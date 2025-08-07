@@ -46,6 +46,7 @@ export default function Home() {
                 <p className="text-gray-600">不僅是農品銷售，更致力於推廣台灣農業文化的深度內涵</p>
               </div>
             </div>
+
           </div>
         </section>
 
