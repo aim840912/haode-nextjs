@@ -1,0 +1,75 @@
+{
+  "navigation": {
+    "brand": "豪德茶業",
+    "brandEn": "HAUDE TEA", 
+    "exploration": "農場探索",
+    "culture": "農業文化遺産",
+    "products": "製品紹介",
+    "news": "農産ニュース",
+    "trace": "製品トレース",
+    "videos": "農場動画"
+  },
+  "hero": {
+    "title": "百年の継承",
+    "subtitle": "1862年の創立以来、豪德茶業は中華茶文化の精髄を継承することに専念しています",
+    "cta": "農業世界を探索"
+  },
+  "sections": {
+    "exploration": {
+      "title": "農場探索",
+      "quality": {
+        "title": "厳選農産物",
+        "description": "山間高地の優良な赤肉李と各季節の農産物を厳選"
+      },
+      "traditional": {
+        "title": "伝統農法",
+        "description": "百年の農業技術を継承し、現代科学技術と融合して最高品質の農産物を実現"
+      },
+      "culture": {
+        "title": "農業文化",
+        "description": "単なる農産物販売ではなく、台湾農業文化の深い内涵の普及に専念"
+      }
+    },
+    "culture": {
+      "title": "農業文化コレクション",
+      "history": {
+        "title": "歴史の継承",
+        "description": "豪德茶業は1862年に創立され、中華茶文化の発展過程を見守ってきました。私たちは伝統的な製茶技術を保存するだけでなく、茶文化の精神的内涵を次世代に伝承することに専念しています。",
+        "description2": "台湾から中国大陸まで、伝統的な茶荘から現代の茶芸館まで、豪德茶業は常に品質と文化を重視する経営理念を堅持しています。"
+      },
+      "archive": {
+        "title": "百年茶譜コレクション",
+        "description": "歴代の茶譜と製茶秘方を珍蔵"
+      }
+    },
+    "products": {
+      "title": "プレミアム製品",
+      "items": {
+        "plum": "赤肉李果樹園",
+        "coffee": "プレミアムコーヒー", 
+        "fruit": "季節のフルーツ",
+        "vegetable": "有機野菜"
+      },
+      "description": "地元の優良農産物、自然で健康的な栽培"
+    }
+  },
+  "footer": {
+    "company": "豪德茶業",
+    "tagline": "百年茶文化を継承し、東洋の茶韻を味わう",
+    "products": "農産シリーズ",
+    "stores": "店舗所在地",
+    "contact": "お問い合わせ",
+    "locations": {
+      "taipei": "台北フラッグシップ店",
+      "taichung": "台中支店",
+      "kaohsiung": "高雄支店",
+      "online": "オンラインストア"
+    },
+    "contactInfo": {
+      "phone": "電話: 02-1234-5678",
+      "email": "メール: info@dechuantea.com",
+      "address": "住所: 台北市中正区"
+    },
+    "copyright": "著作権所有"
+  }
+}

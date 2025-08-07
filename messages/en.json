@@ -1,0 +1,75 @@
+{
+  "navigation": {
+    "brand": "Haude Tea",
+    "brandEn": "HAUDE TEA",
+    "exploration": "Farm Exploration",
+    "culture": "Agricultural Heritage",
+    "products": "Products",
+    "news": "Farm News",
+    "trace": "Product Tracing",
+    "videos": "Farm Videos"
+  },
+  "hero": {
+    "title": "Century Heritage",
+    "subtitle": "Since 1862, Haude Tea has been dedicated to preserving the essence of Chinese tea culture",
+    "cta": "Explore Agricultural World"
+  },
+  "sections": {
+    "exploration": {
+      "title": "Farm Exploration",
+      "quality": {
+        "title": "Premium Produce",
+        "description": "Carefully selected premium red plums and seasonal produce from highland areas"
+      },
+      "traditional": {
+        "title": "Traditional Methods",
+        "description": "Inheriting century-old agricultural techniques, combined with modern technology for optimal produce quality"
+      },
+      "culture": {
+        "title": "Agricultural Culture",
+        "description": "More than just product sales, we're dedicated to promoting the depth of Taiwanese agricultural culture"
+      }
+    },
+    "culture": {
+      "title": "Agricultural Heritage Collection",
+      "history": {
+        "title": "Historical Heritage",
+        "description": "Haude Tea was established in 1862, witnessing the development of Chinese tea culture. We not only preserve traditional tea-making crafts but also dedicate ourselves to passing on the spiritual essence of tea culture to the next generation.",
+        "description2": "From Taiwan to mainland China, from traditional tea houses to modern tea art galleries, Haude Tea has always adhered to the business philosophy of emphasizing both quality and culture."
+      },
+      "archive": {
+        "title": "Century Tea Recipe Collection",
+        "description": "Treasured historical tea recipes and brewing secrets"
+      }
+    },
+    "products": {
+      "title": "Premium Products",
+      "items": {
+        "plum": "Red Plum Orchard",
+        "coffee": "Premium Coffee",
+        "fruit": "Seasonal Fruits",
+        "vegetable": "Organic Vegetables"
+      },
+      "description": "Local premium produce, naturally and healthily cultivated"
+    }
+  },
+  "footer": {
+    "company": "Haude Tea",
+    "tagline": "Inheriting century-old tea culture, savoring Eastern tea essence",
+    "products": "Product Series",
+    "stores": "Store Locations",
+    "contact": "Contact Us",
+    "locations": {
+      "taipei": "Taipei Flagship Store",
+      "taichung": "Taichung Branch",
+      "kaohsiung": "Kaohsiung Branch",
+      "online": "Online Store"
+    },
+    "contactInfo": {
+      "phone": "Phone: 02-1234-5678",
+      "email": "Email: info@dechuantea.com",
+      "address": "Address: Zhongzheng District, Taipei City"
+    },
+    "copyright": "All rights reserved"
+  }
+}

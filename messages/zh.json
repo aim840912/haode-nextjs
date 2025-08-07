@@ -1,0 +1,75 @@
+{
+  "navigation": {
+    "brand": "豪德茶業",
+    "brandEn": "HAUDE TEA",
+    "exploration": "農產探索",
+    "culture": "農業文化",
+    "products": "產品介紹",
+    "news": "農產新聞",
+    "trace": "產品溯源",
+    "videos": "農產影片"
+  },
+  "hero": {
+    "title": "傳承百年",
+    "subtitle": "自1862年創立以來，豪德茶業致力於傳承中華茶文化的精髓",
+    "cta": "探索農產世界"
+  },
+  "sections": {
+    "exploration": {
+      "title": "農產探索",
+      "quality": {
+        "title": "精選農產",
+        "description": "嚴選來自山區高地的優質紅肉李及各季節農產品"
+      },
+      "traditional": {
+        "title": "傳統農法",
+        "description": "傳承百年農業技術，結合現代科技，呈現最佳農品品質"
+      },
+      "culture": {
+        "title": "農業文化",
+        "description": "不僅是農品銷售，更致力於推廣台灣農業文化的深度內涵"
+      }
+    },
+    "culture": {
+      "title": "農業文化典藏",
+      "history": {
+        "title": "歷史傳承",
+        "description": "豪德茶業創立於1862年，見證了中華茶文化的發展歷程。我們不僅保存了傳統的製茶工藝，更致力於將茶文化的精神內涵傳承給下一代。",
+        "description2": "從台灣到中國大陸，從傳統茶莊到現代茶藝館，豪德茶業始終堅持品質與文化並重的經營理念。"
+      },
+      "archive": {
+        "title": "百年茶譜典藏",
+        "description": "珍藏歷代茶譜與製茶秘方"
+      }
+    },
+    "products": {
+      "title": "經典產品",
+      "items": {
+        "plum": "紅肉李果園",
+        "coffee": "精品咖啡",
+        "fruit": "季節水果",
+        "vegetable": "有機蔬菜"
+      },
+      "description": "在地優質農產，自然健康栽培"
+    }
+  },
+  "footer": {
+    "company": "豪德茶業",
+    "tagline": "傳承百年茶文化，品味東方茶韻",
+    "products": "農產系列",
+    "stores": "門市據點",
+    "contact": "聯絡我們",
+    "locations": {
+      "taipei": "台北旗艦店",
+      "taichung": "台中分店",
+      "kaohsiung": "高雄分店",
+      "online": "線上商城"
+    },
+    "contactInfo": {
+      "phone": "電話: 02-1234-5678",
+      "email": "信箱: info@dechuantea.com",
+      "address": "地址: 台北市中正區"
+    },
+    "copyright": "版權所有"
+  }
+}
