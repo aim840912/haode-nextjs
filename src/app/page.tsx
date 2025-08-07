@@ -1,148 +1,6 @@
-
 export default function Home() {
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-      <header className="fixed top-0 w-full bg-white/95 backdrop-blur-lg shadow-sm z-50">
-        <nav className="max-w-7xl mx-auto px-8 py-4 lg:py-5">
-          <div className="hidden lg:grid lg:grid-cols-3 lg:items-center">
-            {/* Desktop Layout */}
-            <div className="justify-self-start">
-              <div className="text-2xl font-bold text-amber-900 tracking-tight">
-                豪德茶業
-              </div>
-              <div className="text-xs text-amber-700/70 font-medium tracking-wider">
-                HAUDE TEA
-              </div>
-            </div>
-            <div className="justify-self-center">
-              <div className="flex items-center space-x-10">
-                <a href="#exploration" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農產探索
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#culture" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農業文化
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#products" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    產品介紹
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#news" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農產新聞
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#trace" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    產品溯源
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#videos" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農產影片
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-              </div>
-            </div>
-            <div className="justify-self-end">
-              <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
-                <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
-                  EN
-                </button>
-                <button className="px-3 py-1.5 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
-                  中文
-                </button>
-                <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
-                  日本語
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile/Tablet Layout */}
-          <div className="lg:hidden">
-            {/* Compact Header for smaller screens */}
-            <div className="flex items-center justify-between">
-              {/* Brand */}
-              <div>
-                <div className="text-xl font-bold text-amber-900 tracking-tight">
-                  豪德茶業
-                </div>
-                <div className="text-xs text-amber-700/70 font-medium tracking-wider">
-                  HAUDE TEA
-                </div>
-              </div>
-              
-              {/* Language Switcher - Compact */}
-              <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
-                <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
-                  EN
-                </button>
-                <button className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
-                  中
-                </button>
-                <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
-                  日
-                </button>
-              </div>
-            </div>
-            
-            {/* Multi-row Navigation for smaller screens */}
-            <div className="mt-3">
-              <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center">
-                <a href="#exploration" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農產探索
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#culture" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農業文化
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#products" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    產品介紹
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#news" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農產新聞
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#trace" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    產品溯源
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-                <a href="#videos" className="group relative py-2">
-                  <span className="text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-medium">
-                    農產影片
-                  </span>
-                  <div className="absolute bottom-0 left-0 w-0 h-0.5 bg-amber-900 group-hover:w-full transition-all duration-300"></div>
-                </a>
-              </div>
-            </div>
-          </div>
-        </nav>
-
-      </header>
 
       <main className="pt-36 lg:pt-24">
         <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-amber-100 via-orange-50 to-yellow-50">
@@ -220,17 +78,223 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
             <div className="grid md:grid-cols-4 gap-8">
-              {['紅肉李果園', '精品咖啡', '季節水果', '有機蔬菜'].map((product, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+              {[
+                { name: '紅肉李果園', emoji: '🍑', desc: '高山新鮮紅肉李，甜美多汁' },
+                { name: '精品咖啡', emoji: '☕', desc: '阿里山咖啡豆，香醇回甘' },
+                { name: '季節水果', emoji: '🍎', desc: '當季新鮮水果，營養豐富' },
+                { name: '有機蔬菜', emoji: '🥬', desc: '有機認證蔬菜，健康安心' }
+              ].map((product, index) => (
+                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                   <div className="aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                    <span className="text-3xl text-amber-900">🍑</span>
+                    <span className="text-4xl">{product.emoji}</span>
                   </div>
                   <div className="p-6">
-                    <h3 className="font-semibold text-gray-800 mb-2">{product}</h3>
-                    <p className="text-sm text-gray-600">在地優質農產，自然健康栽培</p>
+                    <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{product.desc}</p>
+                    <a 
+                      href="/products"
+                      className="inline-block bg-amber-900 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-800 transition-colors"
+                    >
+                      查看商品
+                    </a>
                   </div>
                 </div>
               ))}
+            </div>
+            
+            {/* View All Products Button */}
+            <div className="text-center mt-12">
+              <a 
+                href="/products"
+                className="inline-block bg-amber-900 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-amber-800 transition-colors"
+              >
+                瀏覽所有商品
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* 近期擺攤行程 */}
+        <section className="py-20 px-6 bg-gradient-to-r from-amber-50 to-orange-50">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-4xl font-light text-center text-amber-900 mb-16">近期擺攤行程</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="text-center mb-4">
+                  <div className="text-3xl mb-2">🏪</div>
+                  <h3 className="text-lg font-semibold text-gray-800">台中逢甲夜市</h3>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center">
+                    <span className="mr-2">📅</span>
+                    <span>8月10日 (六)</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">⏰</span>
+                    <span>17:00 - 23:00</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">📍</span>
+                    <span>文華路入口處</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    買二送一優惠
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="text-center mb-4">
+                  <div className="text-3xl mb-2">🌅</div>
+                  <h3 className="text-lg font-semibold text-gray-800">彰化員林假日市集</h3>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center">
+                    <span className="mr-2">📅</span>
+                    <span>8月12日 (一)</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">⏰</span>
+                    <span>08:00 - 14:00</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">📍</span>
+                    <span>中山路廣場</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    現場試吃
+                  </span>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div className="text-center mb-4">
+                  <div className="text-3xl mb-2">🌃</div>
+                  <h3 className="text-lg font-semibold text-gray-800">高雄六合夜市</h3>
+                </div>
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center">
+                    <span className="mr-2">📅</span>
+                    <span>8月15日 (四)</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">⏰</span>
+                    <span>17:30 - 23:30</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2">📍</span>
+                    <span>六合二路</span>
+                  </div>
+                </div>
+                <div className="text-center">
+                  <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
+                    預訂9折
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="text-center mt-12">
+              <a 
+                href="/schedule"
+                className="inline-block bg-amber-900 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-amber-800 transition-colors"
+              >
+                查看完整行程
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* 觀光果園體驗 */}
+        <section className="py-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl font-light text-amber-900 mb-4">豪德觀光果園</h2>
+              <p className="text-xl text-gray-700">親近土地，體驗四季農情，感受自然之美</p>
+            </div>
+            
+            <div className="grid md:grid-cols-4 gap-8">
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🌸</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">春季賞花</h3>
+                <p className="text-sm text-gray-600">梅花盛開，春季蔬菜採摘</p>
+              </div>
+              
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🍑</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">夏日採果</h3>
+                <p className="text-sm text-gray-600">紅肉李盛產期，果香四溢</p>
+              </div>
+              
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🍎</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">秋收體驗</h3>
+                <p className="text-sm text-gray-600">豐收季節，多樣農產品嚐</p>
+              </div>
+              
+              <div className="text-center group">
+                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🫖</span>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">冬日品茶</h3>
+                <p className="text-sm text-gray-600">溫室體驗，品茶話農情</p>
+              </div>
+            </div>
+
+            <div className="mt-16 bg-gradient-to-r from-green-50 to-amber-50 rounded-xl p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h3 className="text-2xl font-bold text-amber-900 mb-4">沉浸式農場體驗</h3>
+                  <ul className="space-y-3">
+                    <li className="flex items-center text-gray-700">
+                      <span className="mr-3 text-green-500">✓</span>
+                      <span>專業導覽解說，了解有機農法</span>
+                    </li>
+                    <li className="flex items-center text-gray-700">
+                      <span className="mr-3 text-green-500">✓</span>
+                      <span>親手採摘當季新鮮水果蔬菜</span>
+                    </li>
+                    <li className="flex items-center text-gray-700">
+                      <span className="mr-3 text-green-500">✓</span>
+                      <span>DIY農產品加工體驗活動</span>
+                    </li>
+                    <li className="flex items-center text-gray-700">
+                      <span className="mr-3 text-green-500">✓</span>
+                      <span>品嚐農場風味餐與農產伴手禮</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="text-center">
+                  <div className="bg-white rounded-lg shadow-lg p-6 mb-4">
+                    <div className="text-5xl mb-3">🚶‍♂️</div>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-2">2公里環山步道</h4>
+                    <p className="text-sm text-gray-600">欣賞山景與果園風光</p>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    <p>📞 預約專線：04-2123-4567</p>
+                    <p>⏰ 開放時間：09:00-17:00（週一公休）</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center mt-12">
+              <a 
+                href="/farm-tour"
+                className="inline-block bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-green-700 transition-colors"
+              >
+                🌱 預約農場體驗
+              </a>
             </div>
           </div>
         </section>
