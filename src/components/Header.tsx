@@ -14,10 +14,10 @@ export default function Header() {
   };
 
   const navItems = [
-    { href: '#explore', label: '農業探索', isExternal: true },
-    { href: '#culture', label: '農業文化', isExternal: true },
+    { href: '/', label: '農業探索', isExternal: false },
+    { href: '/culture', label: '歲月留影', isExternal: false },
     { href: '/products', label: '產品介紹', isExternal: false },
-    { href: '#news', label: '農產新聞', isExternal: true },
+    { href: '/news', label: '農產新聞', isExternal: false },
     { href: '/schedule', label: '擺攤行程', isExternal: false },
     { href: '/farm-tour', label: '觀光果園', isExternal: false },
     { href: '/locations', label: '門市據點', isExternal: false },
@@ -68,16 +68,28 @@ export default function Header() {
           </div>
 
           <div className="justify-self-end">
-            <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
-              <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
-                EN
-              </button>
-              <button className="px-3 py-1.5 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
-                中文
-              </button>
-              <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
-                日本語
-              </button>
+            <div className="flex items-center space-x-3">
+              {/* Admin Button */}
+              <Link 
+                href="/admin/products"
+                className="px-3 py-1.5 text-xs font-medium text-white bg-amber-900 hover:bg-amber-800 rounded-full transition-all duration-200 flex items-center space-x-1"
+              >
+                <span>🛠</span>
+                <span>管理</span>
+              </Link>
+              
+              {/* Language Switcher */}
+              <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
+                <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
+                  EN
+                </button>
+                <button className="px-3 py-1.5 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
+                  中文
+                </button>
+                <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
+                  日本語
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -96,17 +108,27 @@ export default function Header() {
               </div>
             </Link>
 
-            {/* Language Switcher - Compact */}
-            <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
-              <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
-                EN
-              </button>
-              <button className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
-                中
-              </button>
-              <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
-                日
-              </button>
+            <div className="flex items-center space-x-2">
+              {/* Admin Button - Mobile */}
+              <Link 
+                href="/admin/products"
+                className="px-2 py-1 text-xs font-medium text-white bg-amber-900 hover:bg-amber-800 rounded-full transition-all duration-200"
+              >
+                🛠 管理
+              </Link>
+              
+              {/* Language Switcher - Compact */}
+              <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
+                <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
+                  EN
+                </button>
+                <button className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
+                  中
+                </button>
+                <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
+                  日
+                </button>
+              </div>
             </div>
           </div>
 

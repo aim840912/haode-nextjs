@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "title": "台中逢甲夜市",
+    "location": "台中市西屯區文華路",
+    "date": "2024-08-10",
+    "time": "17:00 - 23:00",
+    "status": "upcoming",
+    "products": ["高山紅肉李", "季節水果", "有機蔬菜"],
+    "description": "逢甲夜市週六固定攤位，位於文華路入口處",
+    "contact": "0912-345-678",
+    "specialOffer": "買二送一優惠活動",
+    "weatherNote": "如遇雨天可能取消，請關注最新公告",
+    "createdAt": "2024-08-01T00:00:00.000Z",
+    "updatedAt": "2024-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "title": "彰化員林假日市集",
+    "location": "彰化縣員林市中山路廣場",
+    "date": "2024-08-12",
+    "time": "08:00 - 14:00",
+    "status": "upcoming",
+    "products": ["紅肉李果園", "精品咖啡", "當季水果"],
+    "description": "員林市政府廣場假日農夫市集",
+    "contact": "0912-345-678",
+    "specialOffer": "現場試吃，滿500元送精美包裝",
+    "weatherNote": "有遮陽棚，風雨無阻",
+    "createdAt": "2024-08-01T00:00:00.000Z",
+    "updatedAt": "2024-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "3",
+    "title": "台北士林夜市",
+    "location": "台北市士林區大南路",
+    "date": "2024-08-08",
+    "time": "18:00 - 24:00",
+    "status": "completed",
+    "products": ["高山紅肉李", "精品咖啡"],
+    "description": "士林夜市美食區旁，人潮眾多",
+    "contact": "0912-345-678",
+    "specialOffer": "已結束 - 當日特價優惠",
+    "weatherNote": "已完成",
+    "createdAt": "2024-08-01T00:00:00.000Z",
+    "updatedAt": "2024-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "4",
+    "title": "高雄六合夜市",
+    "location": "高雄市新興區六合二路",
+    "date": "2024-08-15",
+    "time": "17:30 - 23:30",
+    "status": "upcoming",
+    "products": ["有機蔬菜箱", "季節水果", "紅肉李"],
+    "description": "六合夜市固定合作攤位，每月第三個週四",
+    "contact": "0912-345-678",
+    "specialOffer": "預訂優惠：提前預訂9折",
+    "weatherNote": "室外攤位，注意天氣變化",
+    "createdAt": "2024-08-01T00:00:00.000Z",
+    "updatedAt": "2024-08-01T00:00:00.000Z"
+  }
+]

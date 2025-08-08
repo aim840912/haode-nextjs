@@ -1,90 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-
-// 季節性活動資料
-const seasonalActivities = [
-  {
-    id: 1,
-    season: '春季',
-    months: '3-5月',
-    title: '春季賞花採果體驗',
-    highlight: '梅花盛開、新芽萌發',
-    activities: [
-      '梅花賞花步道導覽',
-      '春季蔬菜採摘體驗',
-      '有機農法教學',
-      '季節野菜認識',
-      '手作醃梅工作坊'
-    ],
-    price: 450,
-    duration: '3小時',
-    includes: ['導覽解說', '採摘體驗', '農產品品嚐', '手作體驗', '農場便當'],
-    image: '🌸',
-    available: true,
-    note: '建議穿著舒適服裝和運動鞋'
-  },
-  {
-    id: 2,
-    season: '夏季',
-    months: '6-8月',
-    title: '夏日紅肉李採果樂',
-    highlight: '紅肉李盛產期，果香四溢',
-    activities: [
-      '紅肉李採果體驗',
-      '果園導覽教學',
-      '新鮮果汁DIY',
-      '農場生態解說',
-      '遮陽休息品茶'
-    ],
-    price: 680,
-    duration: '4小時',
-    includes: ['專業導覽', '採果體驗', '現採現吃', 'DIY活動', '農場餐點', '伴手禮'],
-    image: '🍑',
-    available: true,
-    note: '提供遮陽帽和防曬用品'
-  },
-  {
-    id: 3,
-    season: '秋季',
-    months: '9-11月',
-    title: '秋收感恩豐收節',
-    highlight: '豐收季節，品嚐多樣農產',
-    activities: [
-      '秋季水果採收',
-      '咖啡豆烘焙體驗',
-      '農產品加工學習',
-      '感恩豐收餐會',
-      '農場攝影導覽'
-    ],
-    price: 580,
-    duration: '5小時',
-    includes: ['採收體驗', '烘焙學習', '豐收餐會', '攝影指導', '農產伴手禮'],
-    image: '🍎',
-    available: true,
-    note: '適合親子家庭和攝影愛好者'
-  },
-  {
-    id: 4,
-    season: '冬季',
-    months: '12-2月',
-    title: '冬日溫室暖心體驗',
-    highlight: '溫室栽培，品茶話農情',
-    activities: [
-      '溫室蔬菜栽培學習',
-      '傳統茶藝體驗',
-      '農場故事分享',
-      '有機堆肥製作',
-      '冬季養生餐品嚐'
-    ],
-    price: 420,
-    duration: '3小時',
-    includes: ['溫室導覽', '茶藝體驗', '農場故事', '養生餐點', '有機蔬菜'],
-    image: '🫖',
-    available: false,
-    note: '冬季限定，需提前預約'
-  }
-];
+import { useState, useEffect } from 'react';
+import { FarmTourActivity } from '@/types/farmTour';
 
 // 農場設施
 const farmFacilities = [
@@ -127,10 +44,28 @@ const farmFacilities = [
 ];
 
 export default function FarmTourPage() {
-  const [selectedActivity, setSelectedActivity] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState<FarmTourActivity | null>(null);
   const [activeTab, setActiveTab] = useState('activities');
+  const [seasonalActivities, setSeasonalActivities] = useState<FarmTourActivity[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const openBookingModal = (activity) => {
+  useEffect(() => {
+    fetchActivities();
+  }, []);
+
+  const fetchActivities = async () => {
+    try {
+      const response = await fetch('/api/farm-tour');
+      const data = await response.json();
+      setSeasonalActivities(data);
+    } catch (error) {
+      console.error('Error fetching farm tour activities:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const openBookingModal = (activity: FarmTourActivity) => {
     setSelectedActivity(activity);
   };
 
@@ -143,12 +78,32 @@ export default function FarmTourPage() {
       {/* Hero Section */}
       <div className="relative flex items-center justify-center bg-gradient-to-br from-green-100 via-amber-50 to-orange-100 pt-32 pb-20 min-h-screen">
         <div className="text-center relative z-10">
-          <h1 className="text-6xl md:text-8xl font-light text-amber-900 mb-6">
-            豪德觀光果園
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-3xl mx-auto">
-            走進山間果園，體驗四季農情，品味自然恩賜
-          </p>
+          <div className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-6 mb-8">
+            <div className="text-center md:text-left mb-6 md:mb-0">
+              <h1 className="text-6xl md:text-8xl font-light text-amber-900 mb-6">
+                豪德觀光果園
+              </h1>
+              <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto md:mx-0">
+                走進山間果園，體驗四季農情，品味自然恩賜
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <a 
+                href="/admin/farm-tour"
+                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <span>🌿</span>
+                <span>果園管理</span>
+              </a>
+              <a 
+                href="/admin/farm-tour/add"
+                className="px-4 py-2 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-colors flex items-center space-x-2"
+              >
+                <span>➕</span>
+                <span>新增體驗</span>
+              </a>
+            </div>
+          </div>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <button 
               onClick={() => setActiveTab('activities')}
@@ -208,8 +163,18 @@ export default function FarmTourPage() {
         {activeTab === 'activities' && (
           <div>
             <h2 className="text-3xl font-light text-center text-amber-900 mb-12">四季農園體驗</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {seasonalActivities.map((activity) => (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="text-gray-500">載入體驗活動中...</div>
+              </div>
+            ) : seasonalActivities.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-500 mb-4">目前沒有可預約的體驗活動</div>
+                <p className="text-sm text-gray-400">敬請期待更多精彩活動</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 gap-8">
+                {seasonalActivities.map((activity) => (
                 <div key={activity.id} className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all ${!activity.available ? 'opacity-75' : ''}`}>
                   {/* Activity Header */}
                   <div className="bg-gradient-to-r from-amber-100 to-orange-100 p-8 text-center">
@@ -284,7 +249,8 @@ export default function FarmTourPage() {
                   </div>
                 </div>
               ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
 

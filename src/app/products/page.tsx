@@ -104,9 +104,29 @@ export default function ProductsPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16 mt-20 lg:mt-16">
-        <div className="max-w-7xl mx-auto px-6 text-center">
-          <h1 className="text-4xl font-light text-amber-900 mb-4">精選農產品</h1>
-          <p className="text-xl text-gray-700">來自台灣各地的優質農產，新鮮直送到你家</p>
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="text-center md:text-left mb-6 md:mb-0">
+              <h1 className="text-4xl font-light text-amber-900 mb-4">精選農產品</h1>
+              <p className="text-xl text-gray-700">來自台灣各地的優質農產，新鮮直送到你家</p>
+            </div>
+            <div className="flex space-x-3">
+              <a 
+                href="/admin/products"
+                className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
+              >
+                <span>📊</span>
+                <span>產品管理</span>
+              </a>
+              <a 
+                href="/admin/products/add"
+                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <span>➕</span>
+                <span>新增產品</span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
 

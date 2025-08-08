@@ -1,3 +1,5 @@
+import ProductsSection from '@/components/ProductsSection'
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
@@ -75,45 +77,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="products" className="py-20 px-6">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
-            <div className="grid md:grid-cols-4 gap-8">
-              {[
-                { name: '紅肉李果園', emoji: '🍑', desc: '高山新鮮紅肉李，甜美多汁' },
-                { name: '精品咖啡', emoji: '☕', desc: '阿里山咖啡豆，香醇回甘' },
-                { name: '季節水果', emoji: '🍎', desc: '當季新鮮水果，營養豐富' },
-                { name: '有機蔬菜', emoji: '🥬', desc: '有機認證蔬菜，健康安心' }
-              ].map((product, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                  <div className="aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                    <span className="text-4xl">{product.emoji}</span>
-                  </div>
-                  <div className="p-6">
-                    <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
-                    <p className="text-sm text-gray-600 mb-4">{product.desc}</p>
-                    <a 
-                      href="/products"
-                      className="inline-block bg-amber-900 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-800 transition-colors"
-                    >
-                      查看商品
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* View All Products Button */}
-            <div className="text-center mt-12">
-              <a 
-                href="/products"
-                className="inline-block bg-amber-900 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-amber-800 transition-colors"
-              >
-                瀏覽所有商品
-              </a>
-            </div>
-          </div>
-        </section>
+        <ProductsSection />
 
         {/* 近期擺攤行程 */}
         <section className="py-20 px-6 bg-gradient-to-r from-amber-50 to-orange-50">
