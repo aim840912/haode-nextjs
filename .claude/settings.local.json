@@ -4,7 +4,9 @@
       "Bash(npm install:*)",
       "Bash(sudo chown:*)",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm run dev:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }

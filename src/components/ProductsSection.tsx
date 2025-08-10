@@ -64,8 +64,13 @@ export default function ProductsSection() {
           <div className="grid md:grid-cols-4 gap-8">
             {products.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <div className="aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                  <span className="text-4xl">{product.emoji}</span>
+                <div className="aspect-square flex items-center justify-center relative">
+                  <img 
+                    src="/images/backgrounds/product-placeholder.svg" 
+                    alt="Product background" 
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <span className="text-4xl relative z-10">{product.emoji}</span>
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>

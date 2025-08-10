@@ -2,16 +2,39 @@
 
 import { useState } from 'react'
 
+// Culture images available in the directory
+const cultureImages = [
+  '/images/culture/fruit.jpg',
+  '/images/culture/icon.jpg', 
+  '/images/culture/intro.jpg',
+  '/images/culture/many_people_1.jpg',
+  '/images/culture/many_people_2.jpg',
+  '/images/culture/mountain.jpg',
+  '/images/culture/red_plum_1.jpg',
+  '/images/culture/red_plum_2.jpg',
+  '/images/culture/red_plum_dry.jpg',
+  '/images/culture/red_plum_smile.jpg',
+  '/images/culture/scene1.jpg',
+  '/images/culture/scene2.jpg',
+  '/images/culture/special_day.jpg',
+  '/images/culture/tea.jpg',
+  '/images/culture/tea_bag_1.jpg',
+  '/images/culture/tea_bag_2.jpg'
+]
+
+// Function to get random image
+const getRandomImage = () => {
+  return cultureImages[Math.floor(Math.random() * cultureImages.length)]
+}
+
 // 農業文化內容資料 - 瀑布流佈局
-const cultureItems = [
+const baseCultureItems = [
   {
     id: 1,
     title: '創業初期歷史',
     subtitle: '1862年創立',
     description: '豪德茶業在清朝同治年間創立，以傳統手工製茶起家，見證台灣農業發展的起點。',
-    color: 'bg-gradient-to-br from-amber-500 to-amber-700',
     height: 'h-64',
-    textColor: 'text-white',
     emoji: '🏮'
   },
   {
@@ -19,9 +42,7 @@ const cultureItems = [
     title: '手工採茶工藝',
     subtitle: '傳統技術',
     description: '堅持手工採摘嫩芽，確保每片茶葉的品質。',
-    color: 'bg-gradient-to-br from-green-400 to-green-600',
     height: 'h-48',
-    textColor: 'text-white',
     emoji: '🍃'
   },
   {
@@ -29,9 +50,7 @@ const cultureItems = [
     title: '節氣農作智慧',
     subtitle: '順應自然',
     description: '依循二十四節氣進行農事活動，與大自然和諧共處，這是祖先留下的珍貴智慧。',
-    color: 'bg-gradient-to-br from-teal-400 to-teal-600',
     height: 'h-72',
-    textColor: 'text-white',
     emoji: '🌾'
   },
   {
@@ -39,9 +58,7 @@ const cultureItems = [
     title: '古法炒製',
     subtitle: '百年工藝',
     description: '傳承古老炒茶技術，每一步都是藝術。',
-    color: 'bg-gradient-to-br from-orange-400 to-orange-600',
     height: 'h-56',
-    textColor: 'text-white',
     emoji: '🔥'
   },
   {
@@ -49,9 +66,7 @@ const cultureItems = [
     title: '農村生活記憶',
     subtitle: '純樸歲月',
     description: '體驗純樸的農村日常生活，感受慢節奏的美好時光。',
-    color: 'bg-gradient-to-br from-rose-400 to-rose-600',
     height: 'h-60',
-    textColor: 'text-white',
     emoji: '🏡'
   },
   {
@@ -59,9 +74,7 @@ const cultureItems = [
     title: '傳統農具',
     subtitle: '工具文化',
     description: '從犁田到收穫，每一件農具都承載著農民的智慧與汗水。',
-    color: 'bg-gradient-to-br from-brown-400 to-brown-600',
     height: 'h-68',
-    textColor: 'text-white',
     emoji: '🛠️'
   },
   {
@@ -69,9 +82,7 @@ const cultureItems = [
     title: '豐收慶典',
     subtitle: '感恩大地',
     description: '感謝土地恩賜的傳統慶祝活動。',
-    color: 'bg-gradient-to-br from-yellow-500 to-orange-500',
     height: 'h-52',
-    textColor: 'text-white',
     emoji: '🎉'
   },
   {
@@ -79,9 +90,7 @@ const cultureItems = [
     title: '技藝傳承',
     subtitle: '師徒相承',
     description: '師傅帶徒弟，口耳相傳的技術傳承，確保百年工藝不失傳。',
-    color: 'bg-gradient-to-br from-indigo-400 to-indigo-600',
     height: 'h-64',
-    textColor: 'text-white',
     emoji: '👨‍🏫'
   },
   {
@@ -89,9 +98,7 @@ const cultureItems = [
     title: '日治時期發展',
     subtitle: '技術革新',
     description: '引進新式製茶技術，品質獲得日本市場認可，奠定現代化基礎。',
-    color: 'bg-gradient-to-br from-purple-400 to-purple-600',
     height: 'h-76',
-    textColor: 'text-white',
     emoji: '⚙️'
   },
   {
@@ -99,9 +106,7 @@ const cultureItems = [
     title: '文化教育推廣',
     subtitle: '傳承使命',
     description: '透過教育活動推廣農業文化。',
-    color: 'bg-gradient-to-br from-cyan-400 to-cyan-600',
     height: 'h-48',
-    textColor: 'text-white',
     emoji: '📚'
   },
   {
@@ -109,9 +114,7 @@ const cultureItems = [
     title: '現代化轉型',
     subtitle: '科技結合',
     description: '傳統文化與現代科技的完美結合，開創農業新篇章。',
-    color: 'bg-gradient-to-br from-blue-400 to-blue-600',
     height: 'h-72',
-    textColor: 'text-white',
     emoji: '🔬'
   },
   {
@@ -119,12 +122,16 @@ const cultureItems = [
     title: '永續發展',
     subtitle: '綠色未來',
     description: '為未來世代保留珍貴的農業文化資產，建設永續綠色農業。',
-    color: 'bg-gradient-to-br from-emerald-400 to-emerald-600',
     height: 'h-68',
-    textColor: 'text-white',
     emoji: '🌱'
   }
 ]
+
+// Generate items with random images - do this outside the component
+const cultureItems = baseCultureItems.map((item, index) => ({
+  ...item,
+  image: cultureImages[index % cultureImages.length] // Use modulo to cycle through images
+}))
 
 export default function CulturePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
@@ -159,33 +166,39 @@ export default function CulturePage() {
         </div>
       </div>
 
-      {/* Masonry Layout */}
+      {/* Culture Grid */}
       <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-0">
-          {cultureItems.map((item) => (
-            <div
-              key={item.id}
-              className={`${item.color} ${item.height} p-6 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl break-inside-avoid mb-0`}
-              onClick={() => setSelectedItem(item)}
-            >
-              <div className={`${item.textColor} h-full flex flex-col justify-between`}>
-                <div>
-                  <div className="text-4xl mb-3">{item.emoji}</div>
-                  <div className="text-sm opacity-80 mb-2">{item.subtitle}</div>
-                  <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                  <p className="text-sm opacity-90 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-                <div className="mt-4">
-                  <div className="inline-flex items-center text-sm opacity-80">
-                    <span className="mr-2">📖</span>
-                    了解更多
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {cultureItems.map((item) => (
+              <div
+                key={item.id}
+                className="h-80 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl rounded-lg overflow-hidden relative"
+                onClick={() => setSelectedItem(item)}
+              >
+                <img 
+                  src={item.image} 
+                  alt={item.title}
+                  className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+                <div className="h-full flex flex-col justify-between relative">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="relative z-10 p-6 text-white">
+                    <div className="text-4xl mb-3">{item.emoji}</div>
+                    <div className="text-sm opacity-80 mb-2">{item.subtitle}</div>
+                    <h3 className="text-xl font-bold mb-3">{item.title}</h3>
+                    <p className="text-sm opacity-90 leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
+                  <div className="mt-4 relative z-10 p-6 pt-0 text-white">
+                    <div className="inline-flex items-center text-sm opacity-80">
+                      <span className="mr-2">📖</span>
+                      了解更多
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
@@ -217,11 +230,19 @@ export default function CulturePage() {
                 </button>
               </div>
 
-              {/* Large Color Block */}
-              <div className={`${selectedItem.color} aspect-video rounded-xl mb-6 flex items-center justify-center`}>
-                <div className={`${selectedItem.textColor} text-center`}>
-                  <div className="text-6xl mb-4 opacity-70">{selectedItem.emoji}</div>
-                  <div className="text-xl font-semibold opacity-90">{selectedItem.title}</div>
+              {/* Large Image */}
+              <div className="aspect-video rounded-xl mb-6 relative overflow-hidden">
+                <img 
+                  src={selectedItem.image} 
+                  alt={selectedItem.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                <div className="relative z-10 text-white text-center h-full flex items-center justify-center">
+                  <div>
+                    <div className="text-6xl mb-4 opacity-90">{selectedItem.emoji}</div>
+                    <div className="text-xl font-semibold">{selectedItem.title}</div>
+                  </div>
                 </div>
               </div>
 

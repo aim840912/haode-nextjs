@@ -78,45 +78,47 @@ export default function FarmTourPage() {
       {/* Hero Section */}
       <div className="relative flex items-center justify-center bg-gradient-to-br from-green-100 via-amber-50 to-orange-100 pt-32 pb-20 min-h-screen">
         <div className="text-center relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-center max-w-7xl mx-auto px-6 mb-8">
-            <div className="text-center md:text-left mb-6 md:mb-0">
-              <h1 className="text-6xl md:text-8xl font-light text-amber-900 mb-6">
-                豪德觀光果園
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto md:mx-0">
-                走進山間果園，體驗四季農情，品味自然恩賜
-              </p>
+          <div className="text-center max-w-7xl mx-auto px-6 mb-8">
+            <h1 className="text-6xl md:text-8xl font-light text-amber-900 mb-6">
+              豪德觀光果園
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto">
+              走進山間果園，體驗四季農情，品味自然恩賜
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex flex-col md:flex-row gap-4 justify-center">
+              <button 
+                onClick={() => setActiveTab('activities')}
+                className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg"
+              >
+                🌱 季節體驗活動
+              </button>
+              <button 
+                onClick={() => setActiveTab('facilities')}
+                className="border-2 border-amber-900 text-amber-900 px-8 py-4 rounded-full hover:bg-amber-900 hover:text-white transition-colors text-lg"
+              >
+                🏞️ 農場設施導覽
+              </button>
             </div>
-            <div className="flex space-x-3">
+            
+            {/* Management Buttons */}
+            <div className="flex flex-col md:flex-row gap-3">
               <a 
                 href="/admin/farm-tour"
-                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                className="px-6 py-3 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <span>🌿</span>
                 <span>果園管理</span>
               </a>
               <a 
                 href="/admin/farm-tour/add"
-                className="px-4 py-2 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-colors flex items-center space-x-2"
+                className="px-6 py-3 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 <span>➕</span>
                 <span>新增體驗</span>
               </a>
             </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <button 
-              onClick={() => setActiveTab('activities')}
-              className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg"
-            >
-              🌱 季節體驗活動
-            </button>
-            <button 
-              onClick={() => setActiveTab('facilities')}
-              className="border-2 border-amber-900 text-amber-900 px-8 py-4 rounded-full hover:bg-amber-900 hover:text-white transition-colors text-lg"
-            >
-              🏞️ 農場設施導覽
-            </button>
           </div>
         </div>
         <div className="absolute inset-0 opacity-20">
@@ -479,6 +481,7 @@ export default function FarmTourPage() {
           </div>
         </div>
       )}
+
 
       {/* Contact CTA */}
       <div className="bg-gradient-to-r from-green-600 to-amber-600 text-white py-16">

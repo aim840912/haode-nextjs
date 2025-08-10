@@ -129,8 +129,16 @@ export default function NewsPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {news.filter(item => item.featured).map((item) => (
                 <div key={item.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                  <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                    <span className="text-6xl">{item.image}</span>
+                  <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
+                    {item.image.startsWith('/') ? (
+                      <img 
+                        src={item.image} 
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-6xl">{item.image}</span>
+                    )}
                   </div>
                   <div className="p-6">
                     <div className="flex items-center mb-3">
@@ -171,8 +179,16 @@ export default function NewsPage() {
               {filteredNews.map((item) => (
                 <div key={item.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
                   <div className="md:flex">
-                    <div className="md:w-48 aspect-video md:aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                      <span className="text-4xl md:text-6xl">{item.image}</span>
+                    <div className="md:w-48 aspect-video md:aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
+                      {item.image.startsWith('/') ? (
+                        <img 
+                          src={item.image} 
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-4xl md:text-6xl">{item.image}</span>
+                      )}
                     </div>
                     <div className="p-6 flex-1">
                       <div className="flex flex-wrap items-center gap-2 mb-3">

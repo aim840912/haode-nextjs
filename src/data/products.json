@@ -1,19 +1,6 @@
 [
   {
-    "id": "1",
-    "name": "紅肉李果園",
-    "emoji": "🍑",
-    "description": "高山新鮮紅肉李，甜美多汁",
-    "category": "fruits",
-    "price": 280,
-    "images": [],
-    "inventory": 50,
-    "isActive": true,
-    "createdAt": "2024-08-01T00:00:00.000Z",
-    "updatedAt": "2024-08-01T00:00:00.000Z"
-  },
-  {
-    "id": "2", 
+    "id": "2",
     "name": "精品咖啡",
     "emoji": "☕",
     "description": "阿里山咖啡豆，香醇回甘",
@@ -28,7 +15,7 @@
   {
     "id": "3",
     "name": "季節水果",
-    "emoji": "🍎", 
+    "emoji": "🍎",
     "description": "當季新鮮水果，營養豐富",
     "category": "fruits",
     "price": 320,
@@ -42,7 +29,7 @@
     "id": "4",
     "name": "有機蔬菜",
     "emoji": "🥬",
-    "description": "有機認證蔬菜，健康安心", 
+    "description": "有機認證蔬菜，健康安心",
     "category": "vegetables",
     "price": 180,
     "images": [],

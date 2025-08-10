@@ -18,7 +18,11 @@ export default function Home() {
             </button>
           </div>
           <div className="absolute inset-0 opacity-30">
-            <div className="w-full h-full bg-gradient-to-br from-amber-200 via-orange-200 to-yellow-200"></div>
+            <img 
+              src="/images/backgrounds/hero-overlay.svg" 
+              alt="Background overlay" 
+              className="w-full h-full object-cover"
+            />
           </div>
         </section>
 
@@ -27,22 +31,37 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-light text-center text-amber-900 mb-16">農產探索</h2>
             <div className="grid md:grid-cols-3 gap-12">
               <div className="text-center">
-                <div className="w-24 h-24 bg-amber-200 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-2xl text-amber-900">🍃</span>
+                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center relative">
+                  <img 
+                    src="/images/icons/leaf-bg.svg" 
+                    alt="Leaf background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-2xl text-amber-900 relative z-10">🍃</span>
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-800">精選農產</h3>
                 <p className="text-gray-600">嚴選來自山區高地的優質紅肉李及各季節農產品</p>
               </div>
               <div className="text-center">
-                <div className="w-24 h-24 bg-amber-200 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-2xl text-amber-900">🏮</span>
+                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center relative">
+                  <img 
+                    src="/images/icons/lantern-bg.svg" 
+                    alt="Lantern background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-2xl text-amber-900 relative z-10">🏮</span>
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-800">傳統農法</h3>
                 <p className="text-gray-600">傳承百年農業技術，結合現代科技，呈現最佳農品品質</p>
               </div>
               <div className="text-center">
-                <div className="w-24 h-24 bg-amber-200 rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-2xl text-amber-900">🎋</span>
+                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center relative">
+                  <img 
+                    src="/images/icons/bamboo-bg.svg" 
+                    alt="Bamboo background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-2xl text-amber-900 relative z-10">🎋</span>
                 </div>
                 <h3 className="text-xl font-semibold mb-4 text-gray-800">農業文化</h3>
                 <p className="text-gray-600">不僅是農品銷售，更致力於推廣台灣農業文化的深度內涵</p>
@@ -67,8 +86,13 @@ export default function Home() {
                 </p>
               </div>
               <div className="bg-white p-8 rounded-lg shadow-lg">
-                <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg mb-4 flex items-center justify-center">
-                  <span className="text-4xl text-amber-900">📜</span>
+                <div className="aspect-video rounded-lg mb-4 flex items-center justify-center relative">
+                  <img 
+                    src="/images/backgrounds/culture-card.svg" 
+                    alt="Culture card background" 
+                    className="absolute inset-0 w-full h-full object-cover rounded-lg"
+                  />
+                  <span className="text-4xl text-amber-900 relative z-10">📜</span>
                 </div>
                 <h4 className="font-semibold text-gray-800 mb-2">百年茶譜典藏</h4>
                 <p className="text-sm text-gray-600">珍藏歷代茶譜與製茶秘方</p>
@@ -184,32 +208,52 @@ export default function Home() {
             
             <div className="grid md:grid-cols-4 gap-8">
               <div className="text-center group">
-                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🌸</span>
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                  <img 
+                    src="/images/icons/spring-bg.svg" 
+                    alt="Spring background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-3xl relative z-10">🌸</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">春季賞花</h3>
                 <p className="text-sm text-gray-600">梅花盛開，春季蔬菜採摘</p>
               </div>
               
               <div className="text-center group">
-                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🍑</span>
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                  <img 
+                    src="/images/icons/summer-bg.svg" 
+                    alt="Summer background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-3xl relative z-10">🍑</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">夏日採果</h3>
                 <p className="text-sm text-gray-600">紅肉李盛產期，果香四溢</p>
               </div>
               
               <div className="text-center group">
-                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🍎</span>
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                  <img 
+                    src="/images/icons/autumn-bg.svg" 
+                    alt="Autumn background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-3xl relative z-10">🍎</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">秋收體驗</h3>
                 <p className="text-sm text-gray-600">豐收季節，多樣農產品嚐</p>
               </div>
               
               <div className="text-center group">
-                <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🫖</span>
+                <div className="w-20 h-20 rounded-full mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform relative">
+                  <img 
+                    src="/images/icons/winter-bg.svg" 
+                    alt="Winter background" 
+                    className="absolute inset-0 w-full h-full rounded-full"
+                  />
+                  <span className="text-3xl relative z-10">🫖</span>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">冬日品茶</h3>
                 <p className="text-sm text-gray-600">溫室體驗，品茶話農情</p>
