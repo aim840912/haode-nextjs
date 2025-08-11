@@ -41,25 +41,25 @@ yarn-error.log*
 next-env.d.ts
 
 # images and media files
-/public/images/
-/public/products/
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.tiff
-*.webp
-*.mp4
-*.mov
-*.avi
-*.mkv
-*.pdf
+# /public/images/
+# /public/products/
+# *.jpg
+# *.jpeg
+# *.png
+# *.gif
+# *.bmp
+# *.tiff
+# *.webp
+# *.mp4
+# *.mov
+# *.avi
+# *.mkv
+# *.pdf
 
 # keep small icons and logos
-!/public/icons/
-!/public/logo.*
-!/public/favicon.*
+# !/public/icons/
+# !/public/logo.*
+# !/public/favicon.*
 
 # keep placeholder images
 !/public/**/placeholder.*
