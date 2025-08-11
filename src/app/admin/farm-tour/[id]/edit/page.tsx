@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
 
-export default function EditFarmTourActivity({ params }: { params: { id: string } }) {
+export default function EditFarmTourActivity({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
+  const [activityId, setActivityId] = useState<string>('')
   const [formData, setFormData] = useState({
     season: '春季',
     months: '',
@@ -36,12 +37,15 @@ export default function EditFarmTourActivity({ params }: { params: { id: string 
   ]
 
   useEffect(() => {
-    fetchActivity()
+    params.then(({ id }) => {
+      setActivityId(id)
+      fetchActivity(id)
+    })
   }, [])
 
-  const fetchActivity = async () => {
+  const fetchActivity = async (id: string) => {
     try {
-      const response = await fetch(`/api/farm-tour/${params.id}`)
+      const response = await fetch(`/api/farm-tour/${id}`)
       if (response.ok) {
         const activity: FarmTourActivity = await response.json()
         setFormData({
@@ -74,7 +78,7 @@ export default function EditFarmTourActivity({ params }: { params: { id: string 
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/farm-tour/${params.id}`, {
+      const response = await fetch(`/api/farm-tour/${activityId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

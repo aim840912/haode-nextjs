@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import ProductsSection from '@/components/ProductsSection'
 
 export default function Home() {
@@ -13,9 +14,9 @@ export default function Home() {
             <p className="text-xl md:text-2xl text-gray-700 mb-8 max-w-2xl mx-auto">
               自1862年創立以來，豪德茶業致力於傳承中華茶文化的精髓
             </p>
-            <button className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg touch-manipulation">
+            <Link href="/culture" className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg touch-manipulation inline-block">
               探索農產世界
-            </button>
+            </Link>
           </div>
           <div className="absolute inset-0 opacity-30">
             <img 

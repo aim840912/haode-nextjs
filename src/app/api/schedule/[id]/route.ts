@@ -3,10 +3,11 @@ import { scheduleService } from '@/services/scheduleService'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const scheduleItem = await scheduleService.getScheduleById(params.id)
+    const { id } = await params
+    const scheduleItem = await scheduleService.getScheduleById(id)
     if (!scheduleItem) {
       return NextResponse.json(
         { error: 'Schedule not found' },
@@ -25,11 +26,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
-    const scheduleItem = await scheduleService.updateSchedule(params.id, body)
+    const scheduleItem = await scheduleService.updateSchedule(id, body)
     return NextResponse.json(scheduleItem)
   } catch (error) {
     console.error('Error updating schedule:', error)
@@ -42,10 +44,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await scheduleService.deleteSchedule(params.id)
+    const { id } = await params
+    await scheduleService.deleteSchedule(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting schedule:', error)

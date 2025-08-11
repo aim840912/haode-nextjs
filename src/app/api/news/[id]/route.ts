@@ -3,10 +3,11 @@ import { newsService } from '@/services/newsService'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const newsItem = await newsService.getNewsById(params.id)
+    const { id } = await params
+    const newsItem = await newsService.getNewsById(id)
     if (!newsItem) {
       return NextResponse.json(
         { error: 'News not found' },
@@ -25,11 +26,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const body = await request.json()
-    const newsItem = await newsService.updateNews(params.id, body)
+    const newsItem = await newsService.updateNews(id, body)
     return NextResponse.json(newsItem)
   } catch (error) {
     console.error('Error updating news:', error)
@@ -42,10 +44,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await newsService.deleteNews(params.id)
+    const { id } = await params
+    await newsService.deleteNews(id)
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting news:', error)

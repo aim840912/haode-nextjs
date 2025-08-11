@@ -10,7 +10,7 @@ const products = [
     category: '紅肉李果園',
     price: 680,
     originalPrice: 800,
-    image: '/api/placeholder/400/400',
+    image: '/products/red_plum_2.jpg',
     description: '來自海拔1000公尺以上的高山紅肉李，果肉飽滿、甜度極高',
     features: ['有機栽培', '產地直送', '新鮮採摘', '冷鏈保存'],
     specifications: [
@@ -48,7 +48,7 @@ const products = [
     category: '季節水果',
     price: 850,
     originalPrice: 950,
-    image: '/api/placeholder/400/400',
+    image: '/products/fruit.jpg',
     description: '精選當季最優質水果，營養豐富、口感絕佳',
     features: ['當季新鮮', '產地直送', '精美包裝', '營養豐富'],
     specifications: [
@@ -83,10 +83,10 @@ const products = [
 ];
 
 export default function ProductsPage() {
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
 
-  const handleProductClick = (product) => {
+  const handleProductClick = (product: any) => {
     setSelectedProduct(product);
   };
 
@@ -95,7 +95,7 @@ export default function ProductsPage() {
     setQuantity(1);
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product: any) => {
     alert(`已將 ${quantity} 個 ${product.name} 加入購物車`);
     closeModal();
   };
@@ -141,14 +141,20 @@ export default function ProductsPage() {
             >
               {/* Product Image */}
               <div className="relative aspect-square bg-gradient-to-br from-amber-100 to-orange-100">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl">
-                    {product.category === '紅肉李果園' && '🍑'}
-                    {product.category === '精品咖啡' && '☕'}
-                    {product.category === '季節水果' && '🍎'}
-                    {product.category === '有機蔬菜' && '🥬'}
-                  </span>
-                </div>
+                {product.category === '紅肉李果園' || product.category === '季節水果' ? (
+                  <img 
+                    src={product.image} 
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-6xl">
+                      {product.category === '精品咖啡' && '☕'}
+                      {product.category === '有機蔬菜' && '🥬'}
+                    </span>
+                  </div>
+                )}
                 {!product.inStock && (
                   <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
                     缺貨
@@ -170,7 +176,7 @@ export default function ProductsPage() {
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(5)].map((_: any, i: number) => (
                       <span key={i} className={i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}>
                         ⭐
                       </span>
@@ -221,12 +227,18 @@ export default function ProductsPage() {
             <div className="grid md:grid-cols-2 gap-8 p-8">
               {/* Product Image */}
               <div className="aspect-square bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center">
-                <span className="text-8xl">
-                  {selectedProduct.category === '紅肉李果園' && '🍑'}
-                  {selectedProduct.category === '精品咖啡' && '☕'}
-                  {selectedProduct.category === '季節水果' && '🍎'}
-                  {selectedProduct.category === '有機蔬菜' && '🥬'}
-                </span>
+                {selectedProduct.category === '紅肉李果園' || selectedProduct.category === '季節水果' ? (
+                  <img 
+                    src={selectedProduct.image} 
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
+                ) : (
+                  <span className="text-8xl">
+                    {selectedProduct.category === '精品咖啡' && '☕'}
+                    {selectedProduct.category === '有機蔬菜' && '🥬'}
+                  </span>
+                )}
               </div>
 
               {/* Product Details */}
@@ -244,7 +256,7 @@ export default function ProductsPage() {
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i) => (
+                    {[...Array(5)].map((_: any, i: number) => (
                       <span key={i} className={i < Math.floor(selectedProduct.rating) ? 'text-yellow-400' : 'text-gray-300'}>
                         ⭐
                       </span>
@@ -261,7 +273,7 @@ export default function ProductsPage() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-800 mb-3">產品特色</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedProduct.features.map((feature, index) => (
+                    {selectedProduct.features.map((feature: any, index: number) => (
                       <span key={index} className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
                         {feature}
                       </span>
@@ -273,7 +285,7 @@ export default function ProductsPage() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-800 mb-3">商品規格</h4>
                   <div className="space-y-2">
-                    {selectedProduct.specifications.map((spec, index) => (
+                    {selectedProduct.specifications.map((spec: any, index: number) => (
                       <div key={index} className="flex justify-between py-2 border-b border-gray-100">
                         <span className="text-gray-600">{spec.label}</span>
                         <span className="font-medium">{spec.value}</span>

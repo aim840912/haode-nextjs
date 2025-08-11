@@ -90,7 +90,7 @@ export default function SchedulePage() {
   const [activeTab, setActiveTab] = useState('market');
   const [filteredSchedule, setFilteredSchedule] = useState(marketSchedule);
 
-  const filterByStatus = (status) => {
+  const filterByStatus = (status: any) => {
     if (status === 'all') {
       setFilteredSchedule(marketSchedule);
     } else {
@@ -98,7 +98,7 @@ export default function SchedulePage() {
     }
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: any) => {
     switch (status) {
       case 'upcoming': return 'bg-green-100 text-green-800';
       case 'ongoing': return 'bg-blue-100 text-blue-800';
@@ -107,7 +107,7 @@ export default function SchedulePage() {
     }
   };
 
-  const getStatusText = (status) => {
+  const getStatusText = (status: any) => {
     switch (status) {
       case 'upcoming': return '即將到來';
       case 'ongoing': return '進行中';
@@ -116,9 +116,9 @@ export default function SchedulePage() {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: any) => {
     const date = new Date(dateString);
-    const options = { 
+    const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
       month: 'long', 
       day: 'numeric',
@@ -188,19 +188,19 @@ export default function SchedulePage() {
             <div className="flex flex-wrap gap-4 mb-8">
               <button
                 onClick={() => filterByStatus('all')}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 bg-amber-500 text-white border border-amber-500 rounded-lg hover:bg-amber-600 transition-colors font-medium"
               >
                 全部行程
               </button>
               <button
                 onClick={() => filterByStatus('upcoming')}
-                className="px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+                className="px-4 py-2 bg-green-500 border border-green-500 text-white rounded-lg hover:bg-green-600 transition-colors font-medium"
               >
                 即將到來
               </button>
               <button
                 onClick={() => filterByStatus('completed')}
-                className="px-4 py-2 bg-gray-50 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                className="px-4 py-2 bg-gray-500 border border-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
               >
                 已結束
               </button>

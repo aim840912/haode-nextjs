@@ -107,11 +107,11 @@ export default function LocationsPage() {
   const [selectedStore, setSelectedStore] = useState(storeLocations[0]);
   const [showMap, setShowMap] = useState(false);
 
-  const handleStoreSelect = (store) => {
+  const handleStoreSelect = (store: any) => {
     setSelectedStore(store);
   };
 
-  const openMap = (store) => {
+  const openMap = (store: any) => {
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${store.coordinates.lat},${store.coordinates.lng}`;
     window.open(googleMapsUrl, '_blank');
   };
@@ -284,7 +284,7 @@ export default function LocationsPage() {
               <div className="grid grid-cols-2 gap-6 text-center">
                 <div>
                   <div className="text-2xl font-bold text-amber-900">
-                    {selectedStore.hours.split('-')[1].split(':')[0] - selectedStore.hours.split('-')[0].split(':')[0]}
+                    {parseInt(selectedStore.hours.split('-')[1].split(':')[0]) - parseInt(selectedStore.hours.split('-')[0].split(':')[0])}
                   </div>
                   <div className="text-sm text-gray-600">營業小時</div>
                 </div>

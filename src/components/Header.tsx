@@ -69,6 +69,15 @@ export default function Header() {
 
           <div className="justify-self-end">
             <div className="flex items-center space-x-3">
+              {/* Login Button */}
+              <Link 
+                href="/login"
+                className="px-3 py-1.5 text-xs font-medium text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-full transition-all duration-200 flex items-center space-x-1 border border-amber-200"
+              >
+                <span>👤</span>
+                <span>登入</span>
+              </Link>
+              
               {/* Admin Button */}
               <Link 
                 href="/admin/products"
@@ -77,19 +86,6 @@ export default function Header() {
                 <span>🛠</span>
                 <span>管理</span>
               </Link>
-              
-              {/* Language Switcher */}
-              <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
-                <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
-                  EN
-                </button>
-                <button className="px-3 py-1.5 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
-                  中文
-                </button>
-                <button className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-white hover:text-amber-900 rounded-full transition-all duration-200">
-                  日本語
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -109,6 +105,14 @@ export default function Header() {
             </Link>
 
             <div className="flex items-center space-x-2">
+              {/* Login Button - Mobile */}
+              <Link 
+                href="/login"
+                className="px-2 py-1 text-xs font-medium text-amber-900 bg-amber-50 hover:bg-amber-100 rounded-full transition-all duration-200 border border-amber-200"
+              >
+                👤 登入
+              </Link>
+              
               {/* Admin Button - Mobile */}
               <Link 
                 href="/admin/products"
@@ -116,19 +120,6 @@ export default function Header() {
               >
                 🛠 管理
               </Link>
-              
-              {/* Language Switcher - Compact */}
-              <div className="flex items-center space-x-1 bg-gray-50 rounded-full p-1">
-                <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
-                  EN
-                </button>
-                <button className="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-900 rounded-full">
-                  中
-                </button>
-                <button className="px-2 py-1 text-xs font-medium text-gray-600 hover:bg-white rounded-full transition-all duration-200">
-                  日
-                </button>
-              </div>
             </div>
           </div>
 
