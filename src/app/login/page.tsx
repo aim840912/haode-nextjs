@@ -2,21 +2,27 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { login, isLoading } = useAuth();
+  const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError('');
     
-    // 模擬登入處理
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    alert('登入功能尚在開發中');
-    setIsLoading(false);
+    try {
+      await login({ email, password });
+      // 強制重新載入頁面以確保狀態完全更新
+      window.location.href = '/';
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '登入失敗');
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -42,6 +48,21 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+          
+          {/* 測試帳號提示 */}
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <h3 className="text-sm font-medium text-amber-800 mb-2">測試帳號</h3>
+            <div className="text-xs text-amber-700 space-y-1">
+              <div>管理員: admin@haude.com / 123456</div>
+              <div>一般用戶: user@haude.com / 123456</div>
+            </div>
+          </div>
+          
           <form onSubmit={handleLogin} className="space-y-6">
             {/* Email Input */}
             <div>

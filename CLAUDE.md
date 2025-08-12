@@ -1,233 +1,157 @@
-# 豪德茶業網站雛形開發步驟
+The orignal prompt is from: https://www.dzombak.com/blog/2025/08/getting-good-results-from-claude-code/
 
-## 專案概述
-基於 Next.js + TypeScript + Tailwind CSS 開發的豪德茶業網站雛形，參考 https://www.dechuantea.com/ 的設計風格和結構。
+# Development Guidelines
 
-## 開發步驟
+## Philosophy
 
-### 1. 專案分析 ✅
-- 檢查 Next.js 專案結構
-- 確認使用 Tailwind CSS v4 和 TypeScript
-- 了解現有檔案結構和配置
+### Core Beliefs
 
-### 2. 設計分析 ✅
-分析原官網特點：
-- 傳統與現代結合的設計風格
-- 多語言支持（中、英、日）
-- 六大主要區塊：茶葉探索、茶文化典藏、產品介紹、茶品新聞、產品溯源、茶品影片
-- 優雅的色調搭配（以琥珀色系為主）
-- 文化傳承的品牌故事
+- **Incremental progress over big bangs** - Small changes that compile and pass tests
+- **Learning from existing code** - Study and plan before implementing
+- **Pragmatic over dogmatic** - Adapt to project reality
+- **Clear intent over clever code** - Be boring and obvious
+- **使用繁體中文**
 
-### 3. 主頁面開發 ✅
-實現了以下功能模組：
+### Simplicity Means
 
-#### 3.1 導航欄 (Header)
-- 固定頂部導航
-- 豪德茶業品牌標識
-- 主要導航選單：茶葉探索、茶文化典藏、產品介紹、茶品新聞、產品溯源、茶品影片
-- 多語言切換按鈕
+- Single responsibility per function/class
+- Avoid premature abstractions
+- No clever tricks - choose the boring solution
+- If you need to explain it, it's too complex
 
-#### 3.2 英雄區塊 (Hero Section)  
-- 全螢幕背景
-- 「傳承百年」主標題
-- 品牌介紹文字
-- 行動呼籲按鈕
-- 漸層背景效果
+## Process
 
-#### 3.3 茶葉探索區塊
-- 三欄式卡片布局
-- 精選茶源、傳統工藝、文化傳承三大特色
-- 圓形圖示設計
-- 響應式網格布局
+### 1. Planning & Staging
 
-#### 3.4 茶文化典藏區塊
-- 歷史傳承內容介紹
-- 圖文並茂的展示方式
-- 百年茶譜典藏卡片
+Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 
-#### 3.5 經典產品區塊
-- 四大農產系列展示
-- 紅肉李果園、精品咖啡、季節水果、有機蔬菜系列
-- 卡片式產品布局
-
-#### 3.6 頁尾 (Footer)
-- 深色背景設計
-- 四欄式資訊布局：公司介紹、產品系列、門市據點、聯絡資訊
-- 版權聲明
-
-### 4. 設計特色 ✅
-- **色彩搭配**：以琥珀色系（amber）為主調，搭配漸層效果
-- **字體設計**：中文內容為主，保持文化感
-- **響應式設計**：支援桌面和行動裝置
-- **互動效果**：hover 效果、過渡動畫
-- **視覺層次**：適當的陰影和間距設計
-
-### 5. 技術實作細節 ✅
-- 使用 Tailwind CSS 的現代 utility-first 方法
-- 實現響應式設計（md: 斷點）
-- 背景模糊和透明度效果
-- 漸層背景設計
-- Flexbox 和 Grid 布局
-
-## 電商化發展計畫
-
-### 6. 產品販賣可行性分析 ✅
-**現有優勢：**
-- 傳統茶業風格設計，琥珀色系有質感
-- 完整品牌故事（1862年創立，百年傳承）
-- 產品分類清楚：紅肉李、精品咖啡、季節水果、有機蔬菜
-- 聯絡資訊和門市據點完整
-- 專業的響應式設計
-
-### 7. 電商化三階段實作計畫
-
-#### **階段一：MVP 快速驗證（1-2個月）**
-**推薦方案：Shopify**
-- [ ] 註冊 Shopify 帳號，選擇合適方案
-- [ ] 套用現有設計風格到 Shopify 主題
-- [ ] 上架主力產品：
-  - [ ] 紅肉李果園系列（不同規格包裝）
-  - [ ] 精品咖啡系列（豆類、掛耳包）
-  - [ ] 季節水果限定商品
-- [ ] 設定基本金流（PayPal、信用卡）
-- [ ] 設定配送選項（宅配、超商取貨）
-- [ ] 測試購物流程
-
-**預估成本：**
-- Shopify 月費：$29 USD
-- 交易手續費：2.9% + 30¢
-- 設計客製化：$500-1000 USD
-
-#### **階段二：整合優化（3-6個月）**
-**技術方案：Next.js + 第三方服務整合**
-- [ ] 保留現有 Next.js 網站為展示頁面
-- [ ] 整合 Shopify Buy SDK 到現有網站
-- [ ] 或評估使用其他方案：
-  - [ ] **Stripe + Supabase** （完全客製化）
-  - [ ] **WooCommerce** （WordPress 生態）
-  - [ ] **Medusa.js** （開源電商框架）
-
-**功能開發優先順序：**
-1. [ ] 產品詳細頁面設計和開發
-2. [ ] 購物車和結帳流程
-3. [ ] 會員註冊/登入系統
-4. [ ] 訂單管理後台
-5. [ ] 庫存管理系統
-6. [ ] 金流整合（綠界、藍新、LinePay）
-
-#### **階段三：進階功能（6-12個月）**
-- [ ] 會員等級制度（VIP、批發客戶）
-- [ ] 訂閱制商品（定期配送）
-- [ ] 農產品溯源功能（QR Code追蹤）
-- [ ] 客戶推薦系統
-- [ ] 數據分析儀表板
-- [ ] 行動 APP 開發
-- [ ] 社群功能（評論、分享、部落格）
-
-### 8. 技術架構建議
-
-#### **推薦技術棧：**
+```markdown
+## Stage N: [Name]
+**Goal**: [Specific deliverable]
+**Success Criteria**: [Testable outcomes]
+**Tests**: [Specific test cases]
+**Status**: [Not Started|In Progress|Complete]
 ```
-前端：Next.js + Tailwind CSS（現有）
-後端：Supabase（資料庫 + Auth + Storage）
-金流：Stripe + 綠界科技
-配送：7-ELEVEN、全家、黑貓宅急便 API
-圖片：Cloudinary 或 Vercel Blob
-分析：Google Analytics 4 + Mixpanel
-```
+- Update status as you progress
+- Remove file when all stages are done
 
-#### **資料庫設計重點：**
-- 產品管理（商品、規格、庫存）
-- 訂單系統（訂單、付款、配送狀態）
-- 會員系統（個人資料、購買記錄、偏好）
-- 內容管理（部落格、農場故事）
+### 2. Implementation Flow
 
-### 9. 自主開發成本預算
+1. **Understand** - Study existing patterns in codebase
+2. **Test** - Write test first (red)
+3. **Implement** - Minimal code to pass (green)
+4. **Refactor** - Clean up with tests passing
+5. **Commit** - With clear message linking to plan
 
-#### **階段一：Shopify MVP（年成本：NT$ 5,000-15,000）**
-**必要支出：**
-- Shopify Basic 方案：$29 USD/月 = NT$ 11,000/年
-- 交易手續費：2.9% + 30¢（從營收扣除）
-- 商品攝影設備：NT$ 0-3,000（手機拍攝或簡單攝影設備）
+### 3. When Stuck (After 3 Attempts)
 
-**免費資源：**
-- 現有 Next.js 網站設計（已完成）
-- 自己操作 Shopify 後台（學習成本）
-- 基本主題使用（免費）
+**CRITICAL**: Maximum 3 attempts per issue, then STOP.
 
-#### **階段二：客製化 Next.js 電商（年成本：NT$ 15,000-30,000）**
-**主機與資料庫：**
-- Vercel Pro 主機：$20 USD/月 = NT$ 7,500/年（或免費方案）
-- Supabase Pro：$25 USD/月 = NT$ 9,500/年（或免費額度）
-- 網域名稱：NT$ 500-1,000/年
+1. **Document what failed**:
+   - What you tried
+   - Specific error messages
+   - Why you think it failed
 
-**金流服務：**
-- Stripe：2.9% + $0.30 交易手續費（無月費）
-- 綠界科技：設定費 NT$ 3,000 + 2.8% 交易手續費
-- 藍新金流：月費 NT$ 300 + 2.8% 交易手續費
+2. **Research alternatives**:
+   - Find 2-3 similar implementations
+   - Note different approaches used
 
-**額外服務（可選）：**
-- Cloudinary 圖片 CDN：免費額度大，付費約 NT$ 3,000/年
-- SendGrid 電子郵件：免費額度，付費約 NT$ 1,500/年
+3. **Question fundamentals**:
+   - Is this the right abstraction level?
+   - Can this be split into smaller problems?
+   - Is there a simpler approach entirely?
 
-**開發成本：NT$ 0**
-- 使用現有技能自主開發
-- 學習新技術的時間成本
+4. **Try different angle**:
+   - Different library/framework feature?
+   - Different architectural pattern?
+   - Remove abstraction instead of adding?
 
-#### **階段三：進階功能擴展（年成本：NT$ 20,000-40,000）**
-**分析工具：**
-- Google Analytics：免費
-- Mixpanel：免費額度，付費約 NT$ 6,000/年
-- Hotjar 使用者行為分析：NT$ 3,000/年
+## Technical Standards
 
-**行銷工具：**
-- Mailchimp 電子報：免費額度，付費約 NT$ 6,000/年
-- 社群媒體管理工具：NT$ 3,000-6,000/年
+### Architecture Principles
 
-**進階服務：**
-- 物流 API（7-11、全家）：按使用量計費
-- 簡訊通知服務：按則計費
-- 客服聊天機器人：NT$ 3,000-10,000/年
+- **Composition over inheritance** - Use dependency injection
+- **Interfaces over singletons** - Enable testing and flexibility
+- **Explicit over implicit** - Clear data flow and dependencies
+- **Test-driven when possible** - Never disable tests, fix them
 
-### 10. 成本效益分析
+### Code Quality
 
-#### **第一年總投資預估：NT$ 15,000-30,000**
-- 遠低於請外包開發（NT$ 200,000-500,000）
-- 主要是學習時間投資，無人力成本
-- 完全掌控技術和數據
+- **Every commit must**:
+  - Compile successfully
+  - Pass all existing tests
+  - Include tests for new functionality
+  - Follow project formatting/linting
 
-#### **營收平衡點估算：**
-- 假設毛利率 40%，交易手續費 3%
-- 實際獲利率約 37%
-- 需月營收 NT$ 4,000 即可打平成本（年成本 ÷ 12 ÷ 0.37）
+- **Before committing**:
+  - Run formatters/linters
+  - Self-review changes
+  - Ensure commit message explains "why"
 
-#### **長期優勢：**
-- 無持續的人力外包費用
-- 技術完全自主，可快速調整
-- 累積的電商開發經驗具市場價值
-- 未來可複製技術到其他專案
+### Error Handling
 
-### 10. 行銷策略建議
-- [ ] SEO 優化（農產品相關關鍵字）
-- [ ] 社群媒體經營（Instagram、Facebook）
-- [ ] 內容行銷（農場日記、產品故事）
-- [ ] 聯盟行銷（部落客、KOL合作）
-- [ ] 季節性促銷活動
+- Fail fast with descriptive messages
+- Include context for debugging
+- Handle errors at appropriate level
+- Never silently swallow exceptions
 
-### 11. 法規遵循
-- [ ] 食品業者登錄
-- [ ] 產品標示法規
-- [ ] 個資保護法遵循
-- [ ] 電子發票整合
-- [ ] 消費者保護法規
+## Decision Framework
 
-## 啟動專案
-```bash
-npm run dev
-```
-開發伺服器將在 http://localhost:3000 啟動
+When multiple valid approaches exist, choose based on:
 
-## 目前狀態
-✅ 基礎雛形完成，包含主要版面布局和設計風格
-✅ 響應式設計實現
-✅ 品牌風格和色調定義完成
+1. **Testability** - Can I easily test this?
+2. **Readability** - Will someone understand this in 6 months?
+3. **Consistency** - Does this match project patterns?
+4. **Simplicity** - Is this the simplest solution that works?
+5. **Reversibility** - How hard to change later?
+
+## Project Integration
+
+### Learning the Codebase
+
+- Find 3 similar features/components
+- Identify common patterns and conventions
+- Use same libraries/utilities when possible
+- Follow existing test patterns
+
+### Tooling
+
+- Use project's existing build system
+- Use project's test framework
+- Use project's formatter/linter settings
+- Don't introduce new tools without strong justification
+
+## Quality Gates
+
+### Definition of Done
+
+- [ ] Tests written and passing
+- [ ] Code follows project conventions
+- [ ] No linter/formatter warnings
+- [ ] Commit messages are clear
+- [ ] Implementation matches plan
+- [ ] No TODOs without issue numbers
+
+### Test Guidelines
+
+- Test behavior, not implementation
+- One assertion per test when possible
+- Clear test names describing scenario
+- Use existing test utilities/helpers
+- Tests should be deterministic
+
+## Important Reminders
+
+**NEVER**:
+- Use `--no-verify` to bypass commit hooks
+- Disable tests instead of fixing them
+- Commit code that doesn't compile
+- Make assumptions - verify with existing code
+
+**ALWAYS**:
+- Commit working code incrementally
+- Update plan documentation as you go
+- Learn from existing implementations
+- Stop after 3 failed attempts and reassess
+
+##

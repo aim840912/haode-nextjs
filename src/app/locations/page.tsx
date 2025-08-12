@@ -1,128 +1,78 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { Location } from '@/types/location';
+import Link from 'next/link';
 
-// 所有門市據點資料
-const storeLocations = [
-  {
-    id: 1,
-    name: '總店',
-    title: '豪德茶業總店',
-    address: '南投縣埔里鎮中山路一段168號',
-    landmark: '埔里酒廠對面，好找好停車',
-    phone: '049-291-5678',
-    lineId: '@haudetea',
-    hours: '09:00-19:00',
-    closedDays: '無公休日',
-    parking: '店前免費停車場（30個車位）',
-    publicTransport: '埔里轉運站步行5分鐘',
-    features: [
-      '現場品茶試飲，專人解說茶文化',
-      '農產品現場挑選，品質保證',
-      '禮盒包裝服務，送禮自用兩相宜',
-      '免費停車場，交通便利',
-      '農場導覽預約服務',
-      '企業團購訂製服務'
-    ],
-    specialties: ['紅肉李', '精品咖啡', '季節水果', '有機蔬菜', '茶葉', '農產加工品'],
-    coordinates: { lat: 23.9693, lng: 120.9417 },
-    image: '🏪',
-    isMain: true
-  },
-  {
-    id: 2,
-    name: '台北店',
-    title: '豪德茶業台北旗艦店',
-    address: '台北市中正區重慶南路一段100號',
-    landmark: '台北車站Z10出口步行3分鐘',
-    phone: '02-2345-6789',
-    lineId: '@haudetea-taipei',
-    hours: '10:00-21:00',
-    closedDays: '週一公休',
-    parking: '鄰近有付費停車場',
-    publicTransport: '台北車站步行3分鐘',
-    features: [
-      '都會區最大展示空間',
-      '完整產品線展示',
-      '商務禮盒專區',
-      '快速宅配服務',
-      '企業採購諮詢',
-      '品茶體驗空間'
-    ],
-    specialties: ['商務禮盒', '精品茶葉', '咖啡豆', '伴手禮'],
-    coordinates: { lat: 25.0478, lng: 121.5170 },
-    image: '🌆',
-    isMain: false
-  },
-  {
-    id: 3,
-    name: '台中店',
-    title: '豪德茶業台中分店',
-    address: '台中市西區台灣大道二段200號',
-    landmark: '廣三SOGO百貨旁',
-    phone: '04-2345-6789',
-    lineId: '@haudetea-taichung',
-    hours: '10:00-20:00',
-    closedDays: '週二公休',
-    parking: '百貨公司地下停車場',
-    publicTransport: '台中火車站搭公車15分鐘',
-    features: [
-      '百貨商圈據點',
-      '購物便利性佳',
-      '農場導覽預約',
-      '在地配送服務',
-      '親子友善空間'
-    ],
-    specialties: ['新鮮水果', '農場體驗券', '親子禮盒'],
-    coordinates: { lat: 24.1477, lng: 120.6736 },
-    image: '🏢',
-    isMain: false
-  },
-  {
-    id: 4,
-    name: '高雄店',
-    title: '豪德茶業高雄分店',
-    address: '高雄市前金區中正四路300號',
-    landmark: '高雄火車站商圈',
-    phone: '07-345-6789',
-    lineId: '@haudetea-kaohsiung',
-    hours: '10:00-20:00',
-    closedDays: '週二公休',
-    parking: '火車站周邊停車場',
-    publicTransport: '高雄火車站步行8分鐘',
-    features: [
-      '南台灣服務據點',
-      '團購服務專區',
-      '企業訂購服務',
-      '快速物流配送'
-    ],
-    specialties: ['團購優惠', '企業訂購', '物流配送'],
-    coordinates: { lat: 22.6273, lng: 120.3014 },
-    image: '🌴',
-    isMain: false
-  }
-];
 
 export default function LocationsPage() {
-  const [selectedStore, setSelectedStore] = useState(storeLocations[0]);
+  const [storeLocations, setStoreLocations] = useState<Location[]>([]);
+  const [selectedStore, setSelectedStore] = useState<Location | null>(null);
   const [showMap, setShowMap] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
-  const handleStoreSelect = (store: any) => {
+  useEffect(() => {
+    fetchLocations()
+  }, [])
+
+  const fetchLocations = async () => {
+    try {
+      const response = await fetch('/api/locations')
+      const data = await response.json()
+      setStoreLocations(data)
+      if (data.length > 0) {
+        setSelectedStore(data[0])
+      }
+    } catch (error) {
+      console.error('Error fetching locations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleStoreSelect = (store: Location) => {
     setSelectedStore(store);
   };
 
-  const openMap = (store: any) => {
+  const openMap = (store: Location) => {
     const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${store.coordinates.lat},${store.coordinates.lng}`;
     window.open(googleMapsUrl, '_blank');
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center text-gray-900 font-medium">載入中...</div>
+      </div>
+    )
+  }
+
+  if (!selectedStore) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center text-gray-900 font-medium">無門市資料</div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16 mt-20 lg:mt-16">
-        <div className="max-w-7xl mx-auto px-6 text-center">
+        <div className="max-w-7xl mx-auto px-6 text-center relative">
           <h1 className="text-4xl font-light text-amber-900 mb-4">門市據點</h1>
           <p className="text-xl text-gray-700">全台四間門市，就近選購優質農產品</p>
+          {user && (
+            <Link
+              href="/admin/locations"
+              className="absolute top-0 right-6 flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-900 hover:bg-amber-800 rounded-lg transition-colors"
+            >
+              <span className="mr-2">🛠️</span>
+              管理門市
+            </Link>
+          )}
         </div>
       </div>
 
@@ -134,7 +84,7 @@ export default function LocationsPage() {
               key={store.id}
               onClick={() => handleStoreSelect(store)}
               className={`px-6 py-3 rounded-lg font-medium transition-all m-1 ${
-                selectedStore.id === store.id
+                selectedStore?.id === store.id
                   ? 'bg-amber-900 text-white'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
@@ -151,16 +101,27 @@ export default function LocationsPage() {
           {/* Store Information */}
           <div className="space-y-8">
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <div className="flex items-center mb-6">
-                <span className="text-4xl mr-4">{selectedStore.image}</span>
-                <div>
-                  <h2 className="text-2xl font-bold text-amber-900">{selectedStore.title}</h2>
-                  {selectedStore.isMain && (
-                    <span className="inline-block mt-1 bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
-                      🏪 總店
-                    </span>
-                  )}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center">
+                  <span className="text-4xl mr-4">{selectedStore.image}</span>
+                  <div>
+                    <h2 className="text-2xl font-bold text-amber-900">{selectedStore.title}</h2>
+                    {selectedStore.isMain && (
+                      <span className="inline-block mt-1 bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
+                        🏪 總店
+                      </span>
+                    )}
+                  </div>
                 </div>
+                {user && (
+                  <Link
+                    href={`/admin/locations/${selectedStore.id}/edit`}
+                    className="flex items-center px-3 py-2 text-sm font-medium text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
+                  >
+                    <span className="mr-1">✏️</span>
+                    編輯
+                  </Link>
+                )}
               </div>
 
               {/* Address & Contact */}
@@ -315,7 +276,7 @@ export default function LocationsPage() {
               <div
                 key={store.id}
                 className={`bg-white rounded-lg shadow-lg p-6 cursor-pointer transition-all hover:shadow-xl ${
-                  selectedStore.id === store.id ? 'ring-2 ring-amber-900' : ''
+                  selectedStore?.id === store.id ? 'ring-2 ring-amber-900' : ''
                 }`}
                 onClick={() => handleStoreSelect(store)}
               >

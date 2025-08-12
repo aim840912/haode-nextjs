@@ -1,18 +1,5 @@
 [
   {
-    "id": "2",
-    "name": "精品咖啡",
-    "emoji": "☕",
-    "description": "阿里山咖啡豆，香醇回甘",
-    "category": "coffee",
-    "price": 450,
-    "images": [],
-    "inventory": 30,
-    "isActive": true,
-    "createdAt": "2024-08-01T00:00:00.000Z",
-    "updatedAt": "2024-08-01T00:00:00.000Z"
-  },
-  {
     "id": "3",
     "name": "季節水果",
     "emoji": "🍎",
