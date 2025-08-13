@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useCart } from '@/lib/cart-context';
 
 // 模擬產品資料
 const products = [
@@ -85,6 +86,7 @@ const products = [
 export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
+  const { addItem } = useCart();
 
   const handleProductClick = (product: any) => {
     setSelectedProduct(product);
@@ -96,7 +98,24 @@ export default function ProductsPage() {
   };
 
   const addToCart = (product: any) => {
-    alert(`已將 ${quantity} 個 ${product.name} 加入購物車`);
+    // 轉換產品資料格式以符合 Product 型別
+    const productData = {
+      id: product.id.toString(),
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      category: product.category,
+      imageUrl: product.image,
+      stock: product.inStock ? 100 : 0, // 模擬庫存數量
+      isActive: product.inStock,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    addItem(productData, quantity);
+    
+    // 顯示成功訊息
+    alert(`已將 ${quantity} 個 ${product.name} 加入購物車！`);
     closeModal();
   };
 
@@ -182,7 +201,7 @@ export default function ProductsPage() {
                       </span>
                     ))}
                   </div>
-                  <span className="ml-2 text-sm text-gray-600">
+                  <span className="ml-2 text-sm text-gray-700">
                     {product.rating} ({product.reviews})
                   </span>
                 </div>
@@ -262,12 +281,12 @@ export default function ProductsPage() {
                       </span>
                     ))}
                   </div>
-                  <span className="ml-2 text-gray-600">
+                  <span className="ml-2 text-gray-700">
                     {selectedProduct.rating} ({selectedProduct.reviews} 則評價)
                   </span>
                 </div>
 
-                <p className="text-gray-700 mb-6 leading-relaxed">{selectedProduct.description}</p>
+                <p className="text-gray-800 mb-6 leading-relaxed">{selectedProduct.description}</p>
 
                 {/* Features */}
                 <div className="mb-6">
@@ -287,8 +306,8 @@ export default function ProductsPage() {
                   <div className="space-y-2">
                     {selectedProduct.specifications.map((spec: any, index: number) => (
                       <div key={index} className="flex justify-between py-2 border-b border-gray-100">
-                        <span className="text-gray-600">{spec.label}</span>
-                        <span className="font-medium">{spec.value}</span>
+                        <span className="text-gray-800">{spec.label}</span>
+                        <span className="font-medium text-gray-900">{spec.value}</span>
                       </div>
                     ))}
                   </div>
@@ -308,18 +327,18 @@ export default function ProductsPage() {
                   </div>
 
                   <div className="flex items-center gap-4 mb-6">
-                    <span className="text-gray-700">數量：</span>
+                    <span className="text-gray-800 font-medium">數量：</span>
                     <div className="flex items-center border rounded-lg">
                       <button
                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                        className="px-3 py-1 hover:bg-gray-100"
+                        className="px-3 py-1 hover:bg-gray-100 text-gray-800"
                       >
                         -
                       </button>
-                      <span className="px-4 py-1 border-x">{quantity}</span>
+                      <span className="px-4 py-1 border-x text-gray-900 font-medium">{quantity}</span>
                       <button
                         onClick={() => setQuantity(quantity + 1)}
-                        className="px-3 py-1 hover:bg-gray-100"
+                        className="px-3 py-1 hover:bg-gray-100 text-gray-800"
                       >
                         +
                       </button>

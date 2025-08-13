@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { FarmTourActivity } from '@/types/farmTour';
+import SocialLinks from '@/components/SocialLinks';
 
 // 農場設施
 const farmFacilities = [
@@ -307,7 +308,7 @@ export default function FarmTourPage() {
                   <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
                     <span className="mr-2">📍</span>農場地址
                   </h4>
-                  <p className="text-gray-600 ml-6">台中市和平區東關路一段100號</p>
+                  <p className="text-gray-600 ml-6">嘉義縣梅山鄉太和村一鄰八號</p>
                 </div>
 
                 <div>
@@ -348,9 +349,9 @@ export default function FarmTourPage() {
                     <span className="mr-2">📞</span>聯絡資訊
                   </h4>
                   <div className="ml-6 space-y-1 text-gray-600">
-                    <p>預約專線：04-2123-4567</p>
-                    <p>LINE ID：@haudefarm</p>
-                    <p>信箱：tour@haudefarm.com</p>
+                    <p>預約專線：05-2561843</p>
+                    <p>LINE ID：@haudetea</p>
+                    <p>信箱：tour@haudetea.com</p>
                   </div>
                 </div>
               </div>
@@ -490,9 +491,9 @@ export default function FarmTourPage() {
           <p className="text-green-100 mb-8 text-lg">
             歡迎來到豪德觀光果園，在這裡您可以親近土地、體驗農作、品味自然
           </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
             <a 
-              href="tel:04-2123-4567"
+              href="tel:05-2561843"
               className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               📞 電話預約
@@ -500,6 +501,10 @@ export default function FarmTourPage() {
             <button className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors">
               📍 查看地圖
             </button>
+            <div className="flex items-center space-x-3">
+              <span className="text-green-100 text-sm">也可關注我們：</span>
+              <SocialLinks size="sm" />
+            </div>
           </div>
         </div>
       </div>

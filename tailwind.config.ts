@@ -12,6 +12,12 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        sans: ["var(--font-noto-sans-tc)", "var(--font-inter)", "system-ui", "sans-serif"],
+        serif: ["var(--font-noto-serif-tc)", "Georgia", "serif"],
+        display: ["var(--font-noto-sans-tc)", "var(--font-inter)", "system-ui", "sans-serif"],
+        body: ["var(--font-noto-sans-tc)", "var(--font-inter)", "system-ui", "sans-serif"],
+      },
     },
   },
   plugins: [],

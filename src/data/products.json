@@ -6,11 +6,13 @@
     "description": "當季新鮮水果，營養豐富",
     "category": "fruits",
     "price": 320,
-    "images": [],
+    "images": [
+      "https://truth.bahamut.com.tw/s01/202505/forum/79354/d9dbfe0ce69b0823d39b598bfa1c3286.JPG"
+    ],
     "inventory": 25,
     "isActive": true,
     "createdAt": "2024-08-01T00:00:00.000Z",
-    "updatedAt": "2024-08-01T00:00:00.000Z"
+    "updatedAt": "2025-08-12T08:57:45.551Z"
   },
   {
     "id": "4",
@@ -24,5 +26,18 @@
     "isActive": true,
     "createdAt": "2024-08-01T00:00:00.000Z",
     "updatedAt": "2024-08-01T00:00:00.000Z"
+  },
+  {
+    "name": "1",
+    "emoji": "1",
+    "description": "1",
+    "category": "coffee",
+    "price": 10,
+    "inventory": 1,
+    "images": [],
+    "isActive": true,
+    "id": "1754988970456",
+    "createdAt": "2025-08-12T08:56:10.456Z",
+    "updatedAt": "2025-08-12T08:56:10.456Z"
   }
 ]

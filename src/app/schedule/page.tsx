@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SocialLinks from '@/components/SocialLinks';
 
 // 模擬擺攤行程資料
 const marketSchedule = [
@@ -62,27 +63,19 @@ const marketSchedule = [
 const permanentStores = [
   {
     id: 1,
-    name: '台北旗艦店',
-    address: '台北市中正區重慶南路一段100號',
-    phone: '02-2345-6789',
-    hours: '09:00 - 21:00',
-    services: ['現場選購', '宅配服務', '禮盒包裝', '品茶體驗']
+    name: '總店',
+    address: '嘉義縣梅山鄉太和村一鄰八號',
+    phone: '05-2561843',
+    hours: '08:00 - 18:00',
+    services: ['農場直營', '產地導覽體驗', '農產品現場挑選', '禮盒包裝服務', '農場導覽預約', '企業團購訂製']
   },
   {
     id: 2,
-    name: '台中分店',
-    address: '台中市西區台灣大道二段200號',
-    phone: '04-2345-6789',
-    hours: '10:00 - 20:00',
-    services: ['現場選購', '宅配服務', '農場導覽預約']
-  },
-  {
-    id: 3,
-    name: '高雄分店',
-    address: '高雄市前金區中正四路300號',
-    phone: '07-345-6789',
-    hours: '10:00 - 20:00',
-    services: ['現場選購', '團購服務', '企業訂購']
+    name: '嘉義店',
+    address: '嘉義市東區中山路218號',
+    phone: '05-2234567',
+    hours: '10:00 - 21:00',
+    services: ['市區便利據點', '完整產品展示', '快速取貨服務', '農場體驗預約', '宅配服務中心']
   }
 ];
 
@@ -338,9 +331,9 @@ export default function SchedulePage() {
           <p className="text-amber-100 mb-8 text-lg">
             我們也接受團購訂單和企業採購，歡迎來電洽詢客製化服務
           </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
+          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
             <a 
-              href="tel:02-1234-5678"
+              href="tel:05-2561843"
               className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               📞 立即來電詢問
@@ -351,6 +344,10 @@ export default function SchedulePage() {
             >
               🛒 線上訂購
             </a>
+            <div className="flex items-center space-x-3">
+              <span className="text-amber-100 text-sm">追蹤更多消息：</span>
+              <SocialLinks size="sm" />
+            </div>
           </div>
         </div>
       </div>

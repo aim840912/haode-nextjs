@@ -73,22 +73,5 @@
     "weatherNote": "室外攤位，注意天氣變化",
     "createdAt": "2024-08-01T00:00:00.000Z",
     "updatedAt": "2024-08-01T00:00:00.000Z"
-  },
-  {
-    "title": "1",
-    "location": "1",
-    "date": "2025-08-08",
-    "time": "1",
-    "status": "ongoing",
-    "products": [
-      "季節水果"
-    ],
-    "description": "1",
-    "contact": "0912-345-6781",
-    "specialOffer": "1",
-    "weatherNote": "1",
-    "id": "1754836278172",
-    "createdAt": "2025-08-10T14:31:18.172Z",
-    "updatedAt": "2025-08-10T14:31:18.172Z"
   }
 ]

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { locationService } from '@/services/locationService'
+import { reviewService } from '@/services/reviewService'
 
 export async function GET(
   request: NextRequest,
@@ -7,18 +7,18 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const location = await locationService.getLocationById(parseInt(id))
-    if (!location) {
+    const review = await reviewService.getReviewById(id)
+    if (!review) {
       return NextResponse.json(
-        { error: 'Location not found' },
+        { error: 'Review not found' },
         { status: 404 }
       )
     }
-    return NextResponse.json(location)
+    return NextResponse.json(review)
   } catch (error) {
-    console.error('Error fetching location:', error)
+    console.error('Error fetching review:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch location' },
+      { error: 'Failed to fetch review' },
       { status: 500 }
     )
   }
@@ -31,18 +31,12 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
-    const updatedLocation = await locationService.updateLocation(parseInt(id), body)
-    return NextResponse.json(updatedLocation)
+    const review = await reviewService.updateReview(id, body)
+    return NextResponse.json(review)
   } catch (error) {
-    if (error instanceof Error && error.message === 'Location not found') {
-      return NextResponse.json(
-        { error: 'Location not found' },
-        { status: 404 }
-      )
-    }
-    console.error('Error updating location:', error)
+    console.error('Error updating review:', error)
     return NextResponse.json(
-      { error: 'Failed to update location' },
+      { error: 'Failed to update review' },
       { status: 500 }
     )
   }
@@ -54,12 +48,12 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
-    await locationService.deleteLocation(parseInt(id))
+    await reviewService.deleteReview(id)
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting location:', error)
+    console.error('Error deleting review:', error)
     return NextResponse.json(
-      { error: 'Failed to delete location' },
+      { error: 'Failed to delete review' },
       { status: 500 }
     )
   }

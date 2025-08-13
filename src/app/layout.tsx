@@ -1,11 +1,33 @@
 import type { Metadata } from "next";
+import { Noto_Sans_TC, Noto_Serif_TC, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import { AuthProvider } from "@/lib/auth-context";
+import { CartProvider } from "@/lib/cart-context";
+
+const notoSansTC = Noto_Sans_TC({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700", "900"],
+  variable: "--font-noto-sans-tc",
+  display: "swap",
+});
+
+const notoSerifTC = Noto_Serif_TC({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "900"],
+  variable: "--font-noto-serif-tc",
+  display: "swap",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "豪德茶業 Haude Tea - 傳承百年茶文化",
-  description: "豪德茶業創立於1862年，專營紅肉李果園、精品咖啡等優質農產品，致力於傳承百年農業文化",
+  title: "豪德農場 Haude Farm - 嘉義梅山優質農產",
+  description: "座落梅山群峰之間的豪德農場，以自然農法栽培紅肉李、高山茶葉、季節水果等優質農產品，提供農場導覽與四季體驗活動",
 };
 
 export default function RootLayout({
@@ -15,10 +37,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh">
-      <body>
+      <body className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased`}>
         <AuthProvider>
-          <Header />
-          {children}
+          <CartProvider>
+            <Header />
+            {children}
+          </CartProvider>
         </AuthProvider>
       </body>
     </html>

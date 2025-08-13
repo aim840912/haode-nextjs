@@ -14,6 +14,7 @@ export default function AddProduct() {
     category: 'fruits' as const,
     price: 0,
     inventory: 0,
+    images: [''],
     isActive: true
   })
 
@@ -27,7 +28,7 @@ export default function AddProduct() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          images: []
+          images: formData.images.filter(img => img.trim() !== '')
         })
       })
 
@@ -71,7 +72,7 @@ export default function AddProduct() {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
               產品名稱 *
             </label>
             <input
@@ -80,13 +81,13 @@ export default function AddProduct() {
               value={formData.name}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               placeholder="輸入產品名稱"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
               產品圖示 (Emoji) *
             </label>
             <input
@@ -95,14 +96,14 @@ export default function AddProduct() {
               value={formData.emoji}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               placeholder="輸入 emoji，例如：🍑"
               maxLength={2}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
               產品描述 *
             </label>
             <textarea
@@ -111,13 +112,13 @@ export default function AddProduct() {
               onChange={handleInputChange}
               required
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               placeholder="輸入產品描述"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
               產品分類 *
             </label>
             <select
@@ -125,7 +126,7 @@ export default function AddProduct() {
               value={formData.category}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
             >
               <option value="fruits">水果類</option>
               <option value="coffee">咖啡類</option>
@@ -136,7 +137,7 @@ export default function AddProduct() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
                 價格 (NT$) *
               </label>
               <input
@@ -147,13 +148,13 @@ export default function AddProduct() {
                 required
                 min="0"
                 step="10"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                 placeholder="0"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-semibold text-gray-800 mb-2">
                 庫存數量 *
               </label>
               <input
@@ -163,7 +164,7 @@ export default function AddProduct() {
                 onChange={handleInputChange}
                 required
                 min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                 placeholder="0"
               />
             </div>
@@ -185,7 +186,7 @@ export default function AddProduct() {
           <div className="flex justify-end space-x-4 pt-6">
             <Link
               href="/admin/products"
-              className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 border border-gray-300 rounded-md text-gray-800 font-medium hover:bg-gray-50 transition-colors"
             >
               取消
             </Link>

@@ -17,6 +17,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     category: 'fruits' as 'fruits' | 'coffee' | 'vegetables' | 'tea',
     price: 0,
     inventory: 0,
+    images: [''],
     isActive: true
   })
 
@@ -32,6 +33,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
           category: product.category,
           price: product.price,
           inventory: product.inventory,
+          images: product.images.length > 0 ? product.images : [''],
           isActive: product.isActive
         })
       } else {
@@ -63,7 +65,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          images: []
+          images: formData.images.filter(img => img.trim() !== '')
         })
       })
 
@@ -87,6 +89,27 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       [name]: type === 'number' ? Number(value) : 
               type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
               value
+    }))
+  }
+
+  const addImageField = () => {
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, '']
+    }))
+  }
+
+  const removeImageField = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateImageField = (index: number, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.map((img, i) => i === index ? value : img)
     }))
   }
 
@@ -210,6 +233,66 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                 placeholder="0"
               />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              產品圖片
+            </label>
+            <p className="text-xs text-gray-600 mb-3">
+              支援 JPG、PNG、WebP 格式的圖片 URL。建議圖片尺寸為 400x400 像素以上。
+            </p>
+            <div className="space-y-4">
+              {formData.images.map((image, index) => (
+                <div key={index} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="url"
+                      value={image}
+                      onChange={(e) => updateImageField(index, e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                      placeholder="輸入圖片 URL"
+                    />
+                    {formData.images.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeImageField(index)}
+                        className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                        title="刪除此圖片"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                  {image.trim() && (
+                    <div className="mt-2">
+                      <div className="text-xs text-gray-600 mb-2">圖片預覽：</div>
+                      <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                        <img
+                          src={image}
+                          alt={`產品圖片 ${index + 1}`}
+                          className="max-w-full max-h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                            const parent = (e.target as HTMLImageElement).parentElement;
+                            if (parent) {
+                              parent.innerHTML = '<div class="text-red-500 text-xs text-center p-2">圖片載入失敗<br/>請檢查 URL</div>';
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addImageField}
+                className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors text-sm"
+              >
+                + 新增圖片
+              </button>
             </div>
           </div>
 

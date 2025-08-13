@@ -9,9 +9,9 @@ const MOCK_USERS: (User & { password: string })[] = [
     name: '管理員',
     phone: '0912-345-678',
     address: {
-      street: '台北市信義區信義路五段7號',
-      city: '台北市',
-      postalCode: '110',
+      street: '嘉義縣梅山鄉太和村一鄰八號',
+      city: '嘉義縣',
+      postalCode: '603',
       country: '台灣'
     },
     role: 'admin',
