@@ -9,6 +9,19 @@ export default function AddCulture() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const { user, isLoading } = useAuth()
+  
+  const [formData, setFormData] = useState({
+    title: '',
+    subtitle: '',
+    description: '',
+    color: 'bg-gradient-to-br from-amber-400 to-amber-600',
+    height: 'h-64',
+    textColor: 'text-white',
+    emoji: '🎨',
+    imageUrl: ''  // 改名為 imageUrl
+  })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
 
   // 載入中狀態
   if (isLoading) {
@@ -48,18 +61,6 @@ export default function AddCulture() {
       </div>
     )
   }
-  const [formData, setFormData] = useState({
-    title: '',
-    subtitle: '',
-    description: '',
-    color: 'bg-gradient-to-br from-amber-400 to-amber-600',
-    height: 'h-64',
-    textColor: 'text-white',
-    emoji: '🎨',
-    imageUrl: ''  // 改名為 imageUrl
-  })
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>('')
 
   const colorOptions = [
     { name: '琥珀色', value: 'bg-gradient-to-br from-amber-400 to-amber-600', preview: 'from-amber-400 to-amber-600' },

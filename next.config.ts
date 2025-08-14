@@ -50,7 +50,7 @@ const nextConfig: NextConfig = {
   // 嚴格模式
   reactStrictMode: true,
   
-  // ESLint 設定 - 暫時停用以允許部署
+  // ESLint 設定 - 暫時停用以完成部署，後續逐步修正
   eslint: {
     ignoreDuringBuilds: true,
   },

@@ -9,6 +9,20 @@ export default function AddFarmTourActivity() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const { user, isLoading } = useAuth()
+  
+  const [formData, setFormData] = useState({
+    season: '春季',
+    months: '',
+    title: '',
+    highlight: '',
+    activities: [''],
+    price: 0,
+    duration: '',
+    includes: [''],
+    image: '🌱',
+    available: true,
+    note: ''
+  })
 
   // 載入中狀態
   if (isLoading) {
@@ -48,19 +62,6 @@ export default function AddFarmTourActivity() {
       </div>
     )
   }
-  const [formData, setFormData] = useState({
-    season: '春季',
-    months: '',
-    title: '',
-    highlight: '',
-    activities: [''],
-    price: 0,
-    duration: '',
-    includes: [''],
-    image: '🌱',
-    available: true,
-    note: ''
-  })
 
   const seasonOptions = [
     { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
