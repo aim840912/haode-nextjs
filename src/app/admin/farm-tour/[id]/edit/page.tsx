@@ -12,6 +12,39 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   const [initialLoading, setInitialLoading] = useState(true)
   const [activityId, setActivityId] = useState<string>('')
   const { user, isLoading } = useAuth()
+  
+  const [formData, setFormData] = useState({
+    season: '春季',
+    months: '',
+    title: '',
+    highlight: '',
+    activities: [''],
+    price: 0,
+    duration: '',
+    includes: [''],
+    image: '🌱',
+    available: true,
+    note: ''
+  })
+
+  const seasonOptions = [
+    { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
+    { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
+    { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
+    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' }
+  ]
+
+  const emojiOptions = [
+    '🌱', '🌸', '🍑', '🍎', '🫖', '🌾', '🌿', '🍃',
+    '🌽', '🥕', '🍓', '🍄', '🌻', '☘️', '🦋', '🐝'
+  ]
+
+  useEffect(() => {
+    params.then(({ id }) => {
+      setActivityId(id)
+      fetchActivity(id)
+    })
+  }, [])
 
   // 載入中狀態
   if (isLoading || initialLoading) {
@@ -51,38 +84,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
       </div>
     )
   }
-  const [formData, setFormData] = useState({
-    season: '春季',
-    months: '',
-    title: '',
-    highlight: '',
-    activities: [''],
-    price: 0,
-    duration: '',
-    includes: [''],
-    image: '🌱',
-    available: true,
-    note: ''
-  })
-
-  const seasonOptions = [
-    { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
-    { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
-    { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
-    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' }
-  ]
-
-  const emojiOptions = [
-    '🌱', '🌸', '🍑', '🍎', '🫖', '🌾', '🌿', '🍃',
-    '🌽', '🥕', '🍓', '🍄', '🌻', '☘️', '🦋', '🐝'
-  ]
-
-  useEffect(() => {
-    params.then(({ id }) => {
-      setActivityId(id)
-      fetchActivity(id)
-    })
-  }, [])
 
   const fetchActivity = async (id: string) => {
     try {

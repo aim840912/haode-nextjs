@@ -12,6 +12,23 @@ export default function AddSchedule() {
   const [products, setProducts] = useState<Product[]>([])
   const { user, isLoading } = useAuth()
 
+  const [formData, setFormData] = useState({
+    title: '',
+    location: '',
+    date: '',
+    time: '',
+    status: 'upcoming' as const,
+    products: [] as string[],
+    description: '',
+    contact: '0912-345-678',
+    specialOffer: '',
+    weatherNote: ''
+  })
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
   // 載入中狀態
   if (isLoading) {
     return (
@@ -50,22 +67,6 @@ export default function AddSchedule() {
       </div>
     )
   }
-  const [formData, setFormData] = useState({
-    title: '',
-    location: '',
-    date: '',
-    time: '',
-    status: 'upcoming' as const,
-    products: [] as string[],
-    description: '',
-    contact: '0912-345-678',
-    specialOffer: '',
-    weatherNote: ''
-  })
-
-  useEffect(() => {
-    fetchProducts()
-  }, [])
 
   const fetchProducts = async () => {
     try {

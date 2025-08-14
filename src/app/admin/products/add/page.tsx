@@ -10,6 +10,17 @@ export default function AddProduct() {
   const [loading, setLoading] = useState(false)
   const { user, isLoading } = useAuth()
 
+  const [formData, setFormData] = useState({
+    name: '',
+    emoji: '',
+    description: '',
+    category: 'fruits' as const,
+    price: 0,
+    inventory: 0,
+    images: [''],
+    isActive: true
+  })
+
   // 載入中狀態
   if (isLoading) {
     return (
@@ -48,16 +59,6 @@ export default function AddProduct() {
       </div>
     )
   }
-  const [formData, setFormData] = useState({
-    name: '',
-    emoji: '',
-    description: '',
-    category: 'fruits' as const,
-    price: 0,
-    inventory: 0,
-    images: [''],
-    isActive: true
-  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

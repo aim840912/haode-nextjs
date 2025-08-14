@@ -10,6 +10,17 @@ export default function AddNews() {
   const [loading, setLoading] = useState(false)
   const { user, isLoading } = useAuth()
 
+  const [formData, setFormData] = useState({
+    title: '',
+    summary: '',
+    content: '',
+    author: '豪德農場',
+    category: '產品動態',
+    tags: '',
+    image: '📰',
+    featured: false
+  })
+
   // 載入中狀態
   if (isLoading) {
     return (
@@ -48,16 +59,6 @@ export default function AddNews() {
       </div>
     )
   }
-  const [formData, setFormData] = useState({
-    title: '',
-    summary: '',
-    content: '',
-    author: '豪德農場',
-    category: '產品動態',
-    tags: '',
-    image: '📰',
-    featured: false
-  })
 
   const categories = [
     '產品動態',
