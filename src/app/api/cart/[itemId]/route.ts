@@ -4,7 +4,7 @@ import { UpdateCartItemRequest } from '@/types/cart'
 // 更新購物車商品數量
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { itemId: string } }
+  { params }: { params: Promise<{ itemId: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -16,7 +16,7 @@ export async function PUT(
       )
     }
     
-    const { itemId } = params
+    const { itemId } = await params
     const body: UpdateCartItemRequest = await request.json()
     
     if (!body.quantity || body.quantity <= 0) {
@@ -67,7 +67,7 @@ export async function PUT(
 // 從購物車移除商品
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { itemId: string } }
+  { params }: { params: Promise<{ itemId: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -79,7 +79,7 @@ export async function DELETE(
       )
     }
     
-    const { itemId } = params
+    const { itemId } = await params
     
     // TODO: 實際移除商品邏輯
     // - 驗證商品屬於該用戶

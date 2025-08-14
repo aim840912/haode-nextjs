@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/Header";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
+import { ToastProvider } from "@/components/Toast";
+import VisitorTracker from "@/components/VisitorTracker";
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ["latin"],
@@ -38,12 +40,16 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased`}>
-        <AuthProvider>
-          <CartProvider>
-            <Header />
-            {children}
-          </CartProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <VisitorTracker>
+                <Header />
+                {children}
+              </VisitorTracker>
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

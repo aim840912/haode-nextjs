@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // 獲取單一訂單詳細資訊
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -15,7 +15,7 @@ export async function GET(
       )
     }
     
-    const { id } = params
+    const { id } = await params
     
     // TODO: 從資料庫查詢訂單
     // - 驗證訂單屬於該用戶

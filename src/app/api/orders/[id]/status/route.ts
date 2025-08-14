@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // 更新訂單狀態 (管理員功能)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const authHeader = request.headers.get('authorization')
@@ -17,7 +17,7 @@ export async function PUT(
     
     // TODO: 驗證用戶是否為管理員
     
-    const { id } = params
+    const { id } = await params
     const { status, trackingNumber } = await request.json()
     
     const validStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']

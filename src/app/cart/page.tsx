@@ -2,20 +2,50 @@
 
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/components/Toast';
 import Link from 'next/link';
-import Image from 'next/image';
+import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner';
+import OptimizedImage from '@/components/OptimizedImage';
+import { useState } from 'react';
 
 export default function CartPage() {
   const { cart, updateItemQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart();
   const { user, isLoading } = useAuth();
+  const { success, error } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     if (!user) {
-      alert('請先登入才能進行結帳');
+      error('請先登入', '您需要登入才能進行結帳');
       return;
     }
-    // 這裡可以添加結帳邏輯或跳轉到結帳頁面
-    alert('結帳功能開發中...');
+    
+    if (totalItems === 0) {
+      error('購物車空空的', '請先加入商品再結帳');
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // TODO: 實際結帳邏輯
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 模擬 API 呼叫
+      success('準備結帳', '結帐功能即將推出，敬請期待！');
+    } catch (err) {
+      error('結帳失敗', '系統暫時無法處理，請稍後再試');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleClearCart = async () => {
+    if (!confirm('確定要清空購物車嗎？')) return;
+    
+    try {
+      await clearCart();
+      success('購物車已清空', '所有商品已移除');
+    } catch (err) {
+      error('清空失敗', '系統暫時無法處理，請稍後再試');
+    }
   };
 
   // 載入中狀態
@@ -23,8 +53,8 @@ export default function CartPage() {
     return (
       <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-gray-600">載入購物車...</p>
         </div>
       </div>
     );
@@ -105,12 +135,13 @@ export default function CartPage() {
                   <div className="flex items-start space-x-4">
                     {/* 商品圖片 */}
                     <div className="flex-shrink-0 w-20 h-20 bg-gray-200 rounded-lg overflow-hidden">
-                      <Image
-                        src={item.product.imageUrl || '/api/placeholder/80/80'}
+                      <OptimizedImage
+                        src={item.product.images?.[0] || '/api/placeholder/80/80'}
                         alt={item.product.name}
                         width={80}
                         height={80}
-                        className="w-full h-full object-cover"
+                        className="object-cover"
+                        sizes="80px"
                       />
                     </div>
 
@@ -184,12 +215,13 @@ export default function CartPage() {
                 </div>
               </div>
 
-              <button 
+              <LoadingButton
+                loading={isProcessing}
                 onClick={handleCheckout}
                 className="w-full bg-amber-900 text-white py-3 rounded-lg font-semibold hover:bg-amber-800 transition-colors mb-4"
               >
                 前往結帳
-              </button>
+              </LoadingButton>
 
               <Link 
                 href="/products"

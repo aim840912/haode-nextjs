@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginPage() {
     setError('');
     
     try {
-      await login({ email, password });
+      await login({ email, password, rememberMe });
       // 強制重新載入頁面以確保狀態完全更新
       window.location.href = '/';
     } catch (err) {
@@ -105,6 +106,8 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">

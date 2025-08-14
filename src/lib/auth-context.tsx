@@ -30,19 +30,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 從 localStorage 恢復登入狀態
+  // 從 localStorage 或 sessionStorage 恢復登入狀態
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    const userData = localStorage.getItem('auth_user');
+    let token = localStorage.getItem('auth_token');
+    let userData = localStorage.getItem('auth_user');
+    let storage: Storage = localStorage;
+    
+    // 如果 localStorage 中沒有，檢查 sessionStorage
+    if (!token || !userData) {
+      token = sessionStorage.getItem('auth_token');
+      userData = sessionStorage.getItem('auth_user');
+      storage = sessionStorage;
+    }
     
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
       } catch (error) {
-        // 如果資料無效，清除 localStorage
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
+        // 如果資料無效，清除存儲
+        storage.removeItem('auth_token');
+        storage.removeItem('auth_user');
       }
     }
     
@@ -68,9 +76,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       const data: AuthResponse = await response.json();
       
-      // 儲存到 localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
+      // 根據 rememberMe 決定使用哪種存儲
+      const storage = credentials.rememberMe ? localStorage : sessionStorage;
+      
+      // 清除其他存儲中的舊資料
+      const otherStorage = credentials.rememberMe ? sessionStorage : localStorage;
+      otherStorage.removeItem('auth_token');
+      otherStorage.removeItem('auth_user');
+      
+      // 儲存到選定的存儲
+      storage.setItem('auth_token', data.token);
+      storage.setItem('auth_user', JSON.stringify(data.user));
       
       setUser(data.user);
       return data;
@@ -114,8 +130,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const logout = () => {
+    // 清除兩種存儲中的資料
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
+    sessionStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_user');
     setUser(null);
   };
 

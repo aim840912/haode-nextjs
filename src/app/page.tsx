@@ -5,6 +5,8 @@ import Link from 'next/link'
 import ProductsSection from '@/components/ProductsSection'
 import CustomerReviews from '@/components/CustomerReviews'
 import SocialLinks from '@/components/SocialLinks'
+import VisitorCounter from '@/components/VisitorCounter'
+import OptimizedImage from '@/components/OptimizedImage'
 
 export default function Home() {
   // 可用的圖片池
@@ -61,10 +63,13 @@ export default function Home() {
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
                   {featureImages[0] && (
-                    <img 
+                    <OptimizedImage 
                       src={featureImages[0]} 
-                      alt="精選農產" 
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      alt="精選農產"
+                      width={128}
+                      height={128}
+                      className="object-cover hover:scale-110 transition-transform duration-300"
+                      sizes="128px"
                     />
                   )}
                   {!featureImages[0] && (
@@ -79,10 +84,13 @@ export default function Home() {
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
                   {featureImages[1] && (
-                    <img 
+                    <OptimizedImage 
                       src={featureImages[1]} 
-                      alt="傳統農法" 
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      alt="傳統農法"
+                      width={128}
+                      height={128}
+                      className="object-cover hover:scale-110 transition-transform duration-300"
+                      sizes="128px"
                     />
                   )}
                   {!featureImages[1] && (
@@ -97,10 +105,13 @@ export default function Home() {
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
                   {featureImages[2] && (
-                    <img 
+                    <OptimizedImage 
                       src={featureImages[2]} 
-                      alt="農業文化" 
-                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                      alt="農業文化"
+                      width={128}
+                      height={128}
+                      className="object-cover hover:scale-110 transition-transform duration-300"
+                      sizes="128px"
                     />
                   )}
                   {!featureImages[2] && (
@@ -370,8 +381,13 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="border-t border-amber-800 mt-12 pt-8 text-center text-amber-100">
-            <p>&copy; 2024 豪德茶業 Haude Tea Company. 版權所有</p>
+          <div className="border-t border-amber-800 mt-12 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <p className="text-amber-100">&copy; 2024 豪德茶業 Haude Tea Company. 版權所有</p>
+              <div className="mt-4 md:mt-0">
+                <VisitorCounter className="text-amber-100" />
+              </div>
+            </div>
           </div>
         </div>
       </footer>

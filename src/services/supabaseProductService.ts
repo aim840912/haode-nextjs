@@ -92,11 +92,12 @@ class SupabaseProductService implements ProductService {
     return {
       id: dbProduct.id,
       name: dbProduct.name,
+      emoji: dbProduct.emoji || '🍓',
       description: dbProduct.description,
-      price: parseFloat(dbProduct.price),
       category: dbProduct.category,
-      imageUrl: dbProduct.image_url,
-      stock: dbProduct.stock,
+      price: parseFloat(dbProduct.price),
+      images: dbProduct.image_url ? [dbProduct.image_url] : [],
+      inventory: dbProduct.stock,
       isActive: dbProduct.is_active,
       createdAt: dbProduct.created_at,
       updatedAt: dbProduct.updated_at

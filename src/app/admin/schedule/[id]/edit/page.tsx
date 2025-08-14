@@ -58,7 +58,7 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
     location: '',
     date: '',
     time: '',
-    status: 'upcoming' as const,
+    status: 'upcoming' as 'upcoming' | 'ongoing' | 'completed',
     products: [] as string[],
     description: '',
     contact: '',

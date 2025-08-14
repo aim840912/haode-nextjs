@@ -101,7 +101,7 @@ export default function ProductsPage() {
 
   const addToCart = (product: any) => {
     if (!user) {
-      alert('請先登入才能使用購物車功能');
+      window.location.href = '/login';
       return;
     }
 
@@ -109,11 +109,12 @@ export default function ProductsPage() {
     const productData = {
       id: product.id.toString(),
       name: product.name,
+      emoji: product.category === '紅肉李果園' ? '🍑' : product.category === '精品咖啡' ? '☕' : product.category === '季節水果' ? '🍓' : '🥬',
       description: product.description,
+      category: 'fruits' as const, // 暫時固定為 fruits，實際應該根據產品分類映射
       price: product.price,
-      category: product.category,
-      imageUrl: product.image,
-      stock: product.inStock ? 100 : 0, // 模擬庫存數量
+      images: [product.image],
+      inventory: product.inStock ? 100 : 0, // 模擬庫存數量
       isActive: product.inStock,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -359,7 +360,12 @@ export default function ProductsPage() {
                     className="w-full bg-amber-900 text-white py-4 rounded-lg font-semibold text-lg hover:bg-amber-800 transition-colors"
                     disabled={!selectedProduct.inStock}
                   >
-                    {selectedProduct.inStock ? `加入購物車 - NT$ ${selectedProduct.price * quantity}` : '暫時缺貨'}
+                    {!selectedProduct.inStock 
+                      ? '暫時缺貨' 
+                      : !user 
+                        ? '請先登入' 
+                        : `加入購物車 - NT$ ${selectedProduct.price * quantity}`
+                    }
                   </button>
                 </div>
               </div>
