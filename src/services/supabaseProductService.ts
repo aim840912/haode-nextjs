@@ -88,31 +88,31 @@ class SupabaseProductService implements ProductService {
     }
   }
 
-  private transformFromDB(dbProduct: any): Product {
+  private transformFromDB(dbProduct: Record<string, unknown>): Product {
     return {
-      id: dbProduct.id,
-      name: dbProduct.name,
-      emoji: dbProduct.emoji || '🍓',
-      description: dbProduct.description,
-      category: dbProduct.category,
-      price: parseFloat(dbProduct.price),
-      images: dbProduct.image_url ? [dbProduct.image_url] : [],
-      inventory: dbProduct.stock,
-      isActive: dbProduct.is_active,
-      createdAt: dbProduct.created_at,
-      updatedAt: dbProduct.updated_at
+      id: dbProduct.id as string,
+      name: dbProduct.name as string,
+      emoji: (dbProduct.emoji as string) || '🍓',
+      description: dbProduct.description as string,
+      category: dbProduct.category as 'fruits' | 'coffee' | 'vegetables' | 'tea',
+      price: parseFloat(dbProduct.price as string),
+      images: dbProduct.image_url ? [dbProduct.image_url as string] : [],
+      inventory: dbProduct.stock as number,
+      isActive: dbProduct.is_active as boolean,
+      createdAt: dbProduct.created_at as string,
+      updatedAt: dbProduct.updated_at as string
     }
   }
 
-  private transformToDB(product: any): any {
-    const transformed: any = {}
+  private transformToDB(product: Partial<Product>): Record<string, unknown> {
+    const transformed: Record<string, unknown> = {}
     
     if (product.name !== undefined) transformed.name = product.name
     if (product.description !== undefined) transformed.description = product.description
     if (product.price !== undefined) transformed.price = product.price
     if (product.category !== undefined) transformed.category = product.category
-    if (product.imageUrl !== undefined) transformed.image_url = product.imageUrl
-    if (product.stock !== undefined) transformed.stock = product.stock
+    if (product.images && product.images.length > 0) transformed.image_url = product.images[0]
+    if (product.inventory !== undefined) transformed.stock = product.inventory
     if (product.isActive !== undefined) transformed.is_active = product.isActive
     
     return transformed

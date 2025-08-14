@@ -1,7 +1,7 @@
 import { Review, ReviewSubmission, ReviewService } from '@/types/review'
 
 // 模擬資料庫存儲
-let reviews: Review[] = [
+const reviews: Review[] = [
   {
     id: '1',
     customerName: '陳小華',

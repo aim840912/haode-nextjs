@@ -96,31 +96,31 @@ class SupabaseLocationService implements LocationService {
     }
   }
 
-  private transformFromDB(dbLocation: any): Location {
+  private transformFromDB(dbLocation: Record<string, unknown>): Location {
     return {
-      id: dbLocation.id,
-      name: dbLocation.name,
-      title: dbLocation.title,
-      address: dbLocation.address,
-      landmark: dbLocation.landmark,
-      phone: dbLocation.phone,
-      lineId: dbLocation.line_id,
-      hours: dbLocation.hours,
-      closedDays: dbLocation.closed_days,
-      parking: dbLocation.parking,
-      publicTransport: dbLocation.public_transport,
-      features: dbLocation.features || [],
-      specialties: dbLocation.specialties || [],
-      coordinates: dbLocation.coordinates,
-      image: dbLocation.image,
-      isMain: dbLocation.is_main,
-      createdAt: dbLocation.created_at,
-      updatedAt: dbLocation.updated_at
+      id: dbLocation.id as number,
+      name: dbLocation.name as string,
+      title: dbLocation.title as string,
+      address: dbLocation.address as string,
+      landmark: dbLocation.landmark as string,
+      phone: dbLocation.phone as string,
+      lineId: dbLocation.line_id as string,
+      hours: dbLocation.hours as string,
+      closedDays: dbLocation.closed_days as string,
+      parking: dbLocation.parking as string,
+      publicTransport: dbLocation.public_transport as string,
+      features: (dbLocation.features as string[]) || [],
+      specialties: (dbLocation.specialties as string[]) || [],
+      coordinates: dbLocation.coordinates as { lat: number; lng: number },
+      image: dbLocation.image as string,
+      isMain: dbLocation.is_main as boolean,
+      createdAt: dbLocation.created_at as string,
+      updatedAt: dbLocation.updated_at as string
     }
   }
 
-  private transformToDB(location: any): any {
-    const transformed: any = {}
+  private transformToDB(location: Partial<Location>): Record<string, unknown> {
+    const transformed: Record<string, unknown> = {}
     
     if (location.name !== undefined) transformed.name = location.name
     if (location.title !== undefined) transformed.title = location.title
