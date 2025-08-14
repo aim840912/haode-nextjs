@@ -4,14 +4,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "devCommand": "npm run dev",
-  "functions": {
-    "app/**/*.ts": {
-      "runtime": "nodejs18.x"
-    },
-    "app/**/*.tsx": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
