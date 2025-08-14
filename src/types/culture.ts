@@ -7,6 +7,7 @@ export interface CultureItem {
   height: string
   textColor: string
   emoji: string
+  imageUrl?: string  // 新增圖片 URL 欄位
   createdAt: string
   updatedAt: string
 }

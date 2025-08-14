@@ -56,7 +56,7 @@ export default function AddCulture() {
     height: 'h-64',
     textColor: 'text-white',
     emoji: '🎨',
-    image: ''
+    imageUrl: ''  // 改名為 imageUrl
   })
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
@@ -203,10 +203,38 @@ export default function AddCulture() {
               />
             </div>
 
+            {/* 圖片 URL */}
+            <div>
+              <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-900 mb-2">
+                典藏圖片 URL
+              </label>
+              <input
+                type="url"
+                id="imageUrl"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
+                placeholder="https://example.com/image.jpg (選填，留空則使用色塊背景)"
+              />
+              {formData.imageUrl && (
+                <div className="mt-2">
+                  <img 
+                    src={formData.imageUrl} 
+                    alt="圖片預覽" 
+                    className="h-32 w-32 object-cover rounded-lg border border-gray-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+
             {/* 圖片上傳 */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                典藏圖片
+                或上傳圖片檔案
               </label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-orange-400 transition-colors">
                 <div className="space-y-1 text-center">
@@ -386,39 +414,55 @@ export default function AddCulture() {
           <div className="lg:sticky lg:top-8">
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-white rounded-lg shadow-md p-4">
-              <div className={`${formData.color} ${formData.height} p-6 rounded-lg relative overflow-hidden`}>
-                {/* 背景圖片 */}
-                {formData.image && (
-                  <div className="absolute inset-0 rounded-lg">
+              <div className={`relative ${formData.height} rounded-lg overflow-hidden`}>
+                {formData.imageUrl ? (
+                  // 顯示圖片背景
+                  <div className="relative w-full h-full">
                     <img 
-                      src={formData.image} 
+                      src={formData.imageUrl} 
                       alt="背景圖片" 
-                      className="w-full h-full object-cover rounded-lg opacity-30"
+                      className="w-full h-full object-cover rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-20 rounded-lg"></div>
+                    <div className="absolute inset-0 bg-black bg-opacity-30 p-6 flex flex-col justify-between">
+                      <div>
+                        <div className="text-4xl mb-3">{formData.emoji}</div>
+                        <div className="text-white text-sm opacity-90 mb-2">
+                          {formData.subtitle || '副標題預覽'}
+                        </div>
+                        <h3 className="text-white text-xl font-bold mb-3 drop-shadow-lg">
+                          {formData.title || '標題預覽'}
+                        </h3>
+                        <p className="text-white text-sm opacity-90 leading-relaxed drop-shadow">
+                          {formData.description || '描述內容預覽...'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // 顯示色塊背景
+                  <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
+                    <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
+                      <div>
+                        <div className="text-4xl mb-3">{formData.emoji}</div>
+                        <div className="text-sm opacity-80 mb-2">
+                          {formData.subtitle || '副標題預覽'}
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">
+                          {formData.title || '標題預覽'}
+                        </h3>
+                        <p className="text-sm opacity-90 leading-relaxed">
+                          {formData.description || '描述內容預覽...'}
+                        </p>
+                      </div>
+                      <div className="mt-4">
+                        <div className="inline-flex items-center text-sm opacity-80">
+                          <span className="mr-2">📖</span>
+                          了解更多
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
-                
-                <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
-                  <div>
-                    <div className="text-4xl mb-3">{formData.emoji}</div>
-                    <div className="text-sm opacity-80 mb-2">
-                      {formData.subtitle || '副標題預覽'}
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">
-                      {formData.title || '標題預覽'}
-                    </h3>
-                    <p className="text-sm opacity-90 leading-relaxed">
-                      {formData.description || '描述內容預覽...'}
-                    </p>
-                  </div>
-                  <div className="mt-4">
-                    <div className="inline-flex items-center text-sm opacity-80">
-                      <span className="mr-2">📖</span>
-                      了解更多
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

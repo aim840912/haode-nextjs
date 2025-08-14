@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import OptimizedImage from '@/components/OptimizedImage'
 
 export default function CultureAdmin() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])
@@ -93,15 +94,42 @@ export default function CultureAdmin() {
           {cultureItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               {/* Preview Card */}
-              <div className={`${item.color} ${item.height} p-4 flex flex-col justify-between`}>
-                <div>
-                  <div className="text-3xl mb-2">{item.emoji}</div>
-                  <div className={`${item.textColor} text-xs opacity-80 mb-1`}>{item.subtitle}</div>
-                  <h3 className={`${item.textColor} text-sm font-bold mb-2`}>{item.title}</h3>
-                  <p className={`${item.textColor} text-xs opacity-90 leading-relaxed line-clamp-3`}>
-                    {item.description}
-                  </p>
-                </div>
+              <div className={`relative ${item.height} overflow-hidden`}>
+                {item.imageUrl ? (
+                  // 顯示實際圖片
+                  <div className="relative w-full h-full">
+                    <OptimizedImage
+                      src={item.imageUrl}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    {/* 圖片上的文字覆蓋層 */}
+                    <div className="absolute inset-0 bg-black bg-opacity-30 p-4 flex flex-col justify-between">
+                      <div>
+                        <div className="text-3xl mb-2">{item.emoji}</div>
+                        <div className="text-white text-xs opacity-90 mb-1">{item.subtitle}</div>
+                        <h3 className="text-white text-sm font-bold mb-2 drop-shadow-lg">{item.title}</h3>
+                        <p className="text-white text-xs opacity-90 leading-relaxed line-clamp-3 drop-shadow">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // 沒有圖片時顯示原本的色塊設計
+                  <div className={`${item.color} h-full p-4 flex flex-col justify-between`}>
+                    <div>
+                      <div className="text-3xl mb-2">{item.emoji}</div>
+                      <div className={`${item.textColor} text-xs opacity-80 mb-1`}>{item.subtitle}</div>
+                      <h3 className={`${item.textColor} text-sm font-bold mb-2`}>{item.title}</h3>
+                      <p className={`${item.textColor} text-xs opacity-90 leading-relaxed line-clamp-3`}>
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Controls */}
