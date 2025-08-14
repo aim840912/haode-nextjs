@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function CultureAdmin() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchCultureItems()
@@ -25,6 +27,11 @@ export default function CultureAdmin() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     if (!confirm('確定要刪除此文化內容嗎？')) return
     
     try {
@@ -58,12 +65,14 @@ export default function CultureAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">文化典藏管理</h1>
           <div className="space-x-4">
-            <Link 
-              href="/admin/culture/add"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              新增典藏內容
-            </Link>
+            {user && (
+              <Link 
+                href="/admin/culture/add"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                新增典藏內容
+              </Link>
+            )}
             <Link 
               href="/culture"
               className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
@@ -102,20 +111,26 @@ export default function CultureAdmin() {
                   <span>高度：{item.height}</span>
                 </div>
                 
-                <div className="flex space-x-2">
-                  <Link
-                    href={`/admin/culture/${item.id}/edit`}
-                    className="flex-1 bg-orange-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-orange-700 transition-colors"
-                  >
-                    編輯
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
-                  >
-                    刪除
-                  </button>
-                </div>
+                {user ? (
+                  <div className="flex space-x-2">
+                    <Link
+                      href={`/admin/culture/${item.id}/edit`}
+                      className="flex-1 bg-orange-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-orange-700 transition-colors"
+                    >
+                      編輯
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
+                    >
+                      刪除
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-400 text-sm py-2">
+                    需要登入才能編輯
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -124,12 +139,14 @@ export default function CultureAdmin() {
         {cultureItems.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">尚無典藏內容</p>
-            <Link 
-              href="/admin/culture/add"
-              className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              新增第一個典藏內容
-            </Link>
+            {user && (
+              <Link 
+                href="/admin/culture/add"
+                className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                新增第一個典藏內容
+              </Link>
+            )}
           </div>
         )}
 

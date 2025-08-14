@@ -28,16 +28,74 @@
     "updatedAt": "2024-08-01T00:00:00.000Z"
   },
   {
-    "name": "1",
-    "emoji": "1",
-    "description": "1",
-    "category": "coffee",
-    "price": 10,
-    "inventory": 1,
-    "images": [],
+    "id": "5",
+    "name": "梅山紅肉李",
+    "emoji": "🍑",
+    "description": "梅山特產紅肉李，酸甜口感，營養豐富，產地直送新鮮品質",
+    "category": "fruits",
+    "price": 450,
+    "images": [
+      "/images/culture/red_plum_1.jpg",
+      "/images/culture/red_plum_2.jpg"
+    ],
+    "inventory": 50,
     "isActive": true,
-    "id": "1754988970456",
-    "createdAt": "2025-08-12T08:56:10.456Z",
-    "updatedAt": "2025-08-12T08:56:10.456Z"
+    "createdAt": "2025-08-14T00:00:00.000Z",
+    "updatedAt": "2025-08-14T00:00:00.000Z"
+  },
+  {
+    "id": "6",
+    "name": "手工茶包組合",
+    "emoji": "🍵",
+    "description": "精選高山茶葉，傳統手工製作，茶香濃郁，一盒12包",
+    "category": "tea",
+    "price": 580,
+    "images": [
+      "/images/culture/tea_bag_1.jpg",
+      "/images/culture/tea_bag_2.jpg"
+    ],
+    "inventory": 25,
+    "isActive": true,
+    "createdAt": "2025-08-14T00:00:00.000Z",
+    "updatedAt": "2025-08-14T00:00:00.000Z"
+  },
+  {
+    "id": "7",
+    "name": "梅山咖啡豆",
+    "emoji": "☕",
+    "description": "梅山在地種植咖啡豆，中深焙香醇口感，半磅裝",
+    "category": "coffee",
+    "price": 680,
+    "images": [],
+    "inventory": 30,
+    "isActive": true,
+    "createdAt": "2025-08-14T00:00:00.000Z",
+    "updatedAt": "2025-08-14T00:00:00.000Z"
+  },
+  {
+    "id": "8",
+    "name": "當季蔬菜箱",
+    "emoji": "🥕",
+    "description": "每週精選當季新鮮蔬菜，產地直送，約3-4公斤",
+    "category": "vegetables",
+    "price": 350,
+    "images": [],
+    "inventory": 20,
+    "isActive": true,
+    "createdAt": "2025-08-14T00:00:00.000Z",
+    "updatedAt": "2025-08-14T00:00:00.000Z"
+  },
+  {
+    "id": "9",
+    "name": "蜜餞禮盒",
+    "emoji": "🎁",
+    "description": "傳統工法醃製，酸甜好滋味，送禮自用兩相宜，內含5種口味",
+    "category": "fruits",
+    "price": 420,
+    "images": [],
+    "inventory": 35,
+    "isActive": true,
+    "createdAt": "2025-08-14T00:00:00.000Z",
+    "updatedAt": "2025-08-14T00:00:00.000Z"
   }
 ]

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import SocialLinks from '@/components/SocialLinks';
+import { useAuth } from '@/lib/auth-context';
 
 // 模擬擺攤行程資料
 const marketSchedule = [
@@ -82,6 +83,7 @@ const permanentStores = [
 export default function SchedulePage() {
   const [activeTab, setActiveTab] = useState('market');
   const [filteredSchedule, setFilteredSchedule] = useState(marketSchedule);
+  const { user } = useAuth();
 
   const filterByStatus = (status: any) => {
     if (status === 'all') {
@@ -130,22 +132,24 @@ export default function SchedulePage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">擺攤行程 & 門市據點</h1>
               <p className="text-xl text-gray-700">想要現場選購新鮮農產品？來找我們吧！</p>
             </div>
-            <div className="flex space-x-3">
-              <a 
-                href="/admin/schedule"
-                className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition-colors flex items-center space-x-2"
-              >
-                <span>📅</span>
-                <span>行程管理</span>
-              </a>
-              <a 
-                href="/admin/schedule/add"
-                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-              >
-                <span>➕</span>
-                <span>新增行程</span>
-              </a>
-            </div>
+            {user && (
+              <div className="flex space-x-3">
+                <a 
+                  href="/admin/schedule"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>📅</span>
+                  <span>行程管理</span>
+                </a>
+                <a 
+                  href="/admin/schedule/add"
+                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>➕</span>
+                  <span>新增行程</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

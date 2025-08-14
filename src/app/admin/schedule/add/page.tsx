@@ -4,11 +4,52 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Product } from '@/types/product'
+import { useAuth } from '@/lib/auth-context'
 
 export default function AddSchedule() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<Product[]>([])
+  const { user, isLoading } = useAuth()
+
+  // 載入中狀態
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 未登入檢查
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="text-6xl mb-8">🔒</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
+          <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
+          <div className="space-x-4">
+            <Link 
+              href="/login"
+              className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+            >
+              立即登入
+            </Link>
+            <Link 
+              href="/"
+              className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              回到首頁
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
   const [formData, setFormData] = useState({
     title: '',
     location: '',
@@ -105,7 +146,7 @@ export default function AddSchedule() {
           {/* 基本資訊 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 市集/夜市名稱 *
               </label>
               <input
@@ -115,7 +156,7 @@ export default function AddSchedule() {
                 onChange={handleInputChange}
                 required
                 list="market-suggestions"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
                 placeholder="輸入市集或夜市名稱"
               />
               <datalist id="market-suggestions">
@@ -126,14 +167,14 @@ export default function AddSchedule() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 狀態
               </label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               >
                 <option value="upcoming">即將到來</option>
                 <option value="ongoing">進行中</option>
@@ -144,7 +185,7 @@ export default function AddSchedule() {
 
           {/* 地點 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               詳細地址 *
             </label>
             <input
@@ -153,7 +194,7 @@ export default function AddSchedule() {
               value={formData.location}
               onChange={handleInputChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               placeholder="完整地址，包含縣市區域"
             />
           </div>
@@ -161,7 +202,7 @@ export default function AddSchedule() {
           {/* 日期時間 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 日期 *
               </label>
               <input
@@ -170,12 +211,12 @@ export default function AddSchedule() {
                 value={formData.date}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 時間 *
               </label>
               <input
@@ -185,14 +226,14 @@ export default function AddSchedule() {
                 onChange={handleInputChange}
                 required
                 placeholder="例如：17:00 - 23:00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               />
             </div>
           </div>
 
           {/* 描述 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               地點描述
             </label>
             <textarea
@@ -200,14 +241,14 @@ export default function AddSchedule() {
               value={formData.description}
               onChange={handleInputChange}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               placeholder="攤位位置、交通資訊等補充說明"
             />
           </div>
 
           {/* 販售商品 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-900 mb-3">
               販售商品 *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -234,7 +275,7 @@ export default function AddSchedule() {
           {/* 聯絡資訊和優惠 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 聯絡電話 *
               </label>
               <input
@@ -243,13 +284,13 @@ export default function AddSchedule() {
                 value={formData.contact}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
                 placeholder="聯絡電話"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 特別優惠
               </label>
               <input
@@ -257,7 +298,7 @@ export default function AddSchedule() {
                 name="specialOffer"
                 value={formData.specialOffer}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
                 placeholder="例如：買二送一、滿額折扣等"
               />
             </div>
@@ -265,7 +306,7 @@ export default function AddSchedule() {
 
           {/* 天氣備註 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               天氣備註
             </label>
             <input
@@ -273,7 +314,7 @@ export default function AddSchedule() {
               name="weatherNote"
               value={formData.weatherNote}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
               placeholder="例如：如遇雨天取消、有遮陽棚等"
             />
           </div>

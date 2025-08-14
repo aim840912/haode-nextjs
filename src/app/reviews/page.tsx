@@ -188,7 +188,7 @@ export default function ReviewsPage() {
                 </div>
                 <div className="flex items-center">
                   <span className="mr-3">✉️</span>
-                  <span>service@haude.com</span>
+                  <span>aim660617@gmail.com</span>
                 </div>
                 <div className="flex items-center">
                   <span className="mr-3">📍</span>

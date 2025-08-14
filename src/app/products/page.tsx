@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/lib/cart-context';
+import { useAuth } from '@/lib/auth-context';
 
 // 模擬產品資料
 const products = [
@@ -87,6 +88,7 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
   const { addItem } = useCart();
+  const { user } = useAuth();
 
   const handleProductClick = (product: any) => {
     setSelectedProduct(product);
@@ -98,6 +100,11 @@ export default function ProductsPage() {
   };
 
   const addToCart = (product: any) => {
+    if (!user) {
+      alert('請先登入才能使用購物車功能');
+      return;
+    }
+
     // 轉換產品資料格式以符合 Product 型別
     const productData = {
       id: product.id.toString(),
@@ -129,22 +136,24 @@ export default function ProductsPage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">精選農產品</h1>
               <p className="text-xl text-gray-700">來自台灣各地的優質農產，新鮮直送到你家</p>
             </div>
-            <div className="flex space-x-3">
-              <a 
-                href="/admin/products"
-                className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
-              >
-                <span>📊</span>
-                <span>產品管理</span>
-              </a>
-              <a 
-                href="/admin/products/add"
-                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-              >
-                <span>➕</span>
-                <span>新增產品</span>
-              </a>
-            </div>
+            {user && (
+              <div className="flex space-x-3">
+                <a 
+                  href="/admin/products"
+                  className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>📊</span>
+                  <span>產品管理</span>
+                </a>
+                <a 
+                  href="/admin/products/add"
+                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>➕</span>
+                  <span>新增產品</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

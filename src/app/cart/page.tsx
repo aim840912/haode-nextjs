@@ -1,11 +1,63 @@
 'use client';
 
 import { useCart } from '@/lib/cart-context';
+import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function CartPage() {
   const { cart, updateItemQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart();
+  const { user, isLoading } = useAuth();
+
+  const handleCheckout = () => {
+    if (!user) {
+      alert('請先登入才能進行結帳');
+      return;
+    }
+    // 這裡可以添加結帳邏輯或跳轉到結帳頁面
+    alert('結帳功能開發中...');
+  };
+
+  // 載入中狀態
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 未登入檢查
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-36">
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <div className="text-center">
+            <div className="text-6xl mb-8">🔒</div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能使用購物車</h1>
+            <p className="text-gray-600 mb-8">請先登入您的帳戶，即可開始選購我們的優質農產品！</p>
+            <div className="space-x-4">
+              <Link 
+                href="/login"
+                className="inline-block bg-amber-900 text-white px-8 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+              >
+                立即登入
+              </Link>
+              <Link 
+                href="/register"
+                className="inline-block border border-amber-900 text-amber-900 px-8 py-3 rounded-lg hover:bg-amber-50 transition-colors"
+              >
+                註冊帳戶
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (cart.items.length === 0) {
     return (
@@ -79,23 +131,23 @@ export default function CartPage() {
                     <div className="flex items-center space-x-3">
                       <button
                         onClick={() => updateItemQuantity(item.id, item.quantity - 1)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                        className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-100"
                         disabled={item.quantity <= 1}
                       >
-                        <span className="text-lg">-</span>
+                        <span className="text-lg text-gray-700">-</span>
                       </button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
+                      <span className="w-8 text-center font-medium text-gray-900">{item.quantity}</span>
                       <button
                         onClick={() => updateItemQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                        className="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-gray-100"
                       >
-                        <span className="text-lg">+</span>
+                        <span className="text-lg text-gray-700">+</span>
                       </button>
                     </div>
 
                     {/* 小計 */}
                     <div className="text-right">
-                      <p className="font-bold text-lg">
+                      <p className="font-bold text-lg text-gray-900">
                         NT$ {(item.price * item.quantity).toLocaleString()}
                       </p>
                       <button
@@ -118,21 +170,24 @@ export default function CartPage() {
               
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span>商品小計 ({totalItems} 件)</span>
-                  <span>NT$ {totalPrice.toLocaleString()}</span>
+                  <span className="text-gray-700 font-medium">商品小計 ({totalItems} 件)</span>
+                  <span className="font-semibold text-gray-900">NT$ {totalPrice.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>運費</span>
+                  <span className="text-gray-700 font-medium">運費</span>
                   <span className="text-green-600">免運費</span>
                 </div>
                 <hr />
                 <div className="flex justify-between text-lg font-bold">
-                  <span>總計</span>
+                  <span className="text-gray-900 font-semibold">總計</span>
                   <span className="text-amber-900">NT$ {totalPrice.toLocaleString()}</span>
                 </div>
               </div>
 
-              <button className="w-full bg-amber-900 text-white py-3 rounded-lg font-semibold hover:bg-amber-800 transition-colors mb-4">
+              <button 
+                onClick={handleCheckout}
+                className="w-full bg-amber-900 text-white py-3 rounded-lg font-semibold hover:bg-amber-800 transition-colors mb-4"
+              >
                 前往結帳
               </button>
 

@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { Product } from '@/types/product'
+import { useAuth } from '@/lib/auth-context'
 
 export default function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchProducts()
@@ -42,22 +44,24 @@ export default function ProductsSection() {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-center mb-16">
           <h2 className="text-4xl font-light text-amber-900 mb-4 md:mb-0">經典產品</h2>
-          <div className="flex space-x-3">
-            <a 
-              href="/admin/products"
-              className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
-            >
-              <span>📊</span>
-              <span>產品管理</span>
-            </a>
-            <a 
-              href="/admin/products/add"
-              className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-            >
-              <span>➕</span>
-              <span>新增產品</span>
-            </a>
-          </div>
+          {user && (
+            <div className="flex space-x-3">
+              <a 
+                href="/admin/products"
+                className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
+              >
+                <span>📊</span>
+                <span>產品管理</span>
+              </a>
+              <a 
+                href="/admin/products/add"
+                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <span>➕</span>
+                <span>新增產品</span>
+              </a>
+            </div>
+          )}
         </div>
         
         {products.length > 0 ? (
@@ -92,12 +96,14 @@ export default function ProductsSection() {
         ) : (
           <div className="text-center text-gray-600">
             <p className="mb-4">目前沒有上架的產品</p>
-            <a 
-              href="/admin/products"
-              className="inline-block bg-amber-900 text-white px-6 py-3 rounded-full hover:bg-amber-800 transition-colors"
-            >
-              前往管理產品
-            </a>
+            {user && (
+              <a 
+                href="/admin/products"
+                className="inline-block bg-amber-900 text-white px-6 py-3 rounded-full hover:bg-amber-800 transition-colors"
+              >
+                前往管理產品
+              </a>
+            )}
           </div>
         )}
         

@@ -75,8 +75,8 @@ class JsonLocationService implements LocationService {
 }
 
 // 將來改成資料庫時，只需要替換這行
-// export const locationService: LocationService = new JsonLocationService()
+export const locationService: LocationService = new JsonLocationService()
 
 // Supabase implementation
-import { supabaseLocationService } from './supabaseLocationService'
-export const locationService = supabaseLocationService
+// import { supabaseLocationService } from './supabaseLocationService'
+// export const locationService = supabaseLocationService

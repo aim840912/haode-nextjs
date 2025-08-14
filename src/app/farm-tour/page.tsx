@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { FarmTourActivity } from '@/types/farmTour';
 import SocialLinks from '@/components/SocialLinks';
+import { useAuth } from '@/lib/auth-context';
 
 // 農場設施
 const farmFacilities = [
@@ -49,6 +50,7 @@ export default function FarmTourPage() {
   const [activeTab, setActiveTab] = useState('activities');
   const [seasonalActivities, setSeasonalActivities] = useState<FarmTourActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchActivities();
@@ -104,22 +106,24 @@ export default function FarmTourPage() {
             </div>
             
             {/* Management Buttons */}
-            <div className="flex flex-col md:flex-row gap-3">
-              <a 
-                href="/admin/farm-tour"
-                className="px-6 py-3 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <span>🌿</span>
-                <span>果園管理</span>
-              </a>
-              <a 
-                href="/admin/farm-tour/add"
-                className="px-6 py-3 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <span>➕</span>
-                <span>新增體驗</span>
-              </a>
-            </div>
+            {user && (
+              <div className="flex flex-col md:flex-row gap-3">
+                <a 
+                  href="/admin/farm-tour"
+                  className="px-6 py-3 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <span>🌿</span>
+                  <span>果園管理</span>
+                </a>
+                <a 
+                  href="/admin/farm-tour/add"
+                  className="px-6 py-3 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <span>➕</span>
+                  <span>新增體驗</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
         <div className="absolute inset-0 opacity-20">

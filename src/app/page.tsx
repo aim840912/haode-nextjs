@@ -1,9 +1,34 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import ProductsSection from '@/components/ProductsSection'
 import CustomerReviews from '@/components/CustomerReviews'
 import SocialLinks from '@/components/SocialLinks'
 
 export default function Home() {
+  // 可用的圖片池
+  const farmImages = [
+    '/images/culture/fruit.jpg',
+    '/images/culture/tea.jpg',
+    '/images/culture/mountain.jpg',
+    '/images/culture/red_plum_1.jpg',
+    '/images/culture/red_plum_2.jpg',
+    '/images/culture/scene1.jpg',
+    '/images/culture/scene2.jpg',
+    '/images/culture/intro.jpg'
+  ]
+
+  const [featureImages, setFeatureImages] = useState<string[]>([])
+
+  // 隨機選擇三張不同的圖片
+  useEffect(() => {
+    const getRandomImages = () => {
+      const shuffled = [...farmImages].sort(() => 0.5 - Math.random())
+      return shuffled.slice(0, 3)
+    }
+    setFeatureImages(getRandomImages())
+  }, [])
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
 
@@ -34,37 +59,55 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-heading text-center text-amber-900 mb-16">農場特色</h2>
             <div className="grid md:grid-cols-3 gap-12">
               <div className="text-center">
-                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center relative">
-                  <img 
-                    src="/images/icons/leaf-bg.svg" 
-                    alt="Leaf background" 
-                    className="absolute inset-0 w-full h-full rounded-full"
-                  />
-                  <span className="text-2xl text-amber-900 relative z-10">🍃</span>
+                <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
+                  {featureImages[0] && (
+                    <img 
+                      src={featureImages[0]} 
+                      alt="精選農產" 
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    />
+                  )}
+                  {!featureImages[0] && (
+                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
+                      <span className="text-3xl text-white">🍃</span>
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-xl font-heading mb-4 text-gray-800">精選農產</h3>
                 <p className="font-body text-gray-600">嚴選來自山區高地的優質紅肉李及各季節農產品</p>
               </div>
               <div className="text-center">
-                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center relative">
-                  <img 
-                    src="/images/icons/lantern-bg.svg" 
-                    alt="Lantern background" 
-                    className="absolute inset-0 w-full h-full rounded-full"
-                  />
-                  <span className="text-2xl text-amber-900 relative z-10">🏮</span>
+                <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
+                  {featureImages[1] && (
+                    <img 
+                      src={featureImages[1]} 
+                      alt="傳統農法" 
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    />
+                  )}
+                  {!featureImages[1] && (
+                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                      <span className="text-3xl text-white">🏮</span>
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-xl font-heading mb-4 text-gray-800">傳統農法</h3>
                 <p className="text-gray-600">傳承百年農業技術，結合現代科技，呈現最佳農品品質</p>
               </div>
               <div className="text-center">
-                <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center relative">
-                  <img 
-                    src="/images/icons/bamboo-bg.svg" 
-                    alt="Bamboo background" 
-                    className="absolute inset-0 w-full h-full rounded-full"
-                  />
-                  <span className="text-2xl text-amber-900 relative z-10">🎋</span>
+                <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
+                  {featureImages[2] && (
+                    <img 
+                      src={featureImages[2]} 
+                      alt="農業文化" 
+                      className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    />
+                  )}
+                  {!featureImages[2] && (
+                    <div className="w-full h-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
+                      <span className="text-3xl text-white">🎋</span>
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-xl font-heading mb-4 text-gray-800">農業文化</h3>
                 <p className="text-gray-600">不僅是農品銷售，更致力於推廣台灣農業文化的深度內涵</p>

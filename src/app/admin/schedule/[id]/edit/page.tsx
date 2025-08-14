@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ScheduleItem } from '@/types/schedule'
 import { Product } from '@/types/product'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function EditSchedule({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -12,6 +13,46 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
   const [initialLoading, setInitialLoading] = useState(true)
   const [scheduleId, setScheduleId] = useState<string>('')
   const [products, setProducts] = useState<Product[]>([])
+  const { user, isLoading } = useAuth()
+
+  // 載入中狀態
+  if (isLoading || initialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 未登入檢查
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="text-6xl mb-8">🔒</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
+          <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
+          <div className="space-x-4">
+            <Link 
+              href="/login"
+              className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+            >
+              立即登入
+            </Link>
+            <Link 
+              href="/"
+              className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              回到首頁
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
   const [formData, setFormData] = useState({
     title: '',
     location: '',

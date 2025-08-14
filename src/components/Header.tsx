@@ -20,13 +20,13 @@ export default function Header() {
 
   const navItems = [
     { href: '/', label: '農業探索', isExternal: false },
-    { href: '/culture', label: '歲月留影', isExternal: false },
-    { href: '/products', label: '產品介紹', isExternal: false },
-    { href: '/reviews', label: '顧客心聲', isExternal: false },
-    { href: '/news', label: '農產新聞', isExternal: false },
-    { href: '/schedule', label: '擺攤行程', isExternal: false },
     { href: '/farm-tour', label: '觀光果園', isExternal: false },
+    { href: '/products', label: '產品介紹', isExternal: false },
     { href: '/locations', label: '門市據點', isExternal: false },
+    { href: '/culture', label: '歲月留影', isExternal: false },
+    { href: '/reviews', label: '顧客心聲', isExternal: false },
+    { href: '/schedule', label: '擺攤行程', isExternal: false },
+    { href: '/news', label: '農產新聞', isExternal: false },
   ];
 
   return (
@@ -36,7 +36,7 @@ export default function Header() {
           {/* Desktop Layout */}
           <div className="justify-self-start">
             <Link href="/" className="block">
-              <div className="text-2xl font-display text-amber-900 tracking-tight">
+              <div className="text-3xl font-display text-amber-900 tracking-tight">
                 豪德茶業
               </div>
               <div className="text-xs text-amber-700/70 font-inter font-medium tracking-wider">
@@ -78,8 +78,8 @@ export default function Header() {
               {/* Social Links */}
               <SocialLinks size="sm" />
               
-              {/* Cart Icon */}
-              <CartIcon size="sm" />
+              {/* Cart Icon - 只有登入時才顯示 */}
+              {user && <CartIcon size="sm" />}
               
               {/* Auth Button */}
               <AuthButton />
@@ -104,7 +104,7 @@ export default function Header() {
           <div className="flex items-center justify-between">
             {/* Brand */}
             <Link href="/" className="block">
-              <div className="text-xl font-display text-amber-900 tracking-tight">
+              <div className="text-2xl font-display text-amber-900 tracking-tight">
                 豪德茶業
               </div>
               <div className="text-xs text-amber-700/70 font-inter font-medium tracking-wider">
@@ -116,8 +116,8 @@ export default function Header() {
               {/* Social Links - Mobile */}
               <SocialLinks size="sm" />
               
-              {/* Cart Icon - Mobile */}
-              <CartIcon size="sm" />
+              {/* Cart Icon - Mobile - 只有登入時才顯示 */}
+              {user && <CartIcon size="sm" />}
               
               {/* Auth Button - Mobile */}
               <AuthButton isMobile />

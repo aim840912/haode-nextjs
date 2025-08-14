@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Review } from '@/types/review'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function ReviewsAdmin() {
   const [reviews, setReviews] = useState<Review[]>([])
@@ -14,6 +15,7 @@ export default function ReviewsAdmin() {
     pending: 0,
     averageRating: 0
   })
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchReviews()
@@ -47,6 +49,11 @@ export default function ReviewsAdmin() {
   }
 
   const handleApprove = async (id: string) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     try {
       await fetch(`/api/reviews/${id}`, {
         method: 'PUT',
@@ -62,6 +69,11 @@ export default function ReviewsAdmin() {
   }
 
   const handleToggleFeatured = async (id: string, featured: boolean) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     try {
       await fetch(`/api/reviews/${id}`, {
         method: 'PUT',
@@ -76,6 +88,11 @@ export default function ReviewsAdmin() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     if (!confirm('確定要刪除此評價嗎？')) return
     
     try {
@@ -306,28 +323,32 @@ export default function ReviewsAdmin() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      {!review.isApproved && (
+                    {user ? (
+                      <div className="flex space-x-2">
+                        {!review.isApproved && (
+                          <button
+                            onClick={() => handleApprove(review.id)}
+                            className="text-green-600 hover:text-green-900"
+                          >
+                            審核通過
+                          </button>
+                        )}
                         <button
-                          onClick={() => handleApprove(review.id)}
-                          className="text-green-600 hover:text-green-900"
+                          onClick={() => handleToggleFeatured(review.id, review.isFeatured)}
+                          className="text-yellow-600 hover:text-yellow-900"
                         >
-                          審核通過
+                          {review.isFeatured ? '取消精選' : '設為精選'}
                         </button>
-                      )}
-                      <button
-                        onClick={() => handleToggleFeatured(review.id, review.isFeatured)}
-                        className="text-yellow-600 hover:text-yellow-900"
-                      >
-                        {review.isFeatured ? '取消精選' : '設為精選'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(review.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        刪除
-                      </button>
-                    </div>
+                        <button
+                          onClick={() => handleDelete(review.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          刪除
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">需要登入</span>
+                    )}
                   </td>
                 </tr>
               ))}

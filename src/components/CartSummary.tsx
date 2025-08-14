@@ -33,11 +33,11 @@ export default function CartSummary({ showCheckoutButton = true, className = '' 
       <div className="space-y-3 mb-6">
         <div className="flex justify-between">
           <span className="text-gray-600">商品數量</span>
-          <span className="font-medium">{totalItems} 件</span>
+          <span className="font-semibold text-gray-900">{totalItems} 件</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">商品小計</span>
-          <span className="font-medium">NT$ {totalPrice.toLocaleString()}</span>
+          <span className="font-semibold text-gray-900">NT$ {totalPrice.toLocaleString()}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">運費</span>
@@ -45,7 +45,7 @@ export default function CartSummary({ showCheckoutButton = true, className = '' 
         </div>
         <hr />
         <div className="flex justify-between text-lg font-bold">
-          <span>總計</span>
+          <span className="text-gray-900 font-semibold">總計</span>
           <span className="text-amber-900">NT$ {totalPrice.toLocaleString()}</span>
         </div>
       </div>
@@ -74,7 +74,7 @@ export default function CartSummary({ showCheckoutButton = true, className = '' 
                 <span className="text-gray-600 truncate flex-1 mr-2">
                   {item.product.name} x {item.quantity}
                 </span>
-                <span className="font-medium">
+                <span className="font-semibold text-gray-900">
                   NT$ {(item.price * item.quantity).toLocaleString()}
                 </span>
               </div>

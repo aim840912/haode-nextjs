@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 interface NewsItem {
   id: string
@@ -20,6 +21,7 @@ export default function NewsPage() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [selectedCategory, setSelectedCategory] = useState('全部')
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchNews()
@@ -84,22 +86,24 @@ export default function NewsPage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">農產新聞</h1>
               <p className="text-xl text-gray-700">最新農場動態、產品資訊與活動消息</p>
             </div>
-            <div className="flex space-x-3">
-              <a 
-                href="/admin/news"
-                className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2"
-              >
-                <span>📰</span>
-                <span>新聞管理</span>
-              </a>
-              <a 
-                href="/admin/news/add"
-                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-              >
-                <span>✍️</span>
-                <span>發布新聞</span>
-              </a>
-            </div>
+            {user && (
+              <div className="flex space-x-3">
+                <a 
+                  href="/admin/news"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>📰</span>
+                  <span>新聞管理</span>
+                </a>
+                <a 
+                  href="/admin/news/add"
+                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>✍️</span>
+                  <span>發布新聞</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

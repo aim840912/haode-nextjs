@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Product } from '@/types/product'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function ProductsAdmin() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchProducts()
@@ -25,6 +27,11 @@ export default function ProductsAdmin() {
   }
 
   const handleDelete = async (id: string) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     if (!confirm('確定要刪除此產品嗎？')) return
     
     try {
@@ -37,6 +44,11 @@ export default function ProductsAdmin() {
   }
 
   const toggleActive = async (id: string, isActive: boolean) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     try {
       await fetch(`/api/products/${id}`, {
         method: 'PUT',
@@ -64,12 +76,14 @@ export default function ProductsAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">產品管理</h1>
           <div className="space-x-4">
-            <Link 
-              href="/admin/products/add"
-              className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
-            >
-              新增產品
-            </Link>
+            {user && (
+              <Link 
+                href="/admin/products/add"
+                className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+              >
+                新增產品
+              </Link>
+            )}
             <Link 
               href="/"
               className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
@@ -129,32 +143,46 @@ export default function ProductsAdmin() {
                     {product.inventory}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => toggleActive(product.id, product.isActive)}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    {user ? (
+                      <button
+                        onClick={() => toggleActive(product.id, product.isActive)}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          product.isActive
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {product.isActive ? '上架中' : '已下架'}
+                      </button>
+                    ) : (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         product.isActive
                           ? 'bg-green-100 text-green-800'
                           : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {product.isActive ? '上架中' : '已下架'}
-                    </button>
+                      }`}>
+                        {product.isActive ? '上架中' : '已下架'}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="space-x-2">
-                      <Link
-                        href={`/admin/products/${product.id}/edit`}
-                        className="text-amber-600 hover:text-amber-900"
-                      >
-                        編輯
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        刪除
-                      </button>
-                    </div>
+                    {user ? (
+                      <div className="space-x-2">
+                        <Link
+                          href={`/admin/products/${product.id}/edit`}
+                          className="text-amber-600 hover:text-amber-900"
+                        >
+                          編輯
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          刪除
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">需要登入</span>
+                    )}
                   </td>
                 </tr>
               ))}

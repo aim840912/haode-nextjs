@@ -3,10 +3,51 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function AddCulture() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const { user, isLoading } = useAuth()
+
+  // 載入中狀態
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 未登入檢查
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="text-6xl mb-8">🔒</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
+          <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
+          <div className="space-x-4">
+            <Link 
+              href="/login"
+              className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+            >
+              立即登入
+            </Link>
+            <Link 
+              href="/"
+              className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              回到首頁
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
@@ -14,8 +55,11 @@ export default function AddCulture() {
     color: 'bg-gradient-to-br from-amber-400 to-amber-600',
     height: 'h-64',
     textColor: 'text-white',
-    emoji: '🎨'
+    emoji: '🎨',
+    image: ''
   })
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
 
   const colorOptions = [
     { name: '琥珀色', value: 'bg-gradient-to-br from-amber-400 to-amber-600', preview: 'from-amber-400 to-amber-600' },
@@ -48,6 +92,20 @@ export default function AddCulture() {
     '👨‍🏫', '⚙️', '📚', '🔬', '🌱', '🌿', '🚜', '🌽',
     '🍎', '🥕', '🍓', '☘️', '🌸', '🍄', '🐝', '🦋'
   ]
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setImagePreview(result)
+        setFormData(prev => ({ ...prev, image: result }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,7 +159,7 @@ export default function AddCulture() {
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
             {/* 基本資訊 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 典藏標題 *
               </label>
               <input
@@ -110,13 +168,13 @@ export default function AddCulture() {
                 value={formData.title}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                 placeholder="輸入典藏內容標題"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 副標題 *
               </label>
               <input
@@ -125,13 +183,13 @@ export default function AddCulture() {
                 value={formData.subtitle}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                 placeholder="輸入副標題"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 詳細描述 *
               </label>
               <textarea
@@ -140,14 +198,74 @@ export default function AddCulture() {
                 onChange={handleInputChange}
                 required
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                 placeholder="詳細描述文化典藏內容"
               />
             </div>
 
+            {/* 圖片上傳 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                典藏圖片
+              </label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-orange-400 transition-colors">
+                <div className="space-y-1 text-center">
+                  {imagePreview ? (
+                    <div className="mb-4">
+                      <img 
+                        src={imagePreview} 
+                        alt="預覽圖片" 
+                        className="mx-auto h-32 w-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setImagePreview('')
+                          setImageFile(null)
+                          setFormData(prev => ({ ...prev, image: '' }))
+                        }}
+                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                      >
+                        移除圖片
+                      </button>
+                    </div>
+                  ) : (
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                  <div className="flex text-sm text-gray-600">
+                    <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500">
+                      <span>上傳圖片</span>
+                      <input 
+                        id="image-upload" 
+                        name="image-upload" 
+                        type="file" 
+                        className="sr-only" 
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                    <p className="pl-1">或拖拽檔案到此處</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>
+                </div>
+              </div>
+            </div>
+
             {/* Emoji 選擇 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-900 mb-3">
                 選擇圖示
               </label>
               <div className="grid grid-cols-8 gap-2 mb-3">
@@ -169,21 +287,21 @@ export default function AddCulture() {
                 name="emoji"
                 value={formData.emoji}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                 placeholder="或自定義 emoji"
               />
             </div>
 
             {/* 卡片高度 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 卡片高度
               </label>
               <select
                 name="height"
                 value={formData.height}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
                 {heightOptions.map(option => (
                   <option key={option.value} value={option.value}>
@@ -195,11 +313,11 @@ export default function AddCulture() {
 
             {/* 文字顏色 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-900 mb-2">
                 文字顏色
               </label>
               <div className="flex space-x-4">
-                <label className="flex items-center">
+                <label className="flex items-center text-gray-900">
                   <input
                     type="radio"
                     name="textColor"
@@ -210,7 +328,7 @@ export default function AddCulture() {
                   />
                   白色文字
                 </label>
-                <label className="flex items-center">
+                <label className="flex items-center text-gray-900">
                   <input
                     type="radio"
                     name="textColor"
@@ -226,7 +344,7 @@ export default function AddCulture() {
 
             {/* 色彩選擇 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-gray-900 mb-3">
                 背景色彩
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -240,7 +358,7 @@ export default function AddCulture() {
                     }`}
                   >
                     <div className={`w-full h-12 rounded bg-gradient-to-br ${color.preview} mb-2`}></div>
-                    <div className="text-xs text-gray-600">{color.name}</div>
+                    <div className="text-xs text-gray-900">{color.name}</div>
                   </button>
                 ))}
               </div>
@@ -268,8 +386,20 @@ export default function AddCulture() {
           <div className="lg:sticky lg:top-8">
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-white rounded-lg shadow-md p-4">
-              <div className={`${formData.color} ${formData.height} p-6 rounded-lg`}>
-                <div className={`${formData.textColor} h-full flex flex-col justify-between`}>
+              <div className={`${formData.color} ${formData.height} p-6 rounded-lg relative overflow-hidden`}>
+                {/* 背景圖片 */}
+                {formData.image && (
+                  <div className="absolute inset-0 rounded-lg">
+                    <img 
+                      src={formData.image} 
+                      alt="背景圖片" 
+                      className="w-full h-full object-cover rounded-lg opacity-30"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-20 rounded-lg"></div>
+                  </div>
+                )}
+                
+                <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
                   <div>
                     <div className="text-4xl mb-3">{formData.emoji}</div>
                     <div className="text-sm opacity-80 mb-2">

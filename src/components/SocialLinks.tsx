@@ -26,14 +26,14 @@ export default function SocialLinks({
   const socialLinks = [
     {
       name: 'Facebook',
-      url: 'https://www.facebook.com/haudetea',
+      url: 'https://www.facebook.com/groups/284358098576086/?locale=zh_TW',
       icon: '📘',
       bgColor: 'hover:bg-blue-600',
       textColor: 'hover:text-blue-600'
     },
     {
       name: 'Instagram',
-      url: 'https://www.instagram.com/haudetea',
+      url: 'https://www.instagram.com/explore/locations/837190377/hao-de-hong-rou-li-guo-yuan/',
       icon: '📷',
       bgColor: 'hover:bg-pink-600',
       textColor: 'hover:text-pink-600'

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
 
 // Culture images available in the directory
 const cultureImages = [
@@ -135,6 +136,7 @@ const cultureItems = baseCultureItems.map((item, index) => ({
 
 export default function CulturePage() {
   const [selectedItem, setSelectedItem] = useState<any>(null)
+  const { user } = useAuth()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -146,22 +148,24 @@ export default function CulturePage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">歲月留影</h1>
               <p className="text-xl text-gray-700">用鏡頭記錄農家生活的點點滴滴，每一張照片都是時光的見證</p>
             </div>
-            <div className="flex space-x-3">
-              <a 
-                href="/admin/culture"
-                className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm hover:bg-orange-700 transition-colors flex items-center space-x-2"
-              >
-                <span>📸</span>
-                <span>影像管理</span>
-              </a>
-              <a 
-                href="/admin/culture/add"
-                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-              >
-                <span>➕</span>
-                <span>新增照片</span>
-              </a>
-            </div>
+            {user && (
+              <div className="flex space-x-3">
+                <a 
+                  href="/admin/culture"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>📸</span>
+                  <span>影像管理</span>
+                </a>
+                <a 
+                  href="/admin/culture/add"
+                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                >
+                  <span>➕</span>
+                  <span>新增照片</span>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

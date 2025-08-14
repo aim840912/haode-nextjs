@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { Location } from '@/types/location'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function LocationsAdmin() {
   const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchLocations()
@@ -25,6 +27,11 @@ export default function LocationsAdmin() {
   }
 
   const handleDelete = async (id: number) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
     if (!confirm('確定要刪除此門市嗎？')) return
     
     try {
@@ -50,12 +57,14 @@ export default function LocationsAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">門市管理</h1>
           <div className="space-x-4">
-            <Link 
-              href="/admin/locations/add"
-              className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
-            >
-              新增門市
-            </Link>
+            {user && (
+              <Link 
+                href="/admin/locations/add"
+                className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+              >
+                新增門市
+              </Link>
+            )}
             <Link 
               href="/locations"
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -141,20 +150,26 @@ export default function LocationsAdmin() {
                 </div>
 
                 {/* Controls */}
-                <div className="flex space-x-2">
-                  <Link
-                    href={`/admin/locations/${location.id}/edit`}
-                    className="flex-1 bg-amber-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-amber-700 transition-colors"
-                  >
-                    編輯
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(location.id)}
-                    className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
-                  >
-                    刪除
-                  </button>
-                </div>
+                {user ? (
+                  <div className="flex space-x-2">
+                    <Link
+                      href={`/admin/locations/${location.id}/edit`}
+                      className="flex-1 bg-amber-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-amber-700 transition-colors"
+                    >
+                      編輯
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(location.id)}
+                      className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
+                    >
+                      刪除
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-400 text-sm py-2">
+                    需要登入才能編輯
+                  </div>
+                )}
               </div>
             </div>
           ))}

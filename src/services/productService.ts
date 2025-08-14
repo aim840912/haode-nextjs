@@ -65,8 +65,8 @@ class JsonProductService implements ProductService {
 }
 
 // 將來改成資料庫時，只需要替換這行
-// export const productService: ProductService = new JsonProductService()
+export const productService: ProductService = new JsonProductService()
 
 // Supabase implementation
-import { supabaseProductService } from './supabaseProductService'
-export const productService: ProductService = supabaseProductService
+// import { supabaseProductService } from './supabaseProductService'
+// export const productService: ProductService = supabaseProductService
