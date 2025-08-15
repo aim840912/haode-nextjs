@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
+import { Product } from '@/types/product';
 
 // 模擬產品資料
 const products = [
@@ -87,8 +88,44 @@ const products = [
 export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [quantity, setQuantity] = useState(1);
+  const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
   const { user } = useAuth();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        setApiProducts(data.filter((p: Product) => p.isActive)); // 只顯示上架的產品
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 如果有 API 產品則使用，否則使用模擬資料
+  const displayProducts = apiProducts.length > 0 ? apiProducts.map(product => ({
+    id: parseInt(product.id),
+    name: product.name,
+    category: product.category,
+    price: product.price,
+    originalPrice: product.originalPrice || 0,
+    image: product.images[0] || '/api/placeholder/400/400',
+    description: product.description,
+    features: [],
+    specifications: [],
+    inStock: product.inventory > 0,
+    rating: 4.5,
+    reviews: 50
+  })) : products;
 
   const handleProductClick = (product: any) => {
     setSelectedProduct(product);
@@ -109,9 +146,9 @@ export default function ProductsPage() {
     const productData = {
       id: product.id.toString(),
       name: product.name,
-      emoji: product.category === '紅肉李果園' ? '🍑' : product.category === '精品咖啡' ? '☕' : product.category === '季節水果' ? '🍓' : '🥬',
+      emoji: product.emoji,
       description: product.description,
-      category: 'fruits' as const, // 暫時固定為 fruits，實際應該根據產品分類映射
+      category: product.category,
       price: product.price,
       images: [product.image],
       inventory: product.inStock ? 100 : 0, // 模擬庫存數量
@@ -126,6 +163,7 @@ export default function ProductsPage() {
     alert(`已將 ${quantity} 個 ${product.name} 加入購物車！`);
     closeModal();
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -161,8 +199,13 @@ export default function ProductsPage() {
 
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {products.map((product) => (
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500">載入產品中...</div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {displayProducts.map((product) => (
             <div
               key={product.id}
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105"
@@ -181,6 +224,7 @@ export default function ProductsPage() {
                     <span className="text-6xl">
                       {product.category === '精品咖啡' && '☕'}
                       {product.category === '有機蔬菜' && '🥬'}
+                      {product.category === '精品茶葉' && '🍵'}
                     </span>
                   </div>
                 )}
@@ -245,8 +289,9 @@ export default function ProductsPage() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Product Modal */}
@@ -266,6 +311,7 @@ export default function ProductsPage() {
                   <span className="text-8xl">
                     {selectedProduct.category === '精品咖啡' && '☕'}
                     {selectedProduct.category === '有機蔬菜' && '🥬'}
+                    {selectedProduct.category === '精品茶葉' && '🍵'}
                   </span>
                 )}
               </div>

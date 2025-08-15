@@ -62,6 +62,7 @@ export default function ProductsAdmin() {
     }
   }
 
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -76,7 +77,7 @@ export default function ProductsAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">產品管理</h1>
           <div className="space-x-4">
-            {user && (
+            {user?.role === 'admin' && (
               <Link 
                 href="/admin/products/add"
                 className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
@@ -122,7 +123,11 @@ export default function ProductsAdmin() {
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="text-2xl mr-3">{product.emoji}</div>
+                      {product.emoji && (
+                        <div className="text-2xl mr-3">
+                          {product.emoji}
+                        </div>
+                      )}
                       <div>
                         <div className="text-sm font-medium text-gray-900">
                           {product.name}
@@ -137,13 +142,25 @@ export default function ProductsAdmin() {
                     {product.category}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    NT$ {product.price}
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium">NT$ {product.price}</span>
+                      {product.isOnSale && product.originalPrice && product.originalPrice > product.price && (
+                        <>
+                          <span className="text-xs text-gray-500 line-through">
+                            NT$ {product.originalPrice}
+                          </span>
+                          <span className="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-xs font-medium">
+                            特價
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {product.inventory}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {user ? (
+                    {user?.role === 'admin' ? (
                       <button
                         onClick={() => toggleActive(product.id, product.isActive)}
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -165,7 +182,7 @@ export default function ProductsAdmin() {
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {user ? (
+                    {user?.role === 'admin' ? (
                       <div className="space-x-2">
                         <Link
                           href={`/admin/products/${product.id}/edit`}

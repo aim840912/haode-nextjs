@@ -7,6 +7,7 @@ import CustomerReviews from '@/components/CustomerReviews'
 import SocialLinks from '@/components/SocialLinks'
 import VisitorCounter from '@/components/VisitorCounter'
 import OptimizedImage from '@/components/OptimizedImage'
+import { FarmStructuredData } from '@/components/StructuredData'
 
 export default function Home() {
   // 可用的圖片池
@@ -32,7 +33,9 @@ export default function Home() {
     setFeatureImages(getRandomImages())
   }, [])
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+    <>
+      <FarmStructuredData />
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
 
       <main className="pt-36 lg:pt-24">
         <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-amber-100 via-orange-50 to-yellow-50">
@@ -43,9 +46,6 @@ export default function Home() {
             <p className="text-xl md:text-2xl font-body text-gray-700 mb-8 max-w-3xl mx-auto">
               春花夏果秋實冬茶，座落梅山群峰的豪德農場，以自然農法呈現四季最美的農產滋味
             </p>
-            <Link href="/culture" className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg font-sans touch-manipulation inline-block">
-              探索農產世界
-            </Link>
           </div>
           <div className="absolute inset-0 opacity-30">
             <img 
@@ -391,6 +391,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

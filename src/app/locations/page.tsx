@@ -64,7 +64,7 @@ export default function LocationsPage() {
         <div className="max-w-7xl mx-auto px-6 text-center relative">
           <h1 className="text-4xl font-light text-amber-900 mb-4">門市據點</h1>
           <p className="text-xl text-gray-700">全台四間門市，就近選購優質農產品</p>
-          {user && (
+          {user?.role === 'admin' && (
             <Link
               href="/admin/locations"
               className="absolute top-0 right-6 flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-900 hover:bg-amber-800 rounded-lg transition-colors"

@@ -74,7 +74,9 @@ export default function ProductsSection() {
                     alt="Product background" 
                     className="absolute inset-0 w-full h-full object-cover"
                   />
-                  <span className="text-4xl relative z-10">{product.emoji}</span>
+                  {product.emoji && (
+                    <span className="text-4xl relative z-10">{product.emoji}</span>
+                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>

@@ -8,6 +8,9 @@ import { useAuth } from '@/lib/auth-context'
 export default function AddFarmTourActivity() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imageType, setImageType] = useState<'emoji' | 'upload'>('emoji')
   const { user, isLoading } = useAuth()
   
   const [formData, setFormData] = useState({
@@ -162,6 +165,49 @@ export default function AddFarmTourActivity() {
     }))
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // 檢查檔案大小 (限制 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('圖片檔案大小不能超過 5MB')
+        return
+      }
+
+      // 檢查檔案類型
+      if (!file.type.startsWith('image/')) {
+        alert('請選擇圖片檔案')
+        return
+      }
+
+      setImageFile(file)
+      setImageType('upload')
+
+      // 創建預覽
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result as string
+        setImagePreview(result)
+        setFormData(prev => ({ ...prev, image: result }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleEmojiSelect = (emoji: string) => {
+    setImageType('emoji')
+    setImageFile(null)
+    setImagePreview(null)
+    setFormData(prev => ({ ...prev, image: emoji }))
+  }
+
+  const clearImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    setImageType('emoji')
+    setFormData(prev => ({ ...prev, image: '🌱' }))
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -194,7 +240,7 @@ export default function AddFarmTourActivity() {
                     value={formData.season}
                     onChange={(e) => handleSeasonChange(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                   >
                     {seasonOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -214,7 +260,7 @@ export default function AddFarmTourActivity() {
                     value={formData.months}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                     placeholder="例：3-5月"
                   />
                 </div>
@@ -230,7 +276,7 @@ export default function AddFarmTourActivity() {
                   value={formData.title}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="輸入體驗活動標題"
                 />
               </div>
@@ -245,7 +291,7 @@ export default function AddFarmTourActivity() {
                   value={formData.highlight}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="簡短描述活動特色"
                 />
               </div>
@@ -265,7 +311,7 @@ export default function AddFarmTourActivity() {
                       type="text"
                       value={activity}
                       onChange={(e) => updateActivityField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                       placeholder="輸入活動項目"
                     />
                     {formData.activities.length > 1 && (
@@ -305,7 +351,7 @@ export default function AddFarmTourActivity() {
                     onChange={handleInputChange}
                     required
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                     placeholder="0"
                   />
                 </div>
@@ -320,7 +366,7 @@ export default function AddFarmTourActivity() {
                     value={formData.duration}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                     placeholder="例：3小時"
                   />
                 </div>
@@ -338,7 +384,7 @@ export default function AddFarmTourActivity() {
                       type="text"
                       value={include}
                       onChange={(e) => updateIncludeField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                       placeholder="輸入包含項目"
                     />
                     {formData.includes.length > 1 && (
@@ -366,32 +412,103 @@ export default function AddFarmTourActivity() {
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
               
+              {/* 圖片選擇方式 */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  選擇圖示
+                  活動圖片
                 </label>
-                <div className="grid grid-cols-8 gap-2 mb-3">
-                  {emojiOptions.map(emoji => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, image: emoji }))}
-                      className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
-                        formData.image === emoji ? 'bg-green-100 border-green-500' : 'border-gray-300'
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
+                
+                {/* 選擇類型 */}
+                <div className="flex gap-4 mb-4">
+                  <label className="flex items-center text-gray-900 font-medium">
+                    <input
+                      type="radio"
+                      name="imageType"
+                      value="emoji"
+                      checked={imageType === 'emoji'}
+                      onChange={() => setImageType('emoji')}
+                      className="mr-2"
+                    />
+                    使用表情符號
+                  </label>
+                  <label className="flex items-center text-gray-900 font-medium">
+                    <input
+                      type="radio"
+                      name="imageType"
+                      value="upload"
+                      checked={imageType === 'upload'}
+                      onChange={() => setImageType('upload')}
+                      className="mr-2"
+                    />
+                    上傳圖片
+                  </label>
                 </div>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  placeholder="或自定義 emoji"
-                />
+
+                {imageType === 'emoji' ? (
+                  <>
+                    <div className="grid grid-cols-8 gap-2 mb-3">
+                      {emojiOptions.map(emoji => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => handleEmojiSelect(emoji)}
+                          className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
+                            formData.image === emoji && imageType === 'emoji' ? 'bg-green-100 border-green-500' : 'border-gray-300'
+                          }`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      name="image"
+                      value={imageType === 'emoji' ? formData.image : ''}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      placeholder="或自定義 emoji"
+                    />
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-center w-full">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                          </svg>
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">點擊上傳</span> 或拖拽圖片到此處
+                          </p>
+                          <p className="text-xs text-gray-500">PNG, JPG, GIF (最大 5MB)</p>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+                    
+                    {imagePreview && (
+                      <div className="relative">
+                        <img
+                          src={imagePreview}
+                          alt="圖片預覽"
+                          className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                        />
+                        <button
+                          type="button"
+                          onClick={clearImage}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="mb-4">
@@ -403,13 +520,13 @@ export default function AddFarmTourActivity() {
                   value={formData.note}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="輸入參加注意事項"
                 />
               </div>
 
               <div>
-                <label className="flex items-center">
+                <label className="flex items-center text-gray-700 font-medium">
                   <input
                     type="checkbox"
                     name="available"
@@ -446,7 +563,17 @@ export default function AddFarmTourActivity() {
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
-                <div className="text-4xl mb-3">{formData.image}</div>
+                <div className="mb-3">
+                  {imageType === 'upload' && imagePreview ? (
+                    <img 
+                      src={imagePreview} 
+                      alt="活動圖片" 
+                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="text-4xl">{formData.image}</div>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">
                   {formData.title || '活動標題預覽'}
                 </h3>

@@ -16,7 +16,7 @@ create table if not exists products (
   name text not null,
   emoji text,
   description text,
-  category text not null check (category in ('fruits', 'coffee', 'vegetables', 'tea')),
+  category text not null,
   price decimal(10,2) not null,
   images text[] default '{}',
   inventory integer default 0,

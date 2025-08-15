@@ -4,7 +4,13 @@ import { supabaseAdmin } from '@/lib/supabase'
 class SupabaseProductService implements ProductService {
   async getProducts(): Promise<Product[]> {
     try {
-      const { data, error } = await supabaseAdmin!
+      if (!supabaseAdmin) {
+        // 如果沒有 Supabase 設定，回退到本地資料
+        console.warn('Supabase not configured, using fallback data')
+        return []
+      }
+      
+      const { data, error } = await supabaseAdmin
         .from('products')
         .select('*')
         .order('created_at', { ascending: false })
@@ -92,9 +98,9 @@ class SupabaseProductService implements ProductService {
     return {
       id: dbProduct.id as string,
       name: dbProduct.name as string,
-      emoji: (dbProduct.emoji as string) || '🍓',
+      emoji: dbProduct.emoji as string,
       description: dbProduct.description as string,
-      category: dbProduct.category as 'fruits' | 'coffee' | 'vegetables' | 'tea',
+      category: dbProduct.category as string,
       price: parseFloat(dbProduct.price as string),
       images: dbProduct.image_url ? [dbProduct.image_url as string] : [],
       inventory: dbProduct.stock as number,

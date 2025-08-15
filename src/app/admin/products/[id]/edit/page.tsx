@@ -11,30 +11,56 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [productId, setProductId] = useState<string>('')
+  const [categories, setCategories] = useState<string[]>([])
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
     name: '',
     emoji: '',
     description: '',
-    category: 'fruits' as 'fruits' | 'coffee' | 'vegetables' | 'tea',
+    category: 'fruits',
     price: 0,
+    salePrice: 0,
+    isOnSale: false,
+    saleEndDate: '',
     inventory: 0,
     images: [''],
     isActive: true
   })
+
+  const fetchCategories = useCallback(async () => {
+    try {
+      const response = await fetch('/api/products/categories')
+      if (response.ok) {
+        const data = await response.json()
+        setCategories(data)
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+    }
+  }, [])
 
   const fetchProduct = useCallback(async (id: string) => {
     try {
       const response = await fetch(`/api/products/${id}`)
       if (response.ok) {
         const product: Product = await response.json()
+        
+        // 根據是否為特價商品來設定正確的價格顯示
+        const isOnSale = product.isOnSale || false
+        const displayPrice = isOnSale ? product.originalPrice || product.price : product.price
+        const displaySalePrice = isOnSale ? product.price : 0
+        
         setFormData({
           name: product.name,
-          emoji: product.emoji,
+          emoji: product.emoji || '',
           description: product.description,
           category: product.category,
-          price: product.price,
+          price: displayPrice, // 顯示原價
+          salePrice: displaySalePrice, // 顯示特價
+          isOnSale: isOnSale,
+          saleEndDate: product.saleEndDate || '',
           inventory: product.inventory,
           images: product.images.length > 0 ? product.images : [''],
           isActive: product.isActive
@@ -52,11 +78,12 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   }, [router])
 
   useEffect(() => {
+    fetchCategories()
     params.then(({ id }) => {
       setProductId(id)
       fetchProduct(id)
     })
-  }, [params, fetchProduct])
+  }, [params, fetchProduct, fetchCategories])
 
   // 載入中狀態
   if (isLoading || initialLoading) {
@@ -102,13 +129,21 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     setLoading(true)
 
     try {
+      // 根據是否為特價商品設定正確的價格
+      const { salePrice, ...productDataWithoutSalePrice } = formData
+      const productData = {
+        ...productDataWithoutSalePrice,
+        images: formData.images.filter(img => img.trim() !== ''),
+        // 如果是特價商品，設定特價為當前售價，原價為 originalPrice
+        // 如果不是特價商品，設定原價為當前售價，originalPrice 為 null
+        price: formData.isOnSale ? formData.salePrice : formData.price,
+        originalPrice: formData.isOnSale ? formData.price : null
+      }
+
       const response = await fetch(`/api/products/${productId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          images: formData.images.filter(img => img.trim() !== '')
-        })
+        body: JSON.stringify(productData)
       })
 
       if (response.ok) {
@@ -132,6 +167,16 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
               type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
               value
     }))
+  }
+
+  const getEmojiSuggestions = (category: string) => {
+    const suggestions = {
+      fruits: ['🍑', '🍎', '🍓', '🍊', '🍉', '🍇'],
+      coffee: ['☕', '🍵', '♨️', '🏭', '🌰', '✨'],
+      vegetables: ['🥬', '🥕', '🌽', '🌶️', '🍅', '🥒'],
+      tea: ['🍵', '🍃', '🌱', '🌿', '☕', '🌵']
+    }
+    return suggestions[category as keyof typeof suggestions] || ['🍑', '☕', '🥬', '🍵']
   }
 
   const addImageField = () => {
@@ -194,20 +239,43 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             />
           </div>
 
+          {/* Emoji 選擇 */}
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">
-              產品圖示 (Emoji) *
+              產品圖示 (Emoji) (選填)
             </label>
+            
+            {/* 快速選擇按鈕 */}
+            <div className="mb-3">
+              <div className="text-xs text-gray-600 mb-2">快速選擇：</div>
+              <div className="flex flex-wrap gap-2">
+                {getEmojiSuggestions(formData.category).map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, emoji }))}
+                    className={`px-3 py-2 text-xl border rounded-md hover:bg-gray-50 transition-colors ${
+                      formData.emoji === emoji ? 'bg-amber-100 border-amber-500' : 'border-gray-300'
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
             <input
               type="text"
               name="emoji"
               value={formData.emoji}
               onChange={handleInputChange}
-              required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-              placeholder="輸入 emoji，例如：🍑"
+              placeholder="自定義 emoji 或使用上方快速選擇"
               maxLength={2}
             />
+            <div className="text-xs text-gray-500 mt-1">
+              選填，可為產品添加視覺圖示。留空則不顯示任何圖示
+            </div>
           </div>
 
           <div>
@@ -225,28 +293,72 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-semibold text-gray-800 mb-2">
               產品分類 *
             </label>
-            <select
+            <input
+              type="text"
               name="category"
               value={formData.category}
               onChange={handleInputChange}
+              onFocus={() => setShowCategorySuggestions(true)}
+              onBlur={() => {
+                // 延遲隱藏建議，讓點擊建議項目有時間執行
+                setTimeout(() => setShowCategorySuggestions(false), 200)
+              }}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-            >
-              <option value="fruits">水果類</option>
-              <option value="coffee">咖啡類</option>
-              <option value="vegetables">蔬菜類</option>
-              <option value="tea">茶葉類</option>
-            </select>
+              placeholder="輸入產品分類或選擇現有分類"
+            />
+            
+            {/* 分類建議下拉列表 */}
+            {showCategorySuggestions && categories.length > 0 && (
+              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                <div className="p-2 text-xs text-gray-500 bg-gray-50 border-b">
+                  現有分類（點擊選擇）
+                </div>
+                {categories
+                  .filter(category => 
+                    category.toLowerCase().includes(formData.category.toLowerCase())
+                  )
+                  .map((category, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => {
+                        setFormData(prev => ({ ...prev, category }))
+                        setShowCategorySuggestions(false)
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-amber-50 focus:bg-amber-50 focus:outline-none text-gray-900"
+                    >
+                      {category}
+                    </button>
+                  ))
+                }
+                {categories.filter(category => 
+                  category.toLowerCase().includes(formData.category.toLowerCase())
+                ).length === 0 && formData.category && (
+                  <div className="px-3 py-2 text-gray-500 text-sm">
+                    將建立新分類："{formData.category}"
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="text-xs text-gray-500 mt-1">
+              可輸入新分類或從現有分類中選擇
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+          {/* 價格設定 */}
+          <div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">價格設定</h3>
+            
+            {/* 原價 - 必填 */}
+            <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-800 mb-2">
-                價格 (NT$) *
+                原價 (NT$) *
               </label>
               <input
                 type="number"
@@ -257,25 +369,99 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                 min="0"
                 step="10"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                placeholder="0"
+                placeholder="輸入產品原價"
               />
+              <div className="text-xs text-gray-500 mt-1">
+                產品的標準售價
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                庫存數量 *
-              </label>
-              <input
-                type="number"
-                name="inventory"
-                value={formData.inventory}
-                onChange={handleInputChange}
-                required
-                min="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                placeholder="0"
-              />
+            {/* 特價設定 */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center mb-3">
+                <input
+                  type="checkbox"
+                  name="isOnSale"
+                  checked={formData.isOnSale}
+                  onChange={handleInputChange}
+                  className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded mr-2"
+                />
+                <label className="text-sm font-medium text-gray-800">
+                  設為特價商品
+                </label>
+              </div>
+              
+              {formData.isOnSale && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        特價 (NT$) *
+                      </label>
+                      <input
+                        type="number"
+                        name="salePrice"
+                        value={formData.salePrice}
+                        onChange={handleInputChange}
+                        required={formData.isOnSale}
+                        min="0"
+                        step="10"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                        placeholder="輸入特價"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        特價結束日期
+                      </label>
+                      <input
+                        type="date"
+                        name="saleEndDate"
+                        value={formData.saleEndDate}
+                        onChange={handleInputChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                      />
+                    </div>
+                  </div>
+                  
+                  {formData.price > 0 && formData.salePrice > 0 && formData.price > formData.salePrice && (
+                    <div className="bg-green-50 border border-green-200 rounded p-3">
+                      <div className="text-sm text-green-800">
+                        <span className="font-medium">折扣：</span>
+                        {Math.round((1 - formData.salePrice / formData.price) * 100)}% OFF
+                        <span className="ml-2">（省 NT$ {formData.price - formData.salePrice}）</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {formData.salePrice >= formData.price && formData.price > 0 && formData.salePrice > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded p-3">
+                      <div className="text-sm text-red-800">
+                        <span className="font-medium">注意：</span>
+                        特價不能大於或等於原價
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              庫存數量 *
+            </label>
+            <input
+              type="number"
+              name="inventory"
+              value={formData.inventory}
+              onChange={handleInputChange}
+              required
+              min="0"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+              placeholder="0"
+            />
           </div>
 
           <div>

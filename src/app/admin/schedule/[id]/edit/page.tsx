@@ -306,7 +306,7 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
                     className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
                   />
                   <span className="text-sm text-gray-900 flex items-center">
-                    <span className="mr-1">{product.emoji}</span>
+                    {product.emoji && <span className="mr-1">{product.emoji}</span>}
                     {product.name}
                   </span>
                 </label>

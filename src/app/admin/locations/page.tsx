@@ -57,7 +57,7 @@ export default function LocationsAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">門市管理</h1>
           <div className="space-x-4">
-            {user && (
+            {user?.role === 'admin' && (
               <Link 
                 href="/admin/locations/add"
                 className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
@@ -150,7 +150,7 @@ export default function LocationsAdmin() {
                 </div>
 
                 {/* Controls */}
-                {user ? (
+                {user?.role === 'admin' ? (
                   <div className="flex space-x-2">
                     <Link
                       href={`/admin/locations/${location.id}/edit`}
@@ -167,7 +167,7 @@ export default function LocationsAdmin() {
                   </div>
                 ) : (
                   <div className="text-center text-gray-400 text-sm py-2">
-                    需要登入才能編輯
+                    需要管理員權限
                   </div>
                 )}
               </div>
@@ -178,12 +178,14 @@ export default function LocationsAdmin() {
         {locations.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">尚無門市資料</p>
-            <Link 
-              href="/admin/locations/add"
-              className="inline-block bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
-            >
-              新增第一個門市
-            </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin/locations/add"
+                className="inline-block bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+              >
+                新增第一個門市
+              </Link>
+            )}
           </div>
         )}
 

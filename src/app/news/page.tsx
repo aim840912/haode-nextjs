@@ -14,6 +14,7 @@ interface NewsItem {
   category: string
   tags: string[]
   image: string
+  imageUrl?: string
   featured: boolean
 }
 
@@ -132,9 +133,19 @@ export default function NewsPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-8">精選新聞</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {news.filter(item => item.featured).map((item) => (
-                <div key={item.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                <Link 
+                  key={item.id} 
+                  href={`/news/${item.id}`}
+                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer block"
+                >
                   <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-                    {item.image.startsWith('/') ? (
+                    {item.imageUrl ? (
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : item.image.startsWith('/') ? (
                       <img 
                         src={item.image} 
                         alt={item.title}
@@ -159,14 +170,11 @@ export default function NewsPage() {
                     <p className="text-gray-600 text-sm mb-4 line-clamp-3">
                       {item.summary}
                     </p>
-                    <Link 
-                      href={`/news/${item.id}`}
-                      className="inline-flex items-center text-amber-900 hover:text-amber-800 text-sm font-medium"
-                    >
+                    <div className="inline-flex items-center text-amber-900 hover:text-amber-800 text-sm font-medium">
                       閱讀更多 →
-                    </Link>
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -181,10 +189,20 @@ export default function NewsPage() {
           {filteredNews.length > 0 ? (
             <div className="space-y-8">
               {filteredNews.map((item) => (
-                <div key={item.id} className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+                <Link 
+                  key={item.id} 
+                  href={`/news/${item.id}`}
+                  className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden cursor-pointer block"
+                >
                   <div className="md:flex">
                     <div className="md:w-48 aspect-video md:aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-                      {item.image.startsWith('/') ? (
+                      {item.imageUrl ? (
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : item.image.startsWith('/') ? (
                         <img 
                           src={item.image} 
                           alt={item.title}
@@ -221,15 +239,12 @@ export default function NewsPage() {
                         ))}
                       </div>
                       
-                      <Link 
-                        href={`/news/${item.id}`}
-                        className="inline-flex items-center text-amber-900 hover:text-amber-800 font-medium"
-                      >
+                      <div className="inline-flex items-center text-amber-900 hover:text-amber-800 font-medium">
                         閱讀完整內容 →
-                      </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (

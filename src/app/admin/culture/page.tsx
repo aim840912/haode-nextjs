@@ -66,7 +66,7 @@ export default function CultureAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">文化典藏管理</h1>
           <div className="space-x-4">
-            {user && (
+            {user?.role === 'admin' && (
               <Link 
                 href="/admin/culture/add"
                 className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
@@ -139,7 +139,7 @@ export default function CultureAdmin() {
                   <span>高度：{item.height}</span>
                 </div>
                 
-                {user ? (
+                {user?.role === 'admin' ? (
                   <div className="flex space-x-2">
                     <Link
                       href={`/admin/culture/${item.id}/edit`}
@@ -156,7 +156,7 @@ export default function CultureAdmin() {
                   </div>
                 ) : (
                   <div className="text-center text-gray-400 text-sm py-2">
-                    需要登入才能編輯
+                    需要管理員權限
                   </div>
                 )}
               </div>
@@ -167,7 +167,7 @@ export default function CultureAdmin() {
         {cultureItems.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">尚無典藏內容</p>
-            {user && (
+            {user?.role === 'admin' && (
               <Link 
                 href="/admin/culture/add"
                 className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"

@@ -46,17 +46,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     })
   }, [])
 
-  // 載入中狀態
-  if (isLoading || initialLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
-    )
-  }
 
   // 未登入檢查
   if (!user) {
@@ -242,7 +231,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     value={formData.season}
                     onChange={(e) => handleSeasonChange(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   >
                     {seasonOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -262,7 +251,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     value={formData.months}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                     placeholder="例：3-5月"
                   />
                 </div>
@@ -278,7 +267,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   value={formData.title}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="輸入體驗活動標題"
                 />
               </div>
@@ -293,7 +282,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   value={formData.highlight}
                   onChange={handleInputChange}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="簡短描述活動特色"
                 />
               </div>
@@ -313,7 +302,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       type="text"
                       value={activity}
                       onChange={(e) => updateActivityField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                       placeholder="輸入活動項目"
                     />
                     {formData.activities.length > 1 && (
@@ -353,7 +342,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     onChange={handleInputChange}
                     required
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                     placeholder="0"
                   />
                 </div>
@@ -368,7 +357,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     value={formData.duration}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                     placeholder="例：3小時"
                   />
                 </div>
@@ -386,7 +375,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       type="text"
                       value={include}
                       onChange={(e) => updateIncludeField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                       placeholder="輸入包含項目"
                     />
                     {formData.includes.length > 1 && (
@@ -437,7 +426,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   name="image"
                   value={formData.image}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="或自定義 emoji"
                 />
               </div>
@@ -451,7 +440,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   value={formData.note}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="輸入參加注意事項"
                 />
               </div>

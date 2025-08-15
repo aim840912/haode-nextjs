@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react'
 import { ScheduleItem } from '@/types/schedule'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function ScheduleAdmin() {
   const [schedule, setSchedule] = useState<ScheduleItem[]>([])
   const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('all')
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchSchedule()
@@ -96,12 +98,14 @@ export default function ScheduleAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">擺攤行程管理</h1>
           <div className="space-x-4">
-            <Link 
-              href="/admin/schedule/add"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              新增行程
-            </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin/schedule/add"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                新增行程
+              </Link>
+            )}
             <Link 
               href="/schedule"
               className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
@@ -208,15 +212,21 @@ export default function ScheduleAdmin() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <select
-                        value={item.status}
-                        onChange={(e) => updateStatus(item.id, e.target.value)}
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 ${getStatusColor(item.status)}`}
-                      >
-                        <option value="upcoming">即將到來</option>
-                        <option value="ongoing">進行中</option>
-                        <option value="completed">已結束</option>
-                      </select>
+                      {user?.role === 'admin' ? (
+                        <select
+                          value={item.status}
+                          onChange={(e) => updateStatus(item.id, e.target.value)}
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 ${getStatusColor(item.status)}`}
+                        >
+                          <option value="upcoming">即將到來</option>
+                          <option value="ongoing">進行中</option>
+                          <option value="completed">已結束</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                          {getStatusText(item.status)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
@@ -238,20 +248,24 @@ export default function ScheduleAdmin() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <Link
-                          href={`/admin/schedule/${item.id}/edit`}
-                          className="text-purple-600 hover:text-purple-900"
-                        >
-                          編輯
-                        </Link>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          刪除
-                        </button>
-                      </div>
+                      {user?.role === 'admin' ? (
+                        <div className="flex space-x-2">
+                          <Link
+                            href={`/admin/schedule/${item.id}/edit`}
+                            className="text-purple-600 hover:text-purple-900"
+                          >
+                            編輯
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(item.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            刪除
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">需要管理員權限</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -264,12 +278,14 @@ export default function ScheduleAdmin() {
               <p className="text-gray-500 mb-4">
                 {filterStatus === 'all' ? '尚無擺攤行程' : `沒有${getStatusText(filterStatus)}的行程`}
               </p>
-              <Link 
-                href="/admin/schedule/add"
-                className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                新增第一個行程
-              </Link>
+              {user?.role === 'admin' && (
+                <Link 
+                  href="/admin/schedule/add"
+                  className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  新增第一個行程
+                </Link>
+              )}
             </div>
           )}
         </div>

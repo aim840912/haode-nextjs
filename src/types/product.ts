@@ -1,10 +1,13 @@
 export interface Product {
   id: string
   name: string
-  emoji: string
+  emoji?: string
   description: string
-  category: 'fruits' | 'coffee' | 'vegetables' | 'tea'
+  category: string
   price: number
+  originalPrice?: number
+  isOnSale?: boolean
+  saleEndDate?: string
   images: string[]
   inventory: number
   isActive: boolean

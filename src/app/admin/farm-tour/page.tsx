@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function FarmTourAdmin() {
   const [activities, setActivities] = useState<FarmTourActivity[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchActivities()
@@ -77,12 +79,14 @@ export default function FarmTourAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">觀光果園管理</h1>
           <div className="space-x-4">
-            <Link 
-              href="/admin/farm-tour/add"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              新增體驗活動
-            </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin/farm-tour/add"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                新增體驗活動
+              </Link>
+            )}
             <Link 
               href="/farm-tour"
               className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition-colors"
@@ -156,32 +160,38 @@ export default function FarmTourAdmin() {
                 </div>
                 
                 {/* Controls */}
-                <div className="space-y-2">
-                  <div className="flex space-x-2">
-                    <Link
-                      href={`/admin/farm-tour/${activity.id}/edit`}
-                      className="flex-1 bg-amber-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-amber-700 transition-colors"
-                    >
-                      編輯
-                    </Link>
+                {user?.role === 'admin' ? (
+                  <div className="space-y-2">
+                    <div className="flex space-x-2">
+                      <Link
+                        href={`/admin/farm-tour/${activity.id}/edit`}
+                        className="flex-1 bg-amber-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-amber-700 transition-colors"
+                      >
+                        編輯
+                      </Link>
+                      <button
+                        onClick={() => toggleAvailability(activity.id, activity.available)}
+                        className={`flex-1 px-3 py-2 rounded text-sm transition-colors ${
+                          activity.available
+                            ? 'bg-orange-600 text-white hover:bg-orange-700'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                        }`}
+                      >
+                        {activity.available ? '停用' : '啟用'}
+                      </button>
+                    </div>
                     <button
-                      onClick={() => toggleAvailability(activity.id, activity.available)}
-                      className={`flex-1 px-3 py-2 rounded text-sm transition-colors ${
-                        activity.available
-                          ? 'bg-orange-600 text-white hover:bg-orange-700'
-                          : 'bg-green-600 text-white hover:bg-green-700'
-                      }`}
+                      onClick={() => handleDelete(activity.id)}
+                      className="w-full bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
                     >
-                      {activity.available ? '停用' : '啟用'}
+                      刪除活動
                     </button>
                   </div>
-                  <button
-                    onClick={() => handleDelete(activity.id)}
-                    className="w-full bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
-                  >
-                    刪除活動
-                  </button>
-                </div>
+                ) : (
+                  <div className="text-center text-gray-400 text-sm py-2">
+                    需要管理員權限
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -190,12 +200,14 @@ export default function FarmTourAdmin() {
         {activities.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">尚無體驗活動</p>
-            <Link 
-              href="/admin/farm-tour/add"
-              className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              新增第一個體驗活動
-            </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin/farm-tour/add"
+                className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                新增第一個體驗活動
+              </Link>
+            )}
           </div>
         )}
 

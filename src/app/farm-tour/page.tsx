@@ -76,6 +76,24 @@ export default function FarmTourPage() {
     setSelectedActivity(null);
   };
 
+  const scrollToContent = () => {
+    const element = document.getElementById('content-section');
+    if (element) {
+      const offset = 80; // 留出頂部空間
+      const elementPosition = element.offsetTop - offset;
+      window.scrollTo({
+        top: elementPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleTabClick = (tab: string) => {
+    setActiveTab(tab);
+    // 延遲一下確保 DOM 更新
+    setTimeout(() => scrollToContent(), 100);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -92,13 +110,13 @@ export default function FarmTourPage() {
           <div className="flex flex-col items-center gap-6">
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <button 
-                onClick={() => setActiveTab('activities')}
+                onClick={() => handleTabClick('activities')}
                 className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg"
               >
                 🌱 季節體驗活動
               </button>
               <button 
-                onClick={() => setActiveTab('facilities')}
+                onClick={() => handleTabClick('facilities')}
                 className="border-2 border-amber-900 text-amber-900 px-8 py-4 rounded-full hover:bg-amber-900 hover:text-white transition-colors text-lg"
               >
                 🏞️ 農場設施導覽
@@ -131,7 +149,7 @@ export default function FarmTourPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div id="content-section" className="max-w-7xl mx-auto px-6 py-16">
         {/* Navigation Tabs */}
         <div className="flex mb-12 bg-white rounded-lg shadow-sm p-2">
           <button
@@ -285,19 +303,6 @@ export default function FarmTourPage() {
               ))}
             </div>
 
-            {/* 360度農場導覽 */}
-            <div className="mt-16 bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-center text-amber-900 mb-8">360度農場虛擬導覽</h3>
-              <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl mb-4">📹</div>
-                  <p className="text-gray-600 mb-4">沉浸式農場體驗</p>
-                  <button className="bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors">
-                    開始虛擬導覽
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -430,12 +435,12 @@ export default function FarmTourPage() {
                   <h4 className="font-semibold text-gray-800 mb-3">預約資訊</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <label className="block text-gray-600 mb-1">參加日期</label>
-                      <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                      <label className="block text-gray-700 mb-1 font-medium">參加日期</label>
+                      <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
                     </div>
                     <div>
-                      <label className="block text-gray-600 mb-1">參加人數</label>
-                      <select className="w-full border border-gray-300 rounded-lg px-3 py-2">
+                      <label className="block text-gray-700 mb-1 font-medium">參加人數</label>
+                      <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900">
                         <option>1人</option>
                         <option>2人</option>
                         <option>3-5人</option>
@@ -444,20 +449,20 @@ export default function FarmTourPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-gray-600 mb-1">聯絡姓名</label>
-                      <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                      <label className="block text-gray-700 mb-1 font-medium">聯絡姓名</label>
+                      <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
                     </div>
                     <div>
-                      <label className="block text-gray-600 mb-1">聯絡電話</label>
-                      <input type="tel" className="w-full border border-gray-300 rounded-lg px-3 py-2" />
+                      <label className="block text-gray-700 mb-1 font-medium">聯絡電話</label>
+                      <input type="tel" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-gray-600 mb-1">特殊需求或備註</label>
+                  <label className="block text-gray-700 mb-1 font-medium">特殊需求或備註</label>
                   <textarea 
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 text-gray-900"
                     placeholder="如有素食需求、行動不便或其他特殊需求請註明"
                   ></textarea>
                 </div>

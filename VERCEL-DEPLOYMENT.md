@@ -1,321 +1,438 @@
-# Vercel 部署注意事項指南
+# Vercel 多環境部署指南 🚀
 
-## 📋 部署前檢查清單
+> 本指南詳細說明如何在 Vercel 上設置 production/develop 多環境部署策略
 
-### ✅ 必須完成的項目
-- [ ] **環境變數設定** - 在 Vercel Dashboard 中配置所有必要變數
-- [ ] **資料持久化方案** - 將本地 JSON 檔案遷移至資料庫
-- [ ] **圖片資源檢查** - 確保所有圖片都已提交到 Git
-- [ ] **構建測試** - 本地執行 `npm run build` 確保無錯誤
-- [ ] **API 路由測試** - 確認所有 API 端點正常運作
+## 📋 目錄
 
----
+- [部署架構概述](#部署架構概述)
+- [環境分支對應](#環境分支對應)
+- [Vercel Dashboard 設置](#vercel-dashboard-設置)
+- [環境變數配置](#環境變數配置)
+- [域名設置指南](#域名設置指南)
+- [CI/CD 工作流程](#cicd-工作流程)
+- [部署驗證](#部署驗證)
+- [故障排除](#故障排除)
+- [最佳實踐](#最佳實踐)
 
-## 🔧 環境變數配置
+## 🏗️ 部署架構概述
 
-### 在 Vercel Dashboard 中設定以下環境變數：
+### Git Flow + Vercel 部署策略
 
-#### 必要變數
+```mermaid
+graph LR
+    A[feature/*] --> B[develop]
+    B --> C[production]
+    
+    B --> D[Preview Deploy]
+    C --> E[Production Deploy]
+    
+    D --> F[staging.haude-tea.com]
+    E --> G[haude-tea.com]
+```
+
+### 環境對應表
+
+| Git 分支 | Vercel 環境 | 部署域名 | 用途 |
+|---------|------------|----------|------|
+| `production` | Production | haude-tea.com | 正式網站 |
+| `develop` | Preview | staging.haude-tea.com | 測試環境 |
+| `feature/*` | Preview | 自動生成預覽 URL | 功能開發 |
+| `hotfix/*` | Preview | 自動生成預覽 URL | 緊急修復 |
+
+## 🌿 環境分支對應
+
+### Production 環境
+- **分支**：`production`
+- **觸發條件**：推送到 production 分支
+- **部署域名**：主域名（haude-tea.com）
+- **環境變數**：Production 環境變數
+- **特點**：穩定、經過完整測試的代碼
+
+### Preview 環境  
+- **分支**：`develop`, `feature/*`, `hotfix/*`
+- **觸發條件**：推送到任何非 production 分支
+- **部署域名**：預覽 URL 或 staging 子域名
+- **環境變數**：Preview 環境變數
+- **特點**：測試新功能、實驗性代碼
+
+## ⚙️ Vercel Dashboard 設置
+
+### 第一步：專案設置
+
+1. **登入 Vercel Dashboard**
+   ```
+   https://vercel.com/dashboard
+   ```
+
+2. **選擇專案 → Settings → Git**
+
+3. **設置 Production Branch**
+   ```
+   Production Branch: production
+   ```
+   
+   ⚠️ **重要**：確保選擇 `production` 而不是 `main`
+
+### 第二步：分支部署設置
+
+在 **Git** 設置頁面：
+
+```yaml
+Production Branch: production
+Preview Branches: All other branches
+```
+
+### 第三步：自動部署設置
+
+```yaml
+✅ Auto-deploy on push
+✅ Include preview deployments for pull requests
+✅ Auto-expose environment variables
+```
+
+## 🔐 環境變數配置
+
+### Production 環境變數
+
+在 **Settings → Environment Variables**：
+
+```env
+# 環境設定
+Environment: Production
+Branches: production
+
+# 變數設置
+NEXT_PUBLIC_ENV=production
+NEXT_PUBLIC_API_URL=https://api.haude-tea.com
+NEXT_PUBLIC_SUPABASE_URL=your_production_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_production_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_production_service_role_key
+JWT_SECRET=your_production_jwt_secret
+```
+
+### Preview 環境變數
+
+```env
+# 環境設定  
+Environment: Preview
+Branches: All other branches
+
+# 變數設置
+NEXT_PUBLIC_ENV=staging
+NEXT_PUBLIC_API_URL=https://staging-api.haude-tea.com
+NEXT_PUBLIC_SUPABASE_URL=your_staging_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_staging_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_staging_service_role_key
+JWT_SECRET=your_staging_jwt_secret
+```
+
+### 環境變數管理技巧
+
 ```bash
-# JWT 設定（生產環境務必更換）
-JWT_SECRET=your_super_secure_jwt_secret_minimum_32_characters_long
+# 使用 Vercel CLI 管理環境變數
+vercel env add NEXT_PUBLIC_ENV production
+vercel env add NEXT_PUBLIC_ENV staging --environment preview
 
-# 環境標識
-NODE_ENV=production
+# 檢視環境變數
+vercel env ls
+
+# 移除環境變數
+vercel env rm VARIABLE_NAME
 ```
 
-#### 可選變數
+## 🌐 域名設置指南
+
+### 主域名設置
+
+在 **Settings → Domains**：
+
+1. **添加生產域名**
+   ```
+   Domain: haude-tea.com
+   Branch: production (自動對應)
+   ```
+
+2. **添加 www 重定向**
+   ```
+   Domain: www.haude-tea.com  
+   Redirect to: haude-tea.com
+   ```
+
+### Staging 域名設置
+
+```
+Domain: staging.haude-tea.com
+Branch: develop
+```
+
+### DNS 設置
+
+在你的域名提供商設置以下記錄：
+
+```dns
+# A 記錄
+Type: A
+Name: @
+Value: 76.76.19.61
+
+# CNAME 記錄  
+Type: CNAME
+Name: www
+Value: cname.vercel-dns.com
+
+# Staging 子域名
+Type: CNAME  
+Name: staging
+Value: cname.vercel-dns.com
+```
+
+## 🔄 CI/CD 工作流程
+
+### 開發流程
+
 ```bash
-# API 速率限制
-RATE_LIMIT_MAX_REQUESTS=100
-RATE_LIMIT_WINDOW_MS=900000
+# 1. 功能開發
+git checkout develop
+git pull origin develop
+git checkout -b feature/new-cart
 
-# 安全性配置
-BCRYPT_ROUNDS=12
-SESSION_TIMEOUT=86400000
+# 開發完成後推送
+git push origin feature/new-cart
+# ✅ 觸發：Preview 部署到臨時 URL
+
+# 2. 合併到 develop
+# 在 GitHub 創建 PR: feature/new-cart → develop
+git checkout develop
+git merge feature/new-cart  
+git push origin develop
+# ✅ 觸發：Preview 部署到 staging.haude-tea.com
+
+# 3. 發布到生產環境
+git checkout production
+git merge develop
+git push origin production  
+# ✅ 觸發：Production 部署到 haude-tea.com
 ```
 
-#### 如果使用 Supabase（未來升級）
+### 自動化部署觸發器
+
+| 操作 | 觸發條件 | 部署環境 |
+|------|----------|----------|
+| `git push origin develop` | 推送到 develop | Preview |
+| `git push origin production` | 推送到 production | Production |
+| `git push origin feature/xxx` | 推送到功能分支 | Preview |
+| GitHub PR 創建 | 創建 Pull Request | Preview |
+
+## ✅ 部署驗證
+
+### 檢查清單
+
+#### Production 部署驗證
+
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+# 1. 檢查 URL 訪問
+curl -I https://haude-tea.com
+# 應該返回 200 OK
+
+# 2. 檢查環境變數
+# 在瀏覽器 console：
+console.log(process.env.NEXT_PUBLIC_ENV)
+// 應該輸出: "production"
+
+# 3. 檢查 Vercel Dashboard
+# 應該看到 Production 部署有皇冠圖標 👑
 ```
 
-### 設定步驟
-1. 登入 [Vercel Dashboard](https://vercel.com/dashboard)
-2. 選擇您的專案
-3. 前往 **Settings** → **Environment Variables**
-4. 逐一新增上述變數
+#### Preview 部署驗證
 
----
-
-## ⚠️ 重要：本地檔案儲存問題
-
-### 目前的限制
-專案目前使用本地 JSON 檔案儲存資料：
-```
-src/data/
-├── culture.json
-├── farm-tour.json  
-├── locations.json
-├── news.json
-├── products.json
-├── schedule.json
-├── visitor-stats.json  ⚠️ 這會有問題
-└── visitors.json       ⚠️ 這會有問題
-```
-
-### 問題說明
-- **Vercel 是無狀態的** - 每次部署都會重置檔案系統
-- **無法寫入檔案** - Serverless Functions 無法永久寫入檔案
-- **訪客統計會失效** - `visitors.json` 和 `visitor-stats.json` 無法更新
-
-### 解決方案
-
-#### 方案一：使用 Vercel KV（推薦）
 ```bash
-npm install @vercel/kv
+# 1. 檢查預覽 URL
+# Vercel 會在 PR 或推送時提供預覽連結
+
+# 2. 檢查 staging 域名
+curl -I https://staging.haude-tea.com
+
+# 3. 檢查環境變數
+console.log(process.env.NEXT_PUBLIC_ENV)
+// 應該輸出: "staging"
 ```
 
-修改 `src/lib/file-storage.ts`：
-```typescript
-import { kv } from '@vercel/kv'
+### 部署狀態監控
 
-export async function readVisitorStats() {
-  return await kv.get('visitor-stats') || defaultStats
-}
+在 Vercel Dashboard 查看：
 
-export async function writeVisitorStats(stats: any) {
-  await kv.set('visitor-stats', stats)
-}
+```
+✅ Success - 部署成功
+🟡 Building - 建置中  
+❌ Failed - 部署失敗
+🔄 Queued - 等待中
 ```
 
-#### 方案二：暫時停用訪客統計
-在 `src/components/VisitorTracker.tsx` 中添加環境檢查：
-```typescript
-if (process.env.NODE_ENV === 'production') {
-  // 暫時停用統計功能
-  return null
-}
-```
+## 🔧 故障排除
 
----
+### 常見問題
 
-## 🚀 部署步驟
+#### 1. 部署到錯誤環境
 
-### 1. 準備 Git Repository
+**症狀**：推送到 production 但部署為 Preview
+
+**解決方案**：
 ```bash
-# 確保所有變更都已提交
-git add .
-git commit -m "Prepare for Vercel deployment"
-git push origin main
+# 檢查 Vercel Dashboard 設置
+Settings → Git → Production Branch
+確保設置為: production
 ```
 
-### 2. Vercel 部署
-1. 前往 [vercel.com](https://vercel.com)
-2. 使用 GitHub 帳號登入
-3. 點擊 **"New Project"**
-4. 選擇您的 GitHub Repository
-5. **框架預設**: Next.js (自動偵測)
-6. **根目錄**: `.` (保持預設)
-7. 點擊 **"Deploy"**
+#### 2. 環境變數未生效
 
-### 3. 設定環境變數
-部署完成後：
-1. 前往專案 **Settings**
-2. 選擇 **Environment Variables**
-3. 新增所有必要的環境變數
-4. 重新部署專案
+**症狀**：環境變數在應用中無法讀取
 
----
-
-## 📸 圖片和靜態資源
-
-### 目前狀態
-- ✅ 圖片檔案未被 `.gitignore` 忽略
-- ✅ 存放在 `public/` 目錄下
-- ✅ 使用相對路徑引用
-
-### 優化建議
-
-#### 啟用 Vercel Image Optimization
-已在專案中使用 Next.js `Image` 元件，Vercel 會自動優化。
-
-#### 大型圖片處理
-如果圖片檔案過大，考慮：
+**解決方案**：
 ```bash
-# 安裝圖片壓縮工具
-npm install sharp
+# 確保變數名稱以 NEXT_PUBLIC_ 開頭（客戶端變數）
+NEXT_PUBLIC_API_URL=https://api.example.com
+
+# 重新部署以應用新的環境變數
+vercel --prod
 ```
 
----
+#### 3. 域名無法訪問
 
-## 🔧 Vercel 設定檔案
+**症狀**：自定義域名返回 404
 
-目前的 `vercel.json` 配置：
-```json
-{
-  "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "installCommand": "npm install",
-  "devCommand": "npm run dev",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options", 
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ]
-}
+**解決方案**：
+```bash
+# 檢查 DNS 設置
+nslookup haude-tea.com
+
+# 檢查 Vercel 域名設置
+Settings → Domains → 確認域名已驗證
 ```
 
-### 🌍 區域部署限制
+#### 4. 建置失敗
 
-#### 免費版 (Hobby Plan) 限制
-- **單一區域部署** - 通常部署到美國東岸 (iad1)
-- **無法選擇區域** - Vercel 自動決定最佳區域
-- **延遲較高** - 台灣用戶約 150-200ms 延遲
+**症狀**：部署過程中建置錯誤
 
-#### 升級 Pro 版後的好處
-```json
-{
-  "regions": ["hkg1", "sin1", "nrt1"],  // 香港、新加坡、東京
-}
-```
-- **多區域部署** - 就近服務用戶
-- **低延遲** - 亞洲用戶約 30-50ms
-- **高可用性** - 區域故障自動切換
+**解決方案**：
+```bash
+# 本地測試建置
+npm run build
 
----
-
-## ⚡ Serverless Functions 注意事項
-
-### 限制
-- **執行時間**: 最長 10 秒 (Hobby 方案)
-- **記憶體**: 最多 1024MB
-- **檔案大小**: 50MB (壓縮後)
-- **冷啟動**: 第一次請求可能較慢
-
-### 最佳實踐
-```typescript
-// API 路由中添加錯誤處理
-export async function GET(request: NextRequest) {
-  try {
-    // 你的邏輯
-  } catch (error) {
-    console.error('API Error:', error)
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    )
-  }
-}
+# 檢查 Vercel 建置日誌
+Dashboard → Deployments → 點擊失敗的部署查看詳細日誌
 ```
 
----
+### 調試工具
 
-## 🐛 常見問題與解決方案
+```bash
+# Vercel CLI 調試
+vercel logs --follow
+vercel inspect <deployment-url>
 
-### 問題 1: 環境變數未生效
-**症狀**: 本地正常，部署後 API 報錯
-**解決**: 
-1. 檢查 Vercel Dashboard 中的環境變數拼寫
-2. 重新部署專案
-3. 查看 Vercel Function Logs
+# 本地環境測試
+vercel dev --debug
+vercel build --debug
+```
 
-### 問題 2: 檔案寫入失敗
-**症狀**: 訪客統計、內容更新失效
-**解決**: 
-1. 改用 Vercel KV 或資料庫
-2. 或暫時停用相關功能
+## 🎯 最佳實踐
 
-### 問題 3: 圖片載入失敗
-**症狀**: 圖片無法顯示
-**解決**:
-1. 確認圖片檔案已提交到 Git
-2. 檢查路徑是否正確 (以 `/` 開頭)
-3. 使用 `next/image` 元件
+### 分支管理
 
-### 問題 4: 構建失敗
-**症狀**: Deployment failed
-**解決**:
-1. 本地執行 `npm run build` 檢查錯誤
-2. 修復 TypeScript/ESLint 錯誤
-3. 檢查 Node.js 版本相容性
+```bash
+# ✅ 推薦做法
+1. 在 develop 分支測試功能
+2. 通過 PR 合併到 production  
+3. 使用語義化提交訊息
+4. 定期清理功能分支
 
----
+# ❌ 避免做法
+1. 直接推送到 production
+2. 跳過 staging 環境測試
+3. 混合不同功能在單一分支
+```
 
-## 🔄 部署後測試
+### 環境變數管理
 
-### 功能測試清單
-- [ ] 首頁載入正常
-- [ ] 產品頁面圖片顯示
-- [ ] 管理介面登入功能
-- [ ] API 端點回應正常
-- [ ] 文化典藏頁面運作
-- [ ] 購物車功能 (如適用)
+```bash
+# ✅ 推薦做法  
+1. 使用不同的 Supabase 專案（production/staging）
+2. 敏感資料使用 Vercel 環境變數，不要寫在代碼中
+3. 為不同環境使用不同的 API 端點
+4. 定期輪換 API 密鑰
 
-### 效能測試
-1. 使用 [PageSpeed Insights](https://pagespeed.web.dev/)
-2. 檢查 Core Web Vitals
-3. 測試不同裝置的載入速度
+# ❌ 避免做法
+1. 在代碼中硬編碼 API 端點
+2. 所有環境共用同一資料庫
+3. 將敏感資料提交到 Git
+```
 
----
+### 部署策略
 
-## 🎯 後續升級建議
+```bash
+# ✅ 推薦做法
+1. 小批量、頻繁部署
+2. 每次部署前在 staging 環境完整測試
+3. 保持 production 和 develop 同步
+4. 使用 feature flags 控制新功能
 
-### 短期 (1週內)
-1. **修正檔案儲存問題**
-   - 整合 Vercel KV
-   - 或暫時停用訪客統計
+# ❌ 避免做法  
+1. 大批量功能一次性部署
+2. 跳過測試直接發布
+3. 長期不同步分支
+```
 
-### 中期 (1個月內)  
-1. **升級到 Supabase**
-   - 真實資料庫
-   - 用戶認證系統
-   - 即時資料同步
+### 監控與維護
 
-### 長期 (3個月內)
-1. **效能優化**
-   - 圖片 CDN
-   - 快取策略
-   - 監控告警
+```bash
+# 設置部署通知
+vercel integrations --add slack
+vercel integrations --add discord
 
----
+# 定期檢查
+1. 檢查部署成功率
+2. 監控應用效能
+3. 審查環境變數使用
+4. 清理舊的預覽部署
+```
 
 ## 📞 支援資源
 
-### 官方文件
-- [Vercel 部署指南](https://vercel.com/docs/deployments)
-- [Next.js 部署文件](https://nextjs.org/docs/app/building-your-application/deploying)
-- [Vercel KV 文件](https://vercel.com/docs/storage/vercel-kv)
+### Vercel 文檔
 
-### 監控工具
-- [Vercel Analytics](https://vercel.com/analytics)
-- [Vercel Speed Insights](https://vercel.com/docs/speed-insights)
+- [Vercel Git Integration](https://vercel.com/docs/concepts/git)
+- [Environment Variables](https://vercel.com/docs/concepts/projects/environment-variables)  
+- [Custom Domains](https://vercel.com/docs/concepts/projects/domains)
+- [Deployments](https://vercel.com/docs/concepts/deployments/overview)
+
+### 常用指令
+
+```bash
+# Vercel CLI 指令
+vercel login                    # 登入
+vercel projects ls             # 列出專案
+vercel domains ls              # 列出域名
+vercel env ls                  # 列出環境變數
+vercel logs <deployment-url>   # 查看日誌
+vercel rollback <deployment-url> # 回滾部署
+```
 
 ---
 
-## 🎉 完成！
+## 🎉 總結
 
-恭喜！按照這個指南，您的豪德茶業網站應該能成功部署到 Vercel。記住：
+通過本指南，你現在應該能夠：
 
-1. **先部署，再優化** - 不要追求完美，先讓網站上線
-2. **監控錯誤** - 定期檢查 Vercel Dashboard 的 Functions 日誌  
-3. **逐步升級** - 隨著業務成長，再整合更多功能
+- ✅ 設置 Vercel 多環境部署
+- ✅ 管理不同分支對應的部署環境  
+- ✅ 配置環境變數和域名
+- ✅ 實施 CI/CD 工作流程
+- ✅ 排除常見部署問題
 
-祝您部署順利！🚀
+記住：**production 分支 = 生產環境，所有其他分支 = 預覽環境**
+
+> 💡 **小提示**：每次重要部署前，都建議先在 staging 環境完整測試！
+
+---
+
+*最後更新：2024-08-14*  
+*維護者：豪德茶業開發團隊*

@@ -21,8 +21,12 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     category: '產品動態',
     tags: '',
     image: '📰',
+    imageUrl: '',
     featured: false
   })
+  
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
 
   const categories = [
     '產品動態',
@@ -51,8 +55,12 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           category: news.category,
           tags: news.tags.join(', '),
           image: news.image,
+          imageUrl: news.imageUrl || '',
           featured: news.featured
         })
+        if (news.imageUrl) {
+          setImagePreview(news.imageUrl)
+        }
       } else {
         alert('新聞不存在')
         router.push('/admin/news')
@@ -151,6 +159,20 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     }))
   }
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setImagePreview(result)
+        setFormData(prev => ({ ...prev, imageUrl: result }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-24">
@@ -221,6 +243,72 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               placeholder="輸入新聞完整內容&#10;&#10;支援格式：&#10;• 項目符號列表&#10;→ 箭頭列表&#10;✓ 勾選列表&#10;&#10;段落間用空行分隔"
             />
+          </div>
+
+          {/* 圖片上傳 */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              新聞圖片
+            </label>
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
+              <div className="space-y-1 text-center">
+                {imagePreview ? (
+                  <div className="mb-4">
+                    <img 
+                      src={imagePreview} 
+                      alt="預覽" 
+                      className="mx-auto h-32 w-auto object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview('')
+                        setImageFile(null)
+                        setFormData(prev => ({ ...prev, imageUrl: '' }))
+                      }}
+                      className="mt-2 text-sm text-red-600 hover:text-red-500"
+                    >
+                      移除圖片
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <div className="flex text-sm text-gray-600">
+                      <label
+                        htmlFor="image-upload"
+                        className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                      >
+                        <span>上傳圖片</span>
+                        <input
+                          id="image-upload" 
+                          name="image-upload" 
+                          type="file" 
+                          className="sr-only" 
+                          accept="image/*"
+                          onChange={handleImageChange}
+                        />
+                      </label>
+                      <p className="pl-1">或拖拽檔案到此處</p>
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* 分類和作者 */}
@@ -325,7 +413,15 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center mb-3">
-                <span className="text-3xl mr-3">{formData.image}</span>
+                {formData.imageUrl ? (
+                  <img 
+                    src={formData.imageUrl} 
+                    alt="預覽" 
+                    className="w-12 h-12 object-cover rounded-lg mr-3"
+                  />
+                ) : (
+                  <span className="text-3xl mr-3">{formData.image}</span>
+                )}
                 <div>
                   <div className="text-xs text-blue-600 mb-1">{formData.category}</div>
                   <h4 className="font-semibold text-gray-900">{formData.title || '新聞標題'}</h4>

@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
 
 export default function NewsAdmin() {
   const [news, setNews] = useState<NewsItem[]>([])
   const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchNews()
@@ -72,12 +74,14 @@ export default function NewsAdmin() {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">新聞管理</h1>
           <div className="space-x-4">
-            <Link 
-              href="/admin/news/add"
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              發布新聞
-            </Link>
+            {user?.role === 'admin' && (
+              <Link 
+                href="/admin/news/add"
+                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                發布新聞
+              </Link>
+            )}
             <Link 
               href="/news"
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
@@ -122,7 +126,15 @@ export default function NewsAdmin() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      <div className="text-2xl mr-3">{item.image}</div>
+                      {item.imageUrl ? (
+                        <img 
+                          src={item.imageUrl} 
+                          alt={item.title}
+                          className="w-10 h-10 object-cover rounded-lg mr-3"
+                        />
+                      ) : (
+                        <div className="text-2xl mr-3">{item.image}</div>
+                      )}
                       <div className="max-w-xs">
                         <div className="text-sm font-medium text-gray-900 line-clamp-2">
                           {item.title}
@@ -145,39 +157,62 @@ export default function NewsAdmin() {
                     {formatDate(item.publishedAt)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => toggleFeatured(item.id, item.featured)}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    {user?.role === 'admin' ? (
+                      <button
+                        onClick={() => toggleFeatured(item.id, item.featured)}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          item.featured
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {item.featured ? '⭐ 精選' : '📄 一般'}
+                      </button>
+                    ) : (
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         item.featured
                           ? 'bg-yellow-100 text-yellow-800'
                           : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {item.featured ? '⭐ 精選' : '📄 一般'}
-                    </button>
+                      }`}>
+                        {item.featured ? '⭐ 精選' : '📄 一般'}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <Link
-                        href={`/news/${item.id}`}
-                        target="_blank"
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        預覽
-                      </Link>
-                      <Link
-                        href={`/admin/news/${item.id}/edit`}
-                        className="text-amber-600 hover:text-amber-900"
-                      >
-                        編輯
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        刪除
-                      </button>
-                    </div>
+                    {user?.role === 'admin' ? (
+                      <div className="flex space-x-2">
+                        <Link
+                          href={`/news/${item.id}`}
+                          target="_blank"
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          預覽
+                        </Link>
+                        <Link
+                          href={`/admin/news/${item.id}/edit`}
+                          className="text-amber-600 hover:text-amber-900"
+                        >
+                          編輯
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          刪除
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex space-x-2">
+                        <Link
+                          href={`/news/${item.id}`}
+                          target="_blank"
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          預覽
+                        </Link>
+                        <span className="text-gray-400">需要管理員權限</span>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -187,12 +222,14 @@ export default function NewsAdmin() {
           {news.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500">尚無新聞資料</p>
-              <Link 
-                href="/admin/news/add"
-                className="inline-block mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                發布第一則新聞
-              </Link>
+              {user?.role === 'admin' && (
+                <Link 
+                  href="/admin/news/add"
+                  className="inline-block mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  發布第一則新聞
+                </Link>
+              )}
             </div>
           )}
         </div>
