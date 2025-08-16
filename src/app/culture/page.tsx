@@ -142,7 +142,7 @@ export default function CulturePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
+      <div className="pt-8 pb-4">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-6 md:mb-0">
@@ -172,7 +172,7 @@ export default function CulturePage() {
       </div>
 
       {/* Culture Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 pt-4 pb-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {cultureItems.map((item) => (
               <div

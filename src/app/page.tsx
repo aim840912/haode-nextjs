@@ -57,8 +57,7 @@ export default function Home() {
       <FarmStructuredData />
       <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
 
-      <main className="pt-36 lg:pt-24">
-        <section className="relative h-screen flex items-center justify-center bg-gradient-to-r from-amber-100 via-orange-50 to-yellow-50">
+        <section className="relative py-20 flex items-center justify-center">
           <div className="text-center relative z-1">
             <h1 className="text-6xl md:text-8xl font-serif-display text-amber-900 mb-6">
               果香四季
@@ -76,7 +75,7 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="exploration" className="py-20 px-6">
+        <section id="exploration" className="py-12 px-6">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-3xl md:text-4xl font-heading text-center text-amber-900 mb-16">農場特色</h2>
             <div className="grid md:grid-cols-3 gap-12">
@@ -335,7 +334,6 @@ export default function Home() {
             </div>
           </div>
         </section>
-      </main>
 
       <footer className="bg-amber-900 text-white py-16 px-6">
         <div className="max-w-7xl mx-auto">
