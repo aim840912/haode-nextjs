@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/auth-context'
 export default function AddFarmTourActivity() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [_imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [imageType, setImageType] = useState<'emoji' | 'upload'>('emoji')
   const { user, isLoading } = useAuth()

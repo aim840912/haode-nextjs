@@ -85,7 +85,7 @@ export default function SchedulePage() {
   const [filteredSchedule, setFilteredSchedule] = useState(marketSchedule);
   const { user } = useAuth();
 
-  const filterByStatus = (status: any) => {
+  const filterByStatus = (status: 'all' | 'upcoming' | 'ongoing' | 'completed') => {
     if (status === 'all') {
       setFilteredSchedule(marketSchedule);
     } else {
@@ -93,7 +93,7 @@ export default function SchedulePage() {
     }
   };
 
-  const getStatusColor = (status: any) => {
+  const getStatusColor = (status: 'upcoming' | 'ongoing' | 'completed') => {
     switch (status) {
       case 'upcoming': return 'bg-green-100 text-green-800';
       case 'ongoing': return 'bg-blue-100 text-blue-800';
@@ -102,7 +102,7 @@ export default function SchedulePage() {
     }
   };
 
-  const getStatusText = (status: any) => {
+  const getStatusText = (status: 'upcoming' | 'ongoing' | 'completed') => {
     switch (status) {
       case 'upcoming': return '即將到來';
       case 'ongoing': return '進行中';
@@ -111,7 +111,7 @@ export default function SchedulePage() {
     }
   };
 
-  const formatDate = (dateString: any) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const options: Intl.DateTimeFormatOptions = { 
       year: 'numeric', 
@@ -210,8 +210,8 @@ export default function SchedulePage() {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-gray-800">{schedule.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(schedule.status)}`}>
-                      {getStatusText(schedule.status)}
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(schedule.status as 'upcoming' | 'ongoing' | 'completed')}`}>
+                      {getStatusText(schedule.status as 'upcoming' | 'ongoing' | 'completed')}
                     </span>
                   </div>
 

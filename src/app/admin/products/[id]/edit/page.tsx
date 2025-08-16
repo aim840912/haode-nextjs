@@ -340,7 +340,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                   category.toLowerCase().includes(formData.category.toLowerCase())
                 ).length === 0 && formData.category && (
                   <div className="px-3 py-2 text-gray-500 text-sm">
-                    將建立新分類："{formData.category}"
+                    將建立新分類：&ldquo;{formData.category}&rdquo;
                   </div>
                 )}
               </div>

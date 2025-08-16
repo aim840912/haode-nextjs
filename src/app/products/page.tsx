@@ -7,6 +7,17 @@ import { Product } from '@/types/product';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
 
+// 用於模擬產品的擴展類型
+interface ExtendedProduct extends Product {
+  features?: string[];
+  specifications?: { label: string; value: string }[];
+  inStock?: boolean;
+  rating?: number;
+  reviews?: number;
+  image?: string;
+  originalPrice?: number;
+}
+
 // 模擬產品資料
 const products = [
   {
@@ -88,7 +99,7 @@ const products = [
 ];
 
 function ProductsPage() {
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -135,7 +146,7 @@ function ProductsPage() {
     reviews: 50
   })) : products;
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: ExtendedProduct) => {
     setSelectedProduct(product);
   };
 
@@ -144,7 +155,7 @@ function ProductsPage() {
     setQuantity(1);
   };
 
-  const addToCart = (product: any) => {
+  const addToCart = (product: ExtendedProduct) => {
     if (!user) {
       window.location.href = '/login';
       return;
@@ -158,9 +169,9 @@ function ProductsPage() {
       description: product.description,
       category: product.category,
       price: product.price,
-      images: [product.image],
+      images: product.image ? [product.image] : [],
       inventory: product.inStock ? 100 : 0, // 模擬庫存數量
-      isActive: product.inStock,
+      isActive: product.inStock ?? true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -235,7 +246,7 @@ function ProductsPage() {
             <div
               key={product.id}
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105"
-              onClick={() => handleProductClick(product)}
+              onClick={() => handleProductClick(product as unknown as ExtendedProduct)}
             >
               {/* Product Image */}
               <div className="relative aspect-square bg-gradient-to-br from-amber-100 to-orange-100">
@@ -275,7 +286,7 @@ function ProductsPage() {
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_: any, i: number) => (
+                    {[...Array(5)].map((_, i: number) => (
                       <span key={i} className={i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}>
                         ⭐
                       </span>
@@ -306,7 +317,7 @@ function ProductsPage() {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (product.inStock) {
-                        handleProductClick(product);
+                        handleProductClick(product as unknown as ExtendedProduct);
                       }
                     }}
                   >
@@ -357,8 +368,8 @@ function ProductsPage() {
                 {/* Rating */}
                 <div className="flex items-center mb-4">
                   <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_: any, i: number) => (
-                      <span key={i} className={i < Math.floor(selectedProduct.rating) ? 'text-yellow-400' : 'text-gray-300'}>
+                    {[...Array(5)].map((_, i: number) => (
+                      <span key={i} className={i < Math.floor(selectedProduct.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}>
                         ⭐
                       </span>
                     ))}
@@ -374,7 +385,7 @@ function ProductsPage() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-800 mb-3">產品特色</h4>
                   <div className="flex flex-wrap gap-2">
-                    {selectedProduct.features.map((feature: any, index: number) => (
+                    {selectedProduct.features?.map((feature: string, index: number) => (
                       <span key={index} className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
                         {feature}
                       </span>
@@ -386,7 +397,7 @@ function ProductsPage() {
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-800 mb-3">商品規格</h4>
                   <div className="space-y-2">
-                    {selectedProduct.specifications.map((spec: any, index: number) => (
+                    {selectedProduct.specifications?.map((spec: { label: string; value: string }, index: number) => (
                       <div key={index} className="flex justify-between py-2 border-b border-gray-100">
                         <span className="text-gray-800">{spec.label}</span>
                         <span className="font-medium text-gray-900">{spec.value}</span>
@@ -400,7 +411,7 @@ function ProductsPage() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <span className="text-3xl font-bold text-amber-900">NT$ {selectedProduct.price}</span>
-                      {selectedProduct.originalPrice > selectedProduct.price && (
+                      {selectedProduct.originalPrice && selectedProduct.originalPrice > selectedProduct.price && (
                         <span className="ml-2 text-lg text-gray-500 line-through">
                           NT$ {selectedProduct.originalPrice}
                         </span>

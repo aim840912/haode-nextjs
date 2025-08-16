@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { NewsItem } from '@/types/news'
 import { supabaseProductService } from '@/services/supabaseProductService'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -79,10 +80,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (response.ok) {
       const news = await response.json()
       newsPages = news
-        .filter((item: any) => item.isPublished)
-        .map((item: any) => ({
+        .filter((item: NewsItem & { isPublished?: boolean }) => item.isPublished)
+        .map((item: NewsItem) => ({
           url: `${baseUrl}/news/${item.id}`,
-          lastModified: new Date(item.updatedAt),
+          lastModified: new Date(item.publishedAt),
           changeFrequency: 'monthly' as const,
           priority: 0.5,
         }))

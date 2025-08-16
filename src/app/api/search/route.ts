@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { productService } from '@/services/productService'
 import { newsService } from '@/services/newsService'
 import { SearchResult, SearchResponse } from '@/types/search'
+import { Product } from '@/types/product'
+import { NewsItem } from '@/types/news'
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
@@ -75,7 +77,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 計算產品相關性分數
-function calculateProductRelevance(product: any, query: string): number {
+function calculateProductRelevance(product: Product, query: string): number {
   const searchTerm = query.toLowerCase()
   const name = product.name.toLowerCase()
   const description = product.description.toLowerCase()
@@ -102,7 +104,7 @@ function calculateProductRelevance(product: any, query: string): number {
 }
 
 // 計算新聞相關性分數
-function calculateNewsRelevance(newsItem: any, query: string): number {
+function calculateNewsRelevance(newsItem: NewsItem, query: string): number {
   const searchTerm = query.toLowerCase()
   const title = newsItem.title.toLowerCase()
   const summary = newsItem.summary.toLowerCase()

@@ -20,7 +20,7 @@ export default function AddCulture() {
     emoji: '🎨',
     imageUrl: ''  // 改名為 imageUrl
   })
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [_imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
 
   // 載入中狀態

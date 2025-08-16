@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth-context'
+import { CultureItem } from '@/types/culture'
 
 // Culture images available in the directory
 const cultureImages = [
@@ -135,7 +136,7 @@ const cultureItems = baseCultureItems.map((item, index) => ({
 }))
 
 export default function CulturePage() {
-  const [selectedItem, setSelectedItem] = useState<any>(null)
+  const [selectedItem, setSelectedItem] = useState<typeof cultureItems[0] | null>(null)
   const { user } = useAuth()
 
   return (

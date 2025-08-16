@@ -73,8 +73,7 @@ export function LoadingButton({
   onClick?: () => void;
   className?: string;
   disabled?: boolean;
-  [key: string]: any;
-}) {
+} & React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       {...props}

@@ -95,7 +95,7 @@ export default function ReviewsPage() {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'all' | 'product' | 'farm-tour' | 'write')}
               className={`px-6 py-3 rounded-full text-sm font-medium transition-colors ${
                 activeTab === tab.id
                   ? 'bg-amber-900 text-white'

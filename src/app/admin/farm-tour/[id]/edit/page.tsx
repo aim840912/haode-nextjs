@@ -44,7 +44,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
       setActivityId(id)
       fetchActivity(id)
     })
-  }, [])
+  }, [params])
 
 
   // 未登入檢查
