@@ -15,7 +15,8 @@ const nextConfig: NextConfig = {
   // 實驗性功能
   experimental: {
     optimizePackageImports: ['@/components', '@/lib'],
-    optimizeCss: true
+    // 暫時禁用 optimizeCss 以避免 critters 依賴問題
+    // optimizeCss: true
   },
   
   // Webpack 設定優化
