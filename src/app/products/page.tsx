@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { Product } from '@/types/product';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
+import ProductFilter, { FilterState } from '@/components/ProductFilter';
 
 // 用於模擬產品的擴展類型
 interface ExtendedProduct extends Product {
@@ -104,6 +105,13 @@ function ProductsPage() {
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<FilterState>({
+    categories: [],
+    priceRange: [0, 2000],
+    availability: 'all',
+    sortBy: 'name',
+    search: ''
+  });
   const { addItem } = useCart();
   const { user } = useAuth();
 
@@ -131,20 +139,88 @@ function ProductsPage() {
   };
 
   // 如果有 API 產品則使用，否則使用模擬資料
-  const displayProducts = apiProducts.length > 0 ? apiProducts.map(product => ({
-    id: parseInt(product.id),
-    name: product.name,
-    category: product.category,
-    price: product.price,
-    originalPrice: product.originalPrice || 0,
-    image: product.images[0] || '/api/placeholder/400/400',
-    description: product.description,
-    features: [],
-    specifications: [],
-    inStock: product.inventory > 0,
-    rating: 4.5,
-    reviews: 50
-  })) : products;
+  const allProducts = useMemo(() => {
+    return apiProducts.length > 0 ? apiProducts.map(product => ({
+      id: parseInt(product.id),
+      name: product.name,
+      category: product.category,
+      price: product.price,
+      originalPrice: product.originalPrice || 0,
+      image: product.images[0] || '/api/placeholder/400/400',
+      description: product.description,
+      features: [],
+      specifications: [],
+      inStock: product.inventory > 0,
+      rating: 4.5,
+      reviews: 50
+    })) : products;
+  }, [apiProducts]);
+
+  // 篩選和排序邏輯
+  const filteredAndSortedProducts = useMemo(() => {
+    let filtered = [...allProducts];
+
+    // 類別篩選
+    if (filters.categories.length > 0) {
+      filtered = filtered.filter(product => 
+        filters.categories.includes(product.category)
+      );
+    }
+
+    // 價格範圍篩選
+    filtered = filtered.filter(product => 
+      product.price >= filters.priceRange[0] && 
+      product.price <= filters.priceRange[1]
+    );
+
+    // 庫存狀態篩選
+    if (filters.availability === 'in_stock') {
+      filtered = filtered.filter(product => product.inStock);
+    } else if (filters.availability === 'out_of_stock') {
+      filtered = filtered.filter(product => !product.inStock);
+    }
+
+    // 搜尋篩選
+    if (filters.search && filters.search.trim()) {
+      const searchTerm = filters.search.toLowerCase();
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchTerm) ||
+        product.description.toLowerCase().includes(searchTerm) ||
+        product.category.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // 排序
+    filtered.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'price_low':
+          return a.price - b.price;
+        case 'price_high':
+          return b.price - a.price;
+        case 'name':
+          return a.name.localeCompare(b.name);
+        case 'rating':
+          return (b.rating || 0) - (a.rating || 0);
+        case 'newest':
+          return b.id - a.id; // 假設 ID 越大越新
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  }, [allProducts, filters]);
+
+  // 獲取所有可用類別
+  const availableCategories = useMemo(() => {
+    const categories = [...new Set(allProducts.map(product => product.category))];
+    return categories.sort();
+  }, [allProducts]);
+
+  // 篩選回調函數
+  const handleFilterChange = useCallback((newFilters: FilterState) => {
+    setFilters(newFilters);
+  }, []);
 
   const handleProductClick = (product: ExtendedProduct) => {
     setSelectedProduct(product);
@@ -241,8 +317,24 @@ function ProductsPage() {
             </div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {displayProducts.map((product) => (
+          <>
+            {/* Product Filter */}
+            <ProductFilter
+              onFilterChange={handleFilterChange}
+              availableCategories={availableCategories}
+              productCount={filteredAndSortedProducts.length}
+              totalCount={allProducts.length}
+            />
+            
+            {/* Products Grid */}
+            {filteredAndSortedProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-500 mb-4">沒有找到符合條件的產品</div>
+                <p className="text-sm text-gray-400">請嘗試調整篩選條件</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {filteredAndSortedProducts.map((product) => (
             <div
               key={product.id}
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105"
@@ -326,8 +418,10 @@ function ProductsPage() {
                 </div>
               </div>
             </div>
-            ))}
-          </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
