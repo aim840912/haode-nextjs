@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
 import { Product } from '@/types/product';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
 import ProductFilter, { FilterState } from '@/components/ProductFilter';
+import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
+import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
 
 // 用於模擬產品的擴展類型
 interface ExtendedProduct extends Product {
@@ -103,8 +105,6 @@ function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     priceRange: [0, 2000],
@@ -114,28 +114,32 @@ function ProductsPage() {
   });
   const { addItem } = useCart();
   const { user } = useAuth();
+  const { executeWithErrorHandling } = useAsyncWithError();
 
   useEffect(() => {
     fetchProducts();
   }, []);
 
   const fetchProducts = async () => {
-    try {
-      setError(null);
-      const response = await fetch('/api/products');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    await executeWithErrorHandling(
+      async () => {
+        const response = await fetch('/api/products');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setApiProducts(data.filter((p: Product) => p.isActive));
+        return data;
+      },
+      {
+        taskId: 'fetch-products',
+        loadingMessage: '載入產品中...',
+        errorMessage: '載入產品失敗',
+        context: { page: 'products' }
       }
-      
-      const data = await response.json();
-      setApiProducts(data.filter((p: Product) => p.isActive)); // 只顯示上架的產品
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setError(error instanceof Error ? error.message : '載入產品失敗');
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   // 如果有 API 產品則使用，否則使用模擬資料
@@ -294,40 +298,25 @@ function ProductsPage() {
 
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        {loading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : error ? (
-          <div className="text-center py-12">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-              <div className="text-red-600 mb-4">載入產品時發生錯誤</div>
-              <p className="text-sm text-red-700 mb-4">{error}</p>
-              <button 
-                onClick={() => {
-                  setLoading(true);
-                  fetchProducts();
-                }}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
-              >
-                重新載入
-              </button>
+        <LoadingWrapper 
+          fallback={
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
             </div>
-          </div>
-        ) : (
-          <>
-            {/* Product Filter */}
-            <ProductFilter
-              onFilterChange={handleFilterChange}
-              availableCategories={availableCategories}
-              productCount={filteredAndSortedProducts.length}
-              totalCount={allProducts.length}
-            />
-            
-            {/* Products Grid */}
-            {filteredAndSortedProducts.length === 0 ? (
+          }
+        >
+          {/* Product Filter */}
+          <ProductFilter
+            onFilterChange={handleFilterChange}
+            availableCategories={availableCategories}
+            productCount={filteredAndSortedProducts.length}
+            totalCount={allProducts.length}
+          />
+          
+          {/* Products Grid */}
+          {filteredAndSortedProducts.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-gray-500 mb-4">沒有找到符合條件的產品</div>
                 <p className="text-sm text-gray-400">請嘗試調整篩選條件</p>
@@ -421,8 +410,7 @@ function ProductsPage() {
                 ))}
               </div>
             )}
-          </>
-        )}
+        </LoadingWrapper>
       </div>
 
       {/* Product Modal */}
@@ -556,8 +544,20 @@ function ProductsPage() {
 
 export default function ProductsPageWithErrorBoundary() {
   return (
-    <ComponentErrorBoundary>
-      <ProductsPage />
-    </ComponentErrorBoundary>
+    <ErrorHandler>
+      <LoadingManager defaultTimeout={30000} showOverlay={false}>
+        <ComponentErrorBoundary>
+          <Suspense fallback={
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 p-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          }>
+            <ProductsPage />
+          </Suspense>
+        </ComponentErrorBoundary>
+      </LoadingManager>
+    </ErrorHandler>
   );
 }
