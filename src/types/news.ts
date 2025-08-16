@@ -18,4 +18,5 @@ export interface NewsService {
   updateNews(id: string, news: Partial<Omit<NewsItem, 'id' | 'publishedAt'>>): Promise<NewsItem>
   deleteNews(id: string): Promise<void>
   getNewsById(id: string): Promise<NewsItem | null>
+  searchNews(query: string): Promise<NewsItem[]>
 }

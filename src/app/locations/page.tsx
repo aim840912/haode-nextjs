@@ -60,7 +60,7 @@ export default function LocationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16 mt-20 lg:mt-16">
+      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
         <div className="max-w-7xl mx-auto px-6 text-center relative">
           <h1 className="text-4xl font-light text-amber-900 mb-4">門市據點</h1>
           <p className="text-xl text-gray-700">全台四間門市，就近選購優質農產品</p>

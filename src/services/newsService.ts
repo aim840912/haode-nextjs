@@ -57,6 +57,46 @@ class JsonNewsService implements NewsService {
     return news.find(n => n.id === id) || null
   }
 
+  async searchNews(query: string): Promise<NewsItem[]> {
+    const news = await this.getNews()
+    if (!query.trim()) return []
+
+    const searchTerm = query.toLowerCase()
+    
+    return news
+      .filter(item => 
+        item.title.toLowerCase().includes(searchTerm) ||
+        item.summary.toLowerCase().includes(searchTerm) ||
+        item.content.toLowerCase().includes(searchTerm) ||
+        item.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+      )
+      .sort((a, b) => {
+        // 計算相關性分數
+        const getRelevanceScore = (item: NewsItem) => {
+          const title = item.title.toLowerCase()
+          const summary = item.summary.toLowerCase()
+          const content = item.content.toLowerCase()
+          const tags = item.tags.join(' ').toLowerCase()
+          
+          if (title.includes(searchTerm)) return 4
+          if (tags.includes(searchTerm)) return 3
+          if (summary.includes(searchTerm)) return 2
+          if (content.includes(searchTerm)) return 1
+          return 0
+        }
+        
+        const scoreB = getRelevanceScore(b)
+        const scoreA = getRelevanceScore(a)
+        
+        if (scoreB !== scoreA) {
+          return scoreB - scoreA
+        }
+        
+        // 相同分數時，按發布時間排序
+        return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      })
+  }
+
   private async saveNews(news: NewsItem[]): Promise<void> {
     await fs.writeFile(this.filePath, JSON.stringify(news, null, 2), 'utf-8')
   }

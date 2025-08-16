@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Noto_Sans_TC, Noto_Serif_TC, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import HeaderSpacer from "@/components/HeaderSpacer";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { ToastProvider } from "@/components/Toast";
@@ -107,7 +108,10 @@ export default function RootLayout({
               <CartProvider>
                 <VisitorTracker>
                   <Header />
-                  {children}
+                  <main className="min-h-screen">
+                    <HeaderSpacer />
+                    {children}
+                  </main>
                 </VisitorTracker>
               </CartProvider>
             </AuthProvider>

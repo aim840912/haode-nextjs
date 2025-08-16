@@ -116,7 +116,7 @@ export default function NewsDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
-      <div className="bg-white border-b mt-20 lg:mt-16">
+      <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-6 py-4">
           <nav className="text-sm">
             <Link href="/" className="text-amber-900 hover:text-amber-800">首頁</Link>

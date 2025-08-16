@@ -11,7 +11,8 @@
       "Bash(npx tsc:*)",
       "Bash(node:*)",
       "Bash(npm --version)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(npm test:*)"
     ],
     "deny": []
   }

@@ -21,4 +21,5 @@ export interface ProductService {
   updateProduct(id: string, product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product>
   deleteProduct(id: string): Promise<void>
   getProductById(id: string): Promise<Product | null>
+  searchProducts(query: string): Promise<Product[]>
 }

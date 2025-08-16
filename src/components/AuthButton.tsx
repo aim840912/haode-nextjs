@@ -129,6 +129,61 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
               <span className="mr-2">🛒</span>
               購物車
             </Link>
+
+            {/* 管理員選項 */}
+            {user && (
+              <>
+                <div className="border-t border-gray-100 my-1"></div>
+                <div className="px-3 py-1">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">管理功能</p>
+                </div>
+                
+                <Link
+                  href="/admin/products"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <span className="mr-2">📦</span>
+                  產品管理
+                </Link>
+                
+                <Link
+                  href="/admin/news"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <span className="mr-2">📰</span>
+                  新聞管理
+                </Link>
+                
+                <Link
+                  href="/admin/culture"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <span className="mr-2">🖼️</span>
+                  歲月留影管理
+                </Link>
+                
+                <Link
+                  href="/admin/farm-tour"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <span className="mr-2">🚜</span>
+                  果園活動管理
+                </Link>
+                
+                <Link
+                  href="/admin/locations"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <span className="mr-2">📍</span>
+                  門市據點管理
+                </Link>
+              </>
+            )}
             
             <div className="border-t border-gray-100 mt-1 pt-1">
               <button

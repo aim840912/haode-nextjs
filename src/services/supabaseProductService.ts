@@ -94,6 +94,50 @@ class SupabaseProductService implements ProductService {
     }
   }
 
+  async searchProducts(query: string): Promise<Product[]> {
+    try {
+      if (!supabaseAdmin) {
+        console.warn('Supabase not configured, using fallback data')
+        return []
+      }
+      
+      if (!query.trim()) return []
+
+      const searchTerm = `%${query.toLowerCase()}%`
+      
+      const { data, error } = await supabaseAdmin
+        .from('products')
+        .select('*')
+        .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},category.ilike.${searchTerm}`)
+        .eq('is_active', true)
+        .order('name')
+      
+      if (error) throw error
+      
+      const products = data?.map(this.transformFromDB) || []
+      
+      // 按相關性排序
+      return products.sort((a, b) => {
+        const queryLower = query.toLowerCase()
+        const getRelevanceScore = (product: Product) => {
+          const name = product.name.toLowerCase()
+          const description = product.description.toLowerCase()
+          const category = product.category.toLowerCase()
+          
+          if (name.includes(queryLower)) return 3
+          if (category.includes(queryLower)) return 2
+          if (description.includes(queryLower)) return 1
+          return 0
+        }
+        
+        return getRelevanceScore(b) - getRelevanceScore(a)
+      })
+    } catch (error) {
+      console.error('Error searching products:', error)
+      return []
+    }
+  }
+
   private transformFromDB(dbProduct: Record<string, unknown>): Product {
     return {
       id: dbProduct.id as string,

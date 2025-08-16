@@ -61,6 +61,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     
     try {
+      console.log('AuthContext: 發送登入請求', { email: credentials.email });
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -69,12 +71,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify(credentials),
       });
 
+      console.log('AuthContext: 收到 API 回應', { 
+        status: response.status, 
+        ok: response.ok 
+      });
+
       if (!response.ok) {
         const error = await response.json();
+        console.error('AuthContext: 登入 API 錯誤', error);
         throw new Error(error.error || '登入失敗');
       }
 
       const data: AuthResponse = await response.json();
+      console.log('AuthContext: 登入成功，設定使用者狀態');
+      
+      // 確保有效的回應資料
+      if (!data.user || !data.token) {
+        throw new Error('伺服器回應格式錯誤');
+      }
       
       // 根據 rememberMe 決定使用哪種存儲
       const storage = credentials.rememberMe ? localStorage : sessionStorage;
@@ -85,13 +99,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
       otherStorage.removeItem('auth_user');
       
       // 儲存到選定的存儲
-      storage.setItem('auth_token', data.token);
-      storage.setItem('auth_user', JSON.stringify(data.user));
+      try {
+        storage.setItem('auth_token', data.token);
+        storage.setItem('auth_user', JSON.stringify(data.user));
+      } catch (storageError) {
+        console.error('AuthContext: 儲存錯誤', storageError);
+        throw new Error('無法儲存登入資訊');
+      }
       
-      setUser(data.user);
+      // 使用 setTimeout 確保狀態更新在下一個事件循環中執行
+      setTimeout(() => {
+        setUser(data.user);
+      }, 0);
+      
       return data;
     } catch (error) {
-      throw error;
+      console.error('AuthContext: 登入流程錯誤', error);
+      
+      // 清理可能的部分狀態
+      setUser(null);
+      
+      // 重新拋出錯誤給上層處理
+      if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('登入過程中發生未知錯誤');
+      }
     } finally {
       setIsLoading(false);
     }

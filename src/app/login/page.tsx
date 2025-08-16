@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import AuthErrorBoundary from '@/components/AuthErrorBoundary';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,11 +19,16 @@ export default function LoginPage() {
     setError('');
     
     try {
-      await login({ email, password, rememberMe });
-      // 強制重新載入頁面以確保狀態完全更新
-      window.location.href = '/';
+      console.log('開始登入流程...', { email, rememberMe });
+      const result = await login({ email, password, rememberMe });
+      console.log('登入成功:', result);
+      
+      // 使用 Next.js router 進行導航，而不是強制重新載入
+      router.push('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登入失敗');
+      console.error('登入錯誤:', err);
+      const errorMessage = err instanceof Error ? err.message : '登入失敗，請稍後再試';
+      setError(errorMessage);
     }
   };
 
@@ -31,7 +37,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
+    <AuthErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -188,5 +195,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </AuthErrorBoundary>
   );
 }

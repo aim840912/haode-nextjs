@@ -59,6 +59,37 @@ class JsonProductService implements ProductService {
     return products.find(p => p.id === id) || null
   }
 
+  async searchProducts(query: string): Promise<Product[]> {
+    const products = await this.getProducts()
+    if (!query.trim()) return []
+
+    const searchTerm = query.toLowerCase()
+    
+    return products
+      .filter(product => 
+        product.isActive && (
+          product.name.toLowerCase().includes(searchTerm) ||
+          product.description.toLowerCase().includes(searchTerm) ||
+          product.category.toLowerCase().includes(searchTerm)
+        )
+      )
+      .sort((a, b) => {
+        // 計算相關性分數，名稱匹配優先級最高
+        const getRelevanceScore = (product: Product) => {
+          const name = product.name.toLowerCase()
+          const description = product.description.toLowerCase()
+          const category = product.category.toLowerCase()
+          
+          if (name.includes(searchTerm)) return 3
+          if (category.includes(searchTerm)) return 2
+          if (description.includes(searchTerm)) return 1
+          return 0
+        }
+        
+        return getRelevanceScore(b) - getRelevanceScore(a)
+      })
+  }
+
   private async saveProducts(products: Product[]): Promise<void> {
     await fs.writeFile(this.filePath, JSON.stringify(products, null, 2), 'utf-8')
   }

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import AuthButton from './AuthButton';
 import SocialLinks from './SocialLinks';
 import CartIcon from './CartIcon';
+import { ExpandableSearchBar } from './ui/ExpandableSearchBar';
 import { useAuth } from '@/lib/auth-context';
 
 export default function Header() {
@@ -30,11 +31,12 @@ export default function Header() {
   ];
 
   return (
-    <header className="fixed top-0 w-full bg-white/95 backdrop-blur-lg shadow-sm z-50">
+    <header className="fixed top-0 w-full bg-white/95 backdrop-blur-lg z-50">
       <nav className="max-w-7xl mx-auto px-8 py-4 lg:py-5">
-        <div className="hidden lg:grid lg:grid-cols-3 lg:items-center">
+        <div className="hidden lg:block">
           {/* Desktop Layout */}
-          <div className="justify-self-start">
+          {/* 上層：品牌和登入 */}
+          <div className="flex items-center justify-between mb-4">
             <Link href="/" className="block">
               <div className="text-3xl font-display text-amber-900 tracking-tight">
                 豪德茶業
@@ -43,9 +45,13 @@ export default function Header() {
                 HAUDE TEA
               </div>
             </Link>
+            
+            <AuthButton />
           </div>
 
-          <div className="justify-self-center">
+          {/* 下層：導航選單和工具列 */}
+          <div className="flex items-center justify-between">
+            {/* 左側：導航選單 */}
             <div className="flex items-center space-x-5">
               {navItems.map((item) => (
                 <div key={item.href} className="group relative py-2">
@@ -71,29 +77,17 @@ export default function Header() {
                 </div>
               ))}
             </div>
-          </div>
 
-          <div className="justify-self-end">
+            {/* 右側：工具列 */}
             <div className="flex items-center space-x-3">
+              {/* 可展開搜尋欄 */}
+              <ExpandableSearchBar iconOnly />
+              
               {/* Social Links */}
               <SocialLinks size="sm" />
               
               {/* Cart Icon - 只有登入時才顯示 */}
               {user && <CartIcon size="sm" />}
-              
-              {/* Auth Button */}
-              <AuthButton />
-              
-              {/* Admin Button - 只有登入時才顯示 */}
-              {user && (
-                <Link 
-                  href="/admin/products"
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-amber-900 hover:bg-amber-800 rounded-full transition-all duration-200 flex items-center space-x-1"
-                >
-                  <span>🛠</span>
-                  <span>管理</span>
-                </Link>
-              )}
             </div>
           </div>
         </div>
@@ -113,6 +107,9 @@ export default function Header() {
             </Link>
 
             <div className="flex items-center space-x-2">
+              {/* 可展開搜尋欄 - Mobile */}
+              <ExpandableSearchBar iconOnly />
+              
               {/* Social Links - Mobile */}
               <SocialLinks size="sm" />
               
@@ -121,16 +118,6 @@ export default function Header() {
               
               {/* Auth Button - Mobile */}
               <AuthButton isMobile />
-              
-              {/* Admin Button - Mobile - 只有登入時才顯示 */}
-              {user && (
-                <Link 
-                  href="/admin/products"
-                  className="px-2 py-1 text-xs font-medium text-white bg-amber-900 hover:bg-amber-800 rounded-full transition-all duration-200"
-                >
-                  🛠 管理
-                </Link>
-              )}
             </div>
           </div>
 
