@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { productService } from '@/services/productService'
+import { withProductsCache } from '@/lib/api-cache-middleware'
 
-export async function GET() {
+async function handleGET() {
   try {
     const products = await productService.getProducts()
     return NextResponse.json(products)
@@ -14,7 +15,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json()
     const product = await productService.addProduct(body)
@@ -27,3 +28,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// 使用快取中間件包裝 GET 請求
+export const GET = withProductsCache(handleGET)
+export const POST = withProductsCache(handlePOST)

@@ -6,9 +6,10 @@ import { useToast } from '@/components/Toast';
 import Link from 'next/link';
 import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner';
 import OptimizedImage from '@/components/OptimizedImage';
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useState } from 'react';
 
-export default function CartPage() {
+function CartPage() {
   const { cart, updateItemQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart();
   const { user, isLoading } = useAuth();
   const { success, error } = useToast();
@@ -257,5 +258,13 @@ export default function CartPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CartPageWithErrorBoundary() {
+  return (
+    <ComponentErrorBoundary>
+      <CartPage />
+    </ComponentErrorBoundary>
   );
 }

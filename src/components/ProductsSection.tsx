@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Product } from '@/types/product'
 import { useAuth } from '@/lib/auth-context'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
+import { ProductCardSkeleton } from '@/components/LoadingSkeleton'
 
-export default function ProductsSection() {
+function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
 
   useEffect(() => {
@@ -15,7 +18,13 @@ export default function ProductsSection() {
 
   const fetchProducts = async () => {
     try {
+      setError(null)
       const response = await fetch('/api/products')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
       
       // 只顯示活躍的產品，最多4個
@@ -23,6 +32,7 @@ export default function ProductsSection() {
       setProducts(activeProducts)
     } catch (error) {
       console.error('Error fetching products:', error)
+      setError(error instanceof Error ? error.message : '載入產品失敗')
     } finally {
       setLoading(false)
     }
@@ -33,7 +43,36 @@ export default function ProductsSection() {
       <section id="products" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
-          <div className="text-center text-gray-600">載入產品資料中...</div>
+          <div className="grid md:grid-cols-4 gap-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section id="products" className="py-20 px-6">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
+          <div className="text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <div className="text-red-600 mb-4">載入產品時發生錯誤</div>
+              <p className="text-sm text-red-700 mb-4">{error}</p>
+              <button 
+                onClick={() => {
+                  setLoading(true)
+                  fetchProducts()
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              >
+                重新載入
+              </button>
+            </div>
+          </div>
         </div>
       </section>
     )
@@ -120,5 +159,13 @@ export default function ProductsSection() {
         </div>
       </div>
     </section>
+  )
+}
+
+export default function ProductsSectionWithErrorBoundary() {
+  return (
+    <ComponentErrorBoundary>
+      <ProductsSection />
+    </ComponentErrorBoundary>
   )
 }

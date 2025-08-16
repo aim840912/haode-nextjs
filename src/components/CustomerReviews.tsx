@@ -3,10 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Review } from '@/types/review'
 import Link from 'next/link'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
+import { ReviewSkeleton } from '@/components/LoadingSkeleton'
 
-export default function CustomerReviews() {
+function CustomerReviews() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     fetchFeaturedReviews()
@@ -14,11 +17,18 @@ export default function CustomerReviews() {
 
   const fetchFeaturedReviews = async () => {
     try {
+      setError(null)
       const response = await fetch('/api/reviews?approved=true&featured=true&limit=6')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
       const data = await response.json()
       setReviews(data)
     } catch (error) {
       console.error('Error fetching featured reviews:', error)
+      setError(error instanceof Error ? error.message : '載入評價失敗')
     } finally {
       setLoading(false)
     }
@@ -49,8 +59,55 @@ export default function CustomerReviews() {
     }
   }
 
-  if (loading || reviews.length === 0) {
-    return null // 載入中或沒有評價時不顯示區塊
+  if (loading) {
+    return (
+      <section className="py-20 px-6 bg-gradient-to-b from-white to-amber-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-light text-amber-900 mb-4">顧客心聲</h2>
+            <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+              載入顧客評價中...
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <ReviewSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="py-20 px-6 bg-gradient-to-b from-white to-amber-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-light text-amber-900 mb-4">顧客心聲</h2>
+          </div>
+          <div className="text-center">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+              <div className="text-red-600 mb-4">載入評價時發生錯誤</div>
+              <p className="text-sm text-red-700 mb-4">{error}</p>
+              <button 
+                onClick={() => {
+                  setLoading(true)
+                  fetchFeaturedReviews()
+                }}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+              >
+                重新載入
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (reviews.length === 0) {
+    return null // 沒有評價時不顯示區塊
   }
 
   return (
@@ -66,7 +123,7 @@ export default function CustomerReviews() {
 
         {/* 評價卡片網格 */}
         <div className="grid md:grid-cols-3 gap-8 mb-12">
-          {reviews.slice(0, 3).map((review, index) => (
+          {reviews.slice(0, 3).map((review) => (
             <div
               key={review.id}
               className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow relative group"
@@ -91,7 +148,7 @@ export default function CustomerReviews() {
 
               {/* 評價內容 */}
               <p className="text-gray-600 text-sm leading-relaxed mb-4 line-clamp-4">
-                "{review.content}"
+                &ldquo;{review.content}&rdquo;
               </p>
 
               {/* 顧客資訊 */}
@@ -170,7 +227,7 @@ export default function CustomerReviews() {
                       </div>
                     </div>
                     <p className="text-sm text-gray-600 line-clamp-3">
-                      "{review.content}"
+                      &ldquo;{review.content}&rdquo;
                     </p>
                   </div>
                 </div>
@@ -229,5 +286,13 @@ export default function CustomerReviews() {
         </div>
       </div>
     </section>
+  )
+}
+
+export default function CustomerReviewsWithErrorBoundary() {
+  return (
+    <ComponentErrorBoundary>
+      <CustomerReviews />
+    </ComponentErrorBoundary>
   )
 }

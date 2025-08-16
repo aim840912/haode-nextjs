@@ -2,36 +2,56 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import ProductsSection from '@/components/ProductsSection'
-import CustomerReviews from '@/components/CustomerReviews'
+import dynamic from 'next/dynamic'
 import SocialLinks from '@/components/SocialLinks'
 import VisitorCounter from '@/components/VisitorCounter'
 import OptimizedImage from '@/components/OptimizedImage'
 import { FarmStructuredData } from '@/components/StructuredData'
 
+// 動態載入非關鍵組件
+const ProductsSection = dynamic(() => import('@/components/ProductsSection'), {
+  loading: () => (
+    <div className="py-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-8 mx-auto w-48"></div>
+          <div className="grid md:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-gray-200 h-64 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  ssr: false
+})
+
+const CustomerReviews = dynamic(() => import('@/components/CustomerReviews'), {
+  loading: () => (
+    <div className="py-20 px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded mb-8 mx-auto w-32"></div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-gray-200 h-48 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  ssr: false
+})
+
 export default function Home() {
-  // 可用的圖片池
-  const farmImages = [
+  // 優化：使用固定的精選圖片，避免隨機計算造成的效能問題
+  const featureImages = [
     '/images/culture/fruit.jpg',
-    '/images/culture/tea.jpg',
-    '/images/culture/mountain.jpg',
-    '/images/culture/red_plum_1.jpg',
-    '/images/culture/red_plum_2.jpg',
-    '/images/culture/scene1.jpg',
-    '/images/culture/scene2.jpg',
-    '/images/culture/intro.jpg'
+    '/images/culture/tea.jpg', 
+    '/images/culture/mountain.jpg'
   ]
-
-  const [featureImages, setFeatureImages] = useState<string[]>([])
-
-  // 隨機選擇三張不同的圖片
-  useEffect(() => {
-    const getRandomImages = () => {
-      const shuffled = [...farmImages].sort(() => 0.5 - Math.random())
-      return shuffled.slice(0, 3)
-    }
-    setFeatureImages(getRandomImages())
-  }, [])
   return (
     <>
       <FarmStructuredData />
@@ -62,63 +82,42 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-12">
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
-                  {featureImages[0] && (
-                    <OptimizedImage 
-                      src={featureImages[0]} 
-                      alt="精選農產"
-                      width={128}
-                      height={128}
-                      className="object-cover hover:scale-110 transition-transform duration-300"
-                      sizes="128px"
-                    />
-                  )}
-                  {!featureImages[0] && (
-                    <div className="w-full h-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center">
-                      <span className="text-3xl text-white">🍃</span>
-                    </div>
-                  )}
+                  <OptimizedImage 
+                    src={featureImages[0]} 
+                    alt="精選農產"
+                    width={128}
+                    height={128}
+                    className="object-cover hover:scale-110 transition-transform duration-300"
+                    sizes="128px"
+                  />
                 </div>
                 <h3 className="text-xl font-heading mb-4 text-gray-800">精選農產</h3>
                 <p className="font-body text-gray-600">嚴選來自山區高地的優質紅肉李及各季節農產品</p>
               </div>
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
-                  {featureImages[1] && (
-                    <OptimizedImage 
-                      src={featureImages[1]} 
-                      alt="傳統農法"
-                      width={128}
-                      height={128}
-                      className="object-cover hover:scale-110 transition-transform duration-300"
-                      sizes="128px"
-                    />
-                  )}
-                  {!featureImages[1] && (
-                    <div className="w-full h-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
-                      <span className="text-3xl text-white">🏮</span>
-                    </div>
-                  )}
+                  <OptimizedImage 
+                    src={featureImages[1]} 
+                    alt="傳統農法"
+                    width={128}
+                    height={128}
+                    className="object-cover hover:scale-110 transition-transform duration-300"
+                    sizes="128px"
+                  />
                 </div>
                 <h3 className="text-xl font-heading mb-4 text-gray-800">傳統農法</h3>
                 <p className="text-gray-600">傳承百年農業技術，結合現代科技，呈現最佳農品品質</p>
               </div>
               <div className="text-center">
                 <div className="w-32 h-32 rounded-full mx-auto mb-6 overflow-hidden relative shadow-lg">
-                  {featureImages[2] && (
-                    <OptimizedImage 
-                      src={featureImages[2]} 
-                      alt="農業文化"
-                      width={128}
-                      height={128}
-                      className="object-cover hover:scale-110 transition-transform duration-300"
-                      sizes="128px"
-                    />
-                  )}
-                  {!featureImages[2] && (
-                    <div className="w-full h-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center">
-                      <span className="text-3xl text-white">🎋</span>
-                    </div>
-                  )}
+                  <OptimizedImage 
+                    src={featureImages[2]} 
+                    alt="農業文化"
+                    width={128}
+                    height={128}
+                    className="object-cover hover:scale-110 transition-transform duration-300"
+                    sizes="128px"
+                  />
                 </div>
                 <h3 className="text-xl font-heading mb-4 text-gray-800">農業文化</h3>
                 <p className="text-gray-600">不僅是農品銷售，更致力於推廣台灣農業文化的深度內涵</p>

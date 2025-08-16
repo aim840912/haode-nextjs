@@ -3,6 +3,50 @@ import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-change-in-production';
 
+// 輸入清理與驗證
+export function sanitizeInput(input: unknown): string {
+  if (typeof input !== 'string') {
+    return ''
+  }
+  
+  // 基本 XSS 防護和字元過濾
+  return input
+    .replace(/[<>]/g, '') // 移除 HTML 標籤
+    .replace(/javascript:/gi, '') // 移除 JavaScript 協議
+    .replace(/on\w+=/gi, '') // 移除事件處理器
+    .trim()
+    .slice(0, 1000) // 限制長度
+}
+
+// 驗證 Email 格式
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+// CSRF 基礎保護
+export function validateOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin')
+  const referer = request.headers.get('referer')
+  const host = request.headers.get('host')
+  
+  // 在開發環境中，允許 localhost
+  if (process.env.NODE_ENV === 'development') {
+    return true
+  }
+  
+  // 檢查來源是否與主機匹配
+  if (origin && host) {
+    return origin.includes(host)
+  }
+  
+  if (referer && host) {
+    return referer.includes(host)
+  }
+  
+  return false
+}
+
 export interface AuthenticatedRequest extends NextRequest {
   user?: {
     id: string;

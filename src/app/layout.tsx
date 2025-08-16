@@ -6,6 +6,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { ToastProvider } from "@/components/Toast";
 import VisitorTracker from "@/components/VisitorTracker";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ["latin"],
@@ -100,16 +101,18 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased`}>
-        <ToastProvider>
-          <AuthProvider>
-            <CartProvider>
-              <VisitorTracker>
-                <Header />
-                {children}
-              </VisitorTracker>
-            </CartProvider>
-          </AuthProvider>
-        </ToastProvider>
+        <ErrorBoundary>
+          <ToastProvider>
+            <AuthProvider>
+              <CartProvider>
+                <VisitorTracker>
+                  <Header />
+                  {children}
+                </VisitorTracker>
+              </CartProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

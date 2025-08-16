@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { Product } from '@/types/product'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 
-export default function ProductsAdmin() {
+function ProductsAdmin() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
@@ -220,5 +221,13 @@ export default function ProductsAdmin() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ProductsAdminWithErrorBoundary() {
+  return (
+    <ComponentErrorBoundary>
+      <ProductsAdmin />
+    </ComponentErrorBoundary>
   )
 }

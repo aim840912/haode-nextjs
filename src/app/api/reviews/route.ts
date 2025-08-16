@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { reviewService } from '@/services/reviewService'
+import { withReviewsCache } from '@/lib/api-cache-middleware'
 
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const approved = searchParams.get('approved')
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const body = await request.json()
     
@@ -60,3 +61,7 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// 使用快取中間件包裝請求
+export const GET = withReviewsCache(handleGET)
+export const POST = withReviewsCache(handlePOST)
