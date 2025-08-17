@@ -6,18 +6,25 @@ export interface CacheOptions {
 }
 
 /**
- * Server-side cache manager that supports both local memory cache and Vercel KV
+ * Server-side cache manager that supports both local memory cache and Vercel KV/Upstash Redis
  */
 export class CacheManager {
   private static memoryCache = new Map<string, { data: unknown; expires: number }>()
+
+  /**
+   * Check if KV/Redis is available
+   */
+  private static isKVAvailable(): boolean {
+    return !!(process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL)
+  }
 
   /**
    * Get data from cache (KV first, then memory fallback)
    */
   static async get<T>(key: string): Promise<T | null> {
     try {
-      // Try Vercel KV first if available
-      if (process.env.KV_REST_API_URL) {
+      // Try Vercel KV/Upstash Redis first if available
+      if (this.isKVAvailable()) {
         const cached = await kv.get<T>(key)
         if (cached !== null) {
           return cached
@@ -43,8 +50,8 @@ export class CacheManager {
     const { ttl = 300 } = options // Default 5 minutes
 
     try {
-      // Set in Vercel KV if available
-      if (process.env.KV_REST_API_URL) {
+      // Set in Vercel KV/Upstash Redis if available
+      if (this.isKVAvailable()) {
         await kv.set(key, data, { ex: ttl })
       }
     } catch (error) {
@@ -63,7 +70,7 @@ export class CacheManager {
    */
   static async delete(key: string): Promise<void> {
     try {
-      if (process.env.KV_REST_API_URL) {
+      if (this.isKVAvailable()) {
         await kv.del(key)
       }
     } catch (error) {
@@ -78,7 +85,7 @@ export class CacheManager {
    */
   static async deletePattern(pattern: string): Promise<void> {
     try {
-      if (process.env.KV_REST_API_URL) {
+      if (this.isKVAvailable()) {
         const keys = await kv.keys(pattern)
         if (keys.length > 0) {
           await kv.del(...keys)
