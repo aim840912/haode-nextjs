@@ -14,7 +14,6 @@ export default function AddProduct() {
 
   const [formData, setFormData] = useState({
     name: '',
-    emoji: '',
     description: '',
     category: '',
     price: 0,
@@ -130,15 +129,6 @@ export default function AddProduct() {
     }))
   }
 
-  const getEmojiSuggestions = (category: string) => {
-    const suggestions = {
-      fruits: ['🍑', '🍎', '🍓', '🍊', '🍉', '🍇'],
-      coffee: ['☕', '🍵', '♨️', '🏭', '🌰', '✨'],
-      vegetables: ['🥬', '🥕', '🌽', '🌶️', '🍅', '🥒'],
-      tea: ['🍵', '🍃', '🌱', '🌿', '☕', '🌵']
-    }
-    return suggestions[category as keyof typeof suggestions] || ['🍑', '☕', '🥬', '🍵']
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
@@ -171,44 +161,6 @@ export default function AddProduct() {
             />
           </div>
 
-          {/* Emoji 選擇 */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              產品圖示 (Emoji) (選填)
-            </label>
-            
-            {/* 快速選擇按鈕 */}
-            <div className="mb-3">
-              <div className="text-xs text-gray-600 mb-2">快速選擇：</div>
-              <div className="flex flex-wrap gap-2">
-                {getEmojiSuggestions(formData.category).map(emoji => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, emoji }))}
-                    className={`px-3 py-2 text-xl border rounded-md hover:bg-gray-50 transition-colors ${
-                      formData.emoji === emoji ? 'bg-amber-100 border-amber-500' : 'border-gray-300'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <input
-              type="text"
-              name="emoji"
-              value={formData.emoji}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-              placeholder="自定義 emoji 或使用上方快速選擇"
-              maxLength={2}
-            />
-            <div className="text-xs text-gray-500 mt-1">
-              選填，可為產品添加視覺圖示。留空則不顯示任何圖示
-            </div>
-          </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">

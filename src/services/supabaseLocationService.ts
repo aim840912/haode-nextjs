@@ -1,5 +1,5 @@
 import { Location } from '@/types/location'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 interface LocationService {
   getLocations(): Promise<Location[]>
@@ -12,7 +12,7 @@ interface LocationService {
 class SupabaseLocationService implements LocationService {
   async getLocations(): Promise<Location[]> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await supabase
         .from('locations')
         .select('*')
         .order('created_at', { ascending: true })
@@ -78,7 +78,7 @@ class SupabaseLocationService implements LocationService {
 
   async getLocationById(id: number): Promise<Location | null> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await supabase
         .from('locations')
         .select('*')
         .eq('id', id)

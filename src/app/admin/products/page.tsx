@@ -124,10 +124,12 @@ function ProductsAdmin() {
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      {product.emoji && (
-                        <div className="text-2xl mr-3">
-                          {product.emoji}
-                        </div>
+                      {product.images[0] && (
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded mr-3"
+                        />
                       )}
                       <div>
                         <div className="text-sm font-medium text-gray-900">

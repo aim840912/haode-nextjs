@@ -107,15 +107,12 @@ function ProductsSection() {
           <div className="grid md:grid-cols-4 gap-8">
             {products.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <div className="aspect-square flex items-center justify-center relative">
+                <div className="aspect-square relative overflow-hidden rounded-lg">
                   <img 
-                    src="/images/backgrounds/product-placeholder.svg" 
-                    alt="Product background" 
-                    className="absolute inset-0 w-full h-full object-cover"
+                    src={product.images[0] || "/images/placeholder.jpg"} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover"
                   />
-                  {product.emoji && (
-                    <span className="text-4xl relative z-10">{product.emoji}</span>
-                  )}
                 </div>
                 <div className="p-6">
                   <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>

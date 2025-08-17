@@ -29,7 +29,7 @@ const products = [
     category: '紅肉李果園',
     price: 680,
     originalPrice: 800,
-    image: '/products/red_plum_2.jpg',
+    image: '/images/products/red_plum_2.jpg',
     description: '來自海拔1000公尺以上的高山紅肉李，果肉飽滿、甜度極高',
     features: ['有機栽培', '產地直送', '新鮮採摘', '冷鏈保存'],
     specifications: [
@@ -67,7 +67,7 @@ const products = [
     category: '季節水果',
     price: 850,
     originalPrice: 950,
-    image: '/products/fruit.jpg',
+    image: '/images/products/fruit.jpg',
     description: '精選當季最優質水果，營養豐富、口感絕佳',
     features: ['當季新鮮', '產地直送', '精美包裝', '營養豐富'],
     specifications: [
@@ -245,7 +245,6 @@ function ProductsPage() {
     const productData = {
       id: product.id.toString(),
       name: product.name,
-      emoji: product.emoji,
       description: product.description,
       category: product.category,
       price: product.price,
@@ -338,13 +337,11 @@ function ProductsPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-6xl">
-                      {product.category === '精品咖啡' && '☕'}
-                      {product.category === '有機蔬菜' && '🥬'}
-                      {product.category === '精品茶葉' && '🍵'}
-                    </span>
-                  </div>
+                  <img 
+                    src="/images/placeholder.jpg" 
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
                 )}
                 {!product.inStock && (
                   <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">

@@ -1,16 +1,10 @@
 import { Product, ProductService } from '@/types/product'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 class SupabaseProductService implements ProductService {
   async getProducts(): Promise<Product[]> {
     try {
-      if (!supabaseAdmin) {
-        // 如果沒有 Supabase 設定，回退到本地資料
-        console.warn('Supabase not configured, using fallback data')
-        return []
-      }
-      
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false })
@@ -76,7 +70,7 @@ class SupabaseProductService implements ProductService {
 
   async getProductById(id: string): Promise<Product | null> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
@@ -96,16 +90,11 @@ class SupabaseProductService implements ProductService {
 
   async searchProducts(query: string): Promise<Product[]> {
     try {
-      if (!supabaseAdmin) {
-        console.warn('Supabase not configured, using fallback data')
-        return []
-      }
-      
       if (!query.trim()) return []
 
       const searchTerm = `%${query.toLowerCase()}%`
       
-      const { data, error } = await supabaseAdmin
+      const { data, error } = await supabase
         .from('products')
         .select('*')
         .or(`name.ilike.${searchTerm},description.ilike.${searchTerm},category.ilike.${searchTerm}`)
@@ -139,14 +128,29 @@ class SupabaseProductService implements ProductService {
   }
 
   private transformFromDB(dbProduct: Record<string, unknown>): Product {
+    // 預設圖片對應表
+    const defaultImages: { [key: string]: string } = {
+      '有機紅肉李': '/images/products/red-plum.jpg',
+      '高山烏龍茶': '/images/products/oolong-tea.jpg', 
+      '季節蔬菜箱': '/images/products/vegetable-box.jpg',
+      '農場蜂蜜': '/images/products/honey.jpg'
+    }
+
+    // 取得圖片路徑，優先使用資料庫的值，否則使用預設對應
+    let imageUrl = (dbProduct.image_url as string) || defaultImages[dbProduct.name as string] || '/images/placeholder.jpg'
+    
+    // 修正錯誤的 Imgur 連結
+    if (imageUrl && imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png')) {
+      imageUrl = defaultImages[dbProduct.name as string] || '/images/placeholder.jpg'
+    }
+
     return {
       id: dbProduct.id as string,
       name: dbProduct.name as string,
-      emoji: dbProduct.emoji as string,
       description: dbProduct.description as string,
       category: dbProduct.category as string,
       price: parseFloat(dbProduct.price as string),
-      images: dbProduct.image_url ? [dbProduct.image_url as string] : [],
+      images: [imageUrl],
       inventory: dbProduct.stock as number,
       isActive: dbProduct.is_active as boolean,
       createdAt: dbProduct.created_at as string,

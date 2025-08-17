@@ -68,5 +68,7 @@ class JsonScheduleService implements ScheduleService {
   }
 }
 
-// 將來改成資料庫時，只需要替換這行
-export const scheduleService: ScheduleService = new JsonScheduleService()
+import { supabaseScheduleService } from './supabaseScheduleService'
+
+// 使用 Supabase 服務取代 JSON 檔案
+export const scheduleService: ScheduleService = supabaseScheduleService

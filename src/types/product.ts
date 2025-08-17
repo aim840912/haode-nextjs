@@ -1,7 +1,6 @@
 export interface Product {
   id: string
   name: string
-  emoji?: string
   description: string
   category: string
   price: number
