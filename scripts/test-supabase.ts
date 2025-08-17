@@ -26,7 +26,7 @@ function loadEnvVars() {
         const envContent = fs.readFileSync(envPath, 'utf8')
         const envLines = envContent.split('\n')
         
-        envLines.forEach(line => {
+        envLines.forEach((line: string) => {
           const trimmedLine = line.trim()
           if (trimmedLine && !trimmedLine.startsWith('#')) {
             const [key, ...valueParts] = trimmedLine.split('=')
@@ -286,8 +286,8 @@ class SupabaseTestRunner {
       this.log('失敗的測試：', 'error')
       this.results
         .filter(r => r.status === 'error')
-        .forEach(test => {
-          this.log(`- ${test.name}: ${test.message}`, 'error')
+        .forEach((result: TestResult) => {
+          this.log(`- ${result.name}: ${result.message}`, 'error')
         })
     }
   }

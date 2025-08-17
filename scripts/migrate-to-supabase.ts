@@ -22,7 +22,7 @@ function loadEnvVars() {
         const envContent = fs.readFileSync(envPath, 'utf8')
         const envLines = envContent.split('\n')
         
-        envLines.forEach(line => {
+        envLines.forEach((line: string) => {
           const trimmedLine = line.trim()
           if (trimmedLine && !trimmedLine.startsWith('#')) {
             const [key, ...valueParts] = trimmedLine.split('=')

@@ -19,7 +19,7 @@ function loadEnvVars() {
         const envContent = fs.readFileSync(envPath, 'utf8')
         const envLines = envContent.split('\n')
         
-        envLines.forEach(line => {
+        envLines.forEach((line: string) => {
           const trimmedLine = line.trim()
           if (trimmedLine && !trimmedLine.startsWith('#')) {
             const [key, ...valueParts] = trimmedLine.split('=')
@@ -80,11 +80,12 @@ async function updateProductsTable() {
 
     if (emojiError) {
       console.log('⚠️ 使用直接 SQL 方式添加 emoji 欄位...')
-      await supabaseAdmin.from('products').select('emoji').limit(1)
-        .catch(async () => {
-          // 如果查詢失敗，說明欄位不存在，嘗試其他方法
-          console.log('🔧 emoji 欄位不存在，建議手動執行 SQL')
-        })
+      try {
+        await supabaseAdmin.from('products').select('emoji').limit(1)
+      } catch {
+        // 如果查詢失敗，說明欄位不存在，嘗試其他方法
+        console.log('🔧 emoji 欄位不存在，建議手動執行 SQL')
+      }
     }
 
     // 檢查 stock 欄位
