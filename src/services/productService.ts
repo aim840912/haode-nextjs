@@ -2,7 +2,7 @@ import { Product, ProductService } from '@/types/product'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-class JsonProductService implements ProductService {
+export class JsonProductService implements ProductService {
   private readonly filePath = path.join(process.cwd(), 'src/data/products.json')
 
   async getProducts(): Promise<Product[]> {
@@ -95,9 +95,40 @@ class JsonProductService implements ProductService {
   }
 }
 
-// 將來改成資料庫時，只需要替換這行
-export const productService: ProductService = new JsonProductService()
+// 智慧產品服務 - 根據環境自動選擇實作
+import { getProductService } from './serviceFactory'
 
-// Supabase implementation
-// import { supabaseProductService } from './supabaseProductService'
-// export const productService: ProductService = supabaseProductService
+// 延遲初始化的產品服務
+let _productService: ProductService | null = null
+
+export const productService: ProductService = {
+  async getProducts() {
+    if (!_productService) _productService = await getProductService()
+    return _productService.getProducts()
+  },
+  
+  async addProduct(productData) {
+    if (!_productService) _productService = await getProductService()
+    return _productService.addProduct(productData)
+  },
+  
+  async updateProduct(id, productData) {
+    if (!_productService) _productService = await getProductService()
+    return _productService.updateProduct(id, productData)
+  },
+  
+  async deleteProduct(id) {
+    if (!_productService) _productService = await getProductService()
+    return _productService.deleteProduct(id)
+  },
+  
+  async getProductById(id) {
+    if (!_productService) _productService = await getProductService()
+    return _productService.getProductById(id)
+  },
+  
+  async searchProducts(query) {
+    if (!_productService) _productService = await getProductService()
+    return _productService.searchProducts(query)
+  }
+}

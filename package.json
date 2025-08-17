@@ -11,7 +11,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:supabase": "npx tsx scripts/test-supabase.ts",
+    "test:supabase-quick": "npx tsx scripts/quick-test.ts",
+    "check:tables": "npx tsx scripts/check-tables.ts",
+    "migrate:products": "npx tsx scripts/migrate-to-supabase.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

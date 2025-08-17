@@ -30,26 +30,63 @@
 
 ## 🚀 實用開發路線圖
 
-### Phase 1: 能收錢（2-3週）
-**目標：讓客戶能實際下單付款**
+### Phase 0: 準備工作（本週末）
+**目標：設定混合資料架構，保護免費額度**
 
-#### Week 1: 真實資料整合
-- [ ] **產品管理** - 將產品資料移到 Supabase
-- [ ] **庫存系統** - 實作真實庫存檢查和扣減
-- [ ] **會員註冊** - 整合 Supabase Auth
+#### 🔧 **環境配置**
+```javascript
+// .env.local (開發環境)
+NODE_ENV=development
+USE_MOCK_DATA=true          // 使用 JSON 檔案
+NEXT_PUBLIC_DEMO_MODE=true  // 展示模式
+
+// .env.production (生產環境)
+USE_MOCK_DATA=false         // 使用 Supabase
+NEXT_PUBLIC_DEMO_MODE=false
+```
+
+#### 📁 **智慧資料策略**
+```typescript
+// src/lib/data-strategy.ts
+export const dataStrategy = {
+  // 靜態資料：永遠用 JSON（省流量）
+  products: process.env.USE_MOCK_DATA ? 'json' : 'cache+json',
+  culture: 'json',   // 永遠用 JSON
+  locations: 'json', // 永遠用 JSON
+  news: 'json',      // 永遠用 JSON
+
+  // 動態資料：必須用 Supabase
+  users: 'supabase',
+  carts: 'supabase',
+  orders: 'supabase',
+  inventory: 'supabase', // 庫存需即時同步
+
+  // 三層快取配置
+  cache: {
+    browser: 600,    // 10分鐘
+    kv: 3600,        // 1小時
+    products: 86400, // 24小時（很少變）
+    inventory: 60,   // 1分鐘（需即時）
+  }
+}
+```
+
+### Phase 1: 能收錢（2週）
+**目標：讓客戶能實際下單付款，同時保護免費額度**
+
+#### Week 1: 混合資料架構
+- [ ] **保留 JSON 資料** - 產品目錄、文化、據點（省 Supabase 流量）
+- [ ] **建立關鍵 Tables** - 購物車、訂單、庫存、用戶
+- [ ] **三層快取系統** - 瀏覽器 → Vercel KV → 資料來源
+- [ ] **會員註冊** - Supabase Auth 整合
 - [ ] **聯絡資訊** - 更新真實電話、地址、社群連結
 
-#### Week 2: 購物車系統
-- [ ] **購物車 CRUD** - 儲存到 Supabase，支援用戶綁定
-- [ ] **購物流程** - 登入 → 加購物車 → 確認訂單
-- [ ] **運費計算** - 實作真實運費邏輯
+#### Week 2: 綠界支付整合
+- [ ] **申請綠界測試帳號** - 台灣本土支付（優於 Stripe）
+- [ ] **購物車系統** - 存 Supabase，支援用戶綁定
 - [ ] **訂單建立** - 生成真實訂單編號
-
-#### Week 3: 支付整合
-- [ ] **選擇支付方式** - 建議先做綠界（台灣本土）
-- [ ] **支付 API 整合** - 申請測試帳號，實作 callback
-- [ ] **訂單狀態** - 支付成功 → 更新訂單 → 扣庫存
-- [ ] **基本測試** - 完整購買流程測試
+- [ ] **支付流程** - 綠界 → callback → 更新訂單 → 扣庫存
+- [ ] **完整測試** - 從瀏覽到付款的完整流程
 
 ### Phase 2: 能出貨（1-2週）
 **目標：建立後台管理，能處理訂單**
@@ -169,20 +206,118 @@ POST /api/reviews         // 商品評價
 
 ---
 
-## 💰 成本考量
+## 📊 Supabase 流量管理
 
-### 必要費用
-- **Vercel Pro**: $20/月（production 需要）
-- **Supabase Pro**: $25/月（真實使用量）
-- **綠界 ECPay**: 2.8% 手續費
-- **網域名稱**: $10-15/年
+### 免費額度詳細分析
+```javascript
+Supabase 免費方案：
+✅ Database: 500 MB 儲存空間（絕對夠用）
+✅ API Requests: 無限制（但有速率限制）
+⚠️ Bandwidth: 2 GB/月（主要限制）
+✅ File Storage: 1 GB
+✅ Monthly Active Users: 50,000
+✅ Edge Functions: 500,000 次調用/月
+```
 
-### 可選費用
-- **Cloudinary**: $99/月（圖片 CDN）
-- **SendGrid**: $15/月（Email 通知）
-- **LINE Notify**: 免費（通知系統）
+### 流量消耗計算機
+| 使用情境        | 每日 API 請求 | 每月流量消耗 | 是否安全   |
+| --------------- | ------------- | ------------ | ---------- |
+| **個人測試**    | 100 次        | ~300 MB      | ✅ 安全     |
+| **10 訪客/天**  | 100 次        | ~300 MB      | ✅ 安全     |
+| **50 訪客/天**  | 500 次        | ~1.5 GB      | ⚠️ 接近上限 |
+| **100 訪客/天** | 1000 次       | ~3 GB        | ❌ 超標     |
 
-### 總計：約 $50-70/月
+### 三層快取架構（節省流量）
+```typescript
+// src/lib/smart-cache.ts
+class SmartCache {
+  async get(key: string) {
+    // 第一層：瀏覽器快取（最快）
+    const browserCached = this.browserCache.get(key)
+    if (browserCached && !this.isExpired(browserCached)) {
+      return browserCached.data
+    }
+
+    // 第二層：Vercel KV 快取（中等）
+    const kvCached = await kv.get(key)
+    if (kvCached) {
+      this.browserCache.set(key, kvCached)
+      return kvCached
+    }
+
+    // 第三層：資料來源（最慢，消耗流量）
+    const fresh = await this.fetchFromSource(key)
+
+    // 更新所有快取層
+    await kv.set(key, fresh, { ex: this.getTTL(key) })
+    this.browserCache.set(key, fresh)
+
+    return fresh
+  }
+
+  private fetchFromSource(key: string) {
+    const [resource] = key.split(':')
+
+    // 智慧路由：靜態資料用 JSON，動態資料用 Supabase
+    if (['products', 'culture', 'locations'].includes(resource)) {
+      return import(`/data/${resource}.json`) // 不消耗 Supabase 流量
+    }
+
+    return supabase.from(resource).select() // 消耗 Supabase 流量
+  }
+}
+```
+
+## 💰 成本分階段規劃
+
+### Phase 0-1: 測試期（免費）
+```
+✅ Vercel Hobby: $0/月
+✅ Supabase Free: $0/月（2GB 流量）
+✅ 綠界測試: 免費
+✅ 網域: $10/年
+總計: $10/年
+```
+
+### Phase 2: 小流量（50 訪客/天）
+```
+✅ Vercel Hobby: $0/月（還夠用）
+⚠️ Supabase Free: $0/月（接近上限）
+✅ 綠界正式: 2.8% 手續費
+✅ 網域: $10/年
+總計: ~$10/年 + 手續費
+```
+
+### Phase 3: 中流量（100+ 訪客/天）
+```
+⚠️ Vercel Pro: $20/月（需要 Pro 功能）
+❌ Supabase Pro: $25/月（必須升級）
+✅ 綠界正式: 2.8% 手續費
+✅ 網域: $10/年
+總計: $45/月 + 手續費
+```
+
+### 升級決策點
+```javascript
+// 何時升級 Supabase Pro？
+if (
+  monthlyBandwidth > 1.5 * 1024 * 1024 * 1024 || // 1.5GB
+  dailyActiveUsers > 30 ||
+  monthlyRevenue > 5000 // 有收入了
+) {
+  upgradeToPro() // $25/月，值得投資
+}
+
+// 何時升級 Vercel Pro？
+if (
+  needTeamCollaboration ||
+  needAdvancedAnalytics ||
+  buildTimeouts ||
+  customDomains > 1
+) {
+  upgradeVercel() // $20/月
+}
+```
 
 ---
 
@@ -223,17 +358,54 @@ POST /api/reviews         // 商品評價
 ## 🎯 下一步行動
 
 ### 立即開始（本週）
-1. **檢查 Supabase** - 確認 migrations 是否完整
+1. **設定混合資料策略** - 實作 Phase 0 環境配置
 2. **申請綠界測試帳號** - 開始支付整合
-3. **更新聯絡資訊** - 電話、地址、社群連結
-4. **列出產品清單** - 確認要賣的商品和價格
+3. **建立 Supabase Tables** - orders, carts, inventory
+4. **更新聯絡資訊** - 電話、地址、社群連結
+5. **實作三層快取** - SmartCache 類別
 
 ### 本月目標
-🎯 **讓第一個客戶能成功下單並付款**
+🎯 **免費測試到第一筆真實訂單成功**
 
-記住：**完成 > 完美**。先讓網站能賺錢，再慢慢優化。
+### 關鍵成功指標
+```javascript
+// 測試期間目標
+✅ 網站功能完整（購物車 → 訂單 → 支付）
+✅ Supabase 流量 < 1GB/月
+✅ 支付流程 100% 成功率
+✅ 零重大 bug
+
+// 營運期間目標
+📈 第一筆真實訂單
+📈 月營收 > 月成本
+📈 客戶滿意度 > 4.0/5
+📈 轉換率 > 1%
+```
+
+記住：**先免費測試完善，再付費規模化**。混合架構讓你可以最低成本驗證商業模式！
+
+---
+
+## 🔄 資料遷移路徑
+
+### 測試階段（免費）
+```
+📁 /data/products.json    ← 產品目錄（不變）
+📁 /data/culture.json     ← 文化內容（不變）
+📁 /data/locations.json   ← 據點資訊（不變）
+🗄️  Supabase: users, carts, orders, inventory
+```
+
+### 營運階段（付費）
+```
+🗄️  Supabase: 全部資料
+📦 Vercel KV: 快取層
+🌐 CDN: 圖片資源
+```
+
+**漸進式遷移，風險最小，成本最優！**
 
 ---
 
 *最後更新：2025-08-17*
-*基於專案實際狀況分析，專注於實用性與可執行性*
+*整合 Supabase 免費額度策略，專注零成本測試到收費營運*

@@ -1,352 +1,208 @@
-/**
- * Migration script to transfer data from JSON files to Supabase
- * Run this script after setting up Supabase database
- */
-import { readFileSync } from 'fs'
-import { join } from 'path'
-import { supabaseAdmin } from '../src/lib/supabase'
+#!/usr/bin/env npx tsx
 
-interface MigrationResult {
-  table: string
-  success: number
-  errors: number
-  details: string[]
+/**
+ * 資料遷移腳本 - 將 JSON 資料匯入到 Supabase
+ * 
+ * 使用方法：
+ * npm run migrate:products
+ */
+
+import { createClient } from '@supabase/supabase-js'
+import { promises as fs } from 'fs'
+import path from 'path'
+
+// 載入環境變數
+function loadEnvVars() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    try {
+      const fs = require('fs')
+      const envPath = path.join(process.cwd(), '.env.local')
+      
+      if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8')
+        const envLines = envContent.split('\n')
+        
+        envLines.forEach(line => {
+          const trimmedLine = line.trim()
+          if (trimmedLine && !trimmedLine.startsWith('#')) {
+            const [key, ...valueParts] = trimmedLine.split('=')
+            if (key && valueParts.length > 0) {
+              const value = valueParts.join('=').trim()
+              process.env[key.trim()] = value
+            }
+          }
+        })
+        console.log('✅ .env.local 檔案載入成功')
+      } else {
+        console.log('❌ 找不到 .env.local 檔案')
+      }
+    } catch (error) {
+      console.log('❌ 載入 .env.local 時發生錯誤:', error)
+    }
+  }
 }
 
-async function migrateData(): Promise<void> {
-  console.log('🚀 Starting migration to Supabase...')
-  const results: MigrationResult[] = []
+// 轉換產品資料格式
+function transformProductForDB(product: any) {
+  // 先檢查哪些欄位存在，只使用現有欄位
+  const baseData = {
+    // 不包含 id，讓 Supabase 自動生成 UUID
+    name: product.name,
+    description: product.description,
+    category: product.category,
+    price: parseFloat(product.price.toString()),
+    is_active: product.isActive !== false,
+    created_at: product.createdAt || new Date().toISOString(),
+    updated_at: product.updatedAt || new Date().toISOString()
+  }
 
-  try {
-    // Migrate Products
-    console.log('\n📦 Migrating products...')
-    const productsResult = await migrateProducts()
-    results.push(productsResult)
+  // 只有當有圖片時才加入
+  if (product.images && product.images.length > 0) {
+    (baseData as any).image_url = product.images[0]
+  }
 
-    // Migrate Locations 
-    console.log('\n📍 Migrating locations...')
-    const locationsResult = await migrateLocations()
-    results.push(locationsResult)
+  // TODO: 之後添加 emoji 和 stock 欄位
+  // emoji: product.emoji || '',
+  // stock: product.inventory || 0,
 
-    // Migrate News
-    console.log('\n📰 Migrating news...')
-    const newsResult = await migrateNews()
-    results.push(newsResult)
+  return baseData
+}
 
-    // Migrate Schedule
-    console.log('\n📅 Migrating schedule...')
-    const scheduleResult = await migrateSchedule()
-    results.push(scheduleResult)
+async function migrateProducts() {
+  console.log('🚀 開始產品資料遷移...\n')
 
-    // Migrate Culture
-    console.log('\n🏛️ Migrating culture...')
-    const cultureResult = await migrateCulture()
-    results.push(cultureResult)
+  // 載入環境變數
+  loadEnvVars()
 
-    // Migrate Farm Tour
-    console.log('\n🚜 Migrating farm tour...')
-    const farmTourResult = await migrateFarmTour()
-    results.push(farmTourResult)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  } catch (error) {
-    console.error('❌ Migration failed:', error)
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('❌ 缺少必要的環境變數')
+    console.log('請確認 .env.local 包含:')
+    console.log('- NEXT_PUBLIC_SUPABASE_URL')
+    console.log('- SUPABASE_SERVICE_ROLE_KEY')
     return
   }
 
-  // Print summary
-  console.log('\n' + '='.repeat(50))
-  console.log('📊 MIGRATION SUMMARY')
-  console.log('='.repeat(50))
-
-  let totalSuccess = 0
-  let totalErrors = 0
-
-  results.forEach(result => {
-    console.log(`\n${result.table}:`)
-    console.log(`  ✅ Success: ${result.success}`)
-    console.log(`  ❌ Errors: ${result.errors}`)
-    
-    if (result.errors > 0) {
-      console.log('  📝 Error details:')
-      result.details.forEach(detail => {
-        console.log(`    - ${detail}`)
-      })
+  // 建立 Supabase 客戶端
+  const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-
-    totalSuccess += result.success
-    totalErrors += result.errors
   })
 
-  console.log('\n' + '='.repeat(50))
-  console.log(`📈 TOTAL: ${totalSuccess} success, ${totalErrors} errors`)
-  console.log('='.repeat(50))
-
-  if (totalErrors === 0) {
-    console.log('🎉 Migration completed successfully!')
-  } else {
-    console.log('⚠️  Migration completed with some errors.')
-  }
-}
-
-async function migrateProducts(): Promise<MigrationResult> {
-  const result: MigrationResult = { table: 'Products', success: 0, errors: 0, details: [] }
-  
   try {
-    const productsJson = readFileSync(join(process.cwd(), 'src/data/products.json'), 'utf-8')
-    const products = JSON.parse(productsJson)
+    // 讀取 JSON 資料
+    console.log('📖 讀取產品 JSON 資料...')
+    const jsonPath = path.join(process.cwd(), 'src/data/products.json')
+    const jsonData = await fs.readFile(jsonPath, 'utf-8')
+    const products = JSON.parse(jsonData)
+    
+    console.log(`✅ 找到 ${products.length} 個產品`)
 
-    for (const product of products) {
-      try {
-        const { error } = await supabaseAdmin!
+    // 檢查現有資料
+    console.log('\n🔍 檢查 Supabase 現有資料...')
+    const { data: existingProducts, error: fetchError } = await supabaseAdmin
+      .from('products')
+      .select('id, name')
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      throw fetchError
+    }
+
+    const existingNames = existingProducts?.map(p => p.name) || []
+    console.log(`📊 Supabase 中現有 ${existingNames.length} 個產品`)
+
+    // 準備遷移資料（根據名稱判斷，避免重複）
+    const newProducts = products.filter((p: any) => !existingNames.includes(p.name))
+    const updateProducts = products.filter((p: any) => existingNames.includes(p.name))
+
+    console.log(`\n📦 準備遷移:`)
+    console.log(`   新增: ${newProducts.length} 個產品`)
+    console.log(`   更新: ${updateProducts.length} 個產品`)
+
+    // 新增產品
+    if (newProducts.length > 0) {
+      console.log('\n➕ 新增產品...')
+      const newProductData = newProducts.map(transformProductForDB)
+      
+      const { data: insertedData, error: insertError } = await supabaseAdmin
+        .from('products')
+        .insert(newProductData)
+        .select()
+
+      if (insertError) {
+        console.error('插入錯誤詳情:', insertError)
+        throw insertError
+      }
+
+      console.log(`✅ 成功新增 ${insertedData?.length || newProducts.length} 個產品`)
+    }
+
+    // 更新產品
+    if (updateProducts.length > 0) {
+      console.log('\n🔄 更新現有產品...')
+      let updateCount = 0
+
+      for (const product of updateProducts) {
+        const productData = transformProductForDB(product)
+        const { created_at, ...updateData } = productData  // 移除 created_at
+
+        const { error: updateError } = await supabaseAdmin
           .from('products')
-          .insert({
-            name: product.name,
-            description: product.description,
-            price: product.price,
-            category: product.category,
-            image_url: product.imageUrl,
-            stock: product.stock,
-            is_active: product.isActive
-          })
+          .update(updateData)
+          .eq('name', product.name)  // 根據名稱更新
 
-        if (error) {
-          result.errors++
-          result.details.push(`Product "${product.name}": ${error.message}`)
+        if (updateError) {
+          console.warn(`⚠️ 更新產品 ${product.name} 失敗:`, updateError.message)
         } else {
-          result.success++
+          updateCount++
         }
-      } catch (err) {
-        result.errors++
-        result.details.push(`Product "${product.name}": ${err}`)
+      }
+
+      console.log(`✅ 成功更新 ${updateCount} 個產品`)
+    }
+
+    // 驗證結果
+    console.log('\n🔍 驗證遷移結果...')
+    const { data: finalData, error: finalError } = await supabaseAdmin
+      .from('products')
+      .select('id, name, is_active')
+      .order('created_at', { ascending: false })
+
+    if (finalError) {
+      throw finalError
+    }
+
+    console.log(`\n📊 遷移完成統計:`)
+    console.log(`   總產品數: ${finalData?.length || 0}`)
+    console.log(`   啟用產品: ${finalData?.filter(p => p.is_active).length || 0}`)
+    console.log(`   停用產品: ${finalData?.filter(p => !p.is_active).length || 0}`)
+
+    console.log('\n🎉 產品資料遷移完成！')
+    console.log('💡 提示：你現在可以在網站管理介面新增/編輯產品了')
+
+  } catch (error) {
+    console.error('\n❌ 遷移過程發生錯誤:')
+    console.error('完整錯誤物件:', error)
+    if (error instanceof Error) {
+      console.error('錯誤訊息:', error.message)
+      if ('code' in error) {
+        console.error('錯誤代碼:', (error as any).code)
       }
     }
-  } catch (err) {
-    result.errors++
-    result.details.push(`Failed to read products.json: ${err}`)
+    console.log('\n🔧 常見問題排除:')
+    console.log('1. 確認 Supabase 資料庫表格已建立')
+    console.log('2. 檢查 API Keys 是否正確')
+    console.log('3. 確認網路連線正常')
   }
-
-  return result
 }
 
-async function migrateLocations(): Promise<MigrationResult> {
-  const result: MigrationResult = { table: 'Locations', success: 0, errors: 0, details: [] }
-  
-  try {
-    const locationsJson = readFileSync(join(process.cwd(), 'src/data/locations.json'), 'utf-8')
-    const locations = JSON.parse(locationsJson)
-
-    for (const location of locations) {
-      try {
-        const { error } = await supabaseAdmin!
-          .from('locations')
-          .insert({
-            name: location.name,
-            title: location.title,
-            address: location.address,
-            landmark: location.landmark,
-            phone: location.phone,
-            line_id: location.lineId,
-            hours: location.hours,
-            closed_days: location.closedDays,
-            parking: location.parking,
-            public_transport: location.publicTransport,
-            features: location.features,
-            specialties: location.specialties,
-            coordinates: location.coordinates,
-            image: location.image,
-            is_main: location.isMain
-          })
-
-        if (error) {
-          result.errors++
-          result.details.push(`Location "${location.name}": ${error.message}`)
-        } else {
-          result.success++
-        }
-      } catch (err) {
-        result.errors++
-        result.details.push(`Location "${location.name}": ${err}`)
-      }
-    }
-  } catch (err) {
-    result.errors++
-    result.details.push(`Failed to read locations.json: ${err}`)
-  }
-
-  return result
-}
-
-async function migrateNews(): Promise<MigrationResult> {
-  const result: MigrationResult = { table: 'News', success: 0, errors: 0, details: [] }
-  
-  try {
-    const newsJson = readFileSync(join(process.cwd(), 'src/data/news.json'), 'utf-8')
-    const news = JSON.parse(newsJson)
-
-    for (const item of news) {
-      try {
-        const { error } = await supabaseAdmin!
-          .from('news')
-          .insert({
-            title: item.title,
-            summary: item.summary,
-            content: item.content,
-            image_url: item.imageUrl,
-            category: item.category,
-            tags: item.tags,
-            is_published: item.isPublished,
-            publish_date: item.publishDate
-          })
-
-        if (error) {
-          result.errors++
-          result.details.push(`News "${item.title}": ${error.message}`)
-        } else {
-          result.success++
-        }
-      } catch (err) {
-        result.errors++
-        result.details.push(`News "${item.title}": ${err}`)
-      }
-    }
-  } catch (err) {
-    result.errors++
-    result.details.push(`Failed to read news.json: ${err}`)
-  }
-
-  return result
-}
-
-async function migrateSchedule(): Promise<MigrationResult> {
-  const result: MigrationResult = { table: 'Schedule', success: 0, errors: 0, details: [] }
-  
-  try {
-    const scheduleJson = readFileSync(join(process.cwd(), 'src/data/schedule.json'), 'utf-8')
-    const schedule = JSON.parse(scheduleJson)
-
-    for (const item of schedule) {
-      try {
-        const { error } = await supabaseAdmin!
-          .from('schedule')
-          .insert({
-            title: item.title,
-            location: item.location,
-            date: item.date,
-            time: item.time,
-            status: item.status,
-            products: item.products,
-            description: item.description,
-            contact: item.contact,
-            special_offer: item.specialOffer,
-            weather_note: item.weatherNote
-          })
-
-        if (error) {
-          result.errors++
-          result.details.push(`Schedule "${item.title}": ${error.message}`)
-        } else {
-          result.success++
-        }
-      } catch (err) {
-        result.errors++
-        result.details.push(`Schedule "${item.title}": ${err}`)
-      }
-    }
-  } catch (err) {
-    result.errors++
-    result.details.push(`Failed to read schedule.json: ${err}`)
-  }
-
-  return result
-}
-
-async function migrateCulture(): Promise<MigrationResult> {
-  const result: MigrationResult = { table: 'Culture', success: 0, errors: 0, details: [] }
-  
-  try {
-    const cultureJson = readFileSync(join(process.cwd(), 'src/data/culture.json'), 'utf-8')
-    const culture = JSON.parse(cultureJson)
-
-    for (const item of culture) {
-      try {
-        const { error } = await supabaseAdmin!
-          .from('culture')
-          .insert({
-            title: item.title,
-            description: item.description,
-            content: item.content,
-            images: item.images,
-            category: item.category,
-            year: item.year,
-            is_featured: item.isFeatured
-          })
-
-        if (error) {
-          result.errors++
-          result.details.push(`Culture "${item.title}": ${error.message}`)
-        } else {
-          result.success++
-        }
-      } catch (err) {
-        result.errors++
-        result.details.push(`Culture "${item.title}": ${err}`)
-      }
-    }
-  } catch (err) {
-    result.errors++
-    result.details.push(`Failed to read culture.json: ${err}`)
-  }
-
-  return result
-}
-
-async function migrateFarmTour(): Promise<MigrationResult> {
-  const result: MigrationResult = { table: 'Farm Tour', success: 0, errors: 0, details: [] }
-  
-  try {
-    const farmTourJson = readFileSync(join(process.cwd(), 'src/data/farm-tour.json'), 'utf-8')
-    const farmTour = JSON.parse(farmTourJson)
-
-    for (const item of farmTour) {
-      try {
-        const { error } = await supabaseAdmin!
-          .from('farm_tour')
-          .insert({
-            title: item.title,
-            season: item.season,
-            months: item.months,
-            price: item.price,
-            duration: item.duration,
-            activities: item.activities,
-            includes: item.includes,
-            highlight: item.highlight,
-            note: item.note,
-            image: item.image,
-            available: item.available
-          })
-
-        if (error) {
-          result.errors++
-          result.details.push(`Farm Tour "${item.title}": ${error.message}`)
-        } else {
-          result.success++
-        }
-      } catch (err) {
-        result.errors++
-        result.details.push(`Farm Tour "${item.title}": ${err}`)
-      }
-    }
-  } catch (err) {
-    result.errors++
-    result.details.push(`Failed to read farm-tour.json: ${err}`)
-  }
-
-  return result
-}
-
-// Run migration if called directly
+// 執行遷移
 if (require.main === module) {
-  migrateData().catch(console.error)
+  migrateProducts().catch(console.error)
 }
 
-export { migrateData }
+export default migrateProducts
