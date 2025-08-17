@@ -2,7 +2,7 @@ import { ScheduleItem, ScheduleService } from '@/types/schedule'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-class JsonScheduleService implements ScheduleService {
+export class JsonScheduleService implements ScheduleService {
   private readonly filePath = path.join(process.cwd(), 'src/data/schedule.json')
 
   async getSchedule(): Promise<ScheduleItem[]> {

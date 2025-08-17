@@ -6,10 +6,31 @@
  */
 
 import { ProductService } from '@/types/product'
+import { ScheduleService } from '@/types/schedule'
+import { FarmTourActivity } from '@/types/farmTour'
+import { NewsService } from '@/types/news'
+import { CultureService } from '@/types/culture'
+import { LocationService } from '@/types/location'
+import { ReviewService } from '@/types/review'
 import { shouldUseSupabase, shouldFallbackToJson, shouldUseCache, getStrategyInfo } from '@/config/data-strategy'
+
+// 定義服務介面類型
+interface FarmTourService {
+  getAll(): Promise<FarmTourActivity[]>
+  getById(id: string): Promise<FarmTourActivity | null>
+  create(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity>
+  update(id: string, data: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>): Promise<FarmTourActivity | null>
+  delete(id: string): Promise<boolean>
+}
 
 // 服務實例快取
 let productServiceInstance: ProductService | null = null
+let scheduleServiceInstance: ScheduleService | null = null
+let farmTourServiceInstance: FarmTourService | null = null
+let newsServiceInstance: NewsService | null = null
+let cultureServiceInstance: CultureService | null = null
+let locationServiceInstance: LocationService | null = null
+let reviewServiceInstance: ReviewService | null = null
 
 /**
  * 獲取產品服務實例
@@ -107,11 +128,225 @@ export async function createCachedProductService(baseService: ProductService): P
 }
 
 /**
+ * 通用服務工廠函數
+ */
+async function createService<T>(
+  serviceType: keyof Omit<typeof serviceInstances, 'product'>,
+  supabaseServiceImport: () => Promise<{ [key: string]: T }>,
+  jsonServiceCreator: () => Promise<T>,
+  testConnection?: (service: T) => Promise<any>
+): Promise<T> {
+  const useSupabase = shouldUseSupabase(serviceType as any)
+  
+  console.log(`🏭 初始化${serviceType}服務: ${useSupabase ? 'Supabase' : 'JSON'} 模式`)
+
+  try {
+    if (useSupabase) {
+      const supabaseModule = await supabaseServiceImport()
+      const supabaseService = Object.values(supabaseModule)[0] as T
+      
+      // 測試連線（如果提供）
+      if (testConnection) {
+        try {
+          await testConnection(supabaseService)
+          console.log(`✅ ${serviceType} Supabase 服務初始化成功`)
+          return supabaseService
+        } catch (error) {
+          console.warn(`⚠️ ${serviceType} Supabase 連線失敗，嘗試 fallback 到 JSON 模式:`, error)
+          
+          if (shouldFallbackToJson()) {
+            const jsonService = await jsonServiceCreator()
+            console.log(`🔄 ${serviceType} 已切換到 JSON fallback 模式`)
+            return jsonService
+          } else {
+            throw error
+          }
+        }
+      }
+      
+      return supabaseService
+    } else {
+      return await jsonServiceCreator()
+    }
+  } catch (error) {
+    console.error(`❌ ${serviceType} 服務初始化失敗:`, error)
+    
+    if (shouldFallbackToJson()) {
+      console.log(`🔄 ${serviceType} 嘗試 fallback 到 JSON 服務`)
+      return await jsonServiceCreator()
+    } else {
+      throw error
+    }
+  }
+}
+
+// 服務實例集合
+const serviceInstances = {
+  product: productServiceInstance,
+  schedule: scheduleServiceInstance,
+  farmTour: farmTourServiceInstance,
+  news: newsServiceInstance,
+  culture: cultureServiceInstance,
+  locations: locationServiceInstance,
+  reviews: reviewServiceInstance
+}
+
+/**
+ * 獲取排程服務實例
+ */
+export async function getScheduleService(): Promise<ScheduleService> {
+  if (scheduleServiceInstance) {
+    return scheduleServiceInstance
+  }
+
+  scheduleServiceInstance = await createService(
+    'schedule',
+    async () => {
+      const { supabaseScheduleService } = await import('./supabaseScheduleService')
+      return { supabaseScheduleService }
+    },
+    async () => {
+      const { JsonScheduleService } = await import('./scheduleService')
+      return new (JsonScheduleService as any)()
+    },
+    (service) => (service as any).getSchedule()
+  )
+
+  return scheduleServiceInstance!
+}
+
+/**
+ * 獲取農場體驗服務實例
+ */
+export async function getFarmTourService(): Promise<FarmTourService> {
+  if (farmTourServiceInstance) {
+    return farmTourServiceInstance
+  }
+
+  farmTourServiceInstance = await createService(
+    'farmTour',
+    async () => {
+      const { supabaseFarmTourService } = await import('./supabaseFarmTourService')
+      return { supabaseFarmTourService }
+    },
+    async () => {
+      const farmTourService = await import('./farmTourService')
+      return farmTourService.farmTourService
+    },
+    (service) => service.getAll()
+  )
+
+  return farmTourServiceInstance!
+}
+
+/**
+ * 獲取新聞服務實例
+ */
+export async function getNewsService(): Promise<NewsService> {
+  if (newsServiceInstance) {
+    return newsServiceInstance
+  }
+
+  newsServiceInstance = await createService(
+    'news',
+    async () => {
+      const { supabaseNewsService } = await import('./supabaseNewsService')
+      return { supabaseNewsService }
+    },
+    async () => {
+      const { JsonNewsService } = await import('./newsService')
+      return new (JsonNewsService as any)()
+    },
+    (service) => service.getNews()
+  )
+
+  return newsServiceInstance!
+}
+
+/**
+ * 獲取文化服務實例
+ */
+export async function getCultureService(): Promise<CultureService> {
+  if (cultureServiceInstance) {
+    return cultureServiceInstance
+  }
+
+  cultureServiceInstance = await createService(
+    'culture',
+    async () => {
+      const { supabaseCultureService } = await import('./supabaseCultureService')
+      return { supabaseCultureService }
+    },
+    async () => {
+      const { JsonCultureService } = await import('./cultureService')
+      return new (JsonCultureService as any)()
+    },
+    (service) => service.getCultureItems()
+  )
+
+  return cultureServiceInstance!
+}
+
+/**
+ * 獲取地點服務實例
+ */
+export async function getLocationService(): Promise<LocationService> {
+  if (locationServiceInstance) {
+    return locationServiceInstance
+  }
+
+  locationServiceInstance = await createService(
+    'locations',
+    async () => {
+      const { supabaseLocationService } = await import('./supabaseLocationService')
+      return { supabaseLocationService }
+    },
+    async () => {
+      const { JsonLocationService } = await import('./locationService')
+      return new (JsonLocationService as any)()
+    },
+    (service) => service.getLocations()
+  )
+
+  return locationServiceInstance!
+}
+
+/**
+ * 獲取評價服務實例
+ */
+export async function getReviewService(): Promise<ReviewService> {
+  if (reviewServiceInstance) {
+    return reviewServiceInstance
+  }
+
+  reviewServiceInstance = await createService(
+    'reviews',
+    async () => {
+      const { supabaseReviewService } = await import('./supabaseReviewService')
+      return { supabaseReviewService }
+    },
+    async () => {
+      const reviewService = await import('./reviewService')
+      return reviewService.reviewService
+    },
+    (service) => service.getReviews({ limit: 1 })
+  )
+
+  return reviewServiceInstance!
+}
+
+/**
  * 重設服務實例（用於測試或環境變更）
  */
 export function resetServiceInstances() {
   productServiceInstance = null
-  console.log('🔄 服務實例已重設')
+  scheduleServiceInstance = null
+  farmTourServiceInstance = null
+  newsServiceInstance = null
+  cultureServiceInstance = null
+  locationServiceInstance = null
+  reviewServiceInstance = null
+  console.log('🔄 所有服務實例已重設')
 }
 
 /**

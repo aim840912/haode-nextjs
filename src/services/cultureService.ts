@@ -2,7 +2,7 @@ import { CultureItem, CultureService } from '@/types/culture'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-class JsonCultureService implements CultureService {
+export class JsonCultureService implements CultureService {
   private readonly filePath = path.join(process.cwd(), 'src/data/culture.json')
 
   async getCultureItems(): Promise<CultureItem[]> {

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { scheduleService } from '@/services/scheduleService'
+import { getScheduleService } from '@/services/serviceFactory'
 
 export async function GET() {
   try {
+    const scheduleService = await getScheduleService()
     const schedule = await scheduleService.getSchedule()
     return NextResponse.json(schedule)
   } catch (error) {
@@ -16,6 +17,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const scheduleService = await getScheduleService()
     const body = await request.json()
     const scheduleItem = await scheduleService.addSchedule(body)
     return NextResponse.json(scheduleItem, { status: 201 })

@@ -4,61 +4,21 @@ import { useState, useEffect } from 'react';
 import SocialLinks from '@/components/SocialLinks';
 import { useAuth } from '@/lib/auth-context';
 
-// 模擬擺攤行程資料
-const marketSchedule = [
-  {
-    id: 1,
-    title: '台中逢甲夜市',
-    location: '台中市西屯區文華路',
-    date: '2024-08-10',
-    time: '17:00 - 23:00',
-    status: 'upcoming', // upcoming, ongoing, completed
-    products: ['高山紅肉李', '季節水果', '有機蔬菜'],
-    description: '逢甲夜市週六固定攤位，位於文華路入口處',
-    contact: '0912-345-678',
-    specialOffer: '買二送一優惠活動',
-    weatherNote: '如遇雨天可能取消，請關注最新公告'
-  },
-  {
-    id: 2,
-    title: '彰化員林假日市集',
-    location: '彰化縣員林市中山路廣場',
-    date: '2024-08-12',
-    time: '08:00 - 14:00',
-    status: 'upcoming',
-    products: ['紅肉李果園', '精品咖啡', '當季水果'],
-    description: '員林市政府廣場假日農夫市集',
-    contact: '0912-345-678',
-    specialOffer: '現場試吃，滿500元送精美包裝',
-    weatherNote: '有遮陽棚，風雨無阻'
-  },
-  {
-    id: 3,
-    title: '台北士林夜市',
-    location: '台北市士林區大南路',
-    date: '2024-08-08',
-    time: '18:00 - 24:00',
-    status: 'completed',
-    products: ['高山紅肉李', '精品咖啡'],
-    description: '士林夜市美食區旁，人潮眾多',
-    contact: '0912-345-678',
-    specialOffer: '已結束 - 當日特價優惠',
-    weatherNote: '已完成'
-  },
-  {
-    id: 4,
-    title: '高雄六合夜市',
-    location: '高雄市新興區六合二路',
-    date: '2024-08-15',
-    time: '17:30 - 23:30',
-    status: 'upcoming',
-    products: ['有機蔬菜箱', '季節水果', '紅肉李'],
-    description: '六合夜市固定合作攤位，每月第三個週四',
-    contact: '0912-345-678',
-    specialOffer: '預訂優惠：提前預訂9折',
-    weatherNote: '室外攤位，注意天氣變化'
-  }
-];
+interface ScheduleItem {
+  id: string;
+  title: string;
+  location: string;
+  date: string;
+  time: string;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  products: string[];
+  description: string;
+  contact: string;
+  specialOffer: string;
+  weatherNote: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // 模擬固定門市資料
 const permanentStores = [
@@ -82,8 +42,34 @@ const permanentStores = [
 
 export default function SchedulePage() {
   const [activeTab, setActiveTab] = useState('market');
-  const [filteredSchedule, setFilteredSchedule] = useState(marketSchedule);
+  const [marketSchedule, setMarketSchedule] = useState<ScheduleItem[]>([]);
+  const [filteredSchedule, setFilteredSchedule] = useState<ScheduleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const { user } = useAuth();
+
+  // 從 API 獲取擺攤行程資料
+  useEffect(() => {
+    async function fetchSchedule() {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/schedule');
+        if (!response.ok) {
+          throw new Error('Failed to fetch schedule');
+        }
+        const data = await response.json();
+        setMarketSchedule(data);
+        setFilteredSchedule(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load schedule');
+        console.error('Error fetching schedule:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSchedule();
+  }, []);
 
   const filterByStatus = (status: 'all' | 'upcoming' | 'ongoing' | 'completed') => {
     if (status === 'all') {
@@ -203,9 +189,36 @@ export default function SchedulePage() {
               </button>
             </div>
 
+            {/* Loading State */}
+            {loading && (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+                <p className="mt-4 text-gray-600">載入行程資料中...</p>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="text-center py-12">
+                <div className="text-red-600 mb-4">❌ {error}</div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  重新載入
+                </button>
+              </div>
+            )}
+
             {/* Market Schedule Cards */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {filteredSchedule.map((schedule) => (
+            {!loading && !error && (
+              <div className="grid md:grid-cols-2 gap-6">
+                {filteredSchedule.length === 0 ? (
+                  <div className="col-span-2 text-center py-12 text-gray-500">
+                    目前沒有符合條件的行程
+                  </div>
+                ) : (
+                  filteredSchedule.map((schedule) => (
                 <div key={schedule.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   {/* Header */}
                   <div className="flex justify-between items-start mb-4">
@@ -275,8 +288,10 @@ export default function SchedulePage() {
                     )}
                   </div>
                 </div>
-              ))}
-            </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         )}
 

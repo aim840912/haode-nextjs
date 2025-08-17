@@ -2,7 +2,7 @@ import { NewsItem, NewsService } from '@/types/news'
 import { promises as fs } from 'fs'
 import path from 'path'
 
-class JsonNewsService implements NewsService {
+export class JsonNewsService implements NewsService {
   private readonly filePath = path.join(process.cwd(), 'src/data/news.json')
 
   async getNews(): Promise<NewsItem[]> {

@@ -4,7 +4,7 @@ import path from 'path'
 
 const DATA_FILE = path.join(process.cwd(), 'src/data/farm-tour.json')
 
-export const farmTourService = {
+class JsonFarmTourService {
   // 獲取所有活動
   async getAll(): Promise<FarmTourActivity[]> {
     try {
@@ -14,13 +14,13 @@ export const farmTourService = {
       console.error('Error reading farm tour data:', error)
       return []
     }
-  },
+  }
 
   // 根據ID獲取活動
   async getById(id: string): Promise<FarmTourActivity | null> {
     const activities = await this.getAll()
     return activities.find(activity => activity.id === id) || null
-  },
+  }
 
   // 新增活動
   async create(activityData: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity> {
@@ -35,7 +35,7 @@ export const farmTourService = {
     activities.push(newActivity)
     await fs.writeFile(DATA_FILE, JSON.stringify(activities, null, 2))
     return newActivity
-  },
+  }
 
   // 更新活動
   async update(id: string, updateData: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>): Promise<FarmTourActivity | null> {
@@ -52,7 +52,7 @@ export const farmTourService = {
     
     await fs.writeFile(DATA_FILE, JSON.stringify(activities, null, 2))
     return activities[activityIndex]
-  },
+  }
 
   // 刪除活動
   async delete(id: string): Promise<boolean> {
@@ -64,4 +64,13 @@ export const farmTourService = {
     await fs.writeFile(DATA_FILE, JSON.stringify(filteredActivities, null, 2))
     return true
   }
+}
+
+export const farmTourService = new JsonFarmTourService()
+
+// 使用工廠模式的動態服務
+import { getFarmTourService } from './serviceFactory'
+
+export async function getFarmTourServiceInstance() {
+  return await getFarmTourService()
 }

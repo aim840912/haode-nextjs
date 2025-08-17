@@ -8,8 +8,14 @@
 export type DataSource = 'json' | 'supabase' | 'cache+json' | 'cache+supabase'
 
 export interface DataStrategyConfig {
-  // 產品資料（相對靜態）
+  // 核心服務
   products: DataSource
+  schedule: DataSource
+  farmTour: DataSource
+  news: DataSource
+  culture: DataSource
+  locations: DataSource
+  reviews: DataSource
   
   // 動態資料（需要即時性）
   orders: DataSource
@@ -38,6 +44,12 @@ export function getDataStrategy(): DataStrategyConfig {
     // 無 Supabase 配置時的 fallback
     return {
       products: 'json',
+      schedule: 'json',
+      farmTour: 'json',
+      news: 'json',
+      culture: 'json',
+      locations: 'json',
+      reviews: 'json',
       orders: 'json',
       inventory: 'json',
       users: 'json',
@@ -48,10 +60,16 @@ export function getDataStrategy(): DataStrategyConfig {
 
   // 有 Supabase 配置時 - 全部使用 Supabase
   return {
-    products: 'cache+supabase',     // 產品也改用 Supabase
-    orders: 'cache+supabase',       // 訂單用 Supabase
-    inventory: 'cache+supabase',    // 庫存用 Supabase  
-    users: 'cache+supabase',        // 用戶用 Supabase
+    products: 'cache+supabase',
+    schedule: 'cache+supabase',
+    farmTour: 'cache+supabase',
+    news: 'cache+supabase',
+    culture: 'cache+supabase',
+    locations: 'cache+supabase',
+    reviews: 'cache+supabase',
+    orders: 'cache+supabase',
+    inventory: 'cache+supabase',
+    users: 'cache+supabase',
     useCache: true,
     fallbackToJson: true  // 保留 JSON 作為緊急 fallback
   }

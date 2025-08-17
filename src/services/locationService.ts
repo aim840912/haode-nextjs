@@ -10,7 +10,7 @@ interface LocationService {
   getLocationById(id: number): Promise<Location | null>
 }
 
-class JsonLocationService implements LocationService {
+export class JsonLocationService implements LocationService {
   private readonly filePath = path.join(process.cwd(), 'src/data/locations.json')
 
   async getLocations(): Promise<Location[]> {
