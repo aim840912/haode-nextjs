@@ -5,6 +5,7 @@ import { Product } from '@/types/product'
 import { useAuth } from '@/lib/auth-context'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton'
+import SafeImage from './SafeImage'
 
 function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
@@ -108,10 +109,12 @@ function ProductsSection() {
             {products.map((product) => (
               <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                 <div className="aspect-square relative overflow-hidden rounded-lg">
-                  <img 
-                    src={product.images[0] || "/images/placeholder.jpg"} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover"
+                  <SafeImage 
+                    src={product.images?.[0] || "/images/placeholder.jpg"} 
+                    alt={product.name || '產品圖片'} 
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                   />
                 </div>
                 <div className="p-6">

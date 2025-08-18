@@ -28,8 +28,23 @@ export function withApiCache(
 
     // 對於會修改資料的請求，清除相關快取
     if (revalidateOn.includes(method as 'POST' | 'PUT' | 'DELETE')) {
-      const baseUrl = req.url.split('?')[0]
-      await CacheManager.deletePattern(`api:${baseUrl}*`)
+      // 根據 URL 判斷要清除哪個快取模式
+      const url = new URL(req.url)
+      const pathname = url.pathname
+      
+      if (pathname.includes('/api/products')) {
+        await CacheManager.deletePattern(`products:*`)
+      } else if (pathname.includes('/api/reviews')) {
+        await CacheManager.deletePattern(`reviews:*`)
+      } else if (pathname.includes('/api/news')) {
+        await CacheManager.deletePattern(`news:*`)
+      } else if (pathname.includes('/api/farm-tour')) {
+        await CacheManager.deletePattern(`farm-tour:*`)
+      } else {
+        // Fallback 到原本的邏輯
+        const baseUrl = req.url.split('?')[0]
+        await CacheManager.deletePattern(`api:${baseUrl}*`)
+      }
     }
 
     // 檢查是否跳過快取

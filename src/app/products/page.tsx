@@ -10,6 +10,7 @@ import ProductFilter, { FilterState } from '@/components/ProductFilter';
 import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
 import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
 import ProductImageGallery, { ProductCardImage } from '@/components/ProductImageGallery';
+import SafeImage from '@/components/SafeImage';
 
 // 用於模擬產品的擴展類型
 interface ExtendedProduct extends Product {
@@ -22,85 +23,12 @@ interface ExtendedProduct extends Product {
   originalPrice?: number;
 }
 
-// 模擬產品資料
-const products = [
-  {
-    id: 1,
-    name: '高山紅肉李',
-    category: '紅肉李果園',
-    price: 680,
-    originalPrice: 800,
-    image: '/images/products/red_plum_2.jpg',
-    description: '來自海拔1000公尺以上的高山紅肉李，果肉飽滿、甜度極高',
-    features: ['有機栽培', '產地直送', '新鮮採摘', '冷鏈保存'],
-    specifications: [
-      { label: '重量', value: '2公斤裝' },
-      { label: '產地', value: '台中和平區' },
-      { label: '保存期限', value: '冷藏7天' },
-      { label: '甜度', value: '12-14度' }
-    ],
-    inStock: true,
-    rating: 4.8,
-    reviews: 127
-  },
-  {
-    id: 2,
-    name: '精品濾掛咖啡',
-    category: '精品咖啡',
-    price: 450,
-    originalPrice: 520,
-    image: '/api/placeholder/400/400',
-    description: '精選阿里山咖啡豆，中度烘焙，香氣濃郁回甘甜美',
-    features: ['中度烘焙', '單品咖啡', '濾掛式', '新鮮烘焙'],
-    specifications: [
-      { label: '包裝', value: '12包入' },
-      { label: '產地', value: '阿里山' },
-      { label: '烘焙度', value: '中度烘焙' },
-      { label: '風味', value: '花香果酸' }
-    ],
-    inStock: true,
-    rating: 4.6,
-    reviews: 89
-  },
-  {
-    id: 3,
-    name: '當季水果組合',
-    category: '季節水果',
-    price: 850,
-    originalPrice: 950,
-    image: '/images/products/fruit.jpg',
-    description: '精選當季最優質水果，營養豐富、口感絕佳',
-    features: ['當季新鮮', '產地直送', '精美包裝', '營養豐富'],
-    specifications: [
-      { label: '內容', value: '5種水果' },
-      { label: '重量', value: '約3公斤' },
-      { label: '保存', value: '常溫3天' },
-      { label: '包裝', value: '禮盒裝' }
-    ],
-    inStock: true,
-    rating: 4.9,
-    reviews: 203
-  },
-  {
-    id: 4,
-    name: '有機蔬菜箱',
-    category: '有機蔬菜',
-    price: 520,
-    originalPrice: 580,
-    image: '/api/placeholder/400/400',
-    description: '嚴選有機認證蔬菜，無農藥殘留，健康安心',
-    features: ['有機認證', '無農藥', '新鮮採收', '營養滿分'],
-    specifications: [
-      { label: '內容', value: '8種蔬菜' },
-      { label: '重量', value: '約2.5公斤' },
-      { label: '認證', value: '有機認證' },
-      { label: '保存', value: '冷藏5天' }
-    ],
-    inStock: false,
-    rating: 4.7,
-    reviews: 156
-  }
-];
+// 模擬產品的預設值，用於 fallback
+const getDefaultProductFeatures = (): string[] => ['產地直送', '新鮮採摘', '品質保證']
+const getDefaultProductSpecifications = () => [
+  { label: '產地', value: '台灣' },
+  { label: '保存', value: '請參考包裝說明' }
+]
 
 function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
@@ -143,22 +71,30 @@ function ProductsPage() {
     );
   };
 
-  // 如果有 API 產品則使用，否則使用模擬資料
+  // 只使用 API 產品資料，確保 SSR 和 CSR 一致
   const allProducts = useMemo(() => {
-    return apiProducts.length > 0 ? apiProducts.map(product => ({
-      id: parseInt(product.id),
-      name: product.name,
-      category: product.category,
-      price: product.price,
-      originalPrice: product.originalPrice || 0,
-      image: product.images[0] || '/api/placeholder/400/400',
-      description: product.description,
-      features: [],
-      specifications: [],
-      inStock: product.inventory > 0,
-      rating: 4.5,
-      reviews: 50
-    })) : products;
+    // 過濾重複的產品 ID
+    const uniqueProducts = apiProducts.filter((product, index, self) => 
+      index === self.findIndex(p => p.id === product.id)
+    );
+    
+    return uniqueProducts.map((product, index) => {
+      const numericId = parseInt(product.id) || index + 1; // 如果解析失敗，使用索引
+      return {
+        id: product.id, // 保持字串格式
+        name: product.name,
+        category: product.category,
+        price: product.price,
+        originalPrice: product.originalPrice || product.price,
+        image: product.images?.[0] || '/images/placeholder.jpg',
+        description: product.description,
+        features: getDefaultProductFeatures(),
+        specifications: getDefaultProductSpecifications(),
+        inStock: product.inventory > 0,
+        rating: 4.5 + (numericId % 10) / 20, // 基於數字 ID 的固定評分
+        reviews: 50 + (numericId * 7) % 200 // 基於數字 ID 的固定評論數
+      };
+    });
   }, [apiProducts]);
 
   // 篩選和排序邏輯
@@ -207,7 +143,7 @@ function ProductsPage() {
         case 'rating':
           return (b.rating || 0) - (a.rating || 0);
         case 'newest':
-          return b.id - a.id; // 假設 ID 越大越新
+          return parseInt(b.id) - parseInt(a.id); // 將字串 ID 轉為數字進行比較
         default:
           return 0;
       }
@@ -316,16 +252,22 @@ function ProductsPage() {
           />
           
           {/* Products Grid */}
-          {filteredAndSortedProducts.length === 0 ? (
+          {apiProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-900 mx-auto mb-4"></div>
+                <div className="text-gray-500 mb-4">載入產品中...</div>
+                <p className="text-sm text-gray-400">請稍候片刻</p>
+              </div>
+            ) : filteredAndSortedProducts.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-gray-500 mb-4">沒有找到符合條件的產品</div>
                 <p className="text-sm text-gray-400">請嘗試調整篩選條件</p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {filteredAndSortedProducts.map((product) => (
+                {filteredAndSortedProducts.map((product, index) => (
             <div
-              key={product.id}
+              key={`product-${product.id}-${index}`}
               className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105"
               onClick={() => handleProductClick(product as unknown as ExtendedProduct)}
             >
@@ -333,7 +275,7 @@ function ProductsPage() {
               <ProductCardImage
                 product={{
                   ...product,
-                  id: product.id.toString(),
+                  id: product.id,
                   name: product.name,
                   images: product.image ? [product.image] : ['/images/placeholder.jpg'],
                   thumbnailUrl: product.image,

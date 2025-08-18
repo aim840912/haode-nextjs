@@ -49,6 +49,16 @@ export async function DELETE(
   try {
     const { id } = await params
     await productService.deleteProduct(id)
+    
+    // 手動清除產品相關的快取
+    try {
+      const { CacheManager } = await import('@/lib/cache-server')
+      await CacheManager.deletePattern('products:*')
+      console.log('快取已清除：products:*')
+    } catch (cacheError) {
+      console.warn('清除快取時發生警告:', cacheError)
+    }
+    
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting product:', error)

@@ -1,0 +1,284 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Product } from '@/types/product'
+import Link from 'next/link'
+import { useAuth } from '@/lib/auth-context'
+import SafeImage from './SafeImage'
+
+interface ProductsTableProps {
+  onDelete?: (id: string) => void
+  onToggleActive?: (id: string, isActive: boolean) => void
+  refreshTrigger?: number  // 外部觸發重新載入的信號
+}
+
+export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger }: ProductsTableProps) {
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth()
+
+  useEffect(() => {
+    fetchProducts()
+  }, [])
+
+  // 監聽外部重新載入觸發器
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchProducts()
+    }
+  }, [refreshTrigger])
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await fetch('/api/products')
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const data = await response.json()
+      setProducts(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Error fetching products:', error)
+      setError('載入產品資料失敗')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
+    if (!confirm('確定要刪除此產品嗎？這將同時刪除產品的所有圖片資料。')) return
+    
+    try {
+      const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // 立即從本地狀態移除產品，提供即時更新體驗
+      setProducts(prevProducts => prevProducts.filter(p => p.id !== id))
+      
+      // 呼叫父組件的回調函數
+      onDelete?.(id)
+      
+      // 可選：重新獲取數據以確保同步（但會稍微慢一些）
+      // await fetchProducts()
+      
+    } catch (error) {
+      console.error('Error deleting product:', error)
+      alert('刪除失敗，請稍後再試')
+      
+      // 如果刪除失敗，重新獲取數據以確保狀態一致
+      await fetchProducts()
+    }
+  }
+
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
+    const newActiveState = !isActive
+    
+    try {
+      // 立即更新本地狀態以提供即時反饋
+      setProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === id ? { ...p, isActive: newActiveState } : p
+        )
+      )
+      
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isActive: newActiveState })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      // 呼叫父組件的回調函數
+      onToggleActive?.(id, newActiveState)
+      
+    } catch (error) {
+      console.error('Error updating product:', error)
+      alert('更新失敗，請稍後再試')
+      
+      // 如果更新失敗，恢復原始狀態
+      setProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === id ? { ...p, isActive: isActive } : p
+        )
+      )
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-6 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">載入產品資料中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-6 text-center">
+          <div className="text-red-600 mb-4">⚠️</div>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={fetchProducts}
+            className="bg-amber-900 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+          >
+            重新載入
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow overflow-hidden">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              產品
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              分類
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              價格
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              庫存
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              狀態
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              操作
+            </th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {products.map((product) => (
+            <tr key={product.id} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-center">
+                  <div className="relative w-12 h-12 mr-3">
+                    <SafeImage
+                      src={product.images?.[0] || '/images/placeholder.jpg'}
+                      alt={product.name || '產品圖片'}
+                      fill
+                      className="object-cover rounded"
+                      sizes="48px"
+                    />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {product.name}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {product.description}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {product.category}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <div className="flex items-center space-x-2">
+                  <span className="font-medium">NT$ {product.price}</span>
+                  {product.isOnSale && product.originalPrice && product.originalPrice > product.price && (
+                    <>
+                      <span className="text-xs text-gray-500 line-through">
+                        NT$ {product.originalPrice}
+                      </span>
+                      <span className="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-xs font-medium">
+                        特價
+                      </span>
+                    </>
+                  )}
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {product.inventory}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {user?.role === 'admin' ? (
+                  <button
+                    onClick={() => handleToggleActive(product.id, product.isActive)}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      product.isActive
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {product.isActive ? '上架中' : '已下架'}
+                  </button>
+                ) : (
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    product.isActive
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                  }`}>
+                    {product.isActive ? '上架中' : '已下架'}
+                  </span>
+                )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                {user?.role === 'admin' ? (
+                  <div className="space-x-2">
+                    <Link
+                      href={`/admin/products/${product.id}/edit`}
+                      className="text-amber-600 hover:text-amber-900"
+                    >
+                      編輯
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="text-red-600 hover:text-red-900"
+                    >
+                      刪除
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-gray-400">需要登入</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      
+      {products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500">尚無產品資料</p>
+          {user?.role === 'admin' && (
+            <Link 
+              href="/admin/products/add"
+              className="inline-block mt-4 bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+            >
+              新增第一個產品
+            </Link>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

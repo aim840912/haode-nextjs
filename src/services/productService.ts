@@ -49,6 +49,16 @@ export class JsonProductService implements ProductService {
   }
 
   async deleteProduct(id: string): Promise<void> {
+    // 先嘗試刪除 Supabase Storage 中的產品圖片
+    try {
+      const { deleteProductImages } = await import('@/lib/supabase-storage')
+      await deleteProductImages(id)
+    } catch (storageError) {
+      // 圖片刪除失敗不應該阻止產品刪除，但要記錄警告
+      console.warn('刪除產品圖片時發生警告:', storageError)
+    }
+    
+    // 然後從檔案中刪除產品記錄
     const products = await this.getProducts()
     const filteredProducts = products.filter(p => p.id !== id)
     await this.saveProducts(filteredProducts)

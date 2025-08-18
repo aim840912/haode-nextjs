@@ -56,6 +56,16 @@ class SupabaseProductService implements ProductService {
 
   async deleteProduct(id: string): Promise<void> {
     try {
+      // 先刪除 Supabase Storage 中的所有產品圖片
+      const { deleteProductImages } = await import('@/lib/supabase-storage')
+      try {
+        await deleteProductImages(id)
+      } catch (storageError) {
+        // 圖片刪除失敗不應該阻止產品刪除，但要記錄錯誤
+        console.warn('刪除產品圖片時發生警告:', storageError)
+      }
+      
+      // 然後刪除資料庫記錄
       const { error } = await supabaseAdmin!
         .from('products')
         .delete()
@@ -136,25 +146,37 @@ class SupabaseProductService implements ProductService {
       '農場蜂蜜': '/images/products/honey.jpg'
     }
 
+    // 安全地獲取產品名稱
+    const productName = (dbProduct.name as string) || ''
+    
     // 取得圖片路徑，優先使用資料庫的值，否則使用預設對應
-    let imageUrl = (dbProduct.image_url as string) || defaultImages[dbProduct.name as string] || '/images/placeholder.jpg'
+    let imageUrl = (dbProduct.image_url as string) || defaultImages[productName] || '/images/placeholder.jpg'
+    
+    // 驗證圖片 URL
+    if (!imageUrl || typeof imageUrl !== 'string') {
+      imageUrl = '/images/placeholder.jpg'
+    }
     
     // 修正錯誤的 Imgur 連結
-    if (imageUrl && imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png')) {
-      imageUrl = defaultImages[dbProduct.name as string] || '/images/placeholder.jpg'
+    if (imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png') && !imageUrl.includes('.jpeg') && !imageUrl.includes('.webp')) {
+      imageUrl = defaultImages[productName] || '/images/placeholder.jpg'
     }
+    
+    // 確保所有必要欄位都有有效值
+    const price = typeof dbProduct.price === 'number' ? dbProduct.price : parseFloat(dbProduct.price as string) || 0
+    const stock = typeof dbProduct.stock === 'number' ? dbProduct.stock : parseInt(dbProduct.stock as string) || 0
 
     return {
-      id: dbProduct.id as string,
-      name: dbProduct.name as string,
-      description: dbProduct.description as string,
-      category: dbProduct.category as string,
-      price: parseFloat(dbProduct.price as string),
-      images: [imageUrl],
-      inventory: dbProduct.stock as number,
-      isActive: dbProduct.is_active as boolean,
-      createdAt: dbProduct.created_at as string,
-      updatedAt: dbProduct.updated_at as string
+      id: (dbProduct.id as string) || '',
+      name: productName,
+      description: (dbProduct.description as string) || '',
+      category: (dbProduct.category as string) || '',
+      price: price,
+      images: [imageUrl], // 始終確保有一個有效的圖片 URL
+      inventory: stock,
+      isActive: Boolean(dbProduct.is_active),
+      createdAt: (dbProduct.created_at as string) || new Date().toISOString(),
+      updatedAt: (dbProduct.updated_at as string) || new Date().toISOString()
     }
   }
 
