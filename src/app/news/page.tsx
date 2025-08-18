@@ -54,7 +54,7 @@ export default function NewsPage() {
     }
   }
 
-  const categories = ['全部', '產品動態', '產品研發', '永續農業', '活動資訊', '市場動態', '公司動態']
+  const categories = ['全部', '產品動態', '永續農業', '活動資訊']
 
   const filteredNews = selectedCategory === '全部' 
     ? news 

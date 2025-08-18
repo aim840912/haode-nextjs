@@ -18,7 +18,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'fruits',
+    category: '季節水果',
     price: 0,
     salePrice: 0,
     isOnSale: false,
@@ -318,7 +318,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                 onChange={handleInputChange}
                 required
                 min="0"
-                step="10"
+                step="1"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                 placeholder="輸入產品原價"
               />
@@ -356,7 +356,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                         onChange={handleInputChange}
                         required={formData.isOnSale}
                         min="0"
-                        step="10"
+                        step="1"
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                         placeholder="輸入特價"
                       />

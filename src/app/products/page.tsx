@@ -17,8 +17,6 @@ interface ExtendedProduct extends Product {
   features?: string[];
   specifications?: { label: string; value: string }[];
   inStock?: boolean;
-  rating?: number;
-  reviews?: number;
   image?: string;
   originalPrice?: number;
 }
@@ -34,6 +32,7 @@ function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<ExtendedProduct | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [apiProducts, setApiProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     priceRange: [0, 2000],
@@ -50,25 +49,38 @@ function ProductsPage() {
   }, []);
 
   const fetchProducts = async () => {
-    await executeWithErrorHandling(
-      async () => {
-        const response = await fetch('/api/products');
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+    setLoading(true);
+    try {
+      const result = await executeWithErrorHandling(
+        async () => {
+          const response = await fetch('/api/products');
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          setApiProducts(data.filter((p: Product) => p.isActive));
+          return data;
+        },
+        {
+          taskId: 'fetch-products',
+          loadingMessage: '載入產品中...',
+          errorMessage: '載入產品失敗',
+          context: { page: 'products' }
         }
-        
-        const data = await response.json();
-        setApiProducts(data.filter((p: Product) => p.isActive));
-        return data;
-      },
-      {
-        taskId: 'fetch-products',
-        loadingMessage: '載入產品中...',
-        errorMessage: '載入產品失敗',
-        context: { page: 'products' }
+      );
+      
+      // 如果 executeWithErrorHandling 返回 null (發生錯誤)，設置空陣列
+      if (result === null) {
+        setApiProducts([]);
       }
-    );
+    } catch (error) {
+      console.error('Unexpected error in fetchProducts:', error);
+      setApiProducts([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 只使用 API 產品資料，確保 SSR 和 CSR 一致
@@ -91,8 +103,6 @@ function ProductsPage() {
         features: getDefaultProductFeatures(),
         specifications: getDefaultProductSpecifications(),
         inStock: product.inventory > 0,
-        rating: 4.5 + (numericId % 10) / 20, // 基於數字 ID 的固定評分
-        reviews: 50 + (numericId * 7) % 200 // 基於數字 ID 的固定評論數
       };
     });
   }, [apiProducts]);
@@ -140,8 +150,6 @@ function ProductsPage() {
           return b.price - a.price;
         case 'name':
           return a.name.localeCompare(b.name);
-        case 'rating':
-          return (b.rating || 0) - (a.rating || 0);
         case 'newest':
           return parseInt(b.id) - parseInt(a.id); // 將字串 ID 轉為數字進行比較
         default:
@@ -252,11 +260,17 @@ function ProductsPage() {
           />
           
           {/* Products Grid */}
-          {apiProducts.length === 0 ? (
+          {loading ? (
               <div className="text-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-900 mx-auto mb-4"></div>
                 <div className="text-gray-500 mb-4">載入產品中...</div>
                 <p className="text-sm text-gray-400">請稍候片刻</p>
+              </div>
+            ) : apiProducts.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-6">🛒</div>
+                <div className="text-gray-500 mb-4">目前沒有產品資料</div>
+                <p className="text-sm text-gray-400">請稍後再試，或聯絡我們獲取更多資訊</p>
               </div>
             ) : filteredAndSortedProducts.length === 0 ? (
               <div className="text-center py-12">
@@ -295,21 +309,8 @@ function ProductsPage() {
               <div className="p-6">
                 <div className="text-sm text-amber-600 mb-2">{product.category}</div>
                 <h3 className="text-xl font-semibold text-gray-800 mb-3">{product.name}</h3>
-                <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+                <p className="text-gray-600 text-sm mb-6">{product.description}</p>
                 
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i: number) => (
-                      <span key={i} className={i < Math.floor(product.rating) ? 'text-yellow-400' : 'text-gray-300'}>
-                        ⭐
-                      </span>
-                    ))}
-                  </div>
-                  <span className="ml-2 text-sm text-gray-700">
-                    {product.rating} ({product.reviews})
-                  </span>
-                </div>
 
                 {/* Price */}
                 <div className="flex items-center justify-between">
@@ -386,19 +387,6 @@ function ProductsPage() {
                 <div className="text-sm text-amber-600 mb-2">{selectedProduct.category}</div>
                 <h2 className="text-3xl font-bold text-gray-800 mb-4">{selectedProduct.name}</h2>
                 
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  <div className="flex text-yellow-400">
-                    {[...Array(5)].map((_, i: number) => (
-                      <span key={i} className={i < Math.floor(selectedProduct.rating || 0) ? 'text-yellow-400' : 'text-gray-300'}>
-                        ⭐
-                      </span>
-                    ))}
-                  </div>
-                  <span className="ml-2 text-gray-700">
-                    {selectedProduct.rating} ({selectedProduct.reviews} 則評價)
-                  </span>
-                </div>
 
                 <p className="text-gray-800 mb-6 leading-relaxed">{selectedProduct.description}</p>
 

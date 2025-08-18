@@ -70,7 +70,9 @@ export async function POST(request: NextRequest) {
 
     if (generateMultipleSizes) {
       // 上傳多個尺寸
+      console.log(`📸 開始多尺寸上傳，產品ID: ${productId}, 檔案: ${file.name}`);
       const results = await uploadMultipleSizeImages(processedFile, productId);
+      console.log('📸 多尺寸上傳完成:', results);
       
       return NextResponse.json({
         success: true,
@@ -83,7 +85,9 @@ export async function POST(request: NextRequest) {
     } else {
       // 單一尺寸上傳
       const size = (formData.get('size') as 'thumbnail' | 'medium' | 'large') || 'medium';
+      console.log(`📸 開始單一尺寸上傳，產品ID: ${productId}, 尺寸: ${size}, 檔案: ${file.name}`);
       const result = await uploadImageToStorage(processedFile, productId, size);
+      console.log('📸 單一尺寸上傳完成:', result);
       
       return NextResponse.json({
         success: true,

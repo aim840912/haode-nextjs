@@ -49,13 +49,13 @@ export default function OptimizedImage({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
-  const [isInView, setIsInView] = useState(!lazy || priority);
-  const [shouldLoad, setShouldLoad] = useState(!lazy || priority);
+  const [isInView, setIsInView] = useState(priority || !lazy);
+  const [shouldLoad, setShouldLoad] = useState(priority || !lazy);
   const imgRef = useRef<HTMLDivElement>(null);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
-    if (!lazy || priority || shouldLoad) return;
+    if (priority || !lazy || shouldLoad) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -74,7 +74,17 @@ export default function OptimizedImage({
     }
 
     return () => observer.disconnect();
-  }, [lazy, priority, shouldLoad, threshold]);
+  }, [priority, lazy, shouldLoad, threshold]);
+
+  // 更新 src 時重置狀態
+  useEffect(() => {
+    if (src !== currentSrc) {
+      console.log(`🖼️ 圖片 src 更新: ${currentSrc} -> ${src}`);
+      setCurrentSrc(src);
+      setHasError(false);
+      setIsLoading(true);
+    }
+  }, [src, currentSrc]);
 
   const handleLoad = () => {
     setIsLoading(false);
@@ -82,12 +92,16 @@ export default function OptimizedImage({
   };
 
   const handleError = (event: React.SyntheticEvent<HTMLImageElement>) => {
+    console.warn(`🖼️ 圖片載入失敗: ${currentSrc}`);
     setIsLoading(false);
     setHasError(true);
     
     if (currentSrc !== fallbackSrc) {
+      console.log(`🔄 切換到 fallback 圖片: ${fallbackSrc}`);
       setCurrentSrc(fallbackSrc);
       setHasError(false);
+    } else {
+      console.error(`❌ Fallback 圖片也載入失敗: ${fallbackSrc}`);
     }
     
     // 使用工具函數處理錯誤

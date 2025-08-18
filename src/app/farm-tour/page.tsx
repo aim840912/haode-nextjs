@@ -8,12 +8,6 @@ import { useAuth } from '@/lib/auth-context';
 // 農場設施
 const farmFacilities = [
   {
-    name: '觀光步道',
-    description: '全長2公里的環山步道，可欣賞整個果園風光',
-    icon: '🚶‍♂️',
-    features: ['景觀台', '休息涼亭', '解說牌']
-  },
-  {
     name: '品茶亭',
     description: '傳統竹造涼亭，提供農場自產茶品品嚐',
     icon: '🍵',
@@ -24,18 +18,6 @@ const farmFacilities = [
     description: '分區種植不同水果，依季節開放採摘體驗',
     icon: '🌳',
     features: ['紅肉李區', '季節水果', '有機栽培']
-  },
-  {
-    name: '教學中心',
-    description: '農業教學與DIY活動空間，設備齊全',
-    icon: '🏫',
-    features: ['投影設備', 'DIY工具', '展示空間']
-  },
-  {
-    name: '農場餐廳',
-    description: '提供使用農場食材的特色料理',
-    icon: '🍽️',
-    features: ['在地食材', '景觀用餐', '素食選擇']
   },
   {
     name: '停車場',
@@ -231,28 +213,13 @@ export default function FarmTourPage() {
                     </div>
 
                     {/* Details */}
-                    <div className="grid grid-cols-2 gap-4 mb-6 text-sm">
-                      <div className="flex items-center">
-                        <span className="mr-2">💰</span>
-                        <span className="font-bold text-amber-900">NT$ {activity.price}</span>
-                      </div>
-                      <div className="flex items-center">
+                    <div className="mb-6">
+                      <div className="flex items-center text-sm">
                         <span className="mr-2">⏱️</span>
                         <span>{activity.duration}</span>
                       </div>
                     </div>
 
-                    {/* Includes */}
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-gray-800 mb-2 text-sm">費用包含</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {activity.includes.map((include, index) => (
-                          <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                            {include}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
 
                     {/* Note */}
                     <div className="mb-6 p-3 bg-blue-50 rounded-lg">
@@ -327,7 +294,7 @@ export default function FarmTourPage() {
                   <div className="ml-6 space-y-1 text-gray-600">
                     <p>週二至週日：09:00 - 17:00</p>
                     <p>週一公休（國定假日正常開放）</p>
-                    <p className="text-sm text-amber-600">* 體驗活動需提前預約</p>
+                    <p className="text-sm text-amber-600">* 體驗活動請電話詢問</p>
                   </div>
                 </div>
 
@@ -342,23 +309,13 @@ export default function FarmTourPage() {
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                    <span className="mr-2">💰</span>入園費用
-                  </h4>
-                  <div className="ml-6 space-y-1 text-gray-600">
-                    <p>一般入園：NT$ 100 / 人</p>
-                    <p>12歲以下兒童：NT$ 50 / 人</p>
-                    <p className="text-sm text-green-600">* 可折抵農場消費</p>
-                  </div>
-                </div>
 
                 <div>
                   <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
                     <span className="mr-2">📞</span>聯絡資訊
                   </h4>
                   <div className="ml-6 space-y-1 text-gray-600">
-                    <p>預約專線：05-2561843</p>
+                    <p>詢問專線：05-2561843</p>
                     <p>LINE ID：@haudetea</p>
                     <p>信箱：tour@haudetea.com</p>
                   </div>
@@ -367,14 +324,14 @@ export default function FarmTourPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-2xl font-semibold text-amber-900 mb-6">預約須知</h3>
+              <h3 className="text-2xl font-semibold text-amber-900 mb-6">參觀須知</h3>
               
               <div className="space-y-4">
                 <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg">
                   <h4 className="font-medium text-yellow-800 mb-2">⚠️ 重要提醒</h4>
                   <ul className="text-sm text-yellow-700 space-y-1">
-                    <li>• 體驗活動需提前3天預約</li>
-                    <li>• 團體（15人以上）請提前一週預約</li>
+                    <li>• 體驗活動請來電詢問詳情</li>
+                    <li>• 團體參觀請來電洽詢</li>
                     <li>• 如遇天候不佳，活動可能調整或取消</li>
                   </ul>
                 </div>
@@ -402,7 +359,7 @@ export default function FarmTourPage() {
 
               <div className="mt-8 text-center">
                 <button className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
-                  📞 立即電話預約
+                  📞 電話詢問
                 </button>
               </div>
             </div>
@@ -432,7 +389,7 @@ export default function FarmTourPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-3">預約資訊</h4>
+                  <h4 className="font-semibold text-gray-800 mb-3">活動資訊</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <label className="block text-gray-700 mb-1 font-medium">參加日期</label>
@@ -467,13 +424,6 @@ export default function FarmTourPage() {
                   ></textarea>
                 </div>
 
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center text-lg font-semibold">
-                    <span>預估費用</span>
-                    <span className="text-amber-900">NT$ {selectedActivity.price} / 人</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">* 實際費用依參加人數調整，確認預約後通知</p>
-                </div>
 
                 <div className="flex gap-4">
                   <button

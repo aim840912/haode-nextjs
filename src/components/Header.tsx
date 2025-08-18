@@ -25,7 +25,6 @@ export default function Header() {
     { href: '/products', label: '產品介紹', isExternal: false },
     { href: '/locations', label: '門市據點', isExternal: false },
     { href: '/culture', label: '歲月留影', isExternal: false },
-    { href: '/reviews', label: '顧客心聲', isExternal: false },
     { href: '/schedule', label: '擺攤行程', isExternal: false },
     { href: '/news', label: '農產新聞', isExternal: false },
   ];

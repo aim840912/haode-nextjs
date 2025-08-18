@@ -87,39 +87,79 @@ export default function ImageUploader({
           }
         }
 
-        // 生成預覽
+        // 生成本地預覽（立即顯示）
         const preview = await getImagePreviewUrl(processedFile);
+        console.log(`🖼️ 生成本地預覽: ${preview.substring(0, 50)}...`);
 
-        // 上傳到伺服器
-        const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes);
-        
-        if (generateMultipleSizes && result.multiple) {
-          // 多尺寸上傳結果
-          Object.entries(result.urls).forEach(([size, urlData]) => {
-            const url = (urlData as any).url;
-            newImages.push({
-              id: `${productId}-${size}-${Date.now()}-${i}`,
-              url: url,
-              path: (urlData as any).path,
-              size: size as 'thumbnail' | 'medium' | 'large',
-              file: processedFile,
-              preview: url // 使用 Supabase URL 作為預覽，而不是本地 base64
+        // 先創建本地預覽圖片對象，讓用戶立即看到
+        const tempImage: UploadedImage = {
+          id: `temp-${productId}-${Date.now()}-${i}`,
+          url: '',
+          path: '',
+          size: 'medium',
+          file: processedFile,
+          preview: preview
+        };
+
+        // 立即添加到預覽列表
+        setPreviewImages(prev => [...prev, tempImage]);
+
+        try {
+          // 上傳到伺服器
+          const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes);
+          
+          if (generateMultipleSizes && result.multiple) {
+            // 多尺寸上傳結果 - 直接替換臨時預覽
+            const uploadedImages: UploadedImage[] = [];
+            Object.entries(result.urls).forEach(([size, urlData]) => {
+              const url = (urlData as any).url;
+              console.log(`📷 多尺寸上傳成功 ${size}:`, url);
+              uploadedImages.push({
+                id: `${productId}-${size}-${Date.now()}-${i}`,
+                url: url,
+                path: (urlData as any).path,
+                size: size as 'thumbnail' | 'medium' | 'large',
+                file: processedFile,
+                preview: url // 使用 Supabase URL
+              });
             });
-          });
-        } else {
-          // 單一尺寸上傳結果
-          newImages.push({
-            id: `${productId}-${result.size}-${Date.now()}-${i}`,
-            url: result.url,
-            path: result.path,
-            size: result.size,
-            file: processedFile,
-            preview: result.url // 使用 Supabase URL 作為預覽
-          });
+            
+            // 用上傳成功的圖片替換臨時預覽
+            setPreviewImages(prev => [
+              ...prev.filter(img => img.id !== tempImage.id),
+              ...uploadedImages
+            ]);
+            newImages.push(...uploadedImages);
+          } else {
+            // 單一尺寸上傳結果
+            console.log(`📷 單一尺寸上傳成功:`, result.url);
+            const uploadedImage: UploadedImage = {
+              id: `${productId}-${result.size}-${Date.now()}-${i}`,
+              url: result.url,
+              path: result.path,
+              size: result.size,
+              file: processedFile,
+              preview: result.url // 使用 Supabase URL
+            };
+            
+            // 用上傳成功的圖片替換臨時預覽
+            setPreviewImages(prev => prev.map(img => 
+              img.id === tempImage.id ? uploadedImage : img
+            ));
+            newImages.push(uploadedImage);
+          }
+        } catch (uploadError) {
+          // 上傳失敗，保留本地預覽並更新 ID
+          console.error('上傳失敗，保留本地預覽:', uploadError);
+          setPreviewImages(prev => prev.map(img => 
+            img.id === tempImage.id 
+              ? { ...img, id: `local-${productId}-${Date.now()}-${i}` }
+              : img
+          ));
+          throw uploadError; // 重新拋出錯誤，讓外層 catch 處理
         }
       }
 
-      setPreviewImages(prev => [...prev, ...newImages]);
       onUploadSuccess?.(newImages);
 
     } catch (error) {
@@ -296,14 +336,20 @@ export default function ImageUploader({
               <div key={image.id} className="relative group"
                    style={{ position: 'relative' }}>
                 <div className="aspect-square rounded-lg overflow-hidden border border-gray-200"
-                     style={{ position: 'relative' }}>
+                     style={{ position: 'relative', minHeight: '120px' }}>
                   <OptimizedImage
-                    src={image.url || image.preview || '/images/placeholder.jpg'}
-                    alt="上傳的圖片"
+                    src={image.preview || image.url || '/images/placeholder.jpg'}
+                    alt={`上傳的圖片 (${image.size})`}
                     fill
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     className="object-cover"
-                    lazy={false}
-                    onError={() => {}}
+                    priority={true}
+                    onError={() => {
+                      console.warn('預覽圖片載入失敗:', image.preview, image.url);
+                    }}
+                    onLoad={() => {
+                      console.log('圖片載入成功:', image.preview || image.url);
+                    }}
                   />
                 </div>
                 

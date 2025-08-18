@@ -30,11 +30,8 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
   const categories = [
     '產品動態',
-    '產品研發', 
     '永續農業',
-    '活動資訊',
-    '市場動態',
-    '公司動態'
+    '活動資訊'
   ]
 
   const emojiOptions = [

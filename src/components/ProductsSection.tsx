@@ -28,8 +28,8 @@ function ProductsSection() {
       
       const data = await response.json()
       
-      // 只顯示活躍的產品，最多4個
-      const activeProducts = data.filter((p: Product) => p.isActive).slice(0, 4)
+      // 只顯示活躍的產品，最多3個
+      const activeProducts = data.filter((p: Product) => p.isActive).slice(0, 3)
       setProducts(activeProducts)
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -44,8 +44,8 @@ function ProductsSection() {
       <section id="products" className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
-          <div className="grid md:grid-cols-4 gap-8">
-            {Array.from({ length: 4 }).map((_, i) => (
+          <div className="grid md:grid-cols-3 gap-8">
+            {Array.from({ length: 3 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
           </div>
@@ -80,55 +80,48 @@ function ProductsSection() {
   }
 
   return (
-    <section id="products" className="py-20 px-6">
+    <section id="products" className="py-20 px-6 bg-gradient-to-b from-white to-amber-50/30">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-16">
-          <h2 className="text-4xl font-light text-amber-900 mb-4 md:mb-0">經典產品</h2>
-          {user && (
-            <div className="flex space-x-3">
-              <a 
-                href="/admin/products"
-                className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
-              >
-                <span>📊</span>
-                <span>產品管理</span>
-              </a>
-              <a 
-                href="/admin/products/add"
-                className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-              >
-                <span>➕</span>
-                <span>新增產品</span>
-              </a>
-            </div>
-          )}
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-light text-amber-900 mb-2">經典產品</h2>
+          <p className="text-gray-600">精選來自梅山的優質農產品</p>
         </div>
         
         {products.length > 0 ? (
-          <div className="grid md:grid-cols-4 gap-8">
-            {products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <div className="aspect-square relative overflow-hidden rounded-lg">
+          <div className="grid md:grid-cols-3 gap-6">
+            {products.map((product, index) => (
+              <div key={product.id} className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                {/* 圖片區域 */}
+                <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl">
                   <SafeImage 
                     src={product.images?.[0] || "/images/placeholder.jpg"} 
                     alt={product.name || '產品圖片'} 
                     fill
-                    className="object-cover"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                   />
+                  
+                  {/* 產品標籤 */}
+                  {index === 0 && (
+                    <div className="absolute top-3 left-3 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-md">
+                      熱銷
+                    </div>
+                  )}
                 </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-gray-800 mb-2">{product.name}</h3>
-                  <p className="text-sm text-gray-600 mb-3">{product.description}</p>
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-lg font-bold text-amber-900">NT$ {product.price}</span>
-                    <span className="text-sm text-gray-500">庫存 {product.inventory}</span>
-                  </div>
+                
+                {/* 內容區域 */}
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center group-hover:text-amber-900 transition-colors">{product.name}</h3>
+                  
+                  {/* 按鈕 */}
                   <a 
                     href="/products"
-                    className="inline-block bg-amber-900 text-white px-4 py-2 rounded-full text-sm hover:bg-amber-800 transition-colors w-full text-center"
+                    className="flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800 transition-colors"
                   >
-                    查看商品
+                    <span className="mr-1">查看詳情</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                    </svg>
                   </a>
                 </div>
               </div>
@@ -157,6 +150,26 @@ function ProductsSection() {
             瀏覽所有商品
           </a>
         </div>
+        
+        {/* Admin Controls - 移到底部較不顯眼位置 */}
+        {user && (
+          <div className="flex justify-center space-x-3 mt-6">
+            <a 
+              href="/admin/products"
+              className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs hover:bg-gray-200 transition-colors flex items-center space-x-1"
+            >
+              <span>📊</span>
+              <span>管理</span>
+            </a>
+            <a 
+              href="/admin/products/add"
+              className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs hover:bg-green-200 transition-colors flex items-center space-x-1"
+            >
+              <span>➕</span>
+              <span>新增</span>
+            </a>
+          </div>
+        )}
       </div>
     </section>
   )
