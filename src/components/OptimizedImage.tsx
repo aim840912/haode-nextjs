@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import LoadingSpinner from './LoadingSpinner';
+import { handleImageError, buildResponsiveImageSrcSet } from '@/lib/image-utils';
 
 interface OptimizedImageProps {
   src: string;
@@ -19,6 +20,10 @@ interface OptimizedImageProps {
   fallbackSrc?: string;
   onError?: () => void;
   onLoad?: () => void;
+  lazy?: boolean; // 啟用懶加載
+  productId?: string; // 產品ID，用於生成響應式圖片
+  enableResponsive?: boolean; // 啟用響應式圖片
+  threshold?: number; // Intersection Observer 閾值
 }
 
 export default function OptimizedImage({
@@ -35,18 +40,48 @@ export default function OptimizedImage({
   blurDataURL,
   fallbackSrc = '/images/placeholder.jpg',
   onError,
-  onLoad
+  onLoad,
+  lazy = true,
+  productId,
+  enableResponsive = false,
+  threshold = 0.1
 }: OptimizedImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState(src);
+  const [isInView, setIsInView] = useState(!lazy || priority);
+  const [shouldLoad, setShouldLoad] = useState(!lazy || priority);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  // Intersection Observer for lazy loading
+  useEffect(() => {
+    if (!lazy || priority || shouldLoad) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          setShouldLoad(true);
+          observer.disconnect();
+        }
+      },
+      { threshold, rootMargin: '50px' }
+    );
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [lazy, priority, shouldLoad, threshold]);
 
   const handleLoad = () => {
     setIsLoading(false);
     onLoad?.();
   };
 
-  const handleError = () => {
+  const handleError = (event: React.SyntheticEvent<HTMLImageElement>) => {
     setIsLoading(false);
     setHasError(true);
     
@@ -55,6 +90,8 @@ export default function OptimizedImage({
       setHasError(false);
     }
     
+    // 使用工具函數處理錯誤
+    handleImageError(event, fallbackSrc);
     onError?.();
   };
 
@@ -62,31 +99,41 @@ export default function OptimizedImage({
   const defaultBlurDataURL = 
     'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==';
 
-  const containerClassName = `relative overflow-hidden ${className}`;
+  // 響應式圖片處理
+  const finalSrc = shouldLoad ? currentSrc : '';
+  const finalSizes = enableResponsive && productId ? 
+    '(max-width: 200px) 200px, (max-width: 600px) 600px, 1200px' : 
+    sizes;
+
+  const containerClassName = fill 
+    ? `relative overflow-hidden ${className}` 
+    : `relative overflow-hidden ${className}`;
 
   if (fill) {
     return (
-      <div className={containerClassName}>
-        {isLoading && (
+      <div ref={imgRef} className={containerClassName} style={{ position: 'relative' }}>
+        {(!shouldLoad || isLoading) && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-            <LoadingSpinner size="sm" />
+            {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
           </div>
         )}
-        <Image
-          src={currentSrc}
-          alt={alt}
-          fill
-          sizes={sizes}
-          priority={priority}
-          quality={quality}
-          placeholder={placeholder}
-          blurDataURL={blurDataURL || defaultBlurDataURL}
-          className={`transition-opacity duration-300 ${
-            isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
-          onLoad={handleLoad}
-          onError={handleError}
-        />
+        {shouldLoad && (
+          <Image
+            src={finalSrc}
+            alt={alt}
+            fill
+            sizes={finalSizes}
+            priority={priority}
+            quality={quality}
+            placeholder={placeholder}
+            blurDataURL={blurDataURL || defaultBlurDataURL}
+            className={`transition-opacity duration-300 ${
+              isLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+            onLoad={handleLoad}
+            onError={handleError}
+          />
+        )}
         {hasError && currentSrc === fallbackSrc && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
             圖片載入失敗
@@ -97,31 +144,33 @@ export default function OptimizedImage({
   }
 
   return (
-    <div className={containerClassName} style={{ width, height }}>
-      {isLoading && (
+    <div ref={imgRef} className={containerClassName} style={{ width, height }}>
+      {(!shouldLoad || isLoading) && (
         <div 
           className="absolute inset-0 flex items-center justify-center bg-gray-100"
           style={{ width, height }}
         >
-          <LoadingSpinner size="sm" />
+          {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
         </div>
       )}
-      <Image
-        src={currentSrc}
-        alt={alt}
-        width={width || 400}
-        height={height || 300}
-        sizes={sizes}
-        priority={priority}
-        quality={quality}
-        placeholder={placeholder}
-        blurDataURL={blurDataURL || defaultBlurDataURL}
-        className={`transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
-        } ${className}`}
-        onLoad={handleLoad}
-        onError={handleError}
-      />
+      {shouldLoad && (
+        <Image
+          src={finalSrc}
+          alt={alt}
+          width={width || 400}
+          height={height || 300}
+          sizes={finalSizes}
+          priority={priority}
+          quality={quality}
+          placeholder={placeholder}
+          blurDataURL={blurDataURL || defaultBlurDataURL}
+          className={`transition-opacity duration-300 ${
+            isLoading ? 'opacity-0' : 'opacity-100'
+          }`}
+          onLoad={handleLoad}
+          onError={handleError}
+        />
+      )}
       {hasError && currentSrc === fallbackSrc && (
         <div 
           className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm"
@@ -134,26 +183,45 @@ export default function OptimizedImage({
   );
 }
 
-// 響應式圖片組件
+// 響應式圖片組件 - 使用 padding-bottom 技巧確保高度
 export function ResponsiveImage({
   src,
   alt,
-  aspectRatio = 'aspect-video',
+  aspectRatio = 'aspect-square',
   className = '',
+  productId,
   ...props
 }: OptimizedImageProps & {
   aspectRatio?: string;
 }) {
+  // 將 aspectRatio 轉換為 padding-bottom 百分比
+  const paddingBottomMap: Record<string, string> = {
+    'aspect-square': '100%',    // 1:1
+    'aspect-video': '56.25%',   // 16:9
+    'aspect-[4/3]': '75%',      // 4:3
+    'aspect-[3/2]': '66.67%',   // 3:2
+    'aspect-[2/1]': '50%',      // 2:1
+  };
+  
+  const paddingBottom = paddingBottomMap[aspectRatio] || '100%';
+  
   return (
-    <div className={`${aspectRatio} ${className}`}>
-      <OptimizedImage
-        src={src}
-        alt={alt}
-        fill
-        className="object-cover"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-        {...props}
-      />
+    <div className={`relative overflow-hidden ${className}`} style={{ position: 'relative' }}>
+      <div style={{ paddingBottom }} className="relative">
+        <div className="absolute inset-0">
+          <OptimizedImage
+            src={src}
+            alt={alt}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            enableResponsive={true}
+            productId={productId}
+            lazy={true}
+            {...props}
+          />
+        </div>
+      </div>
     </div>
   );
 }

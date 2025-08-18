@@ -1,3 +1,13 @@
+export interface ProductImage {
+  id: string
+  url: string
+  alt: string
+  position: number
+  size: 'thumbnail' | 'medium' | 'large'
+  width?: number
+  height?: number
+}
+
 export interface Product {
   id: string
   name: string
@@ -7,7 +17,11 @@ export interface Product {
   originalPrice?: number
   isOnSale?: boolean
   saleEndDate?: string
-  images: string[]
+  images: string[] // 相容性保留，主要圖片URLs
+  productImages?: ProductImage[] // 新的結構化圖片資料
+  primaryImageUrl?: string // 主要展示圖片
+  thumbnailUrl?: string // 縮圖URL
+  galleryImages?: string[] // 圖片相簿URLs
   inventory: number
   isActive: boolean
   createdAt: string

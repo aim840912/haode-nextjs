@@ -4,12 +4,15 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import ImageUploader from '@/components/ImageUploader'
 
 export default function AddProduct() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [tempProductId] = useState(() => `temp-${Date.now()}`) // 臨時產品ID用於圖片上傳
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -93,7 +96,7 @@ export default function AddProduct() {
       const { salePrice, ...productDataWithoutSalePrice } = formData
       const productData = {
         ...productDataWithoutSalePrice,
-        images: formData.images.filter(img => img.trim() !== ''),
+        images: uploadedImages.length > 0 ? uploadedImages : formData.images.filter(img => img.trim() !== ''),
         // 如果是特價商品，設定特價為當前售價，原價為 originalPrice
         // 如果不是特價商品，設定原價為當前售價，originalPrice 為 null
         price: formData.isOnSale ? formData.salePrice : formData.price,
@@ -129,6 +132,14 @@ export default function AddProduct() {
     }))
   }
 
+  const handleImageUploadSuccess = (images: any[]) => {
+    const urls = images.map(img => img.url)
+    setUploadedImages(prev => [...prev, ...urls])
+  }
+
+  const handleImageUploadError = (error: string) => {
+    alert(`圖片上傳失敗: ${error}`)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
@@ -346,6 +357,28 @@ export default function AddProduct() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               placeholder="0"
             />
+          </div>
+
+          {/* 圖片上傳區域 */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              產品圖片
+            </label>
+            <ImageUploader
+              productId={tempProductId}
+              onUploadSuccess={handleImageUploadSuccess}
+              onUploadError={handleImageUploadError}
+              maxFiles={5}
+              allowMultiple={true}
+              generateMultipleSizes={true}
+              enableCompression={true}
+              className="mb-4"
+            />
+            {uploadedImages.length > 0 && (
+              <div className="text-sm text-green-600">
+                已上傳 {uploadedImages.length} 張圖片
+              </div>
+            )}
           </div>
 
           <div className="flex items-center">

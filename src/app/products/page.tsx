@@ -9,6 +9,7 @@ import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
 import ProductFilter, { FilterState } from '@/components/ProductFilter';
 import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
 import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
+import ProductImageGallery, { ProductCardImage } from '@/components/ProductImageGallery';
 
 // 用於模擬產品的擴展類型
 interface ExtendedProduct extends Product {
@@ -329,31 +330,24 @@ function ProductsPage() {
               onClick={() => handleProductClick(product as unknown as ExtendedProduct)}
             >
               {/* Product Image */}
-              <div className="relative aspect-square bg-gradient-to-br from-amber-100 to-orange-100">
-                {product.category === '紅肉李果園' || product.category === '季節水果' ? (
-                  <img 
-                    src={product.image} 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <img 
-                    src="/images/placeholder.jpg" 
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                {!product.inStock && (
-                  <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-                    缺貨
-                  </div>
-                )}
-                {product.originalPrice > product.price && (
-                  <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm">
-                    特價
-                  </div>
-                )}
-              </div>
+              <ProductCardImage
+                product={{
+                  ...product,
+                  id: product.id.toString(),
+                  name: product.name,
+                  images: product.image ? [product.image] : ['/images/placeholder.jpg'],
+                  thumbnailUrl: product.image,
+                  primaryImageUrl: product.image,
+                  inventory: product.inStock ? 100 : 0,
+                  isOnSale: (product.originalPrice || 0) > product.price,
+                  category: product.category,
+                  price: product.price,
+                  description: product.description,
+                  isActive: true,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                }}
+              />
 
               {/* Product Info */}
               <div className="p-6">
@@ -415,22 +409,28 @@ function ProductsPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="grid md:grid-cols-2 gap-8 p-8">
-              {/* Product Image */}
-              <div className="aspect-square bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg flex items-center justify-center">
-                {selectedProduct.category === '紅肉李果園' || selectedProduct.category === '季節水果' ? (
-                  <img 
-                    src={selectedProduct.image} 
-                    alt={selectedProduct.name}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                ) : (
-                  <span className="text-8xl">
-                    {selectedProduct.category === '精品咖啡' && '☕'}
-                    {selectedProduct.category === '有機蔬菜' && '🥬'}
-                    {selectedProduct.category === '精品茶葉' && '🍵'}
-                  </span>
-                )}
-              </div>
+              {/* Product Image Gallery */}
+              <ProductImageGallery
+                product={{
+                  ...selectedProduct,
+                  id: selectedProduct.id.toString(),
+                  name: selectedProduct.name,
+                  images: selectedProduct.image ? [selectedProduct.image] : ['/images/placeholder.jpg'],
+                  galleryImages: selectedProduct.image ? [selectedProduct.image] : undefined,
+                  thumbnailUrl: selectedProduct.image,
+                  primaryImageUrl: selectedProduct.image,
+                  inventory: selectedProduct.inStock ? 100 : 0,
+                  isOnSale: (selectedProduct.originalPrice || 0) > selectedProduct.price,
+                  category: selectedProduct.category,
+                  price: selectedProduct.price,
+                  description: selectedProduct.description,
+                  isActive: true,
+                  createdAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString()
+                }}
+                showThumbnails={true}
+                autoSlide={false}
+              />
 
               {/* Product Details */}
               <div>
