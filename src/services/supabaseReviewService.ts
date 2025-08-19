@@ -175,9 +175,9 @@ export class SupabaseReviewService implements ReviewService {
       const pending = total - approved
       
       // 計算平均評分（只計算已審核的）
-      const approvedRatings = totalData?.filter(r => r.is_approved).map(r => r.rating) || []
+      const approvedRatings = totalData?.filter((r: any) => r.is_approved).map((r: any) => r.rating) || []
       const averageRating = approvedRatings.length > 0 
-        ? approvedRatings.reduce((sum, rating) => sum + rating, 0) / approvedRatings.length 
+        ? approvedRatings.reduce((sum: number, rating: number) => sum + rating, 0) / approvedRatings.length 
         : 0
 
       return {

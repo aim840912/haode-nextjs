@@ -11,11 +11,11 @@ INSERT INTO locations (name, title, address, landmark, phone, line_id, hours, cl
  '{"lat": 23.4801, "lng": 120.4491}'::jsonb, '🏪', false);
 
 -- Insert sample products data
-INSERT INTO products (name, description, price, category, image_url, stock, is_active) VALUES
-('有機紅肉李', '來自嘉義梅山高海拔地區的有機紅肉李，果實飽滿甜美，富含維生素C和膳食纖維。', 350.00, 'fruit', '/images/products/red-plum.jpg', 100, true),
-('高山烏龍茶', '海拔1000公尺以上的高山烏龍茶，茶香清雅，回甘持久。', 800.00, 'tea', '/images/products/oolong-tea.jpg', 50, true),
-('季節蔬菜箱', '當季新鮮有機蔬菜組合，每週配送不同品種，營養豐富。', 280.00, 'vegetable', '/images/products/vegetable-box.jpg', 30, true),
-('精選茶包', '精選高山茶葉製成的便利茶包，保留原茶風味。', 450.00, 'processed', '/images/products/teabag.jpg', 80, true);
+INSERT INTO products (name, description, price, category, image_url, stock, is_active, show_in_catalog) VALUES
+('有機紅肉李', '來自嘉義梅山高海拔地區的有機紅肉李，果實飽滿甜美，富含維生素C和膳食纖維。', 350.00, 'fruit', '/images/products/red-plum.jpg', 100, true, true),
+('高山烏龍茶', '海拔1000公尺以上的高山烏龍茶，茶香清雅，回甘持久。', 800.00, 'tea', '/images/products/oolong-tea.jpg', 50, true, true),
+('季節蔬菜箱', '當季新鮮有機蔬菜組合，每週配送不同品種，營養豐富。', 280.00, 'vegetable', '/images/products/vegetable-box.jpg', 30, true, true),
+('精選茶包', '精選高山茶葉製成的便利茶包，保留原茶風味。', 450.00, 'processed', '/images/products/teabag.jpg', 80, true, true);
 
 -- Insert sample news data
 INSERT INTO news (title, summary, content, category, tags, is_published, publish_date) VALUES

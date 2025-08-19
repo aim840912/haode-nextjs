@@ -23,36 +23,19 @@ const nextConfig: NextConfig = {
   
   // 實驗性功能
   experimental: {
-    optimizePackageImports: ['@/components', '@/lib'],
+    // 暫時禁用 optimizePackageImports 來修復 Supabase SSR 問題
+    // optimizePackageImports: ['@/components', '@/lib'],
     // 暫時禁用 optimizeCss 以避免 critters 依賴問題
     // optimizeCss: true
   },
   
   // Webpack 設定優化
   webpack: (config, { dev, isServer }) => {
-    // 生產環境優化
+    // 完全禁用 code splitting 來避免 vendors.js 中的 self 問題
     if (!dev) {
       config.optimization = {
         ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-              priority: 20
-            },
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true
-            }
-          }
-        }
+        splitChunks: false
       }
     }
     
@@ -100,8 +83,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false
   },
   
-  // 輸出配置 - 使用 standalone 模式減少部署大小
-  output: 'standalone',
+  // 輸出配置 - 暫時禁用 standalone 模式以修復 Supabase SSR 問題
+  // output: 'standalone',
   
   // Gzip 壓縮設定
   compress: true,

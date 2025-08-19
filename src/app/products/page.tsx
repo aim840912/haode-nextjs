@@ -66,7 +66,7 @@ function ProductsPage() {
           }
 
           const data = await response.json();
-          setApiProducts(data.filter((p: Product) => p.isActive));
+          setApiProducts(data.filter((p: Product) => p.isActive && (p.showInCatalog ?? true)));
           return data;
         },
         {
