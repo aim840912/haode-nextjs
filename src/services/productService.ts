@@ -116,6 +116,11 @@ export const productService: ProductService = {
     if (!_productService) _productService = await getProductService()
     return _productService.getProducts()
   },
+
+  async getAllProducts() {
+    if (!_productService) _productService = await getProductService()
+    return _productService.getAllProducts ? _productService.getAllProducts() : _productService.getProducts()
+  },
   
   async addProduct(productData) {
     if (!_productService) _productService = await getProductService()

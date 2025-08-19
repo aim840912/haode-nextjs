@@ -7,13 +7,30 @@ class SupabaseProductService implements ProductService {
       const { data, error } = await supabase
         .from('products')
         .select('*')
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
       
       if (error) throw error
       
       return data?.map(this.transformFromDB) || []
     } catch (error) {
-      console.error('Error fetching products:', error)
+      return []
+    }
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    try {
+      // 使用管理員客戶端來獲取所有產品（包含下架的）
+      const client = supabaseAdmin || supabase
+      const { data, error } = await client
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+      
+      if (error) throw error
+      
+      return data?.map(this.transformFromDB) || []
+    } catch (error) {
       return []
     }
   }
@@ -80,7 +97,9 @@ class SupabaseProductService implements ProductService {
 
   async getProductById(id: string): Promise<Product | null> {
     try {
-      const { data, error } = await supabase
+      // 使用管理員客戶端來獲取產品（支援查詢下架產品）
+      const client = supabaseAdmin || supabase
+      const { data, error } = await client
         .from('products')
         .select('*')
         .eq('id', id)
@@ -93,7 +112,6 @@ class SupabaseProductService implements ProductService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error fetching product by id:', error)
       return null
     }
   }
@@ -175,6 +193,7 @@ class SupabaseProductService implements ProductService {
       images: [imageUrl], // 始終確保有一個有效的圖片 URL
       inventory: stock,
       isActive: Boolean(dbProduct.is_active),
+      showInCatalog: dbProduct.show_in_catalog !== undefined ? Boolean(dbProduct.show_in_catalog) : true,
       createdAt: (dbProduct.created_at as string) || new Date().toISOString(),
       updatedAt: (dbProduct.updated_at as string) || new Date().toISOString()
     }
@@ -190,6 +209,7 @@ class SupabaseProductService implements ProductService {
     if (product.images && product.images.length > 0) transformed.image_url = product.images[0]
     if (product.inventory !== undefined) transformed.stock = product.inventory
     if (product.isActive !== undefined) transformed.is_active = product.isActive
+    if (product.showInCatalog !== undefined) transformed.show_in_catalog = product.showInCatalog
     
     return transformed
   }

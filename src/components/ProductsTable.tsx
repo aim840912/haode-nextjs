@@ -33,11 +33,22 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     try {
       setLoading(true)
       setError(null)
-      const response = await fetch('/api/products')
+      
+      // 加入時間戳參數防止快取，並標記為管理員請求
+      const timestamp = new Date().getTime()
+      const response = await fetch(`/api/products?t=${timestamp}&admin=true`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const data = await response.json()
+      console.log('ProductsTable fetchProducts - 獲取的資料:', data)
       setProducts(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Error fetching products:', error)
@@ -121,6 +132,37 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     }
   }
 
+  const handleToggleShowInCatalog = async (id: string, showInCatalog: boolean) => {
+    if (!user) {
+      alert('請先登入')
+      return
+    }
+    
+    const newShowState = !showInCatalog
+    
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showInCatalog: newShowState })
+      })
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      
+      const result = await response.json()
+      console.log('handleToggleShowInCatalog - 更新成功:', result)
+      
+      // 更新成功後重新載入整個產品列表，確保資料同步
+      await fetchProducts()
+      
+    } catch (error) {
+      console.error('Error updating product:', error)
+      alert('更新失敗，請稍後再試')
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -167,7 +209,10 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
               庫存
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              狀態
+              上架狀態
+            </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              產品頁顯示
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               操作
@@ -240,6 +285,31 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
                     {product.isActive ? '上架中' : '已下架'}
                   </span>
                 )}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                {(() => {
+                  const showInCatalog = product.showInCatalog ?? true
+                  return user?.role === 'admin' ? (
+                    <button
+                      onClick={() => handleToggleShowInCatalog(product.id, showInCatalog)}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        showInCatalog
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {showInCatalog ? '顯示中' : '已隱藏'}
+                    </button>
+                  ) : (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      showInCatalog
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {showInCatalog ? '顯示中' : '已隱藏'}
+                    </span>
+                  )
+                })()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 {user?.role === 'admin' ? (

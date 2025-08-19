@@ -16,7 +16,6 @@ export async function GET(
     }
     return NextResponse.json(product)
   } catch (error) {
-    console.error('Error fetching product:', error)
     return NextResponse.json(
       { error: 'Failed to fetch product' },
       { status: 500 }
@@ -31,10 +30,11 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
+    
     const product = await productService.updateProduct(id, body)
+    
     return NextResponse.json(product)
   } catch (error) {
-    console.error('Error updating product:', error)
     return NextResponse.json(
       { error: 'Failed to update product' },
       { status: 500 }
@@ -54,14 +54,11 @@ export async function DELETE(
     try {
       const { CacheManager } = await import('@/lib/cache-server')
       await CacheManager.deletePattern('products:*')
-      console.log('快取已清除：products:*')
     } catch (cacheError) {
-      console.warn('清除快取時發生警告:', cacheError)
     }
     
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting product:', error)
     return NextResponse.json(
       { error: 'Failed to delete product' },
       { status: 500 }

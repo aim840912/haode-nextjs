@@ -25,7 +25,8 @@ export default function AddProduct() {
     saleEndDate: '',
     inventory: 0,
     images: [''],
-    isActive: true
+    isActive: true,
+    showInCatalog: true
   })
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export default function AddProduct() {
         }
       }
     } catch (error) {
-      console.error('Error fetching categories:', error)
+      // 忽略分類載入錯誤，不影響表單功能
     }
   }
 
@@ -103,19 +104,22 @@ export default function AddProduct() {
         originalPrice: formData.isOnSale ? formData.price : null
       }
 
+
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productData)
       })
 
+
       if (response.ok) {
+        const result = await response.json()
         router.push('/admin/products')
       } else {
-        alert('新增失敗')
+        const errorText = await response.text()
+        alert(`新增失敗: ${response.status} - ${errorText}`)
       }
     } catch (error) {
-      console.error('Error adding product:', error)
       alert('新增失敗')
     } finally {
       setLoading(false)
@@ -381,17 +385,34 @@ export default function AddProduct() {
             )}
           </div>
 
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="isActive"
-              checked={formData.isActive}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-            />
-            <label className="ml-2 block text-sm text-gray-900">
-              立即上架販售
-            </label>
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="isActive"
+                checked={formData.isActive}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-900">
+                立即上架販售
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="showInCatalog"
+                checked={formData.showInCatalog}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+              />
+              <label className="ml-2 block text-sm text-gray-900">
+                顯示於產品介紹頁面
+              </label>
+              <span className="ml-2 text-xs text-gray-500">
+                (取消勾選則此產品不會出現在前台產品頁面)
+              </span>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-4 pt-6">

@@ -37,6 +37,7 @@ export class CachedProductService implements ProductService {
   async clearCache(): Promise<void> {
     try {
       await CacheManager.delete('products:list')
+      await CacheManager.delete('products:all')
       await CacheManager.delete('products:search:*')
       console.log('🗑️ 產品快取已清除')
     } catch (error) {
@@ -70,6 +71,42 @@ export class CachedProductService implements ProductService {
     try {
       await CacheManager.set(cacheKey, products, { ttl: 300 })
       console.log('💾 產品列表已快取 (5min)')
+    } catch (error) {
+      this.cacheStats.errors++
+      console.warn('快取寫入錯誤:', error)
+    }
+    
+    return products
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    const cacheKey = 'products:all'
+    
+    try {
+      // 嘗試從快取讀取
+      const cached = await CacheManager.get<Product[]>(cacheKey)
+      if (cached) {
+        this.cacheStats.hits++
+        console.log('🎯 快取命中: 所有產品列表 (admin)')
+        return cached
+      }
+    } catch (error) {
+      this.cacheStats.errors++
+      console.warn('快取讀取錯誤:', error)
+    }
+
+    // 快取未命中，查詢資料庫
+    this.cacheStats.misses++
+    console.log('💾 快取未命中: 所有產品列表 (admin)，查詢資料庫')
+    
+    const products = this.baseService.getAllProducts ? 
+      await this.baseService.getAllProducts() : 
+      await this.baseService.getProducts()
+    
+    // 寫入快取（5 分鐘）
+    try {
+      await CacheManager.set(cacheKey, products, { ttl: 300 })
+      console.log('💾 所有產品列表已快取 (5min)')
     } catch (error) {
       this.cacheStats.errors++
       console.warn('快取寫入錯誤:', error)
@@ -187,6 +224,9 @@ export class CachedProductService implements ProductService {
     try {
       // 清除產品列表快取
       await CacheManager.delete('products:list')
+      
+      // 清除管理員產品列表快取
+      await CacheManager.delete('products:all')
       
       // 如果有特定產品 ID，清除該產品快取
       if (productId) {
