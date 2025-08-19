@@ -99,9 +99,9 @@ export default function SchedulePage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = { 
-      year: 'numeric', 
-      month: 'long', 
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       weekday: 'long'
     };
@@ -120,18 +120,16 @@ export default function SchedulePage() {
             </div>
             {user && user.role === 'admin' && (
               <div className="flex space-x-3">
-                <a 
+                <a
                   href="/admin/schedule"
                   className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition-colors flex items-center space-x-2"
                 >
-                  <span>📅</span>
                   <span>行程管理</span>
                 </a>
-                <a 
+                <a
                   href="/admin/schedule/add"
                   className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
                 >
-                  <span>➕</span>
                   <span>新增行程</span>
                 </a>
               </div>
@@ -145,23 +143,21 @@ export default function SchedulePage() {
         <div className="flex mb-8 bg-white rounded-lg shadow-sm p-2">
           <button
             onClick={() => setActiveTab('market')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
-              activeTab === 'market' 
-                ? 'bg-amber-900 text-white' 
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${activeTab === 'market'
+                ? 'bg-amber-900 text-white'
                 : 'text-gray-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
-            📅 市集擺攤行程
+            市集擺攤行程
           </button>
           <button
             onClick={() => setActiveTab('stores')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
-              activeTab === 'stores' 
-                ? 'bg-amber-900 text-white' 
+            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${activeTab === 'stores'
+                ? 'bg-amber-900 text-white'
                 : 'text-gray-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
-            🏪 固定門市據點
+            固定門市據點
           </button>
         </div>
 
@@ -219,75 +215,75 @@ export default function SchedulePage() {
                   </div>
                 ) : (
                   filteredSchedule.map((schedule) => (
-                <div key={schedule.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-bold text-gray-800">{schedule.title}</h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(schedule.status as 'upcoming' | 'ongoing' | 'completed')}`}>
-                      {getStatusText(schedule.status as 'upcoming' | 'ongoing' | 'completed')}
-                    </span>
-                  </div>
-
-                  {/* Date and Time */}
-                  <div className="flex items-center mb-3 text-amber-700">
-                    <span className="mr-2">📅</span>
-                    <span className="font-medium">{formatDate(schedule.date)}</span>
-                  </div>
-                  <div className="flex items-center mb-3 text-gray-600">
-                    <span className="mr-2">⏰</span>
-                    <span>{schedule.time}</span>
-                  </div>
-
-                  {/* Location */}
-                  <div className="flex items-start mb-4 text-gray-600">
-                    <span className="mr-2 mt-1">📍</span>
-                    <div>
-                      <div className="font-medium">{schedule.location}</div>
-                      <div className="text-sm mt-1">{schedule.description}</div>
-                    </div>
-                  </div>
-
-                  {/* Products */}
-                  <div className="mb-4">
-                    <div className="text-sm font-medium text-gray-700 mb-2">販售商品：</div>
-                    <div className="flex flex-wrap gap-2">
-                      {schedule.products.map((product, index) => (
-                        <span key={index} className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
-                          {product}
+                    <div key={schedule.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                      {/* Header */}
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-bold text-gray-800">{schedule.title}</h3>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(schedule.status as 'upcoming' | 'ongoing' | 'completed')}`}>
+                          {getStatusText(schedule.status as 'upcoming' | 'ongoing' | 'completed')}
                         </span>
-                      ))}
-                    </div>
-                  </div>
+                      </div>
 
-                  {/* Special Offer */}
-                  {schedule.specialOffer && (
-                    <div className="mb-4 p-3 bg-orange-50 border-l-4 border-orange-400 rounded-r-lg">
-                      <div className="text-sm font-medium text-orange-700">🎁 特別優惠</div>
-                      <div className="text-sm text-orange-600 mt-1">{schedule.specialOffer}</div>
-                    </div>
-                  )}
+                      {/* Date and Time */}
+                      <div className="flex items-center mb-3 text-amber-700">
+                        <span className="mr-2">📅</span>
+                        <span className="font-medium">{formatDate(schedule.date)}</span>
+                      </div>
+                      <div className="flex items-center mb-3 text-gray-600">
+                        <span className="mr-2">⏰</span>
+                        <span>{schedule.time}</span>
+                      </div>
 
-                  {/* Weather Note */}
-                  {schedule.weatherNote && schedule.status === 'upcoming' && (
-                    <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-                      <div className="text-sm font-medium text-blue-700">⛅ 天氣提醒</div>
-                      <div className="text-sm text-blue-600 mt-1">{schedule.weatherNote}</div>
-                    </div>
-                  )}
+                      {/* Location */}
+                      <div className="flex items-start mb-4 text-gray-600">
+                        <span className="mr-2 mt-1">📍</span>
+                        <div>
+                          <div className="font-medium">{schedule.location}</div>
+                          <div className="text-sm mt-1">{schedule.description}</div>
+                        </div>
+                      </div>
 
-                  {/* Contact */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center text-gray-600">
-                      <span className="mr-2">📞</span>
-                      <span className="text-sm">{schedule.contact}</span>
+                      {/* Products */}
+                      <div className="mb-4">
+                        <div className="text-sm font-medium text-gray-700 mb-2">販售商品：</div>
+                        <div className="flex flex-wrap gap-2">
+                          {schedule.products.map((product, index) => (
+                            <span key={index} className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm">
+                              {product}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Special Offer */}
+                      {schedule.specialOffer && (
+                        <div className="mb-4 p-3 bg-orange-50 border-l-4 border-orange-400 rounded-r-lg">
+                          <div className="text-sm font-medium text-orange-700">🎁 特別優惠</div>
+                          <div className="text-sm text-orange-600 mt-1">{schedule.specialOffer}</div>
+                        </div>
+                      )}
+
+                      {/* Weather Note */}
+                      {schedule.weatherNote && schedule.status === 'upcoming' && (
+                        <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
+                          <div className="text-sm font-medium text-blue-700">⛅ 天氣提醒</div>
+                          <div className="text-sm text-blue-600 mt-1">{schedule.weatherNote}</div>
+                        </div>
+                      )}
+
+                      {/* Contact */}
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <div className="flex items-center text-gray-600">
+                          <span className="mr-2">📞</span>
+                          <span className="text-sm">{schedule.contact}</span>
+                        </div>
+                        {schedule.status === 'upcoming' && (
+                          <button className="bg-amber-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-800 transition-colors">
+                            設定提醒
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    {schedule.status === 'upcoming' && (
-                      <button className="bg-amber-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-800 transition-colors">
-                        設定提醒
-                      </button>
-                    )}
-                  </div>
-                </div>
                   ))
                 )}
               </div>
@@ -299,41 +295,49 @@ export default function SchedulePage() {
           <div>
             <div className="grid md:grid-cols-3 gap-6">
               {permanentStores.map((store) => (
-                <div key={store.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
+                <div key={store.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow flex flex-col h-full">
                   <h3 className="text-xl font-bold text-gray-800 mb-4">{store.name}</h3>
-                  
-                  {/* Address */}
-                  <div className="flex items-start mb-3 text-gray-600">
-                    <span className="mr-2 mt-1">📍</span>
-                    <span className="text-sm">{store.address}</span>
-                  </div>
 
-                  {/* Phone */}
-                  <div className="flex items-center mb-3 text-gray-600">
-                    <span className="mr-2">📞</span>
-                    <span className="text-sm">{store.phone}</span>
-                  </div>
+                  <div className="flex-grow">
+                    {/* Address */}
+                    <div className="flex items-start mb-3 text-gray-600">
+                      <span className="mr-2 mt-1">📍</span>
+                      <span className="text-sm">{store.address}</span>
+                    </div>
 
-                  {/* Hours */}
-                  <div className="flex items-center mb-4 text-gray-600">
-                    <span className="mr-2">⏰</span>
-                    <span className="text-sm">{store.hours}</span>
-                  </div>
+                    {/* Phone */}
+                    <div className="flex items-center mb-3 text-gray-600">
+                      <span className="mr-2">📞</span>
+                      <span className="text-sm">{store.phone}</span>
+                    </div>
 
-                  {/* Services */}
-                  <div className="mb-4">
-                    <div className="text-sm font-medium text-gray-700 mb-2">提供服務：</div>
-                    <div className="space-y-1">
-                      {store.services.map((service, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-600">
-                          <span className="mr-2 text-green-500">✓</span>
-                          <span>{service}</span>
-                        </div>
-                      ))}
+                    {/* Hours */}
+                    <div className="flex items-center mb-4 text-gray-600">
+                      <span className="mr-2">⏰</span>
+                      <span className="text-sm">{store.hours}</span>
+                    </div>
+
+                    {/* Services */}
+                    <div className="mb-4">
+                      <div className="text-sm font-medium text-gray-700 mb-2">提供服務：</div>
+                      <div className="space-y-1 min-h-[120px]">
+                        {store.services.map((service, index) => (
+                          <div key={index} className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2 text-green-500">✓</span>
+                            <span>{service}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  <button className="w-full bg-amber-900 text-white py-2 rounded-lg text-sm hover:bg-amber-800 transition-colors">
+                  <button
+                    onClick={() => {
+                      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`;
+                      window.open(googleMapsUrl, '_blank');
+                    }}
+                    className="w-full bg-amber-900 text-white py-2 rounded-lg text-sm hover:bg-amber-800 transition-colors mt-auto"
+                  >
                     查看地圖
                   </button>
                 </div>
@@ -351,13 +355,13 @@ export default function SchedulePage() {
             我們也接受團購訂單和企業採購，歡迎來電洽詢客製化服務
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-            <a 
+            <a
               href="tel:05-2561843"
               className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               📞 立即來電詢問
             </a>
-            <a 
+            <a
               href="/products"
               className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-amber-900 transition-colors"
             >

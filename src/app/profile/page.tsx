@@ -18,6 +18,9 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [interestedProducts, setInterestedProducts] = useState<string[]>([]);
+  const [interestedProductsData, setInterestedProductsData] = useState<any[]>([]);
+  const [loadingInterests, setLoadingInterests] = useState(false);
 
   // 表單狀態
   const [formData, setFormData] = useState({
@@ -70,6 +73,58 @@ export default function ProfilePage() {
       });
     }
   }, [user]);
+
+  // 載入興趣清單
+  useEffect(() => {
+    const savedInterests = localStorage.getItem('interestedProducts');
+    if (savedInterests) {
+      const productIds = JSON.parse(savedInterests);
+      setInterestedProducts(productIds);
+      
+      // 獲取產品資料
+      if (productIds.length > 0) {
+        fetchInterestedProductsData(productIds);
+      }
+    }
+  }, []);
+
+  const fetchInterestedProductsData = async (productIds: string[]) => {
+    setLoadingInterests(true);
+    try {
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const allProducts = await response.json();
+        const filteredProducts = allProducts.filter((product: any) => 
+          productIds.includes(product.id) && product.isActive
+        );
+        setInterestedProductsData(filteredProducts);
+      }
+    } catch (error) {
+      console.error('Error fetching interested products:', error);
+    } finally {
+      setLoadingInterests(false);
+    }
+  };
+
+  const removeFromInterests = (productId: string, productName: string) => {
+    const newInterestedProducts = interestedProducts.filter(id => id !== productId);
+    setInterestedProducts(newInterestedProducts);
+    setInterestedProductsData(prev => prev.filter(product => product.id !== productId));
+    
+    // 更新 localStorage
+    localStorage.setItem('interestedProducts', JSON.stringify(newInterestedProducts));
+    
+    // 顯示提示
+    const notification = document.createElement('div');
+    notification.textContent = `已從興趣清單移除 ${productName}`;
+    notification.className = 'fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      if (document.body.contains(notification)) {
+        document.body.removeChild(notification);
+      }
+    }, 2000);
+  };
 
   // 路由保護
   useEffect(() => {
@@ -195,6 +250,16 @@ export default function ProfilePage() {
                   }`}
                 >
                   📦 訂單記錄
+                </button>
+                <button
+                  onClick={() => setActiveTab('interests')}
+                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
+                    activeTab === 'interests' 
+                      ? 'bg-amber-100 text-amber-900' 
+                      : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  💙 有興趣的產品 ({interestedProducts.length})
                 </button>
               </nav>
             </div>
@@ -442,6 +507,96 @@ export default function ProfilePage() {
                   <div className="text-center py-12">
                     <div className="text-6xl mb-4">📦</div>
                     <p className="text-gray-600">尚無訂單記錄</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 有興趣的產品 Tab */}
+            {activeTab === 'interests' && (
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">有興趣的產品</h2>
+                  <Link 
+                    href="/products"
+                    className="px-4 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 transition-colors"
+                  >
+                    繼續購物
+                  </Link>
+                </div>
+
+                {loadingInterests ? (
+                  <div className="text-center py-12">
+                    <LoadingSpinner size="lg" />
+                    <p className="mt-4 text-gray-600">載入中...</p>
+                  </div>
+                ) : interestedProductsData.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {interestedProductsData.map((product) => (
+                      <div key={product.id} className="border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                        <div className="aspect-w-16 aspect-h-9">
+                          <OptimizedImage
+                            src={product.images?.[0] || '/images/placeholder.jpg'}
+                            alt={product.name}
+                            width={400}
+                            height={225}
+                            className="object-cover w-full h-48"
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
+                        <div className="p-4">
+                          <div className="text-sm text-amber-600 mb-1">{product.category}</div>
+                          <h3 className="font-semibold text-gray-900 mb-2">{product.name}</h3>
+                          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+                          
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <span className="text-xl font-bold text-amber-900">NT$ {product.price?.toLocaleString()}</span>
+                              {product.originalPrice && product.originalPrice > product.price && (
+                                <span className="ml-2 text-sm text-gray-500 line-through">
+                                  NT$ {product.originalPrice.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              product.inventory > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {product.inventory > 0 ? '有庫存' : '缺貨'}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                            <Link
+                              href="/products"
+                              className="flex-1 px-3 py-2 bg-amber-900 text-white text-sm rounded-lg hover:bg-amber-800 transition-colors text-center"
+                            >
+                              查看詳情
+                            </Link>
+                            <button
+                              onClick={() => removeFromInterests(product.id, product.name)}
+                              className="px-3 py-2 border border-red-300 text-red-600 text-sm rounded-lg hover:bg-red-50 transition-colors"
+                              title="移除興趣"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="text-6xl mb-4">💙</div>
+                    <p className="text-gray-600 mb-4">尚無有興趣的產品</p>
+                    <p className="text-gray-500 text-sm mb-6">在產品頁面點擊愛心圖示來添加您感興趣的產品</p>
+                    <Link 
+                      href="/products"
+                      className="inline-block px-6 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 transition-colors"
+                    >
+                      開始探索產品
+                    </Link>
                   </div>
                 )}
               </div>

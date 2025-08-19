@@ -44,7 +44,7 @@ export default function Header() {
                 HAUDE TEA
               </div>
             </Link>
-            
+
             <AuthButton />
           </div>
 
@@ -81,10 +81,10 @@ export default function Header() {
             <div className="flex items-center space-x-3">
               {/* 可展開搜尋欄 */}
               <ExpandableSearchBar iconOnly />
-              
+
               {/* Social Links */}
               <SocialLinks size="sm" />
-              
+
               {/* Cart Icon - 只有登入時才顯示 */}
               {user && <CartIcon size="sm" />}
             </div>
@@ -108,13 +108,13 @@ export default function Header() {
             <div className="flex items-center space-x-2">
               {/* 可展開搜尋欄 - Mobile */}
               <ExpandableSearchBar iconOnly />
-              
+
               {/* Social Links - Mobile */}
               <SocialLinks size="sm" />
-              
+
               {/* Cart Icon - Mobile - 只有登入時才顯示 */}
               {user && <CartIcon size="sm" />}
-              
+
               {/* Auth Button - Mobile */}
               <AuthButton isMobile />
             </div>

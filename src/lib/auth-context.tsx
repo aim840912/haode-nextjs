@@ -162,7 +162,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      // 呼叫登出 API 清除 server-side cookie
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // 確保 cookie 被發送
+      });
+    } catch (error) {
+      console.error('Logout API error:', error);
+      // 即使 API 失敗也要清除客戶端狀態
+    }
+    
     // 清除兩種存儲中的資料
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');

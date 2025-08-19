@@ -13,7 +13,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
   const [locationId, setLocationId] = useState<string>('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [imageType, setImageType] = useState<'emoji' | 'upload'>('emoji')
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -33,14 +32,10 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
       lat: 0,
       lng: 0
     },
-    image: '🏪',
+    image: '',
     isMain: false
   })
 
-  const emojiOptions = [
-    '🏪', '🌆', '🏢', '🌴', '🏬', '🏭', '🏦', '🏪', 
-    '🏛️', '🏤', '🏣', '🏫', '🏨', '🏩', '🏘️', '🏚️'
-  ]
 
   const fetchLocation = useCallback(async (id: string) => {
     try {
@@ -227,7 +222,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
       }
 
       setImageFile(file)
-      setImageType('upload')
 
       // 創建預覽
       const reader = new FileReader()
@@ -240,18 +234,10 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
     }
   }
 
-  const handleEmojiSelect = (emoji: string) => {
-    setImageType('emoji')
-    setImageFile(null)
-    setImagePreview(null)
-    setFormData(prev => ({ ...prev, image: emoji }))
-  }
-
   const clearImage = () => {
     setImageFile(null)
     setImagePreview(null)
-    setImageType('emoji')
-    setFormData(prev => ({ ...prev, image: '🏪' }))
+    setFormData(prev => ({ ...prev, image: '' }))
   }
 
   if (initialLoading) {
@@ -552,64 +538,12 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
               
-              {/* 圖片選擇方式 */}
+              {/* 圖片上傳 */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-800 mb-3">
-                  門市圖片
+                  門市圖片 (選填)
                 </label>
                 
-                {/* 選擇類型 */}
-                <div className="flex gap-4 mb-4">
-                  <label className="flex items-center text-gray-800 font-medium">
-                    <input
-                      type="radio"
-                      name="imageType"
-                      value="emoji"
-                      checked={imageType === 'emoji'}
-                      onChange={() => setImageType('emoji')}
-                      className="mr-2"
-                    />
-                    使用圖示
-                  </label>
-                  <label className="flex items-center text-gray-800 font-medium">
-                    <input
-                      type="radio"
-                      name="imageType"
-                      value="upload"
-                      checked={imageType === 'upload'}
-                      onChange={() => setImageType('upload')}
-                      className="mr-2"
-                    />
-                    上傳圖片
-                  </label>
-                </div>
-
-                {imageType === 'emoji' ? (
-                  <>
-                    <div className="grid grid-cols-8 gap-2 mb-3">
-                      {emojiOptions.map(emoji => (
-                        <button
-                          key={emoji}
-                          type="button"
-                          onClick={() => handleEmojiSelect(emoji)}
-                          className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
-                            formData.image === emoji && imageType === 'emoji' ? 'bg-amber-100 border-amber-500' : 'border-gray-300'
-                          }`}
-                        >
-                          {emoji}
-                        </button>
-                      ))}
-                    </div>
-                    <input
-                      type="text"
-                      name="image"
-                      value={imageType === 'emoji' ? formData.image : ''}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                      placeholder="或自定義圖示"
-                    />
-                  </>
-                ) : (
                   <div className="space-y-3">
                     <div className="flex items-center justify-center w-full">
                       <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
@@ -648,7 +582,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                       </div>
                     )}
                   </div>
-                )}
               </div>
 
               <div className="flex items-center">
@@ -690,14 +623,22 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
                 <div className="mb-3">
-                  {imageType === 'upload' && imagePreview ? (
+                  {imagePreview ? (
                     <img 
                       src={imagePreview} 
                       alt="門市圖片" 
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
+                  ) : formData.image && formData.image.startsWith('/') ? (
+                    <img 
+                      src={formData.image} 
+                      alt="門市圖片" 
+                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                    />
                   ) : (
-                    <div className="text-4xl">{formData.image}</div>
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">無圖片</span>
+                    </div>
                   )}
                 </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">

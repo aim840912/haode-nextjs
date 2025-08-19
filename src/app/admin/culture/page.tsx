@@ -108,7 +108,6 @@ export default function CultureAdmin() {
                     {/* 圖片上的文字覆蓋層 */}
                     <div className="absolute inset-0 bg-black bg-opacity-30 p-4 flex flex-col justify-between">
                       <div>
-                        <div className="text-3xl mb-2">{item.emoji}</div>
                         <div className="text-white text-xs opacity-90 mb-1">{item.subtitle}</div>
                         <h3 className="text-white text-sm font-bold mb-2 drop-shadow-lg">{item.title}</h3>
                         <p className="text-white text-xs opacity-90 leading-relaxed line-clamp-3 drop-shadow">
@@ -121,7 +120,6 @@ export default function CultureAdmin() {
                   // 沒有圖片時顯示原本的色塊設計
                   <div className={`${item.color} h-full p-4 flex flex-col justify-between`}>
                     <div>
-                      <div className="text-3xl mb-2">{item.emoji}</div>
                       <div className={`${item.textColor} text-xs opacity-80 mb-1`}>{item.subtitle}</div>
                       <h3 className={`${item.textColor} text-sm font-bold mb-2`}>{item.title}</h3>
                       <p className={`${item.textColor} text-xs opacity-90 leading-relaxed line-clamp-3`}>
@@ -143,13 +141,13 @@ export default function CultureAdmin() {
                   <div className="flex space-x-2">
                     <Link
                       href={`/admin/culture/${item.id}/edit`}
-                      className="flex-1 bg-orange-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-orange-700 transition-colors"
+                      className="flex-1 bg-orange-600 text-white px-3 py-2 rounded text-sm inline-flex items-center justify-center h-10 hover:bg-orange-700 transition-colors"
                     >
                       編輯
                     </Link>
                     <button
                       onClick={() => handleDelete(item.id)}
-                      className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
+                      className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm inline-flex items-center justify-center h-10 hover:bg-red-700 transition-colors"
                     >
                       刪除
                     </button>
@@ -182,7 +180,6 @@ export default function CultureAdmin() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="text-3xl mr-4">🎨</div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">{cultureItems.length}</div>
                 <div className="text-sm text-gray-500">總典藏內容</div>
@@ -192,7 +189,6 @@ export default function CultureAdmin() {
           
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="text-3xl mr-4">📏</div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
                   {new Set(cultureItems.map(item => item.height)).size}
@@ -204,7 +200,6 @@ export default function CultureAdmin() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="text-3xl mr-4">🌈</div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
                   {new Set(cultureItems.map(item => item.color)).size}

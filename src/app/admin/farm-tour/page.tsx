@@ -120,10 +120,6 @@ export default function FarmTourAdmin() {
               <div className="p-4">
                 <div className="mb-4">
                   <p className="text-sm text-amber-600 font-medium mb-2">{activity.highlight}</p>
-                  <div className="flex justify-between items-center text-sm">
-                    <span className="font-bold text-green-600">NT$ {activity.price}</span>
-                    <span className="text-gray-600">{activity.duration}</span>
-                  </div>
                 </div>
 
                 {/* Status */}
@@ -212,7 +208,7 @@ export default function FarmTourAdmin() {
         )}
 
         {/* 統計資訊 */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="text-3xl mr-4">🌱</div>
@@ -231,18 +227,6 @@ export default function FarmTourAdmin() {
                   {activities.filter(a => a.available).length}
                 </div>
                 <div className="text-sm text-gray-500">開放預約</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">💰</div>
-              <div>
-                <div className="text-2xl font-bold text-amber-600">
-                  NT$ {activities.length > 0 ? Math.round(activities.reduce((sum, a) => sum + a.price, 0) / activities.length) : 0}
-                </div>
-                <div className="text-sm text-gray-500">平均價格</div>
               </div>
             </div>
           </div>

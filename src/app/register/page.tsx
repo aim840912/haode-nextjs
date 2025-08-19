@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -15,6 +17,9 @@ export default function RegisterPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
+  const [successMessage, setSuccessMessage] = useState('');
+  const { register } = useAuth();
+  const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -77,12 +82,34 @@ export default function RegisterPage() {
     }
 
     setIsLoading(true);
+    setErrors({});
+    setSuccessMessage('');
     
-    // 模擬註冊處理
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    alert('註冊功能尚在開發中');
-    setIsLoading(false);
+    try {
+      const response = await register({
+        email: formData.email,
+        password: formData.password,
+        name: formData.fullName,
+        phone: formData.phone
+      });
+
+      setSuccessMessage('註冊成功！正在為您登入...');
+      
+      // 延遲一下讓用戶看到成功訊息，然後跳轉
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Registration failed:', error);
+      if (error instanceof Error) {
+        setErrors({ general: error.message });
+      } else {
+        setErrors({ general: '註冊失敗，請稍後再試' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSocialRegister = (provider: string) => {
@@ -108,6 +135,26 @@ export default function RegisterPage() {
 
         {/* Register Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
+          {/* Success Message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-green-500 mr-2">✅</span>
+                <p className="text-green-700 font-medium">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error Message */}
+          {errors.general && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-center">
+                <span className="text-red-500 mr-2">❌</span>
+                <p className="text-red-700 font-medium">{errors.general}</p>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleRegister} className="space-y-6">
             {/* Full Name Input */}
             <div>

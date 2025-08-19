@@ -143,7 +143,7 @@ class SupabaseProductService implements ProductService {
       '有機紅肉李': '/images/products/red-plum.jpg',
       '高山烏龍茶': '/images/products/oolong-tea.jpg', 
       '季節蔬菜箱': '/images/products/vegetable-box.jpg',
-      '農場蜂蜜': '/images/products/honey.jpg'
+      '精選茶包': '/images/products/teabag.jpg'
     }
 
     // 安全地獲取產品名稱

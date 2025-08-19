@@ -10,9 +10,9 @@ export default function Home() {
   return (
     <>
       <FarmStructuredData />
-      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white -mt-[var(--header-height)]">
 
-        <section className="relative min-h-screen flex flex-col justify-center text-center pt-20">
+        <section className="relative min-h-screen flex flex-col justify-center text-center pt-[var(--header-height)]">
           <h1 className="text-5xl md:text-7xl font-serif-display text-amber-900 mb-6">
             豪茶德李
           </h1>

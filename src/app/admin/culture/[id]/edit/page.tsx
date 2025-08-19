@@ -20,7 +20,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     color: 'bg-gradient-to-br from-amber-400 to-amber-600',
     height: 'h-64',
     textColor: 'text-white',
-    emoji: '🎨',
     imageUrl: ''
   })
 
@@ -36,7 +35,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
           color: cultureItem.color,
           height: cultureItem.height,
           textColor: cultureItem.textColor,
-          emoji: cultureItem.emoji,
           imageUrl: cultureItem.imageUrl || ''
         })
       } else {
@@ -74,7 +72,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
           <p className="text-gray-600">載入中...</p>
         </div>
       </div>
@@ -86,7 +83,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="text-6xl mb-8">🔒</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
@@ -276,22 +272,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
               )}
             </div>
 
-            {/* Emoji */}
-            <div>
-              <label htmlFor="emoji" className="block text-sm font-medium text-gray-900 mb-2">
-                代表符號
-              </label>
-              <input
-                type="text"
-                id="emoji"
-                name="emoji"
-                value={formData.emoji}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
-                placeholder="🎨"
-              />
-            </div>
-
             {/* 背景色選擇 */}
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-3">
@@ -372,7 +352,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-30 p-6 flex flex-col justify-between">
                       <div>
-                        <div className="text-4xl mb-3">{formData.emoji}</div>
                         <div className="text-white text-sm opacity-90 mb-2">
                           {formData.subtitle || '副標題預覽'}
                         </div>
@@ -390,7 +369,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                   <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
                     <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
                       <div>
-                        <div className="text-4xl mb-3">{formData.emoji}</div>
                         <div className="text-sm opacity-80 mb-2">
                           {formData.subtitle || '副標題預覽'}
                         </div>
@@ -403,7 +381,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                       </div>
                       <div className="mt-4">
                         <div className="inline-flex items-center text-sm opacity-80">
-                          <span className="mr-2">📖</span>
                           了解更多
                         </div>
                       </div>

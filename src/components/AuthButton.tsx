@@ -4,6 +4,61 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useState, useRef, useEffect } from 'react';
 
+// SVG 圖示元件
+const UserIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+  </svg>
+);
+
+const CartIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M7 18c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-0.16 0.28-0.25 0.61-0.25 0.96 0 1.1 0.9 2 2 2h12v-2H7.42c-0.14 0-0.25-0.11-0.25-0.25l0.03-0.12L8.1 13h7.45c0.75 0 1.41-0.41 1.75-1.03L21.7 4H5.21l-0.94-2H1zm16 16c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z"/>
+  </svg>
+);
+
+const PackageIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/>
+  </svg>
+);
+
+const NewsIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+  </svg>
+);
+
+const GalleryIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+  </svg>
+);
+
+const FarmIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12,3L6,7.58V6H4V9.11L1,11.4L1.58,12.25L2,12L2,21H10C10,19.9 10.9,19 12,19C13.1,19 14,19.9 14,21H22V12L22.42,12.25L23,11.4L12,3M12,8.75A2.25,2.25 0 0,1 14.25,11A2.25,2.25 0 0,1 12,13.25A2.25,2.25 0 0,1 9.75,11A2.25,2.25 0 0,1 12,8.75Z"/>
+  </svg>
+);
+
+const LocationIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+  </svg>
+);
+
+const LogoutIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+  </svg>
+);
+
+const HeartIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+  </svg>
+);
+
 interface AuthButtonProps {
   isMobile?: boolean;
 }
@@ -12,6 +67,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { user, logout, isLoading } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [interestedCount, setInterestedCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // 點擊外部關閉下拉選單
@@ -25,6 +81,43 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // 載入興趣產品數量
+  useEffect(() => {
+    const updateInterestedCount = () => {
+      const savedInterests = localStorage.getItem('interestedProducts');
+      if (savedInterests) {
+        const productIds = JSON.parse(savedInterests);
+        setInterestedCount(productIds.length);
+      } else {
+        setInterestedCount(0);
+      }
+    };
+
+    // 初始載入
+    updateInterestedCount();
+
+    // 監聽 localStorage 變化
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'interestedProducts') {
+        updateInterestedCount();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 監聽自定義事件（同頁面更新）
+    const handleCustomUpdate = () => {
+      updateInterestedCount();
+    };
+
+    window.addEventListener('interestedProductsUpdated', handleCustomUpdate);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('interestedProductsUpdated', handleCustomUpdate);
     };
   }, []);
 
@@ -55,10 +148,13 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     return (
       <div className={`${baseClasses} ${loginClasses}`}>
         {isMobile ? (
-          "👤 載入中..."
+          <>
+            <UserIcon className="w-4 h-4 inline mr-1" />
+            載入中...
+          </>
         ) : (
           <>
-            <span>👤</span>
+            <UserIcon className="w-4 h-4" />
             <span>載入中...</span>
           </>
         )}
@@ -77,7 +173,17 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''
           }`}
         >
-          {isLoggingOut ? "👤 登出中..." : "👤 登出"}
+          {isLoggingOut ? (
+            <>
+              <UserIcon className="w-4 h-4 inline mr-1" />
+              登出中...
+            </>
+          ) : (
+            <>
+              <UserIcon className="w-4 h-4 inline mr-1" />
+              登出
+            </>
+          )}
         </button>
       );
     }
@@ -91,7 +197,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             isDropdownOpen ? 'bg-amber-100' : ''
           }`}
         >
-          <span>👤</span>
+          <UserIcon className="w-4 h-4" />
           <span>{user.name}</span>
           <svg
             className={`w-4 h-4 transition-transform ${
@@ -117,7 +223,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
-              <span className="mr-2">👤</span>
+              <UserIcon className="w-4 h-4 mr-2" />
               個人資料
             </Link>
             
@@ -126,8 +232,24 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
-              <span className="mr-2">🛒</span>
+              <CartIcon className="w-4 h-4 mr-2" />
               購物車
+            </Link>
+            
+            <Link
+              href="/profile?tab=interests"
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+              onClick={() => setIsDropdownOpen(false)}
+            >
+              <HeartIcon className="w-4 h-4 mr-2" />
+              <span className="flex items-center justify-between w-full">
+                有興趣的產品
+                {interestedCount > 0 && (
+                  <span className="ml-1 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs rounded-full font-medium">
+                    {interestedCount}
+                  </span>
+                )}
+              </span>
             </Link>
 
             {/* 管理員選項 */}
@@ -143,7 +265,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  <span className="mr-2">📦</span>
+                  <PackageIcon className="w-4 h-4 mr-2" />
                   產品管理
                 </Link>
                 
@@ -152,7 +274,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  <span className="mr-2">📰</span>
+                  <NewsIcon className="w-4 h-4 mr-2" />
                   新聞管理
                 </Link>
                 
@@ -161,7 +283,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  <span className="mr-2">🖼️</span>
+                  <GalleryIcon className="w-4 h-4 mr-2" />
                   歲月留影管理
                 </Link>
                 
@@ -170,7 +292,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  <span className="mr-2">🚜</span>
+                  <FarmIcon className="w-4 h-4 mr-2" />
                   果園活動管理
                 </Link>
                 
@@ -179,7 +301,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  <span className="mr-2">📍</span>
+                  <LocationIcon className="w-4 h-4 mr-2" />
                   門市據點管理
                 </Link>
               </>
@@ -191,7 +313,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                 disabled={isLoggingOut}
                 className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
               >
-                <span className="mr-2">🚪</span>
+                <LogoutIcon className="w-4 h-4 mr-2" />
                 {isLoggingOut ? '登出中...' : '登出'}
               </button>
             </div>
@@ -204,10 +326,13 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   return (
     <Link href="/login" className={`${baseClasses} ${loginClasses}`}>
       {isMobile ? (
-        "👤 登入"
+        <>
+          <UserIcon className="w-4 h-4 inline mr-1" />
+          登入
+        </>
       ) : (
         <>
-          <span>👤</span>
+          <UserIcon className="w-4 h-4" />
           <span>登入</span>
         </>
       )}

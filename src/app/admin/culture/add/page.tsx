@@ -17,7 +17,6 @@ export default function AddCulture() {
     color: 'bg-gradient-to-br from-amber-400 to-amber-600',
     height: 'h-64',
     textColor: 'text-white',
-    emoji: '🎨',
     imageUrl: ''  // 改名為 imageUrl
   })
   const [_imageFile, setImageFile] = useState<File | null>(null)
@@ -88,11 +87,6 @@ export default function AddCulture() {
     { name: '特大 (h-76)', value: 'h-76' }
   ]
 
-  const emojiOptions = [
-    '🎨', '🏮', '🍃', '🌾', '🔥', '🏡', '🛠️', '🎉', 
-    '👨‍🏫', '⚙️', '📚', '🔬', '🌱', '🌿', '🚜', '🌽',
-    '🍎', '🥕', '🍓', '☘️', '🌸', '🍄', '🐝', '🦋'
-  ]
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -292,34 +286,6 @@ export default function AddCulture() {
               </div>
             </div>
 
-            {/* Emoji 選擇 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-3">
-                選擇圖示
-              </label>
-              <div className="grid grid-cols-8 gap-2 mb-3">
-                {emojiOptions.map(emoji => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, emoji }))}
-                    className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
-                      formData.emoji === emoji ? 'bg-orange-100 border-orange-500' : 'border-gray-300'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                name="emoji"
-                value={formData.emoji}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
-                placeholder="或自定義 emoji"
-              />
-            </div>
 
             {/* 卡片高度 */}
             <div>
@@ -426,7 +392,6 @@ export default function AddCulture() {
                     />
                     <div className="absolute inset-0 bg-black bg-opacity-30 p-6 flex flex-col justify-between">
                       <div>
-                        <div className="text-4xl mb-3">{formData.emoji}</div>
                         <div className="text-white text-sm opacity-90 mb-2">
                           {formData.subtitle || '副標題預覽'}
                         </div>
@@ -444,7 +409,6 @@ export default function AddCulture() {
                   <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
                     <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
                       <div>
-                        <div className="text-4xl mb-3">{formData.emoji}</div>
                         <div className="text-sm opacity-80 mb-2">
                           {formData.subtitle || '副標題預覽'}
                         </div>
