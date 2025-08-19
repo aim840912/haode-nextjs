@@ -87,7 +87,7 @@ export default function NewsPage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">農產新聞</h1>
               <p className="text-xl text-gray-700">最新農場動態、產品資訊與活動消息</p>
             </div>
-            {user && (
+            {user && user.role === 'admin' && (
               <div className="flex space-x-3">
                 <a 
                   href="/admin/news"

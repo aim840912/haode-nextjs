@@ -131,7 +131,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             </Link>
 
             {/* 管理員選項 */}
-            {user && (
+            {user && user.role === 'admin' && (
               <>
                 <div className="border-t border-gray-100 my-1"></div>
                 <div className="px-3 py-1">

@@ -218,7 +218,7 @@ function ProductsPage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">精選農產品</h1>
               <p className="text-xl text-gray-700">來自台灣各地的優質農產，新鮮直送到你家</p>
             </div>
-            {user && (
+            {user && user.role === 'admin' && (
               <div className="flex space-x-3">
                 <a 
                   href="/admin/products"

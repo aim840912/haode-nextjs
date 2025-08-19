@@ -130,7 +130,7 @@ function ProductsSection() {
         ) : (
           <div className="text-center text-gray-600">
             <p className="mb-4">目前沒有上架的產品</p>
-            {user && (
+            {user && user.role === 'admin' && (
               <a 
                 href="/admin/products"
                 className="inline-block bg-amber-900 text-white px-6 py-3 rounded-full hover:bg-amber-800 transition-colors"
@@ -152,7 +152,7 @@ function ProductsSection() {
         </div>
         
         {/* Admin Controls - 移到底部較不顯眼位置 */}
-        {user && (
+        {user && user.role === 'admin' && (
           <div className="flex justify-center space-x-3 mt-6">
             <a 
               href="/admin/products"

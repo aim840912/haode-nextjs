@@ -118,7 +118,7 @@ export default function SchedulePage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">擺攤行程 & 門市據點</h1>
               <p className="text-xl text-gray-700">想要現場選購新鮮農產品？來找我們吧！</p>
             </div>
-            {user && (
+            {user && user.role === 'admin' && (
               <div className="flex space-x-3">
                 <a 
                   href="/admin/schedule"

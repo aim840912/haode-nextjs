@@ -113,7 +113,7 @@ export default function LocationsPage() {
                     )}
                   </div>
                 </div>
-                {user && (
+                {user && user.role === 'admin' && (
                   <Link
                     href={`/admin/locations/${selectedStore.id}/edit`}
                     className="flex items-center px-3 py-2 text-sm font-medium text-amber-900 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"

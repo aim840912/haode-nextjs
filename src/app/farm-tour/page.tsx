@@ -10,19 +10,16 @@ const farmFacilities = [
   {
     name: '品茶亭',
     description: '傳統竹造涼亭，提供農場自產茶品品嚐',
-    icon: '🍵',
     features: ['茶藝設備', '山景視野', '文化體驗']
   },
   {
     name: '採果區域',
     description: '分區種植不同水果，依季節開放採摘體驗',
-    icon: '🌳',
     features: ['紅肉李區', '季節水果', '有機栽培']
   },
   {
     name: '停車場',
     description: '可容納30台汽車的免費停車空間',
-    icon: '🚗',
     features: ['免費停車', '遊覽車位', '無障礙設施']
   }
 ];
@@ -79,7 +76,7 @@ export default function FarmTourPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="relative flex items-center justify-center bg-gradient-to-br from-green-100 via-amber-50 to-orange-100 pt-32 pb-20 min-h-screen">
+      <div className="relative flex items-center justify-center bg-gradient-to-br from-green-100 via-amber-50 to-orange-100 pb-20 min-h-[calc(100vh-var(--header-height))]">
         <div className="text-center relative z-10">
           <div className="text-center max-w-7xl mx-auto px-6 mb-8">
             <h1 className="text-6xl md:text-8xl font-light text-amber-900 mb-6">
@@ -95,32 +92,30 @@ export default function FarmTourPage() {
                 onClick={() => handleTabClick('activities')}
                 className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg"
               >
-                🌱 季節體驗活動
+                季節體驗活動
               </button>
               <button 
                 onClick={() => handleTabClick('facilities')}
                 className="border-2 border-amber-900 text-amber-900 px-8 py-4 rounded-full hover:bg-amber-900 hover:text-white transition-colors text-lg"
               >
-                🏞️ 農場設施導覽
+                農場設施導覽
               </button>
             </div>
             
             {/* Management Buttons */}
-            {user && (
+            {user && user.role === 'admin' && (
               <div className="flex flex-col md:flex-row gap-3">
                 <a 
                   href="/admin/farm-tour"
-                  className="px-6 py-3 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-3 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <span>🌿</span>
-                  <span>果園管理</span>
+                  果園管理
                 </a>
                 <a 
                   href="/admin/farm-tour/add"
-                  className="px-6 py-3 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-3 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
-                  <span>➕</span>
-                  <span>新增體驗</span>
+                  新增體驗
                 </a>
               </div>
             )}
@@ -142,7 +137,7 @@ export default function FarmTourPage() {
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
-            🌱 季節體驗活動
+            季節體驗活動
           </button>
           <button
             onClick={() => setActiveTab('facilities')}
@@ -152,7 +147,7 @@ export default function FarmTourPage() {
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
-            🏞️ 農場設施
+            農場設施
           </button>
           <button
             onClick={() => setActiveTab('info')}
@@ -162,7 +157,7 @@ export default function FarmTourPage() {
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
-            📍 參觀資訊
+            參觀資訊
           </button>
         </div>
 
@@ -182,10 +177,9 @@ export default function FarmTourPage() {
             ) : (
               <div className="grid md:grid-cols-2 gap-8">
                 {seasonalActivities.map((activity) => (
-                <div key={activity.id} className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all ${!activity.available ? 'opacity-75' : ''}`}>
+                <div key={activity.id} className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all flex flex-col h-full ${!activity.available ? 'opacity-75' : ''}`}>
                   {/* Activity Header */}
                   <div className="bg-gradient-to-r from-amber-100 to-orange-100 p-8 text-center">
-                    <div className="text-6xl mb-4">{activity.image}</div>
                     <h3 className="text-2xl font-bold text-amber-900 mb-2">{activity.title}</h3>
                     <div className="flex justify-center items-center gap-4 text-sm text-gray-600">
                       <span className="bg-white px-3 py-1 rounded-full">{activity.season}</span>
@@ -193,50 +187,43 @@ export default function FarmTourPage() {
                     </div>
                   </div>
 
-                  <div className="p-6">
-                    {/* Highlight */}
-                    <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg">
-                      <p className="text-amber-800 font-medium">{activity.highlight}</p>
-                    </div>
-
-                    {/* Activities List */}
-                    <div className="mb-6">
-                      <h4 className="font-semibold text-gray-800 mb-3">活動內容</h4>
-                      <div className="space-y-2">
-                        {activity.activities.map((act, index) => (
-                          <div key={index} className="flex items-center text-sm text-gray-600">
-                            <span className="mr-2 text-green-500">✓</span>
-                            <span>{act}</span>
-                          </div>
-                        ))}
+                  <div className="p-6 flex flex-col flex-grow">
+                    <div className="flex-grow">
+                      {/* Highlight */}
+                      <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg">
+                        <p className="text-amber-800 font-medium">{activity.highlight}</p>
                       </div>
-                    </div>
 
-                    {/* Details */}
-                    <div className="mb-6">
-                      <div className="flex items-center text-sm">
-                        <span className="mr-2">⏱️</span>
-                        <span>{activity.duration}</span>
+                      {/* Activities List */}
+                      <div className="mb-6">
+                        <h4 className="font-semibold text-gray-800 mb-3">活動內容</h4>
+                        <div className="space-y-2">
+                          {activity.activities.map((act, index) => (
+                            <div key={index} className="flex items-center text-sm text-gray-600">
+                              <span className="mr-2 text-green-500">✓</span>
+                              <span>{act}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
 
-
-                    {/* Note */}
-                    <div className="mb-6 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-blue-700 text-sm">💡 {activity.note}</p>
+                      {/* Note */}
+                      <div className="mb-6 p-3 bg-blue-50 rounded-lg">
+                        <p className="text-blue-700 text-sm">{activity.note}</p>
+                      </div>
                     </div>
 
                     {/* Booking Button */}
                     <button
                       onClick={() => openBookingModal(activity)}
                       disabled={!activity.available}
-                      className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+                      className={`w-full py-3 rounded-lg font-semibold transition-colors mt-auto ${
                         activity.available 
                           ? 'bg-amber-900 text-white hover:bg-amber-800' 
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
                     >
-                      {activity.available ? '立即預約體驗' : '暫停開放'}
+                      {activity.available ? '立即電話詢問' : '暫停開放'}
                     </button>
                   </div>
                 </div>
@@ -254,7 +241,6 @@ export default function FarmTourPage() {
               {farmFacilities.map((facility, index) => (
                 <div key={index} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow">
                   <div className="text-center mb-4">
-                    <div className="text-4xl mb-3">{facility.icon}</div>
                     <h3 className="text-xl font-semibold text-gray-800">{facility.name}</h3>
                   </div>
                   <p className="text-gray-600 mb-4 text-center">{facility.description}</p>
@@ -281,17 +267,17 @@ export default function FarmTourPage() {
               
               <div className="space-y-6">
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                    <span className="mr-2">📍</span>農場地址
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    農場地址
                   </h4>
-                  <p className="text-gray-600 ml-6">嘉義縣梅山鄉太和村一鄰八號</p>
+                  <p className="text-gray-600">嘉義縣梅山鄉太和村一鄰八號</p>
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                    <span className="mr-2">⏰</span>開放時間
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    開放時間
                   </h4>
-                  <div className="ml-6 space-y-1 text-gray-600">
+                  <div className="space-y-1 text-gray-600">
                     <p>週二至週日：09:00 - 17:00</p>
                     <p>週一公休（國定假日正常開放）</p>
                     <p className="text-sm text-amber-600">* 體驗活動請電話詢問</p>
@@ -299,10 +285,10 @@ export default function FarmTourPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                    <span className="mr-2">🚗</span>交通方式
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    交通方式
                   </h4>
-                  <div className="ml-6 space-y-2 text-gray-600 text-sm">
+                  <div className="space-y-2 text-gray-600 text-sm">
                     <p><strong>自行開車：</strong>國道4號→台3線→東關路</p>
                     <p><strong>大眾運輸：</strong>台中客運→和平區→農場接駁</p>
                     <p><strong>團體包車：</strong>可協助安排遊覽車接駁</p>
@@ -311,10 +297,10 @@ export default function FarmTourPage() {
 
 
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
-                    <span className="mr-2">📞</span>聯絡資訊
+                  <h4 className="font-semibold text-gray-800 mb-2">
+                    聯絡資訊
                   </h4>
-                  <div className="ml-6 space-y-1 text-gray-600">
+                  <div className="space-y-1 text-gray-600">
                     <p>詢問專線：05-2561843</p>
                     <p>LINE ID：@haudetea</p>
                     <p>信箱：tour@haudetea.com</p>
@@ -328,7 +314,7 @@ export default function FarmTourPage() {
               
               <div className="space-y-4">
                 <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg">
-                  <h4 className="font-medium text-yellow-800 mb-2">⚠️ 重要提醒</h4>
+                  <h4 className="font-medium text-yellow-800 mb-2">重要提醒</h4>
                   <ul className="text-sm text-yellow-700 space-y-1">
                     <li>• 體驗活動請來電詢問詳情</li>
                     <li>• 團體參觀請來電洽詢</li>
@@ -337,7 +323,7 @@ export default function FarmTourPage() {
                 </div>
 
                 <div className="p-4 bg-green-50 border-l-4 border-green-400 rounded-r-lg">
-                  <h4 className="font-medium text-green-800 mb-2">👕 建議攜帶</h4>
+                  <h4 className="font-medium text-green-800 mb-2">建議攜帶</h4>
                   <ul className="text-sm text-green-700 space-y-1">
                     <li>• 舒適的運動鞋或登山鞋</li>
                     <li>• 帽子和防曬用品</li>
@@ -347,7 +333,7 @@ export default function FarmTourPage() {
                 </div>
 
                 <div className="p-4 bg-blue-50 border-l-4 border-blue-400 rounded-r-lg">
-                  <h4 className="font-medium text-blue-800 mb-2">🎁 特別服務</h4>
+                  <h4 className="font-medium text-blue-800 mb-2">特別服務</h4>
                   <ul className="text-sm text-blue-700 space-y-1">
                     <li>• 免費農場導覽解說</li>
                     <li>• 團體活動客製化規劃</li>
@@ -359,7 +345,7 @@ export default function FarmTourPage() {
 
               <div className="mt-8 text-center">
                 <button className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold">
-                  📞 電話詢問
+                  電話詢問
                 </button>
               </div>
             </div>
@@ -384,7 +370,6 @@ export default function FarmTourPage() {
 
               <div className="space-y-6">
                 <div className="text-center p-6 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg">
-                  <div className="text-4xl mb-2">{selectedActivity.image}</div>
                   <p className="text-amber-800 font-medium">{selectedActivity.highlight}</p>
                 </div>
 
@@ -455,10 +440,10 @@ export default function FarmTourPage() {
               href="tel:05-2561843"
               className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
-              📞 電話預約
+              電話預約
             </a>
             <button className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors">
-              📍 查看地圖
+              查看地圖
             </button>
             <div className="flex items-center space-x-3">
               <span className="text-green-100 text-sm">也可關注我們：</span>

@@ -36,96 +36,84 @@ const baseCultureItems = [
     title: '創業初期歷史',
     subtitle: '1862年創立',
     description: '豪德茶業在清朝同治年間創立，以傳統手工製茶起家，見證台灣農業發展的起點。',
-    height: 'h-64',
-    emoji: '🏮'
+    height: 'h-64'
   },
   {
     id: 2,
     title: '手工採茶工藝',
     subtitle: '傳統技術',
     description: '堅持手工採摘嫩芽，確保每片茶葉的品質。',
-    height: 'h-48',
-    emoji: '🍃'
+    height: 'h-48'
   },
   {
     id: 3,
     title: '節氣農作智慧',
     subtitle: '順應自然',
     description: '依循二十四節氣進行農事活動，與大自然和諧共處，這是祖先留下的珍貴智慧。',
-    height: 'h-72',
-    emoji: '🌾'
+    height: 'h-72'
   },
   {
     id: 4,
     title: '古法炒製',
     subtitle: '百年工藝',
     description: '傳承古老炒茶技術，每一步都是藝術。',
-    height: 'h-56',
-    emoji: '🔥'
+    height: 'h-56'
   },
   {
     id: 5,
     title: '農村生活記憶',
     subtitle: '純樸歲月',
     description: '體驗純樸的農村日常生活，感受慢節奏的美好時光。',
-    height: 'h-60',
-    emoji: '🏡'
+    height: 'h-60'
   },
   {
     id: 6,
     title: '傳統農具',
     subtitle: '工具文化',
     description: '從犁田到收穫，每一件農具都承載著農民的智慧與汗水。',
-    height: 'h-68',
-    emoji: '🛠️'
+    height: 'h-68'
   },
   {
     id: 7,
     title: '豐收慶典',
     subtitle: '感恩大地',
     description: '感謝土地恩賜的傳統慶祝活動。',
-    height: 'h-52',
-    emoji: '🎉'
+    height: 'h-52'
   },
   {
     id: 8,
     title: '技藝傳承',
     subtitle: '師徒相承',
     description: '師傅帶徒弟，口耳相傳的技術傳承，確保百年工藝不失傳。',
-    height: 'h-64',
-    emoji: '👨‍🏫'
+    height: 'h-64'
   },
   {
     id: 9,
     title: '日治時期發展',
     subtitle: '技術革新',
     description: '引進新式製茶技術，品質獲得日本市場認可，奠定現代化基礎。',
-    height: 'h-76',
-    emoji: '⚙️'
+    height: 'h-76'
   },
   {
     id: 10,
     title: '文化教育推廣',
     subtitle: '傳承使命',
     description: '透過教育活動推廣農業文化。',
-    height: 'h-48',
-    emoji: '📚'
+    height: 'h-48'
   },
   {
     id: 11,
     title: '現代化轉型',
     subtitle: '科技結合',
     description: '傳統文化與現代科技的完美結合，開創農業新篇章。',
-    height: 'h-72',
-    emoji: '🔬'
+    height: 'h-72'
   },
   {
     id: 12,
     title: '永續發展',
     subtitle: '綠色未來',
     description: '為未來世代保留珍貴的農業文化資產，建設永續綠色農業。',
-    height: 'h-68',
-    emoji: '🌱'
+    height: 'h-68'
   }
 ]
 
@@ -149,21 +137,19 @@ export default function CulturePage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">歲月留影</h1>
               <p className="text-xl text-gray-700">用鏡頭記錄農家生活的點點滴滴，每一張照片都是時光的見證</p>
             </div>
-            {user && (
+            {user && user.role === 'admin' && (
               <div className="flex space-x-3">
                 <a 
                   href="/admin/culture"
-                  className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm hover:bg-orange-700 transition-colors flex items-center space-x-2"
+                  className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm hover:bg-orange-700 transition-colors"
                 >
-                  <span>📸</span>
-                  <span>影像管理</span>
+                  影像管理
                 </a>
                 <a 
                   href="/admin/culture/add"
-                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors"
                 >
-                  <span>➕</span>
-                  <span>新增照片</span>
+                  新增照片
                 </a>
               </div>
             )}
@@ -188,7 +174,6 @@ export default function CulturePage() {
                 <div className="h-full flex flex-col justify-between relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                   <div className="relative z-10 p-6 text-white">
-                    <div className="text-4xl mb-3">{item.emoji}</div>
                     <div className="text-sm opacity-80 mb-2">{item.subtitle}</div>
                     <h3 className="text-xl font-bold mb-3">{item.title}</h3>
                     <p className="text-sm opacity-90 leading-relaxed">
@@ -197,7 +182,6 @@ export default function CulturePage() {
                   </div>
                   <div className="mt-4 relative z-10 p-6 pt-0 text-white">
                     <div className="inline-flex items-center text-sm opacity-80">
-                      <span className="mr-2">📖</span>
                       了解更多
                     </div>
                   </div>
@@ -220,12 +204,9 @@ export default function CulturePage() {
             <div className="p-8">
               {/* Header */}
               <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center">
-                  <div className="text-4xl mr-4">{selectedItem.emoji}</div>
-                  <div>
-                    <div className="text-sm text-gray-500 mb-1">{selectedItem.subtitle}</div>
-                    <h3 className="text-2xl font-bold text-gray-900">{selectedItem.title}</h3>
-                  </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">{selectedItem.subtitle}</div>
+                  <h3 className="text-2xl font-bold text-gray-900">{selectedItem.title}</h3>
                 </div>
                 <button
                   onClick={() => setSelectedItem(null)}
@@ -245,7 +226,6 @@ export default function CulturePage() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                 <div className="relative z-10 text-white text-center h-full flex items-center justify-center">
                   <div>
-                    <div className="text-6xl mb-4 opacity-90">{selectedItem.emoji}</div>
                     <div className="text-xl font-semibold">{selectedItem.title}</div>
                   </div>
                 </div>
@@ -259,7 +239,7 @@ export default function CulturePage() {
 
                 {/* Extended content based on item */}
                 <div className="bg-amber-50 rounded-lg p-6 border-l-4 border-amber-400">
-                  <h4 className="font-semibold text-amber-900 mb-3">💡 文化深度解析</h4>
+                  <h4 className="font-semibold text-amber-900 mb-3">文化深度解析</h4>
                   <p className="text-amber-800 text-sm leading-relaxed">
                     {selectedItem.id <= 4 && '歷史的足跡見證了豪德茶業從創立到現代化的完整發展歷程，每個階段都有其獨特的文化價值與時代意義。'}
                     {selectedItem.id > 4 && selectedItem.id <= 8 && '傳統工藝的傳承不僅是技術的延續，更是文化精神的體現，每一個細節都蘊含著深厚的農業智慧。'}
@@ -284,13 +264,13 @@ export default function CulturePage() {
               href="/farm-tour"
               className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
-              🌱 預約農場體驗
+              預約農場體驗
             </a>
             <a 
               href="/schedule"
               className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-amber-900 transition-colors"
             >
-              📅 查看擺攤行程
+              查看擺攤行程
             </a>
           </div>
         </div>

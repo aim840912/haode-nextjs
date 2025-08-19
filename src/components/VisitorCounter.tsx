@@ -143,7 +143,7 @@ export default function VisitorCounter({
         </div>
       ) : (
         // 簡潔顯示模式（用於頁面底部）
-        <div className="flex items-center space-x-4 text-gray-600">
+        <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-1">
             <span>🌍</span>
             <span>總訪客：{formatNumber(stats.unique_visitors)}</span>
