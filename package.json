@@ -12,6 +12,8 @@
     "start": "npx next start",
     "lint": "npx next lint",
     "type-check": "tsc --noEmit",
+    "test": "echo \"No tests specified\" && exit 0",
+    "test:ci": "echo \"No tests specified\" && exit 0",
     "test:supabase": "npx tsx scripts/test-supabase.ts",
     "test:supabase-quick": "npx tsx scripts/quick-test.ts",
     "check:tables": "npx tsx scripts/check-tables.ts",

@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 
 interface VisitorStats {
   total_visits: number
-  unique_visitors: number  
+  unique_visitors: number
   today_visits: number
   date: string
   weekly_stats?: Array<{
@@ -56,13 +56,13 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -275,7 +275,6 @@ export default function AdminDashboard() {
                   className="p-4 border border-gray-200 rounded-lg hover:border-amber-300 hover:bg-amber-50 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">⭐</span>
                     <div>
                       <h3 className="font-semibold text-gray-900">評價管理</h3>
                       <p className="text-sm text-gray-600">管理客戶評價</p>
@@ -288,7 +287,6 @@ export default function AdminDashboard() {
                   className="p-4 border border-gray-200 rounded-lg hover:border-amber-300 hover:bg-amber-50 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
-                    <span className="text-2xl">📰</span>
                     <div>
                       <h3 className="font-semibold text-gray-900">新聞管理</h3>
                       <p className="text-sm text-gray-600">發布農產新聞</p>

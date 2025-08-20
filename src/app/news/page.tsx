@@ -56,15 +56,15 @@ export default function NewsPage() {
 
   const categories = ['全部', '產品動態', '永續農業', '活動資訊']
 
-  const filteredNews = selectedCategory === '全部' 
-    ? news 
+  const filteredNews = selectedCategory === '全部'
+    ? news
     : news.filter(item => item.category === selectedCategory)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('zh-TW', {
       year: 'numeric',
-      month: 'long', 
+      month: 'long',
       day: 'numeric'
     })
   }
@@ -89,18 +89,16 @@ export default function NewsPage() {
             </div>
             {user && user.role === 'admin' && (
               <div className="flex space-x-3">
-                <a 
+                <a
                   href="/admin/news"
                   className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2"
                 >
-                  <span>📰</span>
                   <span>新聞管理</span>
                 </a>
-                <a 
+                <a
                   href="/admin/news/add"
                   className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
                 >
-                  <span>✍️</span>
                   <span>發布新聞</span>
                 </a>
               </div>
@@ -116,11 +114,10 @@ export default function NewsPage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                selectedCategory === category
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
                   ? 'bg-amber-900 text-white'
                   : 'bg-white text-gray-700 hover:bg-amber-100 hover:text-amber-900'
-              }`}
+                }`}
             >
               {category}
             </button>
@@ -133,26 +130,18 @@ export default function NewsPage() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-8">精選新聞</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {news.filter(item => item.featured).map((item) => (
-                <Link 
-                  key={item.id} 
+                <Link
+                  key={item.id}
                   href={`/news/${item.id}`}
                   className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer block"
                 >
                   <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-                    {item.imageUrl ? (
-                      <img 
-                        src={item.imageUrl} 
+                    {item.imageUrl && (
+                      <img
+                        src={item.imageUrl}
                         alt={item.title}
                         className="w-full h-full object-cover"
                       />
-                    ) : item.image.startsWith('/') ? (
-                      <img 
-                        src={item.image} 
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-6xl">{item.image}</span>
                     )}
                   </div>
                   <div className="p-6">
@@ -185,31 +174,23 @@ export default function NewsPage() {
           <h2 className="text-2xl font-semibold text-gray-900 mb-8">
             {selectedCategory === '全部' ? '所有新聞' : selectedCategory}
           </h2>
-          
+
           {filteredNews.length > 0 ? (
             <div className="space-y-8">
               {filteredNews.map((item) => (
-                <Link 
-                  key={item.id} 
+                <Link
+                  key={item.id}
                   href={`/news/${item.id}`}
                   className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden cursor-pointer block"
                 >
                   <div className="md:flex">
                     <div className="md:w-48 aspect-video md:aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-                      {item.imageUrl ? (
-                        <img 
-                          src={item.imageUrl} 
+                      {item.imageUrl && (
+                        <img
+                          src={item.imageUrl}
                           alt={item.title}
                           className="w-full h-full object-cover"
                         />
-                      ) : item.image.startsWith('/') ? (
-                        <img 
-                          src={item.image} 
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-4xl md:text-6xl">{item.image}</span>
                       )}
                     </div>
                     <div className="p-6 flex-1">
@@ -222,15 +203,15 @@ export default function NewsPage() {
                         </span>
                         <span className="text-sm text-gray-500">by {item.author}</span>
                       </div>
-                      
+
                       <h3 className="text-xl font-semibold text-gray-900 mb-3">
                         {item.title}
                       </h3>
-                      
+
                       <p className="text-gray-600 mb-4 line-clamp-2">
                         {item.summary}
                       </p>
-                      
+
                       <div className="flex flex-wrap gap-2 mb-4">
                         {item.tags.map((tag, index) => (
                           <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
@@ -238,7 +219,7 @@ export default function NewsPage() {
                           </span>
                         ))}
                       </div>
-                      
+
                       <div className="inline-flex items-center text-amber-900 hover:text-amber-800 font-medium">
                         閱讀完整內容 →
                       </div>
@@ -250,7 +231,7 @@ export default function NewsPage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">此分類目前沒有新聞</p>
-              <button 
+              <button
                 onClick={() => setSelectedCategory('全部')}
                 className="text-amber-900 hover:text-amber-800 font-medium"
               >

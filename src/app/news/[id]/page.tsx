@@ -133,20 +133,12 @@ export default function NewsDetailPage() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Article Header */}
           <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-            {newsItem.imageUrl ? (
+            {newsItem.imageUrl && (
               <img 
                 src={newsItem.imageUrl} 
                 alt={newsItem.title}
                 className="w-full h-full object-cover"
               />
-            ) : newsItem.image.startsWith('/') ? (
-              <img 
-                src={newsItem.image} 
-                alt={newsItem.title}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-8xl">{newsItem.image}</span>
             )}
           </div>
           
@@ -207,20 +199,12 @@ export default function NewsDetailPage() {
                 <Link key={item.id} href={`/news/${item.id}`}>
                   <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
                     <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-                      {item.imageUrl ? (
+                      {item.imageUrl && (
                         <img 
                           src={item.imageUrl} 
                           alt={item.title}
                           className="w-full h-full object-cover"
                         />
-                      ) : item.image.startsWith('/') ? (
-                        <img 
-                          src={item.image} 
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-4xl">{item.image}</span>
                       )}
                     </div>
                     <div className="p-4">

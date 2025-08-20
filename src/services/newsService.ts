@@ -102,5 +102,6 @@ export class JsonNewsService implements NewsService {
   }
 }
 
-// 將來改成資料庫時，只需要替換這行
-export const newsService: NewsService = new JsonNewsService()
+// 使用 Supabase 資料庫服務以支援 Storage 整合
+import { supabaseNewsService } from './supabaseNewsService'
+export const newsService: NewsService = supabaseNewsService

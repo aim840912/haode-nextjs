@@ -128,14 +128,12 @@ export default function NewsAdmin() {
                 <tr key={item.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      {item.imageUrl ? (
+                      {item.imageUrl && (
                         <img 
                           src={item.imageUrl} 
                           alt={item.title}
                           className="w-10 h-10 object-cover rounded-lg mr-3"
                         />
-                      ) : (
-                        <div className="text-2xl mr-3">{item.image}</div>
                       )}
                       <div className="max-w-xs">
                         <div className="text-sm font-medium text-gray-900 line-clamp-2">

@@ -50,7 +50,7 @@ export class SupabaseNewsService implements NewsService {
       content: newsData.content,
       category: newsData.category,
       tags: newsData.tags,
-      image_url: newsData.image || newsData.imageUrl,
+      image_url: newsData.imageUrl,
       is_published: newsData.featured,
       publish_date: new Date().toISOString()
     }
@@ -77,8 +77,8 @@ export class SupabaseNewsService implements NewsService {
     if (newsData.content !== undefined) dbUpdateData.content = newsData.content
     if (newsData.category !== undefined) dbUpdateData.category = newsData.category
     if (newsData.tags !== undefined) dbUpdateData.tags = newsData.tags
-    if (newsData.image !== undefined || newsData.imageUrl !== undefined) {
-      dbUpdateData.image_url = newsData.image || newsData.imageUrl
+    if (newsData.imageUrl !== undefined) {
+      dbUpdateData.image_url = newsData.imageUrl
     }
     if (newsData.featured !== undefined) dbUpdateData.is_published = newsData.featured
 
@@ -159,7 +159,7 @@ export class SupabaseNewsService implements NewsService {
       publishedAt: dbNews.publish_date,
       category: dbNews.category,
       tags: dbNews.tags || [],
-      image: dbNews.image_url || '📰',
+      image: '', // 不再使用 emoji，保留欄位相容性
       imageUrl: dbNews.image_url,
       featured: dbNews.is_published
     }

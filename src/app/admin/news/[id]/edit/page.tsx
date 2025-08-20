@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { uploadNewsImage, initializeNewsBucket } from '@/lib/news-storage'
 
 export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -20,13 +21,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     author: '豪德農場',
     category: '產品動態',
     tags: '',
-    image: '📰',
     imageUrl: '',
     featured: false
   })
   
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
+  const [uploading, setUploading] = useState(false)
 
   const categories = [
     '產品動態',
@@ -34,10 +35,6 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     '活動資訊'
   ]
 
-  const emojiOptions = [
-    '📰', '🍑', '☕', '🥬', '🌱', '🏪', '🏆', 
-    '🌾', '🚜', '🌿', '🍎', '🥕', '🌽', '🍓'
-  ]
 
   const fetchNews = useCallback(async (id: string) => {
     try {
@@ -51,7 +48,6 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           author: news.author,
           category: news.category,
           tags: news.tags.join(', '),
-          image: news.image,
           imageUrl: news.imageUrl || '',
           featured: news.featured
         })
@@ -126,11 +122,19 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
 
+      let imageUrl = formData.imageUrl
+      
+      // 如果有新選擇的圖片，先上傳到 Storage
+      if (imageFile) {
+        imageUrl = await uploadImageToStorage(imageFile)
+      }
+
       const response = await fetch(`/api/news/${newsId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          imageUrl,
           tags: tagsArray
         })
       })
@@ -160,13 +164,32 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     const file = e.target.files?.[0]
     if (file) {
       setImageFile(file)
+      // 建立預覽 URL
       const reader = new FileReader()
       reader.onload = (e) => {
         const result = e.target?.result as string
         setImagePreview(result)
-        setFormData(prev => ({ ...prev, imageUrl: result }))
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadImageToStorage = async (file: File): Promise<string> => {
+    setUploading(true)
+    try {
+      // 初始化 bucket（如果需要）
+      await initializeNewsBucket()
+      
+      // 上傳圖片
+      const result = await uploadNewsImage(file, newsId)
+      console.log('圖片上傳成功:', result)
+      return result.url
+    } catch (error) {
+      console.error('圖片上傳失敗:', error)
+      alert('圖片上傳失敗，請重試')
+      throw error
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -264,6 +287,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
                         setFormData(prev => ({ ...prev, imageUrl: '' }))
                       }}
                       className="mt-2 text-sm text-red-600 hover:text-red-500"
+                      disabled={uploading}
                     >
                       移除圖片
                     </button>
@@ -343,51 +367,21 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             </div>
           </div>
 
-          {/* 圖示和標籤 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                新聞圖示
-              </label>
-              <div className="grid grid-cols-7 gap-2 mb-3">
-                {emojiOptions.map(emoji => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, image: emoji }))}
-                    className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
-                      formData.image === emoji ? 'bg-blue-100 border-blue-500' : 'border-gray-300'
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-              <input
-                type="text"
-                name="image"
-                value={formData.image}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                placeholder="或自定義 emoji"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                標籤 (用逗號分隔)
-              </label>
-              <input
-                type="text"
-                name="tags"
-                value={formData.tags}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                placeholder="例如：紅肉李,有機農業,豐收"
-              />
-              <div className="mt-2 text-sm text-gray-600">
-                標籤預覽：{formData.tags.split(',').filter(tag => tag.trim()).map(tag => `#${tag.trim()}`).join(' ')}
-              </div>
+          {/* 標籤 */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">
+              標籤 (用逗號分隔)
+            </label>
+            <input
+              type="text"
+              name="tags"
+              value={formData.tags}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              placeholder="例如：紅肉李,有機農業,豐收"
+            />
+            <div className="mt-2 text-sm text-gray-600">
+              標籤預覽：{formData.tags.split(',').filter(tag => tag.trim()).map(tag => `#${tag.trim()}`).join(' ')}
             </div>
           </div>
 
@@ -410,14 +404,12 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center mb-3">
-                {formData.imageUrl ? (
+                {formData.imageUrl && (
                   <img 
                     src={formData.imageUrl} 
                     alt="預覽" 
                     className="w-12 h-12 object-cover rounded-lg mr-3"
                   />
-                ) : (
-                  <span className="text-3xl mr-3">{formData.image}</span>
                 )}
                 <div>
                   <div className="text-xs text-blue-600 mb-1">{formData.category}</div>
@@ -448,10 +440,10 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             </Link>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {loading ? '更新中...' : '更新新聞'}
+              {uploading ? '上傳圖片中...' : loading ? '更新中...' : '更新新聞'}
             </button>
           </div>
         </form>
