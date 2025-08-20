@@ -32,24 +32,35 @@ export default function NewsDetailPage() {
 
   const fetchNewsDetail = async (id: string) => {
     try {
-      // 載入本地資料
-      const newsData = await import('@/data/news.json')
-      const allNews = newsData.default
+      // 從 API 獲取新聞詳情
+      const response = await fetch(`/api/news/${id}`)
       
-      const currentNews = allNews.find((item: NewsItem) => item.id === id)
-      setNewsItem(currentNews || null)
-      
-      // 取得相關新聞（同類別的其他新聞）
-      if (currentNews) {
-        const related = allNews
-          .filter((item: NewsItem) => 
-            item.category === currentNews.category && item.id !== id
-          )
-          .slice(0, 3)
-        setRelatedNews(related)
+      if (response.ok) {
+        const currentNews = await response.json()
+        setNewsItem(currentNews)
+        
+        // 取得相關新聞（同類別的其他新聞）
+        if (currentNews) {
+          const allNewsResponse = await fetch('/api/news')
+          if (allNewsResponse.ok) {
+            const allNews = await allNewsResponse.json()
+            const related = allNews
+              .filter((item: NewsItem) => 
+                item.category === currentNews.category && item.id !== id
+              )
+              .slice(0, 3)
+            setRelatedNews(related)
+          }
+        }
+      } else if (response.status === 404) {
+        setNewsItem(null)
+      } else {
+        console.error('Failed to fetch news:', response.statusText)
+        setNewsItem(null)
       }
     } catch (error) {
       console.error('Error fetching news detail:', error)
+      setNewsItem(null)
     } finally {
       setLoading(false)
     }
