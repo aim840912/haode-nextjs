@@ -234,10 +234,6 @@ function ProductsPage() {
     
     // 檢查登入狀態
     if (!user) {
-      // 顯示提示訊息
-      const { error: showError } = await import('@/components/Toast');
-      const { useToast } = await import('@/components/Toast');
-      
       // 創建臨時 toast 提示
       const notification = document.createElement('div');
       notification.innerHTML = `
