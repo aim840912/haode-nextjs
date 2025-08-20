@@ -92,14 +92,16 @@ function ProductsSection() {
             {products.map((product, index) => (
               <div key={product.id} className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
                 {/* 圖片區域 */}
-                <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl">
-                  <SafeImage 
-                    src={product.images?.[0] || "/images/placeholder.jpg"} 
-                    alt={product.name || '產品圖片'} 
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-                  />
+                <div className="relative overflow-hidden rounded-t-xl">
+                  <div style={{ paddingBottom: '75%' }} className="relative">
+                    <SafeImage 
+                      src={product.images?.[0] || "/images/placeholder.jpg"} 
+                      alt={product.name || '產品圖片'} 
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                    />
+                  </div>
                   
                   {/* 產品標籤 */}
                   {index === 0 && (

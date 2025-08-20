@@ -125,7 +125,7 @@ export default function OptimizedImage({
 
   if (fill) {
     return (
-      <div ref={imgRef} className={containerClassName} style={{ position: 'relative' }}>
+      <div ref={imgRef} className={containerClassName}>
         {(!shouldLoad || isLoading) && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
             {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
@@ -158,12 +158,9 @@ export default function OptimizedImage({
   }
 
   return (
-    <div ref={imgRef} className={containerClassName} style={{ width, height }}>
+    <div ref={imgRef} className={containerClassName}>
       {(!shouldLoad || isLoading) && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center bg-gray-100"
-          style={{ width, height }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
           {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
         </div>
       )}
@@ -186,10 +183,7 @@ export default function OptimizedImage({
         />
       )}
       {hasError && currentSrc === fallbackSrc && (
-        <div 
-          className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm"
-          style={{ width, height }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
           圖片載入失敗
         </div>
       )}
@@ -220,7 +214,7 @@ export function ResponsiveImage({
   const paddingBottom = paddingBottomMap[aspectRatio] || '100%';
   
   return (
-    <div className={`relative overflow-hidden ${className}`} style={{ position: 'relative' }}>
+    <div className={`relative overflow-hidden ${className}`}>
       <div style={{ paddingBottom }} className="relative">
         <div className="absolute inset-0">
           <OptimizedImage

@@ -1,5 +1,5 @@
 import { FarmTourActivity } from '@/types/farmTour'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 export class SupabaseFarmTourService {
   async getAll(): Promise<FarmTourActivity[]> {

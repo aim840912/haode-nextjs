@@ -1,5 +1,5 @@
 {
-  "total_visits": 213,
+  "total_visits": 233,
   "unique_visitors": [
     "v2i2u3",
     "cz6k5y",
@@ -8,21 +8,22 @@
     "bi2i2e",
     "tqv4hm"
   ],
-  "today_visits": 2,
+  "today_visits": 1,
   "daily_stats": {
     "2025-08-14": 1,
     "2025-08-15": 1,
     "2025-08-16": 2,
     "2025-08-17": 3,
     "2025-08-18": 2,
-    "2025-08-19": 2
+    "2025-08-19": 2,
+    "2025-08-20": 1
   },
   "top_visitors": [
     {
       "visitor_id": "cz6k5y",
       "first_visit": "2025-08-16T04:49:15.390Z",
-      "last_visit": "2025-08-19T17:47:58.986Z",
-      "visit_count": 130,
+      "last_visit": "2025-08-20T09:20:37.086Z",
+      "visit_count": 150,
       "ip_address": "::ffff:192.168.1.103",
       "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
     },
@@ -67,5 +68,5 @@
       "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36"
     }
   ],
-  "last_updated": "2025-08-19T17:47:58.986Z"
+  "last_updated": "2025-08-20T09:20:37.087Z"
 }

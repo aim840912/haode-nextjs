@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useCart } from '@/lib/cart-context';
 import { useAuth } from '@/lib/auth-context';
+import { UserInterestsService } from '@/services/userInterestsService';
 import { Product } from '@/types/product';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
@@ -47,12 +48,25 @@ function ProductsPage() {
 
   useEffect(() => {
     fetchProducts();
-    // 從 localStorage 載入興趣清單
-    const savedInterests = localStorage.getItem('interestedProducts');
-    if (savedInterests) {
-      setInterestedProducts(new Set(JSON.parse(savedInterests)));
-    }
+    loadInterestedProducts();
   }, []);
+
+  // 載入興趣產品清單
+  const loadInterestedProducts = async () => {
+    if (user) {
+      // 已登入：從資料庫載入
+      const interests = await UserInterestsService.getUserInterests(user.id);
+      setInterestedProducts(new Set(interests));
+    } else {
+      // 未登入：清空興趣清單
+      setInterestedProducts(new Set());
+    }
+  };
+
+  // 當使用者登入狀態改變時重新載入興趣清單
+  useEffect(() => {
+    loadInterestedProducts();
+  }, [user]);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -213,21 +227,67 @@ function ProductsPage() {
     closeModal();
   };
 
-  const toggleInterest = (productId: string, productName: string, e?: React.MouseEvent) => {
+  const toggleInterest = async (productId: string, productName: string, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
     
+    // 檢查登入狀態
+    if (!user) {
+      // 顯示提示訊息
+      const { error: showError } = await import('@/components/Toast');
+      const { useToast } = await import('@/components/Toast');
+      
+      // 創建臨時 toast 提示
+      const notification = document.createElement('div');
+      notification.innerHTML = `
+        <div class="fixed bottom-4 right-4 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg shadow-lg z-50 max-w-sm">
+          <div class="flex items-start space-x-3">
+            <div class="text-amber-500 text-xl">⚠</div>
+            <div class="flex-1">
+              <h4 class="text-sm font-medium text-gray-900">需要登入</h4>
+              <p class="mt-1 text-sm text-gray-600">請先登入以儲存您感興趣的產品</p>
+              <div class="mt-3">
+                <a href="/login" class="inline-block px-3 py-1 bg-amber-600 text-white text-xs rounded-md hover:bg-amber-700 transition-colors">
+                  立即登入
+                </a>
+              </div>
+            </div>
+            <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-400 hover:text-gray-600">
+              <span class="text-lg">×</span>
+            </button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => {
+        if (document.body.contains(notification)) {
+          document.body.removeChild(notification);
+        }
+      }, 5000);
+      return;
+    }
+    
     const newInterestedProducts = new Set(interestedProducts);
-    if (interestedProducts.has(productId)) {
+    const isRemoving = interestedProducts.has(productId);
+    
+    if (isRemoving) {
       newInterestedProducts.delete(productId);
     } else {
       newInterestedProducts.add(productId);
     }
     
+    // 立即更新 UI
     setInterestedProducts(newInterestedProducts);
-    // 儲存到 localStorage
-    localStorage.setItem('interestedProducts', JSON.stringify(Array.from(newInterestedProducts)));
+    
+    // 已登入：儲存到資料庫
+    const success = await UserInterestsService.toggleInterest(user.id, productId);
+    if (!success) {
+      // 如果儲存失敗，恢復原狀態
+      setInterestedProducts(interestedProducts);
+      console.error('Failed to update interests in database');
+      return;
+    }
     
     // 觸發自定義事件通知其他元件更新
     window.dispatchEvent(new CustomEvent('interestedProductsUpdated'));

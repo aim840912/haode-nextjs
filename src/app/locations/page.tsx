@@ -37,7 +37,7 @@ export default function LocationsPage() {
   };
 
   const openMap = (store: Location) => {
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${store.coordinates.lat},${store.coordinates.lng}`;
+    const googleMapsUrl = 'https://www.google.com/maps/@23.5218764,120.7052764,3a,75y,317.9h,97.58t/data=!3m7!1e1!3m5!1s2z-Z7OYRFmBQU5wEA-0GaQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-7.581682239162674%26panoid%3D2z-Z7OYRFmBQU5wEA-0GaQ%26yaw%3D317.8988412646265!7i16384!8i8192?authuser=0&entry=ttu&g_ep=EgoyMDI1MDgxNy4wIKXMDSoASAFQAw%3D%3D';
     window.open(googleMapsUrl, '_blank');
   };
 
@@ -204,25 +204,22 @@ export default function LocationsPage() {
               <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">
                 門市位置
               </h3>
-              <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg flex items-center justify-center mb-4">
-                <div className="text-center">
-                  {selectedStore.image && selectedStore.image.startsWith('/') ? (
-                    <img src={selectedStore.image} alt={selectedStore.title} className="w-24 h-24 rounded-lg object-cover mx-auto mb-4" />
-                  ) : (
-                    <div className="w-24 h-24 bg-gray-200 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                      <span className="text-gray-400">無圖片</span>
-                    </div>
-                  )}
-                  <p className="text-gray-600 mb-4">互動式地圖</p>
-                  <button
-                    onClick={() => openMap(selectedStore)}
-                    className="bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
-                  >
-                    在 Google Maps 中查看
-                  </button>
-                </div>
+              <div className="text-center mb-4">
+                <button
+                  onClick={() => openMap(selectedStore)}
+                  className="bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+                >
+                  在 Google Maps 中查看
+                </button>
               </div>
-              <div className="text-center">
+              <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg overflow-hidden relative">
+                <img 
+                  src="/images/locations/home.png" 
+                  alt="門市位置地圖" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="text-center mt-4">
                 <p className="text-gray-600 text-sm">{selectedStore.landmark}</p>
               </div>
             </div>

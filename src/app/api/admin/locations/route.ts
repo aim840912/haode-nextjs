@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-auth'
 import { Location } from '@/types/location'
 
 // 檢查是否為管理員權限的簡單實現

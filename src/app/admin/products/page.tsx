@@ -5,23 +5,13 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import ProductsTable from '@/components/ProductsTable'
+import AdminProtection from '@/components/AdminProtection'
 
 function ProductsAdmin() {
-  const { user, isLoading } = useAuth()
-
-  // 載入中狀態
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">驗證身份中...</p>
-        </div>
-      </div>
-    )
-  }
+  const { user } = useAuth()
 
   return (
+    <AdminProtection>
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -56,6 +46,7 @@ function ProductsAdmin() {
         </Suspense>
       </div>
     </div>
+    </AdminProtection>
   )
 }
 

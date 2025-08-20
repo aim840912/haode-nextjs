@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/lib/cart-context';
+import { UserInterestsService } from '@/services/userInterestsService';
 import { useToast } from '@/components/Toast';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner';
@@ -76,17 +77,28 @@ export default function ProfilePage() {
 
   // 載入興趣清單
   useEffect(() => {
-    const savedInterests = localStorage.getItem('interestedProducts');
-    if (savedInterests) {
-      const productIds = JSON.parse(savedInterests);
+    if (user) {
+      loadInterestedProducts();
+    }
+  }, [user]);
+
+  const loadInterestedProducts = async () => {
+    if (!user) return;
+    
+    try {
+      // 從資料庫載入興趣清單
+      const productIds = await UserInterestsService.getUserInterests(user.id);
       setInterestedProducts(productIds);
       
       // 獲取產品資料
       if (productIds.length > 0) {
         fetchInterestedProductsData(productIds);
       }
+    } catch (error) {
+      console.error('Error loading interested products:', error);
+      setInterestedProducts([]);
     }
-  }, []);
+  };
 
   const fetchInterestedProductsData = async (productIds: string[]) => {
     setLoadingInterests(true);
@@ -106,13 +118,29 @@ export default function ProfilePage() {
     }
   };
 
-  const removeFromInterests = (productId: string, productName: string) => {
+  const removeFromInterests = async (productId: string, productName: string) => {
+    if (!user) return;
+    
+    // 立即更新 UI
     const newInterestedProducts = interestedProducts.filter(id => id !== productId);
     setInterestedProducts(newInterestedProducts);
     setInterestedProductsData(prev => prev.filter(product => product.id !== productId));
     
-    // 更新 localStorage
-    localStorage.setItem('interestedProducts', JSON.stringify(newInterestedProducts));
+    // 從資料庫移除
+    const success = await UserInterestsService.removeInterest(user.id, productId);
+    if (!success) {
+      // 如果移除失敗，恢復原狀態
+      setInterestedProducts(interestedProducts);
+      // 重新載入產品資料
+      if (interestedProducts.length > 0) {
+        fetchInterestedProductsData(interestedProducts);
+      }
+      error('移除失敗', '無法從興趣清單中移除產品，請稍後再試');
+      return;
+    }
+    
+    // 觸發自定義事件通知其他元件更新
+    window.dispatchEvent(new CustomEvent('interestedProductsUpdated'));
     
     // 顯示提示
     const notification = document.createElement('div');

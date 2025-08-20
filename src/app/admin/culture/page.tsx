@@ -5,6 +5,7 @@ import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import OptimizedImage from '@/components/OptimizedImage'
+import AdminProtection from '@/components/AdminProtection'
 
 export default function CultureAdmin() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])
@@ -61,6 +62,7 @@ export default function CultureAdmin() {
   }
 
   return (
+    <AdminProtection>
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -211,5 +213,6 @@ export default function CultureAdmin() {
         </div>
       </div>
     </div>
+    </AdminProtection>
   )
 }

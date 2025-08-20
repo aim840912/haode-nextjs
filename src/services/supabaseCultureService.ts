@@ -1,5 +1,5 @@
 import { CultureItem, CultureService } from '@/types/culture'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 export class SupabaseCultureService implements CultureService {
   async getCultureItems(): Promise<CultureItem[]> {

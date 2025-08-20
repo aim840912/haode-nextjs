@@ -1,5 +1,5 @@
 import { Review, ReviewSubmission, ReviewService } from '@/types/review'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 export class SupabaseReviewService implements ReviewService {
   async getReviews(options: {

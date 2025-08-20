@@ -374,7 +374,7 @@ export default function AddProduct() {
               onUploadError={handleImageUploadError}
               maxFiles={5}
               allowMultiple={true}
-              generateMultipleSizes={true}
+              generateMultipleSizes={false}
               enableCompression={true}
               className="mb-4"
             />

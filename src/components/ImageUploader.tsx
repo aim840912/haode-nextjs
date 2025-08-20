@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils';
-import OptimizedImage from './OptimizedImage';
+import Image from 'next/image';
 import LoadingSpinner from './LoadingSpinner';
 
 interface UploadedImage {
@@ -32,7 +32,7 @@ export default function ImageUploader({
   onUploadError,
   maxFiles = 5,
   allowMultiple = true,
-  generateMultipleSizes = true,
+  generateMultipleSizes = false,
   enableCompression = true,
   className = '',
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
@@ -333,11 +333,9 @@ export default function ImageUploader({
           <h4 className="font-medium text-gray-900">已上傳的圖片</h4>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {previewImages.map((image) => (
-              <div key={image.id} className="relative group"
-                   style={{ position: 'relative' }}>
-                <div className="aspect-square rounded-lg overflow-hidden border border-gray-200"
-                     style={{ position: 'relative', minHeight: '120px' }}>
-                  <OptimizedImage
+              <div key={image.id} className="relative group">
+                <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 relative">
+                  <Image
                     src={image.preview || image.url || '/images/placeholder.jpg'}
                     alt={`上傳的圖片 (${image.size})`}
                     fill
@@ -424,9 +422,8 @@ export function SingleImageUploader({
     <div className={className}>
       {currentImage && (
         <div className="mb-4">
-          <div className="aspect-square w-32 rounded-lg overflow-hidden border border-gray-200"
-               style={{ position: 'relative' }}>
-            <OptimizedImage
+          <div className="aspect-square w-32 rounded-lg overflow-hidden border border-gray-200 relative">
+            <Image
               src={currentImage.url || '/images/placeholder.jpg'}
               alt="當前圖片"
               fill

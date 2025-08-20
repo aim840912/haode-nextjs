@@ -224,7 +224,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
             <tr key={product.id} className="hover:bg-gray-50">
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <div className="relative w-12 h-12 mr-3">
+                  <div className="relative mr-3" style={{ width: '48px', height: '48px' }}>
                     <SafeImage
                       src={product.images?.[0] || '/images/placeholder.jpg'}
                       alt={product.name || '產品圖片'}

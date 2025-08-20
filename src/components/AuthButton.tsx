@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/components/Toast';
+import { UserInterestsService } from '@/services/userInterestsService';
 import { useState, useRef, useEffect } from 'react';
 
 // SVG 圖示元件
@@ -65,6 +67,7 @@ interface AuthButtonProps {
 
 export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { user, logout, isLoading } = useAuth();
+  const { success, error: showError } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [interestedCount, setInterestedCount] = useState(0);
@@ -86,27 +89,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
   // 載入興趣產品數量
   useEffect(() => {
-    const updateInterestedCount = () => {
-      const savedInterests = localStorage.getItem('interestedProducts');
-      if (savedInterests) {
-        const productIds = JSON.parse(savedInterests);
-        setInterestedCount(productIds.length);
-      } else {
-        setInterestedCount(0);
-      }
-    };
-
-    // 初始載入
     updateInterestedCount();
-
-    // 監聽 localStorage 變化
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'interestedProducts') {
-        updateInterestedCount();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
     
     // 監聽自定義事件（同頁面更新）
     const handleCustomUpdate = () => {
@@ -116,10 +99,31 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     window.addEventListener('interestedProductsUpdated', handleCustomUpdate);
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('interestedProductsUpdated', handleCustomUpdate);
     };
-  }, []);
+  }, [user]);
+
+  const updateInterestedCount = async () => {
+    if (user) {
+      // 已登入：從資料庫取得數量
+      try {
+        const interests = await UserInterestsService.getUserInterests(user.id);
+        setInterestedCount(interests.length);
+      } catch (error) {
+        console.error('Error fetching interests count:', error);
+        setInterestedCount(0);
+      }
+    } else {
+      // 未登入：從 localStorage 取得數量
+      const savedInterests = localStorage.getItem('interestedProducts');
+      if (savedInterests) {
+        const productIds = JSON.parse(savedInterests);
+        setInterestedCount(productIds.length);
+      } else {
+        setInterestedCount(0);
+      }
+    }
+  };
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -127,11 +131,16 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     setIsLoggingOut(true);
     setIsDropdownOpen(false);
     try {
-      logout();
-      // 強制重新載入頁面以確保狀態完全重置
-      window.location.href = '/';
+      await logout();
+      // 顯示成功提示
+      success('登出成功', '您已成功登出帳號');
+      setIsLoggingOut(false);
     } catch (error) {
       console.error('登出失敗:', error);
+      const errorMessage = error instanceof Error ? error.message : '登出失敗，請稍後再試';
+      
+      // 顯示錯誤提示
+      showError('登出失敗', errorMessage);
       setIsLoggingOut(false);
     }
   };

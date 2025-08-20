@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/components/Toast';
 import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
@@ -19,6 +20,7 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [successMessage, setSuccessMessage] = useState('');
   const { register } = useAuth();
+  const { success, error: showError } = useToast();
   const router = useRouter();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,27 +88,29 @@ export default function RegisterPage() {
     setSuccessMessage('');
     
     try {
-      const response = await register({
+      await register({
         email: formData.email,
         password: formData.password,
         name: formData.fullName,
         phone: formData.phone
       });
 
-      setSuccessMessage('註冊成功！正在為您登入...');
+      // 顯示成功提示
+      success('註冊成功', '歡迎加入豪德茶業！請檢查您的電子郵件進行驗證');
+      setSuccessMessage('註冊成功！請檢查您的電子郵件進行驗證...');
       
-      // 延遲一下讓用戶看到成功訊息，然後跳轉
+      // 延遲一下讓用戶看到成功訊息，然後跳轉到登入頁面
       setTimeout(() => {
-        router.push('/');
-      }, 1500);
+        router.push('/login');
+      }, 2000);
       
     } catch (error) {
       console.error('Registration failed:', error);
-      if (error instanceof Error) {
-        setErrors({ general: error.message });
-      } else {
-        setErrors({ general: '註冊失敗，請稍後再試' });
-      }
+      const errorMessage = error instanceof Error ? error.message : '註冊失敗，請稍後再試';
+      
+      // 顯示錯誤提示和設定錯誤狀態
+      showError('註冊失敗', errorMessage);
+      setErrors({ general: errorMessage });
     } finally {
       setIsLoading(false);
     }

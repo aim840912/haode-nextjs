@@ -1,5 +1,5 @@
 import { NewsItem, NewsService } from '@/types/news'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 export class SupabaseNewsService implements NewsService {
   async getNews(): Promise<NewsItem[]> {

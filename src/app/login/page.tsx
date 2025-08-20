@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
+import { useToast } from '@/components/Toast';
 import AuthErrorBoundary from '@/components/AuthErrorBoundary';
 
 export default function LoginPage() {
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
+  const { success, error: showError } = useToast();
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,15 +21,21 @@ export default function LoginPage() {
     setError('');
     
     try {
-      console.log('開始登入流程...', { email, rememberMe });
-      const result = await login({ email, password, rememberMe });
-      console.log('登入成功:', result);
+      console.log('開始登入流程...', { email });
+      await login({ email, password, rememberMe });
+      console.log('登入成功');
+      
+      // 顯示成功提示
+      success('登入成功', '歡迎回來！');
       
       // 使用 Next.js router 進行導航，而不是強制重新載入
       router.push('/');
     } catch (err) {
       console.error('登入錯誤:', err);
       const errorMessage = err instanceof Error ? err.message : '登入失敗，請稍後再試';
+      
+      // 顯示錯誤提示和設定錯誤狀態
+      showError('登入失敗', errorMessage);
       setError(errorMessage);
     }
   };
@@ -62,12 +70,11 @@ export default function LoginPage() {
             </div>
           )}
           
-          {/* 測試帳號提示 */}
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <h3 className="text-sm font-medium text-amber-800 mb-2">測試帳號</h3>
-            <div className="text-xs text-amber-700 space-y-1">
-              <div>管理員: admin@haude.com / 123456</div>
-              <div>一般用戶: user@haude.com / 123456</div>
+          {/* 新用戶提示 */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="text-sm font-medium text-blue-800 mb-2">新用戶說明</h3>
+            <div className="text-xs text-blue-700">
+              現在使用 Supabase Auth 進行認證，請註冊新帳號或聯繫管理員取得測試帳號
             </div>
           </div>
           

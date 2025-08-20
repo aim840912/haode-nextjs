@@ -1,14 +1,17 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, LoginRequest, RegisterRequest, AuthResponse } from '@/types/auth';
+import { User, LoginRequest, RegisterRequest } from '@/types/auth';
+import { supabase, getUserProfile, signInUser, signOutUser, signUpUser } from '@/lib/supabase-auth';
+import { UserInterestsService } from '@/services/userInterestsService';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (credentials: LoginRequest) => Promise<AuthResponse>;
-  register: (userData: RegisterRequest) => Promise<AuthResponse>;
-  logout: () => void;
+  login: (credentials: LoginRequest) => Promise<void>;
+  register: (userData: RegisterRequest) => Promise<void>;
+  logout: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
 
@@ -30,156 +33,136 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 從 localStorage 或 sessionStorage 恢復登入狀態
+  // 監聽 Supabase 認證狀態變化
   useEffect(() => {
-    let token = localStorage.getItem('auth_token');
-    let userData = localStorage.getItem('auth_user');
-    let storage: Storage = localStorage;
-    
-    // 如果 localStorage 中沒有，檢查 sessionStorage
-    if (!token || !userData) {
-      token = sessionStorage.getItem('auth_token');
-      userData = sessionStorage.getItem('auth_user');
-      storage = sessionStorage;
-    }
-    
-    if (token && userData) {
-      try {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-      } catch (error) {
-        // 如果資料無效，清除存儲
-        storage.removeItem('auth_token');
-        storage.removeItem('auth_user');
-      }
-    }
-    
-    setIsLoading(false);
+    // 取得初始 session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      handleAuthStateChange(session);
+    });
+
+    // 監聽認證狀態變化
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      handleAuthStateChange(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (credentials: LoginRequest): Promise<AuthResponse> => {
-    setIsLoading(true);
-    
-    try {
-      console.log('AuthContext: 發送登入請求', { email: credentials.email });
-      
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      console.log('AuthContext: 收到 API 回應', { 
-        status: response.status, 
-        ok: response.ok 
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('AuthContext: 登入 API 錯誤', error);
-        throw new Error(error.error || '登入失敗');
-      }
-
-      const data: AuthResponse = await response.json();
-      console.log('AuthContext: 登入成功，設定使用者狀態');
-      
-      // 確保有效的回應資料
-      if (!data.user || !data.token) {
-        throw new Error('伺服器回應格式錯誤');
-      }
-      
-      // 根據 rememberMe 決定使用哪種存儲
-      const storage = credentials.rememberMe ? localStorage : sessionStorage;
-      
-      // 清除其他存儲中的舊資料
-      const otherStorage = credentials.rememberMe ? sessionStorage : localStorage;
-      otherStorage.removeItem('auth_token');
-      otherStorage.removeItem('auth_user');
-      
-      // 儲存到選定的存儲
+  // 處理認證狀態變化
+  const handleAuthStateChange = async (session: Session | null) => {
+    if (session?.user) {
       try {
-        storage.setItem('auth_token', data.token);
-        storage.setItem('auth_user', JSON.stringify(data.user));
-      } catch (storageError) {
-        console.error('AuthContext: 儲存錯誤', storageError);
-        throw new Error('無法儲存登入資訊');
+        // 從 profiles 表取得使用者詳細資訊
+        const profile = await getUserProfile(session.user.id);
+        if (profile) {
+          const userData: User = {
+            id: profile.id,
+            email: session.user.email!,
+            name: profile.name,
+            phone: profile.phone || undefined,
+            address: profile.address || undefined,
+            role: profile.role,
+            createdAt: profile.created_at,
+            updatedAt: profile.updated_at,
+          };
+          setUser(userData);
+          
+          // 同步興趣清單（登入成功後）
+          await syncUserInterests(userData.id);
+        } else {
+          // 如果找不到 profile，建立基本使用者資訊
+          console.warn('Profile not found, creating basic user info');
+          const basicUser: User = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.name || session.user.email!.split('@')[0],
+            role: 'customer',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          setUser(basicUser);
+          
+          // 同步興趣清單（登入成功後）
+          await syncUserInterests(basicUser.id);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        // 即使取得 profile 失敗，仍然設定基本使用者資訊
+        const basicUser: User = {
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata?.name || session.user.email!.split('@')[0],
+          role: 'customer',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setUser(basicUser);
+        
+        // 同步興趣清單（登入成功後）
+        await syncUserInterests(basicUser.id);
       }
-      
-      // 使用 setTimeout 確保狀態更新在下一個事件循環中執行
-      setTimeout(() => {
-        setUser(data.user);
-      }, 0);
-      
-      return data;
-    } catch (error) {
-      console.error('AuthContext: 登入流程錯誤', error);
-      
-      // 清理可能的部分狀態
+    } else {
       setUser(null);
+    }
+    setIsLoading(false);
+  };
+
+  // 同步使用者興趣清單
+  const syncUserInterests = async (userId: string) => {
+    try {
+      // 取得本地興趣清單
+      const localInterests = UserInterestsService.getLocalInterests();
       
-      // 重新拋出錯誤給上層處理
-      if (error instanceof Error) {
-        throw error;
-      } else {
-        throw new Error('登入過程中發生未知錯誤');
-      }
-    } finally {
-      setIsLoading(false);
+      // 同步到雲端並取得合併後的清單
+      const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests);
+      
+      // 清除本地儲存，改用雲端資料
+      UserInterestsService.clearLocalInterests();
+      
+      console.log('User interests synced:', mergedInterests.length, 'products');
+    } catch (error) {
+      console.error('Error syncing user interests:', error);
     }
   };
 
-  const register = async (userData: RegisterRequest): Promise<AuthResponse> => {
+  const login = async (credentials: LoginRequest): Promise<void> => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '註冊失敗');
-      }
-
-      const data: AuthResponse = await response.json();
-      
-      // 儲存到 localStorage
-      localStorage.setItem('auth_token', data.token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-      
-      setUser(data.user);
-      return data;
+      await signInUser(credentials.email, credentials.password);
+      // 認證狀態變化會由 onAuthStateChange 處理
     } catch (error) {
-      throw error;
-    } finally {
       setIsLoading(false);
+      throw error;
+    }
+  };
+
+  const register = async (userData: RegisterRequest): Promise<void> => {
+    setIsLoading(true);
+    
+    try {
+      await signUpUser(userData.email, userData.password, userData.name, userData.phone);
+      // 認證狀態變化會由 onAuthStateChange 處理
+    } catch (error) {
+      setIsLoading(false);
+      throw error;
     }
   };
 
   const logout = async () => {
     try {
-      // 呼叫登出 API 清除 server-side cookie
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include', // 確保 cookie 被發送
-      });
+      // 立即清除使用者狀態，避免在登出過程中查詢 profile
+      setUser(null);
+      setIsLoading(false);
+      await signOutUser();
     } catch (error) {
-      console.error('Logout API error:', error);
-      // 即使 API 失敗也要清除客戶端狀態
+      console.error('Logout error:', error);
+      // 確保狀態已清除
+      setUser(null);
+      setIsLoading(false);
     }
-    
-    // 清除兩種存儲中的資料
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_user');
-    setUser(null);
   };
 
   const updateProfile = async (updates: Partial<User>): Promise<void> => {
@@ -190,25 +173,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth/profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify(updates),
+      const { updateProfile } = await import('@/lib/supabase-auth');
+      const updatedProfile = await updateProfile(user.id, {
+        name: updates.name,
+        phone: updates.phone,
+        address: updates.address,
+        role: updates.role,
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || '更新失敗');
-      }
-
-      const updatedUser: User = await response.json();
       
-      // 更新 localStorage
-      localStorage.setItem('auth_user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      if (updatedProfile) {
+        const updatedUser: User = {
+          ...user,
+          name: updatedProfile.name,
+          phone: updatedProfile.phone || undefined,
+          address: updatedProfile.address || undefined,
+          role: updatedProfile.role,
+          updatedAt: updatedProfile.updated_at,
+        };
+        setUser(updatedUser);
+      }
     } catch (error) {
       throw error;
     } finally {

@@ -1,5 +1,5 @@
 import { Product, ProductService } from '@/types/product'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 class SupabaseProductService implements ProductService {
   async getProducts(): Promise<Product[]> {

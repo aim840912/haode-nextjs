@@ -1,5 +1,5 @@
 import { Location } from '@/types/location'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 interface LocationService {
   getLocations(): Promise<Location[]>

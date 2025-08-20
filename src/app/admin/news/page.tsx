@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import AdminProtection from '@/components/AdminProtection'
 
 export default function NewsAdmin() {
   const [news, setNews] = useState<NewsItem[]>([])
@@ -69,6 +70,7 @@ export default function NewsAdmin() {
   }
 
   return (
+    <AdminProtection>
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -284,5 +286,6 @@ export default function NewsAdmin() {
         </div>
       </div>
     </div>
+    </AdminProtection>
   )
 }

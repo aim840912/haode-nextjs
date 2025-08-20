@@ -1,5 +1,5 @@
 import { ScheduleItem, ScheduleService } from '@/types/schedule'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 
 export class SupabaseScheduleService implements ScheduleService {
   async getSchedule(): Promise<ScheduleItem[]> {

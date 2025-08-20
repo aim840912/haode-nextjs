@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Location } from '@/types/location'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import AdminProtection from '@/components/AdminProtection'
 
 export default function LocationsAdmin() {
   const [locations, setLocations] = useState<Location[]>([])
@@ -52,6 +53,7 @@ export default function LocationsAdmin() {
   }
 
   return (
+    <AdminProtection>
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
@@ -239,5 +241,6 @@ export default function LocationsAdmin() {
         </div>
       </div>
     </div>
+    </AdminProtection>
   )
 }

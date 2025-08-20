@@ -30,6 +30,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'),
   title: "豪德農場 Haude Farm - 嘉義梅山優質農產",
   description: "座落梅山群峰之間的豪德農場，以自然農法栽培紅肉李、高山茶葉、季節水果等優質農產品，提供農場導覽與四季體驗活動。新鮮直送、有機栽培、產地直銷",
   keywords: [
