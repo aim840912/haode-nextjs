@@ -68,7 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             updatedAt: profile.updated_at,
           };
           setUser(userData);
-          
+
           // 同步興趣清單（登入成功後）
           await syncUserInterests(userData.id);
         } else {
@@ -83,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             updatedAt: new Date().toISOString(),
           };
           setUser(basicUser);
-          
+
           // 同步興趣清單（登入成功後）
           await syncUserInterests(basicUser.id);
         }
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           updatedAt: new Date().toISOString(),
         };
         setUser(basicUser);
-        
+
         // 同步興趣清單（登入成功後）
         await syncUserInterests(basicUser.id);
       }
@@ -114,13 +114,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       // 取得本地興趣清單
       const localInterests = UserInterestsService.getLocalInterests();
-      
+
       // 同步到雲端並取得合併後的清單
       const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests);
-      
+
       // 清除本地儲存，改用雲端資料
       UserInterestsService.clearLocalInterests();
-      
+
       console.log('User interests synced:', mergedInterests.length, 'products');
     } catch (error) {
       console.error('Error syncing user interests:', error);
@@ -129,7 +129,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const login = async (credentials: LoginRequest): Promise<void> => {
     setIsLoading(true);
-    
+
     try {
       await signInUser(credentials.email, credentials.password);
       // 認證狀態變化會由 onAuthStateChange 處理
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const register = async (userData: RegisterRequest): Promise<void> => {
     setIsLoading(true);
-    
+
     try {
       await signUpUser(userData.email, userData.password, userData.name, userData.phone);
       // 認證狀態變化會由 onAuthStateChange 處理
@@ -171,7 +171,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     setIsLoading(true);
-    
+
     try {
       const { updateProfile } = await import('@/lib/supabase-auth');
       const updatedProfile = await updateProfile(user.id, {
@@ -180,7 +180,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         address: updates.address,
         role: updates.role,
       });
-      
+
       if (updatedProfile) {
         const updatedUser: User = {
           ...user,

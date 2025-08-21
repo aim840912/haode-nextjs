@@ -15,6 +15,8 @@
 - **服務架構** - ✅ 智能服務工廠，自動選擇資料源（JSON/Supabase）
 - **快取管理** - ✅ 三層快取（瀏覽器→KV→資料源），效能提升 6 倍
 - **快取 API** - ✅ /api/cache-status 管理端點（狀態/預熱/清除）
+- **新聞系統** - ✅ Supabase Storage 整合，圖片上傳功能完整
+- **圖片管理** - ✅ 從 Base64 升級到 Storage，支援 CDN 加速
 - **SEO 基礎** - 結構化資料，meta tags
 
 ### ⚠️ **還是假的部分**（30+ TODOs）
@@ -199,7 +201,9 @@ watch -n 2 'curl -s http://localhost:3000/api/cache-status | jq .stats'
 - [x] **智能服務工廠** - 自動選擇 JSON/Supabase 資料源
 - [x] **快取管理 API** - 狀態監控、預熱、清除功能
 - [x] **資料遷移完成** - 9 個產品已從 JSON 遷移到 Supabase
-- [ ] **會員註冊** - Supabase Auth 整合
+- [x] **新聞 Storage 整合** - 新聞系統圖片上傳功能完成
+- [x] **圖片儲存優化** - 從 Base64 升級到 Supabase Storage
+- [x] **會員註冊** - Supabase Auth 整合
 - [ ] **聯絡資訊** - 更新真實電話、地址、社群連結
 
 #### Week 2: 綠界支付整合
@@ -536,12 +540,16 @@ if (
 - **Supabase 資料遷移** - 9 個產品已遷移，schema 完整
 - **快取管理 API** - `/api/cache-status` 監控和操作功能
 - **三層快取架構** - 瀏覽器→KV→資料源，TTL 優化
+- **新聞 Storage 系統** - 完整的圖片上傳管理功能
+- **圖片儲存優化** - 從 Base64 改為 Supabase Storage + CDN
+- **GitHub Actions 修復** - CI/CD 流程正常運作
 
 ### 🚧 **下個階段重點**
 1. **會員系統** - Supabase Auth 整合
 2. **購物車功能** - 真實的加入/移除/結算
 3. **綠界支付** - 台灣本土支付整合
 4. **訂單系統** - 完整的訂單生命週期
+5. **GitHub Actions** - 修復 CI/CD 流程（已完成基本修復）
 
 ### 📊 **效能數據**
 - 快取命中載入：~400ms（vs 2400ms）
@@ -553,5 +561,5 @@ if (
 
 ---
 
-*最後更新：2025-08-17*
-*✅ Vercel KV 快取系統完成 | ✅ 服務工廠模式實作完成 | ✅ Supabase 資料遷移完成*
+*最後更新：2025-08-20*
+*✅ Vercel KV 快取系統完成 | ✅ 服務工廠模式實作完成 | ✅ Supabase 資料遷移完成 | ✅ 新聞 Storage 整合完成 | ✅ GitHub Actions 修復完成*
