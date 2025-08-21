@@ -177,7 +177,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
             <div className="flex items-center space-x-4">
               <Link
                 href="/inquiries"
-                className="text-gray-600 hover:text-gray-800"
+                className="text-gray-700 hover:text-gray-900"
               >
                 ← 返回列表
               </Link>
@@ -189,7 +189,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
                 {INQUIRY_STATUS_LABELS[inquiry.status]}
               </span>
-              <span className="text-gray-600">
+              <span className="text-gray-700">
                 {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
                   year: 'numeric',
                   month: 'long',
@@ -215,25 +215,25 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   <div key={item.id} className="p-6">
                     <div className="flex items-start space-x-4">
                       <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-                        <span className="text-gray-500 text-xs">圖片</span>
+                        <span className="text-gray-600 text-xs">圖片</span>
                       </div>
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-900 mb-1">
                           {item.product_name}
                         </h3>
                         {item.product_category && (
-                          <p className="text-gray-600 text-sm mb-2">
+                          <p className="text-gray-700 text-sm mb-2">
                             分類：{item.product_category}
                           </p>
                         )}
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                        <div className="flex items-center space-x-4 text-sm text-gray-700">
                           <span>數量：{item.quantity}</span>
                           {item.unit_price && (
                             <span>單價：NT$ {item.unit_price.toLocaleString()}</span>
                           )}
                         </div>
                         {item.notes && (
-                          <p className="text-sm text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                          <p className="text-sm text-gray-700 mt-2 bg-gray-50 p-2 rounded">
                             備註：{item.notes}
                           </p>
                         )}
@@ -257,29 +257,29 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               <div className="p-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">姓名</h3>
+                    <h3 className="text-sm font-medium text-gray-800 mb-2">姓名</h3>
                     <p className="text-gray-900">{inquiry.customer_name}</p>
                   </div>
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Email</h3>
+                    <h3 className="text-sm font-medium text-gray-800 mb-2">Email</h3>
                     <p className="text-gray-900">{inquiry.customer_email}</p>
                   </div>
                   {inquiry.customer_phone && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">電話</h3>
+                      <h3 className="text-sm font-medium text-gray-800 mb-2">電話</h3>
                       <p className="text-gray-900">{inquiry.customer_phone}</p>
                     </div>
                   )}
                   {inquiry.delivery_address && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-2">配送地址</h3>
+                      <h3 className="text-sm font-medium text-gray-800 mb-2">配送地址</h3>
                       <p className="text-gray-900">{inquiry.delivery_address}</p>
                     </div>
                   )}
                 </div>
                 {inquiry.notes && (
                   <div className="mt-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">備註</h3>
+                    <h3 className="text-sm font-medium text-gray-800 mb-2">備註</h3>
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <p className="text-gray-900">{inquiry.notes}</p>
                     </div>
@@ -296,15 +296,15 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
-                  <span className="text-gray-700">商品總數</span>
+                  <span className="text-gray-800">商品總數</span>
                   <span className="font-semibold">{InquiryUtils.calculateTotalQuantity(inquiry)} 件</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-700">商品小計</span>
+                  <span className="text-gray-800">商品小計</span>
                   <span className="font-semibold">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-700">運費</span>
+                  <span className="text-gray-800">運費</span>
                   <span className="text-blue-600">待報價</span>
                 </div>
                 <hr />
@@ -312,7 +312,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   <span>預估總計</span>
                   <span className="text-amber-900">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}+</span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-600">
                   * 實際價格以回覆為準
                 </p>
               </div>
@@ -353,7 +353,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               <div className="space-y-3">
                 <Link
                   href="/inquiries"
-                  className="block w-full text-center py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="block w-full text-center py-3 bg-gray-100 text-gray-800 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   返回詢價列表
                 </Link>
@@ -368,7 +368,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               {/* 聯絡資訊 */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-3">需要協助？</h3>
-                <div className="text-sm text-gray-600 space-y-2">
+                <div className="text-sm text-gray-700 space-y-2">
                   <p>📞 客服電話：0800-123-456</p>
                   <p>📧 客服信箱：service@example.com</p>
                   <p>🕐 服務時間：週一至週五 9:00-18:00</p>

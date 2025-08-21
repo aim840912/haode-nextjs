@@ -232,33 +232,33 @@ function InquiriesPage() {
 
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">商品摘要</h4>
-                      <p className="text-sm text-gray-600">
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">商品摘要</h4>
+                      <p className="text-sm text-gray-700">
                         {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
                       </p>
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-gray-600 mt-1">
                         {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
                         {inquiry.inquiry_items.length > 2 && `... 等 ${inquiry.inquiry_items.length} 項`}
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">預估金額</h4>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">預估金額</h4>
                       <p className="text-lg font-bold text-amber-900">
                         NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}
                       </p>
-                      <p className="text-xs text-gray-500 mt-1">實際價格以回覆為準</p>
+                      <p className="text-xs text-gray-600 mt-1">實際價格以回覆為準</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">聯絡資訊</h4>
-                      <p className="text-sm text-gray-600">{inquiry.customer_name}</p>
-                      <p className="text-xs text-gray-500">{inquiry.customer_email}</p>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">聯絡資訊</h4>
+                      <p className="text-sm text-gray-700">{inquiry.customer_name}</p>
+                      <p className="text-xs text-gray-600">{inquiry.customer_email}</p>
                     </div>
                   </div>
 
                   {inquiry.notes && (
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <h4 className="text-sm font-medium text-gray-700 mb-1">備註</h4>
-                      <p className="text-sm text-gray-600">{inquiry.notes}</p>
+                      <h4 className="text-sm font-medium text-gray-800 mb-1">備註</h4>
+                      <p className="text-sm text-gray-700">{inquiry.notes}</p>
                     </div>
                   )}
                 </div>

@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import AdminProtection from '@/components/AdminProtection';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
+import { useToast } from '@/components/Toast';
 import { 
   InquiryWithItems, 
   InquiryStatus,
@@ -15,12 +16,58 @@ import {
 
 function AdminInquiriesPage() {
   const { user } = useAuth();
+  const { success, error: showError, warning } = useToast();
   const [inquiries, setInquiries] = useState<InquiryWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryWithItems | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // 刪除詢價單
+  const deleteInquiry = async (inquiryId: string) => {
+    // 確認對話框
+    if (!confirm('確定要刪除這筆詢價單嗎？此操作無法復原。')) {
+      return;
+    }
+
+    try {
+      // 取得認證 token
+      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      if (!session?.access_token) {
+        throw new Error('認證失敗');
+      }
+
+      // 呼叫 DELETE API
+      const response = await fetch(`/api/inquiries/${inquiryId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        showError('刪除失敗', result.error || '刪除詢價單時發生錯誤');
+        return;
+      }
+
+      // 更新本地狀態，移除已刪除的詢價單
+      setInquiries(inquiries.filter(inquiry => inquiry.id !== inquiryId));
+      
+      // 如果刪除的是當前選中的詢價單，清除選中狀態
+      if (selectedInquiry?.id === inquiryId) {
+        setSelectedInquiry(null);
+      }
+
+      success('刪除成功', '詢價單已成功刪除');
+
+    } catch (err) {
+      console.error('Error deleting inquiry:', err);
+      showError('刪除失敗', err instanceof Error ? err.message : '刪除詢價單時發生錯誤');
+    }
+  };
 
   // 取得所有詢價單
   const fetchInquiries = async () => {
@@ -94,7 +141,17 @@ function AdminInquiriesPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '更新狀態失敗');
+        // 不要拋出錯誤，直接處理並顯示 Toast 通知
+        console.log('狀態更新失敗:', result.error);
+        
+        // 根據錯誤類型顯示不同的 Toast
+        if (result.error && result.error.includes('無法從')) {
+          warning('無法更新狀態', result.error);
+        } else {
+          showError('更新失敗', result.error || '更新狀態時發生錯誤，請稍後再試');
+        }
+        
+        return; // 提前返回，不執行後續的本地狀態更新
       }
 
       // 更新本地狀態
@@ -109,11 +166,17 @@ function AdminInquiriesPage() {
         setSelectedInquiry({ ...selectedInquiry, status: newStatus, updated_at: new Date().toISOString() });
       }
 
-      alert('狀態更新成功！');
+      success('狀態更新成功', `詢價單狀態已更新為「${INQUIRY_STATUS_LABELS[newStatus]}」`);
 
     } catch (err) {
       console.error('Error updating status:', err);
-      alert(err instanceof Error ? err.message : '更新狀態失敗');
+      
+      if (err instanceof Error && err.message.includes('無法從')) {
+        // 狀態轉換錯誤，提供更友善的提示
+        warning('無法更新狀態', err.message);
+      } else {
+        showError('更新失敗', err instanceof Error ? err.message : '更新狀態時發生錯誤，請稍後再試');
+      }
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -213,25 +276,25 @@ function AdminInquiriesPage() {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         詢價單號
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         客戶
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         商品摘要
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         金額
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         狀態
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         建立時間
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         操作
                       </th>
                     </tr>
@@ -249,11 +312,11 @@ function AdminInquiriesPage() {
                             <div className="text-sm font-medium text-gray-900">
                               {inquiry.customer_name}
                             </div>
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-700">
                               {inquiry.customer_email}
                             </div>
                             {inquiry.customer_phone && (
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-gray-700">
                                 {inquiry.customer_phone}
                               </div>
                             )}
@@ -263,7 +326,7 @@ function AdminInquiriesPage() {
                           <div className="text-sm text-gray-900">
                             {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-sm text-gray-700">
                             {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
                             {inquiry.inquiry_items.length > 2 && '...'}
                           </div>
@@ -278,7 +341,9 @@ function AdminInquiriesPage() {
                             value={inquiry.status}
                             onChange={(e) => updateInquiryStatus(inquiry.id, e.target.value as InquiryStatus)}
                             disabled={isUpdatingStatus}
-                            className="text-sm border rounded px-2 py-1"
+                            className={`text-sm font-medium rounded px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                              INQUIRY_STATUS_COLORS[inquiry.status]
+                            } ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
                             {(['pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map((status) => (
                               <option key={status} value={status}>
@@ -287,16 +352,24 @@ function AdminInquiriesPage() {
                             ))}
                           </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                           {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
-                          <button
-                            onClick={() => setSelectedInquiry(inquiry)}
-                            className="hover:text-blue-800"
-                          >
-                            查看詳情
-                          </button>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex items-center space-x-3">
+                            <button
+                              onClick={() => setSelectedInquiry(inquiry)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              查看詳情
+                            </button>
+                            <button
+                              onClick={() => deleteInquiry(inquiry.id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              刪除
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -328,29 +401,29 @@ function AdminInquiriesPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">客戶資訊</h3>
                       <div className="space-y-2">
-                        <p><span className="text-gray-600">姓名：</span>{selectedInquiry.customer_name}</p>
-                        <p><span className="text-gray-600">Email：</span>{selectedInquiry.customer_email}</p>
+                        <p><span className="text-gray-900">姓名：</span><span className="text-gray-900">{selectedInquiry.customer_name}</span></p>
+                        <p><span className="text-gray-900">Email：</span><span className="text-gray-900">{selectedInquiry.customer_email}</span></p>
                         {selectedInquiry.customer_phone && (
-                          <p><span className="text-gray-600">電話：</span>{selectedInquiry.customer_phone}</p>
+                          <p><span className="text-gray-900">電話：</span><span className="text-gray-900">{selectedInquiry.customer_phone}</span></p>
                         )}
                         {selectedInquiry.delivery_address && (
-                          <p><span className="text-gray-600">配送地址：</span>{selectedInquiry.delivery_address}</p>
+                          <p><span className="text-gray-900">配送地址：</span><span className="text-gray-900">{selectedInquiry.delivery_address}</span></p>
                         )}
                       </div>
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">詢價資訊</h3>
                       <div className="space-y-2">
-                        <p><span className="text-gray-600">狀態：</span>
+                        <p><span className="text-gray-900">狀態：</span>
                           <span className={`ml-2 px-2 py-1 rounded-full text-xs ${INQUIRY_STATUS_COLORS[selectedInquiry.status]}`}>
                             {INQUIRY_STATUS_LABELS[selectedInquiry.status]}
                           </span>
                         </p>
-                        <p><span className="text-gray-600">建立時間：</span>
-                          {new Date(selectedInquiry.created_at).toLocaleString('zh-TW')}
+                        <p><span className="text-gray-900">建立時間：</span>
+                          <span className="text-gray-900">{new Date(selectedInquiry.created_at).toLocaleString('zh-TW')}</span>
                         </p>
-                        <p><span className="text-gray-600">更新時間：</span>
-                          {new Date(selectedInquiry.updated_at).toLocaleString('zh-TW')}
+                        <p><span className="text-gray-900">更新時間：</span>
+                          <span className="text-gray-900">{new Date(selectedInquiry.updated_at).toLocaleString('zh-TW')}</span>
                         </p>
                       </div>
                     </div>
@@ -360,7 +433,7 @@ function AdminInquiriesPage() {
                     <div className="mb-6">
                       <h3 className="font-semibold text-gray-900 mb-3">客戶備註</h3>
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <p className="text-gray-700">{selectedInquiry.notes}</p>
+                        <p className="text-gray-900">{selectedInquiry.notes}</p>
                       </div>
                     </div>
                   )}
@@ -373,13 +446,13 @@ function AdminInquiriesPage() {
                           <div>
                             <h4 className="font-medium text-gray-900">{item.product_name}</h4>
                             {item.product_category && (
-                              <p className="text-sm text-gray-600">分類：{item.product_category}</p>
+                              <p className="text-sm text-gray-900">分類：{item.product_category}</p>
                             )}
-                            <p className="text-sm text-gray-600">數量：{item.quantity}</p>
+                            <p className="text-sm text-gray-900">數量：{item.quantity}</p>
                           </div>
                           <div className="text-right">
                             {item.unit_price && (
-                              <p className="text-sm text-gray-600">單價：NT$ {item.unit_price.toLocaleString()}</p>
+                              <p className="text-sm text-gray-700">單價：NT$ {item.unit_price.toLocaleString()}</p>
                             )}
                             <p className="font-medium text-gray-900">
                               小計：NT$ {(item.total_price || (item.unit_price || 0) * item.quantity).toLocaleString()}
