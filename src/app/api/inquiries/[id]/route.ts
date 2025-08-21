@@ -4,9 +4,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase-auth';
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { createInquiryService } from '@/services/inquiryService';
-import { supabaseInquiryService } from '@/services/supabaseInquiryService';
+import { supabaseServerInquiryService } from '@/services/supabaseInquiryService';
 import { 
   UpdateInquiryRequest,
   InquiryStatus,
@@ -14,7 +14,37 @@ import {
 } from '@/types/inquiry';
 
 // 建立詢價服務實例
-const inquiryService = createInquiryService(supabaseInquiryService);
+const inquiryService = createInquiryService(supabaseServerInquiryService);
+
+// 統一的錯誤回應函數
+function createErrorResponse(message: string, status: number, details?: string) {
+  return NextResponse.json(
+    { 
+      error: message,
+      success: false,
+      details: process.env.NODE_ENV === 'development' ? details : undefined
+    },
+    { 
+      status,
+      headers: { 'Content-Type': 'application/json' }
+    }
+  );
+}
+
+// 統一的成功回應函數
+function createSuccessResponse(data: any, message?: string, status: number = 200) {
+  return NextResponse.json(
+    { 
+      success: true,
+      data,
+      message
+    },
+    { 
+      status,
+      headers: { 'Content-Type': 'application/json' }
+    }
+  );
+}
 
 // GET /api/inquiries/[id] - 取得特定詢價單
 export async function GET(
@@ -24,29 +54,14 @@ export async function GET(
   try {
     const { id: inquiryId } = await params;
 
-    // 檢查使用者身份
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供有效的認證 token' },
-        { status: 401 }
-      );
-    }
-
-    // 取得使用者資訊
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '認證失敗' },
-        { status: 401 }
-      );
+    // 驗證使用者認證
+    const user = await getCurrentUser();
+    if (!user) {
+      return createErrorResponse('未認證或會話已過期', 401);
     }
 
     // 檢查是否為管理員
+    const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -61,32 +76,24 @@ export async function GET(
     let inquiry;
     if (isAdmin && adminMode) {
       // 管理員可以查看任何詢價單
-      inquiry = await supabaseInquiryService.getInquiryByIdForAdmin(inquiryId);
+      inquiry = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId);
     } else {
       // 一般使用者只能查看自己的詢價單
       inquiry = await inquiryService.getInquiryById(user.id, inquiryId);
     }
 
     if (!inquiry) {
-      return NextResponse.json(
-        { error: '找不到詢價單' },
-        { status: 404 }
-      );
+      return createErrorResponse('找不到詢價單', 404);
     }
 
-    return NextResponse.json({
-      success: true,
-      data: inquiry
-    });
+    return createSuccessResponse(inquiry);
 
   } catch (error) {
     console.error('Error in GET /api/inquiries/[id]:', error);
-    return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : '取得詢價單失敗',
-        success: false 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      '取得詢價單失敗',
+      500,
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }
@@ -99,32 +106,17 @@ export async function PUT(
   try {
     const { id: inquiryId } = await params;
 
-    // 檢查使用者身份
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供有效的認證 token' },
-        { status: 401 }
-      );
-    }
-
-    // 取得使用者資訊
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '認證失敗' },
-        { status: 401 }
-      );
+    // 驗證使用者認證
+    const user = await getCurrentUser();
+    if (!user) {
+      return createErrorResponse('未認證或會話已過期', 401);
     }
 
     // 解析請求資料
     const updateData: UpdateInquiryRequest = await request.json();
 
     // 檢查是否為管理員
+    const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -135,21 +127,15 @@ export async function PUT(
 
     // 如果是狀態更新，檢查管理員權限
     if (updateData.status && !isAdmin) {
-      return NextResponse.json(
-        { error: '只有管理員可以更新詢價單狀態' },
-        { status: 403 }
-      );
+      return createErrorResponse('只有管理員可以更新詢價單狀態', 403);
     }
 
     // 如果有狀態更新，驗證狀態轉換
     if (updateData.status && isAdmin) {
       // 先取得當前詢價單
-      const currentInquiry = await supabaseInquiryService.getInquiryByIdForAdmin(inquiryId);
+      const currentInquiry = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId);
       if (!currentInquiry) {
-        return NextResponse.json(
-          { error: '找不到詢價單' },
-          { status: 404 }
-        );
+        return createErrorResponse('找不到詢價單', 404);
       }
 
       // 驗證狀態轉換
@@ -157,7 +143,8 @@ export async function PUT(
         return NextResponse.json(
           { 
             error: `無法從 ${currentInquiry.status} 轉換到 ${updateData.status}`,
-            availableTransitions: InquiryUtils.getAvailableStatusTransitions(currentInquiry.status)
+            availableTransitions: InquiryUtils.getAvailableStatusTransitions(currentInquiry.status),
+            success: false
           },
           { status: 400 }
         );
@@ -166,30 +153,20 @@ export async function PUT(
       // 管理員更新狀態
       const updatedInquiry = await inquiryService.updateInquiryStatus(inquiryId, updateData.status);
       
-      return NextResponse.json({
-        success: true,
-        data: updatedInquiry,
-        message: '詢價單狀態更新成功'
-      });
+      return createSuccessResponse(updatedInquiry, '詢價單狀態更新成功');
     }
 
     // 一般使用者更新詢價單
     const updatedInquiry = await inquiryService.updateInquiry(user.id, inquiryId, updateData);
 
-    return NextResponse.json({
-      success: true,
-      data: updatedInquiry,
-      message: '詢價單更新成功'
-    });
+    return createSuccessResponse(updatedInquiry, '詢價單更新成功');
 
   } catch (error) {
     console.error('Error in PUT /api/inquiries/[id]:', error);
-    return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : '更新詢價單失敗',
-        success: false 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      '更新詢價單失敗',
+      500,
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }
@@ -202,29 +179,14 @@ export async function DELETE(
   try {
     const { id: inquiryId } = await params;
 
-    // 檢查使用者身份
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供有效的認證 token' },
-        { status: 401 }
-      );
-    }
-
-    // 取得使用者資訊
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '認證失敗' },
-        { status: 401 }
-      );
+    // 驗證使用者認證
+    const user = await getCurrentUser();
+    if (!user) {
+      return createErrorResponse('未認證或會話已過期', 401);
     }
 
     // 檢查是否為管理員
+    const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -232,28 +194,20 @@ export async function DELETE(
       .single();
 
     if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: '只有管理員可以刪除詢價單' },
-        { status: 403 }
-      );
+      return createErrorResponse('只有管理員可以刪除詢價單', 403);
     }
 
     // 刪除詢價單
     await inquiryService.deleteInquiry(inquiryId);
 
-    return NextResponse.json({
-      success: true,
-      message: '詢價單刪除成功'
-    });
+    return createSuccessResponse(null, '詢價單刪除成功');
 
   } catch (error) {
     console.error('Error in DELETE /api/inquiries/[id]:', error);
-    return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : '刪除詢價單失敗',
-        success: false 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      '刪除詢價單失敗',
+      500,
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }
@@ -266,29 +220,14 @@ export async function PATCH(
   try {
     const { id: inquiryId } = await params;
 
-    // 檢查使用者身份
-    const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: '未提供有效的認證 token' },
-        { status: 401 }
-      );
-    }
-
-    // 取得使用者資訊
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: '認證失敗' },
-        { status: 401 }
-      );
+    // 驗證使用者認證
+    const user = await getCurrentUser();
+    if (!user) {
+      return createErrorResponse('未認證或會話已過期', 401);
     }
 
     // 檢查是否為管理員
+    const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -296,48 +235,33 @@ export async function PATCH(
       .single();
 
     if (profile?.role !== 'admin') {
-      return NextResponse.json(
-        { error: '只有管理員可以更新詢價單狀態' },
-        { status: 403 }
-      );
+      return createErrorResponse('只有管理員可以更新詢價單狀態', 403);
     }
 
     // 解析請求資料
     const { status } = await request.json();
 
     if (!status) {
-      return NextResponse.json(
-        { error: '請提供要更新的狀態' },
-        { status: 400 }
-      );
+      return createErrorResponse('請提供要更新的狀態', 400);
     }
 
     // 驗證狀態值
     const validStatuses: InquiryStatus[] = ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: '無效的狀態值' },
-        { status: 400 }
-      );
+      return createErrorResponse('無效的狀態值', 400);
     }
 
     // 更新狀態
     const updatedInquiry = await inquiryService.updateInquiryStatus(inquiryId, status);
 
-    return NextResponse.json({
-      success: true,
-      data: updatedInquiry,
-      message: '詢價單狀態更新成功'
-    });
+    return createSuccessResponse(updatedInquiry, '詢價單狀態更新成功');
 
   } catch (error) {
     console.error('Error in PATCH /api/inquiries/[id]:', error);
-    return NextResponse.json(
-      { 
-        error: error instanceof Error ? error.message : '更新詢價單狀態失敗',
-        success: false 
-      },
-      { status: 500 }
+    return createErrorResponse(
+      '更新詢價單狀態失敗',
+      500,
+      error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }

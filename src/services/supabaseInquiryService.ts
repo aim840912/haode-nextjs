@@ -3,7 +3,7 @@
  * 實作詢價服務介面，使用 Supabase 作為資料儲存後端
  */
 
-import { supabase } from '@/lib/supabase-auth';
+import { createServiceSupabaseClient } from '@/lib/supabase-server';
 import { 
   InquiryService,
   InquiryWithItems,
@@ -21,10 +21,18 @@ export class SupabaseInquiryService implements InquiryService {
   // 使用者端方法
   async createInquiry(userId: string, data: CreateInquiryRequest): Promise<InquiryWithItems> {
     try {
+      console.log('🔍 SupabaseInquiryService.createInquiry 開始執行:', {
+        userId,
+        customerName: data.customer_name,
+        itemsCount: data.items.length
+      });
+
       // 計算預估總金額
       const totalEstimatedAmount = data.items.reduce((total, item) => {
         return total + (item.unit_price || 0) * item.quantity;
       }, 0);
+
+      console.log('💰 計算的總金額:', totalEstimatedAmount);
 
       // 建立詢價單主記錄
       const inquiryData = {
@@ -39,14 +47,21 @@ export class SupabaseInquiryService implements InquiryService {
         status: 'pending' as InquiryStatus
       };
 
-      const { data: inquiry, error: inquiryError } = await supabase
+      const { data: inquiry, error: inquiryError } = await createServiceSupabaseClient()
         .from('inquiries')
         .insert(inquiryData)
         .select()
         .single();
 
       if (inquiryError) {
-        throw new Error(`建立詢價單失敗: ${inquiryError.message}`);
+        console.error('❌ Supabase 詢價單插入失敗:', {
+          message: inquiryError.message,
+          code: inquiryError.code,
+          details: inquiryError.details,
+          hint: inquiryError.hint,
+          data: inquiryData
+        });
+        throw new Error(`建立詢價單失敗: ${inquiryError.message} (code: ${inquiryError.code})`);
       }
 
       // 建立詢價項目記錄
@@ -61,15 +76,22 @@ export class SupabaseInquiryService implements InquiryService {
         notes: item.notes
       }));
 
-      const { data: inquiryItems, error: itemsError } = await supabase
+      const { data: inquiryItems, error: itemsError } = await createServiceSupabaseClient()
         .from('inquiry_items')
         .insert(itemsData)
         .select();
 
       if (itemsError) {
+        console.error('❌ Supabase 詢價項目插入失敗:', {
+          message: itemsError.message,
+          code: itemsError.code,
+          details: itemsError.details,
+          hint: itemsError.hint,
+          data: itemsData
+        });
         // 如果項目建立失敗，清除已建立的詢價單
-        await supabase.from('inquiries').delete().eq('id', inquiry.id);
-        throw new Error(`建立詢價項目失敗: ${itemsError.message}`);
+        await createServiceSupabaseClient().from('inquiries').delete().eq('id', inquiry.id);
+        throw new Error(`建立詢價項目失敗: ${itemsError.message} (code: ${itemsError.code})`);
       }
 
       return {
@@ -85,7 +107,7 @@ export class SupabaseInquiryService implements InquiryService {
 
   async getUserInquiries(userId: string, params?: InquiryQueryParams): Promise<InquiryWithItems[]> {
     try {
-      let query = supabase
+      let query = createServiceSupabaseClient()
         .from('inquiries')
         .select(`
           *,
@@ -136,7 +158,7 @@ export class SupabaseInquiryService implements InquiryService {
 
   async getInquiryById(userId: string, inquiryId: string): Promise<InquiryWithItems | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createServiceSupabaseClient()
         .from('inquiries')
         .select(`
           *,
@@ -170,7 +192,7 @@ export class SupabaseInquiryService implements InquiryService {
       }
 
       // 更新詢價單
-      const { data: updatedInquiry, error } = await supabase
+      const { data: updatedInquiry, error } = await createServiceSupabaseClient()
         .from('inquiries')
         .update(data)
         .eq('id', inquiryId)
@@ -196,7 +218,7 @@ export class SupabaseInquiryService implements InquiryService {
   // 管理員端方法
   async getAllInquiries(params?: InquiryQueryParams): Promise<InquiryWithItems[]> {
     try {
-      let query = supabase
+      let query = createServiceSupabaseClient()
         .from('inquiries')
         .select(`
           *,
@@ -250,7 +272,7 @@ export class SupabaseInquiryService implements InquiryService {
 
   async updateInquiryStatus(inquiryId: string, status: InquiryStatus): Promise<InquiryWithItems> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createServiceSupabaseClient()
         .from('inquiries')
         .update({ status })
         .eq('id', inquiryId)
@@ -274,7 +296,7 @@ export class SupabaseInquiryService implements InquiryService {
 
   async getInquiryStats(): Promise<InquiryStats[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createServiceSupabaseClient()
         .from('inquiry_stats')
         .select('*');
 
@@ -292,7 +314,7 @@ export class SupabaseInquiryService implements InquiryService {
 
   async deleteInquiry(inquiryId: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const { error } = await createServiceSupabaseClient()
         .from('inquiries')
         .delete()
         .eq('id', inquiryId);
@@ -310,7 +332,7 @@ export class SupabaseInquiryService implements InquiryService {
   // 額外的工具方法
   async getInquiryByIdForAdmin(inquiryId: string): Promise<InquiryWithItems | null> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await createServiceSupabaseClient()
         .from('inquiries')
         .select(`
           *,
@@ -337,14 +359,14 @@ export class SupabaseInquiryService implements InquiryService {
   async updateInquiryItems(inquiryId: string, items: InquiryItem[]): Promise<void> {
     try {
       // 先刪除舊的項目
-      await supabase
+      await createServiceSupabaseClient()
         .from('inquiry_items')
         .delete()
         .eq('inquiry_id', inquiryId);
 
       // 新增新的項目
       if (items.length > 0) {
-        const { error } = await supabase
+        const { error } = await createServiceSupabaseClient()
           .from('inquiry_items')
           .insert(items.map(item => ({ ...item, inquiry_id: inquiryId })));
 
@@ -361,4 +383,4 @@ export class SupabaseInquiryService implements InquiryService {
 }
 
 // 建立並匯出單例實例
-export const supabaseInquiryService = new SupabaseInquiryService();
+export const supabaseServerInquiryService = new SupabaseInquiryService();

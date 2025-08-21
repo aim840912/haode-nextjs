@@ -61,6 +61,9 @@ function CartPage() {
     }
 
     setIsProcessing(true);
+    let response = null;
+    let result = null;
+    
     try {
       // 取得認證 token
       const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
@@ -69,8 +72,14 @@ function CartPage() {
         return;
       }
 
+      console.log('🚀 發送詢價請求:', {
+        url: '/api/inquiries',
+        data: inquiryData,
+        hasToken: !!session.access_token
+      });
+
       // 呼叫詢價 API
-      const response = await fetch('/api/inquiries', {
+      response = await fetch('/api/inquiries', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +88,20 @@ function CartPage() {
         body: JSON.stringify(inquiryData)
       });
 
-      const result = await response.json();
+      console.log('📊 API 回應狀態:', response.status, response.statusText);
+      console.log('📊 回應標頭:', Object.fromEntries(response.headers.entries()));
+
+      // 檢查回應是否為 JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('❌ 回應不是 JSON 格式:', contentType);
+        const textResponse = await response.text();
+        console.error('📄 實際回應內容:', textResponse);
+        throw new Error(`伺服器回應格式錯誤: ${contentType || 'unknown'}`);
+      }
+
+      result = await response.json();
+      console.log('📊 解析後的回應:', result);
 
       if (!response.ok) {
         throw new Error(result.error || '送出詢價失敗');
@@ -91,8 +113,47 @@ function CartPage() {
       router.push('/inquiries');
 
     } catch (err) {
-      console.error('Inquiry submission error:', err);
-      error('送出詢價失敗', err instanceof Error ? err.message : '系統暫時無法處理，請稍後再試');
+      console.error('❌ 詢價提交錯誤:', err);
+      console.error('📊 錯誤詳情:', {
+        message: err instanceof Error ? err.message : 'Unknown error',
+        stack: err instanceof Error ? err.stack : undefined,
+        responseStatus: response?.status,
+        responseStatusText: response?.statusText,
+        result: result
+      });
+      
+      // 提供更詳細的錯誤訊息
+      let errorMessage = '無法建立詢價單，請稍後再試';
+      let errorDetail = '';
+      
+      if (err instanceof Error) {
+        if (err.message.includes('認證失敗')) {
+          errorMessage = '登入已過期';
+          errorDetail = '請重新登入後再試';
+        } else if (err.message.includes('資料驗證失敗')) {
+          errorMessage = '資料格式錯誤';
+          errorDetail = '請檢查您填寫的資訊';
+        } else if (err.message.includes('資料庫權限設定問題')) {
+          errorMessage = '系統權限設定問題';
+          errorDetail = '請聯繫系統管理員修復資料庫權限設定';
+        } else if (err.message.includes('Network') || err.message.includes('fetch')) {
+          errorMessage = '網路連線問題';
+          errorDetail = '請檢查網路連線後重試';
+        } else if (err.message.includes('格式錯誤')) {
+          errorMessage = '伺服器回應格式錯誤';
+          errorDetail = '請重新載入頁面後再試，或聯繫客服';
+        } else if (response?.status === 403) {
+          errorMessage = '權限不足';
+          errorDetail = '您沒有執行此操作的權限，請聯繫管理員';
+        } else if (response?.status === 500) {
+          errorMessage = '伺服器內部錯誤';
+          errorDetail = '系統暫時無法處理，請稍後再試';
+        } else {
+          errorDetail = err.message;
+        }
+      }
+      
+      error(errorMessage, errorDetail);
     } finally {
       setIsProcessing(false);
     }

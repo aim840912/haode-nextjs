@@ -1,15 +1,28 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-// 客戶端 Supabase client
+// 客戶端 Supabase client (for browser use)
 export const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
 
-// 用於服務端的 Supabase 客戶端（具有更高權限）
+// 服務端 Supabase 客戶端（用於 API routes）
+export const supabaseServer = createClient<Database>(
+  supabaseUrl,
+  supabaseAnonKey,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+)
+
+// 管理員 Supabase 客戶端（具有更高權限）
 export const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY 
-  ? createBrowserClient<Database>(
+  ? createClient<Database>(
       supabaseUrl,
       process.env.SUPABASE_SERVICE_ROLE_KEY,
       {
