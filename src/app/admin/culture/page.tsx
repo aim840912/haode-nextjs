@@ -106,9 +106,17 @@ export default function CultureAdmin() {
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority={true}
+                      lazy={false}
+                      onError={() => {
+                        console.error(`❌ 圖片載入失敗 - ${item.title}:`, item.imageUrl?.substring(0, 100) + '...');
+                      }}
+                      onLoad={() => {
+                        console.log(`✅ 圖片載入成功 - ${item.title}`);
+                      }}
                     />
-                    {/* 圖片上的文字覆蓋層 */}
-                    <div className="absolute inset-0 bg-black bg-opacity-30 p-4 flex flex-col justify-between">
+                    {/* 圖片上的文字覆蓋層 - 調整透明度讓圖片更清楚 */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40 p-4 flex flex-col justify-between pointer-events-none">
                       <div>
                         <div className="text-white text-xs opacity-90 mb-1">{item.subtitle}</div>
                         <h3 className="text-white text-sm font-bold mb-2 drop-shadow-lg">{item.title}</h3>
@@ -127,6 +135,9 @@ export default function CultureAdmin() {
                       <p className={`${item.textColor} text-xs opacity-90 leading-relaxed line-clamp-3`}>
                         {item.description}
                       </p>
+                    </div>
+                    <div className={`${item.textColor} text-xs opacity-60`}>
+                      🎨 無圖片
                     </div>
                   </div>
                 )}
@@ -179,7 +190,7 @@ export default function CultureAdmin() {
         )}
 
         {/* 統計資訊 */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div>
@@ -193,9 +204,9 @@ export default function CultureAdmin() {
             <div className="flex items-center">
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {new Set(cultureItems.map(item => item.height)).size}
+                  {cultureItems.filter(item => item.imageUrl).length}
                 </div>
-                <div className="text-sm text-gray-500">不同高度</div>
+                <div className="text-sm text-gray-500">有圖片項目</div>
               </div>
             </div>
           </div>
@@ -204,9 +215,20 @@ export default function CultureAdmin() {
             <div className="flex items-center">
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {new Set(cultureItems.map(item => item.color)).size}
+                  {cultureItems.filter(item => item.imageUrl?.startsWith('data:image/')).length}
                 </div>
-                <div className="text-sm text-gray-500">色彩方案</div>
+                <div className="text-sm text-gray-500">Base64 圖片</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center">
+              <div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {cultureItems.filter(item => item.imageUrl && !item.imageUrl.startsWith('data:image/')).length}
+                </div>
+                <div className="text-sm text-gray-500">URL 圖片</div>
               </div>
             </div>
           </div>

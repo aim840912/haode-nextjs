@@ -1,9 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { handleImageError, buildResponsiveImageSrcSet } from '@/lib/image-utils';
+import { useImageBlob } from '@/hooks/useImageBlob';
 
 interface OptimizedImageProps {
   src: string;
@@ -46,12 +47,43 @@ export default function OptimizedImage({
   enableResponsive = false,
   threshold = 0.1
 }: OptimizedImageProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
   const [isInView, setIsInView] = useState(priority || !lazy);
   const [shouldLoad, setShouldLoad] = useState(priority || !lazy);
   const imgRef = useRef<HTMLDivElement>(null);
+
+  // 使用 useCallback 穩定回調函數引用
+  const handleLoadCallback = useCallback(() => {
+    console.log(`✅ 圖片載入成功: ${src?.substring(0, 50)}...`);
+    onLoad?.();
+  }, [src, onLoad]);
+
+  const handleErrorCallback = useCallback((errorMsg: string) => {
+    console.error(`❌ 圖片載入失敗: ${errorMsg}`);
+    onError?.();
+  }, [onError]);
+
+  // 使用新的圖片 Blob Hook
+  const { 
+    processedSrc, 
+    isLoading, 
+    error, 
+    isBase64,
+    blobUrl 
+  } = useImageBlob(src, {
+    fallbackSrc,
+    onLoad: handleLoadCallback,
+    onError: handleErrorCallback
+  });
+
+  console.log(`🖼️ OptimizedImage 狀態:`, {
+    src: src?.substring(0, 100) + '...',
+    processedSrc: processedSrc?.substring(0, 100) + '...',
+    isBase64,
+    isLoading,
+    error,
+    blobUrl: blobUrl?.substring(0, 50) + '...',
+    shouldLoad
+  });
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -76,37 +108,13 @@ export default function OptimizedImage({
     return () => observer.disconnect();
   }, [priority, lazy, shouldLoad, threshold]);
 
-  // 更新 src 時重置狀態
-  useEffect(() => {
-    if (src !== currentSrc) {
-      console.log(`🖼️ 圖片 src 更新: ${currentSrc} -> ${src}`);
-      setCurrentSrc(src);
-      setHasError(false);
-      setIsLoading(true);
-    }
-  }, [src, currentSrc]);
-
   const handleLoad = () => {
-    setIsLoading(false);
-    onLoad?.();
+    console.log(`✅ Next.js Image 載入成功`);
   };
 
   const handleError = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    console.warn(`🖼️ 圖片載入失敗: ${currentSrc}`);
-    setIsLoading(false);
-    setHasError(true);
-    
-    if (currentSrc !== fallbackSrc) {
-      console.log(`🔄 切換到 fallback 圖片: ${fallbackSrc}`);
-      setCurrentSrc(fallbackSrc);
-      setHasError(false);
-    } else {
-      console.error(`❌ Fallback 圖片也載入失敗: ${fallbackSrc}`);
-    }
-    
-    // 使用工具函數處理錯誤
+    console.warn(`❌ Next.js Image 載入失敗`);
     handleImageError(event, fallbackSrc);
-    onError?.();
   };
 
   // 基本的模糊預設圖片 base64
@@ -114,10 +122,20 @@ export default function OptimizedImage({
     'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==';
 
   // 響應式圖片處理
-  const finalSrc = shouldLoad ? currentSrc : '';
+  const finalSrc = shouldLoad && processedSrc ? processedSrc : '';
   const finalSizes = enableResponsive && productId ? 
     '(max-width: 200px) 200px, (max-width: 600px) 600px, 1200px' : 
     sizes;
+
+  // 判斷圖片類型：base64、Blob URL 或普通 URL
+  const isBase64OrBlob = finalSrc && (finalSrc.startsWith('data:') || finalSrc.startsWith('blob:'));
+  
+  console.log(`🖼️ 圖片類型分析:`, {
+    src: finalSrc?.substring(0, 50) + '...',
+    isBase64OrBlob,
+    isBase64,
+    blobUrl: blobUrl?.substring(0, 50) + '...'
+  });
 
   const containerClassName = fill 
     ? `relative overflow-hidden ${className}` 
@@ -127,15 +145,87 @@ export default function OptimizedImage({
     return (
       <div ref={imgRef} className={containerClassName}>
         {(!shouldLoad || isLoading) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+          <div className="absolute inset-0 flex items-center justify-center">
             {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
           </div>
         )}
-        {shouldLoad && (
+        {shouldLoad && finalSrc && (
+          isBase64OrBlob ? (
+            // 對於 base64 和 Blob URL，使用原生 img 標籤
+            <img
+              src={finalSrc}
+              alt={alt}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                isLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              onLoad={handleLoad}
+              onError={handleError}
+              style={{ objectFit: 'cover' }}
+            />
+          ) : (
+            // 對於普通 URL，使用 Next.js Image 組件進行優化
+            <Image
+              src={finalSrc}
+              alt={alt}
+              fill
+              sizes={finalSizes}
+              priority={priority}
+              quality={quality}
+              placeholder={placeholder}
+              blurDataURL={blurDataURL || defaultBlurDataURL}
+              className={`transition-opacity duration-300 ${
+                isLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              onLoad={handleLoad}
+              onError={handleError}
+            />
+          )
+        )}
+        {error && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-xs p-2 text-center">
+            <div className="text-2xl mb-2">❌</div>
+            <div className="font-semibold">圖片載入失敗</div>
+            <div className="mt-1 opacity-80 text-xs">{error}</div>
+            {isBase64 && (
+              <div className="mt-1 text-xs text-blue-600">
+                📷 Base64 → Blob 轉換
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={imgRef} className={containerClassName}>
+      {(!shouldLoad || isLoading) && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
+        </div>
+      )}
+      {shouldLoad && finalSrc && (
+        isBase64OrBlob ? (
+          // 對於 base64 和 Blob URL，使用原生 img 標籤
+          <img
+            src={finalSrc}
+            alt={alt}
+            width={width || 400}
+            height={height || 300}
+            className={`transition-opacity duration-300 ${
+              isLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+            onLoad={handleLoad}
+            onError={handleError}
+            style={{ objectFit: 'cover' }}
+          />
+        ) : (
+          // 對於普通 URL，使用 Next.js Image 組件進行優化
           <Image
             src={finalSrc}
             alt={alt}
-            fill
+            width={width || 400}
+            height={height || 300}
             sizes={finalSizes}
             priority={priority}
             quality={quality}
@@ -147,44 +237,18 @@ export default function OptimizedImage({
             onLoad={handleLoad}
             onError={handleError}
           />
-        )}
-        {hasError && currentSrc === fallbackSrc && (
-          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
-            圖片載入失敗
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div ref={imgRef} className={containerClassName}>
-      {(!shouldLoad || isLoading) && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-          {shouldLoad ? <LoadingSpinner size="sm" /> : <div className="text-gray-400 text-sm">載入中...</div>}
-        </div>
+        )
       )}
-      {shouldLoad && (
-        <Image
-          src={finalSrc}
-          alt={alt}
-          width={width || 400}
-          height={height || 300}
-          sizes={finalSizes}
-          priority={priority}
-          quality={quality}
-          placeholder={placeholder}
-          blurDataURL={blurDataURL || defaultBlurDataURL}
-          className={`transition-opacity duration-300 ${
-            isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
-          onLoad={handleLoad}
-          onError={handleError}
-        />
-      )}
-      {hasError && currentSrc === fallbackSrc && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500 text-sm">
-          圖片載入失敗
+      {error && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-xs p-2 text-center">
+          <div className="text-2xl mb-2">❌</div>
+          <div className="font-semibold">圖片載入失敗</div>
+          <div className="mt-1 opacity-80 text-xs">{error}</div>
+          {isBase64 && (
+            <div className="mt-1 text-xs text-blue-600">
+              📷 Base64 → Blob 轉換
+            </div>
+          )}
         </div>
       )}
     </div>

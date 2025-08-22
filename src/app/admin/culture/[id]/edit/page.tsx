@@ -20,14 +20,29 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     color: 'bg-gradient-to-br from-amber-400 to-amber-600',
     height: 'h-64',
     textColor: 'text-white',
-    imageUrl: ''
+    imageUrl: '',
+    image: ''  // 新增上傳檔案的 base64 資料
   })
+  
+  // 新增檔案上傳相關狀態
+  const [_imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string>('')
+  const [hasLocalPath, setHasLocalPath] = useState(false)
 
   const fetchCultureItem = useCallback(async (id: string) => {
     try {
       const response = await fetch(`/api/culture/${id}`)
       if (response.ok) {
         const cultureItem: CultureItem = await response.json()
+        // 檢查是否為本地檔案路徑
+        const isLocalPath = !!(cultureItem.imageUrl && 
+          (cultureItem.imageUrl.startsWith('/') || 
+           cultureItem.imageUrl.startsWith('C:') || 
+           cultureItem.imageUrl.startsWith('/mnt/') ||
+           cultureItem.imageUrl.includes(':\\')))
+        
+        setHasLocalPath(isLocalPath)
+        
         setFormData({
           title: cultureItem.title,
           subtitle: cultureItem.subtitle,
@@ -35,8 +50,14 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
           color: cultureItem.color,
           height: cultureItem.height,
           textColor: cultureItem.textColor,
-          imageUrl: cultureItem.imageUrl || ''
+          imageUrl: isLocalPath ? '' : (cultureItem.imageUrl || ''),
+          image: ''
         })
+        
+        // 如果是本地路徑，顯示在預覽中但清空 URL 欄位
+        if (isLocalPath && cultureItem.imageUrl) {
+          setImagePreview(cultureItem.imageUrl)
+        }
       } else {
         alert('找不到該文化典藏項目')
         router.push('/admin/culture')
@@ -136,10 +157,22 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     setLoading(true)
 
     try {
+      // 準備要提交的資料，優先使用上傳的圖片
+      const submitData = {
+        ...formData,
+        imageUrl: formData.image || formData.imageUrl // 上傳的圖片優先於 URL
+      }
+      
+      console.log('📤 提交的編輯資料:', {
+        ...submitData,
+        imageUrl: submitData.imageUrl?.substring(0, 100) + (submitData.imageUrl?.length > 100 ? '...' : ''),
+        hasLocalPath
+      })
+      
       const response = await fetch(`/api/culture/${cultureId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       })
 
       if (response.ok) {
@@ -158,6 +191,30 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  // 新增圖片上傳處理函數
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImageFile(file)
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const result = e.target?.result as string
+        setImagePreview(result)
+        setFormData(prev => ({ ...prev, image: result }))
+        setHasLocalPath(false) // 清除本地路徑警告
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // 清除圖片函數
+  const clearImage = () => {
+    setImagePreview('')
+    setImageFile(null)
+    setFormData(prev => ({ ...prev, image: '', imageUrl: '' }))
+    setHasLocalPath(false)
   }
 
   return (
@@ -244,6 +301,25 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
               />
             </div>
 
+            {/* 本地路徑警告 */}
+            {hasLocalPath && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+                <div className="flex">
+                  <div className="ml-3">
+                    <p className="text-sm text-yellow-700">
+                      <strong className="font-medium">⚠️ 偵測到本地檔案路徑</strong>
+                    </p>
+                    <p className="mt-1 text-sm text-yellow-600">
+                      目前的圖片使用本地檔案路徑，無法在網頁中正常顯示。請使用下方的圖片上傳功能或輸入有效的網址。
+                    </p>
+                    <p className="mt-1 text-xs text-yellow-500 font-mono bg-yellow-100 px-2 py-1 rounded">
+                      原路徑: {imagePreview}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* 圖片 URL */}
             <div>
               <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-900 mb-2">
@@ -254,11 +330,19 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                 id="imageUrl"
                 name="imageUrl"
                 value={formData.imageUrl}
-                onChange={handleInputChange}
+                onChange={(e) => {
+                  handleInputChange(e)
+                  // 如果輸入了新的 URL，清除上傳的圖片
+                  if (e.target.value && imagePreview && !hasLocalPath) {
+                    setImagePreview('')
+                    setImageFile(null)
+                    setFormData(prev => ({ ...prev, image: '' }))
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
-                placeholder="https://example.com/image.jpg (選填，留空則使用色塊背景)"
+                placeholder="https://example.com/image.jpg (選填)"
               />
-              {formData.imageUrl && (
+              {formData.imageUrl && !hasLocalPath && (
                 <div className="mt-2">
                   <img 
                     src={formData.imageUrl} 
@@ -270,6 +354,77 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                   />
                 </div>
               )}
+            </div>
+
+            {/* 圖片上傳 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                或上傳圖片檔案
+              </label>
+              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-orange-400 transition-colors">
+                <div className="space-y-1 text-center">
+                  {imagePreview && !hasLocalPath ? (
+                    <div className="mb-4">
+                      <img 
+                        src={imagePreview} 
+                        alt="預覽圖片" 
+                        className="mx-auto h-32 w-32 object-cover rounded-lg"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                      >
+                        移除圖片
+                      </button>
+                    </div>
+                  ) : hasLocalPath ? (
+                    <div className="mb-4">
+                      <div className="text-center text-gray-500 py-8">
+                        <div className="text-4xl mb-2">⚠️</div>
+                        <p className="text-sm font-medium">本地檔案無法顯示</p>
+                        <p className="text-xs mt-1">請重新上傳圖片</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                      >
+                        清除並重新上傳
+                      </button>
+                    </div>
+                  ) : (
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      stroke="currentColor"
+                      fill="none"
+                      viewBox="0 0 48 48"
+                    >
+                      <path
+                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                  <div className="flex text-sm text-gray-600">
+                    <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500">
+                      <span>{imagePreview || hasLocalPath ? '重新上傳' : '上傳圖片'}</span>
+                      <input 
+                        id="image-upload" 
+                        name="image-upload" 
+                        type="file" 
+                        className="sr-only" 
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                    <p className="pl-1">或拖拽檔案到此處</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>
+                </div>
+              </div>
             </div>
 
             {/* 背景色選擇 */}
@@ -342,14 +497,38 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-white rounded-lg shadow-md p-4">
               <div className={`relative ${formData.height} rounded-lg overflow-hidden`}>
-                {formData.imageUrl ? (
+                {(formData.imageUrl || imagePreview) ? (
                   // 顯示圖片背景
                   <div className="relative w-full h-full">
-                    <img 
-                      src={formData.imageUrl} 
-                      alt="背景圖片" 
-                      className="w-full h-full object-cover rounded-lg"
-                    />
+                    {hasLocalPath ? (
+                      // 當是本地路徑時，顯示預設的無圖片狀態
+                      <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
+                        <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
+                          <div>
+                            <div className="text-sm opacity-80 mb-2">
+                              {formData.subtitle || '副標題預覽'}
+                            </div>
+                            <h3 className="text-xl font-bold mb-3">
+                              {formData.title || '標題預覽'}
+                            </h3>
+                            <p className="text-sm opacity-90 leading-relaxed">
+                              {formData.description || '描述內容預覽...'}
+                            </p>
+                          </div>
+                          <div className="mt-4">
+                            <div className="inline-flex items-center text-sm opacity-80">
+                              📷 請重新上傳圖片
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <img 
+                        src={imagePreview || formData.imageUrl} 
+                        alt="背景圖片" 
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    )}
                     <div className="absolute inset-0 bg-black bg-opacity-30 p-6 flex flex-col justify-between">
                       <div>
                         <div className="text-white text-sm opacity-90 mb-2">
