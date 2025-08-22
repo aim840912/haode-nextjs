@@ -1,131 +1,71 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { CultureItem } from '@/types/culture'
 
-// Culture images available in the directory
-const cultureImages = [
-  '/images/culture/fruit.jpg',
-  '/images/culture/icon.jpg', 
-  '/images/culture/intro.jpg',
-  '/images/culture/many_people_1.jpg',
-  '/images/culture/many_people_2.jpg',
-  '/images/culture/mountain.jpg',
-  '/images/culture/red_plum_1.jpg',
-  '/images/culture/red_plum_2.jpg',
-  '/images/culture/red_plum_dry.jpg',
-  '/images/culture/red_plum_smile.jpg',
-  '/images/culture/scene1.jpg',
-  '/images/culture/scene2.jpg',
-  '/images/culture/special_day.jpg',
-  '/images/culture/tea.jpg',
-  '/images/culture/tea_bag_1.jpg',
-  '/images/culture/tea_bag_2.jpg'
-]
-
-// Function to get random image
-const getRandomImage = () => {
-  return cultureImages[Math.floor(Math.random() * cultureImages.length)]
-}
-
-// 農業文化內容資料 - 瀑布流佈局
-const baseCultureItems = [
-  {
-    id: 1,
-    title: '創業初期歷史',
-    subtitle: '1862年創立',
-    description: '豪德茶業在清朝同治年間創立，以傳統手工製茶起家，見證台灣農業發展的起點。',
-    height: 'h-64'
-  },
-  {
-    id: 2,
-    title: '手工採茶工藝',
-    subtitle: '傳統技術',
-    description: '堅持手工採摘嫩芽，確保每片茶葉的品質。',
-    height: 'h-48'
-  },
-  {
-    id: 3,
-    title: '節氣農作智慧',
-    subtitle: '順應自然',
-    description: '依循二十四節氣進行農事活動，與大自然和諧共處，這是祖先留下的珍貴智慧。',
-    height: 'h-72'
-  },
-  {
-    id: 4,
-    title: '古法炒製',
-    subtitle: '百年工藝',
-    description: '傳承古老炒茶技術，每一步都是藝術。',
-    height: 'h-56'
-  },
-  {
-    id: 5,
-    title: '農村生活記憶',
-    subtitle: '純樸歲月',
-    description: '體驗純樸的農村日常生活，感受慢節奏的美好時光。',
-    height: 'h-60'
-  },
-  {
-    id: 6,
-    title: '傳統農具',
-    subtitle: '工具文化',
-    description: '從犁田到收穫，每一件農具都承載著農民的智慧與汗水。',
-    height: 'h-68'
-  },
-  {
-    id: 7,
-    title: '豐收慶典',
-    subtitle: '感恩大地',
-    description: '感謝土地恩賜的傳統慶祝活動。',
-    height: 'h-52'
-  },
-  {
-    id: 8,
-    title: '技藝傳承',
-    subtitle: '師徒相承',
-    description: '師傅帶徒弟，口耳相傳的技術傳承，確保百年工藝不失傳。',
-    height: 'h-64'
-  },
-  {
-    id: 9,
-    title: '日治時期發展',
-    subtitle: '技術革新',
-    description: '引進新式製茶技術，品質獲得日本市場認可，奠定現代化基礎。',
-    height: 'h-76'
-  },
-  {
-    id: 10,
-    title: '文化教育推廣',
-    subtitle: '傳承使命',
-    description: '透過教育活動推廣農業文化。',
-    height: 'h-48'
-  },
-  {
-    id: 11,
-    title: '現代化轉型',
-    subtitle: '科技結合',
-    description: '傳統文化與現代科技的完美結合，開創農業新篇章。',
-    height: 'h-72'
-  },
-  {
-    id: 12,
-    title: '永續發展',
-    subtitle: '綠色未來',
-    description: '為未來世代保留珍貴的農業文化資產，建設永續綠色農業。',
-    height: 'h-68'
-  }
-]
-
-// Generate items with random images - do this outside the component
-const cultureItems = baseCultureItems.map((item, index) => ({
-  ...item,
-  image: cultureImages[index % cultureImages.length] // Use modulo to cycle through images
-}))
-
 export default function CulturePage() {
-  const [selectedItem, setSelectedItem] = useState<typeof cultureItems[0] | null>(null)
+  const [cultureItems, setCultureItems] = useState<CultureItem[]>([])
+  const [selectedItem, setSelectedItem] = useState<CultureItem | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
+
+  // 載入文化典藏資料
+  useEffect(() => {
+    const fetchCultureItems = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        const response = await fetch('/api/culture')
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        
+        const data = await response.json()
+        setCultureItems(data)
+      } catch (error) {
+        console.error('Error fetching culture items:', error)
+        setError('無法載入文化典藏資料，請稍後再試。')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCultureItems()
+  }, [])
+
+  // 載入狀態
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-4xl mb-4">⏳</div>
+          <p className="text-gray-600">載入中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // 錯誤狀態
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-6">
+          <div className="text-6xl mb-8">❌</div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">載入失敗</h1>
+          <p className="text-gray-600 mb-8">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+          >
+            重新載入
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -159,18 +99,44 @@ export default function CulturePage() {
 
       {/* Culture Grid */}
       <div className="max-w-7xl mx-auto px-6 pt-4 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {cultureItems.length === 0 ? (
+          // 空狀態
+          <div className="text-center py-20">
+            <div className="text-6xl mb-8">📷</div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">尚無文化典藏內容</h2>
+            <p className="text-gray-600 mb-8">目前還沒有任何文化典藏項目，請稍後再來查看。</p>
+            {user && user.role === 'admin' && (
+              <a 
+                href="/admin/culture/add"
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                新增第一個項目
+              </a>
+            )}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {cultureItems.map((item) => (
               <div
                 key={item.id}
                 className="h-80 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl rounded-lg overflow-hidden relative"
                 onClick={() => setSelectedItem(item)}
               >
-                <img 
-                  src={item.image} 
-                  alt={item.title}
-                  className="absolute inset-0 w-full h-full object-cover z-0"
-                />
+                {item.imageUrl ? (
+                  <img 
+                    src={item.imageUrl} 
+                    alt={item.title}
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                    onError={(e) => {
+                      // 圖片載入失敗時的處理
+                      (e.target as HTMLImageElement).style.display = 'none'
+                    }}
+                  />
+                ) : (
+                  // 沒有圖片時的預設背景
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 z-0"></div>
+                )}
+                
                 <div className="h-full flex flex-col justify-between relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                   <div className="relative z-10 p-6 text-white">
@@ -188,7 +154,8 @@ export default function CulturePage() {
                 </div>
               </div>
             ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Modal */}
@@ -218,11 +185,18 @@ export default function CulturePage() {
 
               {/* Large Image */}
               <div className="aspect-video rounded-xl mb-6 relative overflow-hidden">
-                <img 
-                  src={selectedItem.image} 
-                  alt={selectedItem.title}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
+                {selectedItem.imageUrl ? (
+                  <img 
+                    src={selectedItem.imageUrl} 
+                    alt={selectedItem.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                    }}
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600"></div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                 <div className="relative z-10 text-white text-center h-full flex items-center justify-center">
                   <div>
@@ -237,13 +211,12 @@ export default function CulturePage() {
                   {selectedItem.description}
                 </p>
 
-                {/* Extended content based on item */}
+                {/* Extended content */}
                 <div className="bg-amber-50 rounded-lg p-6 border-l-4 border-amber-400">
-                  <h4 className="font-semibold text-amber-900 mb-3">文化深度解析</h4>
+                  <h4 className="font-semibold text-amber-900 mb-3">文化典藏</h4>
                   <p className="text-amber-800 text-sm leading-relaxed">
-                    {selectedItem.id <= 4 && '歷史的足跡見證了豪德茶業從創立到現代化的完整發展歷程，每個階段都有其獨特的文化價值與時代意義。'}
-                    {selectedItem.id > 4 && selectedItem.id <= 8 && '傳統工藝的傳承不僅是技術的延續，更是文化精神的體現，每一個細節都蘊含著深厚的農業智慧。'}
-                    {selectedItem.id > 8 && '現代農業的發展需要在保持傳統文化底蘊的同時，融入科技創新，這是永續發展的關鍵所在。'}
+                    這項文化典藏記錄了農業發展的珍貴時光，每一個細節都承載著歷史的記憶與傳承的價值。
+                    透過這些影像，我們可以感受到時代的變遷與文化的延續。
                   </p>
                 </div>
               </div>

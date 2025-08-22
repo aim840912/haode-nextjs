@@ -14,10 +14,9 @@ export default function AddCulture() {
     title: '',
     subtitle: '',
     description: '',
-    color: 'bg-gradient-to-br from-amber-400 to-amber-600',
     height: 'h-64',
-    textColor: 'text-white',
-    imageUrl: ''  // 改名為 imageUrl
+    imageUrl: '',  // URL 圖片
+    image: ''      // 上傳的圖片檔案 (base64)
   })
   const [_imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
@@ -61,20 +60,6 @@ export default function AddCulture() {
     )
   }
 
-  const colorOptions = [
-    { name: '琥珀色', value: 'bg-gradient-to-br from-amber-400 to-amber-600', preview: 'from-amber-400 to-amber-600' },
-    { name: '綠色', value: 'bg-gradient-to-br from-green-400 to-green-600', preview: 'from-green-400 to-green-600' },
-    { name: '青色', value: 'bg-gradient-to-br from-teal-400 to-teal-600', preview: 'from-teal-400 to-teal-600' },
-    { name: '橙色', value: 'bg-gradient-to-br from-orange-400 to-orange-600', preview: 'from-orange-400 to-orange-600' },
-    { name: '玫瑰色', value: 'bg-gradient-to-br from-rose-400 to-rose-600', preview: 'from-rose-400 to-rose-600' },
-    { name: '棕色', value: 'bg-gradient-to-br from-brown-400 to-brown-600', preview: 'from-brown-400 to-brown-600' },
-    { name: '黃橙色', value: 'bg-gradient-to-br from-yellow-500 to-orange-500', preview: 'from-yellow-500 to-orange-500' },
-    { name: '靛青色', value: 'bg-gradient-to-br from-indigo-400 to-indigo-600', preview: 'from-indigo-400 to-indigo-600' },
-    { name: '紫色', value: 'bg-gradient-to-br from-purple-400 to-purple-600', preview: 'from-purple-400 to-purple-600' },
-    { name: '青藍色', value: 'bg-gradient-to-br from-cyan-400 to-cyan-600', preview: 'from-cyan-400 to-cyan-600' },
-    { name: '藍色', value: 'bg-gradient-to-br from-blue-400 to-blue-600', preview: 'from-blue-400 to-blue-600' },
-    { name: '翠綠色', value: 'bg-gradient-to-br from-emerald-400 to-emerald-600', preview: 'from-emerald-400 to-emerald-600' }
-  ]
 
   const heightOptions = [
     { name: '小型 (h-48)', value: 'h-48' },
@@ -107,6 +92,9 @@ export default function AddCulture() {
     setLoading(true)
 
     try {
+      console.log('📤 提交的資料:', formData)
+      console.log('📷 是否有圖片:', !!formData.image || !!formData.imageUrl)
+      
       const response = await fetch('/api/culture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -306,58 +294,7 @@ export default function AddCulture() {
               </select>
             </div>
 
-            {/* 文字顏色 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                文字顏色
-              </label>
-              <div className="flex space-x-4">
-                <label className="flex items-center text-gray-900">
-                  <input
-                    type="radio"
-                    name="textColor"
-                    value="text-white"
-                    checked={formData.textColor === 'text-white'}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  白色文字
-                </label>
-                <label className="flex items-center text-gray-900">
-                  <input
-                    type="radio"
-                    name="textColor"
-                    value="text-gray-800"
-                    checked={formData.textColor === 'text-gray-800'}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  深色文字
-                </label>
-              </div>
-            </div>
 
-            {/* 色彩選擇 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-3">
-                背景色彩
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {colorOptions.map(color => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      formData.color === color.value ? 'border-orange-500 shadow-lg' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className={`w-full h-12 rounded bg-gradient-to-br ${color.preview} mb-2`}></div>
-                    <div className="text-xs text-gray-900">{color.name}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* 提交按鈕 */}
             <div className="flex justify-end space-x-4 pt-6">
@@ -382,15 +319,15 @@ export default function AddCulture() {
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-white rounded-lg shadow-md p-4">
               <div className={`relative ${formData.height} rounded-lg overflow-hidden`}>
-                {formData.imageUrl ? (
+                {(formData.imageUrl || imagePreview) ? (
                   // 顯示圖片背景
                   <div className="relative w-full h-full">
                     <img 
-                      src={formData.imageUrl} 
+                      src={imagePreview || formData.imageUrl} 
                       alt="背景圖片" 
                       className="w-full h-full object-cover rounded-lg"
                     />
-                    <div className="absolute inset-0 bg-black bg-opacity-30 p-6 flex flex-col justify-between">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent p-6 flex flex-col justify-end">
                       <div>
                         <div className="text-white text-sm opacity-90 mb-2">
                           {formData.subtitle || '副標題預覽'}
@@ -405,25 +342,14 @@ export default function AddCulture() {
                     </div>
                   </div>
                 ) : (
-                  // 顯示色塊背景
-                  <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
-                    <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
-                      <div>
-                        <div className="text-sm opacity-80 mb-2">
-                          {formData.subtitle || '副標題預覽'}
-                        </div>
-                        <h3 className="text-xl font-bold mb-3">
-                          {formData.title || '標題預覽'}
-                        </h3>
-                        <p className="text-sm opacity-90 leading-relaxed">
-                          {formData.description || '描述內容預覽...'}
-                        </p>
-                      </div>
-                      <div className="mt-4">
-                        <div className="inline-flex items-center text-sm opacity-80">
-                          <span className="mr-2">📖</span>
-                          了解更多
-                        </div>
+                  // 顯示預設預覽
+                  <div className="bg-gray-100 h-full p-6 rounded-lg relative flex items-center justify-center">
+                    <div className="text-center text-gray-500">
+                      <div className="text-4xl mb-4">🖼️</div>
+                      <p className="text-sm">請添加圖片以查看預覽</p>
+                      <div className="mt-4 text-xs text-gray-400">
+                        <p>標題: {formData.title || '未設定'}</p>
+                        <p>副標題: {formData.subtitle || '未設定'}</p>
                       </div>
                     </div>
                   </div>

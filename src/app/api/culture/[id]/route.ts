@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cultureService } from '@/services/cultureService'
+import { getCultureService } from '@/services/serviceFactory'
 
 export async function GET(
   request: NextRequest,
@@ -7,6 +7,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+    const cultureService = await getCultureService()
     const cultureItem = await cultureService.getCultureItemById(id)
     if (!cultureItem) {
       return NextResponse.json(
@@ -31,6 +32,7 @@ export async function PUT(
   try {
     const { id } = await params
     const body = await request.json()
+    const cultureService = await getCultureService()
     const cultureItem = await cultureService.updateCultureItem(id, body)
     return NextResponse.json(cultureItem)
   } catch (error) {
@@ -48,6 +50,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    const cultureService = await getCultureService()
     await cultureService.deleteCultureItem(id)
     return NextResponse.json({ success: true })
   } catch (error) {

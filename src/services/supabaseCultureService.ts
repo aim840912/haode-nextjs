@@ -10,14 +10,17 @@ export class SupabaseCultureService implements CultureService {
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error('Error fetching culture items:', error)
-        throw new Error('Failed to fetch culture items')
+        console.error('Supabase error fetching culture items:', error)
+        throw new Error(`資料庫查詢失敗: ${error.message}`)
       }
       
-      return data?.map(this.transformFromDB) || []
+      const result = data?.map(item => this.transformFromDB(item)) || []
+      console.log(`✅ 成功載入 ${result.length} 個文化典藏項目`)
+      return result
     } catch (error) {
       console.error('Error in getCultureItems:', error)
-      return []
+      // 拋出錯誤而不是返回空陣列，這樣前端可以顯示錯誤訊息
+      throw error
     }
   }
 
@@ -42,6 +45,22 @@ export class SupabaseCultureService implements CultureService {
   }
 
   async addCultureItem(itemData: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<CultureItem> {
+    console.log('📥 收到的資料:', itemData)
+    
+    // 處理圖片資料：優先使用 imageUrl，如果沒有則使用其他圖片資料
+    const images = []
+    if (itemData.imageUrl) {
+      console.log('🔗 發現 imageUrl:', itemData.imageUrl?.substring(0, 100) + '...')
+      images.push(itemData.imageUrl)
+    }
+    // 如果有其他 image 屬性（如上傳的 base64 圖片）
+    if ((itemData as any).image) {
+      console.log('📷 發現上傳圖片:', (itemData as any).image?.substring(0, 100) + '...')
+      images.push((itemData as any).image)
+    }
+    
+    console.log('💾 將儲存的圖片數量:', images.length)
+    
     const insertData = {
       title: itemData.title,
       description: itemData.description,
@@ -49,7 +68,7 @@ export class SupabaseCultureService implements CultureService {
       category: 'culture',
       year: new Date().getFullYear(),
       is_featured: true,
-      images: []
+      images: images
     }
 
     const { data, error } = await supabaseAdmin!
@@ -72,6 +91,19 @@ export class SupabaseCultureService implements CultureService {
     if (itemData.title !== undefined) dbUpdateData.title = itemData.title
     if (itemData.description !== undefined) dbUpdateData.description = itemData.description
     if (itemData.subtitle !== undefined) dbUpdateData.content = itemData.subtitle
+    
+    // 處理圖片更新
+    if (itemData.imageUrl !== undefined) {
+      const images = []
+      if (itemData.imageUrl) {
+        images.push(itemData.imageUrl)
+      }
+      // 如果有其他 image 屬性（如上傳的 base64 圖片）
+      if ((itemData as any).image) {
+        images.push((itemData as any).image)
+      }
+      dbUpdateData.images = images
+    }
 
     const { data, error } = await supabaseAdmin!
       .from('culture')
@@ -105,6 +137,30 @@ export class SupabaseCultureService implements CultureService {
     // 根據分類設定顏色和表情符號
     const categoryConfig = this.getCategoryConfig(dbItem.category)
     
+    // 處理圖片 URL，確保有效性
+    const imageUrl = dbItem.images?.[0];
+    let processedImageUrl = imageUrl;
+    
+    if (imageUrl) {
+      console.log('🖼️ 原始圖片資料:', imageUrl?.substring(0, 100) + '...');
+      
+      // 如果是 base64 圖片，確保格式正確
+      if (imageUrl.startsWith('data:image/')) {
+        processedImageUrl = imageUrl;
+        console.log('✅ 偵測到 base64 圖片格式');
+      } 
+      // 如果是 HTTP(S) URL，保持原樣
+      else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+        processedImageUrl = imageUrl;
+        console.log('✅ 偵測到 HTTP(S) 圖片 URL');
+      }
+      // 其他格式的處理
+      else {
+        console.warn('⚠️ 未知圖片格式:', imageUrl?.substring(0, 50) + '...');
+        processedImageUrl = imageUrl;
+      }
+    }
+    
     return {
       id: dbItem.id,
       title: dbItem.title,
@@ -114,7 +170,7 @@ export class SupabaseCultureService implements CultureService {
       height: categoryConfig.height,
       textColor: categoryConfig.textColor,
       emoji: categoryConfig.emoji,
-      imageUrl: dbItem.images?.[0] || undefined,
+      imageUrl: processedImageUrl,
       createdAt: dbItem.created_at,
       updatedAt: dbItem.updated_at
     }

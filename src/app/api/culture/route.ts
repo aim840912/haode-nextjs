@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { cultureService } from '@/services/cultureService'
+import { getCultureService } from '@/services/serviceFactory'
 
 export async function GET() {
   try {
+    const cultureService = await getCultureService()
     const cultureItems = await cultureService.getCultureItems()
     return NextResponse.json(cultureItems)
   } catch (error) {
@@ -16,6 +17,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const cultureService = await getCultureService()
     const body = await request.json()
     const cultureItem = await cultureService.addCultureItem(body)
     return NextResponse.json(cultureItem, { status: 201 })
