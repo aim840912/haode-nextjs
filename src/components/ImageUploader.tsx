@@ -89,7 +89,6 @@ export default function ImageUploader({
 
         // 生成本地預覽（立即顯示）
         const preview = await getImagePreviewUrl(processedFile);
-        console.log(`🖼️ 生成本地預覽: ${preview.substring(0, 50)}...`);
 
         // 先創建本地預覽圖片對象，讓用戶立即看到
         const tempImage: UploadedImage = {
@@ -113,7 +112,6 @@ export default function ImageUploader({
             const uploadedImages: UploadedImage[] = [];
             Object.entries(result.urls).forEach(([size, urlData]) => {
               const url = (urlData as any).url;
-              console.log(`📷 多尺寸上傳成功 ${size}:`, url);
               uploadedImages.push({
                 id: `${productId}-${size}-${Date.now()}-${i}`,
                 url: url,
@@ -132,7 +130,6 @@ export default function ImageUploader({
             newImages.push(...uploadedImages);
           } else {
             // 單一尺寸上傳結果
-            console.log(`📷 單一尺寸上傳成功:`, result.url);
             const uploadedImage: UploadedImage = {
               id: `${productId}-${result.size}-${Date.now()}-${i}`,
               url: result.url,
@@ -346,7 +343,7 @@ export default function ImageUploader({
                       console.warn('預覽圖片載入失敗:', image.preview, image.url);
                     }}
                     onLoad={() => {
-                      console.log('圖片載入成功:', image.preview || image.url);
+                      // Image loaded successfully
                     }}
                   />
                 </div>

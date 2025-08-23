@@ -28,16 +28,16 @@ function CartPage() {
 
   const handleInquirySubmit = async () => {
     if (!user) {
-      error('請先登入', '您需要登入才能送出詢價');
+      error('請先登入', '您需要登入才能詢問店家');
       return;
     }
     
     if (totalItems === 0) {
-      error('購物車空空的', '請先加入商品再送出詢價');
+      error('購物車空空的', '請先加入商品再詢問店家');
       return;
     }
 
-    // 準備詢價資料
+    // 準備詢問店家資料
     const inquiryData: CreateInquiryRequest = {
       customer_name: customerInfo.name || user.name,
       customer_email: customerInfo.email || user.email,
@@ -72,13 +72,13 @@ function CartPage() {
         return;
       }
 
-      console.log('🚀 發送詢價請求:', {
+      console.log('🚀 發送詢問店家請求:', {
         url: '/api/inquiries',
         data: inquiryData,
         hasToken: !!session.access_token
       });
 
-      // 呼叫詢價 API
+      // 呼叫詢問店家 API
       response = await fetch('/api/inquiries', {
         method: 'POST',
         headers: {
@@ -104,16 +104,16 @@ function CartPage() {
       console.log('📊 解析後的回應:', result);
 
       if (!response.ok) {
-        throw new Error(result.error || '送出詢價失敗');
+        throw new Error(result.error || '送出詢問失敗');
       }
 
       // 成功後清空購物車並導向詢價列表
       clearCart();
-      success('詢價單已送出', '我們會在24小時內回覆您詳細的報價和配送資訊');
-      router.push('/inquiries');
+      success('詢問已送出', '我們會在24小時內確認庫存狀況並聯絡您安排配送');
+      router.push('/inquiry');
 
     } catch (err) {
-      console.error('❌ 詢價提交錯誤:', err);
+      console.error('❌ 詢問店家提交錯誤:', err);
       console.error('📊 錯誤詳情:', {
         message: err instanceof Error ? err.message : 'Unknown error',
         stack: err instanceof Error ? err.stack : undefined,
@@ -123,7 +123,7 @@ function CartPage() {
       });
       
       // 提供更詳細的錯誤訊息
-      let errorMessage = '無法建立詢價單，請稍後再試';
+      let errorMessage = '無法送出詢問，請稍後再試';
       let errorDetail = '';
       
       if (err instanceof Error) {
@@ -161,12 +161,12 @@ function CartPage() {
 
   const handleShowInquiryForm = () => {
     if (!user) {
-      error('請先登入', '您需要登入才能送出詢價');
+      error('請先登入', '您需要登入才能詢問店家');
       return;
     }
     
     if (totalItems === 0) {
-      error('購物車空空的', '請先加入商品再送出詢價');
+      error('購物車空空的', '請先加入商品再詢問店家');
       return;
     }
 
@@ -261,10 +261,10 @@ function CartPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              {showInquiryForm ? '送出詢價' : '購物車'}
+              {showInquiryForm ? '詢問店家' : '購物車'}
             </h1>
             <p className="text-gray-600 mt-1">
-              {showInquiryForm ? '填寫聯絡資訊後送出詢價' : `${totalItems} 件商品`}
+              {showInquiryForm ? '填寫聯絡資訊後詢問店家' : `${totalItems} 件商品`}
             </p>
           </div>
           {!showInquiryForm && (
@@ -364,13 +364,13 @@ function CartPage() {
               <div className="bg-white rounded-lg shadow-sm">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-900">聯絡資訊</h2>
-                  <p className="text-gray-600 text-sm mt-1">請填寫您的聯絡資訊，我們會盡快回覆您的詢價</p>
+                  <p className="text-gray-600 text-sm mt-1">請填寫您的聯絡資訊，我們會盡快確認庫存並聯絡您</p>
                 </div>
                 <div className="p-6">
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        姓名 <span className="text-red-500">*</span>
+                        姓名 <span className="text-red-500">{'*'}</span>
                       </label>
                       <input
                         type="text"
@@ -383,7 +383,7 @@ function CartPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email <span className="text-red-500">*</span>
+                        Email <span className="text-red-500">{'*'}</span>
                       </label>
                       <input
                         type="email"
@@ -397,7 +397,7 @@ function CartPage() {
                   </div>
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      電話 <span className="text-red-500">*</span>
+                      電話 <span className="text-red-500">{'*'}</span>
                     </label>
                     <input
                       type="tel"
@@ -445,7 +445,7 @@ function CartPage() {
                       disabled={!customerInfo.name || !customerInfo.email || !customerInfo.phone}
                       className="flex-1 bg-amber-900 text-white py-3 px-6 rounded-lg hover:bg-amber-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      送出詢價
+                      詢問店家
                     </LoadingButton>
                   </div>
                 </div>
@@ -457,7 +457,7 @@ function CartPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-36">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
-                {showInquiryForm ? '詢價摘要' : '詢價預估'}
+                {showInquiryForm ? '詢問摘要' : '詢問資訊'}
               </h2>
               
               <div className="space-y-3 mb-6">
@@ -475,7 +475,7 @@ function CartPage() {
                   <span className="text-amber-900">NT$ {totalPrice.toLocaleString()}+</span>
                 </div>
                 <p className="text-xs text-gray-500">
-                  * 實際價格以詢價回覆為準
+                  {'*'} 實際金額以店家回覆為準
                 </p>
               </div>
 
@@ -486,7 +486,7 @@ function CartPage() {
                     onClick={handleShowInquiryForm}
                     className="w-full bg-amber-900 text-white py-3 rounded-lg font-semibold hover:bg-amber-800 transition-colors mb-4"
                   >
-                    送出詢價
+                    詢問店家
                   </LoadingButton>
 
                   <Link 
@@ -507,26 +507,26 @@ function CartPage() {
                       </svg>
                     </div>
                     <div className="text-sm">
-                      <p className="font-medium text-blue-900 mb-1">詢價說明</p>
+                      <p className="font-medium text-blue-900 mb-1">詢問說明</p>
                       <p className="text-blue-800">
-                        我們會在收到您的詢價後24小時內回覆詳細報價，包含運費計算和配送資訊。
+                        我們會在收到您的詢問後24小時內回覆，確認庫存狀況並提供配送資訊。
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* 詢價說明 */}
+              {/* 詢問說明 */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-900 mb-3">詢價說明</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">詢問說明</h3>
                 <ul className="text-sm text-gray-600 space-y-2">
                   <li className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
-                    24小時內回覆報價
+                    24小時內回覆確認
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>
-                    免費詢價服務
+                    免費詢問服務
                   </li>
                   <li className="flex items-center">
                     <span className="text-green-500 mr-2">✓</span>

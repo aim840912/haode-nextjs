@@ -59,7 +59,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
           setImagePreview(cultureItem.imageUrl)
         }
       } else {
-        alert('找不到該文化典藏項目')
+        alert('找不到該時光典藏項目')
         router.push('/admin/culture')
       }
     } catch (error) {
@@ -125,20 +125,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     )
   }
 
-  const colorOptions = [
-    { name: '琥珀色', value: 'bg-gradient-to-br from-amber-400 to-amber-600', preview: 'from-amber-400 to-amber-600' },
-    { name: '綠色', value: 'bg-gradient-to-br from-green-400 to-green-600', preview: 'from-green-400 to-green-600' },
-    { name: '青色', value: 'bg-gradient-to-br from-teal-400 to-teal-600', preview: 'from-teal-400 to-teal-600' },
-    { name: '橙色', value: 'bg-gradient-to-br from-orange-400 to-orange-600', preview: 'from-orange-400 to-orange-600' },
-    { name: '玫瑰色', value: 'bg-gradient-to-br from-rose-400 to-rose-600', preview: 'from-rose-400 to-rose-600' },
-    { name: '棕色', value: 'bg-gradient-to-br from-brown-400 to-brown-600', preview: 'from-brown-400 to-brown-600' },
-    { name: '黃橙色', value: 'bg-gradient-to-br from-yellow-500 to-orange-500', preview: 'from-yellow-500 to-orange-500' },
-    { name: '靛青色', value: 'bg-gradient-to-br from-indigo-400 to-indigo-600', preview: 'from-indigo-400 to-indigo-600' },
-    { name: '紫色', value: 'bg-gradient-to-br from-purple-400 to-purple-600', preview: 'from-purple-400 to-purple-600' },
-    { name: '青藍色', value: 'bg-gradient-to-br from-cyan-400 to-cyan-600', preview: 'from-cyan-400 to-cyan-600' },
-    { name: '藍色', value: 'bg-gradient-to-br from-blue-400 to-blue-600', preview: 'from-blue-400 to-blue-600' },
-    { name: '翠綠色', value: 'bg-gradient-to-br from-emerald-400 to-emerald-600', preview: 'from-emerald-400 to-emerald-600' }
-  ]
 
   const heightOptions = [
     { name: '中等', value: 'h-64' },
@@ -224,7 +210,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">編輯文化典藏</h1>
+              <h1 className="text-3xl font-bold text-gray-900">編輯時光典藏</h1>
               <p className="text-gray-600 mt-2">修改典藏內容的詳細資訊</p>
             </div>
             <div className="flex space-x-4">
@@ -297,7 +283,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                 required
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
-                placeholder="詳細描述文化典藏內容"
+                placeholder="詳細描述時光典藏內容"
               />
             </div>
 
@@ -427,29 +413,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
               </div>
             </div>
 
-            {/* 背景色選擇 */}
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-3">
-                背景色彩
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {colorOptions.map((color) => (
-                  <button
-                    key={color.value}
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, color: color.value }))}
-                    className={`p-3 rounded-lg border-2 transition-colors ${
-                      formData.color === color.value 
-                        ? 'border-orange-500 shadow-md' 
-                        : 'border-gray-200 hover:border-orange-300'
-                    }`}
-                  >
-                    <div className={`w-full h-12 rounded bg-gradient-to-br ${color.preview} mb-2`}></div>
-                    <div className="text-xs text-gray-700 text-center">{color.name}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* 高度選擇 */}
             <div>

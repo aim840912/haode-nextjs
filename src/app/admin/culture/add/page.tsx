@@ -134,7 +134,7 @@ export default function AddCulture() {
               ← 回到文化管理
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">新增文化典藏</h1>
+          <h1 className="text-3xl font-bold text-gray-900">新增時光典藏</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -182,7 +182,7 @@ export default function AddCulture() {
                 required
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
-                placeholder="詳細描述文化典藏內容"
+                placeholder="詳細描述時光典藏內容"
               />
             </div>
 

@@ -10,7 +10,6 @@ import AuthErrorBoundary from '@/components/AuthErrorBoundary';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
   const { success, error: showError } = useToast();
@@ -22,7 +21,7 @@ export default function LoginPage() {
     
     try {
       console.log('開始登入流程...', { email });
-      await login({ email, password, rememberMe });
+      await login({ email, password });
       console.log('登入成功');
       
       // 顯示成功提示
@@ -113,21 +112,8 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 text-sm text-gray-600">
-                  記住我
-                </label>
-              </div>
+            {/* Forgot Password */}
+            <div className="flex items-center justify-end">
               <Link href="/forgot-password" className="text-sm text-amber-600 hover:text-amber-800 transition-colors">
                 忘記密碼？
               </Link>

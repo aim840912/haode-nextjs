@@ -11,7 +11,7 @@ export default function CulturePage() {
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
 
-  // 載入文化典藏資料
+  // 載入時光典藏資料
   useEffect(() => {
     const fetchCultureItems = async () => {
       try {
@@ -27,7 +27,7 @@ export default function CulturePage() {
         setCultureItems(data)
       } catch (error) {
         console.error('Error fetching culture items:', error)
-        setError('無法載入文化典藏資料，請稍後再試。')
+        setError('無法載入時光典藏資料，請稍後再試。')
       } finally {
         setLoading(false)
       }
@@ -103,8 +103,8 @@ export default function CulturePage() {
           // 空狀態
           <div className="text-center py-20">
             <div className="text-6xl mb-8">📷</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">尚無文化典藏內容</h2>
-            <p className="text-gray-600 mb-8">目前還沒有任何文化典藏項目，請稍後再來查看。</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">尚無時光典藏內容</h2>
+            <p className="text-gray-600 mb-8">目前還沒有任何時光典藏項目，請稍後再來查看。</p>
             {user && user.role === 'admin' && (
               <a 
                 href="/admin/culture/add"
@@ -213,9 +213,9 @@ export default function CulturePage() {
 
                 {/* Extended content */}
                 <div className="bg-amber-50 rounded-lg p-6 border-l-4 border-amber-400">
-                  <h4 className="font-semibold text-amber-900 mb-3">文化典藏</h4>
+                  <h4 className="font-semibold text-amber-900 mb-3">時光典藏</h4>
                   <p className="text-amber-800 text-sm leading-relaxed">
-                    這項文化典藏記錄了農業發展的珍貴時光，每一個細節都承載著歷史的記憶與傳承的價值。
+                    這項時光典藏記錄了農業發展的珍貴時光，每一個細節都承載著歷史的記憶與傳承的價值。
                     透過這些影像，我們可以感受到時代的變遷與文化的延續。
                   </p>
                 </div>

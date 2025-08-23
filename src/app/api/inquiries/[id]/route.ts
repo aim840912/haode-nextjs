@@ -89,7 +89,6 @@ export async function GET(
     return createSuccessResponse(inquiry);
 
   } catch (error) {
-    console.error('Error in GET /api/inquiries/[id]:', error);
     return createErrorResponse(
       '取得詢價單失敗',
       500,
@@ -162,7 +161,6 @@ export async function PUT(
     return createSuccessResponse(updatedInquiry, '詢價單更新成功');
 
   } catch (error) {
-    console.error('Error in PUT /api/inquiries/[id]:', error);
     return createErrorResponse(
       '更新詢價單失敗',
       500,
@@ -203,7 +201,6 @@ export async function DELETE(
     return createSuccessResponse(null, '詢價單刪除成功');
 
   } catch (error) {
-    console.error('Error in DELETE /api/inquiries/[id]:', error);
     return createErrorResponse(
       '刪除詢價單失敗',
       500,
@@ -257,7 +254,6 @@ export async function PATCH(
     return createSuccessResponse(updatedInquiry, '詢價單狀態更新成功');
 
   } catch (error) {
-    console.error('Error in PATCH /api/inquiries/[id]:', error);
     return createErrorResponse(
       '更新詢價單狀態失敗',
       500,

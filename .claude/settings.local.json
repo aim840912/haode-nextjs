@@ -14,7 +14,8 @@
       "Bash(npm run lint)",
       "Bash(npm test:*)",
       "WebFetch(domain:vercel.com)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Read(//mnt/c/Users/aim84/Downloads/**)"
     ],
     "deny": []
   },

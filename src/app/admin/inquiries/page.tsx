@@ -230,8 +230,8 @@ function AdminInquiriesPage() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">詢價單管理</h1>
-            <p className="text-gray-600 mt-1">管理所有客戶詢價單和回覆狀態</p>
+            <h1 className="text-3xl font-bold text-gray-900">庫存查詢管理</h1>
+            <p className="text-gray-600 mt-1">管理所有客戶庫存查詢和回覆狀態</p>
           </div>
 
           {/* 狀態篩選 */}

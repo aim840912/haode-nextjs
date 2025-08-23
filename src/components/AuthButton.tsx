@@ -61,6 +61,12 @@ const HeartIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const InquiryIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+  </svg>
+);
+
 interface AuthButtonProps {
   isMobile?: boolean;
 }
@@ -243,6 +249,15 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             >
               <CartIcon className="w-4 h-4 mr-2" />
               購物車
+            </Link>
+            
+            <Link
+              href="/inquiry"
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+              onClick={() => setIsDropdownOpen(false)}
+            >
+              <InquiryIcon className="w-4 h-4 mr-2" />
+              庫存查詢記錄
             </Link>
             
             <Link

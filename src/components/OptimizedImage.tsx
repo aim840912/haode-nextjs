@@ -53,7 +53,6 @@ export default function OptimizedImage({
 
   // 使用 useCallback 穩定回調函數引用
   const handleLoadCallback = useCallback(() => {
-    console.log(`✅ 圖片載入成功: ${src?.substring(0, 50)}...`);
     onLoad?.();
   }, [src, onLoad]);
 
@@ -75,15 +74,6 @@ export default function OptimizedImage({
     onError: handleErrorCallback
   });
 
-  console.log(`🖼️ OptimizedImage 狀態:`, {
-    src: src?.substring(0, 100) + '...',
-    processedSrc: processedSrc?.substring(0, 100) + '...',
-    isBase64,
-    isLoading,
-    error,
-    blobUrl: blobUrl?.substring(0, 50) + '...',
-    shouldLoad
-  });
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -109,11 +99,10 @@ export default function OptimizedImage({
   }, [priority, lazy, shouldLoad, threshold]);
 
   const handleLoad = () => {
-    console.log(`✅ Next.js Image 載入成功`);
+    // Image loaded successfully
   };
 
   const handleError = (event: React.SyntheticEvent<HTMLImageElement>) => {
-    console.warn(`❌ Next.js Image 載入失敗`);
     handleImageError(event, fallbackSrc);
   };
 
@@ -130,12 +119,6 @@ export default function OptimizedImage({
   // 判斷圖片類型：base64、Blob URL 或普通 URL
   const isBase64OrBlob = finalSrc && (finalSrc.startsWith('data:') || finalSrc.startsWith('blob:'));
   
-  console.log(`🖼️ 圖片類型分析:`, {
-    src: finalSrc?.substring(0, 50) + '...',
-    isBase64OrBlob,
-    isBase64,
-    blobUrl: blobUrl?.substring(0, 50) + '...'
-  });
 
   const containerClassName = fill 
     ? `relative overflow-hidden ${className}` 

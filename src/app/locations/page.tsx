@@ -37,7 +37,7 @@ export default function LocationsPage() {
   };
 
   const openMap = (store: Location) => {
-    const googleMapsUrl = 'https://www.google.com/maps/@23.5218764,120.7052764,3a,75y,317.9h,97.58t/data=!3m7!1e1!3m5!1s2z-Z7OYRFmBQU5wEA-0GaQ!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fcb_client%3Dmaps_sv.tactile%26w%3D900%26h%3D600%26pitch%3D-7.581682239162674%26panoid%3D2z-Z7OYRFmBQU5wEA-0GaQ%26yaw%3D317.8988412646265!7i16384!8i8192?authuser=0&entry=ttu&g_ep=EgoyMDI1MDgxNy4wIKXMDSoASAFQAw%3D%3D';
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`;
     window.open(googleMapsUrl, '_blank');
   };
 
@@ -213,11 +213,17 @@ export default function LocationsPage() {
                 </button>
               </div>
               <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg overflow-hidden relative">
-                <img 
-                  src="/images/locations/home.png" 
-                  alt="門市位置地圖" 
-                  className="w-full h-full object-cover"
-                />
+                {selectedStore.image ? (
+                  <img 
+                    src={selectedStore.image} 
+                    alt={`${selectedStore.name}門市位置`} 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-gray-400 text-lg">暫無圖片</span>
+                  </div>
+                )}
               </div>
               <div className="text-center mt-4">
                 <p className="text-gray-600 text-sm">{selectedStore.landmark}</p>
@@ -241,32 +247,6 @@ export default function LocationsPage() {
               </div>
             </div>
 
-            {/* Store Stats */}
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-8">
-              <h3 className="text-xl font-bold text-amber-900 mb-6 text-center">門市資訊一覽</h3>
-              <div className="grid grid-cols-2 gap-6 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-amber-900">
-                    {parseInt(selectedStore.hours.split('-')[1].split(':')[0]) - parseInt(selectedStore.hours.split('-')[0].split(':')[0])}
-                  </div>
-                  <div className="text-sm text-gray-600">營業小時</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-amber-900">
-                    {selectedStore.closedDays === '無公休日' ? '7' : '6'}
-                  </div>
-                  <div className="text-sm text-gray-600">營業天數/週</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-amber-900">{selectedStore.specialties.length}</div>
-                  <div className="text-sm text-gray-600">主打商品</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-amber-900">{selectedStore.features.length}</div>
-                  <div className="text-sm text-gray-600">特色服務</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 

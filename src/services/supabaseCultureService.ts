@@ -15,7 +15,7 @@ export class SupabaseCultureService implements CultureService {
       }
       
       const result = data?.map(item => this.transformFromDB(item)) || []
-      console.log(`✅ 成功載入 ${result.length} 個文化典藏項目`)
+      console.log(`✅ 成功載入 ${result.length} 個時光典藏項目`)
       return result
     } catch (error) {
       console.error('Error in getCultureItems:', error)

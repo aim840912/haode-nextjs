@@ -1,6 +1,6 @@
 /**
- * 詢價系統類型定義
- * 定義詢價單和詢價項目的資料結構
+ * 庫存查詢/預訂系統類型定義
+ * 定義庫存查詢單和查詢項目的資料結構
  */
 
 export type InquiryStatus = 'pending' | 'quoted' | 'confirmed' | 'completed' | 'cancelled';
@@ -91,16 +91,16 @@ export interface InquiryQueryParams {
   sort_order?: 'asc' | 'desc';
 }
 
-// 詢價單狀態顯示文字
+// 庫存查詢單狀態顯示文字
 export const INQUIRY_STATUS_LABELS: Record<InquiryStatus, string> = {
-  pending: '待處理',
-  quoted: '已報價',
-  confirmed: '已確認',
+  pending: '待確認',
+  quoted: '有庫存',
+  confirmed: '已預訂',
   completed: '已完成',
   cancelled: '已取消'
 };
 
-// 詢價單狀態顏色
+// 庫存查詢單狀態顏色
 export const INQUIRY_STATUS_COLORS: Record<InquiryStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   quoted: 'bg-blue-100 text-blue-800',

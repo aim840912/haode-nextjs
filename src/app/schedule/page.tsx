@@ -20,28 +20,8 @@ interface ScheduleItem {
   updatedAt: string;
 }
 
-// 模擬固定門市資料
-const permanentStores = [
-  {
-    id: 1,
-    name: '總店',
-    address: '嘉義縣梅山鄉太和村一鄰八號',
-    phone: '05-2561843',
-    hours: '08:00 - 18:00',
-    services: ['農場直營', '產地導覽體驗', '農產品現場挑選', '禮盒包裝服務', '農場導覽預約', '企業團購訂製']
-  },
-  {
-    id: 2,
-    name: '嘉義店',
-    address: '嘉義市東區中山路218號',
-    phone: '05-2234567',
-    hours: '10:00 - 21:00',
-    services: ['市區便利據點', '完整產品展示', '快速取貨服務', '農場體驗預約', '宅配服務中心']
-  }
-];
 
 export default function SchedulePage() {
-  const [activeTab, setActiveTab] = useState('market');
   const [marketSchedule, setMarketSchedule] = useState<ScheduleItem[]>([]);
   const [filteredSchedule, setFilteredSchedule] = useState<ScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -115,7 +95,7 @@ export default function SchedulePage() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-6 md:mb-0">
-              <h1 className="text-4xl font-light text-amber-900 mb-4">擺攤行程 & 門市據點</h1>
+              <h1 className="text-4xl font-light text-amber-900 mb-4">擺攤行程</h1>
               <p className="text-xl text-gray-700">想要現場選購新鮮農產品？來找我們吧！</p>
             </div>
             {user && user.role === 'admin' && (
@@ -139,30 +119,8 @@ export default function SchedulePage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
-        {/* Tabs */}
-        <div className="flex mb-8 bg-white rounded-lg shadow-sm p-2">
-          <button
-            onClick={() => setActiveTab('market')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${activeTab === 'market'
-                ? 'bg-amber-900 text-white'
-                : 'text-gray-600 hover:bg-gray-50'
-              }`}
-          >
-            市集擺攤行程
-          </button>
-          <button
-            onClick={() => setActiveTab('stores')}
-            className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${activeTab === 'stores'
-                ? 'bg-amber-900 text-white'
-                : 'text-gray-600 hover:bg-gray-50'
-              }`}
-          >
-            固定門市據點
-          </button>
-        </div>
 
-        {activeTab === 'market' && (
-          <div>
+        <div>
             {/* Filter Buttons */}
             <div className="flex flex-wrap gap-4 mb-8">
               <button
@@ -288,63 +246,7 @@ export default function SchedulePage() {
                 )}
               </div>
             )}
-          </div>
-        )}
-
-        {activeTab === 'stores' && (
-          <div>
-            <div className="grid md:grid-cols-3 gap-6">
-              {permanentStores.map((store) => (
-                <div key={store.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow flex flex-col h-full">
-                  <h3 className="text-xl font-bold text-gray-800 mb-4">{store.name}</h3>
-
-                  <div className="flex-grow">
-                    {/* Address */}
-                    <div className="flex items-start mb-3 text-gray-600">
-                      <span className="mr-2 mt-1">📍</span>
-                      <span className="text-sm">{store.address}</span>
-                    </div>
-
-                    {/* Phone */}
-                    <div className="flex items-center mb-3 text-gray-600">
-                      <span className="mr-2">📞</span>
-                      <span className="text-sm">{store.phone}</span>
-                    </div>
-
-                    {/* Hours */}
-                    <div className="flex items-center mb-4 text-gray-600">
-                      <span className="mr-2">⏰</span>
-                      <span className="text-sm">{store.hours}</span>
-                    </div>
-
-                    {/* Services */}
-                    <div className="mb-4">
-                      <div className="text-sm font-medium text-gray-700 mb-2">提供服務：</div>
-                      <div className="space-y-1 min-h-[120px]">
-                        {store.services.map((service, index) => (
-                          <div key={index} className="flex items-center text-sm text-gray-600">
-                            <span className="mr-2 text-green-500">✓</span>
-                            <span>{service}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`;
-                      window.open(googleMapsUrl, '_blank');
-                    }}
-                    className="w-full bg-amber-900 text-white py-2 rounded-lg text-sm hover:bg-amber-800 transition-colors mt-auto"
-                  >
-                    查看地圖
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* Contact CTA Section */}

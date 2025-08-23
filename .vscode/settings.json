@@ -1,14 +1,15 @@
 {
-  "git.autorefresh": true,
-  "git.autofetch": true,
-  "git.autofetchPeriod": 180,
-  "files.watcherExclude": {
-    "**/node_modules/**": true,
-    "**/.next/**": true,
-    "**/.git/**": true
-  },
-  "remote.WSL.fileWatcher.polling": true,
-  "remote.WSL.fileWatcher.pollingInterval": 2000,
-  "git.enableSmartCommit": true,
-  "git.confirmSync": false
+	"git.autorefresh": true,
+	"git.autofetch": true,
+	"git.autofetchPeriod": 180,
+	"files.watcherExclude": {
+		"**/node_modules/**": true,
+		"**/.next/**": true,
+		"**/.git/**": true
+	},
+	"remote.WSL.fileWatcher.polling": true,
+	"remote.WSL.fileWatcher.pollingInterval": 2000,
+	"git.enableSmartCommit": true,
+	"git.confirmSync": false,
+	"commentTranslate.hover.enabled": false
 }

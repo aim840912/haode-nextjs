@@ -51,11 +51,6 @@ export function useImageBlob(
       return;
     }
 
-    console.log(`🖼️ useImageBlob 處理圖片:`, {
-      isBase64,
-      srcLength: src.length,
-      srcPreview: src.substring(0, 100) + '...'
-    });
 
     setIsLoading(true);
     setError(null);
@@ -77,7 +72,6 @@ export function useImageBlob(
           setIsLoading(false);
           onLoadRef.current?.();
           
-          console.log('✅ base64 轉換為 Blob URL 成功');
         } else {
           throw new Error('base64 轉換失敗');
         }

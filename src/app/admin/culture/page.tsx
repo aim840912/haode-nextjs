@@ -66,7 +66,7 @@ export default function CultureAdmin() {
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">文化典藏管理</h1>
+          <h1 className="text-3xl font-bold text-gray-900">時光典藏管理</h1>
           <div className="space-x-4">
             {user?.role === 'admin' && (
               <Link 
@@ -189,50 +189,6 @@ export default function CultureAdmin() {
           </div>
         )}
 
-        {/* 統計資訊 */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{cultureItems.length}</div>
-                <div className="text-sm text-gray-500">總典藏內容</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {cultureItems.filter(item => item.imageUrl).length}
-                </div>
-                <div className="text-sm text-gray-500">有圖片項目</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {cultureItems.filter(item => item.imageUrl?.startsWith('data:image/')).length}
-                </div>
-                <div className="text-sm text-gray-500">Base64 圖片</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {cultureItems.filter(item => item.imageUrl && !item.imageUrl.startsWith('data:image/')).length}
-                </div>
-                <div className="text-sm text-gray-500">URL 圖片</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
     </AdminProtection>

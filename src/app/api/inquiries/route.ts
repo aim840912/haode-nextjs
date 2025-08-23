@@ -49,15 +49,11 @@ function createSuccessResponse(data: any, message?: string, status: number = 200
 // GET /api/inquiries - 取得詢價單清單
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 GET /api/inquiries 被呼叫');
-
     // 驗證使用者認證
     const user = await getCurrentUser();
     if (!user) {
       return createErrorResponse('未認證或會話已過期', 401);
     }
-
-    console.log('✅ 使用者認證成功:', user.email);
 
     // 解析查詢參數
     const { searchParams } = new URL(request.url);
@@ -93,7 +89,6 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse(inquiries, undefined, 200);
 
   } catch (error) {
-    console.error('❌ GET /api/inquiries 錯誤:', error);
     return createErrorResponse(
       '取得詢價單清單失敗', 
       500, 
@@ -105,34 +100,23 @@ export async function GET(request: NextRequest) {
 // POST /api/inquiries - 建立新詢價單
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 POST /api/inquiries 被呼叫');
-
     // 驗證使用者認證
     const user = await getCurrentUser();
     if (!user) {
       return createErrorResponse('未認證或會話已過期', 401);
     }
 
-    console.log('✅ 使用者認證成功:', user.email);
-
     // 解析請求資料
     let requestData: CreateInquiryRequest;
     try {
       requestData = await request.json();
-      console.log('📊 請求資料:', {
-        customer_name: requestData.customer_name,
-        customer_email: requestData.customer_email,
-        items_count: requestData.items?.length || 0
-      });
     } catch (parseError) {
-      console.error('❌ JSON 解析錯誤:', parseError);
       return createErrorResponse('請求資料格式錯誤', 400);
     }
 
     // 驗證請求資料
     const validation = InquiryUtils.validateInquiryRequest(requestData);
     if (!validation.isValid) {
-      console.log('❌ 資料驗證失敗:', validation.errors);
       return createErrorResponse(
         '資料驗證失敗', 
         400, 
@@ -140,18 +124,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ 資料驗證通過');
-
     // 建立詢價單
-    console.log('🚀 開始建立詢價單...');
     const inquiry = await inquiryService.createInquiry(user.id, requestData);
-    console.log('✅ 詢價單建立成功:', inquiry.id);
 
     return createSuccessResponse(inquiry, '詢價單建立成功', 201);
 
   } catch (error) {
-    console.error('❌ POST /api/inquiries 錯誤:', error);
-
     // 根據錯誤類型提供適當的回應
     if (error instanceof Error) {
       if (error.message.includes('row-level security policy') || error.message.includes('policy')) {
