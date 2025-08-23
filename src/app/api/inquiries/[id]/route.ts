@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { createInquiryService } from '@/services/inquiryService';
 import { supabaseServerInquiryService } from '@/services/supabaseInquiryService';
+import { AuditLogger } from '@/services/auditLogService';
 import { 
   UpdateInquiryRequest,
   InquiryStatus,
@@ -64,7 +65,7 @@ export async function GET(
     const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, name')
       .eq('id', user.id)
       .single();
 
@@ -85,6 +86,22 @@ export async function GET(
     if (!inquiry) {
       return createErrorResponse('找不到詢價單', 404);
     }
+
+    // 記錄詢價單查看的審計日誌
+    AuditLogger.logInquiryView(
+      user.id,
+      user.email || 'unknown@email.com',
+      profile?.name,
+      profile?.role,
+      inquiryId,
+      {
+        customer_name: inquiry.customer_name,
+        customer_email: inquiry.customer_email,
+        status: inquiry.status,
+        admin_mode: isAdmin && adminMode
+      },
+      request
+    ).catch(console.error); // 非同步記錄，不影響主要流程
 
     return createSuccessResponse(inquiry);
 
@@ -118,7 +135,7 @@ export async function PUT(
     const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, name')
       .eq('id', user.id)
       .single();
 
@@ -152,11 +169,55 @@ export async function PUT(
       // 管理員更新狀態
       const updatedInquiry = await inquiryService.updateInquiryStatus(inquiryId, updateData.status);
       
+      // 記錄詢價單狀態變更的審計日誌
+      AuditLogger.logInquiryStatusChange(
+        user.id,
+        user.email || 'unknown@email.com',
+        profile?.name,
+        profile?.role,
+        inquiryId,
+        currentInquiry.status,
+        updateData.status,
+        {
+          customer_name: currentInquiry.customer_name,
+          customer_email: currentInquiry.customer_email
+        },
+        request
+      ).catch(console.error); // 非同步記錄，不影響主要流程
+      
       return createSuccessResponse(updatedInquiry, '詢價單狀態更新成功');
+    }
+
+    // 取得更新前的詢價單資料（用於審計日誌）
+    const previousInquiry = await inquiryService.getInquiryById(user.id, inquiryId);
+    if (!previousInquiry) {
+      return createErrorResponse('找不到詢價單', 404);
     }
 
     // 一般使用者更新詢價單
     const updatedInquiry = await inquiryService.updateInquiry(user.id, inquiryId, updateData);
+
+    // 記錄詢價單更新的審計日誌
+    AuditLogger.logInquiryUpdate(
+      user.id,
+      user.email || 'unknown@email.com',
+      profile?.name,
+      profile?.role,
+      inquiryId,
+      {
+        customer_name: previousInquiry.customer_name,
+        customer_email: previousInquiry.customer_email,
+        notes: previousInquiry.notes,
+        delivery_address: previousInquiry.delivery_address
+      },
+      {
+        customer_name: updatedInquiry.customer_name,
+        customer_email: updatedInquiry.customer_email,
+        notes: updatedInquiry.notes,
+        delivery_address: updatedInquiry.delivery_address
+      },
+      request
+    ).catch(console.error); // 非同步記錄，不影響主要流程
 
     return createSuccessResponse(updatedInquiry, '詢價單更新成功');
 
@@ -187,7 +248,7 @@ export async function DELETE(
     const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, name')
       .eq('id', user.id)
       .single();
 
@@ -195,8 +256,31 @@ export async function DELETE(
       return createErrorResponse('只有管理員可以刪除詢價單', 403);
     }
 
+    // 先取得詢價單資料（用於審計日誌）
+    const inquiryToDelete = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId);
+    if (!inquiryToDelete) {
+      return createErrorResponse('找不到詢價單', 404);
+    }
+
     // 刪除詢價單
     await inquiryService.deleteInquiry(inquiryId);
+
+    // 記錄詢價單刪除的審計日誌
+    AuditLogger.logInquiryDelete(
+      user.id,
+      user.email || 'unknown@email.com',
+      profile?.name,
+      profile?.role,
+      inquiryId,
+      {
+        customer_name: inquiryToDelete.customer_name,
+        customer_email: inquiryToDelete.customer_email,
+        status: inquiryToDelete.status,
+        total_estimated_amount: inquiryToDelete.total_estimated_amount,
+        items_count: inquiryToDelete.inquiry_items?.length || 0
+      },
+      request
+    ).catch(console.error); // 非同步記錄，不影響主要流程
 
     return createSuccessResponse(null, '詢價單刪除成功');
 

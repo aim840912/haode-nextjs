@@ -49,6 +49,12 @@ const LocationIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const AuditIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11C15.4,11 16,11.4 16,12V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V12C8,11.4 8.4,11 9,11V10.5C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10.5V11H13.8V10.5C13.8,8.7 12.8,8.2 12,8.2Z"/>
+  </svg>
+);
+
 const LogoutIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
@@ -327,6 +333,15 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                 >
                   <LocationIcon className="w-4 h-4 mr-2" />
                   門市據點管理
+                </Link>
+                
+                <Link
+                  href="/admin/audit-logs"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <AuditIcon className="w-4 h-4 mr-2" />
+                  審計日誌
                 </Link>
               </>
             )}
