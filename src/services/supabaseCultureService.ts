@@ -14,7 +14,7 @@ export class SupabaseCultureService implements CultureService {
         throw new Error(`資料庫查詢失敗: ${error.message}`)
       }
       
-      const result = data?.map(item => this.transformFromDB(item)) || []
+      const result = data?.map((item: any) => this.transformFromDB(item)) || []
       console.log(`✅ 成功載入 ${result.length} 個時光典藏項目`)
       return result
     } catch (error) {

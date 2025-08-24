@@ -131,7 +131,7 @@ export class SupabaseNewsService implements NewsService {
       const newsItems = data?.map(this.transformFromDB) || []
       
       // 按相關性排序
-      return newsItems.sort((a, b) => {
+      return newsItems.sort((a: any, b: any) => {
         const queryLower = query.toLowerCase()
         const getRelevanceScore = (item: NewsItem) => {
           const title = item.title.toLowerCase()

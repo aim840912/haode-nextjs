@@ -34,9 +34,9 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       setLoading(true)
       setError(null)
       
-      // 加入時間戳參數防止快取，並標記為管理員請求
+      // 使用安全的 admin-proxy API，自動驗證管理員權限
       const timestamp = new Date().getTime()
-      const response = await fetch(`/api/products?t=${timestamp}&admin=true`, {
+      const response = await fetch(`/api/admin-proxy/products?t=${timestamp}`, {
         cache: 'no-cache',
         headers: {
           'Cache-Control': 'no-cache',
@@ -45,14 +45,19 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       })
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
+      
       const data = await response.json()
       console.log('ProductsTable fetchProducts - 獲取的資料:', data)
-      setProducts(Array.isArray(data) ? data : [])
+      
+      // Admin API 回傳格式為 { products: [...] }
+      const products = data.products || data
+      setProducts(Array.isArray(products) ? products : [])
     } catch (error) {
       console.error('Error fetching products:', error)
-      setError('載入產品資料失敗')
+      setError(error instanceof Error ? error.message : '載入產品資料失敗')
     } finally {
       setLoading(false)
     }
@@ -67,9 +72,13 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     if (!confirm('確定要刪除此產品嗎？這將同時刪除產品的所有圖片資料。')) return
     
     try {
-      const response = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/admin-proxy/products?id=${id}`, { 
+        method: 'DELETE'
+      })
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
       
       // 立即從本地狀態移除產品，提供即時更新體驗
@@ -78,12 +87,10 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       // 呼叫父組件的回調函數
       onDelete?.(id)
       
-      // 可選：重新獲取數據以確保同步（但會稍微慢一些）
-      // await fetchProducts()
-      
     } catch (error) {
       console.error('Error deleting product:', error)
-      alert('刪除失敗，請稍後再試')
+      const errorMessage = error instanceof Error ? error.message : '刪除失敗，請稍後再試'
+      alert(errorMessage)
       
       // 如果刪除失敗，重新獲取數據以確保狀態一致
       await fetchProducts()
@@ -106,10 +113,10 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
         )
       )
       
-      const response = await fetch(`/api/products/${id}`, {
+      const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ isActive: newActiveState })
+        body: JSON.stringify({ id, isActive: newActiveState })
       })
       
       if (!response.ok) {
@@ -141,10 +148,10 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     const newShowState = !showInCatalog
     
     try {
-      const response = await fetch(`/api/products/${id}`, {
+      const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ showInCatalog: newShowState })
+        body: JSON.stringify({ id, showInCatalog: newShowState })
       })
       
       if (!response.ok) {

@@ -10,7 +10,8 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // 允許 Supabase Storage 圖片
+    // 允許本地圖片和 Supabase Storage 圖片
+    domains: [], // 本地圖片不需要額外域名
     remotePatterns: [
       {
         protocol: 'https',
@@ -19,6 +20,12 @@ const nextConfig: NextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
+    // 添加 loader 配置確保本地圖片正確處理
+    loader: 'default',
+    // 在開發模式下停用某些優化以幫助除錯
+    ...(process.env.NODE_ENV === 'development' && {
+      unoptimized: false, // 保持優化開啟以測試生產環境行為
+    }),
   },
   
   // 實驗性功能

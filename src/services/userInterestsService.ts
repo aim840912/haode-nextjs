@@ -22,7 +22,7 @@ export class UserInterestsService {
         return [];
       }
 
-      return data?.map(item => item.product_id) || [];
+      return data?.map((item: any) => item.product_id) || [];
     } catch (error) {
       console.error('Error in getUserInterests:', error);
       return [];

@@ -140,10 +140,10 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       }
 
 
-      const response = await fetch(`/api/products/${productId}`, {
+      const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData)
+        body: JSON.stringify({ id: productId, ...productData })
       })
 
       
@@ -151,8 +151,8 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         const result = await response.json()
         router.push('/admin/products')
       } else {
-        const errorText = await response.text()
-        alert(`更新失敗: ${response.status} - ${errorText}`)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        alert(`更新失敗: ${errorData.error || response.status}`)
       }
     } catch (error) {
       alert('更新失敗')

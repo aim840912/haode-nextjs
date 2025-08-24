@@ -1,7 +1,16 @@
 import { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
+import * as jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET 環境變數是必填項目，請在 .env.local 中設定');
+}
+
+if (JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET 必須至少包含 32 個字元以確保安全性');
+}
 
 // 輸入清理與驗證
 export function sanitizeInput(input: unknown): string {
@@ -24,24 +33,56 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
-// CSRF 基礎保護
+// CSRF 增強保護
 export function validateOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin')
   const referer = request.headers.get('referer')
   const host = request.headers.get('host')
   
-  // 在開發環境中，允許 localhost
+  // 開發環境中也執行基本檢查，但較為寬鬆
   if (process.env.NODE_ENV === 'development') {
-    return true
+    // 允許 localhost, 127.0.0.1 和本機 IP
+    const allowedHosts = ['localhost', '127.0.0.1', '0.0.0.0']
+    
+    if (host) {
+      const hostWithoutPort = host.split(':')[0]
+      if (allowedHosts.includes(hostWithoutPort) || hostWithoutPort.startsWith('192.168.') || hostWithoutPort.startsWith('10.')) {
+        return true
+      }
+    }
+    
+    // 檢查是否為本機開發域名
+    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('192.168.'))) {
+      return true
+    }
+    
+    if (referer && (referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('192.168.'))) {
+      return true
+    }
+  }
+  
+  // 生產環境的嚴格檢查
+  if (!host) {
+    return false
   }
   
   // 檢查來源是否與主機匹配
-  if (origin && host) {
-    return origin.includes(host)
+  if (origin) {
+    try {
+      const originUrl = new URL(origin)
+      return originUrl.host === host
+    } catch {
+      return false
+    }
   }
   
-  if (referer && host) {
-    return referer.includes(host)
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer)
+      return refererUrl.host === host
+    } catch {
+      return false
+    }
   }
   
   return false
@@ -57,7 +98,7 @@ export interface AuthenticatedRequest extends NextRequest {
 
 export function verifyToken(token: string) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET as string) as any;
     return {
       id: decoded.userId,
       email: decoded.email,
@@ -189,5 +230,66 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 
       clientData.count++;
       return handler(request);
     };
+  };
+}
+
+// CSRF Token 機制
+export function generateCSRFToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+export function validateCSRFToken(request: NextRequest): boolean {
+  const token = request.headers.get('x-csrf-token');
+  const sessionToken = request.cookies.get('csrf-token')?.value;
+  
+  // 如果都不存在，檢查是否為 GET 請求（通常不需要 CSRF 保護）
+  if (!token && !sessionToken && request.method === 'GET') {
+    return true;
+  }
+  
+  return !!(token && sessionToken && token === sessionToken);
+}
+
+// 組合的安全檢查中間件
+export function validateSecureRequest(request: NextRequest, requiredFields: string[]) {
+  return async () => {
+    // 檢查來源
+    if (!validateOrigin(request)) {
+      return {
+        error: '無效的請求來源',
+        status: 403
+      };
+    }
+    
+    // 對於 POST, PUT, DELETE 請求檢查 CSRF Token
+    if (['POST', 'PUT', 'DELETE'].includes(request.method)) {
+      if (!validateCSRFToken(request)) {
+        return {
+          error: '缺少或無效的 CSRF Token',
+          status: 403
+        };
+      }
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return { 
+        error: '無效的 JSON 格式',
+        status: 400
+      };
+    }
+    
+    const missingFields = requiredFields.filter(field => !body[field]);
+    
+    if (missingFields.length > 0) {
+      return {
+        error: `缺少必要欄位: ${missingFields.join(', ')}`,
+        status: 400
+      };
+    }
+    
+    return { body };
   };
 }

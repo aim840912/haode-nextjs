@@ -171,7 +171,7 @@ export class SupabaseReviewService implements ReviewService {
       if (totalError) throw totalError
 
       const total = totalData?.length || 0
-      const approved = totalData?.filter(r => r.is_approved).length || 0
+      const approved = totalData?.filter((r: any) => r.is_approved).length || 0
       const pending = total - approved
       
       // 計算平均評分（只計算已審核的）

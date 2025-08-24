@@ -138,7 +138,7 @@ class SupabaseProductService implements ProductService {
       const products = data?.map(this.transformFromDB) || []
       
       // 按相關性排序
-      return products.sort((a, b) => {
+      return products.sort((a: any, b: any) => {
         const queryLower = query.toLowerCase()
         const getRelevanceScore = (product: Product) => {
           const name = product.name.toLowerCase()

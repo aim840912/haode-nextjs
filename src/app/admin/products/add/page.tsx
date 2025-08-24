@@ -105,19 +105,18 @@ export default function AddProduct() {
       }
 
 
-      const response = await fetch('/api/products', {
+      const response = await fetch('/api/admin-proxy/products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(productData)
       })
 
-
       if (response.ok) {
         const result = await response.json()
         router.push('/admin/products')
       } else {
-        const errorText = await response.text()
-        alert(`新增失敗: ${response.status} - ${errorText}`)
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        alert(`新增失敗: ${errorData.error || response.status}`)
       }
     } catch (error) {
       alert('新增失敗')
