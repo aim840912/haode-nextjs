@@ -69,8 +69,9 @@ const nextConfig: NextConfig = {
   // PoweredBy header 移除（安全性）
   poweredByHeader: false,
   
-  // 嚴格模式
-  reactStrictMode: true,
+  // 嚴格模式 - 在開發模式下禁用以避免 Multiple GoTrueClient 警告
+  // 但在生產環境中保持啟用以發現潜在問題
+  reactStrictMode: process.env.NODE_ENV === 'production',
   
   // ESLint 設定 - 暫時忽略 warnings 以完成 build
   eslint: {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { 
   uploadNewsImage,
+  uploadNewsImageServer,
   uploadNewsImageWithThumbnail,
   deleteNewsImage,
   listNewsImages,
@@ -64,9 +65,9 @@ export async function POST(request: NextRequest) {
         }
       });
     } else {
-      // 單一檔案上傳
+      // 單一檔案上傳（使用伺服器端函數繞過 RLS）
       console.log(`📸 開始新聞圖片上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
-      const result = await uploadNewsImage(file, newsId);
+      const result = await uploadNewsImageServer(file, newsId);
       console.log('📸 新聞圖片上傳完成:', result);
       
       return NextResponse.json({

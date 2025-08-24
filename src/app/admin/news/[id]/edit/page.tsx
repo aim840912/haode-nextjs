@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { uploadNewsImage, initializeNewsBucket } from '@/lib/news-storage'
+// 圖片上傳現在通過 API 路由處理
 
 export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -177,13 +177,24 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
   const uploadImageToStorage = async (file: File): Promise<string> => {
     setUploading(true)
     try {
-      // 初始化 bucket（如果需要）
-      await initializeNewsBucket()
+      // 通過 API 路由上傳圖片（確保 bucket 初始化）
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('newsId', newsId || `news_${Date.now()}`)
       
-      // 上傳圖片
-      const result = await uploadNewsImage(file, newsId)
+      const response = await fetch('/api/news/images', {
+        method: 'POST',
+        body: formData
+      })
+      
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || '圖片上傳失敗')
+      }
+      
+      const result = await response.json()
       console.log('圖片上傳成功:', result)
-      return result.url
+      return result.data.url
     } catch (error) {
       console.error('圖片上傳失敗:', error)
       alert('圖片上傳失敗，請重試')

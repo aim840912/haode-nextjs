@@ -30,6 +30,17 @@ export class SupabaseAuditLogService implements AuditLogService {
         return; // 不拋出錯誤，避免影響主要業務流程
       }
 
+      // 檢查是否為重複操作（5分鐘內相同使用者、相同動作、相同資源）
+      if (await this.isDuplicateLogEntry(request)) {
+        console.log('跳過重複的審計日誌記錄:', {
+          action: request.action,
+          resource: request.resource_type,
+          resourceId: request.resource_id,
+          user: request.user_email
+        });
+        return;
+      }
+
       // 準備審計日誌資料
       const auditData = {
         user_id: request.user_id,
@@ -77,6 +88,38 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
   }
 
+  // 檢查是否為重複的日誌記錄
+  private async isDuplicateLogEntry(request: CreateAuditLogRequest): Promise<boolean> {
+    try {
+      // 只對查看操作進行重複檢查，避免影響重要的修改操作
+      if (!['view', 'view_list'].includes(request.action)) {
+        return false;
+      }
+
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      
+      const { data, error } = await createServiceSupabaseClient()
+        .from('audit_logs')
+        .select('id')
+        .eq('user_email', request.user_email)
+        .eq('action', request.action)
+        .eq('resource_type', request.resource_type)
+        .eq('resource_id', request.resource_id)
+        .gte('created_at', fiveMinutesAgo)
+        .limit(1);
+
+      if (error) {
+        console.error('檢查重複日誌失敗:', error);
+        return false; // 發生錯誤時不阻止記錄
+      }
+
+      return (data && data.length > 0);
+    } catch (error) {
+      console.error('檢查重複日誌異常:', error);
+      return false; // 發生錯誤時不阻止記錄
+    }
+  }
+
   // 查詢審計日誌
   async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLog[]> {
     try {
@@ -111,7 +154,8 @@ export class SupabaseAuditLogService implements AuditLogService {
           query = query.lte('created_at', params.end_date);
         }
         if (params.ip_address) {
-          query = query.eq('ip_address', params.ip_address);
+          // 使用文字轉換來支援部分匹配和 INET 類型兼容
+          query = query.filter('ip_address::text', 'ilike', `%${params.ip_address}%`);
         }
 
         // 排序

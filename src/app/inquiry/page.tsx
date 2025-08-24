@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/Toast';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
+import { supabase } from '@/lib/supabase-auth';
 import { 
   InquiryWithItems, 
   InquiryStatus,
@@ -27,6 +28,7 @@ function InquiryListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const isInitialized = useRef(false);
 
   // 取得使用者詢價單
   const fetchUserInquiries = async () => {
@@ -37,7 +39,7 @@ function InquiryListPage() {
 
     try {
       // 取得認證 token
-      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error('請重新登入');
       }
@@ -156,12 +158,20 @@ function InquiryListPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedInquiries = filteredInquiries.slice(startIndex, startIndex + itemsPerPage);
 
-  // 初始載入
+  // 初始載入（只在使用者認證完成時載入一次）
   useEffect(() => {
-    if (user) {
+    if (user && !isInitialized.current) {
+      isInitialized.current = true;
       fetchUserInquiries();
     }
-  }, [user, statusFilter]);
+  }, [user]);
+
+  // 當狀態篩選條件改變時重新載入（跳過初始值）
+  useEffect(() => {
+    if (user && isInitialized.current) {
+      fetchUserInquiries();
+    }
+  }, [statusFilter]);
 
   // 重置分頁當篩選條件改變
   useEffect(() => {

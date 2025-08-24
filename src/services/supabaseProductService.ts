@@ -10,10 +10,14 @@ class SupabaseProductService implements ProductService {
         .eq('is_active', true)
         .order('created_at', { ascending: false })
       
-      if (error) throw error
+      if (error) {
+        console.error('Supabase query error:', error)
+        throw error
+      }
       
       return data?.map(this.transformFromDB) || []
     } catch (error) {
+      console.error('Error in getProducts:', error)
       return []
     }
   }

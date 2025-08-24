@@ -87,7 +87,25 @@ export default function LocationsAdmin() {
             <div key={location.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               {/* Location Header */}
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
-                <div className="text-4xl mb-3">{location.image}</div>
+                <div className="mb-3">
+                  {location.image ? (
+                    location.image.startsWith('data:') || location.image.startsWith('/') ? (
+                      <img 
+                        src={location.image} 
+                        alt={location.title}
+                        className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                        <span className="text-gray-400 text-sm">無圖片</span>
+                      </div>
+                    )
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                      <span className="text-gray-400 text-sm">無圖片</span>
+                    </div>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">{location.title}</h3>
                 <div className="text-sm text-gray-600">{location.name}</div>
                 {location.isMain && (
@@ -191,54 +209,6 @@ export default function LocationsAdmin() {
           </div>
         )}
 
-        {/* Statistics */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">🏪</div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{locations.length}</div>
-                <div className="text-sm text-gray-500">總門市數量</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">⭐</div>
-              <div>
-                <div className="text-2xl font-bold text-amber-600">
-                  {locations.filter(l => l.isMain).length}
-                </div>
-                <div className="text-sm text-gray-500">總店數量</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">🎯</div>
-              <div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {locations.length > 0 ? Math.round(locations.reduce((sum, l) => sum + l.features.length, 0) / locations.length) : 0}
-                </div>
-                <div className="text-sm text-gray-500">平均服務項目</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">📦</div>
-              <div>
-                <div className="text-2xl font-bold text-green-600">
-                  {locations.length > 0 ? Math.round(locations.reduce((sum, l) => sum + l.specialties.length, 0) / locations.length) : 0}
-                </div>
-                <div className="text-sm text-gray-500">平均商品種類</div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
     </AdminProtection>

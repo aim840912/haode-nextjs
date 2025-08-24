@@ -18,6 +18,7 @@ export type ResourceType =
   | 'inquiry'       // 詢價單
   | 'inquiry_item'  // 詢價項目
   | 'customer_data' // 客戶資料
+  | 'audit_log'     // 審計日誌
 
 // 使用者角色
 export type UserRole = 
@@ -164,7 +165,8 @@ export const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   inquiry: '詢價單',
   inquiry_item: '詢價項目',
-  customer_data: '客戶資料'
+  customer_data: '客戶資料',
+  audit_log: '審計日誌'
 };
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {

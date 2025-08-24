@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, LoginRequest, RegisterRequest } from '@/types/auth';
-import { supabase, getUserProfile, signInUser, signOutUser, signUpUser } from '@/lib/supabase-auth';
+import { supabase, getUserProfile, signInUser, signOutUser, signUpUser, updateProfile as updateUserProfile } from '@/lib/supabase-auth';
 import { UserInterestsService } from '@/services/userInterestsService';
 import { Session } from '@supabase/supabase-js';
 
@@ -36,14 +36,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // 監聽 Supabase 認證狀態變化
   useEffect(() => {
     // 取得初始 session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       handleAuthStateChange(session);
     });
 
     // 監聽認證狀態變化
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
       handleAuthStateChange(session);
     });
 
@@ -173,8 +173,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
 
     try {
-      const { updateProfile } = await import('@/lib/supabase-auth');
-      const updatedProfile = await updateProfile(user.id, {
+      const updatedProfile = await updateUserProfile(user.id, {
         name: updates.name,
         phone: updates.phone,
         address: updates.address,

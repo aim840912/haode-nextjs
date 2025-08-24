@@ -6,6 +6,7 @@ import AdminProtection from '@/components/AdminProtection';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useToast } from '@/components/Toast';
+import { supabase } from '@/lib/supabase-auth';
 import { 
   InquiryWithItems, 
   InquiryStatus,
@@ -33,7 +34,7 @@ function AdminInquiriesPage() {
 
     try {
       // 取得認證 token
-      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error('認證失敗');
       }
@@ -78,7 +79,7 @@ function AdminInquiriesPage() {
 
     try {
       // 取得認證 token
-      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error('認證失敗');
       }
@@ -123,7 +124,7 @@ function AdminInquiriesPage() {
 
     try {
       // 取得認證 token
-      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error('認證失敗');
       }

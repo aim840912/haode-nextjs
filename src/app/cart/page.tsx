@@ -10,6 +10,7 @@ import OptimizedImage from '@/components/OptimizedImage';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useState } from 'react';
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry';
+import { supabase } from '@/lib/supabase-auth';
 
 function CartPage() {
   const { cart, updateItemQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart();
@@ -66,7 +67,7 @@ function CartPage() {
     
     try {
       // 取得認證 token
-      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         error('認證失敗', '請重新登入');
         return;

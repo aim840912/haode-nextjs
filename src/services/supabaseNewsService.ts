@@ -51,7 +51,9 @@ export class SupabaseNewsService implements NewsService {
       category: newsData.category,
       tags: newsData.tags,
       image_url: newsData.imageUrl,
-      is_published: newsData.featured,
+      author: newsData.author || '豪德農場',
+      featured: newsData.featured || false,
+      is_published: true,  // 修正：總是設為 true（已發布）
       publish_date: new Date().toISOString()
     }
 
@@ -80,7 +82,8 @@ export class SupabaseNewsService implements NewsService {
     if (newsData.imageUrl !== undefined) {
       dbUpdateData.image_url = newsData.imageUrl
     }
-    if (newsData.featured !== undefined) dbUpdateData.is_published = newsData.featured
+    if (newsData.author !== undefined) dbUpdateData.author = newsData.author
+    if (newsData.featured !== undefined) dbUpdateData.featured = newsData.featured
 
     const { data, error } = await supabaseAdmin!
       .from('news')
@@ -155,13 +158,13 @@ export class SupabaseNewsService implements NewsService {
       title: dbNews.title,
       summary: dbNews.summary,
       content: dbNews.content,
-      author: 'Admin', // 預設作者
+      author: dbNews.author || '豪德農場', // 使用資料庫的 author
       publishedAt: dbNews.publish_date,
       category: dbNews.category,
       tags: dbNews.tags || [],
       image: '', // 不再使用 emoji，保留欄位相容性
       imageUrl: dbNews.image_url,
-      featured: dbNews.is_published
+      featured: dbNews.featured || false // 使用資料庫的 featured
     }
   }
 }

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase-auth';
 import { 
   InquiryWithItems, 
   InquiryStatus,
@@ -31,7 +32,7 @@ function InquiriesPage() {
 
     try {
       // 取得認證 token
-      const { data: { session } } = await import('@/lib/supabase-auth').then(m => m.supabase.auth.getSession());
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         throw new Error('認證失敗');
       }
