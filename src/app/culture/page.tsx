@@ -68,7 +68,7 @@ export default function CulturePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Hero Section */}
       <div className="pt-8 pb-4">
         <div className="max-w-7xl mx-auto px-6">
@@ -98,7 +98,7 @@ export default function CulturePage() {
       </div>
 
       {/* Culture Grid */}
-      <div className="max-w-7xl mx-auto px-6 pt-4 pb-12">
+      <div className="flex-1 max-w-7xl mx-auto px-6 pt-4 pb-12 w-full">
         {cultureItems.length === 0 ? (
           // 空狀態
           <div className="text-center py-20">
