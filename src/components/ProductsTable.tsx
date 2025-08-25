@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Product } from '@/types/product'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { useCSRFToken } from '@/hooks/useCSRFToken'
 import SafeImage from './SafeImage'
 
 interface ProductsTableProps {
@@ -17,6 +18,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
+  const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
   useEffect(() => {
     fetchProducts()
@@ -38,6 +40,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       const timestamp = new Date().getTime()
       const response = await fetch(`/api/admin-proxy/products?t=${timestamp}`, {
         cache: 'no-cache',
+        credentials: 'include',
         headers: {
           'Cache-Control': 'no-cache',
           'Pragma': 'no-cache'
@@ -71,9 +74,28 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     
     if (!confirm('確定要刪除此產品嗎？這將同時刪除產品的所有圖片資料。')) return
     
+    // 防止在 CSRF token 未準備好時執行
+    if (csrfLoading || !csrfToken) {
+      alert('請稍候，正在初始化安全驗證...')
+      return
+    }
+    
+    if (csrfError) {
+      alert('安全驗證初始化失敗，請重新整理頁面')
+      return
+    }
+    
     try {
+      const headers: HeadersInit = {}
+      
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken
+      }
+
       const response = await fetch(`/api/admin-proxy/products?id=${id}`, { 
-        method: 'DELETE'
+        method: 'DELETE',
+        headers,
+        credentials: 'include'
       })
       
       if (!response.ok) {
@@ -105,6 +127,17 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     
     const newActiveState = !isActive
     
+    // 防止在 CSRF token 未準備好時執行
+    if (csrfLoading || !csrfToken) {
+      alert('請稍候，正在初始化安全驗證...')
+      return
+    }
+    
+    if (csrfError) {
+      alert('安全驗證初始化失敗，請重新整理頁面')
+      return
+    }
+    
     try {
       // 立即更新本地狀態以提供即時反饋
       setProducts(prevProducts => 
@@ -113,9 +146,18 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
         )
       )
       
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      }
+      
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken
+      }
+
       const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ id, isActive: newActiveState })
       })
       
@@ -147,10 +189,30 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
     
     const newShowState = !showInCatalog
     
+    // 防止在 CSRF token 未準備好時執行
+    if (csrfLoading || !csrfToken) {
+      alert('請稍候，正在初始化安全驗證...')
+      return
+    }
+    
+    if (csrfError) {
+      alert('安全驗證初始化失敗，請重新整理頁面')
+      return
+    }
+    
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      }
+      
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken
+      }
+
       const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ id, showInCatalog: newShowState })
       })
       
@@ -275,7 +337,8 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
                 {user?.role === 'admin' ? (
                   <button
                     onClick={() => handleToggleActive(product.id, product.isActive)}
-                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    disabled={csrfLoading || !csrfToken}
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
                       product.isActive
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
@@ -299,7 +362,8 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
                   return user?.role === 'admin' ? (
                     <button
                       onClick={() => handleToggleShowInCatalog(product.id, showInCatalog)}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      disabled={csrfLoading || !csrfToken}
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
                         showInCatalog
                           ? 'bg-blue-100 text-blue-800'
                           : 'bg-gray-100 text-gray-800'
@@ -329,7 +393,8 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
                     </Link>
                     <button
                       onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-900"
+                      disabled={csrfLoading || !csrfToken}
+                      className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       刪除
                     </button>

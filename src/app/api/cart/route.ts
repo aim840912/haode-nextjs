@@ -1,10 +1,11 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { AddToCartRequest } from '@/types/cart'
-import { requireAuth, rateLimit } from '@/lib/auth-middleware'
+import { requireAuth } from '@/lib/auth-middleware'
+import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { ApiResponseBuilder, handleApiError } from '@/lib/api-response'
 
 // 獲取購物車
-export const GET = rateLimit()(requireAuth(async (request) => {
+const handleGET = requireAuth(async (request) => {
   try {
     const userId = request.user!.id;
     
@@ -23,10 +24,10 @@ export const GET = rateLimit()(requireAuth(async (request) => {
   } catch (error) {
     return handleApiError(error);
   }
-}));
+});
 
 // 添加商品到購物車
-export const POST = rateLimit(50)(requireAuth(async (request) => {
+const handlePOST = requireAuth(async (request) => {
   try {
     const userId = request.user!.id;
     let body: AddToCartRequest;
@@ -65,10 +66,10 @@ export const POST = rateLimit(50)(requireAuth(async (request) => {
   } catch (error) {
     return handleApiError(error);
   }
-}));
+});
 
 // 清空購物車
-export const DELETE = rateLimit(10)(requireAuth(async (request) => {
+const handleDELETE = requireAuth(async (request) => {
   try {
     const userId = request.user!.id;
     
@@ -79,4 +80,32 @@ export const DELETE = rateLimit(10)(requireAuth(async (request) => {
   } catch (error) {
     return handleApiError(error);
   }
-}));
+});
+
+// 套用 Rate Limiting 並導出 API 處理器
+export const GET = withRateLimit(handleGET, {
+  maxRequests: 200,
+  windowMs: 60 * 1000, // 1 分鐘
+  strategy: IdentifierStrategy.USER_ID,
+  enableAuditLog: false,
+  includeHeaders: true,
+  message: '購物車查詢過於頻繁，請稍後重試'
+});
+
+export const POST = withRateLimit(handlePOST, {
+  maxRequests: 100,
+  windowMs: 60 * 1000, // 1 分鐘
+  strategy: IdentifierStrategy.USER_ID,
+  enableAuditLog: false,
+  includeHeaders: true,
+  message: '加入購物車過於頻繁，請稍後重試'
+});
+
+export const DELETE = withRateLimit(handleDELETE, {
+  maxRequests: 50,
+  windowMs: 60 * 1000, // 1 分鐘
+  strategy: IdentifierStrategy.USER_ID,
+  enableAuditLog: false,
+  includeHeaders: true,
+  message: '清空購物車過於頻繁，請稍後重試'
+});

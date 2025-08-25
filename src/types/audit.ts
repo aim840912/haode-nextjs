@@ -12,6 +12,7 @@ export type AuditAction =
   | 'delete'        // 刪除資源
   | 'export'        // 匯出資料
   | 'status_change' // 狀態變更
+  | 'unauthorized_access' // 未授權存取嘗試
 
 // 資源類型
 export type ResourceType = 
@@ -149,7 +150,8 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   update: '更新',
   delete: '刪除',
   export: '匯出',
-  status_change: '狀態變更'
+  status_change: '狀態變更',
+  unauthorized_access: '未授權存取'
 };
 
 export const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
@@ -159,7 +161,8 @@ export const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
   update: 'text-yellow-600 bg-yellow-50',
   delete: 'text-red-600 bg-red-50',
   export: 'text-purple-600 bg-purple-50',
-  status_change: 'text-orange-600 bg-orange-50'
+  status_change: 'text-orange-600 bg-orange-50',
+  unauthorized_access: 'text-red-800 bg-red-100'
 };
 
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
@@ -196,7 +199,8 @@ export class AuditLogUtils {
       create: 3,
       update: 4,
       status_change: 4,
-      delete: 5
+      delete: 5,
+      unauthorized_access: 6
     };
     return severity[action];
   }

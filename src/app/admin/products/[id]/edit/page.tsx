@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Product } from '@/types/product'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { useCSRFToken } from '@/hooks/useCSRFToken'
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
   const { user, isLoading } = useAuth()
+  const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -125,6 +127,18 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // 防止在 CSRF token 未準備好時提交
+    if (csrfLoading || !csrfToken) {
+      alert('請稍候，正在初始化安全驗證...')
+      return
+    }
+    
+    if (csrfError) {
+      alert('安全驗證初始化失敗，請重新整理頁面')
+      return
+    }
+    
     setLoading(true)
 
     try {
@@ -140,9 +154,18 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       }
 
 
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json'
+      }
+      
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken
+      }
+
       const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
+        credentials: 'include',
         body: JSON.stringify({ id: productId, ...productData })
       })
 
@@ -518,10 +541,10 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             </Link>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || csrfLoading || !csrfToken}
               className="px-6 py-2 bg-amber-900 text-white rounded-md hover:bg-amber-800 transition-colors disabled:opacity-50"
             >
-              {loading ? '更新中...' : '更新產品'}
+              {loading ? '更新中...' : csrfLoading ? '初始化中...' : '更新產品'}
             </button>
           </div>
         </form>

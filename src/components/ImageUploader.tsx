@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils';
+import { useCSRFTokenValue } from '@/hooks/useCSRFToken';
 import Image from 'next/image';
 import LoadingSpinner from './LoadingSpinner';
 
@@ -42,6 +43,7 @@ export default function ImageUploader({
   const [previewImages, setPreviewImages] = useState<UploadedImage[]>([]);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const csrfToken = useCSRFTokenValue();
 
   const handleFileSelect = useCallback(async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -105,7 +107,7 @@ export default function ImageUploader({
 
         try {
           // 上傳到伺服器
-          const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes);
+          const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes, csrfToken);
           
           if (generateMultipleSizes && result.multiple) {
             // 多尺寸上傳結果 - 直接替換臨時預覽
@@ -166,12 +168,13 @@ export default function ImageUploader({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError]);
+  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError, csrfToken]);
 
   const uploadImageToServer = async (
     file: File,
     productId: string,
-    generateMultipleSizes: boolean
+    generateMultipleSizes: boolean,
+    csrfToken: string | null
   ) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -179,9 +182,16 @@ export default function ImageUploader({
     formData.append('generateMultipleSizes', generateMultipleSizes.toString());
     formData.append('compress', 'false'); // 已在前端壓縮
 
+    const headers: HeadersInit = {};
+    if (csrfToken) {
+      headers['x-csrf-token'] = csrfToken;
+    }
+
     const response = await fetch('/api/upload/images', {
       method: 'POST',
-      body: formData
+      body: formData,
+      headers,
+      credentials: 'include'
     });
 
     if (!response.ok) {

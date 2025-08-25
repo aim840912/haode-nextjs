@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server';
 import * as jwt from 'jsonwebtoken';
-import * as crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -33,59 +32,113 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email)
 }
 
-// CSRF 增強保護
-export function validateOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get('origin')
-  const referer = request.headers.get('referer')
-  const host = request.headers.get('host')
+/**
+ * 獲取允許的來源清單
+ * 從環境變數或使用預設值
+ */
+function getAllowedOrigins(): string[] {
+  // 生產環境從環境變數獲取
+  if (process.env.NODE_ENV === 'production') {
+    const allowedOrigins = process.env.CSRF_ALLOWED_ORIGINS;
+    if (allowedOrigins) {
+      return allowedOrigins.split(',').map(origin => origin.trim());
+    }
+    // 生產環境預設值（應該在 .env 中設定）
+    return [
+      process.env.NEXTAUTH_URL || '',
+      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
+    ].filter(Boolean);
+  }
   
-  // 開發環境中也執行基本檢查，但較為寬鬆
-  if (process.env.NODE_ENV === 'development') {
-    // 允許 localhost, 127.0.0.1 和本機 IP
-    const allowedHosts = ['localhost', '127.0.0.1', '0.0.0.0']
+  // 開發環境允許的來源
+  return [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://0.0.0.0:3000',
+    // 支援不同端口
+    'http://localhost:3001',
+    'http://localhost:3002'
+  ];
+}
+
+/**
+ * 改進的來源驗證
+ * 使用可配置的白名單機制
+ */
+export function validateOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+  const host = request.headers.get('host');
+  
+  if (!host) {
+    return false;
+  }
+  
+  const allowedOrigins = getAllowedOrigins();
+  
+  // 檢查 Origin header
+  if (origin) {
+    // 直接匹配允許的來源清單
+    if (allowedOrigins.includes(origin)) {
+      return true;
+    }
     
-    if (host) {
-      const hostWithoutPort = host.split(':')[0]
-      if (allowedHosts.includes(hostWithoutPort) || hostWithoutPort.startsWith('192.168.') || hostWithoutPort.startsWith('10.')) {
-        return true
+    // 檢查是否與當前 host 匹配
+    try {
+      const originUrl = new URL(origin);
+      if (originUrl.host === host) {
+        return true;
+      }
+    } catch {
+      // 無效的 URL
+    }
+  } else {
+    // 當 origin 為 null 時，檢查是否為同源請求
+    // 在同源請求中，瀏覽器可能不發送 Origin header
+    if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        if (refererUrl.host === host) {
+          return true; // 同源請求，允許通過
+        }
+      } catch {
+        // 無效的 referer URL
       }
     }
     
-    // 檢查是否為本機開發域名
-    if (origin && (origin.includes('localhost') || origin.includes('127.0.0.1') || origin.includes('192.168.'))) {
-      return true
-    }
-    
-    if (referer && (referer.includes('localhost') || referer.includes('127.0.0.1') || referer.includes('192.168.'))) {
-      return true
+    // 在開發環境中，如果沒有 origin 和 referer，但有有效的 host，允許通過
+    if (process.env.NODE_ENV === 'development') {
+      return true;
     }
   }
   
-  // 生產環境的嚴格檢查
-  if (!host) {
-    return false
-  }
-  
-  // 檢查來源是否與主機匹配
-  if (origin) {
-    try {
-      const originUrl = new URL(origin)
-      return originUrl.host === host
-    } catch {
-      return false
-    }
-  }
-  
+  // 檢查 Referer header
   if (referer) {
     try {
-      const refererUrl = new URL(referer)
-      return refererUrl.host === host
+      const refererUrl = new URL(referer);
+      const refererOrigin = `${refererUrl.protocol}//${refererUrl.host}`;
+      
+      if (allowedOrigins.includes(refererOrigin) || refererUrl.host === host) {
+        return true;
+      }
     } catch {
-      return false
+      // 無效的 URL
     }
   }
   
-  return false
+  // 如果都沒有匹配，在開發環境中給予警告但不阻擋
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('[CSRF] Origin validation failed:', {
+      origin,
+      referer,
+      host,
+      allowedOrigins
+    });
+    // 開發環境中，如果沒有 origin 但有有效的 host，允許通過
+    return !origin || true;
+  }
+  
+  return false;
 }
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -233,21 +286,147 @@ export function rateLimit(maxRequests: number = 100, windowMs: number = 15 * 60 
   };
 }
 
-// CSRF Token 機制
+/**
+ * CSRF Token 管理器
+ * 實現 double-submit cookie pattern
+ */
+export class CSRFTokenManager {
+  private static readonly TOKEN_NAME = 'csrf-token';
+  private static readonly HEADER_NAME = 'x-csrf-token';
+  private static readonly TOKEN_LENGTH = 32;
+  
+  /**
+   * 生成新的 CSRF token
+   * 使用 Web Crypto API（Edge Runtime 支援）
+   */
+  static generateToken(): string {
+    // 生成隨機位元組陣列
+    const bytes = new Uint8Array(this.TOKEN_LENGTH);
+    crypto.getRandomValues(bytes);
+    
+    // 轉換為 hex 字串
+    return Array.from(bytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  
+  /**
+   * 創建 CSRF token cookie 選項
+   */
+  static getCookieOptions(secure?: boolean) {
+    return {
+      name: this.TOKEN_NAME,
+      httpOnly: false, // 允許 JavaScript 讀取以便添加到請求標頭
+      secure: secure ?? (process.env.NODE_ENV === 'production'),
+      sameSite: 'strict' as const,
+      maxAge: 60 * 60 * 24, // 24 小時
+      path: '/'
+    };
+  }
+  
+  /**
+   * 從請求中提取 token
+   */
+  static extractTokens(request: NextRequest): {
+    headerToken?: string;
+    cookieToken?: string;
+  } {
+    const headerToken = request.headers.get(this.HEADER_NAME) || 
+                       request.headers.get('X-CSRF-Token') || // 支援大寫
+                       undefined;
+    
+    const cookieToken = request.cookies.get(this.TOKEN_NAME)?.value;
+    
+    return { headerToken, cookieToken };
+  }
+  
+  /**
+   * 驗證 CSRF token（雙重提交模式）
+   */
+  static validateToken(request: NextRequest): {
+    isValid: boolean;
+    reason?: string;
+  } {
+    // GET 請求和其他安全方法不需要 CSRF 保護
+    if (['GET', 'HEAD', 'OPTIONS'].includes(request.method)) {
+      return { isValid: true };
+    }
+    
+    const { headerToken, cookieToken } = this.extractTokens(request);
+    
+    // 檢查是否都存在
+    if (!headerToken) {
+      return { 
+        isValid: false, 
+        reason: `Missing CSRF token in ${this.HEADER_NAME} header` 
+      };
+    }
+    
+    if (!cookieToken) {
+      return { 
+        isValid: false, 
+        reason: `Missing CSRF token in ${this.TOKEN_NAME} cookie` 
+      };
+    }
+    
+    // 檢查是否匹配
+    if (headerToken !== cookieToken) {
+      return { 
+        isValid: false, 
+        reason: 'CSRF token mismatch between header and cookie' 
+      };
+    }
+    
+    // 檢查 token 格式（32 字節的十六進制字符串）
+    if (!/^[a-f0-9]{64}$/.test(headerToken)) {
+      return { 
+        isValid: false, 
+        reason: 'Invalid CSRF token format' 
+      };
+    }
+    
+    return { isValid: true };
+  }
+  
+  /**
+   * 創建設置 CSRF token 的 response headers
+   */
+  static createTokenResponse(token?: string): {
+    token: string;
+    headers: Headers;
+  } {
+    const csrfToken = token || this.generateToken();
+    const headers = new Headers();
+    const cookieOptions = this.getCookieOptions();
+    
+    // 設置 cookie
+    const cookieValue = `${cookieOptions.name}=${csrfToken}; ` +
+      `Path=${cookieOptions.path}; ` +
+      `Max-Age=${cookieOptions.maxAge}; ` +
+      `SameSite=${cookieOptions.sameSite}; ` +
+      (cookieOptions.secure ? 'Secure; ' : '') +
+      (!cookieOptions.httpOnly ? '' : 'HttpOnly; ');
+    
+    headers.set('Set-Cookie', cookieValue.trim());
+    headers.set('X-CSRF-Token', csrfToken);
+    
+    return { token: csrfToken, headers };
+  }
+}
+
+// 向後兼容的函數
 export function generateCSRFToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+  return CSRFTokenManager.generateToken();
 }
 
 export function validateCSRFToken(request: NextRequest): boolean {
-  const token = request.headers.get('x-csrf-token');
-  const sessionToken = request.cookies.get('csrf-token')?.value;
+  const result = CSRFTokenManager.validateToken(request);
   
-  // 如果都不存在，檢查是否為 GET 請求（通常不需要 CSRF 保護）
-  if (!token && !sessionToken && request.method === 'GET') {
-    return true;
+  if (!result.isValid && process.env.NODE_ENV === 'development') {
+    console.warn('[CSRF] Token validation failed:', result.reason);
   }
   
-  return !!(token && sessionToken && token === sessionToken);
+  return result.isValid;
 }
 
 // 組合的安全檢查中間件

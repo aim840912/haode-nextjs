@@ -17,7 +17,9 @@
     "test:supabase": "npx tsx scripts/test-supabase.ts",
     "test:supabase-quick": "npx tsx scripts/quick-test.ts",
     "check:tables": "npx tsx scripts/check-tables.ts",
-    "migrate:products": "npx tsx scripts/migrate-to-supabase.ts"
+    "migrate:products": "npx tsx scripts/migrate-to-supabase.ts",
+    "generate:keys": "node scripts/generate-keys.js",
+    "generate:keys:simple": "node scripts/generate-keys.js --simple"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

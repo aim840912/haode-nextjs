@@ -12,17 +12,12 @@ declare global {
 /**
  * 為 Next.js API 路由創建 Supabase 服務端客戶端
  * 正確處理 cookies 以進行認證
- * 使用快取機制避免重複建立客戶端實例
+ * 每次請求都創建新實例以確保使用最新的 cookies
  */
 export async function createServerSupabaseClient() {
-  // 使用 globalThis 快取，確保真正的單例
-  if (globalThis.__supabase_server_ssr_client__) {
-    return globalThis.__supabase_server_ssr_client__
-  }
-
   const cookieStore = await cookies()
 
-  globalThis.__supabase_server_ssr_client__ = createServerClient<Database>(
+  return createServerClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -44,8 +39,6 @@ export async function createServerSupabaseClient() {
       },
     }
   )
-
-  return globalThis.__supabase_server_ssr_client__
 }
 
 /**

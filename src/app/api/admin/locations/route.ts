@@ -1,34 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-auth'
 import { Location } from '@/types/location'
-
-// 檢查管理員權限的安全實現
-function checkAdminPermission(request: NextRequest): { isValid: boolean; error?: string } {
-  const adminKey = request.headers.get('X-Admin-Key')
-  const envAdminKey = process.env.ADMIN_API_KEY
-  
-  if (!envAdminKey) {
-    console.error('ADMIN_API_KEY not configured in environment variables')
-    return { isValid: false, error: '伺服器設定錯誤' }
-  }
-  
-  if (!adminKey) {
-    return { isValid: false, error: '缺少管理員認證標頭' }
-  }
-  
-  if (adminKey !== envAdminKey) {
-    return { isValid: false, error: '無效的管理員認證' }
-  }
-  
-  return { isValid: true }
-}
+import { 
+  checkAdminPermission, 
+  createAuthErrorResponse,
+  checkRateLimit 
+} from '@/lib/admin-auth-middleware'
 
 // GET - 取得所有地點
 export async function GET(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+  // Rate limiting
+  const clientIp = request.headers.get('x-forwarded-for') || 'unknown'
+  if (!checkRateLimit(`admin-locations-${clientIp}`, 30, 60000)) {
+    return NextResponse.json(
+      { error: '請求過於頻繁，請稍後再試' },
+      { status: 429 }
+    )
+  }
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -52,10 +45,19 @@ export async function GET(request: NextRequest) {
 
 // POST - 新增地點
 export async function POST(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+  // Rate limiting
+  const clientIp = request.headers.get('x-forwarded-for') || 'unknown'
+  if (!checkRateLimit(`admin-locations-${clientIp}`, 30, 60000)) {
+    return NextResponse.json(
+      { error: '請求過於頻繁，請稍後再試' },
+      { status: 429 }
+    )
+  }
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -101,10 +103,19 @@ export async function POST(request: NextRequest) {
 
 // PUT - 更新地點
 export async function PUT(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+  // Rate limiting
+  const clientIp = request.headers.get('x-forwarded-for') || 'unknown'
+  if (!checkRateLimit(`admin-locations-${clientIp}`, 30, 60000)) {
+    return NextResponse.json(
+      { error: '請求過於頻繁，請稍後再試' },
+      { status: 429 }
+    )
+  }
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -157,10 +168,19 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - 刪除地點
 export async function DELETE(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+  // Rate limiting
+  const clientIp = request.headers.get('x-forwarded-for') || 'unknown'
+  if (!checkRateLimit(`admin-locations-${clientIp}`, 30, 60000)) {
+    return NextResponse.json(
+      { error: '請求過於頻繁，請稍後再試' },
+      { status: 429 }
+    )
+  }
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {

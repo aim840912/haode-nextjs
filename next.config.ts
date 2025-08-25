@@ -49,9 +49,63 @@ const nextConfig: NextConfig = {
     return config
   },
   
-  // 快取配置
+  // 安全標頭與快取配置
   async headers() {
+    // Content Security Policy 配置
+    const csp = [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://checkout.stripe.com",
+      "worker-src 'self' blob:",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.supabase.co wss://*.supabase.co",
+      "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join('; ');
+
+    // 安全標頭配置
+    const securityHeaders = [
+      {
+        key: 'Content-Security-Policy',
+        value: csp
+      },
+      {
+        key: 'X-Frame-Options',
+        value: 'DENY'
+      },
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff'
+      },
+      {
+        key: 'X-XSS-Protection',
+        value: '1; mode=block'
+      },
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin'
+      },
+      {
+        key: 'Permissions-Policy',
+        value: 'camera=(), microphone=(), geolocation=()'
+      },
+      // HSTS 只在生產環境啟用
+      ...(process.env.NODE_ENV === 'production' ? [{
+        key: 'Strict-Transport-Security',
+        value: 'max-age=31536000; includeSubDomains; preload'
+      }] : [])
+    ];
+
     return [
+      // 全站安全標頭
+      {
+        source: '/(.*)',
+        headers: securityHeaders
+      },
+      // 圖片快取配置
       {
         source: '/images/:path*',
         headers: [
@@ -61,6 +115,7 @@ const nextConfig: NextConfig = {
           }
         ]
       },
+      // API 快取配置
       {
         source: '/api/:path*',
         headers: [

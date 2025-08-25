@@ -8,6 +8,7 @@ import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-serve
 import { createInquiryService } from '@/services/inquiryService';
 import { supabaseServerInquiryService } from '@/services/supabaseInquiryService';
 import { AuditLogger } from '@/services/auditLogService';
+import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter';
 import { 
   CreateInquiryRequest, 
   InquiryQueryParams,
@@ -48,7 +49,7 @@ function createSuccessResponse(data: any, message?: string, status: number = 200
 }
 
 // GET /api/inquiries - 取得詢價單清單
-export async function GET(request: NextRequest) {
+async function handleGET(request: NextRequest) {
   try {
     // 驗證使用者認證
     const user = await getCurrentUser();
@@ -120,7 +121,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/inquiries - 建立新詢價單
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     // 驗證使用者認證
     const user = await getCurrentUser();
@@ -202,6 +203,25 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// 套用 Rate Limiting 並導出 API 處理器
+export const GET = withRateLimit(handleGET, {
+  maxRequests: 100,
+  windowMs: 60 * 1000, // 1 分鐘
+  strategy: IdentifierStrategy.USER_ID,
+  enableAuditLog: false,
+  includeHeaders: true,
+  message: '詢價單查詢頻率超出限制，請稍後重試'
+});
+
+export const POST = withRateLimit(handlePOST, {
+  maxRequests: 3,
+  windowMs: 10 * 60 * 1000, // 10 分鐘
+  strategy: IdentifierStrategy.COMBINED,
+  enableAuditLog: true,
+  includeHeaders: true,
+  message: '詢價單提交過於頻繁，請等待 10 分鐘後重試'
+});
 
 // 處理其他不支援的 HTTP 方法
 export async function PUT() {

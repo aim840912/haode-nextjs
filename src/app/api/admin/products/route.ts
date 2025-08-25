@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-auth'
 import { Product } from '@/types/product'
+import { 
+  checkAdminPermission, 
+  createAuthErrorResponse
+} from '@/lib/admin-auth-middleware'
+import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {
@@ -43,33 +48,13 @@ function transformFromDB(dbProduct: Record<string, unknown>): Product {
   }
 }
 
-// 檢查管理員權限的安全實現
-function checkAdminPermission(request: NextRequest): { isValid: boolean; error?: string } {
-  const adminKey = request.headers.get('X-Admin-Key')
-  const envAdminKey = process.env.ADMIN_API_KEY
-  
-  if (!envAdminKey) {
-    console.error('ADMIN_API_KEY not configured in environment variables')
-    return { isValid: false, error: '伺服器設定錯誤' }
-  }
-  
-  if (!adminKey) {
-    return { isValid: false, error: '缺少管理員認證標頭' }
-  }
-  
-  if (adminKey !== envAdminKey) {
-    return { isValid: false, error: '無效的管理員認證' }
-  }
-  
-  return { isValid: true }
-}
-
 // GET - 取得所有產品（包含未啟用的）
-export async function GET(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+async function handleGET(request: NextRequest) {
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -95,11 +80,12 @@ export async function GET(request: NextRequest) {
 }
 
 // POST - 新增產品
-export async function POST(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+async function handlePOST(request: NextRequest) {
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -136,11 +122,12 @@ export async function POST(request: NextRequest) {
 }
 
 // PUT - 更新產品
-export async function PUT(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+async function handlePUT(request: NextRequest) {
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -184,11 +171,12 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE - 刪除產品
-export async function DELETE(request: NextRequest) {
-  const authResult = checkAdminPermission(request)
+async function handleDELETE(request: NextRequest) {
+
+  // 驗證管理員權限
+  const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
-    const status = authResult.error === '伺服器設定錯誤' ? 500 : 401
-    return NextResponse.json({ error: authResult.error }, { status })
+    return createAuthErrorResponse(authResult)
   }
 
   try {
@@ -216,3 +204,27 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }
+
+// 套用 Rate Limiting 並導出 API 處理器
+const adminRateLimitConfig = {
+  maxRequests: 50,
+  windowMs: 60 * 1000, // 1 分鐘
+  strategy: IdentifierStrategy.API_KEY,
+  enableAuditLog: true,
+  includeHeaders: true,
+  message: '管理員 API 使用頻率超出限制，請稍後重試'
+};
+
+export const GET = withRateLimit(handleGET, {
+  ...adminRateLimitConfig,
+  maxRequests: 100 // GET 請求較寬鬆
+});
+
+export const POST = withRateLimit(handlePOST, adminRateLimitConfig);
+
+export const PUT = withRateLimit(handlePUT, adminRateLimitConfig);
+
+export const DELETE = withRateLimit(handleDELETE, {
+  ...adminRateLimitConfig,
+  maxRequests: 20 // DELETE 請求較嚴格
+});
