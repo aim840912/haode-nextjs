@@ -197,12 +197,6 @@ export const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
     windowMs: 60 * 1000 // 1 分鐘
   }),
 
-  // 評價系統 - 中等安全等級
-  '/api/reviews': createConfig(SecurityLevel.MEDIUM, {
-    maxRequests: 10,
-    windowMs: 60 * 1000, // 1 分鐘
-    message: '評價提交過於頻繁，請稍後再試'
-  }),
 
   // 檔案上傳 - 中等安全等級（但更嚴格）
   '/api/upload/**': createConfig(SecurityLevel.MEDIUM, {

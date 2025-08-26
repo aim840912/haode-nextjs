@@ -21,7 +21,6 @@ const CSRF_PROTECTED_PATHS = [
   '/api/inquiries',
   '/api/orders',
   '/api/payment',
-  '/api/reviews',
   '/api/cart',
   '/api/upload',
   '/api/admin-proxy',

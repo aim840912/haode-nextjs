@@ -11,7 +11,6 @@ import { FarmTourActivity } from '@/types/farmTour'
 import { NewsService } from '@/types/news'
 import { CultureService } from '@/types/culture'
 import { LocationService } from '@/types/location'
-import { ReviewService } from '@/types/review'
 import { shouldUseSupabase, shouldFallbackToJson, shouldUseCache, getStrategyInfo } from '@/config/data-strategy'
 
 // 定義服務介面類型
@@ -30,7 +29,6 @@ let farmTourServiceInstance: FarmTourService | null = null
 let newsServiceInstance: NewsService | null = null
 let cultureServiceInstance: CultureService | null = null
 let locationServiceInstance: LocationService | null = null
-let reviewServiceInstance: ReviewService | null = null
 
 /**
  * 獲取產品服務實例
@@ -188,7 +186,6 @@ const serviceInstances = {
   news: newsServiceInstance,
   culture: cultureServiceInstance,
   locations: locationServiceInstance,
-  reviews: reviewServiceInstance
 }
 
 /**
@@ -313,29 +310,6 @@ export async function getLocationService(): Promise<LocationService> {
   return locationServiceInstance!
 }
 
-/**
- * 獲取評價服務實例
- */
-export async function getReviewService(): Promise<ReviewService> {
-  if (reviewServiceInstance) {
-    return reviewServiceInstance
-  }
-
-  reviewServiceInstance = await createService(
-    'reviews',
-    async () => {
-      const { supabaseReviewService } = await import('./supabaseReviewService')
-      return { supabaseReviewService }
-    },
-    async () => {
-      const reviewService = await import('./reviewService')
-      return reviewService.reviewService
-    },
-    (service) => service.getReviews({ limit: 1 })
-  )
-
-  return reviewServiceInstance!
-}
 
 /**
  * 重設服務實例（用於測試或環境變更）
@@ -347,7 +321,6 @@ export function resetServiceInstances() {
   newsServiceInstance = null
   cultureServiceInstance = null
   locationServiceInstance = null
-  reviewServiceInstance = null
   console.log('🔄 所有服務實例已重設')
 }
 

@@ -34,8 +34,6 @@ export function withApiCache(
       
       if (pathname.includes('/api/products')) {
         await CacheManager.deletePattern(`products:*`)
-      } else if (pathname.includes('/api/reviews')) {
-        await CacheManager.deletePattern(`reviews:*`)
       } else if (pathname.includes('/api/news')) {
         await CacheManager.deletePattern(`news:*`)
       } else if (pathname.includes('/api/farm-tour')) {
