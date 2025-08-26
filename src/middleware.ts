@@ -38,7 +38,6 @@ const CSRF_EXCLUDED_PATHS = [
   '/api/culture', // 公開的文化 API（GET 請求）
   '/api/farm-tour', // 公開的農場導覽 API（GET 請求）
   '/api/schedule', // 公開的行程 API（GET 請求）
-  '/api/stats/track', // 訪客追蹤（可能從外部調用）
   '/api/payment/callback', // 支付回調（第三方調用）
   '/api/admin', // Admin API 使用 X-Admin-Key 驗證，不需要 CSRF 保護
   '/_next/', // Next.js 內部請求

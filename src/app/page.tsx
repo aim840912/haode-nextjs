@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import SocialLinks from '@/components/SocialLinks'
-import VisitorCounter from '@/components/VisitorCounter'
 import { FarmStructuredData } from '@/components/StructuredData'
 import ProductsSection from '@/components/ProductsSection'
 
@@ -146,9 +145,6 @@ export default function Home() {
           <div className="border-t border-amber-800 mt-8 pt-6">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-amber-100 text-sm">&copy; 2024 豪德茶業 Haude Tea Company. 版權所有</p>
-              <div className="mt-4 md:mt-0">
-                <VisitorCounter className="text-amber-100" />
-              </div>
             </div>
           </div>
         </div>

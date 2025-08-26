@@ -6,8 +6,9 @@ import HeaderSpacer from "@/components/HeaderSpacer";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { ToastProvider } from "@/components/Toast";
-import VisitorTracker from "@/components/VisitorTracker";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import GoogleAnalyticsProvider from "@/components/GoogleAnalyticsProvider";
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ["latin"],
@@ -104,20 +105,25 @@ export default function RootLayout({
     <html lang="zh">
       <body className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased`}>
         <ErrorBoundary>
-          <ToastProvider>
-            <AuthProvider>
-              <CartProvider>
-                <VisitorTracker>
+          <GoogleAnalyticsProvider>
+            <ToastProvider>
+              <AuthProvider>
+                <CartProvider>
                   <Header />
                   <main className="min-h-screen">
                     <HeaderSpacer />
                     {children}
                   </main>
-                </VisitorTracker>
-              </CartProvider>
-            </AuthProvider>
-          </ToastProvider>
+                </CartProvider>
+              </AuthProvider>
+            </ToastProvider>
+          </GoogleAnalyticsProvider>
         </ErrorBoundary>
+        {/* Google Analytics 4 整合 */}
+        {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && 
+         process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID !== 'G-PLACEHOLDER' && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID} />
+        )}
       </body>
     </html>
   );

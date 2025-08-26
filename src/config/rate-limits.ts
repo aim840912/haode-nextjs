@@ -211,11 +211,6 @@ export const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
     windowMs: 60 * 1000 // 1 分鐘
   }),
 
-  // 統計追蹤 - 低安全等級
-  '/api/stats/**': createConfig(SecurityLevel.LOW, {
-    maxRequests: 500,
-    windowMs: 60 * 1000 // 1 分鐘
-  }),
 
   // 公開資料 API - 公開等級
   '/api/products': createConfig(SecurityLevel.PUBLIC, {
