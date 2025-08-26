@@ -19,7 +19,7 @@ function CartPage() {
   const { success, error } = useToast();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
-  const csrfToken = useCSRFToken();
+  const { token: csrfToken } = useCSRFToken();
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
