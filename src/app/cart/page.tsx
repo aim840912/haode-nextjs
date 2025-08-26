@@ -11,6 +11,7 @@ import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useState } from 'react';
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry';
 import { supabase } from '@/lib/supabase-auth';
+import { useCSRFToken } from '@/hooks/useCSRFToken';
 
 function CartPage() {
   const { cart, updateItemQuantity, removeItem, clearCart, totalItems, totalPrice } = useCart();
@@ -18,6 +19,7 @@ function CartPage() {
   const { success, error } = useToast();
   const router = useRouter();
   const [isProcessing, setIsProcessing] = useState(false);
+  const csrfToken = useCSRFToken();
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
@@ -35,6 +37,12 @@ function CartPage() {
     
     if (totalItems === 0) {
       error('購物車空空的', '請先加入商品再詢問店家');
+      return;
+    }
+    
+    // 檢查 CSRF token 是否準備就緒
+    if (!csrfToken) {
+      error('安全驗證尚未就緒', '請稍候再試');
       return;
     }
 
@@ -72,6 +80,20 @@ function CartPage() {
         error('認證失敗', '請重新登入');
         return;
       }
+      
+      // 獲取最新的 CSRF token 從 cookie
+      const getCookieToken = () => {
+        const cookies = document.cookie.split(';');
+        const csrfCookie = cookies.find(c => c.trim().startsWith('csrf-token='));
+        return csrfCookie ? csrfCookie.split('=')[1].trim() : null;
+      };
+      
+      const currentToken = getCookieToken() || csrfToken;
+      
+      if (!currentToken) {
+        error('安全驗證失敗', '請重新整理頁面再試');
+        return;
+      }
 
       console.log('🚀 發送詢問店家請求:', {
         url: '/api/inquiries',
@@ -84,7 +106,8 @@ function CartPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'X-CSRF-Token': currentToken
         },
         body: JSON.stringify(inquiryData)
       });

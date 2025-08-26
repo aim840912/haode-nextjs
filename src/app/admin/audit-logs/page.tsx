@@ -582,24 +582,24 @@ function AuditLogsPage() {
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-2">基本資訊</h3>
                         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                          <p><span className="font-medium">ID:</span> {selectedLog.id}</p>
-                          <p><span className="font-medium">時間:</span> {new Date(selectedLog.created_at).toLocaleString('zh-TW')}</p>
-                          <p><span className="font-medium">動作:</span> 
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">ID:</span> {selectedLog.id}</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">時間:</span> {new Date(selectedLog.created_at).toLocaleString('zh-TW')}</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">動作:</span> 
                             <span className={`ml-2 px-2 py-1 text-xs rounded-full ${AUDIT_ACTION_COLORS[selectedLog.action]}`}>
                               {AUDIT_ACTION_LABELS[selectedLog.action]}
                             </span>
                           </p>
-                          <p><span className="font-medium">資源:</span> {RESOURCE_TYPE_LABELS[selectedLog.resource_type]} ({selectedLog.resource_id})</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">資源:</span> {RESOURCE_TYPE_LABELS[selectedLog.resource_type]} ({selectedLog.resource_id})</p>
                         </div>
                       </div>
 
                       <div>
                         <h3 className="font-semibold text-gray-900 mb-2">使用者資訊</h3>
                         <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-                          <p><span className="font-medium">姓名:</span> {selectedLog.user_name || '未知'}</p>
-                          <p><span className="font-medium">Email:</span> {selectedLog.user_email}</p>
-                          <p><span className="font-medium">角色:</span> {selectedLog.user_role ? USER_ROLE_LABELS[selectedLog.user_role as UserRole] : '未知'}</p>
-                          <p><span className="font-medium">IP 地址:</span> {selectedLog.ip_address || '未知'}</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">姓名:</span> {selectedLog.user_name || '未知'}</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">Email:</span> {selectedLog.user_email}</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">角色:</span> {selectedLog.user_role ? USER_ROLE_LABELS[selectedLog.user_role as UserRole] : '未知'}</p>
+                          <p className="text-gray-900"><span className="font-medium text-gray-700">IP 地址:</span> {selectedLog.ip_address || '未知'}</p>
                         </div>
                       </div>
                     </div>
@@ -609,7 +609,7 @@ function AuditLogsPage() {
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-2">資源詳情</h3>
                           <div className="bg-gray-50 p-4 rounded-lg">
-                            <pre className="text-sm whitespace-pre-wrap">
+                            <pre className="text-sm text-gray-900 whitespace-pre-wrap">
                               {JSON.stringify(selectedLog.resource_details, null, 2)}
                             </pre>
                           </div>
@@ -620,7 +620,7 @@ function AuditLogsPage() {
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-2">變更前資料</h3>
                           <div className="bg-red-50 p-4 rounded-lg">
-                            <pre className="text-sm whitespace-pre-wrap">
+                            <pre className="text-sm text-red-900 whitespace-pre-wrap">
                               {JSON.stringify(selectedLog.previous_data, null, 2)}
                             </pre>
                           </div>
@@ -631,7 +631,7 @@ function AuditLogsPage() {
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-2">變更後資料</h3>
                           <div className="bg-green-50 p-4 rounded-lg">
-                            <pre className="text-sm whitespace-pre-wrap">
+                            <pre className="text-sm text-green-900 whitespace-pre-wrap">
                               {JSON.stringify(selectedLog.new_data, null, 2)}
                             </pre>
                           </div>
@@ -642,7 +642,7 @@ function AuditLogsPage() {
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-2">額外資訊</h3>
                           <div className="bg-blue-50 p-4 rounded-lg">
-                            <pre className="text-sm whitespace-pre-wrap">
+                            <pre className="text-sm text-blue-900 whitespace-pre-wrap">
                               {JSON.stringify(selectedLog.metadata, null, 2)}
                             </pre>
                           </div>
@@ -653,7 +653,7 @@ function AuditLogsPage() {
                         <div>
                           <h3 className="font-semibold text-gray-900 mb-2">瀏覽器資訊</h3>
                           <div className="bg-gray-50 p-4 rounded-lg">
-                            <p className="text-sm break-all">{selectedLog.user_agent}</p>
+                            <p className="text-sm text-gray-900 break-all">{selectedLog.user_agent}</p>
                           </div>
                         </div>
                       )}
