@@ -6,14 +6,15 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import ImageUploader from '@/components/ImageUploader'
+import { v4 as uuidv4 } from 'uuid'
 
-export default function AddProduct() {
+function AddProduct() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
-  const [tempProductId] = useState(() => `temp-${Date.now()}`) // 臨時產品ID用於圖片上傳
+  const [productId] = useState(() => uuidv4()) // 使用 UUID 作為產品 ID
   const { user, isLoading } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
@@ -111,6 +112,7 @@ export default function AddProduct() {
       const { salePrice, ...productDataWithoutSalePrice } = formData
       const productData = {
         ...productDataWithoutSalePrice,
+        id: productId, // 指定產品 ID
         images: uploadedImages.length > 0 ? uploadedImages : formData.images.filter(img => img.trim() !== ''),
         // 如果是特價商品，設定特價為當前售價，原價為 originalPrice
         // 如果不是特價商品，設定原價為當前售價，originalPrice 為 null
@@ -141,6 +143,7 @@ export default function AddProduct() {
 
       if (response.ok) {
         const result = await response.json()
+        console.log(`✅ 產品建立成功: ${result.product?.id || productId}`)
         router.push('/admin/products')
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
@@ -396,7 +399,7 @@ export default function AddProduct() {
               產品圖片
             </label>
             <ImageUploader
-              productId={tempProductId}
+              productId={productId}
               onUploadSuccess={handleImageUploadSuccess}
               onUploadError={handleImageUploadError}
               maxFiles={5}
@@ -462,3 +465,7 @@ export default function AddProduct() {
     </div>
   )
 }
+
+AddProduct.displayName = 'AddProduct';
+
+export default AddProduct;

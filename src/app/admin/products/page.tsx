@@ -50,6 +50,8 @@ function ProductsAdmin() {
   )
 }
 
+ProductsAdmin.displayName = 'ProductsAdmin';
+
 export default function ProductsAdminWithErrorBoundary() {
   return (
     <ComponentErrorBoundary>
@@ -57,3 +59,5 @@ export default function ProductsAdminWithErrorBoundary() {
     </ComponentErrorBoundary>
   )
 }
+
+ProductsAdminWithErrorBoundary.displayName = 'ProductsAdminWithErrorBoundary';

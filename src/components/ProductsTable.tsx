@@ -102,9 +102,35 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
+
+      // 解析回應以取得刪除詳情
+      const data = await response.json()
       
       // 立即從本地狀態移除產品，提供即時更新體驗
       setProducts(prevProducts => prevProducts.filter(p => p.id !== id))
+      
+      // 顯示詳細的刪除結果
+      if (data.imageCleanup) {
+        const { success, deletedCount, verification } = data.imageCleanup
+        let message = '✅ 產品已成功刪除'
+        
+        if (success && deletedCount > 0) {
+          message += `\n🖼️ 已清理 ${deletedCount} 個圖片檔案`
+          if (verification?.verified) {
+            message += '\n✅ 圖片清理已驗證完成'
+          } else if (verification?.remainingFiles?.length > 0) {
+            message += `\n⚠️ 發現 ${verification.remainingFiles.length} 個圖片檔案未完全清理`
+          }
+        } else if (deletedCount === 0) {
+          message += '\nℹ️ 此產品沒有關聯的圖片檔案'
+        } else if (!success) {
+          message += `\n⚠️ 圖片清理失敗: ${data.imageCleanup.error || '未知錯誤'}`
+        }
+        
+        alert(message)
+      } else {
+        alert('✅ 產品已成功刪除')
+      }
       
       // 呼叫父組件的回調函數
       onDelete?.(id)

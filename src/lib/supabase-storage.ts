@@ -146,64 +146,126 @@ export async function deleteImageFromStorage(filePath: string): Promise<void> {
 }
 
 /**
+ * 產品圖片刪除結果介面
+ */
+export interface ProductImageDeletionResult {
+  success: boolean;
+  productId: string;
+  deletedCount: number;
+  deletedFiles: string[];
+  folderCleanedUp: boolean;
+  error?: string;
+}
+
+/**
  * 刪除產品的所有圖片
  */
-export async function deleteProductImages(productId: string): Promise<void> {
+export async function deleteProductImages(productId: string): Promise<ProductImageDeletionResult> {
   try {
     console.log(`🗑️ 開始刪除產品 ${productId} 的圖片...`);
     
-    // 列出產品資料夾下的所有檔案
-    const { data: files, error: listError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .list(productId);
-
-    if (listError) {
-      console.error(`❌ 列出產品 ${productId} 圖片失敗:`, listError);
-      throw new SupabaseStorageError('列出產品圖片失敗', listError);
-    }
-
-    if (!files || files.length === 0) {
-      console.log(`ℹ️ 產品 ${productId} 沒有圖片需要刪除`);
-      return;
-    }
-
-    console.log(`📁 發現 ${files.length} 個檔案需要刪除:`, files.map((f: any) => f.name));
-
-    // 建立要刪除的檔案路徑列表
-    const filePaths = files.map((file: any) => `${productId}/${file.name}`);
-
-    // 批量刪除所有圖片
-    const { error: deleteError } = await supabase.storage
-      .from(STORAGE_BUCKET)
-      .remove(filePaths);
-
-    if (deleteError) {
-      console.error(`❌ 批量刪除產品 ${productId} 圖片失敗:`, deleteError);
-      throw new SupabaseStorageError('批量刪除產品圖片失敗', deleteError);
-    }
-
-    console.log(`✅ 成功刪除產品 ${productId} 的 ${filePaths.length} 張圖片`);
+    const allDeletedFiles: string[] = [];
+    let totalDeletedCount = 0;
+    let folderCleanedUp = false;
     
-    // 嘗試刪除空資料夾（如果 Supabase 支持的話）
-    try {
-      const { error: folderError } = await supabase.storage
-        .from(STORAGE_BUCKET)
-        .remove([`${productId}/.keep`]); // 嘗試刪除可能的標記檔案
-      
-      if (!folderError) {
-        console.log(`🗂️ 已清理產品 ${productId} 資料夾`);
+    // 要檢查的可能資料夾路徑
+    const possibleFolders = [
+      productId, // UUID 資料夾
+      `temp-${productId}`, // 如果 productId 本身是數字，嘗試 temp 前綴
+    ];
+
+    // 如果 productId 不是以 temp- 開頭，也檢查所有可能的 temp 資料夾
+    if (!productId.startsWith('temp-')) {
+      // 列出所有 temp- 開頭的資料夾，找可能關聯的
+      try {
+        const { data: allFolders } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .list('');
+        
+        if (allFolders) {
+          const tempFolders = allFolders
+            .filter((folder: any) => folder.name.startsWith('temp-'))
+            .map((folder: any) => folder.name);
+          
+          possibleFolders.push(...tempFolders);
+        }
+      } catch (listAllError) {
+        console.warn(`⚠️ 無法列出所有資料夾，將只檢查標準路徑:`, listAllError);
       }
-    } catch (folderCleanupError) {
-      // 資料夾清理失敗不是致命錯誤
-      console.log(`ℹ️ 資料夾清理略過 (這是正常的):`, folderCleanupError);
     }
+
+    console.log(`📁 檢查以下資料夾: ${possibleFolders.join(', ')}`);
+
+    // 檢查每個可能的資料夾
+    for (const folder of possibleFolders) {
+      try {
+        const { data: files, error: listError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .list(folder);
+
+        if (listError || !files || files.length === 0) {
+          continue; // 跳過此資料夾
+        }
+
+        console.log(`📁 在資料夾 ${folder} 發現 ${files.length} 個檔案:`, files.map((f: any) => f.name));
+
+        // 建立要刪除的檔案路徑列表
+        const filePaths = files.map((file: any) => `${folder}/${file.name}`);
+
+        // 批量刪除所有圖片
+        const { error: deleteError } = await supabase.storage
+          .from(STORAGE_BUCKET)
+          .remove(filePaths);
+
+        if (!deleteError) {
+          allDeletedFiles.push(...files.map((f: any) => f.name));
+          totalDeletedCount += filePaths.length;
+          console.log(`✅ 成功刪除資料夾 ${folder} 中的 ${filePaths.length} 張圖片`);
+          folderCleanedUp = true;
+        } else {
+          console.error(`❌ 批量刪除資料夾 ${folder} 圖片失敗:`, deleteError);
+        }
+      } catch (folderError) {
+        console.warn(`⚠️ 處理資料夾 ${folder} 時發生錯誤:`, folderError);
+      }
+    }
+
+    if (totalDeletedCount === 0) {
+      console.log(`ℹ️ 產品 ${productId} 沒有找到圖片需要刪除`);
+      return {
+        success: true,
+        productId,
+        deletedCount: 0,
+        deletedFiles: [],
+        folderCleanedUp: false
+      };
+    }
+
+    console.log(`✅ 總共成功刪除產品 ${productId} 的 ${totalDeletedCount} 張圖片`);
+
+    return {
+      success: true,
+      productId,
+      deletedCount: totalDeletedCount,
+      deletedFiles: allDeletedFiles,
+      folderCleanedUp
+    };
     
   } catch (error) {
-    if (error instanceof SupabaseStorageError) {
-      throw error;
-    }
-    console.error(`💥 刪除產品 ${productId} 圖片過程發生未知錯誤:`, error);
-    throw new SupabaseStorageError('刪除產品圖片過程發生未知錯誤', error);
+    const errorMessage = error instanceof SupabaseStorageError 
+      ? error.message 
+      : '刪除產品圖片過程發生未知錯誤';
+    
+    console.error(`💥 刪除產品 ${productId} 圖片過程發生錯誤:`, error);
+    
+    return {
+      success: false,
+      productId,
+      deletedCount: 0,
+      deletedFiles: [],
+      folderCleanedUp: false,
+      error: errorMessage
+    };
   }
 }
 
@@ -298,3 +360,4 @@ export async function getImageSignedUrl(
     throw new SupabaseStorageError('生成簽名 URL 過程發生未知錯誤', error);
   }
 }
+

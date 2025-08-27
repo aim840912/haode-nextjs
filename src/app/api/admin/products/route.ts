@@ -6,6 +6,8 @@ import {
   createAuthErrorResponse
 } from '@/lib/admin-auth-middleware'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
+import { deleteProductImages, ProductImageDeletionResult, listProductImages } from '@/lib/supabase-storage'
+import { SupabaseAuditLogService } from '@/services/auditLogService'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {
@@ -96,7 +98,7 @@ async function handlePOST(request: NextRequest) {
     const productData = await request.json()
 
     // 轉換資料格式
-    const dbProduct = {
+    const dbProduct: Record<string, unknown> = {
       name: productData.name,
       description: productData.description,
       price: productData.price,
@@ -104,6 +106,11 @@ async function handlePOST(request: NextRequest) {
       image_url: productData.images?.[0] || null,
       stock: productData.inventory || 0,
       is_active: productData.isActive !== false
+    }
+
+    // 如果前端提供了 ID，使用指定的 ID
+    if (productData.id) {
+      dbProduct.id = productData.id
     }
 
     const { data, error } = await supabaseAdmin
@@ -191,6 +198,41 @@ async function handleDELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
     }
 
+    // 先獲取產品資料以便記錄審計日誌
+    const { data: productData, error: fetchError } = await supabaseAdmin
+      .from('products')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error(`Error fetching product ${id} for audit:`, fetchError)
+    }
+
+    // 先刪除 Supabase Storage 中的產品圖片
+    let imageDeletionResult: ProductImageDeletionResult
+    try {
+      console.log(`🗑️ 開始為產品 ${id} 清理圖片...`)
+      imageDeletionResult = await deleteProductImages(id)
+      if (imageDeletionResult.success) {
+        console.log(`✅ 產品 ${id} 的圖片清理完成 - 刪除了 ${imageDeletionResult.deletedCount} 個檔案`)
+      } else {
+        console.warn(`⚠️ 產品 ${id} 圖片清理失敗: ${imageDeletionResult.error}`)
+      }
+    } catch (storageError) {
+      // 如果函數拋出異常（不應該發生，但作為備用）
+      console.warn(`⚠️ 產品 ${id} 圖片清理過程發生異常:`, storageError)
+      imageDeletionResult = {
+        success: false,
+        productId: id,
+        deletedCount: 0,
+        deletedFiles: [],
+        folderCleanedUp: false,
+        error: '圖片清理過程發生異常'
+      }
+    }
+
+    // 然後刪除資料庫記錄
     const { error } = await supabaseAdmin
       .from('products')
       .delete()
@@ -198,7 +240,57 @@ async function handleDELETE(request: NextRequest) {
 
     if (error) throw error
 
-    return NextResponse.json({ message: 'Product deleted successfully' })
+    // 驗證圖片是否真的被刪除乾淨
+    let verificationResult = { verified: false, remainingFiles: [] as any[] }
+    if (imageDeletionResult.success && imageDeletionResult.deletedCount > 0) {
+      try {
+        console.log(`🔍 驗證產品 ${id} 的圖片是否完全清理...`)
+        const remainingImages = await listProductImages(id)
+        if (remainingImages.length === 0) {
+          console.log(`✅ 驗證通過：產品 ${id} 的圖片已完全清理`)
+          verificationResult.verified = true
+        } else {
+          console.warn(`⚠️ 驗證失敗：產品 ${id} 仍有 ${remainingImages.length} 個圖片殘留`)
+          verificationResult.remainingFiles = remainingImages
+        }
+      } catch (verifyError) {
+        console.warn(`⚠️ 無法驗證產品 ${id} 的圖片清理狀態:`, verifyError)
+      }
+    } else if (imageDeletionResult.deletedCount === 0) {
+      // 如果沒有檔案需要刪除，驗證也算通過
+      verificationResult.verified = true
+    }
+
+    // 記錄審計日誌
+    try {
+      const auditService = new SupabaseAuditLogService()
+      await auditService.log({
+        user_id: 'admin-api-key',
+        user_email: 'admin@system',
+        user_name: 'Admin API',
+        user_role: 'admin',
+        action: 'delete',
+        resource_type: 'product' as any, // 暫時使用 any，稍後會更新 type
+        resource_id: id,
+        resource_details: productData ? transformFromDB(productData) : {},
+        metadata: {
+          imageCleanup: imageDeletionResult,
+          verification: verificationResult
+        },
+        ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+        user_agent: request.headers.get('user-agent') || undefined
+      })
+    } catch (auditError) {
+      console.warn('Failed to log product deletion audit:', auditError)
+    }
+
+    return NextResponse.json({ 
+      message: 'Product deleted successfully',
+      imageCleanup: {
+        ...imageDeletionResult,
+        verification: verificationResult
+      }
+    })
   } catch (error) {
     console.error('Error deleting product:', error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })

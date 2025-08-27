@@ -15,7 +15,11 @@
       "Bash(npm test:*)",
       "WebFetch(domain:vercel.com)",
       "Bash(cp:*)",
-      "Read(//mnt/c/Users/aim84/Downloads/**)"
+      "Read(//mnt/c/Users/aim84/Downloads/**)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsx:*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://bxlrtcagsuoijjolgdzs.supabase.co SUPABASE_SERVICE_ROLE_KEY=sb_secret_dcIa080eUatHIVYYwQUFZw_wUovKzgp npx tsx scripts/migrate-product-images.ts --dry-run)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://bxlrtcagsuoijjolgdzs.supabase.co SUPABASE_SERVICE_ROLE_KEY=sb_secret_dcIa080eUatHIVYYwQUFZw_wUovKzgp npx tsx scripts/migrate-product-images.ts)"
     ],
     "deny": []
   },

@@ -6,6 +6,7 @@ import { Product } from '@/types/product'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
+import ImageUploader from '@/components/ImageUploader'
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -14,6 +15,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const [productId, setProductId] = useState<string>('')
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const { user, isLoading } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
@@ -192,6 +194,22 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
               type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
               value
     }))
+  }
+
+  const handleImageUploadSuccess = (images: any[]) => {
+    const urls = images.map(img => img.url)
+    setUploadedImages(prev => [...prev, ...urls])
+    
+    // 同時更新 formData 中的 images
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images.filter(img => img.trim() !== ''), ...urls]
+    }))
+  }
+
+  const handleImageUploadError = (error: string) => {
+    console.error('圖片上傳錯誤:', error)
+    alert(`圖片上傳失敗: ${error}`)
   }
 
 
@@ -447,8 +465,36 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
               產品圖片
             </label>
             <p className="text-xs text-gray-600 mb-3">
-              支援 JPG、PNG、WebP 格式的圖片 URL。建議圖片尺寸為 400x400 像素以上。
+              支援上傳圖片檔案或輸入圖片 URL。建議圖片尺寸為 400x400 像素以上。
             </p>
+            
+            {/* 圖片上傳組件 */}
+            <div className="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h4 className="font-medium text-gray-900 mb-3">上傳新圖片</h4>
+              <ImageUploader
+                productId={productId}
+                onUploadSuccess={handleImageUploadSuccess}
+                onUploadError={handleImageUploadError}
+                maxFiles={5}
+                allowMultiple={true}
+                generateMultipleSizes={false}
+                enableCompression={true}
+                className="mb-4"
+              />
+              {uploadedImages.length > 0 && (
+                <div className="text-sm text-green-600">
+                  本次編輯已上傳 {uploadedImages.length} 張新圖片
+                </div>
+              )}
+            </div>
+
+            {/* 現有圖片 URL 編輯 */}
+            <div className="mb-4">
+              <h4 className="font-medium text-gray-900 mb-3">現有圖片 URL</h4>
+              <p className="text-xs text-gray-500 mb-3">
+                可直接編輯現有的圖片 URL，或透過上方上傳組件新增圖片。
+              </p>
+            </div>
             <div className="space-y-4">
               {formData.images.map((image, index) => (
                 <div key={index} className="border border-gray-200 rounded-lg p-4">

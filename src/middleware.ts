@@ -23,7 +23,6 @@ const CSRF_PROTECTED_PATHS = [
   '/api/payment',
   '/api/cart',
   '/api/upload',
-  '/api/admin-proxy',
   // 可以添加更多需要保護的路徑
 ];
 
@@ -40,6 +39,7 @@ const CSRF_EXCLUDED_PATHS = [
   '/api/schedule', // 公開的行程 API（GET 請求）
   '/api/payment/callback', // 支付回調（第三方調用）
   '/api/admin', // Admin API 使用 X-Admin-Key 驗證，不需要 CSRF 保護
+  '/api/admin-proxy', // Admin Proxy 使用 Supabase 認證 + Admin Key 驗證，不需要 CSRF 保護
   '/_next/', // Next.js 內部請求
   '/favicon.ico',
   // 靜態資源
