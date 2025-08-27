@@ -39,15 +39,39 @@ export function isValidEmail(email: string): boolean {
 function getAllowedOrigins(): string[] {
   // 生產環境從環境變數獲取
   if (process.env.NODE_ENV === 'production') {
+    const origins: string[] = [];
+    
+    // 1. 從 CSRF_ALLOWED_ORIGINS 環境變數獲取
     const allowedOrigins = process.env.CSRF_ALLOWED_ORIGINS;
     if (allowedOrigins) {
-      return allowedOrigins.split(',').map(origin => origin.trim());
+      origins.push(...allowedOrigins.split(',').map(origin => origin.trim()));
     }
-    // 生產環境預設值（應該在 .env 中設定）
-    return [
-      process.env.NEXTAUTH_URL || '',
-      process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : ''
-    ].filter(Boolean);
+    
+    // 2. 自動包含 NEXTAUTH_URL
+    if (process.env.NEXTAUTH_URL) {
+      origins.push(process.env.NEXTAUTH_URL);
+    }
+    
+    // 3. 自動包含 Vercel URL（支援預覽部署）
+    if (process.env.VERCEL_URL) {
+      origins.push(`https://${process.env.VERCEL_URL}`);
+    }
+    
+    // 4. 自動包含 Vercel 生產 URL
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+      origins.push(`https://${process.env.NEXT_PUBLIC_VERCEL_URL}`);
+    }
+    
+    // 5. 包含已知的生產域名
+    origins.push('https://haode-nextjs.vercel.app');
+    
+    // 去除重複並過濾空值
+    const uniqueOrigins = [...new Set(origins)].filter(Boolean);
+    
+    // 記錄允許的來源（幫助調試）
+    console.log('[CSRF] Allowed origins:', uniqueOrigins);
+    
+    return uniqueOrigins;
   }
   
   // 開發環境允許的來源
@@ -126,16 +150,35 @@ export function validateOrigin(request: NextRequest): boolean {
     }
   }
   
-  // 如果都沒有匹配，在開發環境中給予警告但不阻擋
+  // 如果都沒有匹配，記錄詳細資訊以協助調試
+  console.warn('[CSRF] Origin validation failed:', {
+    origin: origin || 'null',
+    referer: referer || 'null',
+    host,
+    allowedOrigins,
+    environment: process.env.NODE_ENV,
+    vercelUrl: process.env.VERCEL_URL || 'not set'
+  });
+  
+  // 開發環境中較寬鬆
   if (process.env.NODE_ENV === 'development') {
-    console.warn('[CSRF] Origin validation failed:', {
-      origin,
-      referer,
-      host,
-      allowedOrigins
-    });
     // 開發環境中，如果沒有 origin 但有有效的 host，允許通過
     return !origin || true;
+  }
+  
+  // 生產環境中，如果是 Vercel 部署且沒有 origin header（同源請求），允許通過
+  if (process.env.VERCEL && !origin && referer) {
+    try {
+      const refererUrl = new URL(referer);
+      // 檢查是否來自相同的 Vercel 域名
+      if (refererUrl.hostname.includes('vercel.app') || 
+          refererUrl.hostname === host) {
+        console.log('[CSRF] Allowing same-origin request on Vercel');
+        return true;
+      }
+    } catch {
+      // 無效的 referer URL
+    }
   }
   
   return false;
@@ -314,13 +357,20 @@ export class CSRFTokenManager {
    * 創建 CSRF token cookie 選項
    */
   static getCookieOptions(secure?: boolean) {
+    // Vercel 環境特殊處理
+    const isVercel = process.env.VERCEL === '1';
+    const isProduction = process.env.NODE_ENV === 'production';
+    
     return {
       name: this.TOKEN_NAME,
       httpOnly: false, // 允許 JavaScript 讀取以便添加到請求標頭
-      secure: secure ?? (process.env.NODE_ENV === 'production'),
-      sameSite: 'strict' as const,
+      secure: secure ?? isProduction,
+      // Vercel 環境使用 'lax' 以支援跨子域請求
+      sameSite: (isVercel ? 'lax' : 'strict') as 'lax' | 'strict',
       maxAge: 60 * 60 * 24, // 24 小時
-      path: '/'
+      path: '/',
+      // 如果有自定義域名，設定 domain
+      ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {})
     };
   }
   
@@ -356,6 +406,11 @@ export class CSRFTokenManager {
     
     // 檢查是否都存在
     if (!headerToken) {
+      console.warn('[CSRF] Missing header token:', {
+        path: request.nextUrl.pathname,
+        method: request.method,
+        headers: Object.fromEntries(request.headers.entries())
+      });
       return { 
         isValid: false, 
         reason: `Missing CSRF token in ${this.HEADER_NAME} header` 
@@ -363,6 +418,11 @@ export class CSRFTokenManager {
     }
     
     if (!cookieToken) {
+      console.warn('[CSRF] Missing cookie token:', {
+        path: request.nextUrl.pathname,
+        method: request.method,
+        cookies: request.cookies.getAll().map(c => c.name)
+      });
       return { 
         isValid: false, 
         reason: `Missing CSRF token in ${this.TOKEN_NAME} cookie` 
@@ -371,6 +431,11 @@ export class CSRFTokenManager {
     
     // 檢查是否匹配
     if (headerToken !== cookieToken) {
+      console.warn('[CSRF] Token mismatch:', {
+        path: request.nextUrl.pathname,
+        headerToken: `${headerToken.substring(0, 8)}...`,
+        cookieToken: `${cookieToken.substring(0, 8)}...`
+      });
       return { 
         isValid: false, 
         reason: 'CSRF token mismatch between header and cookie' 

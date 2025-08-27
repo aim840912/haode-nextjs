@@ -412,23 +412,22 @@ export async function PATCH(
 
     // 記錄審計日誌
     if (is_read !== undefined || is_replied !== undefined) {
-      AuditLogger.logInquiryReadStatusChange(
+      const previousStatus = `read:${currentInquiry.is_read},replied:${currentInquiry.is_replied}`;
+      const newStatus = `read:${updateData.is_read ?? currentInquiry.is_read},replied:${updateData.is_replied ?? currentInquiry.is_replied}`;
+      
+      AuditLogger.logInquiryStatusChange(
         user.id,
         user.email || 'unknown@email.com',
         profile?.name,
         profile?.role,
         inquiryId,
-        {
-          is_read: currentInquiry.is_read,
-          is_replied: currentInquiry.is_replied
-        },
-        {
-          is_read: updateData.is_read ?? currentInquiry.is_read,
-          is_replied: updateData.is_replied ?? currentInquiry.is_replied
-        },
+        previousStatus,
+        newStatus,
         {
           customer_name: currentInquiry.customer_name,
-          customer_email: currentInquiry.customer_email
+          customer_email: currentInquiry.customer_email,
+          is_read_changed: is_read !== undefined,
+          is_replied_changed: is_replied !== undefined
         },
         request
       ).catch(console.error);

@@ -187,8 +187,8 @@ function AdminInquiriesPage() {
       // 計算統計資料
       const stats = {
         total: inquiriesData.length,
-        unread: inquiriesData.filter(i => !i.is_read).length,
-        unreplied: inquiriesData.filter(i => !i.is_replied && i.status !== 'cancelled').length
+        unread: inquiriesData.filter((i: InquiryWithItems) => !i.is_read).length,
+        unreplied: inquiriesData.filter((i: InquiryWithItems) => !i.is_replied && i.status !== 'cancelled').length
       };
       setInquiryStats(stats);
 
