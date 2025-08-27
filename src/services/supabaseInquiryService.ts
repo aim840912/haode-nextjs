@@ -128,6 +128,23 @@ export class SupabaseInquiryService implements InquiryService {
         query = query.lte('created_at', params.end_date);
       }
 
+      // 讀取/回覆狀態篩選
+      if (params?.is_read !== undefined) {
+        query = query.eq('is_read', params.is_read);
+      }
+
+      if (params?.is_replied !== undefined) {
+        query = query.eq('is_replied', params.is_replied);
+      }
+
+      if (params?.unread_only) {
+        query = query.eq('is_read', false);
+      }
+
+      if (params?.unreplied_only) {
+        query = query.eq('is_replied', false);
+      }
+
       // 排序
       const sortBy = params?.sort_by || 'created_at';
       const sortOrder = params?.sort_order || 'desc';
@@ -240,6 +257,23 @@ export class SupabaseInquiryService implements InquiryService {
 
       if (params?.end_date) {
         query = query.lte('created_at', params.end_date);
+      }
+
+      // 讀取/回覆狀態篩選
+      if (params?.is_read !== undefined) {
+        query = query.eq('is_read', params.is_read);
+      }
+
+      if (params?.is_replied !== undefined) {
+        query = query.eq('is_replied', params.is_replied);
+      }
+
+      if (params?.unread_only) {
+        query = query.eq('is_read', false);
+      }
+
+      if (params?.unreplied_only) {
+        query = query.eq('is_replied', false);
       }
 
       // 排序

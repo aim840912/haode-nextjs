@@ -5,6 +5,20 @@
 
 export type InquiryStatus = 'pending' | 'quoted' | 'confirmed' | 'completed' | 'cancelled';
 
+// 詢價單讀取狀態類型
+export type InquiryReadStatus = 'unread' | 'read' | 'replied';
+
+// 每日詢價統計介面
+export interface DailyInquiryStats {
+  inquiry_date: string;
+  total_inquiries: number;
+  read_inquiries: number;
+  replied_inquiries: number;
+  read_rate_percent: number;
+  reply_rate_percent: number;
+  avg_response_time_hours: number | null;
+}
+
 export interface Inquiry {
   id: string;
   user_id: string;
@@ -16,6 +30,11 @@ export interface Inquiry {
   total_estimated_amount?: number;
   delivery_address?: string;
   preferred_delivery_date?: string;
+  is_read: boolean;
+  read_at?: string;
+  is_replied: boolean;
+  replied_at?: string;
+  replied_by?: string;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +88,8 @@ export interface UpdateInquiryRequest {
   total_estimated_amount?: number;
   delivery_address?: string;
   preferred_delivery_date?: string;
+  is_read?: boolean;
+  is_replied?: boolean;
 }
 
 // 詢價單統計資料
@@ -77,6 +98,9 @@ export interface InquiryStats {
   count: number;
   total_amount: number;
   average_amount: number;
+  unread_count: number;
+  unreplied_count: number;
+  avg_response_time_hours: number | null;
 }
 
 // 詢價單查詢參數
@@ -89,6 +113,10 @@ export interface InquiryQueryParams {
   offset?: number;
   sort_by?: 'created_at' | 'updated_at' | 'total_estimated_amount';
   sort_order?: 'asc' | 'desc';
+  is_read?: boolean;
+  is_replied?: boolean;
+  unread_only?: boolean;
+  unreplied_only?: boolean;
 }
 
 // 庫存查詢單狀態顯示文字
@@ -227,5 +255,65 @@ export class InquiryUtils {
   static isValidStatusTransition(from: InquiryStatus, to: InquiryStatus): boolean {
     const availableTransitions = this.getAvailableStatusTransitions(from);
     return availableTransitions.includes(to);
+  }
+
+  /**
+   * 取得詢價單讀取狀態
+   */
+  static getReadStatus(inquiry: InquiryWithItems): InquiryReadStatus {
+    if (inquiry.is_replied) return 'replied';
+    if (inquiry.is_read) return 'read';
+    return 'unread';
+  }
+
+  /**
+   * 檢查詢價單是否需要關注（未讀或未回覆）
+   */
+  static needsAttention(inquiry: InquiryWithItems): boolean {
+    // 已取消的詢價單不需要關注
+    if (inquiry.status === 'cancelled') return false;
+    
+    // 未讀或未回覆的詢價單需要關注
+    return !inquiry.is_read || !inquiry.is_replied;
+  }
+
+  /**
+   * 計算回覆時間（小時）
+   */
+  static calculateResponseTime(inquiry: InquiryWithItems): number | null {
+    if (!inquiry.replied_at) return null;
+    
+    const createdTime = new Date(inquiry.created_at).getTime();
+    const repliedTime = new Date(inquiry.replied_at).getTime();
+    
+    return Math.round((repliedTime - createdTime) / (1000 * 60 * 60) * 10) / 10; // 保留一位小數
+  }
+
+  /**
+   * 格式化回覆時間顯示
+   */
+  static formatResponseTime(inquiry: InquiryWithItems): string {
+    const hours = this.calculateResponseTime(inquiry);
+    if (hours === null) return '未回覆';
+    
+    if (hours < 1) {
+      const minutes = Math.round(hours * 60);
+      return `${minutes} 分鐘`;
+    } else if (hours < 24) {
+      return `${hours} 小時`;
+    } else {
+      const days = Math.round(hours / 24 * 10) / 10;
+      return `${days} 天`;
+    }
+  }
+
+  /**
+   * 取得詢價單優先級（未讀 > 未回覆 > 已完成）
+   */
+  static getPriority(inquiry: InquiryWithItems): number {
+    if (inquiry.status === 'cancelled') return 0;
+    if (!inquiry.is_read) return 10; // 最高優先級
+    if (!inquiry.is_replied) return 5; // 中等優先級
+    return 1; // 低優先級
   }
 }

@@ -21,9 +21,78 @@ function AdminInquiriesPage() {
   const [inquiries, setInquiries] = useState<InquiryWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all' | 'unread' | 'unreplied'>('all');
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryWithItems | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [inquiryStats, setInquiryStats] = useState<{
+    total: number;
+    unread: number;
+    unreplied: number;
+  }>({ total: 0, unread: 0, unreplied: 0 });
+  const [detailedStats, setDetailedStats] = useState<any>(null);
+
+  // 取得詳細統計資料
+  const fetchDetailedStats = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('認證失敗');
+      }
+
+      const response = await fetch(`/api/inquiries/stats?timeframe=30`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setDetailedStats(result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching detailed stats:', err);
+    }
+  };
+
+  // 標記詢價單為已讀
+  const markAsRead = async (inquiryId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('認證失敗');
+      }
+
+      const response = await fetch(`/api/inquiries/${inquiryId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ is_read: true })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        showError('標記失敗', result.error || '標記已讀時發生錯誤');
+        return;
+      }
+
+      // 更新本地狀態
+      setInquiries(inquiries.map(inquiry => 
+        inquiry.id === inquiryId 
+          ? { ...inquiry, is_read: true, read_at: new Date().toISOString() }
+          : inquiry
+      ));
+
+      success('標記成功', '已標記為已讀');
+
+    } catch (err) {
+      console.error('Error marking as read:', err);
+      showError('標記失敗', err instanceof Error ? err.message : '標記已讀時發生錯誤');
+    }
+  };
 
   // 刪除詢價單
   const deleteInquiry = async (inquiryId: string) => {
@@ -87,9 +156,15 @@ function AdminInquiriesPage() {
       // 建立查詢參數
       const params = new URLSearchParams();
       params.append('admin', 'true'); // 管理員模式
-      if (statusFilter !== 'all') {
+      
+      if (statusFilter === 'unread') {
+        params.append('unread_only', 'true');
+      } else if (statusFilter === 'unreplied') {
+        params.append('unreplied_only', 'true');
+      } else if (statusFilter !== 'all') {
         params.append('status', statusFilter);
       }
+      
       params.append('sort_by', 'created_at');
       params.append('sort_order', 'desc');
 
@@ -106,7 +181,16 @@ function AdminInquiriesPage() {
         throw new Error(result.error || '取得詢價單列表失敗');
       }
 
-      setInquiries(result.data || []);
+      const inquiriesData = result.data || [];
+      setInquiries(inquiriesData);
+
+      // 計算統計資料
+      const stats = {
+        total: inquiriesData.length,
+        unread: inquiriesData.filter(i => !i.is_read).length,
+        unreplied: inquiriesData.filter(i => !i.is_replied && i.status !== 'cancelled').length
+      };
+      setInquiryStats(stats);
 
     } catch (err) {
       console.error('Error fetching inquiries:', err);
@@ -187,6 +271,7 @@ function AdminInquiriesPage() {
   useEffect(() => {
     if (user) {
       fetchInquiries();
+      fetchDetailedStats();
     }
   }, [user, statusFilter]);
 
@@ -235,25 +320,155 @@ function AdminInquiriesPage() {
             <p className="text-gray-600 mt-1">管理所有客戶庫存查詢和回覆狀態</p>
           </div>
 
+          {/* 統計儀表板 */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-medium">📊</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-700">總詢價單</p>
+                  <p className="text-2xl font-bold text-gray-900">{inquiryStats.total}</p>
+                  {detailedStats?.summary?.completion_rate && (
+                    <p className="text-xs text-gray-500">完成率 {detailedStats.summary.completion_rate}%</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                    <span className="text-orange-600 text-sm font-medium">👀</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-700">未讀詢價</p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-2xl font-bold text-orange-600">{inquiryStats.unread}</p>
+                    {inquiryStats.unread > 0 && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        需關注
+                      </span>
+                    )}
+                  </div>
+                  {detailedStats?.summary?.read_rate && (
+                    <p className="text-xs text-gray-500">已讀率 {detailedStats.summary.read_rate}%</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-red-600 text-sm font-medium">💬</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-700">未回覆詢價</p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-2xl font-bold text-red-600">{inquiryStats.unreplied}</p>
+                    {inquiryStats.unreplied > 0 && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        待處理
+                      </span>
+                    )}
+                  </div>
+                  {detailedStats?.summary?.reply_rate && (
+                    <p className="text-xs text-gray-500">回覆率 {detailedStats.summary.reply_rate}%</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="text-green-600 text-sm font-medium">⚡</span>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-700">平均回覆時間</p>
+                  <div className="flex items-center space-x-2">
+                    <p className="text-2xl font-bold text-green-600">
+                      {detailedStats?.summary?.avg_response_time_hours 
+                        ? `${detailedStats.summary.avg_response_time_hours}h`
+                        : '--'
+                      }
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500">最近 30 天</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 每日趨勢圖表 */}
+          {detailedStats?.daily_trends && (
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">最近 7 天趨勢</h3>
+              <div className="grid grid-cols-7 gap-2">
+                {detailedStats.daily_trends.map((day: any, index: number) => (
+                  <div key={index} className="text-center">
+                    <div className="text-xs text-gray-500 mb-2">
+                      {new Date(day.date).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
+                    </div>
+                    <div className="bg-gray-100 rounded p-3">
+                      <div className="text-lg font-bold text-gray-900">{day.total_inquiries}</div>
+                      <div className="text-xs text-gray-600">新詢價</div>
+                      <div className="text-xs text-green-600 mt-1">
+                        {day.reply_rate}% 回覆率
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* 狀態篩選 */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <span className="text-gray-700 font-medium">篩選狀態：</span>
-                <div className="flex space-x-2">
-                  {(['all', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setStatusFilter(status)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        statusFilter === status
-                          ? 'bg-amber-900 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {status === 'all' ? '全部' : INQUIRY_STATUS_LABELS[status]}
-                    </button>
-                  ))}
+                <div className="flex space-x-2 flex-wrap">
+                  {(['all', 'unread', 'unreplied', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map((filter) => {
+                    let displayName = '';
+                    let badgeClass = '';
+                    
+                    if (filter === 'all') {
+                      displayName = '全部';
+                    } else if (filter === 'unread') {
+                      displayName = `未讀 (${inquiryStats.unread})`;
+                      badgeClass = inquiryStats.unread > 0 ? 'text-orange-600' : '';
+                    } else if (filter === 'unreplied') {
+                      displayName = `待回覆 (${inquiryStats.unreplied})`;
+                      badgeClass = inquiryStats.unreplied > 0 ? 'text-red-600' : '';
+                    } else {
+                      displayName = INQUIRY_STATUS_LABELS[filter as InquiryStatus];
+                    }
+                    
+                    return (
+                      <button
+                        key={filter}
+                        onClick={() => setStatusFilter(filter)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          statusFilter === filter
+                            ? 'bg-amber-900 text-white'
+                            : `bg-gray-100 hover:bg-gray-200 ${badgeClass || 'text-gray-700'}`
+                        }`}
+                      >
+                        {displayName}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div className="text-sm text-gray-600">
@@ -267,7 +482,12 @@ function AdminInquiriesPage() {
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
               <div className="text-6xl mb-8">📋</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {statusFilter === 'all' ? '還沒有詢價單' : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢價單`}
+                {statusFilter === 'all' && '還沒有詢價單'}
+                {statusFilter === 'unread' && '沒有未讀的詢價單'}
+                {statusFilter === 'unreplied' && '沒有待回覆的詢價單'}
+                {statusFilter !== 'all' && statusFilter !== 'unread' && statusFilter !== 'unreplied' && 
+                  `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢價單`
+                }
               </h2>
               <p className="text-gray-600">當客戶送出詢價時，會顯示在這裡</p>
             </div>
@@ -302,10 +522,22 @@ function AdminInquiriesPage() {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {inquiries.map((inquiry) => (
-                      <tr key={inquiry.id} className="hover:bg-gray-50">
+                      <tr key={inquiry.id} className={`hover:bg-gray-50 ${!inquiry.is_read ? 'bg-orange-50' : ''}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            #{InquiryUtils.formatInquiryNumber(inquiry)}
+                          <div className="flex items-center space-x-3">
+                            <div className="text-sm font-medium text-gray-900">
+                              #{InquiryUtils.formatInquiryNumber(inquiry)}
+                            </div>
+                            {!inquiry.is_read && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                NEW
+                              </span>
+                            )}
+                            {inquiry.is_read && !inquiry.is_replied && inquiry.status !== 'cancelled' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                待回覆
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -364,6 +596,14 @@ function AdminInquiriesPage() {
                             >
                               查看詳情
                             </button>
+                            {!inquiry.is_read && (
+                              <button
+                                onClick={() => markAsRead(inquiry.id)}
+                                className="text-green-600 hover:text-green-800"
+                              >
+                                標記已讀
+                              </button>
+                            )}
                             <button
                               onClick={() => deleteInquiry(inquiry.id)}
                               className="text-red-600 hover:text-red-800"
@@ -426,6 +666,39 @@ function AdminInquiriesPage() {
                         <p><span className="text-gray-900">更新時間：</span>
                           <span className="text-gray-900">{new Date(selectedInquiry.updated_at).toLocaleString('zh-TW')}</span>
                         </p>
+                        <p><span className="text-gray-900">讀取狀態：</span>
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                            selectedInquiry.is_read 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-orange-100 text-orange-800'
+                          }`}>
+                            {selectedInquiry.is_read ? '已讀' : '未讀'}
+                          </span>
+                          {selectedInquiry.read_at && (
+                            <span className="text-sm text-gray-500 ml-2">
+                              ({new Date(selectedInquiry.read_at).toLocaleString('zh-TW')})
+                            </span>
+                          )}
+                        </p>
+                        <p><span className="text-gray-900">回覆狀態：</span>
+                          <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                            selectedInquiry.is_replied 
+                              ? 'bg-blue-100 text-blue-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {selectedInquiry.is_replied ? '已回覆' : '待回覆'}
+                          </span>
+                          {selectedInquiry.replied_at && (
+                            <span className="text-sm text-gray-500 ml-2">
+                              ({new Date(selectedInquiry.replied_at).toLocaleString('zh-TW')})
+                            </span>
+                          )}
+                        </p>
+                        {selectedInquiry.is_replied && InquiryUtils.calculateResponseTime(selectedInquiry) && (
+                          <p><span className="text-gray-900">回覆時間：</span>
+                            <span className="text-gray-900">{InquiryUtils.formatResponseTime(selectedInquiry)}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

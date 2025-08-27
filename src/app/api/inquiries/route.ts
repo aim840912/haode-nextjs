@@ -67,7 +67,11 @@ async function handleGET(request: NextRequest) {
       limit: searchParams.get('limit') ? parseInt(searchParams.get('limit')!) : undefined,
       offset: searchParams.get('offset') ? parseInt(searchParams.get('offset')!) : undefined,
       sort_by: searchParams.get('sort_by') as any || 'created_at',
-      sort_order: searchParams.get('sort_order') as any || 'desc'
+      sort_order: searchParams.get('sort_order') as any || 'desc',
+      is_read: searchParams.get('is_read') ? searchParams.get('is_read') === 'true' : undefined,
+      is_replied: searchParams.get('is_replied') ? searchParams.get('is_replied') === 'true' : undefined,
+      unread_only: searchParams.get('unread_only') === 'true',
+      unreplied_only: searchParams.get('unreplied_only') === 'true'
     };
 
     // 檢查是否為管理員

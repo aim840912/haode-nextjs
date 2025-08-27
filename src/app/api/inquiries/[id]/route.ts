@@ -87,6 +87,25 @@ export async function GET(
       return createErrorResponse('找不到詢價單', 404);
     }
 
+    // 管理員查看詢價單時自動標記為已讀
+    if (isAdmin && adminMode && !inquiry.is_read) {
+      try {
+        await supabase
+          .from('inquiries')
+          .update({ 
+            is_read: true, 
+            read_at: new Date().toISOString() 
+          })
+          .eq('id', inquiryId);
+        
+        // 更新本地資料物件
+        inquiry.is_read = true;
+        inquiry.read_at = new Date().toISOString();
+      } catch (error) {
+        console.error('Failed to mark inquiry as read:', error);
+      }
+    }
+
     // 記錄詢價單查看的審計日誌
     AuditLogger.logInquiryView(
       user.id,
@@ -98,7 +117,8 @@ export async function GET(
         customer_name: inquiry.customer_name,
         customer_email: inquiry.customer_email,
         status: inquiry.status,
-        admin_mode: isAdmin && adminMode
+        admin_mode: isAdmin && adminMode,
+        marked_as_read: isAdmin && adminMode && !inquiry.is_read
       },
       request
     ).catch(console.error); // 非同步記錄，不影響主要流程
@@ -144,6 +164,11 @@ export async function PUT(
     // 如果是狀態更新，檢查管理員權限
     if (updateData.status && !isAdmin) {
       return createErrorResponse('只有管理員可以更新詢價單狀態', 403);
+    }
+
+    // 如果是讀取/回覆狀態更新，檢查管理員權限
+    if ((updateData.is_read !== undefined || updateData.is_replied !== undefined) && !isAdmin) {
+      return createErrorResponse('只有管理員可以更新詢價單讀取/回覆狀態', 403);
     }
 
     // 如果有狀態更新，驗證狀態轉換
@@ -293,7 +318,7 @@ export async function DELETE(
   }
 }
 
-// PATCH /api/inquiries/[id]/status - 快速更新詢價單狀態（僅管理員）
+// PATCH /api/inquiries/[id] - 快速更新詢價單讀取/回覆狀態（僅管理員）
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -311,7 +336,7 @@ export async function PATCH(
     const supabase = await createServerSupabaseClient();
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, name')
       .eq('id', user.id)
       .single();
 
@@ -320,26 +345,100 @@ export async function PATCH(
     }
 
     // 解析請求資料
-    const { status } = await request.json();
+    const requestData = await request.json();
+    const { is_read, is_replied, status } = requestData;
 
-    if (!status) {
-      return createErrorResponse('請提供要更新的狀態', 400);
+    // 準備更新資料
+    const updateData: any = {};
+    
+    if (is_read !== undefined) {
+      updateData.is_read = is_read;
+      if (is_read && !updateData.read_at) {
+        updateData.read_at = new Date().toISOString();
+      }
     }
 
-    // 驗證狀態值
-    const validStatuses: InquiryStatus[] = ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'];
-    if (!validStatuses.includes(status)) {
-      return createErrorResponse('無效的狀態值', 400);
+    if (is_replied !== undefined) {
+      updateData.is_replied = is_replied;
+      if (is_replied && !updateData.replied_at) {
+        updateData.replied_at = new Date().toISOString();
+        updateData.replied_by = user.id;
+      }
     }
 
-    // 更新狀態
-    const updatedInquiry = await inquiryService.updateInquiryStatus(inquiryId, status);
+    if (status !== undefined) {
+      // 驗證狀態值
+      const validStatuses: InquiryStatus[] = ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return createErrorResponse('無效的狀態值', 400);
+      }
+      updateData.status = status;
+    }
 
-    return createSuccessResponse(updatedInquiry, '詢價單狀態更新成功');
+    if (Object.keys(updateData).length === 0) {
+      return createErrorResponse('請提供要更新的欄位', 400);
+    }
+
+    // 先取得當前詢價單資料
+    const currentInquiry = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId);
+    if (!currentInquiry) {
+      return createErrorResponse('找不到詢價單', 404);
+    }
+
+    // 執行更新
+    const { data: updatedInquiry, error } = await supabase
+      .from('inquiries')
+      .update(updateData)
+      .eq('id', inquiryId)
+      .select(`
+        *, 
+        inquiry_items (
+          id,
+          product_id,
+          product_name,
+          product_category,
+          quantity,
+          unit_price,
+          total_price,
+          notes,
+          created_at
+        )
+      `)
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    // 記錄審計日誌
+    if (is_read !== undefined || is_replied !== undefined) {
+      AuditLogger.logInquiryReadStatusChange(
+        user.id,
+        user.email || 'unknown@email.com',
+        profile?.name,
+        profile?.role,
+        inquiryId,
+        {
+          is_read: currentInquiry.is_read,
+          is_replied: currentInquiry.is_replied
+        },
+        {
+          is_read: updateData.is_read ?? currentInquiry.is_read,
+          is_replied: updateData.is_replied ?? currentInquiry.is_replied
+        },
+        {
+          customer_name: currentInquiry.customer_name,
+          customer_email: currentInquiry.customer_email
+        },
+        request
+      ).catch(console.error);
+    }
+
+    return createSuccessResponse(updatedInquiry, '詢價單更新成功');
 
   } catch (error) {
     return createErrorResponse(
-      '更新詢價單狀態失敗',
+      '更新詢價單失敗',
       500,
       error instanceof Error ? error.message : 'Unknown error'
     );

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/Toast';
 import { UserInterestsService } from '@/services/userInterestsService';
+import { useInquiryStats } from '@/hooks/useInquiryStats';
 import { useState, useRef, useEffect } from 'react';
 
 // SVG 圖示元件
@@ -80,6 +81,7 @@ interface AuthButtonProps {
 export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { user, logout, isLoading } = useAuth();
   const { success, error: showError } = useToast();
+  const { stats } = useInquiryStats(30000); // 每30秒重新整理
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [interestedCount, setInterestedCount] = useState(0);
@@ -297,6 +299,22 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                 >
                   <PackageIcon className="w-4 h-4 mr-2" />
                   產品管理
+                </Link>
+                
+                <Link
+                  href="/admin/inquiries"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <InquiryIcon className="w-4 h-4 mr-2" />
+                  <span className="flex items-center justify-between w-full">
+                    詢價管理
+                    {stats && stats.unread_count > 0 && (
+                      <span className="ml-1 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs rounded-full font-medium">
+                        {stats.unread_count > 99 ? '99+' : stats.unread_count}
+                      </span>
+                    )}
+                  </span>
                 </Link>
                 
                 <Link
