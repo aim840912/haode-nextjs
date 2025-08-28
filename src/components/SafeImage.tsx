@@ -88,7 +88,7 @@ export default function SafeImage({
 
   if (fill) {
     return (
-      <div className="relative w-full h-full">
+      <>
         {isLoading && (
           <div className="absolute inset-0 bg-gray-200 animate-pulse rounded" />
         )}
@@ -103,7 +103,7 @@ export default function SafeImage({
           onLoad={handleLoad}
           unoptimized={hasError} // 當有錯誤時停用優化
         />
-      </div>
+      </>
     )
   }
 

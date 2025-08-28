@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import SocialLinks from '@/components/SocialLinks';
 import { useAuth } from '@/lib/auth-context';
 
 interface ScheduleItem {
@@ -249,33 +248,6 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Contact CTA Section */}
-      <div className="bg-amber-900 text-white py-16">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-4">找不到合適的時間地點？</h2>
-          <p className="text-amber-100 mb-8 text-lg">
-            我們也接受團購訂單和企業採購，歡迎來電洽詢客製化服務
-          </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center items-center">
-            <a
-              href="tel:05-2561843"
-              className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-            >
-              📞 立即來電詢問
-            </a>
-            <a
-              href="/products"
-              className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-amber-900 transition-colors"
-            >
-              🛒 線上訂購
-            </a>
-            <div className="flex items-center space-x-3">
-              <span className="text-amber-100 text-sm">追蹤更多消息：</span>
-              <SocialLinks size="sm" />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

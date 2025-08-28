@@ -73,8 +73,8 @@ export default function InquiryNotificationBadge({
   // 大小相關的樣式
   const sizeClasses = {
     sm: {
-      container: 'w-6 h-6',
-      icon: 'w-4 h-4',
+      container: 'w-8 h-8',
+      icon: 'w-5 h-5',
       badge: 'w-4 h-4 text-[10px]',
       badgePosition: '-top-1 -right-1'
     },
@@ -114,11 +114,13 @@ export default function InquiryNotificationBadge({
       <div className={`relative ${currentSize.container} ${className}`}>
         <button
           onClick={handleClick}
-          className={`w-full h-full flex items-center justify-center ${iconColorClass} transition-colors rounded-full hover:bg-gray-100`}
+          className={`w-full h-full flex items-center justify-center bg-amber-100 text-amber-900 rounded-full transition-all duration-300 hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg group`}
           title={title}
           disabled={loading && !hasData}
         >
-          <InquiryIcon className={currentSize.icon} />
+          <div className="group-hover:scale-110 transition-transform duration-200">
+            <InquiryIcon className={currentSize.icon} />
+          </div>
         </button>
         
         {/* 重試指示器 */}
@@ -144,16 +146,18 @@ export default function InquiryNotificationBadge({
         onClick={handleClick}
         className={`
           w-full h-full flex items-center justify-center rounded-full
-          transition-all duration-200 group
-          ${hasUnread 
-            ? 'text-amber-700 hover:text-amber-900 hover:bg-amber-50' 
-            : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-          }
+          bg-amber-100 text-amber-900
+          transition-all duration-300 group
+          hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg
           ${hasUnread ? 'animate-pulse' : ''}
         `}
         title={`庫存查詢${hasUnread ? ` (${unreadCount} 未讀)` : ''}`}
       >
-        {showIcon && <InquiryIcon className={currentSize.icon} />}
+        {showIcon && (
+          <div className="group-hover:scale-110 transition-transform duration-200">
+            <InquiryIcon className={currentSize.icon} />
+          </div>
+        )}
         
         {!showIcon && !hasUnread && (
           <span className="text-xs font-medium text-gray-600">查詢</span>

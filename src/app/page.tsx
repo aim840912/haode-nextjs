@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import SocialLinks from '@/components/SocialLinks'
 import { FarmStructuredData } from '@/components/StructuredData'
 import ProductsSection from '@/components/ProductsSection'
 
@@ -115,40 +114,6 @@ export default function Home() {
           </div>
         </section>
 
-      <footer className="bg-amber-900 text-white py-12 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div>
-              <h3 className="text-xl font-display mb-4">豪德茶業</h3>
-              <p className="text-amber-100 mb-4">傳承百年茶文化，品味東方茶韻</p>
-              <div className="flex items-center">
-                <SocialLinks size="sm" showLabels={false} className="text-amber-100" />
-              </div>
-            </div>
-            <div>
-              <h4 className="font-heading mb-4">快速連結</h4>
-              <ul className="space-y-2 text-amber-100">
-                <li><Link href="/products" className="hover:underline">農產品</Link></li>
-                <li><Link href="/farm-tour" className="hover:underline">農場參觀</Link></li>
-                <li><Link href="/schedule" className="hover:underline">擺攤行程</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-heading mb-4">聯絡資訊</h4>
-              <ul className="space-y-2 text-amber-100">
-                <li>電話: 05-2561843</li>
-                <li>信箱: info@dechuantea.com</li>
-                <li>地址: 嘉義縣梅山鄉太和村一鄰八號</li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-amber-800 mt-8 pt-6">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <p className="text-amber-100 text-sm">&copy; 2024 豪德茶業 Haude Tea Company. 版權所有</p>
-            </div>
-          </div>
-        </div>
-      </footer>
       </div>
     </>
   );

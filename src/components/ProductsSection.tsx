@@ -132,14 +132,6 @@ function ProductsSection() {
         ) : (
           <div className="text-center text-gray-600">
             <p className="mb-4">目前沒有上架的產品</p>
-            {user && user.role === 'admin' && (
-              <a 
-                href="/admin/products"
-                className="inline-block bg-amber-900 text-white px-6 py-3 rounded-full hover:bg-amber-800 transition-colors"
-              >
-                前往管理產品
-              </a>
-            )}
           </div>
         )}
         
@@ -152,26 +144,6 @@ function ProductsSection() {
             瀏覽所有商品
           </a>
         </div>
-        
-        {/* Admin Controls - 移到底部較不顯眼位置 */}
-        {user && user.role === 'admin' && (
-          <div className="flex justify-center space-x-3 mt-6">
-            <a 
-              href="/admin/products"
-              className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs hover:bg-gray-200 transition-colors flex items-center space-x-1"
-            >
-              <span>📊</span>
-              <span>管理</span>
-            </a>
-            <a 
-              href="/admin/products/add"
-              className="px-3 py-1 bg-green-100 text-green-600 rounded-full text-xs hover:bg-green-200 transition-colors flex items-center space-x-1"
-            >
-              <span>➕</span>
-              <span>新增</span>
-            </a>
-          </div>
-        )}
       </div>
     </section>
   )

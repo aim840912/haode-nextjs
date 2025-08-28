@@ -3,6 +3,7 @@ import { Noto_Sans_TC, Noto_Serif_TC, Inter } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import HeaderSpacer from "@/components/HeaderSpacer";
+import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 import { ToastProvider } from "@/components/Toast";
@@ -104,7 +105,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh">
-      <body className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased`}>
+      <body className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen`}>
         <ErrorBoundary>
           <GoogleAnalyticsProvider>
             <ToastProvider>
@@ -112,10 +113,11 @@ export default function RootLayout({
                 <InquiryStatsProvider>
                   <CartProvider>
                     <Header />
-                    <main className="min-h-screen">
+                    <main className="flex-grow">
                       <HeaderSpacer />
                       {children}
                     </main>
+                    <Footer />
                   </CartProvider>
                 </InquiryStatsProvider>
               </AuthProvider>

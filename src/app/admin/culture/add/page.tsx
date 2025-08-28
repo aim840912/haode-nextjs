@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -20,6 +20,7 @@ export default function AddCulture() {
   })
   const [_imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // 載入中狀態
   if (isLoading) {
@@ -256,17 +257,20 @@ export default function AddCulture() {
                     </svg>
                   )}
                   <div className="flex text-sm text-gray-600">
-                    <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500">
-                      <span>上傳圖片</span>
-                      <input 
-                        id="image-upload" 
-                        name="image-upload" 
-                        type="file" 
-                        className="sr-only" 
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 px-2 py-1"
+                    >
+                      上傳圖片
+                    </button>
+                    <input 
+                      ref={fileInputRef}
+                      type="file" 
+                      className="hidden" 
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
                     <p className="pl-1">或拖拽檔案到此處</p>
                   </div>
                   <p className="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>

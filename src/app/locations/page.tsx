@@ -262,13 +262,6 @@ export default function LocationsPage() {
                 }`}
               >
                 <div className="text-center mb-4">
-                  {store.image && store.image.startsWith('/') ? (
-                    <img src={store.image} alt={store.name} className="w-12 h-12 rounded-lg object-cover mx-auto mb-2" />
-                  ) : (
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg mx-auto mb-2 flex items-center justify-center">
-                      <span className="text-gray-400 text-xs">無</span>
-                    </div>
-                  )}
                   <h4 className="font-bold text-gray-800">{store.name}</h4>
                   {store.isMain && (
                     <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">總店</span>

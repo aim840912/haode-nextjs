@@ -37,7 +37,6 @@ function ProductsPage() {
   const [interestedProducts, setInterestedProducts] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
-    priceRange: [0, 2000],
     availability: 'all',
     sortBy: 'name',
     search: ''
@@ -138,11 +137,6 @@ function ProductsPage() {
       );
     }
 
-    // 價格範圍篩選
-    filtered = filtered.filter(product =>
-      product.price >= filters.priceRange[0] &&
-      product.price <= filters.priceRange[1]
-    );
 
     // 庫存狀態篩選
     if (filters.availability === 'in_stock') {

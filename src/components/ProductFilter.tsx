@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 
 export interface FilterState {
   categories: string[]
-  priceRange: [number, number]
   availability: 'all' | 'in_stock' | 'out_of_stock'
   sortBy: 'price_low' | 'price_high' | 'name' | 'rating' | 'newest'
   search?: string
@@ -25,7 +24,6 @@ export default function ProductFilter({
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
-    priceRange: [0, 2000],
     availability: 'all',
     sortBy: 'name',
     search: ''
@@ -46,19 +44,10 @@ export default function ProductFilter({
     }))
   }
 
-  const handlePriceChange = (index: number, value: number) => {
-    setFilters(prev => ({
-      ...prev,
-      priceRange: index === 0 
-        ? [value, prev.priceRange[1]] 
-        : [prev.priceRange[0], value] as [number, number]
-    }))
-  }
 
   const clearAllFilters = () => {
     setFilters({
       categories: [],
-      priceRange: [0, 2000],
       availability: 'all',
       sortBy: 'name',
       search: ''
@@ -66,8 +55,6 @@ export default function ProductFilter({
   }
 
   const hasActiveFilters = filters.categories.length > 0 || 
-    filters.priceRange[0] > 0 || 
-    filters.priceRange[1] < 2000 || 
     filters.availability !== 'all'
 
   return (
@@ -105,7 +92,7 @@ export default function ProductFilter({
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Categories */}
           <div>
             <h3 className="font-semibold text-gray-800 mb-3">產品類別</h3>
@@ -121,37 +108,6 @@ export default function ProductFilter({
                   <span className="text-sm text-gray-700">{category}</span>
                 </label>
               ))}
-            </div>
-          </div>
-
-          {/* Price Range */}
-          <div>
-            <h3 className="font-semibold text-gray-800 mb-3">價格範圍</h3>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="number"
-                  min="0"
-                  max="2000"
-                  value={filters.priceRange[0]}
-                  onChange={(e) => handlePriceChange(0, parseInt(e.target.value) || 0)}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 placeholder-gray-400 bg-white"
-                  placeholder="最低"
-                />
-                <span className="text-gray-500">-</span>
-                <input
-                  type="number"
-                  min="0"
-                  max="2000"
-                  value={filters.priceRange[1]}
-                  onChange={(e) => handlePriceChange(1, parseInt(e.target.value) || 2000)}
-                  className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 placeholder-gray-400 bg-white"
-                  placeholder="最高"
-                />
-              </div>
-              <div className="text-xs text-gray-600 text-center mt-2">
-                目前範圍：NT$ {filters.priceRange[0]} - NT$ {filters.priceRange[1]}
-              </div>
             </div>
           </div>
 
