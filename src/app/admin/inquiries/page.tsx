@@ -11,8 +11,11 @@ import { supabase } from '@/lib/supabase-auth';
 import { 
   InquiryWithItems, 
   InquiryStatus,
+  InquiryType,
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
+  INQUIRY_TYPE_LABELS,
+  INQUIRY_TYPE_COLORS,
   InquiryUtils
 } from '@/types/inquiry';
 
@@ -24,6 +27,7 @@ function AdminInquiriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all' | 'unread' | 'unreplied'>('all');
+  const [typeFilter, setTypeFilter] = useState<InquiryType | 'all'>('all');
   const [selectedInquiry, setSelectedInquiry] = useState<InquiryWithItems | null>(null);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [inquiryStats, setInquiryStats] = useState<{
@@ -169,6 +173,10 @@ function AdminInquiriesPage() {
       } else if (statusFilter !== 'all') {
         params.append('status', statusFilter);
       }
+
+      if (typeFilter !== 'all') {
+        params.append('inquiry_type', typeFilter);
+      }
       
       params.append('sort_by', 'created_at');
       params.append('sort_order', 'desc');
@@ -280,7 +288,7 @@ function AdminInquiriesPage() {
       fetchInquiries();
       fetchDetailedStats();
     }
-  }, [user, statusFilter]);
+  }, [user, statusFilter, typeFilter]);
 
   if (isLoading) {
     return (
@@ -440,11 +448,32 @@ function AdminInquiriesPage() {
             </div>
           )}
 
-          {/* 狀態篩選 */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          {/* 篩選器 */}
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6 space-y-4">
+            {/* 類型篩選 */}
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-700 font-medium">詢問類型：</span>
+              <div className="flex space-x-2">
+                {['all', 'product', 'farm_tour'].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setTypeFilter(type as InquiryType | 'all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      typeFilter === type
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {type === 'all' ? '全部類型' : INQUIRY_TYPE_LABELS[type as InquiryType]}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 狀態篩選 */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <span className="text-gray-700 font-medium">篩選狀態：</span>
+                <span className="text-gray-700 font-medium">處理狀態：</span>
                 <div className="flex space-x-2 flex-wrap">
                   {(['all', 'unread', 'unreplied', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map((filter) => {
                     let displayName = '';
@@ -511,7 +540,10 @@ function AdminInquiriesPage() {
                         客戶
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        商品摘要
+                        類型
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                        詢問內容
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         金額
@@ -562,18 +594,39 @@ function AdminInquiriesPage() {
                             )}
                           </div>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}>
+                            {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
+                          </span>
+                        </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900">
-                            {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
-                          </div>
-                          <div className="text-sm text-gray-700">
-                            {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
-                            {inquiry.inquiry_items.length > 2 && '...'}
-                          </div>
+                          {inquiry.inquiry_type === 'product' ? (
+                            <>
+                              <div className="text-sm text-gray-900">
+                                {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
+                              </div>
+                              <div className="text-sm text-gray-700">
+                                {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
+                                {inquiry.inquiry_items.length > 2 && '...'}
+                              </div>
+                            </>
+                          ) : (
+                            <div>
+                              <div className="text-sm text-gray-900 font-medium">
+                                {inquiry.activity_title}
+                              </div>
+                              <div className="text-sm text-gray-700">
+                                {inquiry.visit_date} · {inquiry.visitor_count}
+                              </div>
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}
+                            {inquiry.inquiry_type === 'product' 
+                              ? `NT$ ${InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}`
+                              : '待報價'
+                            }
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
