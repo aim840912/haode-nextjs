@@ -51,6 +51,7 @@ function CartPage() {
       customer_name: customerInfo.name || user.name,
       customer_email: customerInfo.email || user.email,
       customer_phone: customerInfo.phone,
+      inquiry_type: 'product',
       delivery_address: customerInfo.deliveryAddress,
       notes: customerInfo.notes,
       items: cart.items.map(item => ({

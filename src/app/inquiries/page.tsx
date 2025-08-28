@@ -10,8 +10,11 @@ import { supabase } from '@/lib/supabase-auth';
 import { 
   InquiryWithItems, 
   InquiryStatus,
+  InquiryType,
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
+  INQUIRY_TYPE_LABELS,
+  INQUIRY_TYPE_COLORS,
   InquiryUtils
 } from '@/types/inquiry';
 
@@ -22,6 +25,7 @@ function InquiriesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
+  const [typeFilter, setTypeFilter] = useState<InquiryType | 'all'>('all');
 
   // 取得詢價單列表
   const fetchInquiries = async () => {
@@ -41,6 +45,9 @@ function InquiriesPage() {
       const params = new URLSearchParams();
       if (statusFilter !== 'all') {
         params.append('status', statusFilter);
+      }
+      if (typeFilter !== 'all') {
+        params.append('inquiry_type', typeFilter);
       }
       params.append('sort_by', 'created_at');
       params.append('sort_order', 'desc');
@@ -75,7 +82,7 @@ function InquiriesPage() {
     } else if (!authLoading) {
       setIsLoading(false);
     }
-  }, [user, authLoading, statusFilter]);
+  }, [user, authLoading, statusFilter, typeFilter]);
 
   // 載入中狀態
   if (authLoading || isLoading) {
@@ -157,10 +164,31 @@ function InquiriesPage() {
           </Link>
         </div>
 
-        {/* 狀態篩選 */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+        {/* 篩選器 */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6 space-y-4">
+          {/* 類型篩選 */}
           <div className="flex items-center space-x-4">
-            <span className="text-gray-700 font-medium">篩選狀態：</span>
+            <span className="text-gray-700 font-medium">詢問類型：</span>
+            <div className="flex space-x-2">
+              {['all', 'product', 'farm_tour'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setTypeFilter(type as InquiryType | 'all')}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    typeFilter === type
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {type === 'all' ? '全部' : INQUIRY_TYPE_LABELS[type as InquiryType]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 狀態篩選 */}
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-700 font-medium">處理狀態：</span>
             <div className="flex space-x-2">
               {['all', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'].map((status) => (
                 <button
@@ -218,7 +246,10 @@ function InquiriesPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}>
+                        {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
+                      </span>
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
                         {INQUIRY_STATUS_LABELS[inquiry.status]}
                       </span>
@@ -233,21 +264,48 @@ function InquiriesPage() {
 
                   <div className="grid md:grid-cols-3 gap-4">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-800 mb-2">商品摘要</h4>
-                      <p className="text-sm text-gray-700">
-                        {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
-                      </p>
-                      <div className="text-xs text-gray-600 mt-1">
-                        {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
-                        {inquiry.inquiry_items.length > 2 && `... 等 ${inquiry.inquiry_items.length} 項`}
-                      </div>
+                      {inquiry.inquiry_type === 'product' ? (
+                        <>
+                          <h4 className="text-sm font-medium text-gray-800 mb-2">商品摘要</h4>
+                          <p className="text-sm text-gray-700">
+                            {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
+                          </p>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
+                            {inquiry.inquiry_items.length > 2 && `... 等 ${inquiry.inquiry_items.length} 項`}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <h4 className="text-sm font-medium text-gray-800 mb-2">活動資訊</h4>
+                          <p className="text-sm text-gray-700">
+                            {inquiry.activity_title}
+                          </p>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {inquiry.visit_date} · {inquiry.visitor_count}
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-800 mb-2">預估金額</h4>
-                      <p className="text-lg font-bold text-amber-900">
-                        NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}
-                      </p>
-                      <p className="text-xs text-gray-600 mt-1">實際價格以回覆為準</p>
+                      <h4 className="text-sm font-medium text-gray-800 mb-2">
+                        {inquiry.inquiry_type === 'product' ? '預估金額' : '費用資訊'}
+                      </h4>
+                      {inquiry.inquiry_type === 'product' ? (
+                        <>
+                          <p className="text-lg font-bold text-amber-900">
+                            NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">實際價格以回覆為準</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-lg font-bold text-green-600">
+                            待報價
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1">費用將依活動內容報價</p>
+                        </>
+                      )}
                     </div>
                     <div>
                       <h4 className="text-sm font-medium text-gray-800 mb-2">聯絡資訊</h4>

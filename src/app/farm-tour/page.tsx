@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { FarmTourActivity } from '@/types/farmTour';
 import SocialLinks from '@/components/SocialLinks';
 import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase-auth';
 
 // 農場設施
 const farmFacilities = [
@@ -30,10 +32,30 @@ export default function FarmTourPage() {
   const [seasonalActivities, setSeasonalActivities] = useState<FarmTourActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const router = useRouter();
+
+  // 預約表單狀態
+  const [formData, setFormData] = useState({
+    customer_name: '',
+    customer_email: user?.email || '',
+    customer_phone: '',
+    visit_date: '',
+    visitor_count: '1人',
+    notes: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchActivities();
   }, []);
+
+  // 當使用者狀態改變時，更新表單中的 email
+  useEffect(() => {
+    if (user?.email) {
+      setFormData(prev => ({ ...prev, customer_email: user.email }));
+    }
+  }, [user]);
 
   const fetchActivities = async () => {
     try {
@@ -53,6 +75,81 @@ export default function FarmTourPage() {
 
   const closeModal = () => {
     setSelectedActivity(null);
+    // 重置表單狀態
+    setFormData({
+      customer_name: '',
+      customer_email: user?.email || '',
+      customer_phone: '',
+      visit_date: '',
+      visitor_count: '1人',
+      notes: ''
+    });
+    setSubmitError(null);
+  };
+
+  const handleFormChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmitInquiry = async () => {
+    if (!user) {
+      setSubmitError('請先登入以提交預約詢問');
+      return;
+    }
+
+    if (!selectedActivity) {
+      setSubmitError('未選中活動');
+      return;
+    }
+
+    // 基本驗證
+    if (!formData.customer_name || !formData.customer_email || !formData.visit_date) {
+      setSubmitError('請填寫必要資訊：姓名、Email 和參觀日期');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // 取得認證 token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('認證失敗，請重新登入');
+      }
+
+      const response = await fetch('/api/farm-tour/inquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          customer_name: formData.customer_name,
+          customer_email: formData.customer_email,
+          customer_phone: formData.customer_phone,
+          activity_title: selectedActivity.title,
+          visit_date: formData.visit_date,
+          visitor_count: formData.visitor_count,
+          notes: formData.notes
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '提交預約詢問失敗');
+      }
+
+      // 成功提交，導向詢問單詳情頁
+      router.push(`/inquiries/${result.data.id}`);
+
+    } catch (error) {
+      console.error('Error submitting farm tour inquiry:', error);
+      setSubmitError(error instanceof Error ? error.message : '提交預約詢問時發生錯誤');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const scrollToContent = () => {
@@ -223,7 +320,7 @@ export default function FarmTourPage() {
                           : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       }`}
                     >
-                      {activity.available ? '立即電話詢問' : '暫停開放'}
+                      {activity.available ? '了解詳情' : '暫停開放'}
                     </button>
                   </div>
                 </div>
@@ -373,16 +470,35 @@ export default function FarmTourPage() {
                   <p className="text-amber-800 font-medium">{selectedActivity.highlight}</p>
                 </div>
 
+                {!user && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                    <p className="text-yellow-800 text-sm">
+                      請先登入以提交預約詢問。
+                      <a href="/login" className="underline ml-1">點此登入</a>
+                    </p>
+                  </div>
+                )}
+
                 <div>
-                  <h4 className="font-semibold text-gray-800 mb-3">活動資訊</h4>
+                  <h4 className="font-semibold text-gray-800 mb-3">預約資訊</h4>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
-                      <label className="block text-gray-700 mb-1 font-medium">參加日期</label>
-                      <input type="date" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+                      <label className="block text-gray-700 mb-1 font-medium">參觀日期 *</label>
+                      <input 
+                        type="date" 
+                        value={formData.visit_date}
+                        onChange={(e) => handleFormChange('visit_date', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" 
+                        required
+                      />
                     </div>
                     <div>
-                      <label className="block text-gray-700 mb-1 font-medium">參加人數</label>
-                      <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900">
+                      <label className="block text-gray-700 mb-1 font-medium">參觀人數</label>
+                      <select 
+                        value={formData.visitor_count}
+                        onChange={(e) => handleFormChange('visitor_count', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                      >
                         <option>1人</option>
                         <option>2人</option>
                         <option>3-5人</option>
@@ -391,34 +507,67 @@ export default function FarmTourPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-gray-700 mb-1 font-medium">聯絡姓名</label>
-                      <input type="text" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+                      <label className="block text-gray-700 mb-1 font-medium">聯絡姓名 *</label>
+                      <input 
+                        type="text" 
+                        value={formData.customer_name}
+                        onChange={(e) => handleFormChange('customer_name', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" 
+                        required
+                      />
                     </div>
                     <div>
                       <label className="block text-gray-700 mb-1 font-medium">聯絡電話</label>
-                      <input type="tel" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" />
+                      <input 
+                        type="tel" 
+                        value={formData.customer_phone}
+                        onChange={(e) => handleFormChange('customer_phone', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" 
+                      />
                     </div>
+                  </div>
+                  <div className="mt-4">
+                    <label className="block text-gray-700 mb-1 font-medium">Email *</label>
+                    <input 
+                      type="email" 
+                      value={formData.customer_email}
+                      onChange={(e) => handleFormChange('customer_email', e.target.value)}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900" 
+                      required
+                    />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-gray-700 mb-1 font-medium">特殊需求或備註</label>
                   <textarea 
+                    value={formData.notes}
+                    onChange={(e) => handleFormChange('notes', e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 h-20 text-gray-900"
                     placeholder="如有素食需求、行動不便或其他特殊需求請註明"
                   ></textarea>
                 </div>
 
+                {submitError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-red-800 text-sm">{submitError}</p>
+                  </div>
+                )}
 
                 <div className="flex gap-4">
                   <button
                     onClick={closeModal}
-                    className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
                   >
                     取消
                   </button>
-                  <button className="flex-1 bg-amber-900 text-white py-3 rounded-lg hover:bg-amber-800 transition-colors">
-                    確認預約
+                  <button 
+                    onClick={handleSubmitInquiry}
+                    disabled={isSubmitting || !user}
+                    className="flex-1 bg-amber-900 text-white py-3 rounded-lg hover:bg-amber-800 transition-colors disabled:opacity-50"
+                  >
+                    {isSubmitting ? '提交中...' : '提交預約詢問'}
                   </button>
                 </div>
               </div>

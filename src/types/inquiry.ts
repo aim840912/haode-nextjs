@@ -1,11 +1,14 @@
 /**
- * 庫存查詢/預訂系統類型定義
- * 定義庫存查詢單和查詢項目的資料結構
+ * 詢問系統類型定義
+ * 定義詢問單和查詢項目的資料結構，支援產品詢價和農場參觀預約
  */
 
 export type InquiryStatus = 'pending' | 'quoted' | 'confirmed' | 'completed' | 'cancelled';
 
-// 詢價單讀取狀態類型
+// 詢問類型
+export type InquiryType = 'product' | 'farm_tour';
+
+// 庫存查詢單讀取狀態類型
 export type InquiryReadStatus = 'unread' | 'read' | 'replied';
 
 // 每日詢價統計介面
@@ -26,10 +29,15 @@ export interface Inquiry {
   customer_email: string;
   customer_phone?: string;
   status: InquiryStatus;
+  inquiry_type: InquiryType;
   notes?: string;
   total_estimated_amount?: number;
   delivery_address?: string;
   preferred_delivery_date?: string;
+  // 農場參觀相關欄位
+  activity_title?: string;
+  visit_date?: string;
+  visitor_count?: string;
   is_read: boolean;
   read_at?: string;
   is_replied: boolean;
@@ -52,20 +60,26 @@ export interface InquiryItem {
   created_at: string;
 }
 
-// 完整的詢價單資料（包含項目列表）
+// 完整的詢問單資料（包含項目列表）
 export interface InquiryWithItems extends Inquiry {
   inquiry_items: InquiryItem[];
 }
 
-// 建立詢價單的請求資料
+// 建立詢問單的請求資料
 export interface CreateInquiryRequest {
   customer_name: string;
   customer_email: string;
   customer_phone?: string;
+  inquiry_type: InquiryType;
   notes?: string;
   delivery_address?: string;
   preferred_delivery_date?: string;
-  items: CreateInquiryItemRequest[];
+  // 產品詢價相關
+  items?: CreateInquiryItemRequest[];
+  // 農場參觀相關
+  activity_title?: string;
+  visit_date?: string;
+  visitor_count?: string;
 }
 
 // 建立詢價項目的請求資料
@@ -103,9 +117,10 @@ export interface InquiryStats {
   avg_response_time_hours: number | null;
 }
 
-// 詢價單查詢參數
+// 詢問單查詢參數
 export interface InquiryQueryParams {
   status?: InquiryStatus;
+  inquiry_type?: InquiryType;
   customer_email?: string;
   start_date?: string;
   end_date?: string;
@@ -119,16 +134,22 @@ export interface InquiryQueryParams {
   unreplied_only?: boolean;
 }
 
-// 庫存查詢單狀態顯示文字
+// 詢問單狀態顯示文字
 export const INQUIRY_STATUS_LABELS: Record<InquiryStatus, string> = {
-  pending: '待確認',
-  quoted: '有庫存',
-  confirmed: '已預訂',
+  pending: '待回覆',
+  quoted: '已回覆',
+  confirmed: '已確認',
   completed: '已完成',
   cancelled: '已取消'
 };
 
-// 庫存查詢單狀態顏色
+// 詢問類型顯示文字
+export const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
+  product: '產品詢價',
+  farm_tour: '農場參觀'
+};
+
+// 詢問單狀態顏色
 export const INQUIRY_STATUS_COLORS: Record<InquiryStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   quoted: 'bg-blue-100 text-blue-800',
@@ -137,7 +158,13 @@ export const INQUIRY_STATUS_COLORS: Record<InquiryStatus, string> = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
-// 詢價服務介面
+// 詢問類型顏色
+export const INQUIRY_TYPE_COLORS: Record<InquiryType, string> = {
+  product: 'bg-blue-100 text-blue-800',
+  farm_tour: 'bg-green-100 text-green-800'
+};
+
+// 庫存查詢服務介面
 export interface InquiryService {
   // 使用者端方法
   createInquiry(userId: string, data: CreateInquiryRequest): Promise<InquiryWithItems>;
@@ -197,7 +224,11 @@ export class InquiryUtils {
   }
 
   /**
+<<<<<<< HEAD
    * 驗證詢價單資料
+=======
+   * 驗證詢問單資料
+>>>>>>> 42be805 (feat: 整合農場參觀預約功能至詢價系統)
    */
   static validateInquiryRequest(data: CreateInquiryRequest): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -212,20 +243,37 @@ export class InquiryUtils {
       errors.push('Email格式不正確');
     }
 
-    if (!data.items || data.items.length === 0) {
-      errors.push('詢價項目不能為空');
-    } else {
-      data.items.forEach((item, index) => {
-        if (!item.product_id || item.product_id.trim().length === 0) {
-          errors.push(`第 ${index + 1} 項產品ID不能為空`);
-        }
-        if (!item.product_name || item.product_name.trim().length === 0) {
-          errors.push(`第 ${index + 1} 項產品名稱不能為空`);
-        }
-        if (!item.quantity || item.quantity <= 0) {
-          errors.push(`第 ${index + 1} 項產品數量必須大於0`);
-        }
-      });
+    if (!data.inquiry_type) {
+      errors.push('詢問類型不能為空');
+    }
+
+    // 根據詢問類型驗證不同欄位
+    if (data.inquiry_type === 'product') {
+      if (!data.items || data.items.length === 0) {
+        errors.push('產品查詢項目不能為空');
+      } else {
+        data.items.forEach((item, index) => {
+          if (!item.product_id || item.product_id.trim().length === 0) {
+            errors.push(`第 ${index + 1} 項產品ID不能為空`);
+          }
+          if (!item.product_name || item.product_name.trim().length === 0) {
+            errors.push(`第 ${index + 1} 項產品名稱不能為空`);
+          }
+          if (!item.quantity || item.quantity <= 0) {
+            errors.push(`第 ${index + 1} 項產品數量必須大於0`);
+          }
+        });
+      }
+    } else if (data.inquiry_type === 'farm_tour') {
+      if (!data.activity_title || data.activity_title.trim().length === 0) {
+        errors.push('活動標題不能為空');
+      }
+      if (!data.visit_date || data.visit_date.trim().length === 0) {
+        errors.push('參觀日期不能為空');
+      }
+      if (!data.visitor_count || data.visitor_count.trim().length === 0) {
+        errors.push('參觀人數不能為空');
+      }
     }
 
     return {

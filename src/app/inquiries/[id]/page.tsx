@@ -11,6 +11,8 @@ import {
   InquiryWithItems, 
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
+  INQUIRY_TYPE_LABELS,
+  INQUIRY_TYPE_COLORS,
   InquiryUtils
 } from '@/types/inquiry';
 
@@ -187,6 +189,9 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               詢價單 #{InquiryUtils.formatInquiryNumber(inquiry)}
             </h1>
             <div className="flex items-center space-x-4 mt-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}>
+                {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
+              </span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
                 {INQUIRY_STATUS_LABELS[inquiry.status]}
               </span>
@@ -206,49 +211,94 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* 詢價單詳情 */}
           <div className="lg:col-span-2 space-y-6">
-            {/* 商品清單 */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-bold text-gray-900">詢價商品</h2>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {inquiry.inquiry_items.map((item, index) => (
-                  <div key={item.id} className="p-6">
-                    <div className="flex items-start space-x-4">
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
-                        <span className="text-gray-600 text-xs">圖片</span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {item.product_name}
-                        </h3>
-                        {item.product_category && (
-                          <p className="text-gray-700 text-sm mb-2">
-                            分類：{item.product_category}
-                          </p>
-                        )}
-                        <div className="flex items-center space-x-4 text-sm text-gray-700">
-                          <span>數量：{item.quantity}</span>
-                          {item.unit_price && (
-                            <span>單價：NT$ {item.unit_price.toLocaleString()}</span>
+            {inquiry.inquiry_type === 'product' ? (
+              // 產品詢價內容
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">詢價商品</h2>
+                </div>
+                <div className="divide-y divide-gray-200">
+                  {inquiry.inquiry_items.map((item, index) => (
+                    <div key={item.id} className="p-6">
+                      <div className="flex items-start space-x-4">
+                        <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
+                          <span className="text-gray-600 text-xs">圖片</span>
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {item.product_name}
+                          </h3>
+                          {item.product_category && (
+                            <p className="text-gray-700 text-sm mb-2">
+                              分類：{item.product_category}
+                            </p>
+                          )}
+                          <div className="flex items-center space-x-4 text-sm text-gray-700">
+                            <span>數量：{item.quantity}</span>
+                            {item.unit_price && (
+                              <span>單價：NT$ {item.unit_price.toLocaleString()}</span>
+                            )}
+                          </div>
+                          {item.notes && (
+                            <p className="text-sm text-gray-700 mt-2 bg-gray-50 p-2 rounded">
+                              備註：{item.notes}
+                            </p>
                           )}
                         </div>
-                        {item.notes && (
-                          <p className="text-sm text-gray-700 mt-2 bg-gray-50 p-2 rounded">
-                            備註：{item.notes}
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-gray-900">
+                            NT$ {(item.total_price || (item.unit_price || 0) * item.quantity).toLocaleString()}
                           </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-gray-900">
-                          NT$ {(item.total_price || (item.unit_price || 0) * item.quantity).toLocaleString()}
-                        </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              // 農場參觀內容
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b border-gray-200">
+                  <h2 className="text-xl font-bold text-gray-900">農場參觀預約</h2>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-6">
+                    <div className="text-center p-6 bg-gradient-to-r from-green-100 to-amber-100 rounded-lg">
+                      <h3 className="text-2xl font-bold text-green-900 mb-2">{inquiry.activity_title}</h3>
+                      <p className="text-green-800">體驗山間農情，感受自然之美</p>
+                    </div>
+                    
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-800 mb-2">預定參觀日期</h4>
+                        <p className="text-lg text-gray-900">
+                          {inquiry.visit_date ? new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            weekday: 'long'
+                          }) : '未指定'}
+                        </p>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-800 mb-2">參觀人數</h4>
+                        <p className="text-lg text-gray-900">{inquiry.visitor_count}</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                      <h4 className="font-medium text-blue-900 mb-2">預約須知</h4>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>• 預約成功後會有專人聯繫確認詳細時間</li>
+                        <li>• 活動費用依參加人數和項目內容而定</li>
+                        <li>• 如遇天候不佳，將協調調整時間</li>
+                        <li>• 建議穿著舒適的運動鞋或登山鞋</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* 聯絡資訊 */}
             <div className="bg-white rounded-lg shadow-sm">
@@ -290,33 +340,60 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
             </div>
           </div>
 
-          {/* 詢價摘要 */}
+          {/* 詢問摘要 */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-36">
-              <h2 className="text-xl font-bold text-gray-900 mb-4">詢價摘要</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                {inquiry.inquiry_type === 'product' ? '詢價摘要' : '預約摘要'}
+              </h2>
               
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between">
-                  <span className="text-gray-800">商品總數</span>
-                  <span className="font-semibold">{InquiryUtils.calculateTotalQuantity(inquiry)} 件</span>
+              {inquiry.inquiry_type === 'product' ? (
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between">
+                    <span className="text-gray-800">商品總數</span>
+                    <span className="font-semibold">{InquiryUtils.calculateTotalQuantity(inquiry)} 件</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-800">商品小計</span>
+                    <span className="font-semibold">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-800">運費</span>
+                    <span className="text-blue-600">待報價</span>
+                  </div>
+                  <hr />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>預估總計</span>
+                    <span className="text-amber-900">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}+</span>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    * 實際價格以回覆為準
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-800">商品小計</span>
-                  <span className="font-semibold">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}</span>
+              ) : (
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between">
+                    <span className="text-gray-800">活動名稱</span>
+                    <span className="font-semibold text-right text-sm">{inquiry.activity_title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-800">預約日期</span>
+                    <span className="font-semibold">{inquiry.visit_date}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-800">參觀人數</span>
+                    <span className="font-semibold">{inquiry.visitor_count}</span>
+                  </div>
+                  <hr />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>費用</span>
+                    <span className="text-green-600">待報價</span>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    * 費用將依活動內容報價
+                  </p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-800">運費</span>
-                  <span className="text-blue-600">待報價</span>
-                </div>
-                <hr />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>預估總計</span>
-                  <span className="text-amber-900">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}+</span>
-                </div>
-                <p className="text-xs text-gray-600">
-                  * 實際價格以回覆為準
-                </p>
-              </div>
+              )}
 
               {/* 狀態說明 */}
               <div className="bg-blue-50 p-4 rounded-lg mb-6">
@@ -325,27 +402,39 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 </h3>
                 {inquiry.status === 'pending' && (
                   <p className="text-sm text-blue-800">
-                    我們已收到您的詢價，會在24小時內回覆詳細報價。
+                    {inquiry.inquiry_type === 'product' 
+                      ? '我們已收到您的詢價，會在24小時內回覆詳細報價。'
+                      : '我們已收到您的預約詢問，會在24小時內回覆並聯繫您確認詳細時間。'
+                    }
                   </p>
                 )}
                 {inquiry.status === 'quoted' && (
                   <p className="text-sm text-blue-800">
-                    我們已回覆報價，請確認後聯絡我們。
+                    {inquiry.inquiry_type === 'product'
+                      ? '我們已回覆報價，請確認後聯絡我們。'
+                      : '我們已回覆預約詳情，請確認後聯絡我們。'
+                    }
                   </p>
                 )}
                 {inquiry.status === 'confirmed' && (
                   <p className="text-sm text-blue-800">
-                    訂單已確認，我們正在準備您的商品。
+                    {inquiry.inquiry_type === 'product'
+                      ? '訂單已確認，我們正在準備您的商品。'
+                      : '預約已確認，期待您的蒞臨參觀！'
+                    }
                   </p>
                 )}
                 {inquiry.status === 'completed' && (
                   <p className="text-sm text-green-800">
-                    訂單已完成，感謝您的購買！
+                    {inquiry.inquiry_type === 'product'
+                      ? '訂單已完成，感謝您的購買！'
+                      : '參觀已完成，感謝您的蒞臨！'
+                    }
                   </p>
                 )}
                 {inquiry.status === 'cancelled' && (
                   <p className="text-sm text-red-800">
-                    此詢價單已取消。
+                    此{inquiry.inquiry_type === 'product' ? '詢問單' : '預約'}已取消。
                   </p>
                 )}
               </div>
