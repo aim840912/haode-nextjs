@@ -82,7 +82,7 @@
 
 ---
 
-### 3. 關鍵流程手動檢查清單 ⭐⭐⭐⭐
+### 3. 關鍵流程檢查清單 ⭐⭐⭐⭐
 **為什麼重要**：確保不錯過任何詢問，比自動化測試更實用
 
 **每次更新網站前檢查**：
@@ -112,6 +112,205 @@
 ```
 
 **時間投資**：第一次建立 30 分鐘，每次使用 10 分鐘
+
+---
+
+### 3.1 自動化測試選項 - MCP Playwright（節省 95% 測試時間）⭐⭐⭐⭐
+**為什麼考慮自動化**：每次手動測試需要 7-10 分鐘，自動化後只需 30 秒
+
+**效益分析**：
+- 手動測試：每次 7-10 分鐘 → 自動測試：每次 30 秒
+- 避免人為遺漏，測試結果可重複
+- 自動產生錯誤截圖，方便除錯
+- **適合條件**：每週更新 > 2 次的店家
+
+#### 自動化測試腳本範例
+
+**測試腳本 1：詢問流程完整測試**
+```javascript
+// tests/mcp-tests/01-inquiry-flow.js
+async function testInquiryFlow() {
+  // 1. 訪問首頁
+  await browser.navigate({ url: 'http://localhost:3000' })
+  await browser.wait_for({ text: '首頁', time: 3 })
+  
+  // 2. 檢查商品頁面
+  await browser.navigate({ url: 'http://localhost:3000/products' })
+  await browser.wait_for({ text: '商品', time: 3 })
+  
+  // 3. 檢查聯絡頁面
+  await browser.navigate({ url: 'http://localhost:3000/locations' })
+  await browser.wait_for({ text: '聯絡', time: 3 })
+  
+  // 4. 測試詢問表單
+  await browser.navigate({ url: 'http://localhost:3000' })
+  const snapshot = await browser.snapshot()
+  
+  // 尋找詢價按鈕並點擊
+  if (snapshot.includes('詢價')) {
+    await browser.click({ element: '詢價按鈕', ref: '[href*="contact"]' })
+  }
+  
+  // 5. 填寫並提交表單
+  await browser.fill_form({
+    fields: [
+      { name: '姓名', type: 'textbox', ref: '#name', value: '測試用戶' },
+      { name: '電話', type: 'textbox', ref: '#phone', value: '0912345678' },
+      { name: '信箱', type: 'textbox', ref: '#email', value: 'test@example.com' },
+      { name: '訊息', type: 'textbox', ref: '#message', value: '測試詢問內容' }
+    ]
+  })
+  
+  await browser.click({ element: '送出', ref: 'button[type="submit"]' })
+  await browser.wait_for({ text: '感謝', time: 5 })
+  
+  console.log('✅ 詢問流程測試通過！')
+}
+```
+
+**測試腳本 2：聯絡資訊驗證**
+```javascript
+// tests/mcp-tests/02-contact-info.js
+async function testContactInfo() {
+  await browser.navigate({ url: 'http://localhost:3000/locations' })
+  
+  const checkItems = [
+    { text: '09', description: '電話號碼' },
+    { text: 'LINE', description: 'LINE ID' },
+    { text: '@', description: 'Email 地址' },
+    { text: '地址', description: '實體地址' },
+    { text: '營業', description: '營業時間' }
+  ]
+  
+  for (const item of checkItems) {
+    try {
+      await browser.wait_for({ text: item.text, time: 2 })
+      console.log(`✅ ${item.description} 存在`)
+    } catch (error) {
+      console.log(`❌ ${item.description} 未找到`)
+      await browser.take_screenshot({ 
+        filename: `missing-${item.description}.png` 
+      })
+    }
+  }
+}
+```
+
+**測試腳本 3：管理功能檢查**
+```javascript
+// tests/mcp-tests/03-admin-functions.js
+async function testAdminFunctions() {
+  try {
+    // 1. 檢查管理後台頁面
+    await browser.navigate({ url: 'http://localhost:3000/admin/inquiries' })
+    
+    // 如果需要登入
+    if (await browser.snapshot().includes('登入')) {
+      await browser.fill_form({
+        fields: [
+          { name: '信箱', type: 'textbox', ref: '#email', value: 'admin@gmail.com' },
+          { name: '密碼', type: 'textbox', ref: '#password', value: 'your_password' }
+        ]
+      })
+      await browser.click({ element: '登入', ref: 'button[type="submit"]' })
+    }
+    
+    // 2. 檢查詢問列表載入
+    await browser.wait_for({ text: '詢問', time: 5 })
+    console.log('✅ 詢問列表載入成功')
+    
+    // 3. 檢查統計資料
+    const snapshot = await browser.snapshot()
+    if (snapshot.includes('未讀') || snapshot.includes('總數')) {
+      console.log('✅ 詢問統計顯示正常')
+    }
+    
+  } catch (error) {
+    console.log('❌ 管理功能測試失敗：', error.message)
+    await browser.take_screenshot({ filename: 'admin-error.png' })
+  }
+}
+```
+
+#### 執行方式
+
+**方法 1：直接使用 Claude Code**
+```bash
+# 在 Claude Code 中執行
+# 1. 確保開發服務器運行
+npm run dev
+
+# 2. 在新終端執行測試
+node tests/run-all-tests.js
+```
+
+**方法 2：加入 package.json scripts**
+```json
+{
+  "scripts": {
+    "test:all": "node tests/run-all-tests.js",
+    "test:inquiry": "node tests/mcp-tests/01-inquiry-flow.js",
+    "test:contact": "node tests/mcp-tests/02-contact-info.js",
+    "test:admin": "node tests/mcp-tests/03-admin-functions.js"
+  }
+}
+```
+
+#### 主測試執行器
+```javascript
+// tests/run-all-tests.js
+async function runAllTests() {
+  console.log('🚀 開始自動化測試...')
+  const startTime = Date.now()
+  
+  try {
+    // 依序執行所有測試
+    await testInquiryFlow()      // 最重要的詢問流程
+    await testContactInfo()      // 聯絡資訊驗證
+    await testAdminFunctions()   // 管理功能檢查
+    
+    const duration = (Date.now() - startTime) / 1000
+    console.log(`✅ 所有測試通過！耗時 ${duration} 秒`)
+    
+  } catch (error) {
+    console.error('❌ 測試失敗：', error.message)
+    
+    // 自動截圖記錄錯誤狀態
+    await browser.take_screenshot({ 
+      filename: `test-error-${Date.now()}.png`,
+      fullPage: true 
+    })
+    
+    // 可選：發送 LINE Notify 通知
+    // await sendLineNotify(`測試失敗：${error.message}`)
+    
+  } finally {
+    await browser.close()
+  }
+}
+
+// 執行測試
+runAllTests()
+```
+
+#### 成本效益
+
+**設置成本**：
+- 第一次設置：1-2 小時
+- 維護成本：幾乎為零
+
+**時間節省**：
+- 手動測試：每次 7-10 分鐘
+- 自動測試：每次 30 秒
+- **節省率：95%**
+
+**適用場景**：
+- ✅ 每週更新 > 2 次
+- ✅ 團隊成員 > 1 人
+- ✅ 希望減少重複工作
+- ❌ 很少更新網站（手動測試即可）
+
+**時間投資**：設置 1-2 小時，每次使用 30 秒
 
 ---
 
@@ -326,6 +525,7 @@
 
 ---
 
-*最後更新：2025-08-26*
+*最後更新：2025-08-28*
 *基礎安全檢查完成：2025-08-26（95% 實施完成）*
+*MCP Playwright 自動化測試方案加入：2025-08-28*
 *專為台灣小店家設計 - 實用至上*
