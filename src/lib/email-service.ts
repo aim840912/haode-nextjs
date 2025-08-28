@@ -1,6 +1,6 @@
 /**
  * Email 通知服務
- * 處理詢價單相關的 Email 通知功能
+ * 處理庫存查詢單相關的 Email 通知功能
  */
 
 import { InquiryWithItems, InquiryEmailData, EmailTemplate } from '@/types/inquiry';
@@ -30,7 +30,7 @@ export class EmailService {
   }
 
   /**
-   * 發送詢價確認信給客戶
+   * 發送庫存查詢確認信給客戶
    */
   async sendInquiryConfirmation(inquiry: InquiryWithItems): Promise<boolean> {
     try {
@@ -50,7 +50,7 @@ export class EmailService {
   }
 
   /**
-   * 發送新詢價通知給管理員
+   * 發送新庫存查詢通知給管理員
    */
   async sendNewInquiryNotification(inquiry: InquiryWithItems): Promise<boolean> {
     try {
@@ -195,27 +195,27 @@ export class EmailService {
   }
 
   /**
-   * 生成詢價確認信模板
+   * 生成庫存查詢確認信模板
    */
   private generateInquiryConfirmationTemplate(inquiry: InquiryWithItems): EmailTemplate {
     const inquiryNumber = this.formatInquiryNumber(inquiry);
     const totalAmount = this.calculateTotalAmount(inquiry);
     const totalItems = this.calculateTotalQuantity(inquiry);
 
-    const subject = `詢價確認 - ${inquiryNumber}`;
+    const subject = `庫存查詢確認 - ${inquiryNumber}`;
 
     const text = `
 親愛的 ${inquiry.customer_name}，
 
-感謝您的詢價！我們已收到您的詢價單，編號：${inquiryNumber}
+感謝您的庫存查詢！我們已收到您的查詢單，編號：${inquiryNumber}
 
-詢價內容：
+查詢內容：
 ${inquiry.inquiry_items.map(item => `- ${item.product_name} x ${item.quantity}`).join('\n')}
 
 商品總數：${totalItems} 件
 預估金額：NT$ ${totalAmount.toLocaleString()}
 
-我們會在24小時內回覆您詳細的報價和配送資訊。
+我們會在24小時內回覆您詳細的庫存和價格資訊。
 
 如有任何問題，請隨時聯絡我們：
 電話：0800-123-456
@@ -228,14 +228,14 @@ ${this.config.fromName}
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #92400e;">詢價確認</h2>
+        <h2 style="color: #92400e;">庫存查詢確認</h2>
         
         <p>親愛的 ${inquiry.customer_name}，</p>
         
-        <p>感謝您的詢價！我們已收到您的詢價單，編號：<strong>${inquiryNumber}</strong></p>
+        <p>感謝您的庫存查詢！我們已收到您的查詢單，編號：<strong>${inquiryNumber}</strong></p>
         
         <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3>詢價內容：</h3>
+          <h3>查詢內容：</h3>
           <ul>
             ${inquiry.inquiry_items.map(item => 
               `<li>${item.product_name} x ${item.quantity}</li>`
@@ -248,7 +248,7 @@ ${this.config.fromName}
           </div>
         </div>
         
-        <p>我們會在24小時內回覆您詳細的報價和配送資訊。</p>
+        <p>我們會在24小時內回覆您詳細的庫存和價格資訊。</p>
         
         <div style="background: #dbeafe; padding: 15px; border-radius: 8px; margin-top: 20px;">
           <h4>聯絡我們：</h4>
@@ -265,18 +265,18 @@ ${this.config.fromName}
   }
 
   /**
-   * 生成新詢價通知模板（給管理員）
+   * 生成新庫存查詢通知模板（給管理員）
    */
   private generateNewInquiryNotificationTemplate(inquiry: InquiryWithItems): EmailTemplate {
     const inquiryNumber = this.formatInquiryNumber(inquiry);
     const totalAmount = this.calculateTotalAmount(inquiry);
 
-    const subject = `新詢價單 - ${inquiryNumber}`;
+    const subject = `新庫存查詢單 - ${inquiryNumber}`;
 
     const text = `
-新的詢價單需要處理：
+新的詢問單需要處理：
 
-詢價單號：${inquiryNumber}
+查詢單號：${inquiryNumber}
 客戶：${inquiry.customer_name}
 Email：${inquiry.customer_email}
 電話：${inquiry.customer_phone || '未提供'}
@@ -293,10 +293,10 @@ ${inquiry.notes ? `客戶備註：${inquiry.notes}` : ''}
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #dc2626;">新詢價單通知</h2>
+        <h2 style="color: #dc2626;">新庫存查詢單通知</h2>
         
         <div style="background: #fef2f2; padding: 20px; border-radius: 8px; border-left: 4px solid #dc2626;">
-          <h3>詢價單 ${inquiryNumber}</h3>
+          <h3>詢問單 ${inquiryNumber}</h3>
           
           <div style="margin: 15px 0;">
             <strong>客戶資訊：</strong><br>
@@ -344,18 +344,18 @@ ${inquiry.notes ? `客戶備註：${inquiry.notes}` : ''}
     const inquiryNumber = this.formatInquiryNumber(inquiry);
     const statusLabels: Record<string, string> = {
       pending: '待處理',
-      quoted: '已報價',
+      quoted: '已回覆',
       confirmed: '已確認',
       completed: '已完成',
       cancelled: '已取消'
     };
 
-    const subject = `詢價狀態更新 - ${inquiryNumber}`;
+    const subject = `庫存查詢狀態更新 - ${inquiryNumber}`;
 
     const text = `
 親愛的 ${inquiry.customer_name}，
 
-您的詢價單 ${inquiryNumber} 狀態已更新：
+您的詢問單 ${inquiryNumber} 狀態已更新：
 
 從「${statusLabels[oldStatus] || oldStatus}」更新為「${statusLabels[inquiry.status] || inquiry.status}」
 
@@ -369,12 +369,12 @@ ${this.config.fromName}
 
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #92400e;">詢價狀態更新</h2>
+        <h2 style="color: #92400e;">庫存查詢狀態更新</h2>
         
         <p>親愛的 ${inquiry.customer_name}，</p>
         
         <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3>詢價單 ${inquiryNumber}</h3>
+          <h3>詢問單 ${inquiryNumber}</h3>
           <p>狀態已從「<strong>${statusLabels[oldStatus] || oldStatus}</strong>」更新為「<strong style="color: #059669;">${statusLabels[inquiry.status] || inquiry.status}</strong>」</p>
         </div>
         
@@ -397,16 +397,16 @@ ${this.config.fromName}
   private getStatusMessage(status: string): string {
     const messages: Record<string, string> = {
       pending: '我們正在處理您的詢價，會盡快回覆。',
-      quoted: '我們已回覆報價，請確認後聯絡我們。',
+      quoted: '我們已回覆庫存資訊，請確認後聯絡我們。',
       confirmed: '訂單已確認，我們正在準備您的商品。',
       completed: '訂單已完成，感謝您的購買！',
-      cancelled: '此詢價單已取消。'
+      cancelled: '此詢問單已取消。'
     };
     return messages[status] || '狀態已更新。';
   }
 
   /**
-   * 格式化詢價單編號
+   * 格式化詢問單編號
    */
   private formatInquiryNumber(inquiry: InquiryWithItems): string {
     const date = new Date(inquiry.created_at);
@@ -418,7 +418,7 @@ ${this.config.fromName}
   }
 
   /**
-   * 計算詢價單總金額
+   * 計算詢問單總金額
    */
   private calculateTotalAmount(inquiry: InquiryWithItems): number {
     return inquiry.inquiry_items.reduce((total, item) => {

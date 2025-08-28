@@ -23,7 +23,7 @@ function InquiriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
 
-  // 取得詢價單列表
+  // 取得詢問單列表
   const fetchInquiries = async () => {
     if (!user) return;
 
@@ -55,14 +55,14 @@ function InquiriesPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '取得詢價單列表失敗');
+        throw new Error(result.error || '取得詢問單列表失敗');
       }
 
       setInquiries(result.data || []);
 
     } catch (err) {
       console.error('Error fetching inquiries:', err);
-      setError(err instanceof Error ? err.message : '載入詢價單時發生錯誤');
+      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +83,7 @@ function InquiriesPage() {
       <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">載入詢價單...</p>
+          <p className="mt-4 text-gray-600">載入詢問單...</p>
         </div>
       </div>
     );
@@ -96,7 +96,7 @@ function InquiriesPage() {
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="text-6xl mb-8">🔒</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢價單</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢問單</h1>
             <p className="text-gray-600 mb-8">請先登入您的帳戶，即可查看您的詢價歷史！</p>
             <div className="space-x-4">
               <Link 
@@ -146,7 +146,7 @@ function InquiriesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">我的詢價單</h1>
+            <h1 className="text-3xl font-bold text-gray-900">我的詢問單</h1>
             <p className="text-gray-600 mt-1">查看您的詢價歷史和處理狀態</p>
           </div>
           <Link
@@ -179,15 +179,15 @@ function InquiriesPage() {
           </div>
         </div>
 
-        {/* 詢價單列表 */}
+        {/* 詢問單列表 */}
         {inquiries.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <div className="text-6xl mb-8">📋</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {statusFilter === 'all' ? '還沒有詢價單' : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢價單`}
+              {statusFilter === 'all' ? '還沒有詢問單' : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢問單`}
             </h2>
             <p className="text-gray-600 mb-8">
-              前往購物車選擇商品後，即可送出您的第一個詢價單！
+              前往購物車選擇商品後，即可送出您的第一個詢問單！
             </p>
             <Link
               href="/products"
@@ -205,7 +205,7 @@ function InquiriesPage() {
                     <div className="flex items-center space-x-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          詢價單 #{InquiryUtils.formatInquiryNumber(inquiry)}
+                          詢問單 #{InquiryUtils.formatInquiryNumber(inquiry)}
                         </h3>
                         <p className="text-sm text-gray-600">
                           {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {

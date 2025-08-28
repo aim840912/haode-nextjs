@@ -16,7 +16,7 @@ export type AuditAction =
 
 // 資源類型
 export type ResourceType = 
-  | 'inquiry'       // 詢價單
+  | 'inquiry'       // 詢問單
   | 'inquiry_item'  // 詢價項目
   | 'customer_data' // 客戶資料
   | 'audit_log'     // 審計日誌
@@ -166,7 +166,7 @@ export const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
 };
 
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
-  inquiry: '詢價單',
+  inquiry: '詢問單',
   inquiry_item: '詢價項目',
   customer_data: '客戶資料',
   audit_log: '審計日誌'
@@ -248,7 +248,7 @@ export class AuditLogUtils {
       case 'inquiry':
         return resourceDetails.customer_name 
           ? `客戶：${resourceDetails.customer_name}` 
-          : '詢價單';
+          : '詢問單';
       case 'inquiry_item':
         return resourceDetails.product_name 
           ? `商品：${resourceDetails.product_name}` 

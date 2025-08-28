@@ -133,7 +133,7 @@ function CartPage() {
 
       // 成功後清空購物車並導向詢價列表
       clearCart();
-      success('詢問已送出', '我們會在24小時內確認庫存狀況並聯絡您安排配送');
+      success('詢價已送出', '我們會在24小時內回覆詢價並聯絡您安排配送');
       router.push('/inquiry');
 
     } catch (err) {
@@ -388,7 +388,7 @@ function CartPage() {
               <div className="bg-white rounded-lg shadow-sm">
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-bold text-gray-900">聯絡資訊</h2>
-                  <p className="text-gray-600 text-sm mt-1">請填寫您的聯絡資訊，我們會盡快確認庫存並聯絡您</p>
+                  <p className="text-gray-600 text-sm mt-1">請填寫您的聯絡資訊，我們會盡快回覆詢價並聯絡您</p>
                 </div>
                 <div className="p-6">
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -533,7 +533,7 @@ function CartPage() {
                     <div className="text-sm">
                       <p className="font-medium text-blue-900 mb-1">詢問說明</p>
                       <p className="text-blue-800">
-                        我們會在收到您的詢問後24小時內回覆，確認庫存狀況並提供配送資訊。
+                        我們會在收到您的詢價後24小時內回覆，提供報價並確認配送資訊。
                       </p>
                     </div>
                   </div>

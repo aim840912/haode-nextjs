@@ -313,7 +313,7 @@ export const auditLogService = new SupabaseAuditLogService();
 // 審計日誌輔助函數
 export class AuditLogger {
   
-  // 記錄詢價單查看
+  // 記錄詢問單查看
   static async logInquiryView(
     userId: string | null,
     userEmail: string,
@@ -337,7 +337,7 @@ export class AuditLogger {
     });
   }
 
-  // 記錄詢價單列表查看
+  // 記錄詢問單列表查看
   static async logInquiryListView(
     userId: string | null,
     userEmail: string,
@@ -362,7 +362,7 @@ export class AuditLogger {
     });
   }
 
-  // 記錄詢價單建立
+  // 記錄詢問單建立
   static async logInquiryCreate(
     userId: string | null,
     userEmail: string,
@@ -391,7 +391,7 @@ export class AuditLogger {
     });
   }
 
-  // 記錄詢價單更新
+  // 記錄詢問單更新
   static async logInquiryUpdate(
     userId: string | null,
     userEmail: string,
@@ -420,7 +420,7 @@ export class AuditLogger {
     });
   }
 
-  // 記錄詢價單刪除
+  // 記錄詢問單刪除
   static async logInquiryDelete(
     userId: string | null,
     userEmail: string,
@@ -448,7 +448,7 @@ export class AuditLogger {
     });
   }
 
-  // 記錄詢價單狀態變更
+  // 記錄詢問單狀態變更
   static async logInquiryStatusChange(
     userId: string | null,
     userEmail: string,

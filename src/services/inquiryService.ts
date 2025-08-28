@@ -1,6 +1,6 @@
 /**
- * 詢價服務 - 抽象層
- * 提供統一的詢價服務介面，可切換不同的實作（如 Supabase、本地儲存等）
+ * 庫存查詢服務 - 抽象層
+ * 提供統一的庫存查詢服務介面，可切換不同的實作（如 Supabase、本地儲存等）
  */
 
 import { 
@@ -29,7 +29,7 @@ class InquiryServiceImpl implements InquiryService {
       return inquiry;
     } catch (error) {
       console.error('Error creating inquiry:', error);
-      throw new Error('無法建立詢價單，請稍後再試');
+      throw new Error('無法建立庫存查詢單，請稍後再試');
     }
   }
 
@@ -38,7 +38,7 @@ class InquiryServiceImpl implements InquiryService {
       return await this.implementation.getUserInquiries(userId, params);
     } catch (error) {
       console.error('Error fetching user inquiries:', error);
-      throw new Error('無法取得詢價單清單，請稍後再試');
+      throw new Error('無法取得庫存查詢單清單，請稍後再試');
     }
   }
 
@@ -47,7 +47,7 @@ class InquiryServiceImpl implements InquiryService {
       return await this.implementation.getInquiryById(userId, inquiryId);
     } catch (error) {
       console.error('Error fetching inquiry by ID:', error);
-      throw new Error('無法取得詢價單詳情，請稍後再試');
+      throw new Error('無法取得庫存查詢單詳情，請稍後再試');
     }
   }
 
@@ -58,7 +58,7 @@ class InquiryServiceImpl implements InquiryService {
       return inquiry;
     } catch (error) {
       console.error('Error updating inquiry:', error);
-      throw new Error('無法更新詢價單，請稍後再試');
+      throw new Error('無法更新庫存查詢單，請稍後再試');
     }
   }
 
@@ -68,7 +68,7 @@ class InquiryServiceImpl implements InquiryService {
       return await this.implementation.getAllInquiries(params);
     } catch (error) {
       console.error('Error fetching all inquiries:', error);
-      throw new Error('無法取得詢價單清單，請稍後再試');
+      throw new Error('無法取得庫存查詢單清單，請稍後再試');
     }
   }
 
@@ -79,7 +79,7 @@ class InquiryServiceImpl implements InquiryService {
       return inquiry;
     } catch (error) {
       console.error('Error updating inquiry status:', error);
-      throw new Error('無法更新詢價單狀態，請稍後再試');
+      throw new Error('無法更新庫存查詢單狀態，請稍後再試');
     }
   }
 
@@ -88,7 +88,7 @@ class InquiryServiceImpl implements InquiryService {
       return await this.implementation.getInquiryStats();
     } catch (error) {
       console.error('Error fetching inquiry stats:', error);
-      throw new Error('無法取得詢價統計，請稍後再試');
+      throw new Error('無法取得庫存查詢統計，請稍後再試');
     }
   }
 
@@ -98,12 +98,12 @@ class InquiryServiceImpl implements InquiryService {
       console.log('Inquiry deleted successfully:', inquiryId);
     } catch (error) {
       console.error('Error deleting inquiry:', error);
-      throw new Error('無法刪除詢價單，請稍後再試');
+      throw new Error('無法刪除庫存查詢單，請稍後再試');
     }
   }
 }
 
-// 工廠函數建立詢價服務實例
+// 工廠函數建立庫存查詢服務實例
 export function createInquiryService(implementation: InquiryService): InquiryService {
   return new InquiryServiceImpl(implementation);
 }

@@ -176,14 +176,14 @@ export const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
     message: '管理員 API 使用頻率超出限制'
   }),
 
-  // 詢價相關 - 高安全等級（防止濫用）
+  // 庫存查詢相關 - 高安全等級（防止濫用）
   '/api/inquiries': createConfig(SecurityLevel.HIGH, {
     maxRequests: 5,
     windowMs: 10 * 60 * 1000, // 10 分鐘
-    message: '詢價提交過於頻繁，請等待 10 分鐘後重試'
+    message: '庫存查詢提交過於頻繁，請等待 10 分鐘後重試'
   }),
 
-  // 詢價統計 - 中等安全等級（允許頻繁查詢但有限制）
+  // 庫存查詢統計 - 中等安全等級（允許頻繁查詢但有限制）
   '/api/inquiries/stats': createConfig(SecurityLevel.MEDIUM, {
     maxRequests: 120, // 每分鐘 120 次請求（適合 30 秒輪詢）
     windowMs: 60 * 1000, // 1 分鐘

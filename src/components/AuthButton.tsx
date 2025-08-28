@@ -244,7 +244,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
               onClick={() => setIsDropdownOpen(false)}
             >
               <InquiryIcon className="w-4 h-4 mr-2" />
-              庫存查詢記錄
+              詢問單問答紀錄
             </Link>
             
             <Link

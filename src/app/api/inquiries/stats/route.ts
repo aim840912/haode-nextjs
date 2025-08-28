@@ -1,6 +1,6 @@
 /**
- * 詢價統計 API 路由
- * 提供詢價單統計資料給管理員使用
+ * 庫存查詢統計 API 路由
+ * 提供庫存查詢單統計資料給管理員使用
  */
 
 import { NextRequest, NextResponse } from 'next/server';

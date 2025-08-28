@@ -37,7 +37,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
     getParams();
   }, [params]);
 
-  // 取得詢價單詳情
+  // 取得詢問單詳情
   const fetchInquiry = async () => {
     if (!user || !inquiryId) return;
 
@@ -62,16 +62,16 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('找不到詢價單');
+          throw new Error('找不到詢問單');
         }
-        throw new Error(result.error || '取得詢價單詳情失敗');
+        throw new Error(result.error || '取得詢問單詳情失敗');
       }
 
       setInquiry(result.data);
 
     } catch (err) {
       console.error('Error fetching inquiry:', err);
-      setError(err instanceof Error ? err.message : '載入詢價單時發生錯誤');
+      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +92,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
       <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">載入詢價單詳情...</p>
+          <p className="mt-4 text-gray-600">載入詢問單詳情...</p>
         </div>
       </div>
     );
@@ -105,7 +105,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="text-6xl mb-8">🔒</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢價單</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢問單</h1>
             <p className="text-gray-600 mb-8">請先登入您的帳戶！</p>
             <Link 
               href="/login"
@@ -154,8 +154,8 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="text-6xl mb-8">📋</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">找不到詢價單</h1>
-            <p className="text-gray-600 mb-8">這個詢價單可能已被刪除或您沒有權限查看</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">找不到詢問單</h1>
+            <p className="text-gray-600 mb-8">這個詢問單可能已被刪除或您沒有權限查看</p>
             <Link
               href="/inquiries"
               className="bg-amber-900 text-white px-8 py-3 rounded-lg hover:bg-amber-800 transition-colors"
@@ -184,7 +184,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               </Link>
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mt-2">
-              詢價單 #{InquiryUtils.formatInquiryNumber(inquiry)}
+              詢問單 #{InquiryUtils.formatInquiryNumber(inquiry)}
             </h1>
             <div className="flex items-center space-x-4 mt-2">
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
@@ -204,7 +204,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
-          {/* 詢價單詳情 */}
+          {/* 詢問單詳情 */}
           <div className="lg:col-span-2 space-y-6">
             {/* 商品清單 */}
             <div className="bg-white rounded-lg shadow-sm">
@@ -345,7 +345,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 )}
                 {inquiry.status === 'cancelled' && (
                   <p className="text-sm text-red-800">
-                    此詢價單已取消。
+                    此詢問單已取消。
                   </p>
                 )}
               </div>

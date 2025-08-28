@@ -6,13 +6,11 @@ import InquiryStatusBadge from './InquiryStatusBadge';
 
 interface InquiryCardProps {
   inquiry: InquiryWithItems;
-  onDuplicate?: (inquiry: InquiryWithItems) => void;
   showActions?: boolean;
 }
 
 export default function InquiryCard({ 
   inquiry, 
-  onDuplicate, 
   showActions = true 
 }: InquiryCardProps) {
   return (
@@ -23,7 +21,7 @@ export default function InquiryCard({
           <div className="flex items-start justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                詢價單 #{InquiryUtils.formatInquiryNumber(inquiry)}
+                庫存查詢單 #{InquiryUtils.formatInquiryNumber(inquiry)}
               </h3>
               <p className="text-sm text-gray-600">
                 {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
@@ -59,7 +57,7 @@ export default function InquiryCard({
         {showActions && (
           <div className="flex flex-col sm:flex-row gap-3 lg:ml-6">
             <Link
-              href={`/inquiry/${inquiry.id}`}
+              href={`/inquiries/${inquiry.id}`}
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center text-sm"
             >
               查看詳情
@@ -67,20 +65,11 @@ export default function InquiryCard({
             
             {inquiry.status === 'quoted' && (
               <Link
-                href={`/inquiry/${inquiry.id}?action=accept`}
+                href={`/inquiries/${inquiry.id}?action=accept`}
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-center text-sm"
               >
-                接受報價
+                確認資訊
               </Link>
-            )}
-            
-            {onDuplicate && (
-              <button
-                onClick={() => onDuplicate(inquiry)}
-                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
-              >
-                重新詢價
-              </button>
             )}
           </div>
         )}

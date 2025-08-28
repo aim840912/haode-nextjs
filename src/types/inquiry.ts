@@ -1,14 +1,14 @@
 /**
- * 庫存查詢/預訂系統類型定義
+ * 庫存查詢系統類型定義
  * 定義庫存查詢單和查詢項目的資料結構
  */
 
 export type InquiryStatus = 'pending' | 'quoted' | 'confirmed' | 'completed' | 'cancelled';
 
-// 詢價單讀取狀態類型
+// 庫存查詢單讀取狀態類型
 export type InquiryReadStatus = 'unread' | 'read' | 'replied';
 
-// 每日詢價統計介面
+// 每日庫存查詢統計介面
 export interface DailyInquiryStats {
   inquiry_date: string;
   total_inquiries: number;
@@ -52,12 +52,12 @@ export interface InquiryItem {
   created_at: string;
 }
 
-// 完整的詢價單資料（包含項目列表）
+// 完整的庫存查詢單資料（包含項目列表）
 export interface InquiryWithItems extends Inquiry {
   inquiry_items: InquiryItem[];
 }
 
-// 建立詢價單的請求資料
+// 建立庫存查詢單的請求資料
 export interface CreateInquiryRequest {
   customer_name: string;
   customer_email: string;
@@ -68,7 +68,7 @@ export interface CreateInquiryRequest {
   items: CreateInquiryItemRequest[];
 }
 
-// 建立詢價項目的請求資料
+// 建立庫存查詢項目的請求資料
 export interface CreateInquiryItemRequest {
   product_id: string;
   product_name: string;
@@ -78,7 +78,7 @@ export interface CreateInquiryItemRequest {
   notes?: string;
 }
 
-// 更新詢價單的請求資料
+// 更新庫存查詢單的請求資料
 export interface UpdateInquiryRequest {
   customer_name?: string;
   customer_email?: string;
@@ -92,7 +92,7 @@ export interface UpdateInquiryRequest {
   is_replied?: boolean;
 }
 
-// 詢價單統計資料
+// 庫存查詢單統計資料
 export interface InquiryStats {
   status: InquiryStatus;
   count: number;
@@ -103,7 +103,7 @@ export interface InquiryStats {
   avg_response_time_hours: number | null;
 }
 
-// 詢價單查詢參數
+// 庫存查詢單查詢參數
 export interface InquiryQueryParams {
   status?: InquiryStatus;
   customer_email?: string;
@@ -121,9 +121,9 @@ export interface InquiryQueryParams {
 
 // 庫存查詢單狀態顯示文字
 export const INQUIRY_STATUS_LABELS: Record<InquiryStatus, string> = {
-  pending: '待確認',
-  quoted: '有庫存',
-  confirmed: '已預訂',
+  pending: '待回覆',
+  quoted: '已回覆',
+  confirmed: '已確認有貨',
   completed: '已完成',
   cancelled: '已取消'
 };
@@ -137,7 +137,7 @@ export const INQUIRY_STATUS_COLORS: Record<InquiryStatus, string> = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
-// 詢價服務介面
+// 庫存查詢服務介面
 export interface InquiryService {
   // 使用者端方法
   createInquiry(userId: string, data: CreateInquiryRequest): Promise<InquiryWithItems>;
@@ -166,10 +166,10 @@ export interface EmailTemplate {
   text: string;
 }
 
-// 詢價工具函數類別
+// 庫存查詢工具函數類別
 export class InquiryUtils {
   /**
-   * 計算詢價單總金額
+   * 計算庫存查詢單總金額
    */
   static calculateTotalAmount(inquiry: InquiryWithItems): number {
     return inquiry.inquiry_items.reduce((total, item) => {
@@ -178,14 +178,14 @@ export class InquiryUtils {
   }
 
   /**
-   * 計算詢價單商品總數量
+   * 計算庫存查詢單商品總數量
    */
   static calculateTotalQuantity(inquiry: InquiryWithItems): number {
     return inquiry.inquiry_items.reduce((total, item) => total + item.quantity, 0);
   }
 
   /**
-   * 格式化詢價單編號
+   * 格式化庫存查詢單編號
    */
   static formatInquiryNumber(inquiry: InquiryWithItems): string {
     const date = new Date(inquiry.created_at);
@@ -193,11 +193,11 @@ export class InquiryUtils {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const shortId = inquiry.id.slice(0, 8).toUpperCase();
-    return `INQ${year}${month}${day}-${shortId}`;
+    return `STK${year}${month}${day}-${shortId}`;
   }
 
   /**
-   * 驗證詢價單資料
+   * 驗證庫存查詢單資料
    */
   static validateInquiryRequest(data: CreateInquiryRequest): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
@@ -213,7 +213,7 @@ export class InquiryUtils {
     }
 
     if (!data.items || data.items.length === 0) {
-      errors.push('詢價項目不能為空');
+      errors.push('查詢項目不能為空');
     } else {
       data.items.forEach((item, index) => {
         if (!item.product_id || item.product_id.trim().length === 0) {
@@ -258,7 +258,7 @@ export class InquiryUtils {
   }
 
   /**
-   * 取得詢價單讀取狀態
+   * 取得庫存查詢單讀取狀態
    */
   static getReadStatus(inquiry: InquiryWithItems): InquiryReadStatus {
     if (inquiry.is_replied) return 'replied';
@@ -267,13 +267,13 @@ export class InquiryUtils {
   }
 
   /**
-   * 檢查詢價單是否需要關注（未讀或未回覆）
+   * 檢查庫存查詢單是否需要關注（未讀或未回覆）
    */
   static needsAttention(inquiry: InquiryWithItems): boolean {
-    // 已取消的詢價單不需要關注
+    // 已取消的庫存查詢單不需要關注
     if (inquiry.status === 'cancelled') return false;
     
-    // 未讀或未回覆的詢價單需要關注
+    // 未讀或未回覆的庫存查詢單需要關注
     return !inquiry.is_read || !inquiry.is_replied;
   }
 
@@ -308,7 +308,7 @@ export class InquiryUtils {
   }
 
   /**
-   * 取得詢價單優先級（未讀 > 未回覆 > 已完成）
+   * 取得庫存查詢單優先級（未讀 > 未回覆 > 已完成）
    */
   static getPriority(inquiry: InquiryWithItems): number {
     if (inquiry.status === 'cancelled') return 0;

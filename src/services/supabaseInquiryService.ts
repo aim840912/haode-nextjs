@@ -1,6 +1,6 @@
 /**
- * Supabase 詢價服務實作
- * 實作詢價服務介面，使用 Supabase 作為資料儲存後端
+ * Supabase 庫存查詢服務實作
+ * 實作庫存查詢服務介面，使用 Supabase 作為資料儲存後端
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
@@ -34,7 +34,7 @@ export class SupabaseInquiryService implements InquiryService {
 
       console.log('💰 計算的總金額:', totalEstimatedAmount);
 
-      // 建立詢價單主記錄
+      // 建立庫存查詢單主記錄
       const inquiryData = {
         user_id: userId,
         customer_name: data.customer_name,
@@ -54,17 +54,17 @@ export class SupabaseInquiryService implements InquiryService {
         .single();
 
       if (inquiryError) {
-        console.error('❌ Supabase 詢價單插入失敗:', {
+        console.error('❌ Supabase 庫存查詢單插入失敗:', {
           message: inquiryError.message,
           code: inquiryError.code,
           details: inquiryError.details,
           hint: inquiryError.hint,
           data: inquiryData
         });
-        throw new Error(`建立詢價單失敗: ${inquiryError.message} (code: ${inquiryError.code})`);
+        throw new Error(`建立庫存查詢單失敗: ${inquiryError.message} (code: ${inquiryError.code})`);
       }
 
-      // 建立詢價項目記錄
+      // 建立庫存查詢項目記錄
       const itemsData = data.items.map(item => ({
         inquiry_id: inquiry.id,
         product_id: item.product_id,
@@ -82,16 +82,16 @@ export class SupabaseInquiryService implements InquiryService {
         .select();
 
       if (itemsError) {
-        console.error('❌ Supabase 詢價項目插入失敗:', {
+        console.error('❌ Supabase 庫存查詢項目插入失敗:', {
           message: itemsError.message,
           code: itemsError.code,
           details: itemsError.details,
           hint: itemsError.hint,
           data: itemsData
         });
-        // 如果項目建立失敗，清除已建立的詢價單
+        // 如果項目建立失敗，清除已建立的庫存查詢單
         await createServiceSupabaseClient().from('inquiries').delete().eq('id', inquiry.id);
-        throw new Error(`建立詢價項目失敗: ${itemsError.message} (code: ${itemsError.code})`);
+        throw new Error(`建立庫存查詢項目失敗: ${itemsError.message} (code: ${itemsError.code})`);
       }
 
       return {
@@ -101,7 +101,7 @@ export class SupabaseInquiryService implements InquiryService {
 
     } catch (error) {
       console.error('Error creating inquiry:', error);
-      throw error instanceof Error ? error : new Error('建立詢價單時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('建立庫存查詢單時發生未知錯誤');
     }
   }
 
@@ -162,14 +162,14 @@ export class SupabaseInquiryService implements InquiryService {
       const { data, error } = await query;
 
       if (error) {
-        throw new Error(`取得詢價單清單失敗: ${error.message}`);
+        throw new Error(`取得詢問單清單失敗: ${error.message}`);
       }
 
       return data as InquiryWithItems[];
 
     } catch (error) {
       console.error('Error fetching user inquiries:', error);
-      throw error instanceof Error ? error : new Error('取得詢價單清單時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('取得詢問單清單時發生未知錯誤');
     }
   }
 
@@ -189,14 +189,14 @@ export class SupabaseInquiryService implements InquiryService {
         if (error.code === 'PGRST116') {
           return null; // 找不到記錄
         }
-        throw new Error(`取得詢價單詳情失敗: ${error.message}`);
+        throw new Error(`取得詢問單詳情失敗: ${error.message}`);
       }
 
       return data as InquiryWithItems;
 
     } catch (error) {
       console.error('Error fetching inquiry by ID:', error);
-      throw error instanceof Error ? error : new Error('取得詢價單詳情時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('取得詢問單詳情時發生未知錯誤');
     }
   }
 
@@ -205,10 +205,10 @@ export class SupabaseInquiryService implements InquiryService {
       // 確認使用者擁有此詢價單
       const existingInquiry = await this.getInquiryById(userId, inquiryId);
       if (!existingInquiry) {
-        throw new Error('找不到詢價單或無權限修改');
+        throw new Error('找不到詢問單或無權限修改');
       }
 
-      // 更新詢價單
+      // 更新詢問單
       const { data: updatedInquiry, error } = await createServiceSupabaseClient()
         .from('inquiries')
         .update(data)
@@ -221,14 +221,14 @@ export class SupabaseInquiryService implements InquiryService {
         .single();
 
       if (error) {
-        throw new Error(`更新詢價單失敗: ${error.message}`);
+        throw new Error(`更新詢問單失敗: ${error.message}`);
       }
 
       return updatedInquiry as InquiryWithItems;
 
     } catch (error) {
       console.error('Error updating inquiry:', error);
-      throw error instanceof Error ? error : new Error('更新詢價單時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('更新詢問單時發生未知錯誤');
     }
   }
 
@@ -293,14 +293,14 @@ export class SupabaseInquiryService implements InquiryService {
       const { data, error } = await query;
 
       if (error) {
-        throw new Error(`取得所有詢價單失敗: ${error.message}`);
+        throw new Error(`取得所有詢問單失敗: ${error.message}`);
       }
 
       return data as InquiryWithItems[];
 
     } catch (error) {
       console.error('Error fetching all inquiries:', error);
-      throw error instanceof Error ? error : new Error('取得所有詢價單時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('取得所有詢問單時發生未知錯誤');
     }
   }
 
@@ -317,14 +317,14 @@ export class SupabaseInquiryService implements InquiryService {
         .single();
 
       if (error) {
-        throw new Error(`更新詢價單狀態失敗: ${error.message}`);
+        throw new Error(`更新詢問單狀態失敗: ${error.message}`);
       }
 
       return data as InquiryWithItems;
 
     } catch (error) {
       console.error('Error updating inquiry status:', error);
-      throw error instanceof Error ? error : new Error('更新詢價單狀態時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('更新詢問單狀態時發生未知錯誤');
     }
   }
 
@@ -354,12 +354,12 @@ export class SupabaseInquiryService implements InquiryService {
         .eq('id', inquiryId);
 
       if (error) {
-        throw new Error(`刪除詢價單失敗: ${error.message}`);
+        throw new Error(`刪除詢問單失敗: ${error.message}`);
       }
 
     } catch (error) {
       console.error('Error deleting inquiry:', error);
-      throw error instanceof Error ? error : new Error('刪除詢價單時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('刪除詢問單時發生未知錯誤');
     }
   }
 
@@ -379,14 +379,14 @@ export class SupabaseInquiryService implements InquiryService {
         if (error.code === 'PGRST116') {
           return null; // 找不到記錄
         }
-        throw new Error(`取得詢價單詳情失敗: ${error.message}`);
+        throw new Error(`取得詢問單詳情失敗: ${error.message}`);
       }
 
       return data as InquiryWithItems;
 
     } catch (error) {
       console.error('Error fetching inquiry by ID for admin:', error);
-      throw error instanceof Error ? error : new Error('取得詢價單詳情時發生未知錯誤');
+      throw error instanceof Error ? error : new Error('取得詢問單詳情時發生未知錯誤');
     }
   }
 

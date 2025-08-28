@@ -58,7 +58,7 @@ function AdminInquiriesPage() {
     }
   };
 
-  // 標記詢價單為已讀
+  // 標記庫存查詢單為已讀
   const markAsRead = async (inquiryId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -98,10 +98,10 @@ function AdminInquiriesPage() {
     }
   };
 
-  // 刪除詢價單
+  // 刪除庫存查詢單
   const deleteInquiry = async (inquiryId: string) => {
     // 確認對話框
-    if (!confirm('確定要刪除這筆詢價單嗎？此操作無法復原。')) {
+    if (!confirm('確定要刪除這筆庫存查詢單嗎？此操作無法復原。')) {
       return;
     }
 
@@ -124,27 +124,27 @@ function AdminInquiriesPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        showError('刪除失敗', result.error || '刪除詢價單時發生錯誤');
+        showError('刪除失敗', result.error || '刪除庫存查詢單時發生錯誤');
         return;
       }
 
-      // 更新本地狀態，移除已刪除的詢價單
+      // 更新本地狀態，移除已刪除的庫存查詢單
       setInquiries(inquiries.filter(inquiry => inquiry.id !== inquiryId));
       
-      // 如果刪除的是當前選中的詢價單，清除選中狀態
+      // 如果刪除的是當前選中的庫存查詢單，清除選中狀態
       if (selectedInquiry?.id === inquiryId) {
         setSelectedInquiry(null);
       }
 
-      success('刪除成功', '詢價單已成功刪除');
+      success('刪除成功', '庫存查詢單已成功刪除');
 
     } catch (err) {
       console.error('Error deleting inquiry:', err);
-      showError('刪除失敗', err instanceof Error ? err.message : '刪除詢價單時發生錯誤');
+      showError('刪除失敗', err instanceof Error ? err.message : '刪除庫存查詢單時發生錯誤');
     }
   };
 
-  // 取得所有詢價單
+  // 取得所有庫存查詢單
   const fetchInquiries = async () => {
     if (!user) return;
 
@@ -184,7 +184,7 @@ function AdminInquiriesPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || '取得詢價單列表失敗');
+        throw new Error(result.error || '取得庫存查詢單列表失敗');
       }
 
       const inquiriesData = result.data || [];
@@ -200,13 +200,13 @@ function AdminInquiriesPage() {
 
     } catch (err) {
       console.error('Error fetching inquiries:', err);
-      setError(err instanceof Error ? err.message : '載入詢價單時發生錯誤');
+      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // 更新詢價單狀態
+  // 更新詢問單狀態
   const updateInquiryStatus = async (inquiryId: string, newStatus: InquiryStatus) => {
     if (!user) return;
 
@@ -253,12 +253,12 @@ function AdminInquiriesPage() {
           : inquiry
       ));
 
-      // 如果有選中的詢價單，也更新它
+      // 如果有選中的詢問單，也更新它
       if (selectedInquiry?.id === inquiryId) {
         setSelectedInquiry({ ...selectedInquiry, status: newStatus, updated_at: new Date().toISOString() });
       }
 
-      success('狀態更新成功', `詢價單狀態已更新為「${INQUIRY_STATUS_LABELS[newStatus]}」`);
+      success('狀態更新成功', `詢問單狀態已更新為「${INQUIRY_STATUS_LABELS[newStatus]}」`);
 
     } catch (err) {
       console.error('Error updating status:', err);
@@ -288,7 +288,7 @@ function AdminInquiriesPage() {
         <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
           <div className="text-center">
             <LoadingSpinner size="lg" />
-            <p className="mt-4 text-gray-600">載入詢價單管理...</p>
+            <p className="mt-4 text-gray-600">載入詢問單管理...</p>
           </div>
         </div>
       </AdminProtection>
@@ -323,8 +323,8 @@ function AdminInquiriesPage() {
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">庫存查詢管理</h1>
-            <p className="text-gray-600 mt-1">管理所有客戶庫存查詢和回覆狀態</p>
+            <h1 className="text-3xl font-bold text-gray-900">詢問單問答管理</h1>
+            <p className="text-gray-600 mt-1">管理所有客戶詢問單問答和回覆狀態</p>
           </div>
 
           {/* 統計儀表板 */}
@@ -337,7 +337,7 @@ function AdminInquiriesPage() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">總詢價單</p>
+                  <p className="text-sm font-medium text-gray-700">總詢問單</p>
                   <p className="text-2xl font-bold text-gray-900">{inquiryStats.total}</p>
                   {detailedStats?.summary?.completion_rate && (
                     <p className="text-xs text-gray-500">完成率 {detailedStats.summary.completion_rate}%</p>
@@ -479,21 +479,21 @@ function AdminInquiriesPage() {
                 </div>
               </div>
               <div className="text-sm text-gray-600">
-                共 {inquiries.length} 筆詢價單
+                共 {inquiries.length} 筆詢問單
               </div>
             </div>
           </div>
 
-          {/* 詢價單列表 */}
+          {/* 詢問單列表 */}
           {inquiries.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
               <div className="text-6xl mb-8">📋</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                {statusFilter === 'all' && '還沒有詢價單'}
-                {statusFilter === 'unread' && '沒有未讀的詢價單'}
-                {statusFilter === 'unreplied' && '沒有待回覆的詢價單'}
+                {statusFilter === 'all' && '還沒有詢問單'}
+                {statusFilter === 'unread' && '沒有未讀的詢問單'}
+                {statusFilter === 'unreplied' && '沒有待回覆的詢問單'}
                 {statusFilter !== 'all' && statusFilter !== 'unread' && statusFilter !== 'unreplied' && 
-                  `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢價單`
+                  `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢問單`
                 }
               </h2>
               <p className="text-gray-600">當客戶送出詢價時，會顯示在這裡</p>
@@ -505,7 +505,7 @@ function AdminInquiriesPage() {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        詢價單號
+                        詢問單號
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         客戶
@@ -627,14 +627,14 @@ function AdminInquiriesPage() {
             </div>
           )}
 
-          {/* 詢價單詳情 Modal */}
+          {/* 詢問單詳情 Modal */}
           {selectedInquiry && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
               <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex items-center justify-between">
                     <h2 className="text-xl font-bold text-gray-900">
-                      詢價單詳情 #{InquiryUtils.formatInquiryNumber(selectedInquiry)}
+                      詢問單詳情 #{InquiryUtils.formatInquiryNumber(selectedInquiry)}
                     </h2>
                     <button
                       onClick={() => setSelectedInquiry(null)}

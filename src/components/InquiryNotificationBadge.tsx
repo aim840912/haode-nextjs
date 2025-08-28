@@ -1,6 +1,6 @@
 /**
- * 詢價通知徽章元件
- * 為管理員顯示未讀詢價數量的通知徽章，支援點擊導航和動畫效果
+ * 庫存查詢通知徽章元件
+ * 為管理員顯示未讀庫存查詢數量的通知徽章，支援點擊導航和動畫效果
  */
 
 'use client';
@@ -20,7 +20,7 @@ interface InquiryNotificationBadgeProps {
   onClick?: () => void;
 }
 
-// 詢價管理圖標元件
+// 庫存查詢管理圖標元件
 function InquiryIcon({ className = "w-5 h-5" }: { className?: string }) {
   return (
     <svg
@@ -105,10 +105,10 @@ export default function InquiryNotificationBadge({
       : 'text-gray-400 hover:text-gray-600';
       
     const title = shouldShowError 
-      ? `詢價管理 (錯誤: ${error})` 
+      ? `庫存查詢 (錯誤: ${error})` 
       : loading 
-        ? '詢價管理 (載入中...)' 
-        : '詢價管理';
+        ? '庫存查詢 (載入中...)' 
+        : '庫存查詢';
 
     return showIcon ? (
       <div className={`relative ${currentSize.container} ${className}`}>
@@ -151,12 +151,12 @@ export default function InquiryNotificationBadge({
           }
           ${hasUnread ? 'animate-pulse' : ''}
         `}
-        title={`詢價管理${hasUnread ? ` (${unreadCount} 未讀)` : ''}`}
+        title={`庫存查詢${hasUnread ? ` (${unreadCount} 未讀)` : ''}`}
       >
         {showIcon && <InquiryIcon className={currentSize.icon} />}
         
         {!showIcon && !hasUnread && (
-          <span className="text-xs font-medium text-gray-600">詢價</span>
+          <span className="text-xs font-medium text-gray-600">查詢</span>
         )}
         
         {/* 未讀數量徽章 */}

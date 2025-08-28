@@ -51,8 +51,8 @@ export const InquiryPDFDocument: React.FC<InquiryPDFDocumentProps> = ({ inquiry 
           <Text style={pdfStyles.companyNameEn}>HAUDE TEA</Text>
         </View>
 
-        {/* 標題和詢價單編號 */}
-        <Text style={pdfStyles.title}>詢價單</Text>
+        {/* 標題和庫存查詢單編號 */}
+        <Text style={pdfStyles.title}>庫存查詢單</Text>
         <Text style={pdfStyles.inquiryNumber}>
           編號：{InquiryUtils.formatInquiryNumber(inquiry)}
         </Text>
@@ -89,9 +89,9 @@ export const InquiryPDFDocument: React.FC<InquiryPDFDocumentProps> = ({ inquiry 
           )}
         </View>
 
-        {/* 詢價資訊 */}
+        {/* 庫存查詢資訊 */}
         <View style={pdfStyles.infoSection}>
-          <Text style={pdfStyles.sectionTitle}>詢價資訊</Text>
+          <Text style={pdfStyles.sectionTitle}>庫存查詢資訊</Text>
           <View style={pdfStyles.infoRow}>
             <Text style={pdfStyles.infoLabel}>建立日期：</Text>
             <Text style={pdfStyles.infoValue}>{formatDate(inquiry.created_at)}</Text>
@@ -197,7 +197,7 @@ export const InquiryPDFDocument: React.FC<InquiryPDFDocumentProps> = ({ inquiry 
 
         {/* 頁尾 */}
         <View style={pdfStyles.footer}>
-          <Text style={pdfStyles.footerText}>感謝您的詢價，我們將儘快為您提供最優惠的報價</Text>
+          <Text style={pdfStyles.footerText}>感謝您的庫存查詢，我們將盡快為您提供庫存和價格資訊</Text>
           <Text style={pdfStyles.footerText}>
             如有任何問題，請聯繫我們 | 豪德茶業 HAUDE TEA
           </Text>

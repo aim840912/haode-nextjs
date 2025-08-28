@@ -1,6 +1,6 @@
 /**
- * 詢價 API 路由
- * 處理詢價單的建立和查詢
+ * 庫存查詢 API 路由
+ * 處理庫存查詢單的建立和查詢
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -15,7 +15,7 @@ import {
   InquiryUtils
 } from '@/types/inquiry';
 
-// 建立詢價服務實例
+// 建立庫存查詢服務實例
 const inquiryService = createInquiryService(supabaseServerInquiryService);
 
 // 統一的錯誤回應函數
@@ -48,7 +48,7 @@ function createSuccessResponse(data: any, message?: string, status: number = 200
   );
 }
 
-// GET /api/inquiries - 取得詢價單清單
+// GET /api/inquiries - 取得庫存查詢單清單
 async function handleGET(request: NextRequest) {
   try {
     // 驗證使用者認證
@@ -85,12 +85,12 @@ async function handleGET(request: NextRequest) {
     const isAdmin = profile?.role === 'admin';
     const adminMode = searchParams.get('admin') === 'true';
 
-    // 取得詢價單清單
+    // 取得庫存查詢單清單
     let inquiries;
     if (isAdmin && adminMode) {
       inquiries = await inquiryService.getAllInquiries(queryParams);
       
-      // 記錄管理員查看所有詢價單列表的審計日誌
+      // 記錄管理員查看所有庫存查詢單列表的審計日誌
       AuditLogger.logInquiryListView(
         user.id,
         user.email || 'unknown@email.com',
@@ -102,7 +102,7 @@ async function handleGET(request: NextRequest) {
     } else {
       inquiries = await inquiryService.getUserInquiries(user.id, queryParams);
       
-      // 記錄使用者查看自己詢價單列表的審計日誌
+      // 記錄使用者查看自己庫存查詢單列表的審計日誌
       AuditLogger.logInquiryListView(
         user.id,
         user.email || 'unknown@email.com',
@@ -117,14 +117,14 @@ async function handleGET(request: NextRequest) {
 
   } catch (error) {
     return createErrorResponse(
-      '取得詢價單清單失敗', 
+      '取得庫存查詢單清單失敗', 
       500, 
       error instanceof Error ? error.message : 'Unknown error'
     );
   }
 }
 
-// POST /api/inquiries - 建立新詢價單
+// POST /api/inquiries - 建立新庫存查詢單
 async function handlePOST(request: NextRequest) {
   try {
     // 驗證使用者認證
@@ -159,10 +159,10 @@ async function handlePOST(request: NextRequest) {
       );
     }
 
-    // 建立詢價單
+    // 建立庫存查詢單
     const inquiry = await inquiryService.createInquiry(user.id, requestData);
 
-    // 記錄詢價單建立的審計日誌
+    // 記錄詢問單建立的審計日誌
     AuditLogger.logInquiryCreate(
       user.id,
       user.email || 'unknown@email.com',
@@ -178,7 +178,7 @@ async function handlePOST(request: NextRequest) {
       request
     ).catch(console.error); // 非同步記錄，不影響主要流程
 
-    return createSuccessResponse(inquiry, '詢價單建立成功', 201);
+    return createSuccessResponse(inquiry, '詢問單建立成功', 201);
 
   } catch (error) {
     // 根據錯誤類型提供適當的回應
@@ -194,14 +194,14 @@ async function handlePOST(request: NextRequest) {
       } else if (error.message.includes('connection') || error.message.includes('timeout')) {
         return createErrorResponse('資料庫連線問題，請稍後再試', 503, error.message);
       } else if (error.message.includes('duplicate') || error.message.includes('unique')) {
-        return createErrorResponse('詢價單已存在，請勿重複提交', 409, error.message);
+        return createErrorResponse('詢問單已存在，請勿重複提交', 409, error.message);
       } else if (error.message.includes('foreign key') || error.message.includes('constraint')) {
         return createErrorResponse('資料關聯錯誤，請聯繫系統管理員', 400, error.message);
       }
     }
 
     return createErrorResponse(
-      '建立詢價單失敗', 
+      '建立詢問單失敗', 
       500, 
       error instanceof Error ? error.message : 'Unknown error'
     );
@@ -215,7 +215,7 @@ export const GET = withRateLimit(handleGET, {
   strategy: IdentifierStrategy.USER_ID,
   enableAuditLog: false,
   includeHeaders: true,
-  message: '詢價單查詢頻率超出限制，請稍後重試'
+  message: '詢問單查詢頻率超出限制，請稍後重試'
 });
 
 export const POST = withRateLimit(handlePOST, {
@@ -224,7 +224,7 @@ export const POST = withRateLimit(handlePOST, {
   strategy: IdentifierStrategy.COMBINED,
   enableAuditLog: true,
   includeHeaders: true,
-  message: '詢價單提交過於頻繁，請等待 10 分鐘後重試'
+  message: '詢問單提交過於頻繁，請等待 10 分鐘後重試'
 });
 
 // 處理其他不支援的 HTTP 方法
