@@ -64,3 +64,12 @@ next-env.d.ts
 # keep placeholder images
 !/public/**/placeholder.*
 !/public/**/sample.*
+
+# Claude Code 設定
+.claude/
+
+# Playwright MCP 相關
+.playwright-mcp/
+
+# 測試結果目錄
+test-results/
