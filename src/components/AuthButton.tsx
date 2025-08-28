@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/Toast';
 import { UserInterestsService } from '@/services/userInterestsService';
-import { useInquiryStats } from '@/hooks/useInquiryStats';
+import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext';
 import { useState, useRef, useEffect } from 'react';
 
 // SVG 圖示元件
@@ -81,7 +81,7 @@ interface AuthButtonProps {
 export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { user, logout, isLoading } = useAuth();
   const { success, error: showError } = useToast();
-  const { stats } = useInquiryStats(30000); // 每30秒重新整理
+  const { stats, error: statsError, isRetrying } = useInquiryStatsContext();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [interestedCount, setInterestedCount] = useState(0);
@@ -186,32 +186,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   }
 
   if (user) {
-    if (isMobile) {
-      // 行動版保持原本簡單的登出按鈕
-      return (
-        <button
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className={`${baseClasses} ${logoutClasses} ${
-            isLoggingOut ? 'opacity-50 cursor-not-allowed' : ''
-          }`}
-        >
-          {isLoggingOut ? (
-            <>
-              <UserIcon className="w-4 h-4 inline mr-1" />
-              登出中...
-            </>
-          ) : (
-            <>
-              <UserIcon className="w-4 h-4 inline mr-1" />
-              登出
-            </>
-          )}
-        </button>
-      );
-    }
-
-    // 桌面版使用下拉選單
+    // 所有裝置都使用下拉選單
     return (
       <div className="relative" ref={dropdownRef}>
         <button
@@ -221,7 +196,11 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
           }`}
         >
           <UserIcon className="w-4 h-4" />
-          <span>{user.name}</span>
+          {isMobile ? (
+            <span className="sr-only">{user.name}</span>
+          ) : (
+            <span>{user.name}</span>
+          )}
           <svg
             className={`w-4 h-4 transition-transform ${
               isDropdownOpen ? 'rotate-180' : ''
@@ -236,7 +215,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
         {/* 下拉選單 */}
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+          <div className={`absolute right-0 mt-2 ${isMobile ? 'w-56' : 'w-48'} bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50`}>
             <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100">
               {user.email}
             </div>
@@ -305,8 +284,26 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                   href="/admin/inquiries"
                   className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
                   onClick={() => setIsDropdownOpen(false)}
+                  title={statsError && process.env.NODE_ENV === 'development' ? `詢價管理 (統計載入錯誤: ${statsError})` : '詢價管理'}
                 >
-                  <InquiryIcon className="w-4 h-4 mr-2" />
+                  <div className="relative flex items-center">
+                    <InquiryIcon className="w-4 h-4 mr-2" />
+                    
+                    {/* 開發模式錯誤指示器 */}
+                    {statsError && process.env.NODE_ENV === 'development' && !isRetrying && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2">
+                        <div className="w-full h-full bg-red-500 rounded-full"></div>
+                      </div>
+                    )}
+                    
+                    {/* 重試指示器 */}
+                    {isRetrying && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2">
+                        <div className="w-full h-full bg-yellow-400 rounded-full animate-ping"></div>
+                      </div>
+                    )}
+                  </div>
+                  
                   <span className="flex items-center justify-between w-full">
                     詢價管理
                     {stats && stats.unread_count > 0 && (

@@ -6,6 +6,7 @@ import AdminProtection from '@/components/AdminProtection';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useToast } from '@/components/Toast';
+import { useCSRFToken } from '@/hooks/useCSRFToken';
 import { supabase } from '@/lib/supabase-auth';
 import { 
   InquiryWithItems, 
@@ -18,6 +19,7 @@ import {
 function AdminInquiriesPage() {
   const { user } = useAuth();
   const { success, error: showError, warning } = useToast();
+  const { token: csrfToken } = useCSRFToken();
   const [inquiries, setInquiries] = useState<InquiryWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,8 @@ function AdminInquiriesPage() {
 
       const response = await fetch(`/api/inquiries/stats?timeframe=30`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
         }
       });
 
@@ -67,7 +70,8 @@ function AdminInquiriesPage() {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
         },
         body: JSON.stringify({ is_read: true })
       });
@@ -112,7 +116,8 @@ function AdminInquiriesPage() {
       const response = await fetch(`/api/inquiries/${inquiryId}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
         }
       });
 
@@ -171,7 +176,8 @@ function AdminInquiriesPage() {
       // 呼叫 API
       const response = await fetch(`/api/inquiries?${params}`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
         }
       });
 
@@ -218,7 +224,8 @@ function AdminInquiriesPage() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          ...(csrfToken && { 'X-CSRF-Token': csrfToken })
         },
         body: JSON.stringify({ status: newStatus })
       });

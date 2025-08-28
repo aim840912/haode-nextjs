@@ -7,16 +7,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 
 // 統一的錯誤回應函數
-function createErrorResponse(message: string, status: number, details?: string) {
+function createErrorResponse(message: string, status: number, details?: string, errorCode?: string) {
+  // 在生產環境中隱藏敏感錯誤訊息
+  const isProduction = process.env.NODE_ENV === 'production';
+  const sanitizedMessage = isProduction && status >= 500 ? '服務暫時不可用，請稍後重試' : message;
+  
   return NextResponse.json(
     { 
-      error: message,
+      error: sanitizedMessage,
       success: false,
-      details: process.env.NODE_ENV === 'development' ? details : undefined
+      details: isProduction ? undefined : details,
+      errorCode: errorCode,
+      timestamp: new Date().toISOString()
     },
     { 
       status,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate'
+      }
     }
   );
 }
@@ -27,53 +36,115 @@ function createSuccessResponse(data: any, message?: string, status: number = 200
     { 
       success: true,
       data,
-      message
+      message,
+      timestamp: new Date().toISOString()
     },
     { 
       status,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 
+        'Content-Type': 'application/json',
+        'Cache-Control': 'private, max-age=30' // 允許快取 30 秒
+      }
     }
   );
 }
 
 // GET /api/inquiries/stats - 取得詢價統計資料（僅管理員）
 export async function GET(request: NextRequest) {
+  const startTime = Date.now();
+  
   try {
     // 驗證使用者認證
-    const user = await getCurrentUser();
+    let user;
+    try {
+      user = await getCurrentUser();
+    } catch (authError) {
+      console.error('[InquiryStats] Authentication error:', authError);
+      return createErrorResponse('認證服務暫時不可用', 503, 
+        authError instanceof Error ? authError.message : 'Unknown auth error', 
+        'AUTH_SERVICE_ERROR'
+      );
+    }
+
     if (!user) {
-      return createErrorResponse('未認證或會話已過期', 401);
+      return createErrorResponse('未認證或會話已過期', 401, undefined, 'UNAUTHENTICATED');
     }
 
     // 檢查是否為管理員
-    const supabase = await createServerSupabaseClient();
-    const { data: profile } = await supabase
+    let supabase;
+    try {
+      supabase = await createServerSupabaseClient();
+    } catch (dbError) {
+      console.error('[InquiryStats] Database connection error:', dbError);
+      return createErrorResponse('資料庫連線錯誤', 503,
+        dbError instanceof Error ? dbError.message : 'Unknown database error',
+        'DATABASE_CONNECTION_ERROR'
+      );
+    }
+
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role, name')
       .eq('id', user.id)
       .single();
 
+    if (profileError) {
+      console.error('[InquiryStats] Profile fetch error:', profileError);
+      return createErrorResponse('無法驗證使用者權限', 500,
+        profileError.message,
+        'PROFILE_FETCH_ERROR'
+      );
+    }
+
     if (profile?.role !== 'admin') {
-      return createErrorResponse('只有管理員可以查看統計資料', 403);
+      return createErrorResponse('只有管理員可以查看統計資料', 403, undefined, 'INSUFFICIENT_PERMISSIONS');
     }
 
     // 取得查詢參數
     const { searchParams } = new URL(request.url);
-    const timeframe = searchParams.get('timeframe') || '30'; // 預設 30 天
+    const timeframeParam = searchParams.get('timeframe') || '30';
+    
+    // 驗證 timeframe 參數
+    const daysAgo = parseInt(timeframeParam);
+    if (isNaN(daysAgo) || daysAgo < 1 || daysAgo > 365) {
+      return createErrorResponse('無效的時間範圍參數', 400, 
+        `timeframe 必須是 1-365 之間的數字，收到: ${timeframeParam}`,
+        'INVALID_TIMEFRAME'
+      );
+    }
 
     // 計算日期範圍
-    const daysAgo = parseInt(timeframe);
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - daysAgo);
+    const startDateISO = startDate.toISOString();
 
     // 查詢基本統計
-    const { data: basicStats } = await supabase
-      .from('inquiries')
-      .select('id, status, is_read, is_replied, created_at, replied_at')
-      .gte('created_at', startDate.toISOString());
+    let basicStats;
+    try {
+      const { data, error: queryError } = await supabase
+        .from('inquiries')
+        .select('id, status, is_read, is_replied, created_at, replied_at')
+        .gte('created_at', startDateISO);
+
+      if (queryError) {
+        console.error('[InquiryStats] Query error:', queryError);
+        return createErrorResponse('查詢統計資料時發生錯誤', 500,
+          queryError.message,
+          'QUERY_ERROR'
+        );
+      }
+
+      basicStats = data;
+    } catch (dbError) {
+      console.error('[InquiryStats] Database query error:', dbError);
+      return createErrorResponse('資料庫查詢失敗', 503,
+        dbError instanceof Error ? dbError.message : 'Unknown database error',
+        'DATABASE_QUERY_ERROR'
+      );
+    }
 
     if (!basicStats) {
-      return createErrorResponse('取得統計資料失敗', 500);
+      return createErrorResponse('無法取得統計資料', 500, undefined, 'NO_DATA_RETURNED');
     }
 
     // 計算統計資料
@@ -148,13 +219,28 @@ export async function GET(request: NextRequest) {
       timeframe_days: daysAgo
     };
 
-    return createSuccessResponse(statsData);
+    // 記錄請求處理時間
+    const processingTime = Date.now() - startTime;
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[InquiryStats] Request processed in ${processingTime}ms`);
+    }
+
+    return createSuccessResponse(statsData, `統計資料已成功取得 (處理時間: ${processingTime}ms)`);
 
   } catch (error) {
+    // 記錄未捕獲的錯誤
+    console.error('[InquiryStats] Unhandled error:', error);
+    
+    const processingTime = Date.now() - startTime;
+    const errorDetails = error instanceof Error 
+      ? `${error.message} (Stack: ${error.stack})`
+      : 'Unknown error';
+      
     return createErrorResponse(
-      '取得統計資料失敗',
+      '統計資料服務發生未預期的錯誤',
       500,
-      error instanceof Error ? error.message : 'Unknown error'
+      `Error after ${processingTime}ms: ${errorDetails}`,
+      'UNHANDLED_ERROR'
     );
   }
 }

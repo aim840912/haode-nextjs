@@ -6,7 +6,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useInquiryStats } from '@/hooks/useInquiryStats';
+import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext';
 import { useAuth } from '@/lib/auth-context';
 
 interface InquiryNotificationBadgeProps {
@@ -47,7 +47,7 @@ export default function InquiryNotificationBadge({
   onClick
 }: InquiryNotificationBadgeProps) {
   const { user } = useAuth();
-  const { stats, loading, error } = useInquiryStats(30000); // 每30秒重新整理
+  const { stats, loading, error, isRetrying, retryCount } = useInquiryStatsContext();
   const router = useRouter();
 
   // 只有管理員才顯示
@@ -94,18 +94,46 @@ export default function InquiryNotificationBadge({
 
   const currentSize = sizeClasses[size];
 
+  // 判斷是否顯示錯誤狀態
+  const shouldShowError = error && process.env.NODE_ENV === 'development' && !isRetrying;
+  const hasData = stats !== null;
+  
   // 載入或錯誤狀態顯示
-  if (loading || error) {
+  if ((loading && !hasData) || shouldShowError) {
+    const iconColorClass = shouldShowError 
+      ? 'text-red-400 hover:text-red-600' 
+      : 'text-gray-400 hover:text-gray-600';
+      
+    const title = shouldShowError 
+      ? `詢價管理 (錯誤: ${error})` 
+      : loading 
+        ? '詢價管理 (載入中...)' 
+        : '詢價管理';
+
     return showIcon ? (
       <div className={`relative ${currentSize.container} ${className}`}>
         <button
           onClick={handleClick}
-          className="w-full h-full flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
-          title="詢價管理"
-          disabled={loading}
+          className={`w-full h-full flex items-center justify-center ${iconColorClass} transition-colors rounded-full hover:bg-gray-100`}
+          title={title}
+          disabled={loading && !hasData}
         >
           <InquiryIcon className={currentSize.icon} />
         </button>
+        
+        {/* 重試指示器 */}
+        {isRetrying && (
+          <div className="absolute -top-1 -right-1 w-3 h-3">
+            <div className="w-full h-full bg-yellow-400 rounded-full animate-ping"></div>
+          </div>
+        )}
+        
+        {/* 開發模式錯誤指示器 */}
+        {shouldShowError && (
+          <div className="absolute -top-1 -right-1 w-3 h-3">
+            <div className="w-full h-full bg-red-500 rounded-full"></div>
+          </div>
+        )}
       </div>
     ) : null;
   }
@@ -155,9 +183,23 @@ export default function InquiryNotificationBadge({
       </button>
 
       {/* 載入指示器 */}
-      {loading && (
-        <div className={`absolute inset-0 flex items-center justify-center`}>
-          <div className="w-2 h-2 bg-gray-400 rounded-full animate-ping"></div>
+      {loading && hasData && (
+        <div className="absolute top-0 right-0 w-2 h-2">
+          <div className="w-full h-full bg-gray-400 rounded-full animate-ping"></div>
+        </div>
+      )}
+
+      {/* 重試指示器 */}
+      {isRetrying && (
+        <div className="absolute top-0 right-0 w-2 h-2">
+          <div className="w-full h-full bg-yellow-400 rounded-full animate-ping"></div>
+        </div>
+      )}
+
+      {/* 開發模式錯誤指示器 */}
+      {error && process.env.NODE_ENV === 'development' && !isRetrying && (
+        <div className="absolute top-0 right-0 w-2 h-2">
+          <div className="w-full h-full bg-red-500 rounded-full animate-pulse"></div>
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import { ToastProvider } from "@/components/Toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import GoogleAnalyticsProvider from "@/components/GoogleAnalyticsProvider";
+import { InquiryStatsProvider } from "@/contexts/InquiryStatsContext";
 
 const notoSansTC = Noto_Sans_TC({
   subsets: ["latin"],
@@ -108,13 +109,15 @@ export default function RootLayout({
           <GoogleAnalyticsProvider>
             <ToastProvider>
               <AuthProvider>
-                <CartProvider>
-                  <Header />
-                  <main className="min-h-screen">
-                    <HeaderSpacer />
-                    {children}
-                  </main>
-                </CartProvider>
+                <InquiryStatsProvider>
+                  <CartProvider>
+                    <Header />
+                    <main className="min-h-screen">
+                      <HeaderSpacer />
+                      {children}
+                    </main>
+                  </CartProvider>
+                </InquiryStatsProvider>
               </AuthProvider>
             </ToastProvider>
           </GoogleAnalyticsProvider>
