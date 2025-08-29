@@ -9,6 +9,7 @@ import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner';
 import OptimizedImage from '@/components/OptimizedImage';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { useState } from 'react';
+import React from 'react';
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry';
 import { supabase } from '@/lib/supabase-auth';
 import { useCSRFToken } from '@/hooks/useCSRFToken';
@@ -21,6 +22,7 @@ function CartPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const { token: csrfToken } = useCSRFToken();
   const [showInquiryForm, setShowInquiryForm] = useState(false);
+  const [isValidatingProducts, setIsValidatingProducts] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -28,6 +30,61 @@ function CartPage() {
     deliveryAddress: '',
     notes: ''
   });
+
+  // 驗證購物車中的產品是否仍然存在
+  const validateCartProducts = async () => {
+    if (cart.items.length === 0) return;
+    
+    setIsValidatingProducts(true);
+    try {
+      const response = await fetch(`/api/products?t=${Date.now()}`);
+      if (!response.ok) {
+        console.warn('無法驗證產品，跳過驗證');
+        return;
+      }
+      
+      const products = await response.json();
+      const activeProductIds = new Set(
+        products.filter((p: any) => p.isActive && (p.showInCatalog ?? true))
+                .map((p: any) => p.id)
+      );
+      
+      let removedCount = 0;
+      const itemsToRemove: string[] = [];
+      
+      // 檢查每個購物車項目
+      cart.items.forEach(item => {
+        if (!activeProductIds.has(item.product.id)) {
+          itemsToRemove.push(item.id);
+          removedCount++;
+        }
+      });
+      
+      // 移除不存在的產品
+      if (itemsToRemove.length > 0) {
+        itemsToRemove.forEach(itemId => {
+          removeItem(itemId);
+        });
+        
+        error(
+          '商品已更新', 
+          `已移除 ${removedCount} 個不再販售的商品`
+        );
+      }
+      
+    } catch (err) {
+      console.warn('產品驗證失敗:', err);
+    } finally {
+      setIsValidatingProducts(false);
+    }
+  };
+
+  // 頁面載入時驗證產品
+  React.useEffect(() => {
+    if (cart.items.length > 0) {
+      validateCartProducts();
+    }
+  }, []);
 
   const handleInquirySubmit = async () => {
     if (!user) {

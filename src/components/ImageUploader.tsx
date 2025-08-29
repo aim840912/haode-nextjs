@@ -25,6 +25,8 @@ interface ImageUploaderProps {
   enableCompression?: boolean;
   className?: string;
   acceptedTypes?: string[];
+  apiEndpoint?: string;
+  idParamName?: string;
 }
 
 export default function ImageUploader({
@@ -36,7 +38,9 @@ export default function ImageUploader({
   generateMultipleSizes = false,
   enableCompression = true,
   className = '',
-  acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+  acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
+  apiEndpoint = '/api/upload/images',
+  idParamName = 'productId'
 }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -168,7 +172,7 @@ export default function ImageUploader({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError, csrfToken]);
+  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError, csrfToken, apiEndpoint, idParamName]);
 
   const uploadImageToServer = async (
     file: File,
@@ -178,7 +182,7 @@ export default function ImageUploader({
   ) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('productId', productId);
+    formData.append(idParamName, productId);
     formData.append('generateMultipleSizes', generateMultipleSizes.toString());
     formData.append('compress', 'false'); // 已在前端壓縮
 
@@ -187,7 +191,7 @@ export default function ImageUploader({
       headers['x-csrf-token'] = csrfToken;
     }
 
-    const response = await fetch('/api/upload/images', {
+    const response = await fetch(apiEndpoint, {
       method: 'POST',
       body: formData,
       headers,

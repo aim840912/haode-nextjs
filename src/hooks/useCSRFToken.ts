@@ -202,7 +202,9 @@ export function useCSRFToken(): UseCSRFTokenReturn {
     const maxAge = 23 * 60 * 60 * 1000; // 23小時（在24小時過期前刷新）
 
     if (tokenAge > maxAge) {
-      console.log('CSRF token is near expiry, refreshing...');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('CSRF token is near expiry, refreshing...');
+      }
       fetchToken(true);
     }
   }, [fetchToken]);
@@ -213,10 +215,14 @@ export function useCSRFToken(): UseCSRFTokenReturn {
   useEffect(() => {
     // 立即嘗試從 cookie 獲取 token
     const existingToken = getTokenFromCookie();
-    console.log('[DEBUG] CSRF cookie token found:', existingToken ? existingToken.substring(0, 8) + '...' : 'none');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[DEBUG] CSRF cookie token found:', existingToken ? existingToken.substring(0, 8) + '...' : 'none');
+    }
     
     if (isValidTokenFormat(existingToken)) {
-      console.log('[DEBUG] Using existing CSRF token from cookie');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] Using existing CSRF token from cookie');
+      }
       setState(prev => ({
         ...prev,
         token: existingToken,
@@ -224,7 +230,9 @@ export function useCSRFToken(): UseCSRFTokenReturn {
         lastFetched: Date.now()
       }));
     } else {
-      console.log('[DEBUG] No valid cookie token, fetching from server');
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] No valid cookie token, fetching from server');
+      }
       // 如果 cookie 中沒有有效 token，則從伺服器獲取
       fetchToken();
     }
