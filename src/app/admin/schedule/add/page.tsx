@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Product } from '@/types/product'
 import { useAuth } from '@/lib/auth-context'
+import TimePickerChinese from '@/components/TimePickerChinese'
 
 export default function AddSchedule() {
   const router = useRouter()
@@ -24,6 +25,27 @@ export default function AddSchedule() {
     specialOffer: '',
     weatherNote: ''
   })
+
+  const [timeRange, setTimeRange] = useState({
+    startTime: '',
+    endTime: ''
+  })
+
+  // Format start and end times into time range string
+  const formatTimeRange = (startTime: string, endTime: string) => {
+    if (!startTime || !endTime) return ''
+    return `${startTime}-${endTime}`
+  }
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products')
+      const data = await response.json()
+      setProducts(data.filter((p: Product) => p.isActive))
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    }
+  }
 
   useEffect(() => {
     fetchProducts()
@@ -68,25 +90,21 @@ export default function AddSchedule() {
     )
   }
 
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch('/api/products')
-      const data = await response.json()
-      setProducts(data.filter((p: Product) => p.isActive))
-    } catch (error) {
-      console.error('Error fetching products:', error)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
+      const submitData = {
+        ...formData,
+        time: formattedTime
+      }
+      
       const response = await fetch('/api/schedule', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       })
 
       if (response.ok) {
@@ -107,6 +125,13 @@ export default function AddSchedule() {
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }))
+  }
+
+  const handleTimeChange = (timeType: 'startTime' | 'endTime', value: string) => {
+    setTimeRange(prev => ({
+      ...prev,
+      [timeType]: value
     }))
   }
 
@@ -201,7 +226,7 @@ export default function AddSchedule() {
           </div>
 
           {/* 日期時間 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
                 日期 *
@@ -218,17 +243,31 @@ export default function AddSchedule() {
 
             <div>
               <label className="block text-sm font-medium text-gray-900 mb-2">
-                時間 *
+                開始時間 *
               </label>
-              <input
-                type="text"
-                name="time"
-                value={formData.time}
-                onChange={handleInputChange}
+              <TimePickerChinese
+                value={timeRange.startTime}
+                onChange={(time) => handleTimeChange('startTime', time)}
                 required
-                placeholder="例如：17:00 - 23:00"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                className="w-full"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">
+                結束時間 *
+              </label>
+              <TimePickerChinese
+                value={timeRange.endTime}
+                onChange={(time) => handleTimeChange('endTime', time)}
+                required
+                className="w-full"
+              />
+              {timeRange.startTime && timeRange.endTime && (
+                <div className="mt-2 text-sm text-gray-600">
+                  時間範圍：{formatTimeRange(timeRange.startTime, timeRange.endTime)}
+                </div>
+              )}
             </div>
           </div>
 
@@ -337,7 +376,7 @@ export default function AddSchedule() {
               
               <div className="space-y-2 text-sm text-gray-600 mb-3">
                 <div>📅 {formData.date ? new Date(formData.date).toLocaleDateString('zh-TW', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '請選擇日期'}</div>
-                <div>⏰ {formData.time || '請輸入時間'}</div>
+                <div>⏰ {formatTimeRange(timeRange.startTime, timeRange.endTime) || '請選擇時間'}</div>
                 <div>📍 {formData.location || '請輸入地址'}</div>
               </div>
 
