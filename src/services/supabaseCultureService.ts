@@ -1,5 +1,11 @@
 import { CultureItem, CultureService } from '@/types/culture'
 import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { 
+  uploadCultureImageToStorage, 
+  deleteCultureImages,
+  initializeCultureStorageBucket,
+  uploadBase64ToCultureStorage
+} from '@/lib/culture-storage'
 
 export class SupabaseCultureService implements CultureService {
   async getCultureItems(): Promise<CultureItem[]> {
@@ -44,23 +50,20 @@ export class SupabaseCultureService implements CultureService {
     }
   }
 
-  async addCultureItem(itemData: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<CultureItem> {
-    console.log('📥 收到的資料:', itemData)
+  async addCultureItem(itemData: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }): Promise<CultureItem> {
+    console.log('📥 收到的資料:', {
+      ...itemData,
+      imageFile: itemData.imageFile ? `File: ${itemData.imageFile.name}` : undefined
+    })
     
-    // 處理圖片資料：優先使用 imageUrl，如果沒有則使用其他圖片資料
-    const images = []
-    if (itemData.imageUrl) {
-      console.log('🔗 發現 imageUrl:', itemData.imageUrl?.substring(0, 100) + '...')
-      images.push(itemData.imageUrl)
-    }
-    // 如果有其他 image 屬性（如上傳的 base64 圖片）
-    if ((itemData as any).image) {
-      console.log('📷 發現上傳圖片:', (itemData as any).image?.substring(0, 100) + '...')
-      images.push((itemData as any).image)
+    // 確保 Storage bucket 存在
+    try {
+      await initializeCultureStorageBucket();
+    } catch (bucketError) {
+      console.warn('⚠️ Storage bucket 初始化警告:', bucketError);
     }
     
-    console.log('💾 將儲存的圖片數量:', images.length)
-    
+    // 先插入資料庫記錄以取得 ID
     const insertData = {
       title: itemData.title,
       description: itemData.description,
@@ -68,7 +71,7 @@ export class SupabaseCultureService implements CultureService {
       category: 'culture',
       year: new Date().getFullYear(),
       is_featured: true,
-      images: images
+      images: [] // 先設為空陣列，稍後更新
     }
 
     const { data, error } = await supabaseAdmin!
@@ -82,10 +85,64 @@ export class SupabaseCultureService implements CultureService {
       throw new Error('Failed to add culture item')
     }
 
-    return this.transformFromDB(data)
+    const cultureId = data.id;
+    const images: string[] = [];
+
+    try {
+      // 處理圖片上傳
+      if (itemData.imageFile) {
+        console.log('📤 上傳檔案到 Storage:', itemData.imageFile.name);
+        const { url } = await uploadCultureImageToStorage(itemData.imageFile, cultureId);
+        images.push(url);
+        console.log('✅ Storage 上傳成功:', url);
+      } else if (itemData.imageUrl) {
+        console.log('🔗 使用提供的 imageUrl:', itemData.imageUrl?.substring(0, 100) + '...');
+        images.push(itemData.imageUrl);
+      } else if ((itemData as any).image && (itemData as any).image.startsWith('data:image/')) {
+        // 處理 base64 圖片（向後相容）
+        console.log('📷 轉換 base64 圖片到 Storage');
+        const { url } = await uploadBase64ToCultureStorage((itemData as any).image, cultureId);
+        images.push(url);
+        console.log('✅ Base64 轉換上傳成功:', url);
+      }
+
+      // 更新資料庫中的圖片 URL
+      if (images.length > 0) {
+        const { error: updateError } = await supabaseAdmin!
+          .from('culture')
+          .update({ images })
+          .eq('id', cultureId);
+
+        if (updateError) {
+          console.error('Error updating images:', updateError);
+          // 嘗試清理已上傳的檔案
+          await deleteCultureImages(cultureId);
+          throw new Error('Failed to update culture item with images');
+        }
+
+        console.log('💾 資料庫圖片 URL 更新成功:', images);
+      }
+
+      return this.transformFromDB({ ...data, images });
+    } catch (uploadError) {
+      console.error('🚫 圖片處理失敗，刪除資料庫記錄:', uploadError);
+      // 如果圖片處理失敗，刪除已建立的資料庫記錄
+      await supabaseAdmin!
+        .from('culture')
+        .delete()
+        .eq('id', cultureId);
+      
+      throw new Error('Failed to process culture item images');
+    }
   }
 
-  async updateCultureItem(id: string, itemData: Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>>): Promise<CultureItem> {
+  async updateCultureItem(id: string, itemData: Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }): Promise<CultureItem> {
+    console.log('🔄 更新時光典藏:', {
+      id,
+      ...itemData,
+      imageFile: itemData.imageFile ? `File: ${itemData.imageFile.name}` : undefined
+    });
+    
     const dbUpdateData: Record<string, any> = {}
     
     if (itemData.title !== undefined) dbUpdateData.title = itemData.title
@@ -93,16 +150,36 @@ export class SupabaseCultureService implements CultureService {
     if (itemData.subtitle !== undefined) dbUpdateData.content = itemData.subtitle
     
     // 處理圖片更新
-    if (itemData.imageUrl !== undefined) {
-      const images = []
+    const images: string[] = [];
+    let shouldUpdateImages = false;
+
+    if (itemData.imageFile) {
+      console.log('📤 上傳新檔案到 Storage:', itemData.imageFile.name);
+      // 先刪除舊圖片
+      await deleteCultureImages(id);
+      // 上傳新圖片
+      const { url } = await uploadCultureImageToStorage(itemData.imageFile, id);
+      images.push(url);
+      shouldUpdateImages = true;
+      console.log('✅ 新檔案上傳成功:', url);
+    } else if (itemData.imageUrl !== undefined) {
       if (itemData.imageUrl) {
-        images.push(itemData.imageUrl)
+        console.log('🔗 使用新的 imageUrl:', itemData.imageUrl?.substring(0, 100) + '...');
+        images.push(itemData.imageUrl);
       }
-      // 如果有其他 image 屬性（如上傳的 base64 圖片）
-      if ((itemData as any).image) {
-        images.push((itemData as any).image)
-      }
-      dbUpdateData.images = images
+      shouldUpdateImages = true;
+    } else if ((itemData as any).image && (itemData as any).image.startsWith('data:image/')) {
+      // 處理 base64 圖片（向後相容）
+      console.log('📷 轉換新的 base64 圖片到 Storage');
+      await deleteCultureImages(id);
+      const { url } = await uploadBase64ToCultureStorage((itemData as any).image, id);
+      images.push(url);
+      shouldUpdateImages = true;
+      console.log('✅ Base64 轉換更新成功:', url);
+    }
+
+    if (shouldUpdateImages) {
+      dbUpdateData.images = images;
     }
 
     const { data, error } = await supabaseAdmin!
@@ -118,10 +195,27 @@ export class SupabaseCultureService implements CultureService {
     }
     
     if (!data) throw new Error('Culture item not found')
+    console.log('✅ 時光典藏更新成功');
     return this.transformFromDB(data)
   }
 
   async deleteCultureItem(id: string): Promise<void> {
+    try {
+      // 先刪除 Storage 中的所有圖片
+      console.log('🗑️ 刪除時光典藏項目:', id);
+      const deletionResult = await deleteCultureImages(id);
+      
+      if (deletionResult.success) {
+        console.log(`✅ 成功刪除 ${deletionResult.deletedCount} 張圖片`);
+      } else {
+        console.warn('⚠️ 刪除圖片時發生警告:', deletionResult.error);
+      }
+    } catch (storageError) {
+      // 圖片刪除失敗不應該阻止項目刪除，但要記錄錯誤
+      console.warn('⚠️ 刪除時光典藏圖片時發生警告:', storageError);
+    }
+
+    // 然後刪除資料庫記錄
     const { error } = await supabaseAdmin!
       .from('culture')
       .delete()
@@ -131,6 +225,8 @@ export class SupabaseCultureService implements CultureService {
       console.error('Error deleting culture item:', error)
       throw new Error('Failed to delete culture item')
     }
+
+    console.log('✅ 時光典藏項目刪除完成:', id);
   }
 
   private transformFromDB(dbItem: Record<string, any>): CultureItem {

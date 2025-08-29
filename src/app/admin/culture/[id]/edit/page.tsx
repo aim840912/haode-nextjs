@@ -143,22 +143,30 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     setLoading(true)
 
     try {
-      // 準備要提交的資料，優先使用上傳的圖片
-      const submitData = {
-        ...formData,
-        imageUrl: formData.image || formData.imageUrl // 上傳的圖片優先於 URL
-      }
-      
       console.log('📤 提交的編輯資料:', {
-        ...submitData,
-        imageUrl: submitData.imageUrl?.substring(0, 100) + (submitData.imageUrl?.length > 100 ? '...' : ''),
+        ...formData,
+        imageFile: imageFile ? `File: ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null,
         hasLocalPath
       })
       
+      // 準備 FormData 用於檔案上傳
+      const submitFormData = new FormData()
+      submitFormData.append('title', formData.title)
+      submitFormData.append('subtitle', formData.subtitle)
+      submitFormData.append('description', formData.description)
+      submitFormData.append('height', formData.height)
+      
+      if (imageFile) {
+        submitFormData.append('imageFile', imageFile)
+        console.log('📁 包含新的圖片檔案:', imageFile.name)
+      } else if (formData.imageUrl) {
+        submitFormData.append('imageUrl', formData.imageUrl)
+        console.log('🔗 保持現有的圖片 URL:', formData.imageUrl)
+      }
+      
       const response = await fetch(`/api/culture/${cultureId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData)
+        body: submitFormData  // 使用 FormData
       })
 
       if (response.ok) {
@@ -183,12 +191,25 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // 驗證檔案大小 (限制 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        alert('圖片檔案大小不能超過 10MB')
+        return
+      }
+
+      // 驗證檔案類型
+      if (!file.type.startsWith('image/')) {
+        alert('請選擇圖片檔案')
+        return
+      }
+
       setImageFile(file)
       const reader = new FileReader()
       reader.onload = (e) => {
         const result = e.target?.result as string
         setImagePreview(result)
-        setFormData(prev => ({ ...prev, image: result }))
+        // 清除 URL 欄位，因為使用檔案上傳
+        setFormData(prev => ({ ...prev, imageUrl: '' }))
         setHasLocalPath(false) // 清除本地路徑警告
       }
       reader.readAsDataURL(file)
@@ -199,7 +220,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
   const clearImage = () => {
     setImagePreview('')
     setImageFile(null)
-    setFormData(prev => ({ ...prev, image: '', imageUrl: '' }))
+    setFormData(prev => ({ ...prev, imageUrl: '' }))
     setHasLocalPath(false)
   }
 

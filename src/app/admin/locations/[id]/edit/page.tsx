@@ -128,7 +128,10 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
         body: JSON.stringify({
           ...formData,
           features: formData.features.filter(feature => feature.trim() !== ''),
-          specialties: formData.specialties.filter(specialty => specialty.trim() !== '')
+          specialties: formData.specialties.filter(specialty => specialty.trim() !== ''),
+          coordinates: formData.coordinates.lat || formData.coordinates.lng ? 
+            formData.coordinates : 
+            { lat: 23.5519, lng: 120.5564 } // 台灣中心點作為預設值
         })
       })
 
@@ -147,21 +150,10 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
-    if (name.startsWith('coordinates.')) {
-      const coordField = name.split('.')[1] as 'lat' | 'lng'
-      setFormData(prev => ({
-        ...prev,
-        coordinates: {
-          ...prev.coordinates,
-          [coordField]: parseFloat(value) || 0
-        }
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
-      }))
-    }
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    }))
   }
 
   const addFeatureField = () => {
@@ -431,37 +423,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    緯度
-                  </label>
-                  <input
-                    type="number"
-                    name="coordinates.lat"
-                    value={formData.coordinates.lat}
-                    onChange={handleInputChange}
-                    step="any"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                    placeholder="例：23.9693"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    經度
-                  </label>
-                  <input
-                    type="number"
-                    name="coordinates.lng"
-                    value={formData.coordinates.lng}
-                    onChange={handleInputChange}
-                    step="any"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                    placeholder="例：120.9417"
-                  />
-                </div>
-              </div>
             </div>
 
             {/* 特色服務 */}

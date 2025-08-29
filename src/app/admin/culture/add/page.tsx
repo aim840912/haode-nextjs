@@ -18,7 +18,7 @@ export default function AddCulture() {
     imageUrl: '',  // URL 圖片
     image: ''      // 上傳的圖片檔案 (base64)
   })
-  const [_imageFile, setImageFile] = useState<File | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -93,13 +93,29 @@ export default function AddCulture() {
     setLoading(true)
 
     try {
-      console.log('📤 提交的資料:', formData)
-      console.log('📷 是否有圖片:', !!formData.image || !!formData.imageUrl)
+      console.log('📤 提交的資料:', {
+        ...formData,
+        imageFile: imageFile ? `File: ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null
+      })
+      
+      // 準備 FormData 用於檔案上傳
+      const submitData = new FormData()
+      submitData.append('title', formData.title)
+      submitData.append('subtitle', formData.subtitle)
+      submitData.append('description', formData.description)
+      submitData.append('height', formData.height)
+      
+      if (imageFile) {
+        submitData.append('imageFile', imageFile)
+        console.log('📁 包含圖片檔案:', imageFile.name)
+      } else if (formData.imageUrl) {
+        submitData.append('imageUrl', formData.imageUrl)
+        console.log('🔗 包含圖片 URL:', formData.imageUrl)
+      }
       
       const response = await fetch('/api/culture', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: submitData  // 使用 FormData 而不是 JSON
       })
 
       if (response.ok) {
@@ -132,7 +148,7 @@ export default function AddCulture() {
               href="/admin/culture"
               className="text-orange-600 hover:text-orange-800"
             >
-              ← 回到文化管理
+              ← 回到時光典藏管理
             </Link>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">新增時光典藏</h1>

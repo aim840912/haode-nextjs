@@ -207,16 +207,11 @@ export default function CulturePage() {
 
               {/* Content */}
               <div className="prose prose-lg max-w-none">
-                <p className="text-gray-700 leading-relaxed text-lg mb-6">
-                  {selectedItem.description}
-                </p>
-
                 {/* Extended content */}
                 <div className="bg-amber-50 rounded-lg p-6 border-l-4 border-amber-400">
                   <h4 className="font-semibold text-amber-900 mb-3">時光典藏</h4>
                   <p className="text-amber-800 text-sm leading-relaxed">
-                    這項時光典藏記錄了農業發展的珍貴時光，每一個細節都承載著歷史的記憶與傳承的價值。
-                    透過這些影像，我們可以感受到時代的變遷與文化的延續。
+                    {selectedItem.description}
                   </p>
                 </div>
               </div>

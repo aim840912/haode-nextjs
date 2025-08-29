@@ -73,3 +73,6 @@ next-env.d.ts
 
 # 測試結果目錄
 test-results/
+
+# Supabase 臨時檔案
+supabase/.temp/
