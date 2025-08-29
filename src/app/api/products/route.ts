@@ -7,12 +7,36 @@ async function handleGET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const isAdmin = searchParams.get('admin') === 'true'
     const timestamp = searchParams.get('t')
+    const nocache = searchParams.get('nocache') === 'true'
     
+    let products: any[]
     
-    const products = isAdmin && productService.getAllProducts ? 
-      await productService.getAllProducts() : 
-      await productService.getProducts()
-    
+    if (nocache) {
+      // 繞過快取，直接從資料庫獲取
+      console.log('🚫 繞過快取，直接查詢資料庫')
+      
+      // 如果要繞過快取，我們需要直接使用基礎服務
+      const { getProductService } = await import('@/services/serviceFactory')
+      const baseService = await getProductService()
+      
+      // 如果是 CachedProductService，獲取其基礎服務
+      if ('baseService' in baseService && (baseService as any).baseService) {
+        const cachedService = baseService as any
+        products = isAdmin && cachedService.baseService.getAllProducts ? 
+          await cachedService.baseService.getAllProducts() : 
+          await cachedService.baseService.getProducts()
+      } else {
+        // 直接是基礎服務
+        products = isAdmin && baseService.getAllProducts ? 
+          await baseService.getAllProducts() : 
+          await baseService.getProducts()
+      }
+    } else {
+      // 正常使用快取
+      products = isAdmin && productService.getAllProducts ? 
+        await productService.getAllProducts() : 
+        await productService.getProducts()
+    }
     
     const response = NextResponse.json(products)
     
@@ -21,6 +45,10 @@ async function handleGET(request: NextRequest) {
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
     
+    // 如果是繞過快取的請求，在 header 中標記
+    if (nocache) {
+      response.headers.set('X-Cache-Bypassed', 'true')
+    }
     
     return response
   } catch (error) {
@@ -37,6 +65,15 @@ async function handlePOST(request: NextRequest) {
     const body = await request.json()
     
     const product = await productService.addProduct(body)
+    
+    // 清除產品快取，確保變更立即生效
+    try {
+      const { CachedProductService } = await import('@/services/cachedProductService')
+      await CachedProductService.clearGlobalCache()
+      console.log('🔄 產品新增後已清除全域快取')
+    } catch (cacheError) {
+      console.warn('清除產品快取失敗:', cacheError)
+    }
     
     return NextResponse.json(product, { status: 201 })
   } catch (error) {

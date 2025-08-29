@@ -67,12 +67,17 @@ function ProductsPage() {
     loadInterestedProducts();
   }, [user]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async (forceRefresh: boolean = false) => {
     setLoading(true);
     try {
       const result = await executeWithErrorHandling(
         async () => {
-          const response = await fetch('/api/products');
+          // 添加時間戳參數避免快取，確保獲取最新資料
+          const timestamp = Date.now();
+          const url = forceRefresh 
+            ? `/api/products?t=${timestamp}&nocache=true`
+            : `/api/products?t=${timestamp}`;
+          const response = await fetch(url);
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -100,7 +105,21 @@ function ProductsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [executeWithErrorHandling]);
+
+  // 提供全域方法供測試使用
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).refreshProducts = () => fetchProducts(true);
+      (window as any).refreshProductsNormal = () => fetchProducts(false);
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).refreshProducts;
+        delete (window as any).refreshProductsNormal;
+      }
+    };
+  }, [fetchProducts]);
 
   // 只使用 API 產品資料，確保 SSR 和 CSR 一致
   const allProducts = useMemo(() => {
@@ -308,22 +327,39 @@ function ProductsPage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">精選農產品</h1>
               <p className="text-xl text-gray-700">來自台灣各地的優質農產，新鮮直送到你家</p>
             </div>
-            {user && user.role === 'admin' && (
-              <div className="flex space-x-3">
-                <a
-                  href="/admin/products"
-                  className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
-                >
-                  <span>產品管理</span>
-                </a>
-                <a
-                  href="/admin/products/add"
-                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-                >
-                  <span>新增產品</span>
-                </a>
-              </div>
-            )}
+            <div className="flex space-x-3">
+              {/* 重新整理按鈕 - 對所有用戶可見 */}
+              <button
+                onClick={() => {
+                  setApiProducts([]);
+                  setLoading(true);
+                  fetchProducts();
+                }}
+                disabled={loading}
+                className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="重新整理產品列表"
+              >
+                <span className={loading ? 'animate-spin' : ''}>🔄</span>
+                <span>{loading ? '更新中...' : '重新整理'}</span>
+              </button>
+
+              {user && user.role === 'admin' && (
+                <>
+                  <a
+                    href="/admin/products"
+                    className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                  >
+                    <span>產品管理</span>
+                  </a>
+                  <a
+                    href="/admin/products/add"
+                    className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  >
+                    <span>新增產品</span>
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

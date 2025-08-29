@@ -45,6 +45,38 @@ export class CachedProductService implements ProductService {
     }
   }
 
+  /**
+   * 全域快取清除方法 - 可被外部調用
+   * 用於管理員操作後清除所有產品相關快取
+   */
+  static async clearGlobalCache(): Promise<void> {
+    try {
+      await CacheManager.delete('products:list')
+      await CacheManager.delete('products:all')
+      await CacheManager.delete('products:search:*')
+      
+      // 額外清除可能的個別產品快取模式
+      // 注意: 這裡使用通用模式，實際實作取決於 CacheManager 支援
+      const patterns = [
+        'products:item:*'
+      ]
+      
+      for (const pattern of patterns) {
+        try {
+          await CacheManager.delete(pattern)
+        } catch (patternError) {
+          // 單個模式清除失敗不應影響整體
+          console.warn(`清除快取模式 ${pattern} 失敗:`, patternError)
+        }
+      }
+      
+      console.log('🌍 全域產品快取已清除')
+    } catch (error) {
+      console.warn('全域快取清除失敗:', error)
+      throw error // 拋出錯誤，讓調用方知道清除失敗
+    }
+  }
+
   async getProducts(): Promise<Product[]> {
     const cacheKey = 'products:list'
     

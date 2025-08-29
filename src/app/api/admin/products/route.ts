@@ -121,6 +121,15 @@ async function handlePOST(request: NextRequest) {
 
     if (error) throw error
 
+    // 清除產品快取，確保公開 API 能立即看到變更
+    try {
+      const { CachedProductService } = await import('@/services/cachedProductService')
+      await CachedProductService.clearGlobalCache()
+    } catch (cacheError) {
+      console.warn('清除產品快取失敗:', cacheError)
+      // 不影響主要功能，只記錄警告
+    }
+
     return NextResponse.json({ product: transformFromDB(data) }, { status: 201 })
   } catch (error) {
     console.error('Error creating product:', error)
@@ -169,6 +178,15 @@ async function handlePUT(request: NextRequest) {
       .single()
 
     if (error) throw error
+
+    // 清除產品快取，確保公開 API 能立即看到變更
+    try {
+      const { CachedProductService } = await import('@/services/cachedProductService')
+      await CachedProductService.clearGlobalCache()
+    } catch (cacheError) {
+      console.warn('清除產品快取失敗:', cacheError)
+      // 不影響主要功能，只記錄警告
+    }
 
     return NextResponse.json({ product: transformFromDB(data) })
   } catch (error) {
@@ -282,6 +300,16 @@ async function handleDELETE(request: NextRequest) {
       })
     } catch (auditError) {
       console.warn('Failed to log product deletion audit:', auditError)
+    }
+
+    // 清除產品快取，確保公開 API 能立即看到變更
+    try {
+      const { CachedProductService } = await import('@/services/cachedProductService')
+      await CachedProductService.clearGlobalCache()
+      console.log('🔄 產品刪除後已清除全域快取')
+    } catch (cacheError) {
+      console.warn('清除產品快取失敗:', cacheError)
+      // 不影響主要功能，只記錄警告
     }
 
     return NextResponse.json({ 

@@ -5,6 +5,7 @@ import { Product } from '@/types/product'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
+import { useToast } from '@/components/Toast'
 import SafeImage from './SafeImage'
 
 interface ProductsTableProps {
@@ -19,6 +20,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
+  const { success, error: errorToast, warning, loading: loadingToast, updateToast, removeToast } = useToast()
 
   useEffect(() => {
     fetchProducts()
@@ -68,22 +70,29 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
 
   const handleDelete = async (id: string) => {
     if (!user) {
-      alert('請先登入')
+      warning('請先登入', '您需要登入後才能刪除產品')
       return
     }
     
-    if (!confirm('確定要刪除此產品嗎？這將同時刪除產品的所有圖片資料。')) return
+    // 找到要刪除的產品資訊
+    const productToDelete = products.find(p => p.id === id)
+    const productName = productToDelete?.name || '產品'
+    
+    if (!confirm(`確定要刪除「${productName}」嗎？這將同時刪除產品的所有圖片資料。`)) return
     
     // 防止在 CSRF token 未準備好時執行
     if (csrfLoading || !csrfToken) {
-      alert('請稍候，正在初始化安全驗證...')
+      warning('請稍候', '正在初始化安全驗證...')
       return
     }
     
     if (csrfError) {
-      alert('安全驗證初始化失敗，請重新整理頁面')
+      errorToast('安全驗證失敗', '請重新整理頁面後再試')
       return
     }
+    
+    // 顯示刪除進度
+    const loadingId = loadingToast('刪除產品中', `正在刪除「${productName}」...`)
     
     try {
       const headers: HeadersInit = {}
@@ -106,15 +115,18 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       // 解析回應以取得刪除詳情
       const data = await response.json()
       
+      // 移除loading toast
+      removeToast(loadingId)
+      
       // 立即從本地狀態移除產品，提供即時更新體驗
       setProducts(prevProducts => prevProducts.filter(p => p.id !== id))
       
       // 顯示詳細的刪除結果
       if (data.imageCleanup) {
-        const { success, deletedCount, verification } = data.imageCleanup
-        let message = '✅ 產品已成功刪除'
+        const { success: imageSuccess, deletedCount, verification } = data.imageCleanup
+        let message = `產品「${productName}」已成功刪除`
         
-        if (success && deletedCount > 0) {
+        if (imageSuccess && deletedCount > 0) {
           message += `\n🖼️ 已清理 ${deletedCount} 個圖片檔案`
           if (verification?.verified) {
             message += '\n✅ 圖片清理已驗證完成'
@@ -123,13 +135,13 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
           }
         } else if (deletedCount === 0) {
           message += '\nℹ️ 此產品沒有關聯的圖片檔案'
-        } else if (!success) {
+        } else if (!imageSuccess) {
           message += `\n⚠️ 圖片清理失敗: ${data.imageCleanup.error || '未知錯誤'}`
         }
         
-        alert(message)
+        success('刪除成功', message)
       } else {
-        alert('✅ 產品已成功刪除')
+        success('刪除成功', `產品「${productName}」已成功刪除`)
       }
       
       // 呼叫父組件的回調函數
@@ -137,8 +149,18 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       
     } catch (error) {
       console.error('Error deleting product:', error)
+      
+      // 移除loading toast
+      removeToast(loadingId)
+      
       const errorMessage = error instanceof Error ? error.message : '刪除失敗，請稍後再試'
-      alert(errorMessage)
+      errorToast('刪除失敗', `無法刪除產品「${productName}」: ${errorMessage}`, [
+        {
+          label: '重試',
+          onClick: () => handleDelete(id),
+          variant: 'primary'
+        }
+      ])
       
       // 如果刪除失敗，重新獲取數據以確保狀態一致
       await fetchProducts()
@@ -147,20 +169,23 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
 
   const handleToggleActive = async (id: string, isActive: boolean) => {
     if (!user) {
-      alert('請先登入')
+      warning('請先登入', '您需要登入後才能修改產品狀態')
       return
     }
     
+    const productToUpdate = products.find(p => p.id === id)
+    const productName = productToUpdate?.name || '產品'
     const newActiveState = !isActive
+    const actionText = newActiveState ? '啟用' : '停用'
     
     // 防止在 CSRF token 未準備好時執行
     if (csrfLoading || !csrfToken) {
-      alert('請稍候，正在初始化安全驗證...')
+      warning('請稍候', '正在初始化安全驗證...')
       return
     }
     
     if (csrfError) {
-      alert('安全驗證初始化失敗，請重新整理頁面')
+      errorToast('安全驗證失敗', '請重新整理頁面後再試')
       return
     }
     
@@ -191,12 +216,23 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       
+      // 顯示成功訊息
+      success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
+      
       // 呼叫父組件的回調函數
       onToggleActive?.(id, newActiveState)
       
     } catch (error) {
       console.error('Error updating product:', error)
-      alert('更新失敗，請稍後再試')
+      
+      const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
+      errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [
+        {
+          label: '重試',
+          onClick: () => handleToggleActive(id, isActive),
+          variant: 'primary'
+        }
+      ])
       
       // 如果更新失敗，恢復原始狀態
       setProducts(prevProducts => 
@@ -209,20 +245,23 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
 
   const handleToggleShowInCatalog = async (id: string, showInCatalog: boolean) => {
     if (!user) {
-      alert('請先登入')
+      warning('請先登入', '您需要登入後才能修改產品目錄狀態')
       return
     }
     
+    const productToUpdate = products.find(p => p.id === id)
+    const productName = productToUpdate?.name || '產品'
     const newShowState = !showInCatalog
+    const actionText = newShowState ? '顯示在目錄' : '從目錄隐藏'
     
     // 防止在 CSRF token 未準備好時執行
     if (csrfLoading || !csrfToken) {
-      alert('請稍候，正在初始化安全驗證...')
+      warning('請稍候', '正在初始化安全驗證...')
       return
     }
     
     if (csrfError) {
-      alert('安全驗證初始化失敗，請重新整理頁面')
+      errorToast('安全驗證失敗', '請重新整理頁面後再試')
       return
     }
     
@@ -252,9 +291,20 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       // 更新成功後重新載入整個產品列表，確保資料同步
       await fetchProducts()
       
+      // 顯示成功訊息
+      success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
+      
     } catch (error) {
       console.error('Error updating product:', error)
-      alert('更新失敗，請稍後再試')
+      
+      const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
+      errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [
+        {
+          label: '重試',
+          onClick: () => handleToggleShowInCatalog(id, showInCatalog),
+          variant: 'primary'
+        }
+      ])
     }
   }
 

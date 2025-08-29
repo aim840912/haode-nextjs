@@ -127,12 +127,18 @@ function AddProduct() {
       
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
-        console.log('[DEBUG] CSRF token being sent:', csrfToken.substring(0, 8) + '...')
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[DEBUG] CSRF token being sent:', csrfToken.substring(0, 8) + '...');
+        }
       } else {
-        console.error('[DEBUG] No CSRF token available!')
+        if (process.env.NODE_ENV === 'development') {
+          console.error('[DEBUG] No CSRF token available!');
+        }
       }
       
-      console.log('[DEBUG] Request headers:', Object.keys(headers))
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[DEBUG] Request headers:', Object.keys(headers));
+      }
 
       const response = await fetch('/api/admin-proxy/products', {
         method: 'POST',
