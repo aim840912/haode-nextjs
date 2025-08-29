@@ -102,14 +102,30 @@ export class SupabaseNewsService implements NewsService {
   }
 
   async deleteNews(id: string): Promise<void> {
-    const { error } = await supabaseAdmin!
-      .from('news')
-      .delete()
-      .eq('id', id)
+    try {
+      // 先清理 Supabase Storage 中的新聞圖片
+      try {
+        const { deleteAllNewsImages } = await import('@/lib/news-storage')
+        await deleteAllNewsImages(id)
+        console.log(`✅ 新聞 ${id} 的圖片已清理`)
+      } catch (storageError) {
+        // 圖片刪除失敗不應該阻止新聞刪除，但要記錄錯誤
+        console.warn(`⚠️ 新聞 ${id} 圖片清理失敗:`, storageError)
+      }
 
-    if (error) {
-      console.error('Error deleting news:', error)
-      throw new Error('Failed to delete news')
+      // 然後刪除資料庫記錄
+      const { error } = await supabaseAdmin!
+        .from('news')
+        .delete()
+        .eq('id', id)
+
+      if (error) {
+        console.error('Error deleting news:', error)
+        throw new Error('Failed to delete news')
+      }
+    } catch (error) {
+      console.error('Error in deleteNews:', error)
+      throw error
     }
   }
 

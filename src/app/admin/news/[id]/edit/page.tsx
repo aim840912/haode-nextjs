@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import ImageUploader from '@/components/ImageUploader'
 // 圖片上傳現在通過 API 路由處理
 
 export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
@@ -25,9 +26,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     featured: false
   })
   
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>('')
-  const [uploading, setUploading] = useState(false)
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
 
   const categories = [
     '產品動態',
@@ -52,7 +51,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           featured: news.featured
         })
         if (news.imageUrl) {
-          setImagePreview(news.imageUrl)
+          // setImagePreview(news.imageUrl) // 不再需要，由 ImageUploader 處理
         }
       } else {
         alert('新聞不存在')
@@ -122,12 +121,8 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
 
-      let imageUrl = formData.imageUrl
-      
-      // 如果有新選擇的圖片，先上傳到 Storage
-      if (imageFile) {
-        imageUrl = await uploadImageToStorage(imageFile)
-      }
+      // 使用上傳成功的圖片 URL，如果沒有新上傳的圖片則保持原有的 URL
+      const imageUrl = uploadedImages.length > 0 ? uploadedImages[0] : formData.imageUrl
 
       const response = await fetch(`/api/news/${newsId}`, {
         method: 'PUT',
@@ -160,48 +155,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     }))
   }
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      // 建立預覽 URL
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setImagePreview(result)
-      }
-      reader.readAsDataURL(file)
-    }
+  const handleImageUploadSuccess = (images: any[]) => {
+    const urls = images.map(img => img.url || img.preview)
+    setUploadedImages(prev => [...prev, ...urls])
   }
 
-  const uploadImageToStorage = async (file: File): Promise<string> => {
-    setUploading(true)
-    try {
-      // 通過 API 路由上傳圖片（確保 bucket 初始化）
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('newsId', newsId || `news_${Date.now()}`)
-      
-      const response = await fetch('/api/news/images', {
-        method: 'POST',
-        body: formData
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || '圖片上傳失敗')
-      }
-      
-      const result = await response.json()
-      console.log('圖片上傳成功:', result)
-      return result.data.url
-    } catch (error) {
-      console.error('圖片上傳失敗:', error)
-      alert('圖片上傳失敗，請重試')
-      throw error
-    } finally {
-      setUploading(false)
-    }
+  const handleImageUploadError = (error: string) => {
+    alert(`圖片上傳失敗: ${error}`)
   }
 
   if (initialLoading) {
@@ -281,66 +241,33 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             <label className="block text-sm font-semibold text-gray-800 mb-2">
               新聞圖片
             </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors">
-              <div className="space-y-1 text-center">
-                {imagePreview ? (
-                  <div className="mb-4">
-                    <img 
-                      src={imagePreview} 
-                      alt="預覽" 
-                      className="mx-auto h-32 w-auto object-cover rounded-lg"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImagePreview('')
-                        setImageFile(null)
-                        setFormData(prev => ({ ...prev, imageUrl: '' }))
-                      }}
-                      className="mt-2 text-sm text-red-600 hover:text-red-500"
-                      disabled={uploading}
-                    >
-                      移除圖片
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 48 48"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <div className="flex text-sm text-gray-600">
-                      <label
-                        htmlFor="image-upload"
-                        className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
-                      >
-                        <span>上傳圖片</span>
-                        <input
-                          id="image-upload" 
-                          name="image-upload" 
-                          type="file" 
-                          className="sr-only" 
-                          accept="image/*"
-                          onChange={handleImageChange}
-                        />
-                      </label>
-                      <p className="pl-1">或拖拽檔案到此處</p>
-                    </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>
-                  </>
-                )}
+            {formData.imageUrl && uploadedImages.length === 0 && (
+              <div className="mb-4">
+                <div className="text-sm text-gray-600 mb-2">目前圖片：</div>
+                <img 
+                  src={formData.imageUrl} 
+                  alt="目前圖片" 
+                  className="h-32 w-auto object-cover rounded-lg border"
+                />
               </div>
-            </div>
+            )}
+            <ImageUploader
+              productId={newsId}
+              onUploadSuccess={handleImageUploadSuccess}
+              onUploadError={handleImageUploadError}
+              maxFiles={1}
+              allowMultiple={false}
+              generateMultipleSizes={false}
+              enableCompression={true}
+              apiEndpoint="/api/news/images"
+              idParamName="newsId"
+              className="mb-4"
+            />
+            {uploadedImages.length > 0 && (
+              <div className="text-sm text-green-600">
+                已上傳 {uploadedImages.length} 張新圖片（將替換原有圖片）
+              </div>
+            )}
           </div>
 
           {/* 分類和作者 */}
@@ -451,10 +378,10 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             </Link>
             <button
               type="submit"
-              disabled={loading || uploading}
+              disabled={loading}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              {uploading ? '上傳圖片中...' : loading ? '更新中...' : '更新新聞'}
+              {loading ? '更新中...' : '更新新聞'}
             </button>
           </div>
         </form>
