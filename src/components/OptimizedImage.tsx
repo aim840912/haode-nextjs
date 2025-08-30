@@ -146,19 +146,14 @@ export default function OptimizedImage({
               style={{ objectFit: 'cover' }}
             />
           ) : (
-            // 對於普通 URL，使用 Next.js Image 組件進行優化
-            <Image
+            // 對於普通 URL，在 fill 模式下使用原生 img 標籤避免 Next.js Image 的兼容性問題
+            <img
               src={finalSrc}
               alt={alt}
-              fill
-              sizes={finalSizes}
-              priority={priority}
-              quality={quality}
-              placeholder={placeholder}
-              blurDataURL={blurDataURL || defaultBlurDataURL}
-              className={`transition-opacity duration-300 ${
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isLoading ? 'opacity-0' : 'opacity-100'
               }`}
+              style={{ objectFit: 'cover' }}
               onLoad={handleLoad}
               onError={handleError}
             />

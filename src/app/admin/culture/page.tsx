@@ -12,6 +12,18 @@ export default function CultureAdmin() {
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
+  // 高度類名映射 - 確保所有可能的 Tailwind 類名都被包含
+  const heightClassMap = {
+    'h-32': 'h-32',    // 128px
+    'h-40': 'h-40',    // 160px
+    'h-48': 'h-48',    // 192px
+    'h-56': 'h-56',    // 224px
+    'h-64': 'h-64',    // 256px
+    'h-72': 'h-72',    // 288px
+    'h-80': 'h-80',    // 320px
+    'h-96': 'h-96',    // 384px
+  } as const
+
   useEffect(() => {
     fetchCultureItems()
   }, [])
@@ -96,7 +108,7 @@ export default function CultureAdmin() {
           {cultureItems.map((item) => (
             <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
               {/* Preview Card */}
-              <div className={`relative ${item.height} overflow-hidden`}>
+              <div className={`relative ${heightClassMap[item.height as keyof typeof heightClassMap] || 'h-56'} overflow-hidden`}>
                 {item.imageUrl ? (
                   // 顯示實際圖片
                   <div className="relative w-full h-full">
