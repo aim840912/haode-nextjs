@@ -589,7 +589,7 @@ export default function FarmTourPage() {
               href="tel:05-2561843"
               className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
-              電話預約
+              電話詢問
             </a>
             <button className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors">
               查看地圖
