@@ -145,7 +145,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     try {
       console.log('📤 提交的編輯資料:', {
         ...formData,
-        imageFile: imageFile ? `File: ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null,
+        imageFile: _imageFile ? `File: ${_imageFile.name} (${(_imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null,
         hasLocalPath
       })
       
@@ -156,9 +156,9 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
       submitFormData.append('description', formData.description)
       submitFormData.append('height', formData.height)
       
-      if (imageFile) {
-        submitFormData.append('imageFile', imageFile)
-        console.log('📁 包含新的圖片檔案:', imageFile.name)
+      if (_imageFile) {
+        submitFormData.append('imageFile', _imageFile)
+        console.log('📁 包含新的圖片檔案:', _imageFile.name)
       } else if (formData.imageUrl) {
         submitFormData.append('imageUrl', formData.imageUrl)
         console.log('🔗 保持現有的圖片 URL:', formData.imageUrl)
