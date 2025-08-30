@@ -82,11 +82,32 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
   - Pass all existing tests
   - Include tests for new functionality
   - Follow project formatting/linting
+  - Use project logger system (no console.log)
 
 - **Before committing**:
   - Run formatters/linters
   - Self-review changes
   - Ensure commit message explains "why"
+
+### Logging Standards
+
+- **NEVER use console.log/warn/error** - Use the project's logger system instead
+- **Import the appropriate logger**:
+  ```typescript
+  import { logger, apiLogger, dbLogger, cacheLogger, authLogger } from '@/lib/logger'
+  ```
+- **Use appropriate log levels**:
+  - `logger.debug()` - Development debugging info
+  - `logger.info()` - General information and user actions  
+  - `logger.warn()` - Warnings that don't break functionality
+  - `logger.error()` - Errors with recovery possible
+  - `logger.fatal()` - Critical system errors
+- **Provide context**: Always include relevant metadata in log context
+- **Use module-specific loggers**:
+  - `apiLogger` for API routes
+  - `dbLogger` for database operations
+  - `cacheLogger` for cache operations
+  - `authLogger` for authentication logic
 
 ### Error Handling
 
@@ -147,11 +168,21 @@ When multiple valid approaches exist, choose based on:
 - Disable tests instead of fixing them
 - Commit code that doesn't compile
 - Make assumptions - verify with existing code
+- Use console.log/warn/error - use the project logger system instead
 
 **ALWAYS**:
 - Commit working code incrementally
 - Update plan documentation as you go
 - Learn from existing implementations
 - Stop after 3 failed attempts and reassess
+- Use appropriate logger (apiLogger, dbLogger, etc.) with proper context
 
 ##
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+
+      
+      IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.
