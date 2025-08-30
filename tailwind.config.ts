@@ -6,10 +6,6 @@ export default {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  safelist: [
-    // 確保動態高度類名始終被包含
-    'h-32', 'h-40', 'h-48', 'h-56', 'h-64', 'h-72', 'h-80', 'h-96'
-  ],
   theme: {
     extend: {
       colors: {
