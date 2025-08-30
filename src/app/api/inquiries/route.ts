@@ -89,28 +89,8 @@ async function handleGET(request: NextRequest) {
     let inquiries;
     if (isAdmin && adminMode) {
       inquiries = await inquiryService.getAllInquiries(queryParams);
-      
-      // 記錄管理員查看所有庫存查詢單列表的審計日誌
-      AuditLogger.logInquiryListView(
-        user.id,
-        user.email || 'unknown@email.com',
-        profile?.name,
-        profile?.role,
-        { ...queryParams, admin_mode: true },
-        request
-      ).catch(console.error); // 非同步記錄，不影響主要流程
     } else {
       inquiries = await inquiryService.getUserInquiries(user.id, queryParams);
-      
-      // 記錄使用者查看自己庫存查詢單列表的審計日誌
-      AuditLogger.logInquiryListView(
-        user.id,
-        user.email || 'unknown@email.com',
-        profile?.name,
-        profile?.role,
-        queryParams,
-        request
-      ).catch(console.error); // 非同步記錄，不影響主要流程
     }
 
     return createSuccessResponse(inquiries, undefined, 200);

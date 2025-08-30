@@ -79,6 +79,7 @@ export class SupabaseInquiryService implements InquiryService {
         customer_name: data.customer_name,
         customer_email: data.customer_email,
         customer_phone: data.customer_phone,
+        inquiry_type: data.inquiry_type,
         notes: notesWithFarmTourData,
         delivery_address: data.delivery_address,
         preferred_delivery_date: data.preferred_delivery_date,

@@ -1,6 +1,14 @@
 /**
  * 審計日誌服務實作
  * 提供審計日誌的記錄、查詢和統計功能
+ * 
+ * 審計策略：
+ * - ✅ 記錄重要操作：建立(create)、更新(update)、刪除(delete)
+ * - ✅ 記錄狀態變更：status_change
+ * - ✅ 記錄單一資源查看：view（敏感資料）
+ * - ✅ 記錄未授權訪問：unauthorized_access
+ * - ❌ 不記錄列表瀏覽：view_list（已優化移除，減少雜訊）
+ * - ❌ 不記錄靜態頁面訪問：page_view
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
@@ -338,6 +346,7 @@ export class AuditLogger {
   }
 
   // 記錄詢問單列表查看
+  // @deprecated 已棄用：列表瀏覽記錄會產生過多雜訊，建議移除調用
   static async logInquiryListView(
     userId: string | null,
     userEmail: string,
