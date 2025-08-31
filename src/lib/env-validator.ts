@@ -226,7 +226,7 @@ export function validateOnStartup(): void {
     logger.error('========================================');
     
     result.errors.forEach(error => {
-      logger.error(error, { metadata: { type: 'env_validation' } });
+      logger.error(error, new Error(error), { metadata: { type: 'env_validation' } });
     });
     
     if (result.warnings.length > 0) {

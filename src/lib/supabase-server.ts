@@ -87,7 +87,7 @@ export async function getCurrentUser() {
     
     return user
   } catch (error) {
-    authLogger.error('獲取用戶時發生錯誤', error)
+    authLogger.error('獲取用戶時發生錯誤', error as Error)
     return null
   }
 }

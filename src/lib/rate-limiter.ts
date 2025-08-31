@@ -371,7 +371,7 @@ export class AdvancedRateLimiter {
         };
 
       } catch (fallbackError) {
-        logger.error('Rate Limiter fallback store also failed', fallbackError, { metadata: { originalError: error.message } });
+        logger.error('Rate Limiter fallback store also failed', fallbackError as Error, { metadata: { originalError: (error as Error).message } });
         
         // 如果兩個存儲都失敗，允許請求通過但記錄錯誤
         return {
@@ -427,7 +427,7 @@ export class AdvancedRateLimiter {
       });
 
     } catch (error) {
-      logger.error('Rate Limiter failed to log violation', error);
+      logger.error('Rate Limiter failed to log violation', error as Error);
     }
   }
 
@@ -441,7 +441,7 @@ export class AdvancedRateLimiter {
       if (!result.allowed) {
         const response = NextResponse.json(
           {
-            error: (config as Error).message || '請求過於頻繁，請稍後再試',
+            error: '請求過於頻繁，請稍後再試',
             success: false,
             code: 'RATE_LIMIT_EXCEEDED',
             details: {
@@ -493,7 +493,7 @@ export class AdvancedRateLimiter {
       if (!result.allowed) {
         return NextResponse.json(
           {
-            error: (config as Error).message || '請求過於頻繁，請稍後再試',
+            error: '請求過於頻繁，請稍後再試',
             success: false,
             code: 'RATE_LIMIT_EXCEEDED',
             details: {

@@ -90,7 +90,7 @@ export async function validateCSRFAdvanced(request: NextRequest): Promise<CSRFVa
     return { isValid: true };
 
   } catch (error) {
-    authLogger.error('CSRF validation error', error);
+    authLogger.error('CSRF validation error', error as Error);
     
     return {
       isValid: false,

@@ -123,7 +123,7 @@ async function logSecurityViolation(
     }
 
   } catch (error) {
-    authLogger.error('Failed to log security violation', error);
+    authLogger.error('Failed to log security violation', error as Error);
   }
 }
 
@@ -186,7 +186,7 @@ export async function middleware(request: NextRequest) {
 
           return NextResponse.json(
             {
-              error: (rateLimitConfig as Error).message || '請求過於頻繁，請稍後再試',
+              error: '請求過於頻繁，請稍後再試',
               success: false,
               code: 'RATE_LIMIT_EXCEEDED',
               details: {
@@ -292,7 +292,7 @@ export async function middleware(request: NextRequest) {
     return response;
 
   } catch (error) {
-    authLogger.error('Middleware error', error);
+    authLogger.error('Middleware error', error as Error);
     
     // 發生錯誤時，仍然繼續處理請求，但記錄錯誤
     const response = NextResponse.next();

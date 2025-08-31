@@ -287,7 +287,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       }
       
       const result = await response.json()
-      logger.debug('handleToggleShowInCatalog - 更新成功', { metadata: { productId: id, newStatus: !isCurrentlyShown, component: 'ProductsTable' } })
+      logger.debug('handleToggleShowInCatalog - 更新成功', { metadata: { productId: id, newStatus: !showInCatalog, component: 'ProductsTable' } })
       
       // 更新成功後重新載入整個產品列表，確保資料同步
       await fetchProducts()
