@@ -127,7 +127,7 @@ async function handlePOST(request: NextRequest) {
       const { CachedProductService } = await import('@/services/cachedProductService')
       await CachedProductService.clearGlobalCache()
     } catch (cacheError) {
-      apiLogger.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
       // 不影響主要功能，只記錄警告
     }
 
@@ -185,7 +185,7 @@ async function handlePUT(request: NextRequest) {
       const { CachedProductService } = await import('@/services/cachedProductService')
       await CachedProductService.clearGlobalCache()
     } catch (cacheError) {
-      apiLogger.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
       // 不影響主要功能，只記錄警告
     }
 
@@ -309,7 +309,7 @@ async function handleDELETE(request: NextRequest) {
       await CachedProductService.clearGlobalCache()
       apiLogger.info('🔄 產品刪除後已清除全域快取')
     } catch (cacheError) {
-      apiLogger.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
       // 不影響主要功能，只記錄警告
     }
 
