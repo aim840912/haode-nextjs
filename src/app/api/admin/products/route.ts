@@ -240,7 +240,7 @@ async function handleDELETE(request: NextRequest) {
       }
     } catch (storageError) {
       // 如果函數拋出異常（不應該發生，但作為備用）
-      apiLogger.warn(`⚠️ 產品 ${id} 圖片清理過程發生異常:`, storageError)
+      apiLogger.warn(`⚠️ 產品 ${id} 圖片清理過程發生異常`, { metadata: { error: (storageError as Error).message } })
       imageDeletionResult = {
         success: false,
         productId: id,
