@@ -273,7 +273,7 @@ async function handleDELETE(request: NextRequest) {
           verificationResult.remainingFiles = remainingImages
         }
       } catch (verifyError) {
-        apiLogger.warn(`⚠️ 無法驗證產品 ${id} 的圖片清理狀態:`, verifyError)
+        apiLogger.warn(`⚠️ 無法驗證產品 ${id} 的圖片清理狀態`, { metadata: { error: (verifyError as Error).message } })
       }
     } else if (imageDeletionResult.deletedCount === 0) {
       // 如果沒有檔案需要刪除，驗證也算通過
