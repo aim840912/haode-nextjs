@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase-auth';
+import { dbLogger } from '@/lib/logger';
 
 export interface UserInterest {
   id: string;
@@ -18,13 +19,13 @@ export class UserInterestsService {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching user interests:', error);
+        dbLogger.error('Error fetching user interests', undefined, { userId, metadata: { error: (error as Error).message || error } });
         return [];
       }
 
       return data?.map((item: any) => item.product_id) || [];
     } catch (error) {
-      console.error('Error in getUserInterests:', error);
+      dbLogger.error('Error in getUserInterests', error instanceof Error ? error : undefined, { userId });
       return [];
     }
   }
@@ -44,13 +45,13 @@ export class UserInterestsService {
         if (error.code === '23505') {
           return true;
         }
-        console.error('Error adding interest:', error);
+        dbLogger.error('Error adding interest', undefined, { userId, metadata: { error: (error as Error).message || error, productId } });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in addInterest:', error);
+      dbLogger.error('Error in addInterest', error instanceof Error ? error : undefined, { userId, metadata: { productId } });
       return false;
     }
   }
@@ -65,13 +66,13 @@ export class UserInterestsService {
         .eq('product_id', productId);
 
       if (error) {
-        console.error('Error removing interest:', error);
+        dbLogger.error('Error removing interest', undefined, { userId, metadata: { error: (error as Error).message || error, productId } });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in removeInterest:', error);
+      dbLogger.error('Error in removeInterest', error instanceof Error ? error : undefined, { userId, metadata: { productId } });
       return false;
     }
   }
@@ -91,13 +92,13 @@ export class UserInterestsService {
         .upsert(interests, { onConflict: 'user_id,product_id' });
 
       if (error) {
-        console.error('Error adding multiple interests:', error);
+        dbLogger.error('Error adding multiple interests', undefined, { userId, metadata: { error: (error as Error).message || error, productIdCount: productIds.length } });
         return false;
       }
 
       return true;
     } catch (error) {
-      console.error('Error in addMultipleInterests:', error);
+      dbLogger.error('Error in addMultipleInterests', error instanceof Error ? error : undefined, { userId, metadata: { productIdCount: productIds.length } });
       return false;
     }
   }
@@ -121,7 +122,7 @@ export class UserInterestsService {
         return await this.addInterest(userId, productId);
       }
     } catch (error) {
-      console.error('Error in toggleInterest:', error);
+      dbLogger.error('Error in toggleInterest', error instanceof Error ? error : undefined, { userId, metadata: { productId } });
       return false;
     }
   }
@@ -143,7 +144,7 @@ export class UserInterestsService {
       
       return mergedInterests;
     } catch (error) {
-      console.error('Error in syncLocalInterests:', error);
+      dbLogger.error('Error in syncLocalInterests', error instanceof Error ? error : undefined, { userId, metadata: { localInterestCount: localInterests.length } });
       return localInterests; // 如果同步失敗，返回本地清單
     }
   }
@@ -155,7 +156,7 @@ export class UserInterestsService {
       // 觸發事件通知其他元件更新
       window.dispatchEvent(new CustomEvent('interestedProductsUpdated'));
     } catch (error) {
-      console.error('Error clearing local interests:', error);
+      dbLogger.error('Error clearing local interests', error instanceof Error ? error : undefined);
     }
   }
 
@@ -165,7 +166,7 @@ export class UserInterestsService {
       const saved = localStorage.getItem('interestedProducts');
       return saved ? JSON.parse(saved) : [];
     } catch (error) {
-      console.error('Error getting local interests:', error);
+      dbLogger.error('Error getting local interests', error instanceof Error ? error : undefined);
       return [];
     }
   }
@@ -177,7 +178,7 @@ export class UserInterestsService {
       // 觸發事件通知其他元件更新
       window.dispatchEvent(new CustomEvent('interestedProductsUpdated'));
     } catch (error) {
-      console.error('Error setting local interests:', error);
+      dbLogger.error('Error setting local interests', error instanceof Error ? error : undefined, { metadata: { interestCount: interests.length } });
     }
   }
 }

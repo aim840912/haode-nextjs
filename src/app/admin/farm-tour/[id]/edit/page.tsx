@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function EditFarmTourActivity({ params }: { params: Promise<{ id: string }> }) {
@@ -97,7 +98,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
         router.push('/admin/farm-tour')
       }
     } catch (error) {
-      console.error('Error fetching activity:', error)
+      logger.error('Error fetching activity:', error instanceof Error ? error : new Error('Unknown error'))
       alert('載入失敗')
     } finally {
       setInitialLoading(false)
@@ -125,7 +126,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
         alert('更新失敗')
       }
     } catch (error) {
-      console.error('Error updating farm tour activity:', error)
+      logger.error('Error updating farm tour activity:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     } finally {
       setLoading(false)

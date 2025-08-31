@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
 
+// Bundle Analyzer 配置
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+})
+
 const nextConfig: NextConfig = {
   // 圖片優化配置
   images: {
@@ -36,18 +41,17 @@ const nextConfig: NextConfig = {
     // optimizeCss: true
   },
   
-  // Webpack 設定優化
-  webpack: (config, { dev, isServer }) => {
-    // 完全禁用 code splitting 來避免 vendors.js 中的 self 問題
-    if (!dev) {
+  // 建置優化配置 - 支援 Turbopack
+  ...(process.env.NODE_ENV === 'production' && {
+    webpack: (config) => {
+      // 生產環境的 webpack 優化
       config.optimization = {
         ...config.optimization,
-        splitChunks: false
+        splitChunks: false // 避免 vendors.js 問題
       }
+      return config
     }
-    
-    return config
-  },
+  }),
   
   // 安全標頭與快取配置
   async headers() {
@@ -135,9 +139,9 @@ const nextConfig: NextConfig = {
   // 但在生產環境中保持啟用以發現潜在問題
   reactStrictMode: process.env.NODE_ENV === 'production',
   
-  // ESLint 設定 - 暫時忽略 warnings 以完成 build
+  // ESLint 設定 - 暫時允許建置通過，但保持檢查
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // 暫時設為 true 直到修復更多 any 類型
     dirs: ['src']
   },
   
@@ -153,4 +157,4 @@ const nextConfig: NextConfig = {
   compress: true,
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

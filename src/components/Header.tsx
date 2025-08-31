@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import AuthButton from './AuthButton';
 import SocialLinks from './SocialLinks';
-import CartIcon from './CartIcon';
 import { ExpandableSearchBar } from './ui/ExpandableSearchBar';
 import InquiryNotificationBadge from './InquiryNotificationBadge';
 import { useAuth } from '@/lib/auth-context';
@@ -89,8 +88,6 @@ export default function Header() {
               {/* 詢價通知徽章 - 只有管理員才顯示 */}
               {user?.role === 'admin' && <InquiryNotificationBadge size="sm" />}
 
-              {/* Cart Icon - 只有登入時才顯示 */}
-              {user && <CartIcon size="sm" />}
             </div>
           </div>
         </div>
@@ -119,8 +116,6 @@ export default function Header() {
               {/* 詢價通知徽章 - Mobile - 只有管理員才顯示 */}
               {user?.role === 'admin' && <InquiryNotificationBadge size="sm" />}
 
-              {/* Cart Icon - Mobile - 只有登入時才顯示 */}
-              {user && <CartIcon size="sm" />}
 
               {/* Auth Button - Mobile */}
               <AuthButton isMobile />

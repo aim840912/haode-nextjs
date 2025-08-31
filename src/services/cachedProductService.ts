@@ -7,6 +7,7 @@
 
 import { Product, ProductService } from '@/types/product'
 import { CacheManager } from '@/lib/cache-server'
+import { cacheLogger } from '@/lib/logger'
 
 export class CachedProductService implements ProductService {
   private baseService: ProductService
@@ -39,9 +40,9 @@ export class CachedProductService implements ProductService {
       await CacheManager.delete('products:list')
       await CacheManager.delete('products:all')
       await CacheManager.delete('products:search:*')
-      console.log('🗑️ 產品快取已清除')
+      cacheLogger.info('產品快取已清除')
     } catch (error) {
-      console.warn('清除快取失敗:', error)
+      cacheLogger.warn('清除快取失敗', { metadata: { error: (error as Error).message } })
     }
   }
 
@@ -66,13 +67,13 @@ export class CachedProductService implements ProductService {
           await CacheManager.delete(pattern)
         } catch (patternError) {
           // 單個模式清除失敗不應影響整體
-          console.warn(`清除快取模式 ${pattern} 失敗:`, patternError)
+          cacheLogger.warn('清除快取模式失敗', { metadata: { pattern, error: (patternError as Error).message } })
         }
       }
       
-      console.log('🌍 全域產品快取已清除')
+      cacheLogger.info('全域產品快取已清除')
     } catch (error) {
-      console.warn('全域快取清除失敗:', error)
+      cacheLogger.warn('全域快取清除失敗', { metadata: { error: (error as Error).message } })
       throw error // 拋出錯誤，讓調用方知道清除失敗
     }
   }
@@ -85,27 +86,27 @@ export class CachedProductService implements ProductService {
       const cached = await CacheManager.get<Product[]>(cacheKey)
       if (cached) {
         this.cacheStats.hits++
-        console.log('🎯 快取命中: 產品列表')
+        cacheLogger.debug('快取命中', { metadata: { type: 'products_list' } })
         return cached
       }
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取讀取錯誤:', error)
+      cacheLogger.warn('快取讀取錯誤', { metadata: { error: (error as Error).message } })
     }
 
     // 快取未命中，查詢資料庫
     this.cacheStats.misses++
-    console.log('💾 快取未命中: 產品列表，查詢資料庫')
+    cacheLogger.debug('快取未命中', { metadata: { type: 'products_list', action: 'query_database' } })
     
     const products = await this.baseService.getProducts()
     
     // 寫入快取（5 分鐘）
     try {
       await CacheManager.set(cacheKey, products, { ttl: 300 })
-      console.log('💾 產品列表已快取 (5min)')
+      cacheLogger.debug('產品列表已快取', { metadata: { ttl: 300 } })
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取寫入錯誤:', error)
+      cacheLogger.warn('快取寫入錯誤', { metadata: { error: (error as Error).message } })
     }
     
     return products
@@ -119,17 +120,17 @@ export class CachedProductService implements ProductService {
       const cached = await CacheManager.get<Product[]>(cacheKey)
       if (cached) {
         this.cacheStats.hits++
-        console.log('🎯 快取命中: 所有產品列表 (admin)')
+        cacheLogger.debug('快取命中', { metadata: { type: 'all_products', scope: 'admin' } })
         return cached
       }
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取讀取錯誤:', error)
+      cacheLogger.warn('快取讀取錯誤', { metadata: { error: (error as Error).message } })
     }
 
     // 快取未命中，查詢資料庫
     this.cacheStats.misses++
-    console.log('💾 快取未命中: 所有產品列表 (admin)，查詢資料庫')
+    cacheLogger.debug('快取未命中', { metadata: { type: 'all_products', scope: 'admin', action: 'query_database' } })
     
     const products = this.baseService.getAllProducts ? 
       await this.baseService.getAllProducts() : 
@@ -138,10 +139,10 @@ export class CachedProductService implements ProductService {
     // 寫入快取（5 分鐘）
     try {
       await CacheManager.set(cacheKey, products, { ttl: 300 })
-      console.log('💾 所有產品列表已快取 (5min)')
+      cacheLogger.debug('所有產品列表已快取', { metadata: { ttl: 300, scope: 'admin' } })
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取寫入錯誤:', error)
+      cacheLogger.warn('快取寫入錯誤', { metadata: { error: (error as Error).message } })
     }
     
     return products
@@ -155,17 +156,17 @@ export class CachedProductService implements ProductService {
       const cached = await CacheManager.get<Product>(cacheKey)
       if (cached) {
         this.cacheStats.hits++
-        console.log(`🎯 快取命中: 產品 ${id}`)
+        cacheLogger.debug('快取命中', { metadata: { type: 'product', productId: id } })
         return cached
       }
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取讀取錯誤:', error)
+      cacheLogger.warn('快取讀取錯誤', { metadata: { error: (error as Error).message } })
     }
 
     // 快取未命中，查詢資料庫
     this.cacheStats.misses++
-    console.log(`💾 快取未命中: 產品 ${id}，查詢資料庫`)
+    cacheLogger.debug('快取未命中', { metadata: { type: 'product', productId: id, action: 'query_database' } })
     
     const product = await this.baseService.getProductById(id)
     
@@ -173,10 +174,10 @@ export class CachedProductService implements ProductService {
     if (product) {
       try {
         await CacheManager.set(cacheKey, product, { ttl: 600 })
-        console.log(`💾 產品 ${id} 已快取 (10min)`)
+        cacheLogger.debug('產品已快取', { metadata: { productId: id, ttl: 600 } })
       } catch (error) {
         this.cacheStats.errors++
-        console.warn('快取寫入錯誤:', error)
+        cacheLogger.warn('快取寫入錯誤', { metadata: { error: (error as Error).message } })
       }
     }
     
@@ -192,27 +193,27 @@ export class CachedProductService implements ProductService {
       const cached = await CacheManager.get<Product[]>(cacheKey)
       if (cached) {
         this.cacheStats.hits++
-        console.log(`🎯 快取命中: 搜索 "${query}"`)
+        cacheLogger.debug('快取命中', { metadata: { type: 'search', query } })
         return cached
       }
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取讀取錯誤:', error)
+      cacheLogger.warn('快取讀取錯誤', { metadata: { error: (error as Error).message } })
     }
 
     // 快取未命中，查詢資料庫
     this.cacheStats.misses++
-    console.log(`💾 快取未命中: 搜索 "${query}"，查詢資料庫`)
+    cacheLogger.debug('快取未命中', { metadata: { type: 'search', query, action: 'query_database' } })
     
     const results = await this.baseService.searchProducts(query)
     
     // 寫入快取（2 分鐘）
     try {
       await CacheManager.set(cacheKey, results, { ttl: 120 })
-      console.log(`💾 搜索 "${query}" 結果已快取 (2min)`)
+      cacheLogger.debug('搜索結果已快取', { metadata: { query, ttl: 120 } })
     } catch (error) {
       this.cacheStats.errors++
-      console.warn('快取寫入錯誤:', error)
+      cacheLogger.warn('快取寫入錯誤', { metadata: { error: (error as Error).message } })
     }
     
     return results
@@ -224,7 +225,7 @@ export class CachedProductService implements ProductService {
     
     // 清除相關快取
     await this.invalidateProductCaches()
-    console.log('🔄 新增產品後清除快取')
+    cacheLogger.info('新增產品後清除快取')
     
     return newProduct
   }
@@ -235,7 +236,7 @@ export class CachedProductService implements ProductService {
     
     // 清除相關快取
     await this.invalidateProductCaches(id)
-    console.log(`🔄 更新產品 ${id} 後清除快取`)
+    cacheLogger.info('更新產品後清除快取', { metadata: { productId: id } })
     
     return updatedProduct
   }
@@ -246,7 +247,7 @@ export class CachedProductService implements ProductService {
     
     // 清除相關快取
     await this.invalidateProductCaches(id)
-    console.log(`🔄 刪除產品 ${id} 後清除快取`)
+    cacheLogger.info('刪除產品後清除快取', { metadata: { productId: id } })
   }
 
   /**
@@ -270,7 +271,7 @@ export class CachedProductService implements ProductService {
       // await CacheManager.deletePattern('products:search:*')
       
     } catch (error) {
-      console.warn('清除快取失敗:', error)
+      cacheLogger.warn('清除快取失敗', { metadata: { error: (error as Error).message } })
     }
   }
 }

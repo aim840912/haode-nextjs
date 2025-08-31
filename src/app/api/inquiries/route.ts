@@ -9,6 +9,7 @@ import { createInquiryService } from '@/services/inquiryService';
 import { supabaseServerInquiryService } from '@/services/supabaseInquiryService';
 import { AuditLogger } from '@/services/auditLogService';
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter';
+import { apiLogger } from '@/lib/logger';
 import { 
   CreateInquiryRequest, 
   InquiryQueryParams,
@@ -156,7 +157,14 @@ async function handlePOST(request: NextRequest) {
         items_count: inquiry.inquiry_items?.length || 0
       },
       request
-    ).catch(console.error); // 非同步記錄，不影響主要流程
+    ).catch(error => {
+      // 非同步記錄失敗，不影響主要流程
+      apiLogger.warn('審計日誌記錄失敗', {
+        module: 'AuditLog',
+        action: 'logInquiryCreate',
+        metadata: { error: (error as Error).message }
+      })
+    });
 
     return createSuccessResponse(inquiry, '詢問單建立成功', 201);
 

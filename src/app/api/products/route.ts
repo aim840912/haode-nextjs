@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { productService } from '@/services/productService'
 import { withProductsCache } from '@/lib/api-cache-middleware'
+import { apiLogger } from '@/lib/logger'
 
 async function handleGET(request: NextRequest) {
   try {
@@ -13,7 +14,7 @@ async function handleGET(request: NextRequest) {
     
     if (nocache) {
       // 繞過快取，直接從資料庫獲取
-      console.log('🚫 繞過快取，直接查詢資料庫')
+      apiLogger.debug('繞過快取，直接查詢資料庫', { metadata: { nocache: true } })
       
       // 如果要繞過快取，我們需要直接使用基礎服務
       const { getProductService } = await import('@/services/serviceFactory')
@@ -52,7 +53,7 @@ async function handleGET(request: NextRequest) {
     
     return response
   } catch (error) {
-    console.error('Error fetching products:', error)
+    apiLogger.error('Error fetching products', error as Error, { metadata: { nocache } })
     return NextResponse.json(
       { error: 'Failed to fetch products' },
       { status: 500 }
@@ -70,14 +71,14 @@ async function handlePOST(request: NextRequest) {
     try {
       const { CachedProductService } = await import('@/services/cachedProductService')
       await CachedProductService.clearGlobalCache()
-      console.log('🔄 產品新增後已清除全域快取')
+      apiLogger.info('產品新增後已清除全域快取', { metadata: { action: 'product_created' } })
     } catch (cacheError) {
-      console.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
     }
     
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
-    console.error('Error creating product:', error)
+    apiLogger.error('Error creating product', error as Error, { metadata: { action: 'create_product' } })
     return NextResponse.json(
       { error: 'Failed to create product' },
       { status: 500 }

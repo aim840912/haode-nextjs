@@ -5,7 +5,6 @@ import Header from "@/components/Header";
 import HeaderSpacer from "@/components/HeaderSpacer";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/lib/auth-context";
-import { CartProvider } from "@/lib/cart-context";
 import { ToastProvider } from "@/components/Toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -93,9 +92,10 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://haode-nextjs.vercel.app/',
   },
-  other: {
-    'google-site-verification': 'YOUR_GOOGLE_VERIFICATION_CODE', // TODO: 替換為實際驗證碼
-  },
+  // Note: Google Site Verification code should be added when registering with Google Search Console
+  // other: {
+  //   'google-site-verification': 'YOUR_VERIFICATION_CODE',
+  // },
 };
 
 export default function RootLayout({
@@ -111,14 +111,12 @@ export default function RootLayout({
             <ToastProvider>
               <AuthProvider>
                 <InquiryStatsProvider>
-                  <CartProvider>
-                    <Header />
-                    <main className="flex-grow">
-                      <HeaderSpacer />
-                      {children}
-                    </main>
-                    <Footer />
-                  </CartProvider>
+                  <Header />
+                  <main className="flex-grow">
+                    <HeaderSpacer />
+                    {children}
+                  </main>
+                  <Footer />
                 </InquiryStatsProvider>
               </AuthProvider>
             </ToastProvider>

@@ -1,5 +1,6 @@
 import { NewsItem, NewsService } from '@/types/news'
 import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { dbLogger } from '@/lib/logger'
 
 export class SupabaseNewsService implements NewsService {
   async getNews(): Promise<NewsItem[]> {
@@ -11,13 +12,15 @@ export class SupabaseNewsService implements NewsService {
         .order('publish_date', { ascending: false })
       
       if (error) {
-        console.error('Error fetching news:', error)
+        dbLogger.info('Error fetching news:', error)
         throw new Error('Failed to fetch news')
       }
       
       return data?.map(this.transformFromDB) || []
     } catch (error) {
-      console.error('Error in getNews:', error)
+      dbLogger.error('Error in getNews', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'getNews' }
+      })
       return []
     }
   }
@@ -38,7 +41,9 @@ export class SupabaseNewsService implements NewsService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error fetching news by id:', error)
+      dbLogger.error('Error fetching news by id', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'getNewsById' }
+      })
       return null
     }
   }
@@ -64,7 +69,7 @@ export class SupabaseNewsService implements NewsService {
       .single()
 
     if (error) {
-      console.error('Error adding news:', error)
+      dbLogger.info('Error adding news:', error)
       throw new Error('Failed to add news')
     }
 
@@ -93,7 +98,7 @@ export class SupabaseNewsService implements NewsService {
       .single()
 
     if (error) {
-      console.error('Error updating news:', error)
+      dbLogger.info('Error updating news:', error)
       throw new Error('Failed to update news')
     }
     
@@ -107,10 +112,12 @@ export class SupabaseNewsService implements NewsService {
       try {
         const { deleteAllNewsImages } = await import('@/lib/news-storage')
         await deleteAllNewsImages(id)
-        console.log(`✅ 新聞 ${id} 的圖片已清理`)
+        dbLogger.info(`✅ 新聞 ${id} 的圖片已清理`)
       } catch (storageError) {
         // 圖片刪除失敗不應該阻止新聞刪除，但要記錄錯誤
-        console.warn(`⚠️ 新聞 ${id} 圖片清理失敗:`, storageError)
+        dbLogger.error(`⚠️ 新聞 ${id} 圖片清理失敗`, storageError instanceof Error ? storageError : new Error('Unknown storage error'), {
+          metadata: { context: 'deleteNewsImages', newsId: id }
+        })
       }
 
       // 然後刪除資料庫記錄
@@ -120,11 +127,13 @@ export class SupabaseNewsService implements NewsService {
         .eq('id', id)
 
       if (error) {
-        console.error('Error deleting news:', error)
+        dbLogger.info('Error deleting news:', error)
         throw new Error('Failed to delete news')
       }
     } catch (error) {
-      console.error('Error in deleteNews:', error)
+      dbLogger.error('Error in deleteNews', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'deleteNews' }
+      })
       throw error
     }
   }
@@ -163,7 +172,9 @@ export class SupabaseNewsService implements NewsService {
         return getRelevanceScore(b) - getRelevanceScore(a)
       })
     } catch (error) {
-      console.error('Error searching news:', error)
+      dbLogger.error('Error searching news', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'searchNews' }
+      })
       return []
     }
   }

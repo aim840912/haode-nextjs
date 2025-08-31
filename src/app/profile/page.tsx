@@ -2,17 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { useCart } from '@/lib/cart-context';
 import { UserInterestsService } from '@/services/userInterestsService';
 import { useToast } from '@/components/Toast';
 import { useRouter } from 'next/navigation';
 import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner';
 import OptimizedImage from '@/components/OptimizedImage';
 import Link from 'next/link';
+import { logger } from '@/lib/logger';
 
 export default function ProfilePage() {
   const { user, updateProfile, isLoading: authLoading } = useAuth();
-  const { cart, totalItems, totalPrice } = useCart();
   const { success, error } = useToast();
   const router = useRouter();
 
@@ -95,7 +94,7 @@ export default function ProfilePage() {
         fetchInterestedProductsData(productIds);
       }
     } catch (error) {
-      console.error('Error loading interested products:', error);
+      logger.error('Error loading interested products', error as Error, { metadata: { userId: user?.id } });
       setInterestedProducts([]);
     }
   };
@@ -112,7 +111,7 @@ export default function ProfilePage() {
         setInterestedProductsData(filteredProducts);
       }
     } catch (error) {
-      console.error('Error fetching interested products:', error);
+      logger.error('Error fetching interested products', error as Error, { metadata: { userId: user?.id } });
     } finally {
       setLoadingInterests(false);
     }
@@ -258,16 +257,6 @@ export default function ProfilePage() {
                   }`}
                 >
                   👤 個人資料
-                </button>
-                <button
-                  onClick={() => setActiveTab('cart')}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === 'cart' 
-                      ? 'bg-amber-100 text-amber-900' 
-                      : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  🛒 購物車 ({totalItems})
                 </button>
                 <button
                   onClick={() => setActiveTab('orders')}
@@ -440,61 +429,6 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {/* 購物車 Tab */}
-            {activeTab === 'cart' && (
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">購物車預覽</h2>
-                  <Link 
-                    href="/cart"
-                    className="px-4 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 transition-colors"
-                  >
-                    前往購物車
-                  </Link>
-                </div>
-
-                {cart.items.length > 0 ? (
-                  <div className="space-y-4">
-                    {cart.items.map((item) => (
-                      <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                          <OptimizedImage
-                            src={item.product.images?.[0] || '/images/placeholder.jpg'}
-                            alt={item.product.name}
-                            width={64}
-                            height={64}
-                            className="object-cover"
-                            sizes="64px"
-                          />
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{item.product.name}</h3>
-                          <p className="text-gray-600">數量: {item.quantity}</p>
-                          <p className="text-amber-900 font-semibold">NT$ {(item.price * item.quantity).toLocaleString()}</p>
-                        </div>
-                      </div>
-                    ))}
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center text-lg font-bold">
-                        <span>總計 ({totalItems} 件)</span>
-                        <span className="text-amber-900">NT$ {totalPrice.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🛒</div>
-                    <p className="text-gray-600 mb-4">購物車是空的</p>
-                    <Link 
-                      href="/products"
-                      className="inline-block px-6 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 transition-colors"
-                    >
-                      開始購物
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* 訂單記錄 Tab */}
             {activeTab === 'orders' && (

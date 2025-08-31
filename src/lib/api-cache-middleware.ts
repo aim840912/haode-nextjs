@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { CacheManager, CacheOptions } from './cache-server'
+import { cacheLogger } from '@/lib/logger'
 
 interface CacheMiddlewareOptions extends CacheOptions {
   cacheKeyGenerator?: (req: NextRequest) => string
@@ -74,7 +75,7 @@ export function withApiCache(
         response.headers.set('Cache-Control', `public, max-age=${ttl}, stale-while-revalidate=${ttl * 2}`)
         response.headers.set('X-Cache', 'MISS')
       } catch (error) {
-        console.warn('Failed to cache API response:', error)
+        cacheLogger.warn('Failed to cache API response', { metadata: { error: (error as Error).message, cacheKey } })
       }
     }
 

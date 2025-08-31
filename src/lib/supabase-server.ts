@@ -1,12 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { Database } from '@/types/database'
+import { authLogger } from '@/lib/logger'
 
 // 使用 globalThis 確保真正的全域快取
 declare global {
-  var __supabase_server_ssr_client__: any
-  var __supabase_service_client__: any
+  var __supabase_server_ssr_client__: SupabaseClient<Database> | undefined
+  var __supabase_service_client__: SupabaseClient<Database> | undefined
 }
 
 /**
@@ -33,7 +34,7 @@ export async function createServerSupabaseClient() {
           } catch (error) {
             // API routes 中設定 cookies 時忽略錯誤
             // 因為 headers 已發送後無法設定
-            console.warn('無法設定 cookie:', error)
+            authLogger.warn('無法設定 cookie', { metadata: { error: (error as Error).message } })
           }
         },
       },
@@ -80,13 +81,13 @@ export async function getCurrentUser() {
     const { data: { user }, error } = await supabase.auth.getUser()
     
     if (error) {
-      console.log('❌ 用戶認證失敗:', error.message)
+      authLogger.warn('用戶認證失敗', { metadata: { error: (error as Error).message } })
       return null
     }
     
     return user
   } catch (error) {
-    console.error('❌ 獲取用戶時發生錯誤:', error)
+    authLogger.error('獲取用戶時發生錯誤', error)
     return null
   }
 }

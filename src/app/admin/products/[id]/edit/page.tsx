@@ -4,9 +4,16 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Product } from '@/types/product'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import ImageUploader from '@/components/ImageUploader'
+
+// 動態載入圖片上傳器，減少初始 bundle 大小
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
+  ssr: false
+})
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -208,7 +215,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   }
 
   const handleImageUploadError = (error: string) => {
-    console.error('圖片上傳錯誤:', error)
+    logger.error('圖片上傳錯誤', new Error(error))
     alert(`圖片上傳失敗: ${error}`)
   }
 

@@ -4,8 +4,15 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import ImageUploader from '@/components/ImageUploader'
+
+// 動態載入圖片上傳器，減少初始 bundle 大小
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
+  ssr: false
+})
 // 圖片上傳現在通過 API 路由處理
 
 export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
@@ -58,7 +65,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         router.push('/admin/news')
       }
     } catch (error) {
-      console.error('Error fetching news:', error)
+      logger.error('Error fetching news:', error instanceof Error ? error : new Error('Unknown error'))
       alert('載入失敗')
     } finally {
       setInitialLoading(false)
@@ -140,7 +147,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         alert('更新失敗')
       }
     } catch (error) {
-      console.error('Error updating news:', error)
+      logger.error('Error updating news:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     } finally {
       setLoading(false)

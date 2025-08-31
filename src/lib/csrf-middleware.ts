@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { CSRFTokenManager, validateOrigin } from '@/lib/auth-middleware';
+import { authLogger } from '@/lib/logger';
 
 /**
  * CSRF 驗證結果
@@ -63,11 +64,11 @@ export async function validateCSRFAdvanced(request: NextRequest): Promise<CSRFVa
     // 3. 額外的安全檢查：檢查 User-Agent
     const userAgent = request.headers.get('user-agent');
     if (!userAgent || userAgent.length < 10) {
-      console.warn('[CSRF] Suspicious request with invalid User-Agent:', {
+      authLogger.warn('CSRF Suspicious request with invalid User-Agent', { metadata: {
         userAgent,
         ip: request.headers.get('x-forwarded-for') || 'unknown',
         path: request.nextUrl.pathname
-      });
+      } });
       
       // 在生產環境中可能要阻擋這種請求
       if (process.env.NODE_ENV === 'production') {
@@ -89,7 +90,7 @@ export async function validateCSRFAdvanced(request: NextRequest): Promise<CSRFVa
     return { isValid: true };
 
   } catch (error) {
-    console.error('CSRF validation error:', error);
+    authLogger.error('CSRF validation error', error);
     
     return {
       isValid: false,
@@ -213,13 +214,13 @@ export const csrfUtils = {
   logDebugInfo: (request: NextRequest, context: string) => {
     if (process.env.NODE_ENV === 'development') {
       const tokenInfo = csrfUtils.getTokenInfo(request);
-      console.log(`[CSRF Debug - ${context}]:`, {
+      authLogger.debug('CSRF Debug', { metadata: { context,
         method: request.method,
         path: request.nextUrl.pathname,
         origin: request.headers.get('origin'),
         referer: request.headers.get('referer'),
         ...tokenInfo
-      });
+      } });
     }
   }
 };

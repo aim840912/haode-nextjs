@@ -8,6 +8,7 @@ import {
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { deleteProductImages, ProductImageDeletionResult, listProductImages } from '@/lib/supabase-storage'
 import { SupabaseAuditLogService } from '@/services/auditLogService'
+import { apiLogger } from '@/lib/logger'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {
@@ -76,7 +77,7 @@ async function handleGET(request: NextRequest) {
 
     return NextResponse.json({ products: transformedProducts })
   } catch (error) {
-    console.error('Error fetching all products:', error)
+    apiLogger.error('Error fetching all products', error)
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 }
@@ -126,13 +127,13 @@ async function handlePOST(request: NextRequest) {
       const { CachedProductService } = await import('@/services/cachedProductService')
       await CachedProductService.clearGlobalCache()
     } catch (cacheError) {
-      console.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗:', cacheError)
       // 不影響主要功能，只記錄警告
     }
 
     return NextResponse.json({ product: transformFromDB(data) }, { status: 201 })
   } catch (error) {
-    console.error('Error creating product:', error)
+    apiLogger.error('Error creating product', error)
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }
@@ -184,13 +185,13 @@ async function handlePUT(request: NextRequest) {
       const { CachedProductService } = await import('@/services/cachedProductService')
       await CachedProductService.clearGlobalCache()
     } catch (cacheError) {
-      console.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗:', cacheError)
       // 不影響主要功能，只記錄警告
     }
 
     return NextResponse.json({ product: transformFromDB(data) })
   } catch (error) {
-    console.error('Error updating product:', error)
+    apiLogger.error('Error updating product', error)
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
@@ -224,22 +225,22 @@ async function handleDELETE(request: NextRequest) {
       .single()
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error(`Error fetching product ${id} for audit:`, fetchError)
+      apiLogger.error(`Error fetching product ${id} for audit:`, fetchError)
     }
 
     // 先刪除 Supabase Storage 中的產品圖片
     let imageDeletionResult: ProductImageDeletionResult
     try {
-      console.log(`🗑️ 開始為產品 ${id} 清理圖片...`)
+      apiLogger.info(`🗑️ 開始為產品 ${id} 清理圖片...`)
       imageDeletionResult = await deleteProductImages(id)
       if (imageDeletionResult.success) {
-        console.log(`✅ 產品 ${id} 的圖片清理完成 - 刪除了 ${imageDeletionResult.deletedCount} 個檔案`)
+        apiLogger.info(`✅ 產品 ${id} 的圖片清理完成 - 刪除了 ${imageDeletionResult.deletedCount} 個檔案`)
       } else {
-        console.warn(`⚠️ 產品 ${id} 圖片清理失敗: ${imageDeletionResult.error}`)
+        apiLogger.warn(`⚠️ 產品 ${id} 圖片清理失敗: ${imageDeletionResult.error}`)
       }
     } catch (storageError) {
       // 如果函數拋出異常（不應該發生，但作為備用）
-      console.warn(`⚠️ 產品 ${id} 圖片清理過程發生異常:`, storageError)
+      apiLogger.warn(`⚠️ 產品 ${id} 圖片清理過程發生異常:`, storageError)
       imageDeletionResult = {
         success: false,
         productId: id,
@@ -262,17 +263,17 @@ async function handleDELETE(request: NextRequest) {
     let verificationResult = { verified: false, remainingFiles: [] as any[] }
     if (imageDeletionResult.success && imageDeletionResult.deletedCount > 0) {
       try {
-        console.log(`🔍 驗證產品 ${id} 的圖片是否完全清理...`)
+        apiLogger.info(`🔍 驗證產品 ${id} 的圖片是否完全清理...`)
         const remainingImages = await listProductImages(id)
         if (remainingImages.length === 0) {
-          console.log(`✅ 驗證通過：產品 ${id} 的圖片已完全清理`)
+          apiLogger.info(`✅ 驗證通過：產品 ${id} 的圖片已完全清理`)
           verificationResult.verified = true
         } else {
-          console.warn(`⚠️ 驗證失敗：產品 ${id} 仍有 ${remainingImages.length} 個圖片殘留`)
+          apiLogger.warn(`⚠️ 驗證失敗：產品 ${id} 仍有 ${remainingImages.length} 個圖片殘留`)
           verificationResult.remainingFiles = remainingImages
         }
       } catch (verifyError) {
-        console.warn(`⚠️ 無法驗證產品 ${id} 的圖片清理狀態:`, verifyError)
+        apiLogger.warn(`⚠️ 無法驗證產品 ${id} 的圖片清理狀態:`, verifyError)
       }
     } else if (imageDeletionResult.deletedCount === 0) {
       // 如果沒有檔案需要刪除，驗證也算通過
@@ -299,16 +300,16 @@ async function handleDELETE(request: NextRequest) {
         user_agent: request.headers.get('user-agent') || undefined
       })
     } catch (auditError) {
-      console.warn('Failed to log product deletion audit:', auditError)
+      apiLogger.warn('Failed to log product deletion audit:', auditError)
     }
 
     // 清除產品快取，確保公開 API 能立即看到變更
     try {
       const { CachedProductService } = await import('@/services/cachedProductService')
       await CachedProductService.clearGlobalCache()
-      console.log('🔄 產品刪除後已清除全域快取')
+      apiLogger.info('🔄 產品刪除後已清除全域快取')
     } catch (cacheError) {
-      console.warn('清除產品快取失敗:', cacheError)
+      apiLogger.warn('清除產品快取失敗:', cacheError)
       // 不影響主要功能，只記錄警告
     }
 
@@ -320,7 +321,7 @@ async function handleDELETE(request: NextRequest) {
       }
     })
   } catch (error) {
-    console.error('Error deleting product:', error)
+    apiLogger.error('Error deleting product', error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }

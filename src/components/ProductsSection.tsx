@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton'
 import SafeImage from './SafeImage'
+import { logger } from '@/lib/logger'
 
 function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
@@ -32,7 +33,7 @@ function ProductsSection() {
       const activeProducts = data.filter((p: Product) => p.isActive).slice(0, 3)
       setProducts(activeProducts)
     } catch (error) {
-      console.error('Error fetching products:', error)
+      logger.error('Error fetching products', error as Error, { metadata: { component: 'ProductsSection' } })
       setError(error instanceof Error ? error.message : '載入產品失敗')
     } finally {
       setLoading(false)

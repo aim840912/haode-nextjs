@@ -10,6 +10,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, createContext, useContext, ReactNode } from 'react';
+import { logger } from '@/lib/logger';
 
 interface CSRFTokenState {
   token: string | null;
@@ -146,7 +147,7 @@ export function useCSRFToken(): UseCSRFTokenReturn {
         return;
       }
 
-      console.error('Failed to fetch CSRF token:', error);
+      logger.error('Failed to fetch CSRF token', error instanceof Error ? error : undefined, { metadata: { error: error instanceof Error ? error.message : String(error) } });
       
       setState(prev => ({
         ...prev,
@@ -179,7 +180,7 @@ export function useCSRFToken(): UseCSRFTokenReturn {
         }
       });
     } catch (error) {
-      console.warn('Failed to clear token on server:', error);
+      logger.warn('Failed to clear token on server', { metadata: { error: error instanceof Error ? error.message : String(error) } });
     }
 
     setState({
@@ -203,7 +204,7 @@ export function useCSRFToken(): UseCSRFTokenReturn {
 
     if (tokenAge > maxAge) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('CSRF token is near expiry, refreshing...');
+        logger.debug('CSRF token is near expiry, refreshing...');
       }
       fetchToken(true);
     }
@@ -216,12 +217,12 @@ export function useCSRFToken(): UseCSRFTokenReturn {
     // 立即嘗試從 cookie 獲取 token
     const existingToken = getTokenFromCookie();
     if (process.env.NODE_ENV === 'development') {
-      console.log('[DEBUG] CSRF cookie token found:', existingToken ? existingToken.substring(0, 8) + '...' : 'none');
+      logger.debug('CSRF cookie token found', { metadata: { tokenPreview: existingToken ? existingToken.substring(0, 8) + '...' : 'none' } });
     }
     
     if (isValidTokenFormat(existingToken)) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DEBUG] Using existing CSRF token from cookie');
+        logger.debug('Using existing CSRF token from cookie');
       }
       setState(prev => ({
         ...prev,
@@ -231,7 +232,7 @@ export function useCSRFToken(): UseCSRFTokenReturn {
       }));
     } else {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DEBUG] No valid cookie token, fetching from server');
+        logger.debug('No valid cookie token, fetching from server');
       }
       // 如果 cookie 中沒有有效 token，則從伺服器獲取
       fetchToken();

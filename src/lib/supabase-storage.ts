@@ -1,5 +1,6 @@
 import { supabase, supabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
+import { dbLogger } from '@/lib/logger';
 
 export class SupabaseStorageError extends Error {
   constructor(message: string, public cause?: unknown) {
@@ -40,12 +41,12 @@ export async function initializeStorageBucket() {
         throw new SupabaseStorageError('建立 storage bucket 失敗', error);
       }
 
-      console.log('Storage bucket 建立成功:', data);
+      dbLogger.info('Storage bucket 建立成功', { metadata: { bucketName: STORAGE_BUCKET } });
     }
 
     return true;
   } catch (error) {
-    console.error('初始化 storage bucket 失敗:', error);
+    dbLogger.error('初始化 storage bucket 失敗', error as Error, { metadata: { bucketName: STORAGE_BUCKET } });
     throw error;
   }
 }
@@ -162,7 +163,7 @@ export interface ProductImageDeletionResult {
  */
 export async function deleteProductImages(productId: string): Promise<ProductImageDeletionResult> {
   try {
-    console.log(`🗑️ 開始刪除產品 ${productId} 的圖片...`);
+    dbLogger.info('開始刪除產品圖片', { metadata: { productId } });
     
     const allDeletedFiles: string[] = [];
     let totalDeletedCount = 0;
@@ -190,11 +191,11 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
           possibleFolders.push(...tempFolders);
         }
       } catch (listAllError) {
-        console.warn(`⚠️ 無法列出所有資料夾，將只檢查標準路徑:`, listAllError);
+        dbLogger.warn('無法列出所有資料夾', { metadata: { productId, error: (listAllError as Error).message } });
       }
     }
 
-    console.log(`📁 檢查以下資料夾: ${possibleFolders.join(', ')}`);
+    dbLogger.debug('檢查資料夾', { metadata: { productId, folders: possibleFolders } });
 
     // 檢查每個可能的資料夾
     for (const folder of possibleFolders) {
@@ -207,7 +208,7 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
           continue; // 跳過此資料夾
         }
 
-        console.log(`📁 在資料夾 ${folder} 發現 ${files.length} 個檔案:`, files.map((f: any) => f.name));
+        dbLogger.debug('在資料夾發現檔案', { metadata: { folder, fileCount: files.length, productId, files: files.map((f: any) => f.name) } });
 
         // 建立要刪除的檔案路徑列表
         const filePaths = files.map((file: any) => `${folder}/${file.name}`);
@@ -220,18 +221,18 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
         if (!deleteError) {
           allDeletedFiles.push(...files.map((f: any) => f.name));
           totalDeletedCount += filePaths.length;
-          console.log(`✅ 成功刪除資料夾 ${folder} 中的 ${filePaths.length} 張圖片`);
+          dbLogger.info('成功刪除資料夾圖片', { metadata: { folder, deletedCount: filePaths.length, productId } });
           folderCleanedUp = true;
         } else {
-          console.error(`❌ 批量刪除資料夾 ${folder} 圖片失敗:`, deleteError);
+          dbLogger.error('批量刪除資料夾圖片失敗', deleteError, { metadata: { folder, productId } });
         }
       } catch (folderError) {
-        console.warn(`⚠️ 處理資料夾 ${folder} 時發生錯誤:`, folderError);
+        dbLogger.warn('處理資料夾時發生錯誤', { metadata: { folder, productId, error: (folderError as Error).message } });
       }
     }
 
     if (totalDeletedCount === 0) {
-      console.log(`ℹ️ 產品 ${productId} 沒有找到圖片需要刪除`);
+      dbLogger.debug('產品沒有找到圖片', { metadata: { productId } });
       return {
         success: true,
         productId,
@@ -241,7 +242,7 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
       };
     }
 
-    console.log(`✅ 總共成功刪除產品 ${productId} 的 ${totalDeletedCount} 張圖片`);
+    dbLogger.info('總共成功刪除產品圖片', { metadata: { productId, totalDeletedCount } });
 
     return {
       success: true,
@@ -256,7 +257,7 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
       ? error.message 
       : '刪除產品圖片過程發生未知錯誤';
     
-    console.error(`💥 刪除產品 ${productId} 圖片過程發生錯誤:`, error);
+    dbLogger.error('刪除產品圖片過程發生錯誤', error as Error, { metadata: { productId } });
     
     return {
       success: false,

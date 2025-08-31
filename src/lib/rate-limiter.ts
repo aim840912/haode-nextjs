@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@vercel/kv';
 import { auditLogService } from '@/services/auditLogService';
 import { AuditAction } from '@/types/audit';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate Limiting 識別策略
@@ -86,7 +87,7 @@ class VercelKVStore implements RateLimitStore {
     try {
       return await kv.get(key);
     } catch (error) {
-      console.warn('[Rate Limiter] KV get failed:', error);
+      logger.warn('Rate Limiter KV get failed', { metadata: { error: (error as Error).message } });
       return null;
     }
   }
@@ -95,7 +96,7 @@ class VercelKVStore implements RateLimitStore {
     try {
       await kv.set(key, value, { ex: Math.ceil(ttl / 1000) });
     } catch (error) {
-      console.warn('[Rate Limiter] KV set failed:', error);
+      logger.warn('Rate Limiter KV set failed', { metadata: { error: (error as Error).message } });
     }
   }
 
@@ -103,7 +104,7 @@ class VercelKVStore implements RateLimitStore {
     try {
       return await kv.incr(key);
     } catch (error) {
-      console.warn('[Rate Limiter] KV incr failed:', error);
+      logger.warn('Rate Limiter KV incr failed', { metadata: { error: (error as Error).message } });
       return 1;
     }
   }
@@ -112,7 +113,7 @@ class VercelKVStore implements RateLimitStore {
     try {
       await kv.expire(key, Math.ceil(ttl / 1000));
     } catch (error) {
-      console.warn('[Rate Limiter] KV expire failed:', error);
+      logger.warn('Rate Limiter KV expire failed', { metadata: { error: (error as Error).message } });
     }
   }
 }
@@ -182,7 +183,7 @@ setInterval(() => memoryStore.cleanup(), 60000);
 
 // 在開發環境中記錄存儲狀態
 if (process.env.NODE_ENV === 'development') {
-  console.log(`[Rate Limiter] Using ${isKVAvailable ? 'Vercel KV' : 'Memory'} store`);
+  logger.info('Rate Limiter store initialized', { metadata: { storeType: isKVAvailable ? 'Vercel KV' : 'Memory' } });
 }
 
 /**
@@ -339,7 +340,7 @@ export class AdvancedRateLimiter {
       };
 
     } catch (error) {
-      console.error('[Rate Limiter] Primary store failed, using fallback:', error);
+      logger.warn('Rate Limiter primary store failed, using fallback', { metadata: { error: (error as Error).message } });
       
       // 回退到記憶體存儲
       try {
@@ -370,7 +371,7 @@ export class AdvancedRateLimiter {
         };
 
       } catch (fallbackError) {
-        console.error('[Rate Limiter] Fallback store also failed:', fallbackError);
+        logger.error('Rate Limiter fallback store also failed', fallbackError, { metadata: { originalError: error.message } });
         
         // 如果兩個存儲都失敗，允許請求通過但記錄錯誤
         return {
@@ -426,7 +427,7 @@ export class AdvancedRateLimiter {
       });
 
     } catch (error) {
-      console.error('[Rate Limiter] Failed to log violation:', error);
+      logger.error('Rate Limiter failed to log violation', error);
     }
   }
 
@@ -440,7 +441,7 @@ export class AdvancedRateLimiter {
       if (!result.allowed) {
         const response = NextResponse.json(
           {
-            error: config.message || '請求過於頻繁，請稍後再試',
+            error: (config as Error).message || '請求過於頻繁，請稍後再試',
             success: false,
             code: 'RATE_LIMIT_EXCEEDED',
             details: {
@@ -492,7 +493,7 @@ export class AdvancedRateLimiter {
       if (!result.allowed) {
         return NextResponse.json(
           {
-            error: config.message || '請求過於頻繁，請稍後再試',
+            error: (config as Error).message || '請求過於頻繁，請稍後再試',
             success: false,
             code: 'RATE_LIMIT_EXCEEDED',
             details: {

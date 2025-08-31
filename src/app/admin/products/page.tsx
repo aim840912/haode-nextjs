@@ -2,10 +2,16 @@
 
 import { Suspense } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/lib/auth-context'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
-import ProductsTable from '@/components/ProductsTable'
 import AdminProtection from '@/components/AdminProtection'
+
+// 動態載入大型表格組件
+const ProductsTable = dynamic(() => import('@/components/ProductsTable'), {
+  loading: () => <div className="flex justify-center items-center h-64">載入產品清單中...</div>,
+  ssr: false
+})
 
 function ProductsAdmin() {
   const { user } = useAuth()

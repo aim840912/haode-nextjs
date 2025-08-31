@@ -4,6 +4,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { dbLogger } from '@/lib/logger';
 import { 
   InquiryService,
   InquiryWithItems,
@@ -37,7 +38,12 @@ export class SupabaseInquiryService implements InquiryService {
         notes: farmTourData.original_notes
       };
     } catch (error) {
-      console.warn('Failed to parse farm tour data from notes:', error);
+      dbLogger.warn('無法解析農場參觀資料', { 
+        metadata: { 
+          errorMessage: error instanceof Error ? error.message : String(error),
+          notes: inquiry.notes 
+        }
+      });
       return inquiry;
     }
   }
@@ -45,10 +51,12 @@ export class SupabaseInquiryService implements InquiryService {
   // 使用者端方法
   async createInquiry(userId: string, data: CreateInquiryRequest): Promise<InquiryWithItems> {
     try {
-      console.log('🔍 SupabaseInquiryService.createInquiry 開始執行:', {
+      dbLogger.info('庫存查詢建立開始', {
         userId,
-        customerName: data.customer_name,
-        itemsCount: data.items?.length || 0
+        metadata: {
+          customerName: data.customer_name,
+          itemsCount: data.items?.length || 0
+        }
       });
 
       // 計算預估總金額（只有產品詢價才計算）
@@ -58,7 +66,9 @@ export class SupabaseInquiryService implements InquiryService {
           }, 0)
         : null;
 
-      console.log('💰 計算的總金額:', totalEstimatedAmount);
+      dbLogger.debug('計算總金額', { 
+        metadata: { totalEstimatedAmount } 
+      });
 
       // 建立詢問單主記錄 - 暫時將農場參觀資料存在 notes 中
       let notesWithFarmTourData = data.notes || '';
@@ -94,13 +104,16 @@ export class SupabaseInquiryService implements InquiryService {
         .single();
 
       if (inquiryError) {
-        console.error('❌ Supabase 庫存查詢單插入失敗:', {
-          message: inquiryError.message,
-          code: inquiryError.code,
-          details: inquiryError.details,
-          hint: inquiryError.hint,
-          data: inquiryData
-        });
+        dbLogger.error('庫存查詢單插入失敗', 
+          new Error(`${inquiryError.message} (code: ${inquiryError.code})`), 
+          {
+            metadata: {
+              code: inquiryError.code,
+              details: inquiryError.details,
+              hint: inquiryError.hint,
+              data: inquiryData
+            }
+          });
         throw new Error(`建立庫存查詢單失敗: ${inquiryError.message} (code: ${inquiryError.code})`);
       }
 
@@ -125,13 +138,16 @@ export class SupabaseInquiryService implements InquiryService {
           .select();
 
         if (itemsError) {
-          console.error('❌ Supabase 庫存查詢項目插入失敗:', {
-            message: itemsError.message,
-            code: itemsError.code,
-            details: itemsError.details,
-            hint: itemsError.hint,
-            data: itemsData
-          });
+          dbLogger.error('庫存查詢項目插入失敗', 
+            new Error(`${itemsError.message} (code: ${itemsError.code})`), 
+            {
+              metadata: {
+                code: itemsError.code,
+                details: itemsError.details,
+                hint: itemsError.hint,
+                data: itemsData
+              }
+            });
           // 如果項目建立失敗，清除已建立的庫存查詢單
           await createServiceSupabaseClient().from('inquiries').delete().eq('id', inquiry.id);
           throw new Error(`建立庫存查詢項目失敗: ${itemsError.message} (code: ${itemsError.code})`);
@@ -149,7 +165,9 @@ export class SupabaseInquiryService implements InquiryService {
       } as InquiryWithItems;
 
     } catch (error) {
-      console.error('Error creating inquiry:', error);
+      dbLogger.error('建立庫存查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { userId });
       throw error instanceof Error ? error : new Error('建立庫存查詢單時發生未知錯誤');
     }
   }
@@ -220,7 +238,9 @@ export class SupabaseInquiryService implements InquiryService {
       return parsedData as InquiryWithItems[];
 
     } catch (error) {
-      console.error('Error fetching user inquiries:', error);
+      dbLogger.error('取得使用者查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { userId });
       throw error instanceof Error ? error : new Error('取得詢問單清單時發生未知錯誤');
     }
   }
@@ -250,7 +270,9 @@ export class SupabaseInquiryService implements InquiryService {
       return parsedData as InquiryWithItems;
 
     } catch (error) {
-      console.error('Error fetching inquiry by ID:', error);
+      dbLogger.error('根據ID取得查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { inquiryId } });
       throw error instanceof Error ? error : new Error('取得詢問單詳情時發生未知錯誤');
     }
   }
@@ -282,7 +304,9 @@ export class SupabaseInquiryService implements InquiryService {
       return updatedInquiry as InquiryWithItems;
 
     } catch (error) {
-      console.error('Error updating inquiry:', error);
+      dbLogger.error('更新庫存查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { inquiryId } });
       throw error instanceof Error ? error : new Error('更新詢問單時發生未知錯誤');
     }
   }
@@ -357,7 +381,9 @@ export class SupabaseInquiryService implements InquiryService {
       return parsedData as InquiryWithItems[];
 
     } catch (error) {
-      console.error('Error fetching all inquiries:', error);
+      dbLogger.error('取得所有查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { params } });
       throw error instanceof Error ? error : new Error('取得所有詢問單時發生未知錯誤');
     }
   }
@@ -381,7 +407,9 @@ export class SupabaseInquiryService implements InquiryService {
       return data as InquiryWithItems;
 
     } catch (error) {
-      console.error('Error updating inquiry status:', error);
+      dbLogger.error('更新查詢狀態失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { inquiryId, status } });
       throw error instanceof Error ? error : new Error('更新詢問單狀態時發生未知錯誤');
     }
   }
@@ -399,7 +427,8 @@ export class SupabaseInquiryService implements InquiryService {
       return data as InquiryStats[];
 
     } catch (error) {
-      console.error('Error fetching inquiry stats:', error);
+      dbLogger.error('取得查詢統計失敗', 
+        error instanceof Error ? error : new Error('Unknown error'));
       throw error instanceof Error ? error : new Error('取得詢價統計時發生未知錯誤');
     }
   }
@@ -416,7 +445,9 @@ export class SupabaseInquiryService implements InquiryService {
       }
 
     } catch (error) {
-      console.error('Error deleting inquiry:', error);
+      dbLogger.error('刪除庫存查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { inquiryId } });
       throw error instanceof Error ? error : new Error('刪除詢問單時發生未知錯誤');
     }
   }
@@ -446,7 +477,9 @@ export class SupabaseInquiryService implements InquiryService {
       return parsedData as InquiryWithItems;
 
     } catch (error) {
-      console.error('Error fetching inquiry by ID for admin:', error);
+      dbLogger.error('管理員取得查詢失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { inquiryId } });
       throw error instanceof Error ? error : new Error('取得詢問單詳情時發生未知錯誤');
     }
   }
@@ -471,7 +504,9 @@ export class SupabaseInquiryService implements InquiryService {
       }
 
     } catch (error) {
-      console.error('Error updating inquiry items:', error);
+      dbLogger.error('更新查詢項目失敗', 
+        error instanceof Error ? error : new Error('Unknown error'), 
+        { metadata: { inquiryId } });
       throw error instanceof Error ? error : new Error('更新詢價項目時發生未知錯誤');
     }
   }

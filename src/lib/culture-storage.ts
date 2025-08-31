@@ -1,5 +1,6 @@
 import { supabase, supabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
+import { dbLogger } from './logger';
 
 export class CultureStorageError extends Error {
   constructor(message: string, public cause?: unknown) {
@@ -40,12 +41,14 @@ export async function initializeCultureStorageBucket() {
         throw new CultureStorageError('建立 culture storage bucket 失敗', error);
       }
 
-      console.log('Culture Storage bucket 建立成功:', data);
+      dbLogger.info('Culture Storage bucket 建立成功:', data);
     }
 
     return true;
   } catch (error) {
-    console.error('初始化 culture storage bucket 失敗:', error);
+    dbLogger.error('初始化 culture storage bucket 失敗', error instanceof Error ? error : new Error('Unknown error'), {
+      metadata: { context: 'initializeCultureStorageBucket' }
+    });
     throw error;
   }
 }
@@ -90,9 +93,11 @@ export async function uploadCultureImageToStorage(
       .from(CULTURE_STORAGE_BUCKET)
       .getPublicUrl(filePath);
 
-    console.log('✅ 時光典藏圖片上傳成功:', {
-      filePath,
-      url: urlData.publicUrl
+    dbLogger.info('✅ 時光典藏圖片上傳成功', {
+      metadata: {
+        filePath,
+        url: urlData.publicUrl
+      }
     });
 
     return {
@@ -124,7 +129,9 @@ export async function deleteCultureImageFromStorage(filePath: string): Promise<v
       throw new CultureStorageError('刪除時光典藏圖片失敗', error);
     }
 
-    console.log('✅ 時光典藏圖片刪除成功:', filePath);
+    dbLogger.info('✅ 時光典藏圖片刪除成功', {
+      metadata: { filePath }
+    });
   } catch (error) {
     if (error instanceof CultureStorageError) {
       throw error;
@@ -143,7 +150,7 @@ export async function deleteCultureImages(cultureId: string): Promise<{
   error?: string;
 }> {
   try {
-    console.log(`🗑️ 開始刪除時光典藏 ${cultureId} 的圖片...`);
+    dbLogger.info(`🗑️ 開始刪除時光典藏 ${cultureId} 的圖片...`);
     
     // 列出該項目的所有圖片
     const { data: files, error: listError } = await supabaseAdmin!.storage
@@ -151,7 +158,7 @@ export async function deleteCultureImages(cultureId: string): Promise<{
       .list(cultureId);
 
     if (listError || !files || files.length === 0) {
-      console.log(`ℹ️ 時光典藏 ${cultureId} 沒有找到圖片需要刪除`);
+      dbLogger.info(`ℹ️ 時光典藏 ${cultureId} 沒有找到圖片需要刪除`);
       return {
         success: true,
         deletedCount: 0,
@@ -159,7 +166,7 @@ export async function deleteCultureImages(cultureId: string): Promise<{
       };
     }
 
-    console.log(`📁 在資料夾 ${cultureId} 發現 ${files.length} 個檔案:`, 
+    dbLogger.info(`📁 在資料夾 ${cultureId} 發現 ${files.length} 個檔案:`, 
       files.map((f: any) => f.name));
 
     // 建立要刪除的檔案路徑列表
@@ -174,7 +181,7 @@ export async function deleteCultureImages(cultureId: string): Promise<{
       throw new CultureStorageError('批量刪除時光典藏圖片失敗', deleteError);
     }
 
-    console.log(`✅ 成功刪除時光典藏 ${cultureId} 的 ${filePaths.length} 張圖片`);
+    dbLogger.info(`✅ 成功刪除時光典藏 ${cultureId} 的 ${filePaths.length} 張圖片`);
 
     return {
       success: true,
@@ -187,7 +194,9 @@ export async function deleteCultureImages(cultureId: string): Promise<{
       ? error.message 
       : '刪除時光典藏圖片過程發生未知錯誤';
     
-    console.error(`💥 刪除時光典藏 ${cultureId} 圖片過程發生錯誤:`, error);
+    dbLogger.error(`💥 刪除時光典藏 ${cultureId} 圖片過程發生錯誤`, error instanceof Error ? error : new Error('Unknown error'), {
+      metadata: { context: 'deleteAllCultureImages', cultureId }
+    });
     
     return {
       success: false,

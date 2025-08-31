@@ -12,6 +12,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server';
+import { dbLogger } from '@/lib/logger';
 import { 
   AuditLogService,
   AuditLog,
@@ -34,17 +35,19 @@ export class SupabaseAuditLogService implements AuditLogService {
       // 驗證請求資料
       const validation = AuditLogUtils.validateAuditLogRequest(request);
       if (!validation.isValid) {
-        console.error('審計日誌驗證失敗:', validation.errors);
+        dbLogger.info('審計日誌驗證失敗', { metadata: { errors: validation.errors } });
         return; // 不拋出錯誤，避免影響主要業務流程
       }
 
       // 檢查是否為重複操作（5分鐘內相同使用者、相同動作、相同資源）
       if (await this.isDuplicateLogEntry(request)) {
-        console.log('跳過重複的審計日誌記錄:', {
-          action: request.action,
-          resource: request.resource_type,
-          resourceId: request.resource_id,
-          user: request.user_email
+        dbLogger.info('跳過重複的審計日誌記錄', {
+          metadata: {
+            action: request.action,
+            resource: request.resource_type,
+            resourceId: request.resource_id,
+            user: request.user_email
+          }
         });
         return;
       }
@@ -73,25 +76,31 @@ export class SupabaseAuditLogService implements AuditLogService {
         .insert(auditData);
 
       if (error) {
-        console.error('審計日誌記錄失敗:', {
-          message: error.message,
-          code: error.code,
-          details: error.details,
-          hint: error.hint,
-          data: auditData
+        dbLogger.info('審計日誌記錄失敗', {
+          metadata: {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint,
+            data: auditData
+          }
         });
         // 不拋出錯誤，避免影響主要業務流程
       } else {
-        console.log('審計日誌記錄成功:', {
-          action: request.action,
-          resource: request.resource_type,
-          resourceId: request.resource_id,
-          user: request.user_email
+        dbLogger.info('審計日誌記錄成功', {
+          metadata: {
+            action: request.action,
+            resource: request.resource_type,
+            resourceId: request.resource_id,
+            user: request.user_email
+          }
         });
       }
 
     } catch (error) {
-      console.error('審計日誌記錄異常:', error);
+      dbLogger.error('審計日誌記錄異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'log_audit_entry' }
+      });
       // 不拋出錯誤，避免影響主要業務流程
     }
   }
@@ -117,13 +126,17 @@ export class SupabaseAuditLogService implements AuditLogService {
         .limit(1);
 
       if (error) {
-        console.error('檢查重複日誌失敗:', error);
+        dbLogger.error('檢查重複日誌失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'check_duplicate_log' }
+        });
         return false; // 發生錯誤時不阻止記錄
       }
 
       return (data && data.length > 0);
     } catch (error) {
-      console.error('檢查重複日誌異常:', error);
+      dbLogger.error('檢查重複日誌異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'check_duplicate_log' }
+      });
       return false; // 發生錯誤時不阻止記錄
     }
   }
@@ -186,14 +199,18 @@ export class SupabaseAuditLogService implements AuditLogService {
       const { data, error } = await query;
 
       if (error) {
-        console.error('查詢審計日誌失敗:', error);
+        dbLogger.error('查詢審計日誌失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'get_audit_logs' }
+        });
         throw new Error(`查詢審計日誌失敗: ${error.message}`);
       }
 
       return data || [];
 
     } catch (error) {
-      console.error('查詢審計日誌異常:', error);
+      dbLogger.error('查詢審計日誌異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'get_audit_logs' }
+      });
       throw new Error(error instanceof Error ? error.message : '查詢審計日誌時發生未知錯誤');
     }
   }
@@ -209,14 +226,18 @@ export class SupabaseAuditLogService implements AuditLogService {
         });
 
       if (error) {
-        console.error('取得使用者活動歷史失敗:', error);
+        dbLogger.error('取得使用者活動歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'get_user_history', userId }
+        });
         throw new Error(`取得使用者活動歷史失敗: ${error.message}`);
       }
 
       return data || [];
 
     } catch (error) {
-      console.error('取得使用者活動歷史異常:', error);
+      dbLogger.error('取得使用者活動歷史異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'get_user_history', userId }
+      });
       throw new Error(error instanceof Error ? error.message : '取得使用者活動歷史時發生未知錯誤');
     }
   }
@@ -236,14 +257,18 @@ export class SupabaseAuditLogService implements AuditLogService {
         });
 
       if (error) {
-        console.error('取得資源存取歷史失敗:', error);
+        dbLogger.error('取得資源存取歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'get_resource_history', resourceType, resourceId }
+        });
         throw new Error(`取得資源存取歷史失敗: ${error.message}`);
       }
 
       return data || [];
 
     } catch (error) {
-      console.error('取得資源存取歷史異常:', error);
+      dbLogger.error('取得資源存取歷史異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'get_resource_history', resourceType, resourceId }
+      });
       throw new Error(error instanceof Error ? error.message : '取得資源存取歷史時發生未知錯誤');
     }
   }
@@ -258,14 +283,18 @@ export class SupabaseAuditLogService implements AuditLogService {
         .order('date', { ascending: false });
 
       if (error) {
-        console.error('取得審計統計失敗:', error);
+        dbLogger.error('取得審計統計失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'get_audit_stats', days }
+        });
         throw new Error(`取得審計統計失敗: ${error.message}`);
       }
 
       return data || [];
 
     } catch (error) {
-      console.error('取得審計統計異常:', error);
+      dbLogger.error('取得審計統計異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'get_audit_stats', days }
+      });
       throw new Error(error instanceof Error ? error.message : '取得審計統計時發生未知錯誤');
     }
   }
@@ -280,14 +309,18 @@ export class SupabaseAuditLogService implements AuditLogService {
         .order('total_actions', { ascending: false });
 
       if (error) {
-        console.error('取得使用者活動統計失敗:', error);
+        dbLogger.error('取得使用者活動統計失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'get_user_activity_stats', days }
+        });
         throw new Error(`取得使用者活動統計失敗: ${error.message}`);
       }
 
       return data || [];
 
     } catch (error) {
-      console.error('取得使用者活動統計異常:', error);
+      dbLogger.error('取得使用者活動統計異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'get_user_activity_stats', days }
+      });
       throw new Error(error instanceof Error ? error.message : '取得使用者活動統計時發生未知錯誤');
     }
   }
@@ -302,14 +335,18 @@ export class SupabaseAuditLogService implements AuditLogService {
         .order('access_count', { ascending: false });
 
       if (error) {
-        console.error('取得資源存取統計失敗:', error);
+        dbLogger.error('取得資源存取統計失敗', new Error(`${error.message} (code: ${error.code})`), {
+          metadata: { context: 'get_resource_access_stats', days }
+        });
         throw new Error(`取得資源存取統計失敗: ${error.message}`);
       }
 
       return data || [];
 
     } catch (error) {
-      console.error('取得資源存取統計異常:', error);
+      dbLogger.error('取得資源存取統計異常', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { context: 'get_resource_access_stats', days }
+      });
       throw new Error(error instanceof Error ? error.message : '取得資源存取統計時發生未知錯誤');
     }
   }

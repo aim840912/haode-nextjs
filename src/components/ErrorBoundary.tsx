@@ -26,7 +26,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
   
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo)
+    console.error('ErrorBoundary caught an error:', error as Error, errorInfo)
     
     // 呼叫自定義錯誤處理器
     if (this.props.onError) {

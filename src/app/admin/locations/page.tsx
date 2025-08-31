@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Location } from '@/types/location'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import AdminProtection from '@/components/AdminProtection'
 
@@ -21,7 +22,7 @@ export default function LocationsAdmin() {
       const data = await response.json()
       setLocations(data)
     } catch (error) {
-      console.error('Error fetching locations:', error)
+      logger.error('Error fetching locations:', error instanceof Error ? error : new Error('Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -39,7 +40,7 @@ export default function LocationsAdmin() {
       await fetch(`/api/locations/${id}`, { method: 'DELETE' })
       setLocations(locations.filter(l => l.id !== id))
     } catch (error) {
-      console.error('Error deleting location:', error)
+      logger.error('Error deleting location:', error instanceof Error ? error : new Error('Unknown error'))
       alert('刪除失敗')
     }
   }

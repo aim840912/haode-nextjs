@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { useAuth } from '@/lib/auth-context';
 import AdminProtection from '@/components/AdminProtection';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -58,7 +59,7 @@ function AdminInquiriesPage() {
         setDetailedStats(result.data);
       }
     } catch (err) {
-      console.error('Error fetching detailed stats:', err);
+      logger.error('Error fetching detailed stats:', err instanceof Error ? err : new Error('Unknown error'));
     }
   };
 
@@ -97,7 +98,7 @@ function AdminInquiriesPage() {
       success('標記成功', '已標記為已讀');
 
     } catch (err) {
-      console.error('Error marking as read:', err);
+      logger.error('Error marking as read:', err instanceof Error ? err : new Error('Unknown error'));
       showError('標記失敗', err instanceof Error ? err.message : '標記已讀時發生錯誤');
     }
   };
@@ -143,7 +144,7 @@ function AdminInquiriesPage() {
       success('刪除成功', '庫存查詢單已成功刪除');
 
     } catch (err) {
-      console.error('Error deleting inquiry:', err);
+      logger.error('Error deleting inquiry:', err instanceof Error ? err : new Error('Unknown error'));
       showError('刪除失敗', err instanceof Error ? err.message : '刪除庫存查詢單時發生錯誤');
     }
   };
@@ -207,7 +208,7 @@ function AdminInquiriesPage() {
       setInquiryStats(stats);
 
     } catch (err) {
-      console.error('Error fetching inquiries:', err);
+      logger.error('Error fetching inquiries:', err instanceof Error ? err : new Error('Unknown error'));
       setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);
@@ -242,7 +243,7 @@ function AdminInquiriesPage() {
 
       if (!response.ok) {
         // 不要拋出錯誤，直接處理並顯示 Toast 通知
-        console.log('狀態更新失敗:', result.error);
+        logger.info('狀態更新失敗:', result.error);
         
         // 根據錯誤類型顯示不同的 Toast
         if (result.error && result.error.includes('無法從')) {
@@ -269,7 +270,7 @@ function AdminInquiriesPage() {
       success('狀態更新成功', `詢問單狀態已更新為「${INQUIRY_STATUS_LABELS[newStatus]}」`);
 
     } catch (err) {
-      console.error('Error updating status:', err);
+      logger.error('Error updating status:', err instanceof Error ? err : new Error('Unknown error'));
       
       if (err instanceof Error && err.message.includes('無法從')) {
         // 狀態轉換錯誤，提供更友善的提示
@@ -362,7 +363,7 @@ function AdminInquiriesPage() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">未讀詢價</p>
+                  <p className="text-sm font-medium text-gray-700">未讀詢問</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-2xl font-bold text-orange-600">{inquiryStats.unread}</p>
                     {inquiryStats.unread > 0 && (
@@ -386,7 +387,7 @@ function AdminInquiriesPage() {
                   </div>
                 </div>
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">未回覆詢價</p>
+                  <p className="text-sm font-medium text-gray-700">未回覆詢問</p>
                   <div className="flex items-center space-x-2">
                     <p className="text-2xl font-bold text-red-600">{inquiryStats.unreplied}</p>
                     {inquiryStats.unreplied > 0 && (
@@ -437,7 +438,7 @@ function AdminInquiriesPage() {
                     </div>
                     <div className="bg-gray-100 rounded p-3">
                       <div className="text-lg font-bold text-gray-900">{day.total_inquiries}</div>
-                      <div className="text-xs text-gray-600">新詢價</div>
+                      <div className="text-xs text-gray-600">新詢問</div>
                       <div className="text-xs text-green-600 mt-1">
                         {day.reply_rate}% 回覆率
                       </div>
@@ -525,7 +526,7 @@ function AdminInquiriesPage() {
                   `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢問單`
                 }
               </h2>
-              <p className="text-gray-600">當客戶送出詢價時，會顯示在這裡</p>
+              <p className="text-gray-600">當客戶送出詢問時，會顯示在這裡</p>
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -713,7 +714,7 @@ function AdminInquiriesPage() {
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-3">詢價資訊</h3>
+                      <h3 className="font-semibold text-gray-900 mb-3">詢問資訊</h3>
                       <div className="space-y-2">
                         <p><span className="text-gray-900">狀態：</span>
                           <span className={`ml-2 px-2 py-1 rounded-full text-xs ${INQUIRY_STATUS_COLORS[selectedInquiry.status]}`}>
@@ -773,7 +774,7 @@ function AdminInquiriesPage() {
                   )}
 
                   <div>
-                    <h3 className="font-semibold text-gray-900 mb-3">詢價商品</h3>
+                    <h3 className="font-semibold text-gray-900 mb-3">詢問商品</h3>
                     <div className="space-y-3">
                       {selectedInquiry.inquiry_items.map((item) => (
                         <div key={item.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">

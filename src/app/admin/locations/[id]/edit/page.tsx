@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Location } from '@/types/location'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function EditLocation({ params }: { params: Promise<{ id: string }> }) {
@@ -64,7 +65,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
         router.push('/admin/locations')
       }
     } catch (error) {
-      console.error('Error fetching location:', error)
+      logger.error('Error fetching location:', error instanceof Error ? error : new Error('Unknown error'))
       alert('載入失敗')
     } finally {
       setInitialLoading(false)
@@ -141,7 +142,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
         alert('更新失敗')
       }
     } catch (error) {
-      console.error('Error updating location:', error)
+      logger.error('Error updating location:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     } finally {
       setLoading(false)

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import * as jwt from 'jsonwebtoken';
+import { authLogger } from '@/lib/logger';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -69,7 +70,7 @@ function getAllowedOrigins(): string[] {
     const uniqueOrigins = [...new Set(origins)].filter(Boolean);
     
     // 記錄允許的來源（幫助調試）
-    console.log('[CSRF] Allowed origins:', uniqueOrigins);
+    authLogger.debug('CSRF Allowed origins', { metadata: { origins: uniqueOrigins } });
     
     return uniqueOrigins;
   }
@@ -151,14 +152,14 @@ export function validateOrigin(request: NextRequest): boolean {
   }
   
   // 如果都沒有匹配，記錄詳細資訊以協助調試
-  console.warn('[CSRF] Origin validation failed:', {
+  authLogger.warn('CSRF Origin validation failed', { metadata: {
     origin: origin || 'null',
     referer: referer || 'null',
     host,
     allowedOrigins,
     environment: process.env.NODE_ENV,
     vercelUrl: process.env.VERCEL_URL || 'not set'
-  });
+  } });
   
   // 開發環境中較寬鬆
   if (process.env.NODE_ENV === 'development') {
@@ -173,7 +174,7 @@ export function validateOrigin(request: NextRequest): boolean {
       // 檢查是否來自相同的 Vercel 域名
       if (refererUrl.hostname.includes('vercel.app') || 
           refererUrl.hostname === host) {
-        console.log('[CSRF] Allowing same-origin request on Vercel');
+        authLogger.debug('CSRF Allowing same-origin request on Vercel');
         return true;
       }
     } catch {
@@ -406,11 +407,11 @@ export class CSRFTokenManager {
     
     // 檢查是否都存在
     if (!headerToken) {
-      console.warn('[CSRF] Missing header token:', {
+      authLogger.warn('CSRF Missing header token', { metadata: {
         path: request.nextUrl.pathname,
         method: request.method,
         headers: Object.fromEntries(request.headers.entries())
-      });
+      } });
       return { 
         isValid: false, 
         reason: `Missing CSRF token in ${this.HEADER_NAME} header` 
@@ -418,11 +419,11 @@ export class CSRFTokenManager {
     }
     
     if (!cookieToken) {
-      console.warn('[CSRF] Missing cookie token:', {
+      authLogger.warn('CSRF Missing cookie token', { metadata: {
         path: request.nextUrl.pathname,
         method: request.method,
         cookies: request.cookies.getAll().map(c => c.name)
-      });
+      } });
       return { 
         isValid: false, 
         reason: `Missing CSRF token in ${this.TOKEN_NAME} cookie` 
@@ -431,11 +432,11 @@ export class CSRFTokenManager {
     
     // 檢查是否匹配
     if (headerToken !== cookieToken) {
-      console.warn('[CSRF] Token mismatch:', {
+      authLogger.warn('CSRF Token mismatch', { metadata: {
         path: request.nextUrl.pathname,
         headerToken: `${headerToken.substring(0, 8)}...`,
         cookieToken: `${cookieToken.substring(0, 8)}...`
-      });
+      } });
       return { 
         isValid: false, 
         reason: 'CSRF token mismatch between header and cookie' 
@@ -488,7 +489,7 @@ export function validateCSRFToken(request: NextRequest): boolean {
   const result = CSRFTokenManager.validateToken(request);
   
   if (!result.isValid && process.env.NODE_ENV === 'development') {
-    console.warn('[CSRF] Token validation failed:', result.reason);
+    authLogger.warn('CSRF Token validation failed', { metadata: { reason: result.reason } });
   }
   
   return result.isValid;

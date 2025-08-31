@@ -1,6 +1,8 @@
 // Google Analytics 4 整合工具函數
 // 為豪德農場量身定制的分析追蹤功能
 
+import { logger } from '@/lib/logger';
+
 declare global {
   interface Window {
     gtag: (...args: unknown[]) => void
@@ -23,7 +25,7 @@ function safeGtag(...args: unknown[]): void {
     try {
       window.gtag(...args)
     } catch (error) {
-      console.warn('GA tracking error:', error)
+      logger.warn('GA tracking error', { metadata: { error: (error as Error).message } })
     }
   }
 }
@@ -42,7 +44,7 @@ export function trackEvent(eventName: string, parameters: Record<string, unknown
   })
 
   // 同時也記錄到我們的 JSON 系統（作為備份）
-  console.log(`📊 GA4 Event: ${eventName}`, parameters)
+  logger.debug('GA4 Event tracked', { metadata: { eventName, parameters } })
 }
 
 // 頁面瀏覽追蹤（通常由 GoogleAnalytics 組件自動處理）
@@ -55,7 +57,7 @@ export function trackPageView(path: string, title?: string): void {
     page_location: window.location.href,
   })
 
-  console.log(`📄 GA4 Page View: ${path}`, { title })
+  logger.debug('GA4 Page View tracked', { metadata: { path, title } })
 }
 
 // 產品相關事件追蹤
@@ -254,14 +256,14 @@ export function checkGAStatus(): {
 export function logGAStatus(): void {
   if (process.env.NODE_ENV === 'development') {
     const status = checkGAStatus()
-    console.log('🔍 GA4 Status:', status)
+    logger.debug('GA4 Status', { metadata: { status } })
     
     if (!status.hasValidId) {
-      console.warn('⚠️ GA4: 請在 .env.local 中設定有效的 NEXT_PUBLIC_GA_MEASUREMENT_ID')
+      logger.warn('GA4: 請在 .env.local 中設定有效的 NEXT_PUBLIC_GA_MEASUREMENT_ID');
     } else if (!status.isLoaded) {
-      console.warn('⚠️ GA4: Google Analytics 腳本尚未載入')
+      logger.warn('GA4: Google Analytics 腳本尚未載入');
     } else {
-      console.log('✅ GA4: Google Analytics 已準備就緒')
+      logger.info('GA4: Google Analytics 已準備就緒');
     }
   }
 }

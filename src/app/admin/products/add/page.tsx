@@ -3,10 +3,17 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import ImageUploader from '@/components/ImageUploader'
 import { v4 as uuidv4 } from 'uuid'
+
+// 動態載入圖片上傳器，減少初始 bundle 大小
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
+  ssr: false
+})
 
 function AddProduct() {
   const router = useRouter()
@@ -128,16 +135,20 @@ function AddProduct() {
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
         if (process.env.NODE_ENV === 'development') {
-          console.log('[DEBUG] CSRF token being sent:', csrfToken.substring(0, 8) + '...');
+          logger.info('[DEBUG] CSRF token being sent', {
+            metadata: { token: csrfToken.substring(0, 8) + '...' }
+          });
         }
       } else {
         if (process.env.NODE_ENV === 'development') {
-          console.error('[DEBUG] No CSRF token available!');
+          logger.error('[DEBUG] No CSRF token available!');
         }
       }
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[DEBUG] Request headers:', Object.keys(headers));
+        logger.info('[DEBUG] Request headers', {
+          metadata: { headerKeys: Object.keys(headers) }
+        });
       }
 
       const response = await fetch('/api/admin-proxy/products', {
@@ -149,7 +160,7 @@ function AddProduct() {
 
       if (response.ok) {
         const result = await response.json()
-        console.log(`✅ 產品建立成功: ${result.product?.id || productId}`)
+        logger.info(`✅ 產品建立成功: ${result.product?.id || productId}`)
         router.push('/admin/products')
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))

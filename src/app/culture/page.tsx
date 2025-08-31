@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { CultureItem } from '@/types/culture'
 
@@ -24,9 +25,9 @@ export default function CulturePage() {
         }
         
         const data = await response.json()
-        setCultureItems(data)
+        setCultureItems(data.data || data)
       } catch (error) {
-        console.error('Error fetching culture items:', error)
+        logger.error('Error fetching culture items:', error instanceof Error ? error : new Error('Unknown error'))
         setError('無法載入時光典藏資料，請稍後再試。')
       } finally {
         setLoading(false)

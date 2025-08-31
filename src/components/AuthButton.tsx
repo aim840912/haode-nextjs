@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast';
 import { UserInterestsService } from '@/services/userInterestsService';
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext';
 import { useState, useRef, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 // SVG 圖示元件
 const UserIcon = ({ className }: { className?: string }) => (
@@ -124,7 +125,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
         const interests = await UserInterestsService.getUserInterests(user.id);
         setInterestedCount(interests.length);
       } catch (error) {
-        console.error('Error fetching interests count:', error);
+        logger.error('Error fetching interests count', error as Error, { metadata: { userId: user?.id } });
         setInterestedCount(0);
       }
     } else {
@@ -150,7 +151,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
       success('登出成功', '您已成功登出帳號');
       setIsLoggingOut(false);
     } catch (error) {
-      console.error('登出失敗:', error);
+      logger.error('登出失敗', error as Error, { metadata: { userId: user?.id } });
       const errorMessage = error instanceof Error ? error.message : '登出失敗，請稍後再試';
       
       // 顯示錯誤提示

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 import LoadingSpinner from './LoadingSpinner';
 import { handleImageError, buildResponsiveImageSrcSet } from '@/lib/image-utils';
 import { useImageBlob } from '@/hooks/useImageBlob';
@@ -57,7 +58,7 @@ export default function OptimizedImage({
   }, [src, onLoad]);
 
   const handleErrorCallback = useCallback((errorMsg: string) => {
-    console.error(`❌ 圖片載入失敗: ${errorMsg}`);
+    logger.error('圖片載入失敗', new Error(errorMsg), { metadata: { src, alt } });
     onError?.();
   }, [onError]);
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function EditCulture({ params }: { params: Promise<{ id: string }> }) {
@@ -63,7 +64,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
         router.push('/admin/culture')
       }
     } catch (error) {
-      console.error('Error fetching culture item:', error)
+      logger.error('載入文化項目失敗', error instanceof Error ? error : new Error('Unknown error'))
       alert('載入失敗')
       router.push('/admin/culture')
     }
@@ -77,7 +78,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
         setCultureId(id)
         await fetchCultureItem(id)
       } catch (error) {
-        console.error('Error loading data:', error)
+        logger.error('載入資料失敗', error instanceof Error ? error : new Error('Unknown error'))
         alert('載入失敗')
         router.push('/admin/culture')
       } finally {
@@ -143,10 +144,12 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     setLoading(true)
 
     try {
-      console.log('📤 提交的編輯資料:', {
-        ...formData,
-        imageFile: _imageFile ? `File: ${_imageFile.name} (${(_imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null,
-        hasLocalPath
+      logger.info('📤 提交的編輯資料', {
+        metadata: {
+          ...formData,
+          imageFile: _imageFile ? `File: ${_imageFile.name} (${(_imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null,
+          hasLocalPath
+        }
       })
       
       // 準備 FormData 用於檔案上傳
@@ -158,10 +161,14 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
       
       if (_imageFile) {
         submitFormData.append('imageFile', _imageFile)
-        console.log('📁 包含新的圖片檔案:', _imageFile.name)
+        logger.info('📁 包含新的圖片檔案', {
+          metadata: { fileName: _imageFile.name }
+        })
       } else if (formData.imageUrl) {
         submitFormData.append('imageUrl', formData.imageUrl)
-        console.log('🔗 保持現有的圖片 URL:', formData.imageUrl)
+        logger.info('🔗 保持現有的圖片 URL', {
+          metadata: { imageUrl: formData.imageUrl }
+        })
       }
       
       const response = await fetch(`/api/culture/${cultureId}`, {
@@ -175,7 +182,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
         alert('更新失敗')
       }
     } catch (error) {
-      console.error('Error updating culture item:', error)
+      logger.error('Error updating culture item:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     } finally {
       setLoading(false)

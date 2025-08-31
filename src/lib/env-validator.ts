@@ -5,6 +5,8 @@
  * 確保安全相關的配置符合最低要求
  */
 
+import { logger } from '@/lib/logger';
+
 interface EnvValidationResult {
   isValid: boolean;
   errors: string[];
@@ -219,43 +221,43 @@ export function validateOnStartup(): void {
   const result = validateEnvironment();
   
   if (!result.isValid) {
-    console.error('========================================');
-    console.error('環境變數驗證失敗！');
-    console.error('========================================');
+    logger.error('========================================');
+    logger.error('環境變數驗證失敗');
+    logger.error('========================================');
     
     result.errors.forEach(error => {
-      console.error(`❌ ${error}`);
+      logger.error(error, { metadata: { type: 'env_validation' } });
     });
     
     if (result.warnings.length > 0) {
-      console.warn('');
-      console.warn('警告：');
+      logger.warn('');
+      logger.warn('警告');
       result.warnings.forEach(warning => {
-        console.warn(`⚠️  ${warning}`);
+        logger.warn(warning, { metadata: { type: 'env_validation' } });
       });
     }
     
-    console.error('========================================');
-    console.error('請檢查 .env.local 檔案並確保所有必要的環境變數都已正確設定');
-    console.error('參考 .env.local.example 檔案了解所需的環境變數');
-    console.error('========================================');
+    logger.error('========================================');
+    logger.error('請檢查 .env.local 檔案並確保所有必要的環境變數都已正確設定');
+    logger.error('參考 .env.local.example 檔案了解所需的環境變數');
+    logger.error('========================================');
     
     // 在生產環境中，如果關鍵配置缺失，應該停止應用
     if (process.env.NODE_ENV === 'production') {
       const hasCriticalError = result.errors.some(e => e.includes('[CRITICAL]'));
       if (hasCriticalError) {
-        console.error('發現關鍵安全配置錯誤，停止應用啟動');
+        logger.fatal('發現關鍵安全配置錯誤，停止應用啟動');
         process.exit(1);
       }
     }
   } else {
-    console.log('✅ 環境變數驗證通過');
+    logger.info('環境變數驗證通過');
     
     if (result.warnings.length > 0) {
-      console.warn('');
-      console.warn('環境變數警告：');
+      logger.warn('');
+      logger.warn('環境變數警告');
       result.warnings.forEach(warning => {
-        console.warn(`⚠️  ${warning}`);
+        logger.warn(warning, { metadata: { type: 'env_validation' } });
       });
     }
   }

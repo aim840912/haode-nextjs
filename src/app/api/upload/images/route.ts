@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -143,7 +143,7 @@ export async function DELETE(request: NextRequest) {
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -181,7 +181,7 @@ export async function GET(request: NextRequest) {
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -96,7 +97,7 @@ export default function AddLocation() {
         alert('新增失敗')
       }
     } catch (error) {
-      console.error('Error creating location:', error)
+      logger.error('Error creating location:', error instanceof Error ? error : new Error('Unknown error'))
       alert('新增失敗')
     } finally {
       setLoading(false)

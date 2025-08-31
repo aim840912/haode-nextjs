@@ -145,7 +145,7 @@ export const INQUIRY_STATUS_LABELS: Record<InquiryStatus, string> = {
 
 // 詢問類型顯示文字
 export const INQUIRY_TYPE_LABELS: Record<InquiryType, string> = {
-  product: '產品詢價',
+  product: '產品詢問',
   farm_tour: '農場參觀'
 };
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ScheduleItem } from '@/types/schedule'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function ScheduleAdmin() {
@@ -21,7 +22,7 @@ export default function ScheduleAdmin() {
       const data = await response.json()
       setSchedule(data)
     } catch (error) {
-      console.error('Error fetching schedule:', error)
+      logger.error('Error fetching schedule:', error instanceof Error ? error : new Error('Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -34,7 +35,7 @@ export default function ScheduleAdmin() {
       await fetch(`/api/schedule/${id}`, { method: 'DELETE' })
       setSchedule(schedule.filter(s => s.id !== id))
     } catch (error) {
-      console.error('Error deleting schedule:', error)
+      logger.error('Error deleting schedule:', error instanceof Error ? error : new Error('Unknown error'))
       alert('刪除失敗')
     }
   }
@@ -48,7 +49,7 @@ export default function ScheduleAdmin() {
       })
       fetchSchedule()
     } catch (error) {
-      console.error('Error updating status:', error)
+      logger.error('Error updating status:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     }
   }

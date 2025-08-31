@@ -3,9 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import ImageUploader from '@/components/ImageUploader'
 import { v4 as uuidv4 } from 'uuid'
+
+// 動態載入圖片上傳器，減少初始 bundle 大小
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
+  ssr: false
+})
 // 圖片上傳現在通過 API 路由處理
 
 export default function AddNews() {
@@ -102,7 +109,7 @@ export default function AddNews() {
         alert('發布失敗')
       }
     } catch (error) {
-      console.error('Error adding news:', error)
+      logger.error('Error adding news:', error instanceof Error ? error : new Error('Unknown error'))
       alert('發布失敗')
     } finally {
       setLoading(false)

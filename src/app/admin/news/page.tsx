@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import AdminProtection from '@/components/AdminProtection'
 
@@ -21,7 +22,7 @@ export default function NewsAdmin() {
       const data = await response.json()
       setNews(data)
     } catch (error) {
-      console.error('Error fetching news:', error)
+      logger.error('Error fetching news:', error instanceof Error ? error : new Error('Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -34,7 +35,7 @@ export default function NewsAdmin() {
       await fetch(`/api/news/${id}`, { method: 'DELETE' })
       setNews(news.filter(n => n.id !== id))
     } catch (error) {
-      console.error('Error deleting news:', error)
+      logger.error('Error deleting news:', error instanceof Error ? error : new Error('Unknown error'))
       alert('刪除失敗')
     }
   }
@@ -48,7 +49,7 @@ export default function NewsAdmin() {
       })
       fetchNews()
     } catch (error) {
-      console.error('Error updating news:', error)
+      logger.error('Error updating news:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     }
   }

@@ -1,17 +1,38 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { useCart } from '@/lib/cart-context';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth-context';
 import { UserInterestsService } from '@/services/userInterestsService';
 import { Product } from '@/types/product';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
-import ProductFilter, { FilterState } from '@/components/ProductFilter';
 import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
 import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
-import ProductImageGallery, { ProductCardImage } from '@/components/ProductImageGallery';
 import SafeImage from '@/components/SafeImage';
+import { logger } from '@/lib/logger';
+
+// 動態載入大型組件，提升初始載入速度
+const ProductFilter = dynamic(() => import('@/components/ProductFilter'), {
+  loading: () => <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>,
+  ssr: false
+});
+
+const ProductImageGallery = dynamic(() => import('@/components/ProductImageGallery'), {
+  loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>,
+  ssr: false
+});
+
+const ProductCardImage = dynamic(() => 
+  import('@/components/ProductImageGallery').then(mod => ({ default: mod.ProductCardImage })), 
+  {
+    loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse"></div>,
+    ssr: false
+  }
+);
+
+// 引入類型
+import type { FilterState } from '@/components/ProductFilter';
 
 // 用於模擬產品的擴展類型
 interface ExtendedProduct extends Product {
@@ -41,7 +62,6 @@ function ProductsPage() {
     sortBy: 'name',
     search: ''
   });
-  const { addItem } = useCart();
   const { user } = useAuth();
   const { executeWithErrorHandling } = useAsyncWithError();
 
@@ -100,7 +120,7 @@ function ProductsPage() {
         setApiProducts([]);
       }
     } catch (error) {
-      console.error('Unexpected error in fetchProducts:', error);
+      logger.error('Unexpected error in fetchProducts', error as Error, { metadata: { action: 'fetch_products' } });
       setApiProducts([]);
     } finally {
       setLoading(false);
@@ -213,31 +233,15 @@ function ProductsPage() {
     setQuantity(1);
   };
 
-  const addToCart = (product: ExtendedProduct) => {
+  const requestQuote = (product: ExtendedProduct) => {
     if (!user) {
       window.location.href = '/login';
       return;
     }
 
-    // 轉換產品資料格式以符合 Product 型別
-    const productData = {
-      id: product.id.toString(),
-      name: product.name,
-      description: product.description,
-      category: product.category,
-      price: product.price,
-      images: product.image ? [product.image] : [],
-      inventory: product.inStock ? 100 : 0, // 模擬庫存數量
-      isActive: product.inStock ?? true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    addItem(productData, quantity);
-
-    // 顯示成功訊息
-    alert(`已將 ${quantity} 個 ${product.name} 加入購物車！`);
-    closeModal();
+    // 導向詢問單頁面，並預填產品資訊
+    const inquiryUrl = `/inquiries/create?product=${encodeURIComponent(product.name)}&quantity=${quantity}&productId=${product.id}`;
+    window.location.href = inquiryUrl;
   };
 
   const toggleInterest = async (productId: string, productName: string, e?: React.MouseEvent) => {
@@ -294,7 +298,7 @@ function ProductsPage() {
     if (!success) {
       // 如果儲存失敗，恢復原狀態
       setInterestedProducts(interestedProducts);
-      console.error('Failed to update interests in database');
+      logger.error('Failed to update interests in database', undefined, { metadata: { action: 'update_interests' } });
       return;
     }
     
@@ -617,7 +621,7 @@ function ProductsPage() {
                   </div>
 
                   <button
-                    onClick={() => addToCart(selectedProduct)}
+                    onClick={() => requestQuote(selectedProduct)}
                     className="w-full bg-amber-900 text-white py-4 rounded-lg font-semibold text-lg hover:bg-amber-800 transition-colors"
                     disabled={!selectedProduct.inStock}
                   >
@@ -625,7 +629,7 @@ function ProductsPage() {
                       ? '暫時缺貨'
                       : !user
                         ? '請先登入'
-                        : `加入購物車 - NT$ ${selectedProduct.price * quantity}`
+                        : `立即詢問 - NT$ ${selectedProduct.price * quantity}`
                     }
                   </button>
                 </div>

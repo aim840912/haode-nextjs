@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils';
 import { useCSRFTokenValue } from '@/hooks/useCSRFToken';
 import Image from 'next/image';
@@ -89,7 +90,9 @@ export default function ImageUploader({
           try {
             processedFile = await compressImage(file);
           } catch (error) {
-            console.warn('圖片壓縮失敗，使用原檔案:', error);
+            logger.warn('圖片壓縮失敗，使用原檔案', {
+              metadata: { context: 'compressImage', error: error instanceof Error ? error.message : 'Unknown compression error' }
+            });
           }
         }
 
@@ -153,7 +156,7 @@ export default function ImageUploader({
           }
         } catch (uploadError) {
           // 上傳失敗，保留本地預覽並更新 ID
-          console.error('上傳失敗，保留本地預覽:', uploadError);
+          logger.error('上傳失敗，保留本地預覽', uploadError instanceof Error ? uploadError : new Error('Unknown upload error'));
           setPreviewImages(prev => prev.map(img => 
             img.id === tempImage.id 
               ? { ...img, id: `local-${productId}-${Date.now()}-${i}` }
@@ -166,7 +169,7 @@ export default function ImageUploader({
       onUploadSuccess?.(newImages);
 
     } catch (error) {
-      console.error('上傳失敗:', error);
+      logger.error('上傳失敗', error instanceof Error ? error : new Error('Unknown error'));
       onUploadError?.(error instanceof Error ? error.message : '上傳失敗');
     } finally {
       setIsUploading(false);
@@ -254,7 +257,7 @@ export default function ImageUploader({
       // 從預覽中移除
       setPreviewImages(prev => prev.filter(img => img.id !== imageId));
     } catch (error) {
-      console.error('刪除圖片失敗:', error);
+      logger.error('刪除圖片失敗', error instanceof Error ? error : new Error('Unknown error'));
       onUploadError?.('刪除圖片失敗');
     }
   };
@@ -354,7 +357,9 @@ export default function ImageUploader({
                     className="object-cover"
                     priority={true}
                     onError={() => {
-                      console.warn('預覽圖片載入失敗:', image.preview, image.url);
+                      logger.warn('預覽圖片載入失敗', {
+                        metadata: { preview: image.preview, url: image.url }
+                      });
                     }}
                     onLoad={() => {
                       // Image loaded successfully

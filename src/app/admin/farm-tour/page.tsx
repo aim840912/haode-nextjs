@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function FarmTourAdmin() {
@@ -20,7 +21,7 @@ export default function FarmTourAdmin() {
       const data = await response.json()
       setActivities(data)
     } catch (error) {
-      console.error('Error fetching farm tour activities:', error)
+      logger.error('Error fetching farm tour activities:', error instanceof Error ? error : new Error('Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -33,7 +34,7 @@ export default function FarmTourAdmin() {
       await fetch(`/api/farm-tour/${id}`, { method: 'DELETE' })
       setActivities(activities.filter(activity => activity.id !== id))
     } catch (error) {
-      console.error('Error deleting activity:', error)
+      logger.error('Error deleting activity:', error instanceof Error ? error : new Error('Unknown error'))
       alert('刪除失敗')
     }
   }
@@ -52,7 +53,7 @@ export default function FarmTourAdmin() {
         ))
       }
     } catch (error) {
-      console.error('Error updating availability:', error)
+      logger.error('Error updating availability:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新狀態失敗')
     }
   }

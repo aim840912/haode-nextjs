@@ -30,23 +30,23 @@ export const siteConfig = {
 }
 
 export const contactInfo = {
-  phone: '+886-5-2501234', // TODO: 替換為實際電話
-  email: 'info@haudefarm.com', // TODO: 替換為實際 email
+  phone: '+886-5-2561843',
+  email: 'info@dechuantea.com',
   address: {
-    street: '梅山鄉農場路123號', // TODO: 替換為實際地址
+    street: '梅山鄉太和村一鄰八號',
     city: '梅山鄉',
     state: '嘉義縣',
     postalCode: '603',
     country: '台灣'
   },
   coordinates: {
-    latitude: '23.5833', // TODO: 替換為實際座標
+    latitude: '23.5833',
     longitude: '120.5833'
   }
 }
 
 export const socialLinks = {
-  facebook: 'https://www.facebook.com/haudefarm', // TODO: 替換為實際連結
+  facebook: 'https://www.facebook.com/groups/284358098576086/?locale=zh_TW',
   instagram: 'https://www.instagram.com/haudefarm',
   line: 'https://line.me/haudefarm',
   youtube: 'https://www.youtube.com/haudefarm'

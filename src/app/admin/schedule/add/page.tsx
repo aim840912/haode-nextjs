@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { Product } from '@/types/product'
 import { useAuth } from '@/lib/auth-context'
 import TimePickerChinese from '@/components/TimePickerChinese'
@@ -43,7 +44,7 @@ export default function AddSchedule() {
       const data = await response.json()
       setProducts(data.filter((p: Product) => p.isActive))
     } catch (error) {
-      console.error('Error fetching products:', error)
+      logger.error('Error fetching products:', error instanceof Error ? error : new Error('Unknown error'))
     }
   }
 
@@ -113,7 +114,7 @@ export default function AddSchedule() {
         alert('新增失敗')
       }
     } catch (error) {
-      console.error('Error adding schedule:', error)
+      logger.error('Error adding schedule:', error instanceof Error ? error : new Error('Unknown error'))
       alert('新增失敗')
     } finally {
       setLoading(false)

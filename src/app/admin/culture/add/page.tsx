@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function AddCulture() {
@@ -93,9 +94,11 @@ export default function AddCulture() {
     setLoading(true)
 
     try {
-      console.log('📤 提交的資料:', {
-        ...formData,
-        imageFile: imageFile ? `File: ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null
+      logger.info('📤 提交的資料', {
+        metadata: {
+          ...formData,
+          imageFile: imageFile ? `File: ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null
+        }
       })
       
       // 準備 FormData 用於檔案上傳
@@ -107,10 +110,14 @@ export default function AddCulture() {
       
       if (imageFile) {
         submitData.append('imageFile', imageFile)
-        console.log('📁 包含圖片檔案:', imageFile.name)
+        logger.info('📁 包含圖片檔案', {
+          metadata: { fileName: imageFile.name }
+        })
       } else if (formData.imageUrl) {
         submitData.append('imageUrl', formData.imageUrl)
-        console.log('🔗 包含圖片 URL:', formData.imageUrl)
+        logger.info('🔗 包含圖片 URL', {
+          metadata: { imageUrl: formData.imageUrl }
+        })
       }
       
       const response = await fetch('/api/culture', {
@@ -124,7 +131,7 @@ export default function AddCulture() {
         alert('新增失敗')
       }
     } catch (error) {
-      console.error('Error adding culture item:', error)
+      logger.error('Error adding culture item:', error instanceof Error ? error : new Error('Unknown error'))
       alert('新增失敗')
     } finally {
       setLoading(false)

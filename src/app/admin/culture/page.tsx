@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger'
 import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
@@ -34,7 +35,7 @@ export default function CultureAdmin() {
       const data = await response.json()
       setCultureItems(data)
     } catch (error) {
-      console.error('Error fetching culture items:', error)
+      logger.error('Error fetching culture items:', error instanceof Error ? error : new Error('Unknown error'))
     } finally {
       setLoading(false)
     }
@@ -52,7 +53,7 @@ export default function CultureAdmin() {
       await fetch(`/api/culture/${id}`, { method: 'DELETE' })
       setCultureItems(cultureItems.filter(item => item.id !== id))
     } catch (error) {
-      console.error('Error deleting culture item:', error)
+      logger.error('Error deleting culture item:', error instanceof Error ? error : new Error('Unknown error'))
       alert('刪除失敗')
     }
   }
@@ -121,10 +122,10 @@ export default function CultureAdmin() {
                       priority={true}
                       lazy={false}
                       onError={() => {
-                        console.error(`❌ 圖片載入失敗 - ${item.title}:`, item.imageUrl?.substring(0, 100) + '...');
+                        logger.error(`❌ 圖片載入失敗 - ${item.title}`, new Error(`Image load failed: ${item.imageUrl?.substring(0, 100)}...`));
                       }}
                       onLoad={() => {
-                        console.log(`✅ 圖片載入成功 - ${item.title}`);
+                        logger.info(`✅ 圖片載入成功 - ${item.title}`);
                       }}
                     />
                     {/* 圖片上的文字覆蓋層 - 調整透明度讓圖片更清楚 */}

@@ -22,7 +22,7 @@ export const FarmStructuredData = () => {
     "alternateName": ["Haude Farm", "豪德製茶所"],
     "description": "座落梅山群峰之間的豪德農場，以自然農法栽培紅肉李、高山茶葉、季節水果等優質農產品，提供農場導覽與四季體驗活動",
     "url": "https://haode-nextjs.vercel.app/",
-    "telephone": "+886-5-2501234", // TODO: 替換為實際電話
+    "telephone": "+886-5-2561843",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "梅山鄉",
@@ -32,7 +32,7 @@ export const FarmStructuredData = () => {
     },
     "geo": {
       "@type": "GeoCoordinates",
-      "latitude": "23.5833", // TODO: 替換為實際座標
+      "latitude": "23.5833",
       "longitude": "120.5833"
     },
     "openingHours": "Mo-Su 08:00-17:00",
@@ -73,7 +73,7 @@ export const FarmStructuredData = () => {
       "name": "豪德農場"
     },
     "sameAs": [
-      "https://www.facebook.com/haudefarm", // TODO: 替換為實際社群連結
+      "https://www.facebook.com/groups/284358098576086/?locale=zh_TW",
       "https://www.instagram.com/haudefarm"
     ]
   }
@@ -126,7 +126,7 @@ export const ArticleStructuredData = ({ article }: { article: any }) => {
       "name": "豪德農場",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://haode-nextjs.vercel.app//logo.png" // TODO: 替換為實際 logo
+        "url": "https://haode-nextjs.vercel.app/logo.png"
       }
     },
     "datePublished": article.publishDate,

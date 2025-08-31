@@ -22,7 +22,8 @@
       "Bash(NEXT_PUBLIC_SUPABASE_URL=https://bxlrtcagsuoijjolgdzs.supabase.co SUPABASE_SERVICE_ROLE_KEY=sb_secret_dcIa080eUatHIVYYwQUFZw_wUovKzgp npx tsx scripts/migrate-product-images.ts)",
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_wait_for",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   },

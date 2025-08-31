@@ -218,7 +218,7 @@ class ModuleLogger {
   }
 
   error(message: string, error?: Error, context?: LogContext): void {
-    this.parentLogger.error(message, error, this.mergeContext(context))
+    this.parentLogger.error(message, error as Error, this.mergeContext(context))
   }
 
   fatal(message: string, error?: Error, context?: LogContext): void {
@@ -269,17 +269,5 @@ export const logDbQuery = (table: string, operation: string) => {
   return dbLogger.timer(`${operation}:${table}`)
 }
 
-// 向後相容的 console 替換（逐步遷移用）
-if (process.env.NODE_ENV === 'development') {
-  // 在開發環境提供遷移提醒
-  const originalConsole = {
-    log: console.log,
-    warn: console.warn,
-    error: console.error
-  }
-
-  console.log = (...args: any[]) => {
-    originalConsole.warn('🔄 建議使用 logger.info() 替代 console.log')
-    originalConsole.log(...args)
-  }
-}
+// console.log 已全面替換為統一 logger 系統
+// 開發環境已完成遷移，移除 console 覆寫機制

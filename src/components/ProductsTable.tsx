@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { useToast } from '@/components/Toast'
 import SafeImage from './SafeImage'
+import { logger } from '@/lib/logger'
 
 interface ProductsTableProps {
   onDelete?: (id: string) => void
@@ -55,13 +56,13 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       }
       
       const data = await response.json()
-      console.log('ProductsTable fetchProducts - 獲取的資料:', data)
+      logger.debug('ProductsTable fetchProducts - 獲取的資料', { metadata: { productsCount: data?.length || 0 } })
       
       // Admin API 回傳格式為 { products: [...] }
       const products = data.products || data
       setProducts(Array.isArray(products) ? products : [])
     } catch (error) {
-      console.error('Error fetching products:', error)
+      logger.error('Error fetching products', error as Error, { metadata: { component: 'ProductsTable' } })
       setError(error instanceof Error ? error.message : '載入產品資料失敗')
     } finally {
       setLoading(false)
@@ -148,7 +149,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       onDelete?.(id)
       
     } catch (error) {
-      console.error('Error deleting product:', error)
+      logger.error('Error deleting product', error as Error, { metadata: { productId: id, component: 'ProductsTable' } })
       
       // 移除loading toast
       removeToast(loadingId)
@@ -223,7 +224,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       onToggleActive?.(id, newActiveState)
       
     } catch (error) {
-      console.error('Error updating product:', error)
+      logger.error('Error updating product', error as Error, { metadata: { productId: id, component: 'ProductsTable' } })
       
       const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
       errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [
@@ -286,7 +287,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       }
       
       const result = await response.json()
-      console.log('handleToggleShowInCatalog - 更新成功:', result)
+      logger.debug('handleToggleShowInCatalog - 更新成功', { metadata: { productId: id, newStatus: !isCurrentlyShown, component: 'ProductsTable' } })
       
       // 更新成功後重新載入整個產品列表，確保資料同步
       await fetchProducts()
@@ -295,7 +296,7 @@ export default function ProductsTable({ onDelete, onToggleActive, refreshTrigger
       success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
       
     } catch (error) {
-      console.error('Error updating product:', error)
+      logger.error('Error updating product', error as Error, { metadata: { productId: id, component: 'ProductsTable' } })
       
       const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
       errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [

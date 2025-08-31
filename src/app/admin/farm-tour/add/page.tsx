@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
 export default function AddFarmTourActivity() {
@@ -90,7 +91,7 @@ export default function AddFarmTourActivity() {
         alert('新增失敗')
       }
     } catch (error) {
-      console.error('Error adding farm tour activity:', error)
+      logger.error('Error adding farm tour activity:', error instanceof Error ? error : new Error('Unknown error'))
       alert('新增失敗')
     } finally {
       setLoading(false)

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { logger } from '@/lib/logger';
 import { FarmTourActivity } from '@/types/farmTour';
 import SocialLinks from '@/components/SocialLinks';
 import { useAuth } from '@/lib/auth-context';
@@ -63,7 +64,7 @@ export default function FarmTourPage() {
       const data = await response.json();
       setSeasonalActivities(data);
     } catch (error) {
-      console.error('Error fetching farm tour activities:', error);
+      logger.error('Error fetching farm tour activities:', error instanceof Error ? error : new Error('Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -145,7 +146,7 @@ export default function FarmTourPage() {
       router.push(`/inquiries/${result.data.id}`);
 
     } catch (error) {
-      console.error('Error submitting farm tour inquiry:', error);
+      logger.error('Error submitting farm tour inquiry:', error instanceof Error ? error : new Error('Unknown error'));
       setSubmitError(error instanceof Error ? error.message : '提交預約詢問時發生錯誤');
     } finally {
       setIsSubmitting(false);

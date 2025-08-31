@@ -23,6 +23,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/lib/supabase-auth';
+import { logger } from '@/lib/logger';
 
 // 全域請求去重機制
 interface PendingRequest {
@@ -89,7 +90,7 @@ export function useInquiryStats(
         }
       }
     } catch (err) {
-      console.warn('Failed to load cached stats:', err);
+      logger.warn('Failed to load cached stats', { metadata: { error: err instanceof Error ? err.message : String(err) } });
     }
     return null;
   }, []);
@@ -104,7 +105,7 @@ export function useInquiryStats(
         timestamp: Date.now()
       }));
     } catch (err) {
-      console.warn('Failed to save stats cache:', err);
+      logger.warn('Failed to save stats cache', { metadata: { error: err instanceof Error ? err.message : String(err) } });
     }
   }, []);
 
@@ -123,7 +124,7 @@ export function useInquiryStats(
     // 如果連續錯誤過多，停止輪詢
     if (consecutiveErrors >= 5) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('[useInquiryStats] Too many consecutive errors, stopping polling');
+        logger.debug('[useInquiryStats] Too many consecutive errors, stopping polling');
       }
       return null;
     }
@@ -211,7 +212,7 @@ export function useInquiryStats(
         setIsRetrying(false);
         saveCachedStats(result);
         if (process.env.NODE_ENV === 'development') {
-          console.log('[useInquiryStats] Using deduplicated request result:', result);
+          logger.debug('[useInquiryStats] Using deduplicated request result', { metadata: { result } });
         }
         return;
       }
@@ -231,11 +232,13 @@ export function useInquiryStats(
           
           // 記錄詳細錯誤資訊
           if (process.env.NODE_ENV === 'development') {
-            console.error('[useInquiryStats] API Error:', {
-              status: response.status,
-              statusText: response.statusText,
-              errorData,
-              url: response.url
+            logger.error('[useInquiryStats] API Error', undefined, {
+              metadata: {
+                status: response.status,
+                statusText: response.statusText,
+                errorData,
+                url: response.url
+              }
             });
           }
           
@@ -274,7 +277,7 @@ export function useInquiryStats(
       saveCachedStats(newStats);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[useInquiryStats] Successfully fetched stats:', newStats);
+        logger.debug('[useInquiryStats] Successfully fetched stats', { metadata: { stats: newStats } });
       }
     } catch (err) {
       // 請求失敗時清理快取（如果 cacheKey 存在）
@@ -291,12 +294,13 @@ export function useInquiryStats(
       const isRateLimitError = errorMessage.includes('頻繁') || errorMessage.includes('10 分鐘');
       const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('網路');
       
-      console.error('[useInquiryStats] Error fetching inquiry stats:', {
-        error: err,
-        retryCount,
-        consecutiveErrors,
-        isRateLimitError,
-        isNetworkError
+      logger.error('[useInquiryStats] Error fetching inquiry stats', err instanceof Error ? err : undefined, {
+        metadata: {
+          retryCount,
+          consecutiveErrors,
+          isRateLimitError,
+          isNetworkError
+        }
       });
 
       setConsecutiveErrors(prev => prev + 1);
@@ -315,7 +319,7 @@ export function useInquiryStats(
           setIsRetrying(true);
           
           if (process.env.NODE_ENV === 'development') {
-            console.log(`[useInquiryStats] Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
+            logger.debug(`[useInquiryStats] Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`);
           }
           
           retryTimeoutRef.current = setTimeout(() => {
@@ -419,7 +423,7 @@ export function useInquiryStats(
         
         // 開發模式下記錄快取使用
         if (process.env.NODE_ENV === 'development') {
-          console.log('[useInquiryStats] Loaded from cache:', cachedStats);
+          logger.debug('[useInquiryStats] Loaded from cache', { metadata: { cachedStats } });
         }
       }
       
@@ -468,7 +472,7 @@ export function useInquiryStats(
       if (!loading && isVisible) {
         // 開發模式下記錄輪詢資訊
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[useInquiryStats] Polling with interval: ${dynamicInterval}ms, hasUnread: ${stats?.unread_count || 0}`);
+          logger.debug(`[useInquiryStats] Polling with interval: ${dynamicInterval}ms, hasUnread: ${stats?.unread_count || 0}`);
         }
         
         // 直接呼叫 fetchStats 而不是 refresh，避免循環依賴

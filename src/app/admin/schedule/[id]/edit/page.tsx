@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ScheduleItem } from '@/types/schedule'
 import { Product } from '@/types/product'
 import Link from 'next/link'
+import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import TimePickerChinese from '@/components/TimePickerChinese'
 
@@ -68,7 +69,7 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
       const data = await response.json()
       setProducts(data.filter((p: Product) => p.isActive))
     } catch (error) {
-      console.error('Error fetching products:', error)
+      logger.error('Error fetching products:', error instanceof Error ? error : new Error('Unknown error'))
     }
   }, [])
 
@@ -96,7 +97,7 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
         router.push('/admin/schedule')
       }
     } catch (error) {
-      console.error('Error fetching schedule:', error)
+      logger.error('Error fetching schedule:', error instanceof Error ? error : new Error('Unknown error'))
       alert('載入失敗')
     } finally {
       setInitialLoading(false)
@@ -173,7 +174,7 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
         alert('更新失敗')
       }
     } catch (error) {
-      console.error('Error updating schedule:', error)
+      logger.error('Error updating schedule:', error instanceof Error ? error : new Error('Unknown error'))
       alert('更新失敗')
     } finally {
       setLoading(false)

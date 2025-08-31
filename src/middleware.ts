@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CSRFTokenManager, validateOrigin } from '@/lib/auth-middleware';
 import { rateLimiter } from '@/lib/rate-limiter';
 import { getRateLimitConfig, ANTI_DDOS_LIMIT } from '@/config/rate-limits';
+import { authLogger } from '@/lib/logger';
 
 /**
  * 需要 CSRF 保護的路徑模式
@@ -90,7 +91,7 @@ async function logSecurityViolation(
   request: NextRequest, 
   type: 'csrf' | 'rate_limit' | 'origin', 
   reason: string,
-  details?: any
+  details?: Record<string, unknown>
 ) {
   try {
     const clientInfo = {
@@ -112,15 +113,17 @@ async function logSecurityViolation(
       timestamp: new Date().toISOString()
     };
 
-    console.warn(`[${type.toUpperCase()} Violation]`, logData);
+    authLogger.warn(`${type.toUpperCase()} violation`, { metadata: logData });
 
     // 在生產環境中，可以發送到監控系統
+    // 未來功能：整合 Sentry 或其他監控服務
     if (process.env.NODE_ENV === 'production') {
-      // TODO: 發送到外部監控系統（如 Sentry）
+      // 可以在此處添加 Sentry 或其他監控系統的錯誤報告
+      // 例如：Sentry.captureException(new Error(`Security violation: ${type}`))
     }
 
   } catch (error) {
-    console.error('Failed to log security violation:', error);
+    authLogger.error('Failed to log security violation', error);
   }
 }
 
@@ -183,7 +186,7 @@ export async function middleware(request: NextRequest) {
 
           return NextResponse.json(
             {
-              error: rateLimitConfig.message || '請求過於頻繁，請稍後再試',
+              error: (rateLimitConfig as Error).message || '請求過於頻繁，請稍後再試',
               success: false,
               code: 'RATE_LIMIT_EXCEEDED',
               details: {
@@ -289,7 +292,7 @@ export async function middleware(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('Middleware error:', error);
+    authLogger.error('Middleware error', error);
     
     // 發生錯誤時，仍然繼續處理請求，但記錄錯誤
     const response = NextResponse.next();

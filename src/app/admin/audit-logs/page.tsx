@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 import { useAuth } from '@/lib/auth-context';
 import AdminProtection from '@/components/AdminProtection';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -81,7 +82,7 @@ function AuditLogsPage() {
       setAuditLogs(result.data || []);
 
     } catch (err) {
-      console.error('Error fetching audit logs:', err);
+      logger.error('載入審計日誌失敗', err instanceof Error ? err : new Error('Unknown error'));
       setError(err instanceof Error ? err.message : '載入審計日誌時發生錯誤');
     } finally {
       setIsLoading(false);
@@ -220,7 +221,7 @@ function AuditLogsPage() {
       await fetchAuditLogs(); // 重新載入數據
 
     } catch (err) {
-      console.error('Delete error:', err);
+      logger.error('刪除審計日誌失敗', err instanceof Error ? err : new Error('Unknown error'));
       showError(err instanceof Error ? err.message : '刪除審計日誌時發生錯誤');
     } finally {
       setIsDeleting(false);

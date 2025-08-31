@@ -4,6 +4,7 @@
  */
 
 import { InquiryWithItems, InquiryEmailData, EmailTemplate } from '@/types/inquiry';
+import { logger } from '@/lib/logger';
 
 // Email 服務配置
 interface EmailConfig {
@@ -44,7 +45,7 @@ export class EmailService {
         text: template.text
       });
     } catch (error) {
-      console.error('Error sending inquiry confirmation:', error);
+      logger.error('Error sending inquiry confirmation', error as Error, { metadata: { service: 'EmailService', action: 'sendInquiryConfirmation' } });
       return false;
     }
   }
@@ -55,7 +56,7 @@ export class EmailService {
   async sendNewInquiryNotification(inquiry: InquiryWithItems): Promise<boolean> {
     try {
       if (!this.config.adminEmail) {
-        console.warn('Admin email not configured, skipping notification');
+        logger.warn('Admin email not configured, skipping notification', { metadata: { service: 'EmailService', action: 'sendNewInquiryNotification' } });
         return false;
       }
 
@@ -69,7 +70,7 @@ export class EmailService {
         text: template.text
       });
     } catch (error) {
-      console.error('Error sending new inquiry notification:', error);
+      logger.error('Error sending new inquiry notification', error as Error, { metadata: { service: 'EmailService', action: 'sendNewInquiryNotification' } });
       return false;
     }
   }
@@ -89,7 +90,7 @@ export class EmailService {
         text: template.text
       });
     } catch (error) {
-      console.error('Error sending status update notification:', error);
+      logger.error('Error sending status update notification', error as Error, { metadata: { service: 'EmailService', action: 'sendStatusUpdateNotification' } });
       return false;
     }
   }
@@ -146,10 +147,10 @@ export class EmailService {
       //   })
       // });
       
-      console.log('📧 [Resend] Email sent:', params.subject, 'to', params.to);
+      logger.info('📧 [Resend] Email sent', { metadata: { service: 'EmailService', provider: 'Resend', subject: params.subject, to: params.to } });
       return true;
     } catch (error) {
-      console.error('Error sending email with Resend:', error);
+      logger.error('Error sending email with Resend', error as Error, { metadata: { service: 'EmailService', provider: 'Resend' } });
       return false;
     }
   }
@@ -166,10 +167,10 @@ export class EmailService {
   }): Promise<boolean> {
     try {
       // 這裡可以整合 SendGrid API
-      console.log('📧 [SendGrid] Email sent:', params.subject, 'to', params.to);
+      logger.info('📧 [SendGrid] Email sent', { metadata: { service: 'EmailService', provider: 'SendGrid', subject: params.subject, to: params.to } });
       return true;
     } catch (error) {
-      console.error('Error sending email with SendGrid:', error);
+      logger.error('Error sending email with SendGrid', error as Error, { metadata: { service: 'EmailService', provider: 'SendGrid' } });
       return false;
     }
   }
@@ -184,13 +185,16 @@ export class EmailService {
     html: string;
     text: string;
   }): boolean {
-    console.log('📧 [Console] Email would be sent:');
-    console.log('  To:', params.toName ? `${params.toName} <${params.to}>` : params.to);
-    console.log('  From:', `${this.config.fromName} <${this.config.fromEmail}>`);
-    console.log('  Subject:', params.subject);
-    console.log('  Text Content:');
-    console.log('  ' + params.text.split('\n').join('\n  '));
-    console.log('---');
+    logger.info('📧 [Console] Email would be sent', {
+      metadata: {
+        service: 'EmailService',
+        provider: 'Console',
+        to: params.toName ? `${params.toName} <${params.to}>` : params.to,
+        from: `${this.config.fromName} <${this.config.fromEmail}>`,
+        subject: params.subject,
+        textPreview: params.text.substring(0, 200) + (params.text.length > 200 ? '...' : '')
+      }
+    });
     return true;
   }
 

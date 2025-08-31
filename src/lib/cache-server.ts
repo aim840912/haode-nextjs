@@ -1,4 +1,5 @@
 import { kv } from '@vercel/kv'
+import { cacheLogger } from '@/lib/logger'
 
 export interface CacheOptions {
   ttl?: number // Time to live in seconds
@@ -31,7 +32,7 @@ export class CacheManager {
         }
       }
     } catch (error) {
-      console.warn('KV cache read error:', error)
+      cacheLogger.warn('KV cache read error', { metadata: { error: (error as Error).message } })
     }
 
     // Fallback to memory cache
@@ -55,7 +56,7 @@ export class CacheManager {
         await kv.set(key, data, { ex: ttl })
       }
     } catch (error) {
-      console.warn('KV cache write error:', error)
+      cacheLogger.warn('KV cache write error', { metadata: { error: (error as Error).message, key, ttl } })
     }
 
     // Always set in memory cache as fallback
@@ -74,7 +75,7 @@ export class CacheManager {
         await kv.del(key)
       }
     } catch (error) {
-      console.warn('KV cache delete error:', error)
+      cacheLogger.warn('KV cache delete error', { metadata: { error: (error as Error).message, key } })
     }
 
     this.memoryCache.delete(key)
@@ -92,7 +93,7 @@ export class CacheManager {
         }
       }
     } catch (error) {
-      console.warn('KV cache pattern delete error:', error)
+      cacheLogger.warn('KV cache pattern delete error', { metadata: { error: (error as Error).message, pattern } })
     }
 
     // Clear matching keys from memory cache

@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.next/
+dist/
+build/
+
+# Config files
+.env*
+*.log
+
+# Generated files
+.turbo/
+.vercel/
+
+# Data files
+src/data/*.json
+
+# Documentation
+*.md
+README.md
+CHANGELOG.md

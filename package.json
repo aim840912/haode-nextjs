@@ -9,9 +9,13 @@
   "scripts": {
     "dev": "npx next dev --turbopack",
     "build": "npx next build",
+    "analyze": "ANALYZE=true npm run build",
     "start": "npx next start",
     "lint": "npx next lint",
     "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "commit": "cz",
     "test": "echo \"No tests specified\" && exit 0",
     "test:ci": "echo \"No tests specified\" && exit 0",
     "test:supabase": "npx tsx scripts/test-supabase.ts",
@@ -19,13 +23,26 @@
     "check:tables": "npx tsx scripts/check-tables.ts",
     "migrate:products": "npx tsx scripts/migrate-to-supabase.ts",
     "generate:keys": "node scripts/generate-keys.js",
-    "generate:keys:simple": "node scripts/generate-keys.js --simple"
+    "generate:keys:simple": "node scripts/generate-keys.js --simple",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "*.{json,md,css}": [
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "@next/third-parties": "^15.5.0",
-    "@playwright/test": "^1.55.0",
-    "@react-pdf/renderer": "^4.3.0",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/line-clamp": "^0.4.4",
@@ -48,8 +65,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/uuid": "^10.0.0",
+    "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
