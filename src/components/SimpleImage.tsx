@@ -42,7 +42,7 @@ export default function SimpleImage({
 
   const handleError = () => {
     const errorMsg = `圖片載入失敗: ${src}`
-    logger.warn('SimpleImage 載入失敗', { src, alt })
+    logger.warn('SimpleImage 載入失敗', { metadata: { src, alt } })
     setError(errorMsg)
     onError?.(errorMsg)
   }
