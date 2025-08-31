@@ -53,6 +53,7 @@ async function handleGET(request: NextRequest) {
     
     return response
   } catch (error) {
+    const nocache = new URL(request.url).searchParams.get('nocache') === 'true'
     apiLogger.error('Error fetching products', error as Error, { metadata: { nocache } })
     return NextResponse.json(
       { error: 'Failed to fetch products' },
