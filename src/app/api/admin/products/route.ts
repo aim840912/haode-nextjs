@@ -300,7 +300,7 @@ async function handleDELETE(request: NextRequest) {
         user_agent: request.headers.get('user-agent') || undefined
       })
     } catch (auditError) {
-      apiLogger.warn('Failed to log product deletion audit:', auditError)
+      apiLogger.warn('Failed to log product deletion audit', { metadata: { error: (auditError as Error).message } })
     }
 
     // 清除產品快取，確保公開 API 能立即看到變更
