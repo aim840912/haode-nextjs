@@ -50,10 +50,86 @@
 
 ### 🔴 高優先級
 
-#### 1. 安全性增強
-- 環境變數驗證：使用 Zod 進行完整的 env schema 驗證
-- Rate Limiting 優化：依據使用者類型設定不同限制
-- 輸入驗證加強：API 路由使用 Zod 嚴格驗證
+#### 1. 安全性增強 🔒
+
+**現況評估**：
+- ✅ 安全框架代碼已存在（env-validator.ts, rate-limiter.ts）
+- ⚠️ 關鍵功能未被啟用（validateOnStartup 從未調用）
+- ⚠️ Rate Limiting 覆蓋率低（僅 5 個檔案使用）
+- ⚠️ API 輸入驗證未全面實施
+
+**為何重要**：
+- **立即風險**：環境變數洩漏、API 濫用、注入攻擊
+- **商業影響**：資料外洩、服務中斷、聲譽損失
+- **合規要求**：GDPR/個資法、支付安全標準
+- **投資回報**：低成本（2-4小時）可防範 90% 常見攻擊
+
+**實施計畫**（預計 3.5 小時）：
+
+##### 📌 階段一：啟用環境變數驗證（30分鐘）
+1. **整合驗證系統**
+   - 在 `src/app/layout.tsx` 或應用入口點調用 `validateOnStartup()`
+   - 確保所有環境變數在啟動時被驗證
+   
+2. **增強驗證規則**
+   - 合併 `env-validator.ts` 和 `env-validation.ts` 的驗證邏輯
+   - 添加更多關鍵變數的驗證規則（JWT_SECRET、ADMIN_API_KEY 等）
+
+##### 📌 階段二：擴展 Rate Limiting 覆蓋（1小時）
+1. **全局 Rate Limiting**
+   ```typescript
+   // middleware.ts 啟用全局保護
+   - 一般用戶：100 請求/分鐘
+   - API 密集操作：30 請求/分鐘
+   - 敏感操作：5 請求/分鐘
+   ```
+   
+2. **重要 API 保護**
+   - 寫入操作：嚴格限制（5-10 請求/分鐘）
+   - 查詢操作：適度限制（30-50 請求/分鐘）
+   - 公開 API：寬鬆限制（100 請求/分鐘）
+
+##### 📌 階段三：API 輸入驗證（1.5小時）
+1. **建立驗證 Schema**
+   ```typescript
+   // 為每個 API 路由創建 Zod schema
+   - 詢問單 API：驗證 email、phone、message 格式
+   - 產品 API：驗證價格、庫存、圖片 URL
+   - 用戶 API：驗證認證資訊、權限
+   ```
+   
+2. **整合驗證中間件**
+   - 創建統一的 `withValidation` 中間件
+   - 自動驗證請求 body、query、params
+   - 返回標準化錯誤訊息
+
+##### 📌 階段四：安全配置優化（30分鐘）
+1. **Headers 安全**
+   ```typescript
+   // 添加安全 headers
+   - Content-Security-Policy
+   - X-Frame-Options
+   - X-Content-Type-Options
+   - Strict-Transport-Security
+   ```
+   
+2. **錯誤處理**
+   - 生產環境隱藏詳細錯誤
+   - 記錄完整錯誤到日誌
+   - 返回通用錯誤訊息給用戶
+
+**預期成果**：
+- ✅ 100% 環境變數驗證覆蓋
+- ✅ 全站 Rate Limiting 保護
+- ✅ 所有 API 輸入驗證
+- ✅ 安全 headers 配置完整
+- ✅ 審計日誌追蹤可疑活動
+
+**測試計畫**：
+1. 環境變數缺失/錯誤測試
+2. Rate Limiting 壓力測試
+3. SQL 注入/XSS 測試
+4. OWASP ZAP 安全掃描
 
 ### 🟡 中優先級（長期規劃）
 
