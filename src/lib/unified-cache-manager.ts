@@ -380,6 +380,17 @@ export class UnifiedCacheManager {
       hits: 0,
       misses: 0,
       errors: 0,
+      memoryHits: 0,
+      kvHits: 0,
+      sets: 0,
+      deletes: 0,
+      invalidations: 0,
+      warmups: 0,
+      backgroundRefreshes: 0,
+      responseTimes: [],
+      peakMemorySize: 0,
+      startTime: Date.now(),
+      lastActivity: Date.now(),
     }
   }
 

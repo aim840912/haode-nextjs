@@ -15,11 +15,12 @@ export async function GET(request: Request) {
 
     // 獲取服務實例並檢查快取統計
     const productService = await getProductService()
-    let serviceStats = null
+    let serviceStats: { unified?: unknown } | null = null
 
     // 檢查是否是快取服務
     if ('getCacheStats' in productService && typeof productService.getCacheStats === 'function') {
-      serviceStats = (productService as { getCacheStats: () => unknown }).getCacheStats()
+      const stats = (productService as { getCacheStats: () => unknown }).getCacheStats()
+      serviceStats = stats as { unified?: unknown } | null
     }
 
     // 快取配置檢查
@@ -190,7 +191,13 @@ export async function POST(request: Request) {
 /**
  * 計算快取健康評分 (0-100)
  */
-function calculateHealthScore(metrics: { hitRate: string; errors?: number; memorySize?: number }): {
+function calculateHealthScore(metrics: {
+  hitRate: string
+  hits?: number
+  misses?: number
+  errors?: number
+  memorySize?: number
+}): {
   score: number
   status: string
   factors: string[]
@@ -216,8 +223,8 @@ function calculateHealthScore(metrics: { hitRate: string; errors?: number; memor
   }
 
   // 錯誤率評分 (30% 權重)
-  const totalRequests = metrics.hits + metrics.misses
-  if (totalRequests > 0) {
+  const totalRequests = (metrics.hits || 0) + (metrics.misses || 0)
+  if (totalRequests > 0 && metrics.errors) {
     const errorRate = (metrics.errors / totalRequests) * 100
     if (errorRate > 5) {
       score -= 30
@@ -347,8 +354,8 @@ async function runCacheBenchmark() {
     cacheLogger.info('快取效能基準測試完成', {
       metadata: {
         iterations,
-        avgSetTime: results.summary.set_ms.avg.toFixed(2),
-        avgGetHitTime: results.summary.get_hit_ms.avg.toFixed(2),
+        avgSetTime: (results.summary.set_ms as { avg: number }).avg.toFixed(2),
+        avgGetHitTime: (results.summary.get_hit_ms as { avg: number }).avg.toFixed(2),
       },
     })
 
@@ -383,11 +390,11 @@ function generateCacheRecommendations(
       recommendations.push('✨ 統一快取命中率優秀！系統效能良好')
     }
 
-    if (unifiedMetrics.errors > 0) {
+    if (unifiedMetrics.errors && unifiedMetrics.errors > 0) {
       recommendations.push('⚠️ 偵測到快取錯誤，請檢查 KV 連線狀態')
     }
 
-    if (unifiedMetrics.size > 1000) {
+    if (unifiedMetrics.size && unifiedMetrics.size > 1000) {
       recommendations.push('快取項目較多，考慮使用標籤失效機制清理過期內容')
     }
   }

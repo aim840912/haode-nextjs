@@ -63,7 +63,7 @@ class UnifiedClientCacheManager {
     }
 
     this.metrics.hits++
-    return entry.data
+    return entry.data as T
   }
 
   /**
