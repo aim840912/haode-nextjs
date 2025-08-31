@@ -321,7 +321,7 @@ async function handleDELETE(request: NextRequest) {
       }
     })
   } catch (error) {
-    apiLogger.error('Error deleting product', error)
+    apiLogger.error('Error deleting product', error as Error)
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
   }
 }
