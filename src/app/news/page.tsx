@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import SimpleImage from '@/components/SimpleImage'
 
 interface NewsItem {
   id: string
@@ -56,16 +57,15 @@ export default function NewsPage() {
 
   const categories = ['全部', '產品動態', '永續農業', '活動資訊']
 
-  const filteredNews = selectedCategory === '全部'
-    ? news
-    : news.filter(item => item.category === selectedCategory)
+  const filteredNews =
+    selectedCategory === '全部' ? news : news.filter(item => item.category === selectedCategory)
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
@@ -110,14 +110,15 @@ export default function NewsPage() {
       <div className="max-w-7xl mx-auto px-6 py-16">
         {/* Category Filter */}
         <div className="flex flex-wrap gap-2 mb-12 justify-center">
-          {categories.map((category) => (
+          {categories.map(category => (
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedCategory === category
                   ? 'bg-amber-900 text-white'
                   : 'bg-white text-gray-700 hover:bg-amber-100 hover:text-amber-900'
-                }`}
+              }`}
             >
               {category}
             </button>
@@ -129,42 +130,45 @@ export default function NewsPage() {
           <div className="mb-16">
             <h2 className="text-2xl font-semibold text-gray-900 mb-8">精選新聞</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {news.filter(item => item.featured).map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/news/${item.id}`}
-                  className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer block"
-                >
-                  <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
-                    {item.imageUrl && (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center mb-3">
-                      <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-medium">
-                        {item.category}
-                      </span>
-                      <span className="text-sm text-gray-500 ml-auto">
-                        {formatDate(item.publishedAt)}
-                      </span>
+              {news
+                .filter(item => item.featured)
+                .map(item => (
+                  <Link
+                    key={item.id}
+                    href={`/news/${item.id}`}
+                    className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer block"
+                  >
+                    <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden relative">
+                      {item.imageUrl && (
+                        <SimpleImage
+                          src={item.imageUrl}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          priority={filteredNews.indexOf(item) < 3}
+                        />
+                      )}
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                      {item.summary}
-                    </p>
-                    <div className="inline-flex items-center text-amber-900 hover:text-amber-800 text-sm font-medium">
-                      閱讀更多 →
+                    <div className="p-6">
+                      <div className="flex items-center mb-3">
+                        <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-medium">
+                          {item.category}
+                        </span>
+                        <span className="text-sm text-gray-500 ml-auto">
+                          {formatDate(item.publishedAt)}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
+                        {item.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-3">{item.summary}</p>
+                      <div className="inline-flex items-center text-amber-900 hover:text-amber-800 text-sm font-medium">
+                        閱讀更多 →
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
             </div>
           </div>
         )}
@@ -177,19 +181,21 @@ export default function NewsPage() {
 
           {filteredNews.length > 0 ? (
             <div className="space-y-8">
-              {filteredNews.map((item) => (
+              {filteredNews.map(item => (
                 <Link
                   key={item.id}
                   href={`/news/${item.id}`}
                   className="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow overflow-hidden cursor-pointer block"
                 >
                   <div className="md:flex">
-                    <div className="md:w-48 aspect-video md:aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
+                    <div className="md:w-48 aspect-video md:aspect-square bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden relative">
                       {item.imageUrl && (
-                        <img
+                        <SimpleImage
                           src={item.imageUrl}
                           alt={item.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, 192px"
                         />
                       )}
                     </div>
@@ -204,17 +210,16 @@ export default function NewsPage() {
                         <span className="text-sm text-gray-500">by {item.author}</span>
                       </div>
 
-                      <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                        {item.title}
-                      </h3>
+                      <h3 className="text-xl font-semibold text-gray-900 mb-3">{item.title}</h3>
 
-                      <p className="text-gray-600 mb-4 line-clamp-2">
-                        {item.summary}
-                      </p>
+                      <p className="text-gray-600 mb-4 line-clamp-2">{item.summary}</p>
 
                       <div className="flex flex-wrap gap-2 mb-4">
                         {item.tags.map((tag, index) => (
-                          <span key={index} className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                          <span
+                            key={index}
+                            className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs"
+                          >
                             #{tag}
                           </span>
                         ))}

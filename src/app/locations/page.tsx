@@ -1,17 +1,16 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { Location } from '@/types/location';
-import Link from 'next/link';
-
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
+import { Location } from '@/types/location'
+import Link from 'next/link'
+import SimpleImage, { AvatarSimpleImage } from '@/components/SimpleImage'
 
 export default function LocationsPage() {
-  const [storeLocations, setStoreLocations] = useState<Location[]>([]);
-  const [selectedStore, setSelectedStore] = useState<Location | null>(null);
-  const [showMap, setShowMap] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const [storeLocations, setStoreLocations] = useState<Location[]>([])
+  const [selectedStore, setSelectedStore] = useState<Location | null>(null)
+  const [loading, setLoading] = useState(true)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchLocations()
@@ -33,13 +32,13 @@ export default function LocationsPage() {
   }
 
   const handleStoreSelect = (store: Location) => {
-    setSelectedStore(store);
-  };
+    setSelectedStore(store)
+  }
 
   const openMap = (store: Location) => {
-    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`;
-    window.open(googleMapsUrl, '_blank');
-  };
+    const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(store.address)}`
+    window.open(googleMapsUrl, '_blank')
+  }
 
   if (loading) {
     return (
@@ -78,7 +77,7 @@ export default function LocationsPage() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* Store Selection Tabs */}
         <div className="flex flex-wrap justify-center mb-12 bg-white rounded-lg shadow-sm p-2">
-          {storeLocations.map((store) => (
+          {storeLocations.map(store => (
             <button
               key={store.id}
               onClick={() => handleStoreSelect(store)}
@@ -89,7 +88,11 @@ export default function LocationsPage() {
               }`}
             >
               {store.name}
-              {store.isMain && <span className="ml-2 text-xs bg-red-500 text-white px-2 py-1 rounded-full">總店</span>}
+              {store.isMain && (
+                <span className="ml-2 text-xs bg-red-500 text-white px-2 py-1 rounded-full">
+                  總店
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -102,7 +105,12 @@ export default function LocationsPage() {
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
                   {selectedStore.image && selectedStore.image.startsWith('/') && (
-                    <img src={selectedStore.image} alt={selectedStore.title} className="w-16 h-16 rounded-lg object-cover mr-4" />
+                    <AvatarSimpleImage
+                      src={selectedStore.image}
+                      alt={selectedStore.title}
+                      size="lg"
+                      className="mr-4 rounded-lg"
+                    />
                   )}
                   <div>
                     <h2 className="text-2xl font-bold text-amber-900">{selectedStore.title}</h2>
@@ -135,7 +143,10 @@ export default function LocationsPage() {
 
                 <div className="flex items-center">
                   <span className="mr-3 text-amber-600">●</span>
-                  <a href={`tel:${selectedStore.phone}`} className="text-amber-900 hover:underline font-medium">
+                  <a
+                    href={`tel:${selectedStore.phone}`}
+                    className="text-amber-900 hover:underline font-medium"
+                  >
                     {selectedStore.phone}
                   </a>
                 </div>
@@ -201,9 +212,7 @@ export default function LocationsPage() {
           <div className="space-y-8">
             {/* Interactive Map Area */}
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">
-                門市位置
-              </h3>
+              <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">門市位置</h3>
               <div className="text-center mb-4">
                 <button
                   onClick={() => openMap(selectedStore)}
@@ -214,10 +223,13 @@ export default function LocationsPage() {
               </div>
               <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg overflow-hidden relative">
                 {selectedStore.image ? (
-                  <img 
-                    src={selectedStore.image} 
-                    alt={`${selectedStore.name}門市位置`} 
-                    className="w-full h-full object-cover"
+                  <SimpleImage
+                    src={selectedStore.image}
+                    alt={`${selectedStore.name}門市位置`}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 70vw"
+                    priority
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -232,9 +244,7 @@ export default function LocationsPage() {
 
             {/* Store Specialties */}
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">
-                主打商品
-              </h3>
+              <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">主打商品</h3>
               <div className="grid grid-cols-2 gap-3">
                 {selectedStore.specialties.map((specialty, index) => (
                   <div
@@ -246,7 +256,6 @@ export default function LocationsPage() {
                 ))}
               </div>
             </div>
-
           </div>
         </div>
 
@@ -254,7 +263,7 @@ export default function LocationsPage() {
         <div className="mt-16">
           <h3 className="text-2xl font-bold text-center text-amber-900 mb-8">全台門市快速查詢</h3>
           <div className="grid md:grid-cols-4 gap-6">
-            {storeLocations.map((store) => (
+            {storeLocations.map(store => (
               <div
                 key={store.id}
                 className={`bg-white rounded-lg shadow-lg p-6 transition-all hover:shadow-xl flex flex-col h-full ${
@@ -264,7 +273,9 @@ export default function LocationsPage() {
                 <div className="text-center mb-4">
                   <h4 className="font-bold text-gray-800">{store.name}</h4>
                   {store.isMain && (
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">總店</span>
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
+                      總店
+                    </span>
                   )}
                 </div>
                 <div className="flex-grow">
@@ -279,10 +290,12 @@ export default function LocationsPage() {
                     </div>
                     <div className="flex items-center">
                       <span className="mr-2 text-amber-600">●</span>
-                      <span className="truncate">{store.address.split(' ')[0]} {store.address.split(' ')[1]}</span>
+                      <span className="truncate">
+                        {store.address.split(' ')[0]} {store.address.split(' ')[1]}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="mb-4">
                     <h5 className="text-sm font-medium text-gray-800 mb-2">提供服務：</h5>
                     <div className="space-y-1 min-h-[120px]">
@@ -306,9 +319,9 @@ export default function LocationsPage() {
                     選擇門市
                   </button>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openMap(store);
+                    onClick={e => {
+                      e.stopPropagation()
+                      openMap(store)
                     }}
                     className="border border-amber-900 text-amber-900 px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900 hover:text-white transition-colors"
                   >
@@ -329,13 +342,13 @@ export default function LocationsPage() {
             四間門市都提供完整的農產品選購服務，歡迎就近前往體驗
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <a 
+            <a
               href={`tel:${selectedStore.phone}`}
               className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               聯絡 {selectedStore.name}
             </a>
-            <a 
+            <a
               href="/products"
               className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-amber-900 transition-colors"
             >
@@ -345,5 +358,5 @@ export default function LocationsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

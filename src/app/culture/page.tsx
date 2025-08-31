@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { CultureItem } from '@/types/culture'
+import SimpleImage from '@/components/SimpleImage'
 
 export default function CulturePage() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])
@@ -18,16 +19,19 @@ export default function CulturePage() {
       try {
         setLoading(true)
         setError(null)
-        
+
         const response = await fetch('/api/culture')
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
-        
+
         const data = await response.json()
         setCultureItems(data.data || data)
       } catch (error) {
-        logger.error('Error fetching culture items:', error instanceof Error ? error : new Error('Unknown error'))
+        logger.error(
+          'Error fetching culture items:',
+          error instanceof Error ? error : new Error('Unknown error')
+        )
         setError('無法載入時光典藏資料，請稍後再試。')
       } finally {
         setLoading(false)
@@ -57,7 +61,7 @@ export default function CulturePage() {
           <div className="text-6xl mb-8">❌</div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">載入失敗</h1>
           <p className="text-gray-600 mb-8">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
           >
@@ -76,17 +80,19 @@ export default function CulturePage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-6 md:mb-0">
               <h1 className="text-4xl font-light text-amber-900 mb-4">歲月留影</h1>
-              <p className="text-xl text-gray-700">用鏡頭記錄農家生活的點點滴滴，每一張照片都是時光的見證</p>
+              <p className="text-xl text-gray-700">
+                用鏡頭記錄農家生活的點點滴滴，每一張照片都是時光的見證
+              </p>
             </div>
             {user && user.role === 'admin' && (
               <div className="flex space-x-3">
-                <a 
+                <a
                   href="/admin/culture"
                   className="px-4 py-2 bg-orange-600 text-white rounded-full text-sm hover:bg-orange-700 transition-colors"
                 >
                   影像管理
                 </a>
-                <a 
+                <a
                   href="/admin/culture/add"
                   className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors"
                 >
@@ -107,7 +113,7 @@ export default function CulturePage() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">尚無時光典藏內容</h2>
             <p className="text-gray-600 mb-8">目前還沒有任何時光典藏項目，請稍後再來查看。</p>
             {user && user.role === 'admin' && (
-              <a 
+              <a
                 href="/admin/culture/add"
                 className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
               >
@@ -117,40 +123,35 @@ export default function CulturePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {cultureItems.map((item) => (
+            {cultureItems.map(item => (
               <div
                 key={item.id}
                 className="h-80 cursor-pointer transform hover:scale-105 transition-all duration-300 hover:shadow-2xl rounded-lg overflow-hidden relative"
                 onClick={() => setSelectedItem(item)}
               >
                 {item.imageUrl ? (
-                  <img 
-                    src={item.imageUrl} 
+                  <SimpleImage
+                    src={item.imageUrl}
                     alt={item.title}
-                    className="absolute inset-0 w-full h-full object-cover z-0"
-                    onError={(e) => {
-                      // 圖片載入失敗時的處理
-                      (e.target as HTMLImageElement).style.display = 'none'
-                    }}
+                    fill
+                    className="object-cover z-0"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    priority={cultureItems.indexOf(item) < 3}
                   />
                 ) : (
                   // 沒有圖片時的預設背景
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600 z-0"></div>
                 )}
-                
+
                 <div className="h-full flex flex-col justify-between relative">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                   <div className="relative z-10 p-6 text-white">
                     <div className="text-sm opacity-80 mb-2">{item.subtitle}</div>
                     <h3 className="text-xl font-bold mb-3">{item.title}</h3>
-                    <p className="text-sm opacity-90 leading-relaxed">
-                      {item.description}
-                    </p>
+                    <p className="text-sm opacity-90 leading-relaxed">{item.description}</p>
                   </div>
                   <div className="mt-4 relative z-10 p-6 pt-0 text-white">
-                    <div className="inline-flex items-center text-sm opacity-80">
-                      了解更多
-                    </div>
+                    <div className="inline-flex items-center text-sm opacity-80">了解更多</div>
                   </div>
                 </div>
               </div>
@@ -161,13 +162,13 @@ export default function CulturePage() {
 
       {/* Modal */}
       {selectedItem && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedItem(null)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <div className="p-8">
               {/* Header */}
@@ -187,13 +188,13 @@ export default function CulturePage() {
               {/* Large Image */}
               <div className="aspect-video rounded-xl mb-6 relative overflow-hidden">
                 {selectedItem.imageUrl ? (
-                  <img 
-                    src={selectedItem.imageUrl} 
+                  <SimpleImage
+                    src={selectedItem.imageUrl}
                     alt={selectedItem.title}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
-                    }}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 80vw"
+                    priority
                   />
                 ) : (
                   <div className="absolute inset-0 bg-gradient-to-br from-amber-400 to-amber-600"></div>
@@ -229,13 +230,13 @@ export default function CulturePage() {
             歡迎參加我們的農場導覽活動，一起創造屬於您的美好回憶
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <a 
+            <a
               href="/farm-tour"
               className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
             >
               預約農場體驗
             </a>
-            <a 
+            <a
               href="/schedule"
               className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-amber-900 transition-colors"
             >
