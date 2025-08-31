@@ -77,7 +77,7 @@ async function handleGET(request: NextRequest) {
 
     return NextResponse.json({ products: transformedProducts })
   } catch (error) {
-    apiLogger.error('Error fetching all products', error)
+    apiLogger.error('Error fetching all products', error as Error)
     return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
   }
 }
@@ -133,7 +133,7 @@ async function handlePOST(request: NextRequest) {
 
     return NextResponse.json({ product: transformFromDB(data) }, { status: 201 })
   } catch (error) {
-    apiLogger.error('Error creating product', error)
+    apiLogger.error('Error creating product', error as Error)
     return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
   }
 }
@@ -191,7 +191,7 @@ async function handlePUT(request: NextRequest) {
 
     return NextResponse.json({ product: transformFromDB(data) })
   } catch (error) {
-    apiLogger.error('Error updating product', error)
+    apiLogger.error('Error updating product', error as Error)
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
   }
 }
