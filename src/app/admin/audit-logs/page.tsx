@@ -33,10 +33,9 @@ function AuditLogsPage() {
   const [selectedLogs, setSelectedLogs] = useState<string[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState<{
-    type: 'single' | 'batch'
-    data?: AuditLog | string[]
-  }>({ type: 'single' })
+  const [deleteTarget, setDeleteTarget] = useState<
+    { type: 'single'; data?: AuditLog } | { type: 'batch'; data?: { ids: string[] } }
+  >({ type: 'single' })
 
   // 篩選狀態
   const [filters, setFilters] = useState<AuditLogQueryParams>({
@@ -188,7 +187,7 @@ function AuditLogsPage() {
 
       if (deleteTarget.type === 'single') {
         // 刪除單個日誌
-        const logId = deleteTarget.data.id
+        const logId = deleteTarget.data?.id
         response = await fetch(`/api/audit-logs/${logId}`, {
           method: 'DELETE',
           headers: {
@@ -206,7 +205,7 @@ function AuditLogsPage() {
           },
           body: JSON.stringify({
             operation: 'delete_by_ids',
-            ids: deleteTarget.data.ids,
+            ids: deleteTarget.data?.ids,
           }),
         })
       }
@@ -726,22 +725,24 @@ function AuditLogsPage() {
                         <div className="bg-gray-50 p-3 rounded-lg">
                           <p className="text-sm text-gray-700">
                             <strong>時間：</strong>
-                            {new Date(deleteTarget.data.created_at).toLocaleString('zh-TW')}
+                            {deleteTarget.data?.created_at &&
+                              new Date(deleteTarget.data.created_at).toLocaleString('zh-TW')}
                           </p>
                           <p className="text-sm text-gray-700">
                             <strong>動作：</strong>
-                            {AUDIT_ACTION_LABELS[deleteTarget.data.action as AuditAction]}
+                            {deleteTarget.data?.action &&
+                              AUDIT_ACTION_LABELS[deleteTarget.data.action as AuditAction]}
                           </p>
                           <p className="text-sm text-gray-700">
                             <strong>使用者：</strong>
-                            {deleteTarget.data.user_email}
+                            {deleteTarget.data?.user_email}
                           </p>
                         </div>
                       </div>
                     ) : (
                       <div>
                         <p className="text-gray-600 mb-4">
-                          確定要刪除選取的 <strong>{deleteTarget.data.ids.length}</strong>{' '}
+                          確定要刪除選取的 <strong>{deleteTarget.data?.ids?.length}</strong>{' '}
                           筆審計日誌嗎？
                         </p>
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
