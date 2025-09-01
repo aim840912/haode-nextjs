@@ -48,11 +48,11 @@ export interface UseScheduleCalendarReturn {
   setStatusFilter: (filter: 'all' | 'upcoming' | 'ongoing' | 'completed') => void;
   
   // 行事曆參考
-  calendarRef: React.RefObject<FullCalendar>;
+  calendarRef: React.RefObject<FullCalendar | null>;
 }
 
 export function useScheduleCalendar(): UseScheduleCalendarReturn {
-  const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef<FullCalendar | null>(null);
   
   // 狀態管理
   const [events, setEvents] = useState<ScheduleCalendarEvent[]>([]);
@@ -61,40 +61,6 @@ export function useScheduleCalendar(): UseScheduleCalendarReturn {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'completed'>('all');
-
-  // 從 API 獲取事件資料
-  const fetchEvents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      logger.debug('開始獲取擺攤行程行事曆資料');
-      
-      const response = await fetch('/api/schedule/calendar');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const apiResponse = await response.json();
-      const eventsData = apiResponse.data || [];
-      
-      logger.info(`成功獲取擺攤行程行事曆資料: ${eventsData.length} 個事件`);
-      
-      setAllEvents(eventsData);
-      updateFilteredEvents(eventsData, statusFilter);
-      calculateStatistics(eventsData);
-      
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '載入行事曆資料失敗';
-      logger.error(`獲取擺攤行程行事曆資料失敗: ${errorMessage}`);
-      setError(errorMessage);
-      setEvents([]);
-      setStatistics(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [statusFilter, calculateStatistics, updateFilteredEvents]);
 
   // 更新過濾後的事件
   const updateFilteredEvents = useCallback((eventsData: ScheduleCalendarEvent[], filter: string) => {
@@ -133,6 +99,40 @@ export function useScheduleCalendar(): UseScheduleCalendarReturn {
     
     logger.debug(`計算統計資料: 總數=${stats.total}, 即將到來=${stats.byStatus.upcoming}, 進行中=${stats.byStatus.ongoing}, 已結束=${stats.byStatus.completed}`);
   }, []);
+
+  // 從 API 獲取事件資料
+  const fetchEvents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      logger.debug('開始獲取擺攤行程行事曆資料');
+      
+      const response = await fetch('/api/schedule/calendar');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const apiResponse = await response.json();
+      const eventsData = apiResponse.data || [];
+      
+      logger.info(`成功獲取擺攤行程行事曆資料: ${eventsData.length} 個事件`);
+      
+      setAllEvents(eventsData);
+      updateFilteredEvents(eventsData, statusFilter);
+      calculateStatistics(eventsData);
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '載入行事曆資料失敗';
+      logger.error(`獲取擺攤行程行事曆資料失敗: ${errorMessage}`);
+      setError(errorMessage);
+      setEvents([]);
+      setStatistics(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [statusFilter, calculateStatistics, updateFilteredEvents]);
 
   // 刷新資料
   const refreshData = useCallback(async () => {
