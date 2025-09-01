@@ -1,88 +1,89 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import Link from 'next/link';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase-auth';
-import { 
-  InquiryWithItems, 
+import { useState, useEffect } from 'react'
+import { useAuth } from '@/lib/auth-context'
+import Link from 'next/link'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase-auth'
+import {
+  InquiryWithItems,
   InquiryStatus,
   InquiryType,
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
   INQUIRY_TYPE_LABELS,
   INQUIRY_TYPE_COLORS,
-  InquiryUtils
-} from '@/types/inquiry';
+  InquiryUtils,
+} from '@/types/inquiry'
 
 function InquiriesPage() {
-  const { user, isLoading: authLoading } = useAuth();
-  const router = useRouter();
-  const [inquiries, setInquiries] = useState<InquiryWithItems[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
-  const [typeFilter, setTypeFilter] = useState<InquiryType | 'all'>('all');
+  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter()
+  const [inquiries, setInquiries] = useState<InquiryWithItems[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all')
+  const [typeFilter, setTypeFilter] = useState<InquiryType | 'all'>('all')
 
   // 取得詢問單列表
   const fetchInquiries = async () => {
-    if (!user) return;
+    if (!user) return
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
       // 取得認證 token
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        throw new Error('認證失敗');
+        throw new Error('認證失敗')
       }
 
       // 建立查詢參數
-      const params = new URLSearchParams();
+      const params = new URLSearchParams()
       if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
+        params.append('status', statusFilter)
       }
       if (typeFilter !== 'all') {
-        params.append('inquiry_type', typeFilter);
+        params.append('inquiry_type', typeFilter)
       }
-      params.append('sort_by', 'created_at');
-      params.append('sort_order', 'desc');
+      params.append('sort_by', 'created_at')
+      params.append('sort_order', 'desc')
 
       // 呼叫 API
       const response = await fetch(`/api/inquiries?${params}`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || '取得詢問單列表失敗');
+        throw new Error(result.error || '取得詢問單列表失敗')
       }
 
-      setInquiries(result.data || []);
-
+      setInquiries(result.data || [])
     } catch (err) {
-      console.error('Error fetching inquiries:', err);
-      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
+      console.error('Error fetching inquiries:', err)
+      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   // 初始載入
   useEffect(() => {
     if (user) {
-      fetchInquiries();
+      fetchInquiries()
     } else if (!authLoading) {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [user, authLoading, statusFilter, typeFilter]);
+  }, [user, authLoading, statusFilter, typeFilter])
 
   // 載入中狀態
   if (authLoading || isLoading) {
@@ -93,7 +94,7 @@ function InquiriesPage() {
           <p className="mt-4 text-gray-600">載入詢問單...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // 未登入檢查
@@ -106,13 +107,13 @@ function InquiriesPage() {
             <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢問單</h1>
             <p className="text-gray-600 mb-8">請先登入您的帳戶，即可查看您的詢價歷史！</p>
             <div className="space-x-4">
-              <Link 
+              <Link
                 href="/login"
                 className="inline-block bg-amber-900 text-white px-8 py-3 rounded-lg hover:bg-amber-800 transition-colors"
               >
                 立即登入
               </Link>
-              <Link 
+              <Link
                 href="/register"
                 className="inline-block border border-amber-900 text-amber-900 px-8 py-3 rounded-lg hover:bg-amber-50 transition-colors"
               >
@@ -122,7 +123,7 @@ function InquiriesPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // 錯誤狀態
@@ -143,7 +144,7 @@ function InquiriesPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // 主要內容
@@ -156,12 +157,6 @@ function InquiriesPage() {
             <h1 className="text-3xl font-bold text-gray-900">我的詢問單</h1>
             <p className="text-gray-600 mt-1">查看您的詢價歷史和處理狀態</p>
           </div>
-          <Link
-            href="/cart"
-            className="bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
-          >
-            新增詢價
-          </Link>
         </div>
 
         {/* 篩選器 */}
@@ -170,7 +165,7 @@ function InquiriesPage() {
           <div className="flex items-center space-x-4">
             <span className="text-gray-700 font-medium">詢問類型：</span>
             <div className="flex space-x-2">
-              {['all', 'product', 'farm_tour'].map((type) => (
+              {['all', 'product', 'farm_tour'].map(type => (
                 <button
                   key={type}
                   onClick={() => setTypeFilter(type as InquiryType | 'all')}
@@ -190,7 +185,7 @@ function InquiriesPage() {
           <div className="flex items-center space-x-4">
             <span className="text-gray-700 font-medium">處理狀態：</span>
             <div className="flex space-x-2">
-              {['all', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'].map((status) => (
+              {['all', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'].map(status => (
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status as InquiryStatus | 'all')}
@@ -212,11 +207,11 @@ function InquiriesPage() {
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <div className="text-6xl mb-8">📋</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {statusFilter === 'all' ? '還沒有詢問單' : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢問單`}
+              {statusFilter === 'all'
+                ? '還沒有詢問單'
+                : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢問單`}
             </h2>
-            <p className="text-gray-600 mb-8">
-              前往購物車選擇商品後，即可送出您的第一個詢問單！
-            </p>
+            <p className="text-gray-600 mb-8">前往購物車選擇商品後，即可送出您的第一個詢問單！</p>
             <Link
               href="/products"
               className="inline-block bg-amber-900 text-white px-8 py-3 rounded-lg hover:bg-amber-800 transition-colors"
@@ -226,8 +221,11 @@ function InquiriesPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {inquiries.map((inquiry) => (
-              <div key={inquiry.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            {inquiries.map(inquiry => (
+              <div
+                key={inquiry.id}
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-4">
@@ -241,16 +239,20 @@ function InquiriesPage() {
                             month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           })}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}
+                      >
                         {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}
+                      >
                         {INQUIRY_STATUS_LABELS[inquiry.status]}
                       </span>
                       <Link
@@ -271,16 +273,18 @@ function InquiriesPage() {
                             {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
                           </p>
                           <div className="text-xs text-gray-600 mt-1">
-                            {inquiry.inquiry_items.slice(0, 2).map(item => item.product_name).join(', ')}
-                            {inquiry.inquiry_items.length > 2 && `... 等 ${inquiry.inquiry_items.length} 項`}
+                            {inquiry.inquiry_items
+                              .slice(0, 2)
+                              .map(item => item.product_name)
+                              .join(', ')}
+                            {inquiry.inquiry_items.length > 2 &&
+                              `... 等 ${inquiry.inquiry_items.length} 項`}
                           </div>
                         </>
                       ) : (
                         <>
                           <h4 className="text-sm font-medium text-gray-800 mb-2">活動資訊</h4>
-                          <p className="text-sm text-gray-700">
-                            {inquiry.activity_title}
-                          </p>
+                          <p className="text-sm text-gray-700">{inquiry.activity_title}</p>
                           <div className="text-xs text-gray-600 mt-1">
                             {inquiry.visit_date} · {inquiry.visitor_count}
                           </div>
@@ -300,9 +304,7 @@ function InquiriesPage() {
                         </>
                       ) : (
                         <>
-                          <p className="text-lg font-bold text-green-600">
-                            待報價
-                          </p>
+                          <p className="text-lg font-bold text-green-600">待報價</p>
                           <p className="text-xs text-gray-600 mt-1">費用將依活動內容報價</p>
                         </>
                       )}
@@ -328,7 +330,7 @@ function InquiriesPage() {
 
         {/* 底部說明 */}
         <div className="mt-12 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-4">詢價流程說明</h3>
+          <h3 className="text-lg font-semibold text-blue-900 mb-4">詢問流程說明</h3>
           <div className="grid md:grid-cols-4 gap-4 text-sm">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -362,7 +364,7 @@ function InquiriesPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function InquiriesPageWithErrorBoundary() {
@@ -370,5 +372,5 @@ export default function InquiriesPageWithErrorBoundary() {
     <ComponentErrorBoundary>
       <InquiriesPage />
     </ComponentErrorBoundary>
-  );
+  )
 }
