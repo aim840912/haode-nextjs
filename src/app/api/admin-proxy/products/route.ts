@@ -47,30 +47,52 @@ async function validateAdminUser() {
   }
 }
 
-async function forwardToAdminAPI(method: string, body?: any) {
+async function forwardToAdminAPI(method: string, body?: unknown, request?: NextRequest) {
   const adminKey = process.env.ADMIN_API_KEY
   
   if (!adminKey) {
     throw new Error('ADMIN_API_KEY not configured')
   }
 
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+  // 動態獲取基礎 URL，優先使用當前請求的 origin
+  let baseUrl: string
+  if (request) {
+    const requestUrl = new URL(request.url)
+    baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+  } else {
+    baseUrl = process.env.NEXTAUTH_URL || 
+              (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  }
+  
   const adminApiUrl = `${baseUrl}/api/admin/products`
 
-  const response = await fetch(adminApiUrl, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Admin-Key': adminKey
-    },
-    body: body ? JSON.stringify(body) : undefined
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 秒超時
 
-  return response
+  try {
+    const response = await fetch(adminApiUrl, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Key': adminKey
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal
+    })
+
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout: ${adminApiUrl}`)
+    }
+    throw error
+  }
 }
 
 // GET - 獲取所有產品（包含未啟用的）
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const validation = await validateAdminUser()
     if (!validation.isValid) {
@@ -80,14 +102,14 @@ export async function GET() {
       )
     }
 
-    const response = await forwardToAdminAPI('GET')
+    const response = await forwardToAdminAPI('GET', undefined, request)
     const data = await response.json()
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
     console.error('Admin proxy GET error:', error)
     return NextResponse.json(
-      { error: '代理請求失敗' },
+      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
     )
   }
@@ -105,14 +127,14 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const response = await forwardToAdminAPI('POST', body)
+    const response = await forwardToAdminAPI('POST', body, request)
     const data = await response.json()
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
     console.error('Admin proxy POST error:', error)
     return NextResponse.json(
-      { error: '代理請求失敗' },
+      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
     )
   }
@@ -130,14 +152,14 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const response = await forwardToAdminAPI('PUT', body)
+    const response = await forwardToAdminAPI('PUT', body, request)
     const data = await response.json()
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
     console.error('Admin proxy PUT error:', error)
     return NextResponse.json(
-      { error: '代理請求失敗' },
+      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
     )
   }
@@ -170,22 +192,37 @@ export async function DELETE(request: NextRequest) {
       throw new Error('ADMIN_API_KEY not configured')
     }
 
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.VERCEL_URL || 'http://localhost:3000'
+    // 動態獲取基礎 URL，使用當前請求的 origin
+    const requestUrl = new URL(request.url)
+    const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
     const adminApiUrl = `${baseUrl}/api/admin/products?id=${id}`
 
-    const response = await fetch(adminApiUrl, {
-      method: 'DELETE',
-      headers: {
-        'X-Admin-Key': adminKey
-      }
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 秒超時
 
-    const data = await response.json()
-    return NextResponse.json(data, { status: response.status })
+    try {
+      const response = await fetch(adminApiUrl, {
+        method: 'DELETE',
+        headers: {
+          'X-Admin-Key': adminKey
+        },
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+      const data = await response.json()
+      return NextResponse.json(data, { status: response.status })
+    } catch (error) {
+      clearTimeout(timeoutId)
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error(`Request timeout: ${adminApiUrl}`)
+      }
+      throw error
+    }
   } catch (error) {
     console.error('Admin proxy DELETE error:', error)
     return NextResponse.json(
-      { error: '代理請求失敗' },
+      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
     )
   }

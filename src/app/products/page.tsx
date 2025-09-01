@@ -9,7 +9,6 @@ import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
 import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
 import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
-import SafeImage from '@/components/SafeImage';
 import { ProductStructuredData } from '@/components/StructuredData';
 import Breadcrumbs, { createProductBreadcrumbs } from '@/components/Breadcrumbs';
 import { logger } from '@/lib/logger';
@@ -62,7 +61,11 @@ function ProductsPage() {
     categories: [],
     availability: 'all',
     sortBy: 'name',
-    search: ''
+    search: '',
+    priceRange: {
+      min: 0,
+      max: 5000
+    }
   });
   const { user } = useAuth();
   const { executeWithErrorHandling } = useAsyncWithError();
@@ -160,7 +163,6 @@ function ProductsPage() {
     );
 
     return uniqueProducts.map((product, index) => {
-      const numericId = parseInt(product.id) || index + 1; // 如果解析失敗，使用索引
       return {
         id: product.id, // 保持字串格式
         name: product.name,
@@ -202,6 +204,14 @@ function ProductsPage() {
         product.name.toLowerCase().includes(searchTerm) ||
         product.description.toLowerCase().includes(searchTerm) ||
         product.category.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // 價格區間篩選
+    if (filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 5000)) {
+      filtered = filtered.filter(product => 
+        product.price >= filters.priceRange!.min && 
+        product.price <= filters.priceRange!.max
       );
     }
 

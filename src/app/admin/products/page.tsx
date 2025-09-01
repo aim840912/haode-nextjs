@@ -7,8 +7,8 @@ import { useAuth } from '@/lib/auth-context'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import AdminProtection from '@/components/AdminProtection'
 
-// 動態載入大型表格組件
-const ProductsTable = dynamic(() => import('@/components/ProductsTable'), {
+// 動態載入管理端產品表格組件
+const AdminProductsTable = dynamic(() => import('@/components/AdminProductsTable'), {
   loading: () => <div className="flex justify-center items-center h-64">載入產品清單中...</div>,
   ssr: false
 })
@@ -48,7 +48,7 @@ function ProductsAdmin() {
             </div>
           </div>
         }>
-          <ProductsTable />
+          <AdminProductsTable />
         </Suspense>
       </div>
     </div>
