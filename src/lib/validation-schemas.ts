@@ -295,6 +295,30 @@ export const UploadSchemas = {
     generateMultipleSizes: z.boolean().default(false),
     compress: z.boolean().default(true),
   }),
+
+  /** POST 圖片上傳驗證（FormData 格式）*/
+  imageUpload: z.object({
+    productId: StringSchemas.uuid,
+    generateMultipleSizes: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform(val => val === 'true'),
+    compress: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform(val => val === 'true'),
+    size: z.enum(['thumbnail', 'medium', 'large']).optional().default('medium'),
+  }),
+
+  /** GET 列出圖片驗證 */
+  listImages: z.object({
+    productId: StringSchemas.uuid,
+  }),
+
+  /** DELETE 刪除圖片驗證 */
+  deleteImage: z.object({
+    filePath: z.string().min(1, '檔案路徑不能為空'),
+  }),
 }
 
 // ============================================================================
@@ -587,6 +611,35 @@ export const AdminProductSchemas = {
   /** 刪除產品 ID 驗證 */
   deleteParams: z.object({
     id: StringSchemas.uuid,
+  }),
+}
+
+/**
+ * 圖片上傳 API 相關 Schema
+ */
+export const ImageUploadSchemas = {
+  /** POST 上傳表單驗證 */
+  uploadForm: z.object({
+    productId: StringSchemas.uuid,
+    generateMultipleSizes: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform(val => val === 'true'),
+    compress: z
+      .enum(['true', 'false'])
+      .optional()
+      .transform(val => val === 'true'),
+    size: z.enum(['thumbnail', 'medium', 'large']).optional().default('medium'),
+  }),
+
+  /** GET 查詢參數驗證 */
+  query: z.object({
+    productId: StringSchemas.uuid,
+  }),
+
+  /** DELETE 刪除參數驗證 */
+  deleteParams: z.object({
+    filePath: z.string().min(1, '檔案路徑不能為空').max(500, '檔案路徑過長'),
   }),
 }
 

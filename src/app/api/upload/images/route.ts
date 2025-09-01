@@ -1,194 +1,184 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { 
-  uploadImageToStorage, 
+import { NextRequest } from 'next/server'
+import {
+  uploadImageToStorage,
   uploadMultipleSizeImages,
   SupabaseStorageError,
-  initializeStorageBucket 
-} from '@/lib/supabase-storage';
-import { validateImageFile, compressImage } from '@/lib/image-utils';
+  initializeStorageBucket,
+} from '@/lib/supabase-storage'
+import { validateImageFile } from '@/lib/image-utils'
+import { withErrorHandler } from '@/lib/error-handler'
+import { ImageUploadSchemas } from '@/lib/validation-schemas'
+import { ValidationError } from '@/lib/errors'
+import { success, created } from '@/lib/api-response'
+import { apiLogger } from '@/lib/logger'
 
 // 初始化 storage bucket
-let bucketInitialized = false;
+let bucketInitialized = false
 
 async function ensureBucketExists() {
   if (!bucketInitialized) {
     try {
-      await initializeStorageBucket();
-      bucketInitialized = true;
+      await initializeStorageBucket()
+      bucketInitialized = true
+      apiLogger.info('Storage bucket 初始化成功')
     } catch (error) {
-      console.error('無法初始化 storage bucket:', error);
+      apiLogger.warn('無法初始化 storage bucket', { metadata: { error: (error as Error).message } })
       // 繼續執行，可能 bucket 已存在
     }
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    await ensureBucketExists();
+async function handlePOST(request: NextRequest) {
+  await ensureBucketExists()
 
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const productId = formData.get('productId') as string;
-    const generateMultipleSizes = formData.get('generateMultipleSizes') === 'true';
-    const compress = formData.get('compress') === 'true';
+  const formData = await request.formData()
+  const file = formData.get('file') as File
 
-    if (!file) {
-      return NextResponse.json(
-        { error: '請選擇要上傳的圖片檔案' },
-        { status: 400 }
-      );
+  // 驗證表單資料
+  const formParams: Record<string, string> = {}
+  for (const [key, value] of formData.entries()) {
+    if (key !== 'file') {
+      formParams[key] = value.toString()
     }
+  }
 
-    if (!productId) {
-      return NextResponse.json(
-        { error: '產品 ID 是必需的' },
-        { status: 400 }
-      );
+  const result = ImageUploadSchemas.uploadForm.safeParse(formParams)
+  if (!result.success) {
+    const errorMessage = result.error.issues
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
+    throw new ValidationError(`上傳參數驗證失敗: ${errorMessage}`)
+  }
+
+  const { productId, generateMultipleSizes, compress, size } = result.data
+
+  if (!file) {
+    throw new ValidationError('請選擇要上傳的圖片檔案')
+  }
+
+  // 驗證檔案
+  const validation = validateImageFile(file)
+  if (!validation.valid) {
+    throw new ValidationError(validation.error || '圖片檔案驗證失敗')
+  }
+
+  const processedFile = file
+
+  // 可選的圖片壓縮
+  if (compress) {
+    try {
+      // 注意：server-side 壓縮需要不同的實作
+      // 這裡我們先跳過壓縮，在客戶端處理
+      apiLogger.debug('伺服器端圖片壓縮暫未實作')
+    } catch (compressionError) {
+      apiLogger.warn('圖片壓縮失敗，使用原檔案', {
+        metadata: { error: (compressionError as Error).message },
+      })
     }
+  }
 
-    // 驗證檔案
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 400 }
-      );
-    }
+  if (generateMultipleSizes) {
+    // 上傳多個尺寸
+    apiLogger.info(`開始多尺寸圖片上傳`, { metadata: { productId, fileName: file.name } })
+    const results = await uploadMultipleSizeImages(processedFile, productId)
+    apiLogger.info('多尺寸圖片上傳完成', { metadata: { productId, sizes: Object.keys(results) } })
 
-    let processedFile = file;
+    return success(
+      {
+        multiple: true,
+        urls: results,
+      },
+      '圖片上傳成功'
+    )
+  } else {
+    // 單一尺寸上傳
+    apiLogger.info(`開始單一尺寸圖片上傳`, { metadata: { productId, size, fileName: file.name } })
+    const uploadResult = await uploadImageToStorage(processedFile, productId, size)
+    apiLogger.info('單一尺寸圖片上傳完成', { metadata: { productId, size, url: uploadResult.url } })
 
-    // 可選的圖片壓縮
-    if (compress) {
-      try {
-        // 注意：server-side 壓縮需要不同的實作
-        // 這裡我們先跳過壓縮，在客戶端處理
-        console.log('伺服器端圖片壓縮暫未實作');
-      } catch (error) {
-        console.warn('圖片壓縮失敗，使用原檔案:', error);
-      }
-    }
-
-    if (generateMultipleSizes) {
-      // 上傳多個尺寸
-      console.log(`📸 開始多尺寸上傳，產品ID: ${productId}, 檔案: ${file.name}`);
-      const results = await uploadMultipleSizeImages(processedFile, productId);
-      console.log('📸 多尺寸上傳完成:', results);
-      
-      return NextResponse.json({
-        success: true,
-        message: '圖片上傳成功',
-        data: {
-          multiple: true,
-          urls: results
-        }
-      });
-    } else {
-      // 單一尺寸上傳
-      const size = (formData.get('size') as 'thumbnail' | 'medium' | 'large') || 'medium';
-      console.log(`📸 開始單一尺寸上傳，產品ID: ${productId}, 尺寸: ${size}, 檔案: ${file.name}`);
-      const result = await uploadImageToStorage(processedFile, productId, size);
-      console.log('📸 單一尺寸上傳完成:', result);
-      
-      return NextResponse.json({
-        success: true,
-        message: '圖片上傳成功',
-        data: {
-          multiple: false,
-          url: result.url,
-          path: result.path,
-          size
-        }
-      });
-    }
-
-  } catch (error) {
-    console.error('圖片上傳失敗:', error);
-
-    if (error instanceof SupabaseStorageError) {
-      return NextResponse.json(
-        { error: (error as Error).message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: '圖片上傳過程發生未知錯誤' },
-      { status: 500 }
-    );
+    return success(
+      {
+        multiple: false,
+        url: uploadResult.url,
+        path: uploadResult.path,
+        size,
+      },
+      '圖片上傳成功'
+    )
   }
 }
 
 // 處理圖片刪除
-export async function DELETE(request: NextRequest) {
-  try {
-    const { filePath } = await request.json();
+async function handleDELETE(request: NextRequest) {
+  const body = await request.json()
+  const result = ImageUploadSchemas.deleteParams.safeParse(body)
 
-    if (!filePath) {
-      return NextResponse.json(
-        { error: '檔案路徑是必需的' },
-        { status: 400 }
-      );
-    }
-
-    const { deleteImageFromStorage } = await import('@/lib/supabase-storage');
-    await deleteImageFromStorage(filePath);
-
-    return NextResponse.json({
-      success: true,
-      message: '圖片刪除成功'
-    });
-
-  } catch (error) {
-    console.error('圖片刪除失敗:', error);
-
-    if (error instanceof SupabaseStorageError) {
-      return NextResponse.json(
-        { error: (error as Error).message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: '圖片刪除過程發生未知錯誤' },
-      { status: 500 }
-    );
+  if (!result.success) {
+    const errorMessage = result.error.issues
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
+    throw new ValidationError(`刪除參數驗證失敗: ${errorMessage}`)
   }
+
+  const { filePath } = result.data
+
+  apiLogger.info(`開始刪除圖片`, { metadata: { filePath } })
+
+  const { deleteImageFromStorage } = await import('@/lib/supabase-storage')
+  await deleteImageFromStorage(filePath)
+
+  apiLogger.info('圖片刪除成功', { metadata: { filePath } })
+
+  return success(null, '圖片刪除成功')
 }
 
 // 列出產品圖片
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const productId = searchParams.get('productId');
+async function handleGET(request: NextRequest) {
+  const { searchParams } = new URL(request.url)
 
-    if (!productId) {
-      return NextResponse.json(
-        { error: '產品 ID 是必需的' },
-        { status: 400 }
-      );
-    }
-
-    const { listProductImages } = await import('@/lib/supabase-storage');
-    const images = await listProductImages(productId);
-
-    return NextResponse.json({
-      success: true,
-      data: images
-    });
-
-  } catch (error) {
-    console.error('列出圖片失敗:', error);
-
-    if (error instanceof SupabaseStorageError) {
-      return NextResponse.json(
-        { error: (error as Error).message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: '列出圖片過程發生未知錯誤' },
-      { status: 500 }
-    );
+  // 將 URLSearchParams 轉換為物件
+  const queryParams: Record<string, string> = {}
+  for (const [key, value] of searchParams.entries()) {
+    queryParams[key] = value
   }
+
+  const result = ImageUploadSchemas.query.safeParse(queryParams)
+  if (!result.success) {
+    const errorMessage = result.error.issues
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
+    throw new ValidationError(`查詢參數驗證失敗: ${errorMessage}`)
+  }
+
+  const { productId } = result.data
+
+  apiLogger.debug(`查詢產品圖片`, { metadata: { productId } })
+
+  const { listProductImages } = await import('@/lib/supabase-storage')
+  const images = await listProductImages(productId)
+
+  apiLogger.info(`產品圖片查詢完成`, { metadata: { productId, imageCount: images.length } })
+
+  return success(images, '圖片列表取得成功')
 }
+
+// 整合錯誤處理中間件
+const handlePOSTWithError = withErrorHandler(handlePOST, {
+  module: 'ImageUploadAPI',
+  enableAuditLog: true, // 圖片上傳需要審計日誌
+})
+
+const handleGETWithError = withErrorHandler(handleGET, {
+  module: 'ImageUploadAPI',
+  enableAuditLog: false, // GET 請求通常不需要審計日誌
+})
+
+const handleDELETEWithError = withErrorHandler(handleDELETE, {
+  module: 'ImageUploadAPI',
+  enableAuditLog: true, // 刪除操作需要審計日誌
+})
+
+// 導出 API 處理器
+export const POST = handlePOSTWithError
+export const GET = handleGETWithError
+export const DELETE = handleDELETEWithError
