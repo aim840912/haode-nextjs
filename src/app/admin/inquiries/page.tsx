@@ -19,6 +19,7 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils
 } from '@/types/inquiry';
+import { InquiryStatusFlowCompact } from '@/components/inquiry/InquiryStatusFlow';
 
 function AdminInquiriesPage() {
   const { user } = useAuth();
@@ -699,6 +700,14 @@ function AdminInquiriesPage() {
                   </div>
                 </div>
                 <div className="p-6">
+                  {/* 狀態流程追蹤 */}
+                  <div className="mb-6">
+                    <InquiryStatusFlowCompact 
+                      inquiry={selectedInquiry}
+                      className="border border-gray-200"
+                    />
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-6 mb-6">
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">客戶資訊</h3>

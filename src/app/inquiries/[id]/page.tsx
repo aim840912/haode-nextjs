@@ -15,6 +15,7 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils
 } from '@/types/inquiry';
+import { InquiryStatusFlowDetailed } from '@/components/inquiry/InquiryStatusFlow';
 
 interface InquiryDetailPageProps {
   params: Promise<{
@@ -208,6 +209,14 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
           </div>
         </div>
 
+        {/* 狀態流程追蹤 */}
+        <div className="mb-8">
+          <InquiryStatusFlowDetailed 
+            inquiry={inquiry}
+            className="shadow-md"
+          />
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* 詢問單詳情 */}
           <div className="lg:col-span-2 space-y-6">
@@ -351,11 +360,11 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-800">商品總數</span>
-                    <span className="font-semibold">{InquiryUtils.calculateTotalQuantity(inquiry)} 件</span>
+                    <span className="font-semibold text-gray-900">{InquiryUtils.calculateTotalQuantity(inquiry)} 件</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">商品小計</span>
-                    <span className="font-semibold">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}</span>
+                    <span className="font-semibold text-gray-900">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">運費</span>
@@ -374,15 +383,15 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-800">活動名稱</span>
-                    <span className="font-semibold text-right text-sm">{inquiry.activity_title}</span>
+                    <span className="font-semibold text-right text-sm text-gray-900">{inquiry.activity_title}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">預約日期</span>
-                    <span className="font-semibold">{inquiry.visit_date}</span>
+                    <span className="font-semibold text-gray-900">{inquiry.visit_date}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">參觀人數</span>
-                    <span className="font-semibold">{inquiry.visitor_count}</span>
+                    <span className="font-semibold text-gray-900">{inquiry.visitor_count}</span>
                   </div>
                   <hr />
                   <div className="flex justify-between text-lg font-bold">

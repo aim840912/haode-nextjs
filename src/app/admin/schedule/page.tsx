@@ -108,6 +108,13 @@ export default function ScheduleAdmin() {
               </Link>
             )}
             <Link 
+              href="/schedule/calendar"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            >
+              <span>📅</span>
+              <span>預覽客戶行事曆</span>
+            </Link>
+            <Link 
               href="/schedule"
               className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
             >

@@ -109,22 +109,31 @@ export default function SchedulePage() {
               <h1 className="text-4xl font-light text-amber-900 mb-4">擺攤行程</h1>
               <p className="text-xl text-gray-700">想要現場選購新鮮農產品？來找我們吧！</p>
             </div>
-            {user && user.role === 'admin' && (
-              <div className="flex space-x-3">
-                <a
-                  href="/admin/schedule"
-                  className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition-colors flex items-center space-x-2"
-                >
-                  <span>行程管理</span>
-                </a>
-                <a
-                  href="/admin/schedule/add"
-                  className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
-                >
-                  <span>新增行程</span>
-                </a>
-              </div>
-            )}
+            <div className="flex space-x-3">
+              <a
+                href="/schedule/calendar"
+                className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <span>📅</span>
+                <span>行事曆檢視</span>
+              </a>
+              {user && user.role === 'admin' && (
+                <>
+                  <a
+                    href="/admin/schedule"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-full text-sm hover:bg-purple-700 transition-colors flex items-center space-x-2"
+                  >
+                    <span>行程管理</span>
+                  </a>
+                  <a
+                    href="/admin/schedule/add"
+                    className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                  >
+                    <span>新增行程</span>
+                  </a>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

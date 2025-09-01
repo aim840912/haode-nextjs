@@ -79,24 +79,36 @@ export default function FarmTourAdmin() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">觀光果園管理</h1>
-          <div className="space-x-4">
+          <div className="flex flex-wrap gap-3">
             {user?.role === 'admin' && (
               <Link 
                 href="/admin/farm-tour/add"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
               >
                 新增體驗活動
               </Link>
             )}
             <Link 
+              href="/admin/farm-tour/calendar"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+            >
+              預約行事曆
+            </Link>
+            <Link 
+              href="/admin/inquiries"
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
+            >
+              詢問單管理
+            </Link>
+            <Link 
               href="/farm-tour"
-              className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition-colors"
+              className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm"
             >
               查看果園頁面
             </Link>
             <Link 
               href="/"
-              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
             >
               回到首頁
             </Link>
