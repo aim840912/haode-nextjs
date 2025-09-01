@@ -1,6 +1,6 @@
 /**
  * 錯誤處理中間件和工具函數
- * 
+ *
  * 提供統一的錯誤處理機制：
  * - API 錯誤處理包裝器
  * - 錯誤日誌記錄整合
@@ -9,20 +9,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { 
-  AppError, 
-  InternalServerError, 
-  ErrorFactory,
-  ErrorUtils,
-  ErrorResponse 
-} from './errors'
+import { AppError, ErrorFactory, ErrorUtils, ErrorResponse } from './errors'
 import { logger, apiLogger } from './logger'
 import { LogContext } from './logger'
+import { recordApiRequest } from './metrics'
 
 /**
  * API 路由處理器類型
  */
-export type ApiHandler = (request: NextRequest, params?: any) => Promise<NextResponse>
+export type ApiHandler = (request: NextRequest, params?: unknown) => Promise<NextResponse>
 
 /**
  * 錯誤處理選項
@@ -83,11 +78,9 @@ class ErrorStatsCollector {
       statusCode: error.statusCode,
       module: error.details?.module,
       userAgent: request.headers.get('user-agent') || undefined,
-      ip: request.headers.get('x-forwarded-for') || 
-          request.headers.get('x-real-ip') || 
-          'unknown',
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
       path: new URL(request.url).pathname,
-      method: request.method
+      method: request.method,
     }
 
     this.stats.push(stat)
@@ -103,15 +96,13 @@ class ErrorStatsCollector {
    */
   getErrorSummary(timeWindowMs: number = 60000): object {
     const now = Date.now()
-    const recentErrors = this.stats.filter(stat => 
-      now - stat.timestamp <= timeWindowMs
-    )
+    const recentErrors = this.stats.filter(stat => now - stat.timestamp <= timeWindowMs)
 
     const summary = {
       total: recentErrors.length,
       byType: {} as Record<string, number>,
       byStatus: {} as Record<number, number>,
-      byModule: {} as Record<string, number>
+      byModule: {} as Record<string, number>,
     }
 
     recentErrors.forEach(stat => {
@@ -133,10 +124,10 @@ export function withErrorHandler(
   handler: ApiHandler,
   options: ErrorHandlerOptions = {}
 ): ApiHandler {
-  return async (request: NextRequest, params?: any): Promise<NextResponse> => {
+  return async (request: NextRequest, params?: unknown): Promise<NextResponse> => {
     const startTime = performance.now()
     const traceId = generateTraceId()
-    
+
     // 設定日誌上下文
     const logContext: LogContext = {
       module: options.module || 'API',
@@ -145,8 +136,8 @@ export function withErrorHandler(
       metadata: {
         method: request.method,
         path: new URL(request.url).pathname,
-        userAgent: request.headers.get('user-agent')
-      }
+        userAgent: request.headers.get('user-agent'),
+      },
     }
 
     try {
@@ -155,7 +146,7 @@ export function withErrorHandler(
 
       // 執行處理器（可能包含重試邏輯）
       let result: NextResponse
-      
+
       if (options.enableRetry) {
         result = await withRetry(
           () => handler(request, params),
@@ -169,17 +160,21 @@ export function withErrorHandler(
 
       // 記錄成功請求
       const duration = performance.now() - startTime
+      const durationMs = Math.round(duration)
+
       apiLogger.info(`API 請求成功`, {
         ...logContext,
         metadata: {
           ...logContext.metadata,
           statusCode: result.status,
-          duration: Math.round(duration)
-        }
+          duration: durationMs,
+        },
       })
 
-      return result
+      // 記錄 API 指標
+      recordApiRequest(request.method, new URL(request.url).pathname, durationMs, result.status)
 
+      return result
     } catch (error) {
       // 轉換為標準錯誤格式
       let appError: AppError
@@ -192,7 +187,7 @@ export function withErrorHandler(
         appError = ErrorFactory.fromError(error as Error, {
           module: options.module,
           action: logContext.action,
-          traceId
+          traceId,
         })
       }
 
@@ -209,8 +204,8 @@ export function withErrorHandler(
           errorType: appError.errorType,
           errorCode: appError.errorCode,
           duration: Math.round(duration),
-          traceId: appError.traceId
-        }
+          traceId: appError.traceId,
+        },
       }
 
       // 根據錯誤嚴重性選擇日誌級別
@@ -222,19 +217,24 @@ export function withErrorHandler(
         apiLogger.info(`API 處理訊息`, errorLogContext)
       }
 
+      // 記錄 API 錯誤指標
+      recordApiRequest(
+        request.method,
+        new URL(request.url).pathname,
+        Math.round(duration),
+        appError.statusCode
+      )
+
       // 建立錯誤回應
       const errorResponse = createErrorResponse(appError)
-      
-      return NextResponse.json(
-        errorResponse,
-        { 
-          status: appError.statusCode,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Error-Trace-Id': appError.traceId
-          }
-        }
-      )
+
+      return NextResponse.json(errorResponse, {
+        status: appError.statusCode,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Error-Trace-Id': appError.traceId,
+        },
+      })
     }
   }
 }
@@ -268,8 +268,8 @@ async function withRetry<T>(
           metadata: {
             ...logContext.metadata,
             attempts: attempt,
-            maxAttempts
-          }
+            maxAttempts,
+          },
         })
         break
       }
@@ -282,8 +282,8 @@ async function withRetry<T>(
           attempt,
           maxAttempts,
           delayMs,
-          error: ErrorUtils.getErrorSummary(lastError)
-        }
+          error: ErrorUtils.getErrorSummary(lastError),
+        },
       })
 
       // 延遲後重試
@@ -304,7 +304,7 @@ function createErrorResponse(error: AppError): ErrorResponse {
   if (process.env.NODE_ENV === 'development') {
     response.error.details = {
       ...error.details,
-      stack: error.stack?.split('\n').slice(0, 10) // 只顯示前 10 行堆疊
+      stack: error.stack?.split('\n').slice(0, 10), // 只顯示前 10 行堆疊
     }
   }
 
@@ -329,10 +329,10 @@ export function setupGlobalErrorHandlers(): void {
       action: 'unhandledRejection',
       metadata: {
         reason: reason instanceof Error ? ErrorUtils.getErrorSummary(reason) : reason,
-        promise: promise.toString()
-      }
+        promise: promise.toString(),
+      },
     })
-    
+
     // 在生產環境中可能需要終止程序
     if (process.env.NODE_ENV === 'production') {
       process.exit(1)
@@ -340,12 +340,12 @@ export function setupGlobalErrorHandlers(): void {
   })
 
   // 捕獲未處理的例外
-  process.on('uncaughtException', (error) => {
+  process.on('uncaughtException', error => {
     logger.fatal('未處理的例外', error, {
       module: 'Global',
-      action: 'uncaughtException'
+      action: 'uncaughtException',
     })
-    
+
     // 優雅地關閉程序
     process.exit(1)
   })
@@ -358,27 +358,24 @@ export function getHealthStatus(): {
   status: 'healthy' | 'degraded'
   timestamp: string
   errors: {
-    last5Minutes: any
+    last5Minutes: object
     criticalErrors: number
   }
 } {
   const collector = ErrorStatsCollector.getInstance()
-  const errorSummary = collector.getErrorSummary(300000) as any // 5 分鐘內的錯誤
-  
+  const errorSummary = collector.getErrorSummary(300000) // 5 分鐘內的錯誤
+
   return {
     status: errorSummary.total > 50 ? 'degraded' : 'healthy',
     timestamp: new Date().toISOString(),
     errors: {
       last5Minutes: errorSummary,
-      criticalErrors: errorSummary.byStatus?.[500] || 0
-    }
+      criticalErrors: errorSummary.byStatus?.[500] || 0,
+    },
   }
 }
 
 /**
  * 錯誤處理工具函數匯出
  */
-export {
-  ErrorStatsCollector,
-  createErrorResponse
-}
+export { ErrorStatsCollector, createErrorResponse }
