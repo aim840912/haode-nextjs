@@ -13,6 +13,9 @@ import {
   ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
+  BugAntIcon,
+  ExclamationCircleIcon,
+  ShieldExclamationIcon,
 } from '@heroicons/react/24/outline'
 
 interface BusinessMetrics {
@@ -51,10 +54,33 @@ interface MetricsResponse {
   message: string
 }
 
+interface ErrorStats {
+  total: number
+  errorRate: number
+  byType: Record<string, number>
+  byStatus: Record<number, number>
+  byModule: Record<string, number>
+  byPath: Record<string, number>
+  topPatterns: Array<{ pattern: string; count: number }>
+  trends: {
+    lastHour: number
+    lastDay: number
+    hourlyAverage: number
+  }
+  alerts: Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }>
+}
+
 interface SystemHealth {
   status: 'healthy' | 'degraded' | 'error'
   vercelAnalytics: 'active' | 'inactive'
   customMetrics: 'collecting' | 'paused'
+  errorTracking: {
+    status: 'available' | 'unavailable'
+    last5Minutes: {
+      total: number
+      criticalErrors: number
+    }
+  }
   timestamp: string
 }
 
@@ -64,8 +90,16 @@ export default function MonitoringDashboard() {
     status: 'healthy',
     vercelAnalytics: 'active',
     customMetrics: 'collecting',
+    errorTracking: {
+      status: 'available', // 內建錯誤追蹤總是可用
+      last5Minutes: {
+        total: 0,
+        criticalErrors: 0
+      }
+    },
     timestamp: new Date().toISOString(),
   })
+  const [errorStats, setErrorStats] = useState<ErrorStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [lastRefresh, setLastRefresh] = useState<string>('')
@@ -76,30 +110,37 @@ export default function MonitoringDashboard() {
       setLoading(true)
       setError(null)
 
-      // 計算時間範圍（毫秒）
-      const timeRangeMs = {
-        '1h': 60 * 60 * 1000,
-        '24h': 24 * 60 * 60 * 1000,
-        '7d': 7 * 24 * 60 * 60 * 1000,
-      }[timeRange]
+      // 並行請求指標和錯誤統計
+      const [metricsResponse, errorStatsResponse] = await Promise.all([
+        fetch(`/api/metrics?timeRange=${timeRange}&format=comprehensive`),
+        fetch(`/api/admin/error-stats?timeRange=${timeRange}`)
+      ])
 
-      const response = await fetch(`/api/metrics?timeRange=${timeRangeMs}&format=summary`)
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      if (!metricsResponse.ok) {
+        throw new Error(`指標 API 錯誤 ${metricsResponse.status}: ${metricsResponse.statusText}`)
       }
 
-      const result: MetricsResponse = await response.json()
+      if (!errorStatsResponse.ok) {
+        throw new Error(`錯誤統計 API 錯誤 ${errorStatsResponse.status}: ${errorStatsResponse.statusText}`)
+      }
 
-      if (result.success) {
-        setMetrics(result.data.metrics)
-        setSystemHealth(prev => ({
-          ...prev,
-          status: 'healthy',
-          timestamp: result.data.timestamp,
-        }))
+      const [metricsResult, errorStatsResult] = await Promise.all([
+        metricsResponse.json(),
+        errorStatsResponse.json()
+      ])
+
+      if (metricsResult.success) {
+        setMetrics(metricsResult.data.metrics)
+        setSystemHealth(metricsResult.data.systemHealth)
       } else {
-        throw new Error(result.message || '無法載入指標數據')
+        throw new Error(metricsResult.message || '無法載入指標數據')
+      }
+
+      if (errorStatsResult.success) {
+        setErrorStats(errorStatsResult.data.errorStats)
+      } else {
+        console.warn('錯誤統計載入失敗:', errorStatsResult.message)
+        // 錯誤統計失敗不影響整體載入
       }
 
       setLastRefresh(new Date().toLocaleString('zh-TW'))
@@ -227,7 +268,7 @@ export default function MonitoringDashboard() {
           </h2>
         </div>
         <div className="px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div
               className={`flex items-center gap-3 p-3 rounded-lg border ${getStatusColor(systemHealth.status)}`}
             >
@@ -253,9 +294,170 @@ export default function MonitoringDashboard() {
                 <p className="text-sm">運作中</p>
               </div>
             </div>
+
+            <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+              systemHealth.errorTracking.status === 'available' 
+                ? 'border-green-200 bg-green-50 text-green-700'
+                : 'border-red-200 bg-red-50 text-red-700'
+            }`}>
+              <BugAntIcon className="h-5 w-5" />
+              <div>
+                <p className="font-medium">錯誤追蹤</p>
+                <p className="text-sm">
+                  {systemHealth.errorTracking.status === 'available' ? '內建系統運作中' : '系統不可用'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* 錯誤追蹤基本統計 */}
+        <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+          <h3 className="text-lg font-semibold text-orange-900 mb-2 flex items-center gap-2">
+            <ExclamationCircleIcon className="h-5 w-5" />
+            錯誤追蹤統計（過去 5 分鐘）
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-3 rounded border">
+              <p className="text-sm text-gray-600">總錯誤數</p>
+              <p className="text-2xl font-bold text-orange-600">{systemHealth.errorTracking.last5Minutes.total}</p>
+            </div>
+            <div className="bg-white p-3 rounded border">
+              <p className="text-sm text-gray-600">致命錯誤</p>
+              <p className="text-2xl font-bold text-red-600">{systemHealth.errorTracking.last5Minutes.criticalErrors}</p>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* 詳細錯誤統計儀表板 */}
+      {errorStats && (
+        <div className="bg-white rounded-lg shadow border">
+          <div className="px-6 py-4 border-b">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <ShieldExclamationIcon className="h-5 w-5 text-red-600" />
+              詳細錯誤分析 ({timeRange === '1h' ? '過去 1 小時' : timeRange === '24h' ? '過去 24 小時' : '過去 7 天'})
+            </h2>
+          </div>
+          <div className="px-6 py-4 space-y-6">
+            {/* 警報區域 */}
+            {errorStats.alerts && errorStats.alerts.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                  <ExclamationTriangleIcon className="h-4 w-4 text-amber-500" />
+                  活躍警報
+                </h3>
+                {errorStats.alerts.map((alert, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-md border-l-4 ${
+                      alert.severity === 'high' ? 'bg-red-50 border-red-400 text-red-700' :
+                      alert.severity === 'medium' ? 'bg-yellow-50 border-yellow-400 text-yellow-700' :
+                      'bg-blue-50 border-blue-400 text-blue-700'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="font-medium">{alert.message}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        alert.severity === 'high' ? 'bg-red-100 text-red-800' :
+                        alert.severity === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {alert.severity}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* 錯誤概覽 */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <BugAntIcon className="h-8 w-8 text-red-600" />
+                  <div>
+                    <p className="text-sm text-red-600 font-medium">總錯誤數</p>
+                    <p className="text-2xl font-bold text-red-700">{errorStats.total}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <ClockIcon className="h-8 w-8 text-orange-600" />
+                  <div>
+                    <p className="text-sm text-orange-600 font-medium">錯誤率 (每分鐘)</p>
+                    <p className="text-2xl font-bold text-orange-700">{errorStats.errorRate.toFixed(1)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <ChartBarIcon className="h-8 w-8 text-blue-600" />
+                  <div>
+                    <p className="text-sm text-blue-600 font-medium">過去 1 小時</p>
+                    <p className="text-2xl font-bold text-blue-700">{errorStats.trends?.lastHour || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <UserGroupIcon className="h-8 w-8 text-green-600" />
+                  <div>
+                    <p className="text-sm text-green-600 font-medium">過去 24 小時</p>
+                    <p className="text-2xl font-bold text-green-700">{errorStats.trends?.lastDay || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 錯誤分類 */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* 依類型分類 */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-gray-900">依錯誤類型</h3>
+                {Object.entries(errorStats.byType).map(([type, count]) => (
+                  <div key={type} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="text-sm text-gray-700">{type}</span>
+                    <span className="text-sm font-medium text-red-600">{count}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* 依狀態碼分類 */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-gray-900">依 HTTP 狀態碼</h3>
+                {Object.entries(errorStats.byStatus).map(([status, count]) => (
+                  <div key={status} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                    <span className="text-sm text-gray-700">{status}</span>
+                    <span className={`text-sm font-medium ${
+                      parseInt(status) >= 500 ? 'text-red-600' : 'text-yellow-600'
+                    }`}>{count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 頂級錯誤模式 */}
+            {errorStats.topPatterns && errorStats.topPatterns.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium text-gray-900">最頻繁錯誤模式</h3>
+                <div className="space-y-2">
+                  {errorStats.topPatterns.map((pattern, index) => (
+                    <div key={index} className="flex justify-between items-center p-3 bg-red-50 rounded border">
+                      <span className="text-sm text-gray-700 font-mono">{pattern.pattern}</span>
+                      <span className="text-sm font-bold text-red-600">{pattern.count} 次</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 當前為測試模式，顯示簡化的指標儀表板 */}
       <div className="bg-white rounded-lg shadow border">
@@ -264,7 +466,7 @@ export default function MonitoringDashboard() {
           <p className="text-sm text-gray-600 mt-1">監控系統已就緒，正在收集業務指標數據</p>
         </div>
         <div className="px-6 py-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <ChartBarIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
               <p className="text-xl font-bold text-blue-900">Vercel Analytics</p>
@@ -280,6 +482,15 @@ export default function MonitoringDashboard() {
               <p className="text-green-600 text-sm">業務數據追蹤</p>
               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
                 運作中
+              </span>
+            </div>
+
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <BugAntIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <p className="text-xl font-bold text-green-900">錯誤追蹤</p>
+              <p className="text-sm text-green-600">內建錯誤監控系統</p>
+              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium mt-2 bg-green-100 text-green-800">
+                系統運作中
               </span>
             </div>
 

@@ -19,10 +19,20 @@ export default function LocationsPage() {
   const fetchLocations = async () => {
     try {
       const response = await fetch('/api/locations')
-      const data = await response.json()
-      setStoreLocations(data)
-      if (data.length > 0) {
-        setSelectedStore(data[0])
+      const result = await response.json()
+      
+      // 處理統一 API 回應格式
+      const data = result.data || result
+      
+      // 確保 data 是陣列
+      if (Array.isArray(data)) {
+        setStoreLocations(data)
+        if (data.length > 0) {
+          setSelectedStore(data[0])
+        }
+      } else {
+        console.error('API 回應格式錯誤：locations data 不是陣列', result)
+        setStoreLocations([])
       }
     } catch (error) {
       console.error('Error fetching locations:', error)

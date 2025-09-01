@@ -104,7 +104,18 @@ export default function ProfilePage() {
     try {
       const response = await fetch('/api/products');
       if (response.ok) {
-        const allProducts = await response.json();
+        const result = await response.json();
+        
+        // 處理統一 API 回應格式
+        const allProducts = result.data || result;
+        
+        // 確保 allProducts 是陣列
+        if (!Array.isArray(allProducts)) {
+          logger.error('API 回應格式錯誤：data 不是陣列', new Error('Invalid API response'), { metadata: { response: result } });
+          setInterestedProductsData([]);
+          return;
+        }
+        
         const filteredProducts = allProducts.filter((product: any) => 
           productIds.includes(product.id) && product.isActive
         );

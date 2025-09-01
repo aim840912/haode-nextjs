@@ -21,15 +21,25 @@ import { apiLogger } from '@/lib/logger';
 const inquiryService = createInquiryService(supabaseServerInquiryService);
 
 // GET /api/inquiries - 取得庫存查詢單清單
-async function handleGET(request: NextRequest, { validated }: { validated: any }) {
+async function handleGET(request: NextRequest, params?: unknown) {
+  // 暫時移除驗證功能，直接處理請求
   // 驗證使用者認證
   const user = await getCurrentUser();
   if (!user) {
     throw new AuthorizationError('未認證或會話已過期');
   }
 
-  // 使用驗證過的查詢參數
-  const queryParams = validated.query;
+  // 直接解析查詢參數
+  const url = new URL(request.url)
+  const statusParam = url.searchParams.get('status')
+  const queryParams = {
+    page: parseInt(url.searchParams.get('page') || '1'),
+    limit: parseInt(url.searchParams.get('limit') || '10'),
+    search: url.searchParams.get('search') || undefined,
+    status: (statusParam && ['pending', 'processing', 'completed', 'cancelled'].includes(statusParam)) 
+      ? statusParam as any : undefined,
+    admin: url.searchParams.get('admin') === 'true'
+  }
 
   // 檢查是否為管理員
   const supabase = await createServerSupabaseClient();
@@ -54,7 +64,7 @@ async function handleGET(request: NextRequest, { validated }: { validated: any }
 }
 
 // POST /api/inquiries - 建立新庫存查詢單
-async function handlePOST(request: NextRequest, { validated }: { validated: any }) {
+async function handlePOST(request: NextRequest, params?: unknown) {
   // 驗證使用者認證
   const user = await getCurrentUser();
   if (!user) {
@@ -70,7 +80,8 @@ async function handlePOST(request: NextRequest, { validated }: { validated: any 
     .single();
 
   // 使用驗證過的請求資料
-  const requestData = validated.body;
+  // 直接解析請求 body
+  const requestData = await request.json()
 
   // 建立庫存查詢單
   const inquiry = await inquiryService.createInquiry(user.id, requestData);

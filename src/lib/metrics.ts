@@ -281,19 +281,27 @@ export const metrics = new MetricsCollector()
 
 // 便利的記錄函數
 export const recordPageView = (page: string, userId?: string) => {
-  metrics.incrementCounter('page_view', { page, userId })
+  const labels: Record<string, string> = { page }
+  if (userId) labels.userId = userId
+  metrics.incrementCounter('page_view', labels)
 }
 
 export const recordProductView = (productId: string, userId?: string) => {
-  metrics.incrementCounter('product_view', { productId, userId })
+  const labels: Record<string, string> = { productId }
+  if (userId) labels.userId = userId
+  metrics.incrementCounter('product_view', labels)
 }
 
 export const recordInquirySubmit = (category: string, userId?: string) => {
-  metrics.incrementCounter('inquiry_submit', { category, userId })
+  const labels: Record<string, string> = { category }
+  if (userId) labels.userId = userId
+  metrics.incrementCounter('inquiry_submit', labels)
 }
 
 export const recordSearchQuery = (query: string, userId?: string) => {
-  metrics.incrementCounter('search_query', { query, userId })
+  const labels: Record<string, string> = { query }
+  if (userId) labels.userId = userId
+  metrics.incrementCounter('search_query', labels)
 }
 
 export const recordApiRequest = (

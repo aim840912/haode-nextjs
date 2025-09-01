@@ -13,6 +13,7 @@ import { AppError, ErrorFactory, ErrorUtils, ErrorResponse } from './errors'
 import { logger, apiLogger } from './logger'
 import { LogContext } from './logger'
 import { recordApiRequest } from './metrics'
+import { captureError, addBreadcrumb, setUser, startTransaction, finishTransaction } from './error-tracking'
 
 /**
  * API 路由處理器類型
@@ -52,14 +53,23 @@ interface ErrorStats {
 }
 
 /**
- * 錯誤統計收集器
+ * 增強的錯誤統計收集器
  */
 class ErrorStatsCollector {
   private static instance: ErrorStatsCollector
   private stats: ErrorStats[] = []
   private readonly maxStats = 1000 // 最多保留 1000 筆錯誤統計
+  private errorPatterns: Map<string, number> = new Map() // 錯誤模式分析
+  private alertThresholds = {
+    errorRatePerMinute: 10, // 每分鐘錯誤超過 10 次就警告
+    criticalErrorsPerHour: 5, // 每小時致命錯誤超過 5 次就警告
+    sameErrorPattern: 5 // 相同錯誤模式出現超過 5 次就警告
+  }
 
-  private constructor() {}
+  private constructor() {
+    // 定期清理過期統計資料
+    setInterval(() => this.cleanup(), 5 * 60 * 1000) // 每 5 分鐘清理一次
+  }
 
   static getInstance(): ErrorStatsCollector {
     if (!ErrorStatsCollector.instance) {
@@ -85,10 +95,17 @@ class ErrorStatsCollector {
 
     this.stats.push(stat)
 
+    // 錯誤模式分析
+    const errorPattern = `${error.errorType}:${stat.path}:${stat.method}`
+    this.errorPatterns.set(errorPattern, (this.errorPatterns.get(errorPattern) || 0) + 1)
+
     // 保持統計資料在合理範圍內
     if (this.stats.length > this.maxStats) {
       this.stats = this.stats.slice(-this.maxStats)
     }
+
+    // 檢查是否需要發出警報
+    this.checkAlerts()
   }
 
   /**
@@ -100,9 +117,14 @@ class ErrorStatsCollector {
 
     const summary = {
       total: recentErrors.length,
+      errorRate: this.calculateErrorRate(timeWindowMs),
       byType: {} as Record<string, number>,
       byStatus: {} as Record<number, number>,
       byModule: {} as Record<string, number>,
+      byPath: {} as Record<string, number>,
+      topPatterns: this.getTopErrorPatterns(5),
+      trends: this.getErrorTrends(),
+      alerts: this.getActiveAlerts()
     }
 
     recentErrors.forEach(stat => {
@@ -111,11 +133,167 @@ class ErrorStatsCollector {
       if (stat.module) {
         summary.byModule[stat.module] = (summary.byModule[stat.module] || 0) + 1
       }
+      if (stat.path) {
+        summary.byPath[stat.path] = (summary.byPath[stat.path] || 0) + 1
+      }
     })
 
     return summary
   }
+
+  /**
+   * 計算錯誤率
+   */
+  private calculateErrorRate(timeWindowMs: number): number {
+    const now = Date.now()
+    const recentErrors = this.stats.filter(stat => now - stat.timestamp <= timeWindowMs)
+    const minutesInWindow = timeWindowMs / (60 * 1000)
+    return recentErrors.length / minutesInWindow
+  }
+
+  /**
+   * 取得頂級錯誤模式
+   */
+  private getTopErrorPatterns(limit: number): Array<{ pattern: string; count: number }> {
+    return Array.from(this.errorPatterns.entries())
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, limit)
+      .map(([pattern, count]) => ({ pattern, count }))
+  }
+
+  /**
+   * 取得錯誤趨勢
+   */
+  private getErrorTrends(): object {
+    const now = Date.now()
+    const hourAgo = now - 60 * 60 * 1000
+    const dayAgo = now - 24 * 60 * 60 * 1000
+
+    return {
+      lastHour: this.stats.filter(stat => stat.timestamp >= hourAgo).length,
+      lastDay: this.stats.filter(stat => stat.timestamp >= dayAgo).length,
+      hourlyAverage: this.stats.filter(stat => stat.timestamp >= dayAgo).length / 24
+    }
+  }
+
+  /**
+   * 檢查警報條件
+   */
+  private checkAlerts(): void {
+    const now = Date.now()
+    const lastMinute = now - 60 * 1000
+    const lastHour = now - 60 * 60 * 1000
+
+    // 檢查每分鐘錯誤率
+    const errorsLastMinute = this.stats.filter(stat => stat.timestamp >= lastMinute).length
+    if (errorsLastMinute >= this.alertThresholds.errorRatePerMinute) {
+      logger.warn('高錯誤率警報', {
+        metadata: {
+          errorsPerMinute: errorsLastMinute,
+          threshold: this.alertThresholds.errorRatePerMinute
+        }
+      })
+    }
+
+    // 檢查致命錯誤
+    const criticalErrorsLastHour = this.stats.filter(stat => 
+      stat.timestamp >= lastHour && stat.statusCode >= 500
+    ).length
+    if (criticalErrorsLastHour >= this.alertThresholds.criticalErrorsPerHour) {
+      logger.error('致命錯誤過多警報', undefined, {
+        metadata: {
+          criticalErrorsPerHour: criticalErrorsLastHour,
+          threshold: this.alertThresholds.criticalErrorsPerHour
+        }
+      })
+    }
+
+    // 檢查重複錯誤模式
+    this.errorPatterns.forEach((count, pattern) => {
+      if (count >= this.alertThresholds.sameErrorPattern) {
+        logger.warn('重複錯誤模式警報', {
+          metadata: {
+            pattern,
+            occurrences: count,
+            threshold: this.alertThresholds.sameErrorPattern
+          }
+        })
+      }
+    })
+  }
+
+  /**
+   * 取得活躍警報
+   */
+  private getActiveAlerts(): Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }> {
+    const alerts: Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }> = []
+    
+    const now = Date.now()
+    const lastMinute = now - 60 * 1000
+    const lastHour = now - 60 * 60 * 1000
+
+    const errorsLastMinute = this.stats.filter(stat => stat.timestamp >= lastMinute).length
+    if (errorsLastMinute >= this.alertThresholds.errorRatePerMinute) {
+      alerts.push({
+        type: 'high_error_rate',
+        message: `每分鐘錯誤數過高: ${errorsLastMinute}`,
+        severity: errorsLastMinute >= 20 ? 'high' : 'medium'
+      })
+    }
+
+    const criticalErrorsLastHour = this.stats.filter(stat => 
+      stat.timestamp >= lastHour && stat.statusCode >= 500
+    ).length
+    if (criticalErrorsLastHour >= this.alertThresholds.criticalErrorsPerHour) {
+      alerts.push({
+        type: 'critical_errors',
+        message: `每小時致命錯誤過多: ${criticalErrorsLastHour}`,
+        severity: 'high'
+      })
+    }
+
+    return alerts
+  }
+
+  /**
+   * 清理過期資料
+   */
+  private cleanup(): void {
+    const now = Date.now()
+    const oneDayAgo = now - 24 * 60 * 60 * 1000
+
+    // 清理超過一天的統計資料
+    const initialLength = this.stats.length
+    this.stats = this.stats.filter(stat => stat.timestamp >= oneDayAgo)
+
+    // 清理過期的錯誤模式（重置計數器）
+    this.errorPatterns.clear()
+
+    if (initialLength > this.stats.length) {
+      logger.debug('錯誤統計清理完成', {
+        metadata: {
+          removed: initialLength - this.stats.length,
+          remaining: this.stats.length
+        }
+      })
+    }
+  }
+
+  /**
+   * 取得詳細統計資料（用於管理界面）
+   */
+  getDetailedStats(): object {
+    return {
+      totalStats: this.stats.length,
+      oldestEntry: this.stats.length > 0 ? new Date(Math.min(...this.stats.map(s => s.timestamp))) : null,
+      newestEntry: this.stats.length > 0 ? new Date(Math.max(...this.stats.map(s => s.timestamp))) : null,
+      errorPatterns: Array.from(this.errorPatterns.entries()).length,
+      thresholds: this.alertThresholds
+    }
+  }
 }
+
+// ErrorStatsCollector 將在檔案底部一起導出
 
 /**
  * 統一的錯誤處理中間件
@@ -139,6 +317,29 @@ export function withErrorHandler(
         userAgent: request.headers.get('user-agent'),
       },
     }
+
+    // 開始 Sentry 效能追蹤
+    const sentryTransaction = startTransaction(
+      `${request.method} ${new URL(request.url).pathname}`,
+      'http.server'
+    )
+
+    // 設定使用者上下文（如果有）
+    const userId = request.headers.get('x-user-id') || logContext.userId
+    if (userId) {
+      setUser(userId)
+    }
+
+    // 記錄 API 請求麵包屑
+    addBreadcrumb(
+      `API 請求: ${request.method} ${new URL(request.url).pathname}`,
+      'http',
+      {
+        method: request.method,
+        url: new URL(request.url).pathname,
+        userAgent: request.headers.get('user-agent')
+      }
+    )
 
     try {
       // 記錄請求開始
@@ -173,6 +374,9 @@ export function withErrorHandler(
 
       // 記錄 API 指標
       recordApiRequest(request.method, new URL(request.url).pathname, durationMs, result.status)
+
+      // 完成 Sentry 效能追蹤
+      finishTransaction(sentryTransaction)
 
       return result
     } catch (error) {
@@ -224,6 +428,17 @@ export function withErrorHandler(
         Math.round(duration),
         appError.statusCode
       )
+
+      // 發送錯誤到 Sentry（除了已在 logger 中處理的之外）
+      if (appError.statusCode >= 500) {
+        captureError(error as Error, logContext)
+      }
+
+      // 完成 Sentry 效能追蹤（標記為失敗）
+      if (sentryTransaction) {
+        sentryTransaction.setStatus('internal_error')
+        finishTransaction(sentryTransaction)
+      }
 
       // 建立錯誤回應
       const errorResponse = createErrorResponse(appError)
@@ -365,12 +580,14 @@ export function getHealthStatus(): {
   const collector = ErrorStatsCollector.getInstance()
   const errorSummary = collector.getErrorSummary(300000) // 5 分鐘內的錯誤
 
+  const summary = errorSummary as any // 暫時使用 any 類型以避免建置錯誤
+  
   return {
-    status: errorSummary.total > 50 ? 'degraded' : 'healthy',
+    status: summary.total > 50 ? 'degraded' : 'healthy',
     timestamp: new Date().toISOString(),
     errors: {
-      last5Minutes: errorSummary,
-      criticalErrors: errorSummary.byStatus?.[500] || 0,
+      last5Minutes: summary,
+      criticalErrors: summary.byStatus?.[500] || 0,
     },
   }
 }

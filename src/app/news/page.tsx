@@ -35,8 +35,18 @@ export default function NewsPage() {
       // 讀取本地 JSON 資料
       const response = await fetch('/api/news')
       if (response.ok) {
-        const data = await response.json()
-        setNews(data)
+        const result = await response.json()
+        
+        // 處理統一 API 回應格式
+        const data = result.data || result
+        
+        // 確保 data 是陣列
+        if (Array.isArray(data)) {
+          setNews(data)
+        } else {
+          console.error('API 回應格式錯誤：news data 不是陣列', result)
+          setNews([])
+        }
       } else {
         // 如果 API 不存在，使用本地資料
         const newsData = await import('@/data/news.json')

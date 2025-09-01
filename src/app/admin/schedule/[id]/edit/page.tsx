@@ -66,8 +66,18 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
   const fetchProducts = useCallback(async () => {
     try {
       const response = await fetch('/api/products')
-      const data = await response.json()
-      setProducts(data.filter((p: Product) => p.isActive))
+      const result = await response.json()
+      
+      // 處理統一 API 回應格式
+      const data = result.data || result
+      
+      // 確保 data 是陣列
+      if (Array.isArray(data)) {
+        setProducts(data.filter((p: Product) => p.isActive))
+      } else {
+        logger.error('API 回應格式錯誤：data 不是陣列')
+        setProducts([])
+      }
     } catch (error) {
       logger.error('Error fetching products:', error instanceof Error ? error : new Error('Unknown error'))
     }

@@ -7,7 +7,10 @@
  * - 支援多個輸出目標
  * - 效能友善（生產環境最小化日誌）
  * - TypeScript 類型安全
+ * - 整合 Sentry 錯誤追蹤
  */
+
+import { captureError, captureFatalError, captureWarning, addBreadcrumb } from './error-tracking'
 
 export enum LogLevel {
   DEBUG = 0,
@@ -136,8 +139,8 @@ class Logger {
       console[consoleMethod](JSON.stringify(entry))
       
       if (error && level >= LogLevel.ERROR) {
-        // 可以在這裡送到錯誤追蹤服務 (如 Sentry)
-        // this.sendToErrorTracking(entry, error)
+        // 送到錯誤追蹤服務 (Sentry)
+        this.sendToErrorTracking(entry, error)
       }
     }
   }
@@ -189,6 +192,38 @@ class Logger {
    */
   timer(label: string): LogTimer {
     return new LogTimer(this, label)
+  }
+
+  /**
+   * 發送錯誤到追蹤服務（Sentry）
+   */
+  private sendToErrorTracking(entry: LogEntry, error: Error): void {
+    try {
+      const context: LogContext = {
+        module: entry.context?.module,
+        action: entry.context?.action,
+        requestId: entry.context?.requestId,
+        userId: entry.context?.userId,
+        metadata: entry.context?.metadata
+      }
+
+      if (entry.level === LogLevel.FATAL) {
+        captureFatalError(error, context)
+      } else if (entry.level === LogLevel.ERROR) {
+        captureError(error, context)
+      } else if (entry.level === LogLevel.WARN) {
+        captureWarning(entry.message, context)
+      }
+
+      // 記錄麵包屑追蹤
+      addBreadcrumb(entry.message, entry.context?.module || 'logger', {
+        level: entry.levelName.toLowerCase(),
+        timestamp: entry.timestamp
+      })
+    } catch (sentryError) {
+      // 避免 Sentry 錯誤影響主要功能
+      console.debug('Sentry 整合錯誤:', sentryError)
+    }
   }
 }
 

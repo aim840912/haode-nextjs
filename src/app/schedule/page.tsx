@@ -36,7 +36,19 @@ export default function SchedulePage() {
         if (!response.ok) {
           throw new Error('Failed to fetch schedule');
         }
-        const data = await response.json();
+        const result = await response.json();
+        
+        // 處理統一 API 回應格式
+        const data = result.data || result;
+        
+        // 確保 data 是陣列
+        if (!Array.isArray(data)) {
+          console.error('API 回應格式錯誤：schedule data 不是陣列', result);
+          setMarketSchedule([]);
+          setFilteredSchedule([]);
+          return;
+        }
+        
         setMarketSchedule(data);
         setFilteredSchedule(data);
       } catch (err) {

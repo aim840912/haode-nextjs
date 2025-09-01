@@ -61,7 +61,18 @@ export default function FarmTourPage() {
   const fetchActivities = async () => {
     try {
       const response = await fetch('/api/farm-tour');
-      const data = await response.json();
+      const result = await response.json();
+      
+      // 處理統一 API 回應格式
+      const data = result.data || result;
+      
+      // 確保 data 是陣列
+      if (!Array.isArray(data)) {
+        logger.error('API 回應格式錯誤：farm-tour data 不是陣列', new Error('Invalid API response'), { metadata: { response: result } });
+        setSeasonalActivities([]);
+        return;
+      }
+      
       setSeasonalActivities(data);
     } catch (error) {
       logger.error('Error fetching farm tour activities:', error instanceof Error ? error : new Error('Unknown error'));

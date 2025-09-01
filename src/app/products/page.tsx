@@ -105,7 +105,16 @@ function ProductsPage() {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
-          const data = await response.json();
+          const result = await response.json();
+          
+          // 處理統一 API 回應格式
+          const data = result.data || result;
+          
+          // 確保 data 是陣列
+          if (!Array.isArray(data)) {
+            throw new Error('API 回應格式錯誤：data 不是陣列');
+          }
+          
           setApiProducts(data.filter((p: Product) => p.isActive && (p.showInCatalog ?? true)));
           return data;
         },
