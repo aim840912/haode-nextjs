@@ -10,6 +10,8 @@ import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
 import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
 import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
 import SafeImage from '@/components/SafeImage';
+import { ProductStructuredData } from '@/components/StructuredData';
+import Breadcrumbs, { createProductBreadcrumbs } from '@/components/Breadcrumbs';
 import { logger } from '@/lib/logger';
 
 // 動態載入大型組件，提升初始載入速度
@@ -323,6 +325,35 @@ function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* SEO Structured Data for Products */}
+      {filteredAndSortedProducts.length > 0 && (
+        <>
+          {filteredAndSortedProducts.slice(0, 3).map((product, index) => (
+            <ProductStructuredData 
+              key={`structured-data-${product.id}-${index}`}
+              product={{
+                name: product.name,
+                description: product.description,
+                category: product.category,
+                price: product.price,
+                inventory: product.inStock ? 100 : 0,
+                images: product.image ? [product.image] : ['/images/placeholder.jpg']
+              }}
+            />
+          ))}
+        </>
+      )}
+      
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <Breadcrumbs 
+            items={createProductBreadcrumbs()}
+            enableStructuredData={true}
+          />
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
         <div className="max-w-7xl mx-auto px-6">

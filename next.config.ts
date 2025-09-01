@@ -62,13 +62,16 @@ const nextConfig: NextConfig = {
       "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com",
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "font-src 'self' https://fonts.gstatic.com",
+      "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com",
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+      "frame-ancestors 'none'", // 防止 clickjacking
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
+      "upgrade-insecure-requests", // 自動升級 HTTP 到 HTTPS
+      ...(process.env.NODE_ENV === 'production' ? ["block-all-mixed-content"] : [])
     ].join('; ')
 
     // 安全標頭配置
@@ -95,14 +98,26 @@ const nextConfig: NextConfig = {
       },
       {
         key: 'Permissions-Policy',
-        value: 'camera=(), microphone=(), geolocation=()',
+        value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
+      },
+      {
+        key: 'Cross-Origin-Embedder-Policy',
+        value: 'unsafe-none', // 允許嵌入內容，可根據需求調整
+      },
+      {
+        key: 'Cross-Origin-Opener-Policy',
+        value: 'same-origin',
+      },
+      {
+        key: 'Cross-Origin-Resource-Policy',
+        value: 'same-origin',
       },
       // HSTS 只在生產環境啟用
       ...(process.env.NODE_ENV === 'production'
         ? [
             {
               key: 'Strict-Transport-Security',
-              value: 'max-age=31536000; includeSubDomains; preload',
+              value: 'max-age=63072000; includeSubDomains; preload', // 2年有效期
             },
           ]
         : []),

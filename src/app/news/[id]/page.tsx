@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { ArticleStructuredData } from '@/components/StructuredData'
+import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
 
 interface NewsItem {
   id: string
@@ -126,16 +128,24 @@ export default function NewsDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* SEO Structured Data */}
+      <ArticleStructuredData 
+        article={{
+          title: newsItem.title,
+          summary: newsItem.summary,
+          imageUrl: newsItem.imageUrl || newsItem.image,
+          publishDate: newsItem.publishedAt,
+          updatedAt: newsItem.publishedAt // 假設沒有單獨的更新時間
+        }} 
+      />
+      
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-4xl mx-auto px-6 py-4">
-          <nav className="text-sm">
-            <Link href="/" className="text-amber-900 hover:text-amber-800">首頁</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <Link href="/news" className="text-amber-900 hover:text-amber-800">農產新聞</Link>
-            <span className="mx-2 text-gray-400">/</span>
-            <span className="text-gray-600">{newsItem.title}</span>
-          </nav>
+          <Breadcrumbs 
+            items={createNewsBreadcrumbs(newsItem.title)}
+            enableStructuredData={true}
+          />
         </div>
       </div>
 

@@ -30,11 +30,12 @@ const ENV_VARIABLES: EnvVariable[] = [
   // === 關鍵安全配置 ===
   {
     name: 'ADMIN_API_KEY',
-    required: true,
+    required: false, // 可選，因為並非所有部署都需要
     minLength: 32,
     securityLevel: 'critical',
     validator: (value) => {
-      if (!value || value.length < 32) return false;
+      if (!value) return true; // 允許為空
+      if (value.length < 32) return false;
       
       // 檢查是否包含不安全的預設值
       const unsafePatterns = [
@@ -52,11 +53,12 @@ const ENV_VARIABLES: EnvVariable[] = [
   },
   {
     name: 'JWT_SECRET',
-    required: true,
+    required: false, // 可選，因為使用 Supabase Auth
     minLength: 32,
     securityLevel: 'critical',
     validator: (value) => {
-      if (!value || value.length < 32) return false;
+      if (!value) return true; // 允許為空
+      if (value.length < 32) return false;
       
       const unsafePatterns = [
         'fallback-secret',
@@ -116,6 +118,82 @@ const ENV_VARIABLES: EnvVariable[] = [
     pattern: /^https?:\/\/.+$/,
     securityLevel: 'medium',
     message: 'NEXTAUTH_URL 必須是有效的 URL'
+  },
+  
+  // === 第三方服務配置 ===
+  {
+    name: 'STRIPE_SECRET_KEY',
+    required: false,
+    pattern: /^sk_/,
+    securityLevel: 'high',
+    message: 'STRIPE_SECRET_KEY 必須以 sk_ 開頭'
+  },
+  {
+    name: 'RESEND_API_KEY',
+    required: false,
+    pattern: /^re_/,
+    securityLevel: 'high',
+    message: 'RESEND_API_KEY 必須以 re_ 開頭'
+  },
+  {
+    name: 'GOOGLE_MAPS_API_KEY',
+    required: false,
+    minLength: 20,
+    securityLevel: 'medium',
+    message: 'GOOGLE_MAPS_API_KEY 必須至少 20 字元'
+  },
+  {
+    name: 'NEXT_PUBLIC_GA_ID',
+    required: false,
+    pattern: /^G-/,
+    securityLevel: 'low',
+    message: 'NEXT_PUBLIC_GA_ID 必須以 G- 開頭'
+  },
+  {
+    name: 'NEXT_PUBLIC_GA_MEASUREMENT_ID',
+    required: false,
+    pattern: /^G-/,
+    securityLevel: 'low',
+    message: 'NEXT_PUBLIC_GA_MEASUREMENT_ID 必須以 G- 開頭'
+  },
+  
+  // === Vercel KV 快取配置 ===
+  {
+    name: 'KV_REST_API_URL',
+    required: false,
+    pattern: /^https?:\/\/.+$/,
+    securityLevel: 'medium',
+    message: 'KV_REST_API_URL 必須是有效的 URL'
+  },
+  {
+    name: 'KV_REST_API_TOKEN',
+    required: false,
+    minLength: 20,
+    securityLevel: 'medium',
+    message: 'KV_REST_API_TOKEN 必須設定'
+  },
+  {
+    name: 'UPSTASH_REDIS_REST_URL',
+    required: false,
+    pattern: /^https?:\/\/.+$/,
+    securityLevel: 'medium',
+    message: 'UPSTASH_REDIS_REST_URL 必須是有效的 URL'
+  },
+  {
+    name: 'UPSTASH_REDIS_REST_TOKEN',
+    required: false,
+    minLength: 20,
+    securityLevel: 'medium',
+    message: 'UPSTASH_REDIS_REST_TOKEN 必須設定'
+  },
+  
+  // === 基礎配置 ===
+  {
+    name: 'NEXT_PUBLIC_BASE_URL',
+    required: false,
+    pattern: /^https?:\/\/.+$/,
+    securityLevel: 'low',
+    message: 'NEXT_PUBLIC_BASE_URL 必須是有效的 URL'
   }
 ];
 
@@ -305,11 +383,30 @@ export function isEnvSecure(name: string): boolean {
 
 // 導出環境變數名稱常數，避免硬編碼
 export const ENV_KEYS = {
+  // 安全配置
   ADMIN_API_KEY: 'ADMIN_API_KEY',
   JWT_SECRET: 'JWT_SECRET',
+  
+  // Supabase 配置
   SUPABASE_URL: 'NEXT_PUBLIC_SUPABASE_URL',
   SUPABASE_ANON_KEY: 'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   SUPABASE_SERVICE_KEY: 'SUPABASE_SERVICE_ROLE_KEY',
+  
+  // 基礎配置
   NODE_ENV: 'NODE_ENV',
-  NEXTAUTH_URL: 'NEXTAUTH_URL'
+  NEXTAUTH_URL: 'NEXTAUTH_URL',
+  BASE_URL: 'NEXT_PUBLIC_BASE_URL',
+  
+  // 第三方服務
+  STRIPE_SECRET_KEY: 'STRIPE_SECRET_KEY',
+  RESEND_API_KEY: 'RESEND_API_KEY',
+  GOOGLE_MAPS_API_KEY: 'GOOGLE_MAPS_API_KEY',
+  GA_ID: 'NEXT_PUBLIC_GA_ID',
+  GA_MEASUREMENT_ID: 'NEXT_PUBLIC_GA_MEASUREMENT_ID',
+  
+  // Vercel KV 快取
+  KV_REST_API_URL: 'KV_REST_API_URL',
+  KV_REST_API_TOKEN: 'KV_REST_API_TOKEN',
+  UPSTASH_REDIS_REST_URL: 'UPSTASH_REDIS_REST_URL',
+  UPSTASH_REDIS_REST_TOKEN: 'UPSTASH_REDIS_REST_TOKEN'
 } as const;

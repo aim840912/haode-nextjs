@@ -213,6 +213,28 @@ export const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
     message: '檔案上傳頻率超出限制，請稍後重試'
   }),
 
+  // 審計日誌 - 高安全等級
+  '/api/audit-logs/**': createConfig(SecurityLevel.HIGH, {
+    maxRequests: 50,
+    windowMs: 60 * 1000, // 1 分鐘
+    strategy: IdentifierStrategy.USER_ID,
+    message: '審計日誌查詢頻率超出限制'
+  }),
+
+  // 重置服務 - 關鍵安全等級
+  '/api/reset-service': createConfig(SecurityLevel.CRITICAL, {
+    maxRequests: 2,
+    windowMs: 5 * 60 * 1000, // 5 分鐘
+    message: '系統重置請求過於頻繁，請等待 5 分鐘後重試'
+  }),
+
+  // 資料策略 - 高安全等級
+  '/api/data-strategy': createConfig(SecurityLevel.HIGH, {
+    maxRequests: 10,
+    windowMs: 60 * 1000, // 1 分鐘
+    message: '資料策略請求頻率超出限制'
+  }),
+
   // 搜尋功能 - 低安全等級
   '/api/search': createConfig(SecurityLevel.LOW, {
     maxRequests: 100,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import SimpleImage from '@/components/SimpleImage'
+import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
 
 interface NewsItem {
   id: string
@@ -79,6 +80,16 @@ export default function NewsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <Breadcrumbs 
+            items={createNewsBreadcrumbs()}
+            enableStructuredData={true}
+          />
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
         <div className="max-w-7xl mx-auto px-6">

@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { CultureItem } from '@/types/culture'
 import SimpleImage from '@/components/SimpleImage'
+import Breadcrumbs, { createCultureBreadcrumbs } from '@/components/Breadcrumbs'
 
 export default function CulturePage() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])
@@ -74,6 +75,16 @@ export default function CulturePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <Breadcrumbs 
+            items={createCultureBreadcrumbs()}
+            enableStructuredData={true}
+          />
+        </div>
+      </div>
+
       {/* Hero Section */}
       <div className="pt-8 pb-4">
         <div className="max-w-7xl mx-auto px-6">

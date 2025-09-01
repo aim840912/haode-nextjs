@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://haode-nextjs.vercel.app/'
+  const baseUrl = 'https://haode-nextjs.vercel.app'
 
   return {
     rules: [
@@ -13,13 +13,73 @@ export default function robots(): MetadataRoute.Robots {
           '/api/',
           '/login',
           '/register',
+          '/profile',
           '/_next/',
           '/private/',
+          '/inquiries/',
+          '/diagnosis/',
+          '/search?*',
+          '/*.json$',
+          '/*.log$',
         ],
+        crawlDelay: 1,
       },
       {
         userAgent: 'Googlebot',
-        allow: '/',
+        allow: [
+          '/',
+          '/products',
+          '/news',
+          '/culture',
+          '/locations',
+          '/farm-tour',
+          '/schedule',
+          '/products/*',
+          '/news/*',
+          '/culture/*',
+        ],
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/login',
+          '/register',
+          '/profile',
+          '/inquiries/',
+          '/diagnosis/',
+          '/*.json$',
+          '/*.log$',
+        ],
+      },
+      {
+        userAgent: 'Bingbot',
+        allow: [
+          '/',
+          '/products',
+          '/news',
+          '/culture',
+          '/locations',
+          '/farm-tour',
+          '/schedule',
+        ],
+        disallow: [
+          '/admin/',
+          '/api/',
+          '/login',
+          '/register',
+          '/profile',
+          '/inquiries/',
+          '/*.json$',
+        ],
+        crawlDelay: 2,
+      },
+      {
+        userAgent: 'facebookexternalhit',
+        allow: [
+          '/',
+          '/products',
+          '/news',
+          '/culture',
+        ],
         disallow: [
           '/admin/',
           '/api/',
