@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
@@ -22,53 +23,61 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     height: 'h-64',
     textColor: 'text-white',
     imageUrl: '',
-    image: ''  // 新增上傳檔案的 base64 資料
+    image: '', // 新增上傳檔案的 base64 資料
   })
-  
+
   // 新增檔案上傳相關狀態
   const [_imageFile, setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string>('')
   const [hasLocalPath, setHasLocalPath] = useState(false)
 
-  const fetchCultureItem = useCallback(async (id: string) => {
-    try {
-      const response = await fetch(`/api/culture/${id}`)
-      if (response.ok) {
-        const cultureItem: CultureItem = await response.json()
-        // 檢查是否為本地檔案路徑
-        const isLocalPath = !!(cultureItem.imageUrl && 
-          (cultureItem.imageUrl.startsWith('/') || 
-           cultureItem.imageUrl.startsWith('C:') || 
-           cultureItem.imageUrl.startsWith('/mnt/') ||
-           cultureItem.imageUrl.includes(':\\')))
-        
-        setHasLocalPath(isLocalPath)
-        
-        setFormData({
-          title: cultureItem.title,
-          subtitle: cultureItem.subtitle,
-          description: cultureItem.description,
-          color: cultureItem.color,
-          height: cultureItem.height,
-          textColor: cultureItem.textColor,
-          imageUrl: isLocalPath ? '' : (cultureItem.imageUrl || ''),
-          image: ''
-        })
-        
-        // 如果是本地路徑，顯示在預覽中但清空 URL 欄位
-        if (isLocalPath && cultureItem.imageUrl) {
-          setImagePreview(cultureItem.imageUrl)
+  const fetchCultureItem = useCallback(
+    async (id: string) => {
+      try {
+        const response = await fetch(`/api/culture/${id}`)
+        if (response.ok) {
+          const cultureItem: CultureItem = await response.json()
+          // 檢查是否為本地檔案路徑
+          const isLocalPath = !!(
+            cultureItem.imageUrl &&
+            (cultureItem.imageUrl.startsWith('/') ||
+              cultureItem.imageUrl.startsWith('C:') ||
+              cultureItem.imageUrl.startsWith('/mnt/') ||
+              cultureItem.imageUrl.includes(':\\'))
+          )
+
+          setHasLocalPath(isLocalPath)
+
+          setFormData({
+            title: cultureItem.title,
+            subtitle: cultureItem.subtitle,
+            description: cultureItem.description,
+            color: cultureItem.color,
+            height: cultureItem.height,
+            textColor: cultureItem.textColor,
+            imageUrl: isLocalPath ? '' : cultureItem.imageUrl || '',
+            image: '',
+          })
+
+          // 如果是本地路徑，顯示在預覽中但清空 URL 欄位
+          if (isLocalPath && cultureItem.imageUrl) {
+            setImagePreview(cultureItem.imageUrl)
+          }
+        } else {
+          alert('找不到該時光典藏項目')
+          router.push('/admin/culture')
         }
-      } else {
-        alert('找不到該時光典藏項目')
+      } catch (error) {
+        logger.error(
+          '載入文化項目失敗',
+          error instanceof Error ? error : new Error('Unknown error')
+        )
+        alert('載入失敗')
         router.push('/admin/culture')
       }
-    } catch (error) {
-      logger.error('載入文化項目失敗', error instanceof Error ? error : new Error('Unknown error'))
-      alert('載入失敗')
-      router.push('/admin/culture')
-    }
-  }, [router])
+    },
+    [router]
+  )
 
   // 取得參數並載入資料
   useEffect(() => {
@@ -108,13 +117,13 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -126,17 +135,16 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
     )
   }
 
-
   const heightOptions = [
     { name: '中等', value: 'h-64' },
     { name: '較高', value: 'h-80' },
-    { name: '很高', value: 'h-96' }
+    { name: '很高', value: 'h-96' },
   ]
 
   const textColorOptions = [
     { name: '白色', value: 'text-white' },
     { name: '黑色', value: 'text-black' },
-    { name: '灰色', value: 'text-gray-700' }
+    { name: '灰色', value: 'text-gray-700' },
   ]
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -147,33 +155,35 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
       logger.info('📤 提交的編輯資料', {
         metadata: {
           ...formData,
-          imageFile: _imageFile ? `File: ${_imageFile.name} (${(_imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null,
-          hasLocalPath
-        }
+          imageFile: _imageFile
+            ? `File: ${_imageFile.name} (${(_imageFile.size / 1024 / 1024).toFixed(2)}MB)`
+            : null,
+          hasLocalPath,
+        },
       })
-      
+
       // 準備 FormData 用於檔案上傳
       const submitFormData = new FormData()
       submitFormData.append('title', formData.title)
       submitFormData.append('subtitle', formData.subtitle)
       submitFormData.append('description', formData.description)
       submitFormData.append('height', formData.height)
-      
+
       if (_imageFile) {
         submitFormData.append('imageFile', _imageFile)
         logger.info('📁 包含新的圖片檔案', {
-          metadata: { fileName: _imageFile.name }
+          metadata: { fileName: _imageFile.name },
         })
       } else if (formData.imageUrl) {
         submitFormData.append('imageUrl', formData.imageUrl)
         logger.info('🔗 保持現有的圖片 URL', {
-          metadata: { imageUrl: formData.imageUrl }
+          metadata: { imageUrl: formData.imageUrl },
         })
       }
-      
+
       const response = await fetch(`/api/culture/${cultureId}`, {
         method: 'PUT',
-        body: submitFormData  // 使用 FormData
+        body: submitFormData, // 使用 FormData
       })
 
       if (response.ok) {
@@ -182,14 +192,19 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
         alert('更新失敗')
       }
     } catch (error) {
-      logger.error('Error updating culture item:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error updating culture item:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('更新失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
   }
@@ -212,7 +227,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
 
       setImageFile(file)
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = e => {
         const result = e.target?.result as string
         setImagePreview(result)
         // 清除 URL 欄位，因為使用檔案上傳
@@ -264,7 +279,11 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 編輯表單 */}
-          <form id="edit-culture-form" onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+          <form
+            id="edit-culture-form"
+            onSubmit={handleSubmit}
+            className="bg-white rounded-lg shadow-md p-6 space-y-6"
+          >
             {/* 標題 */}
             <div>
               <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-2">
@@ -344,7 +363,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                 id="imageUrl"
                 name="imageUrl"
                 value={formData.imageUrl}
-                onChange={(e) => {
+                onChange={e => {
                   handleInputChange(e)
                   // 如果輸入了新的 URL，清除上傳的圖片
                   if (e.target.value && imagePreview && !hasLocalPath) {
@@ -358,12 +377,14 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
               />
               {formData.imageUrl && !hasLocalPath && (
                 <div className="mt-2">
-                  <img 
-                    src={formData.imageUrl} 
-                    alt="圖片預覽" 
+                  <Image
+                    src={formData.imageUrl}
+                    alt="圖片預覽"
+                    width={128}
+                    height={128}
                     className="h-32 w-32 object-cover rounded-lg border border-gray-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
+                    onError={e => {
+                      ;(e.target as HTMLImageElement).style.display = 'none'
                     }}
                   />
                 </div>
@@ -372,16 +393,16 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
 
             {/* 圖片上傳 */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                或上傳圖片檔案
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">或上傳圖片檔案</label>
               <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-orange-400 transition-colors">
                 <div className="space-y-1 text-center">
                   {imagePreview && !hasLocalPath ? (
                     <div className="mb-4">
-                      <img 
-                        src={imagePreview} 
-                        alt="預覽圖片" 
+                      <Image
+                        src={imagePreview}
+                        alt="預覽圖片"
+                        width={128}
+                        height={128}
                         className="mx-auto h-32 w-32 object-cover rounded-lg"
                       />
                       <button
@@ -423,13 +444,16 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                     </svg>
                   )}
                   <div className="flex text-sm text-gray-600">
-                    <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500">
+                    <label
+                      htmlFor="image-upload"
+                      className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-orange-500"
+                    >
                       <span>{imagePreview || hasLocalPath ? '重新上傳' : '上傳圖片'}</span>
-                      <input 
-                        id="image-upload" 
-                        name="image-upload" 
-                        type="file" 
-                        className="sr-only" 
+                      <input
+                        id="image-upload"
+                        name="image-upload"
+                        type="file"
+                        className="sr-only"
                         accept="image/*"
                         onChange={handleImageChange}
                       />
@@ -440,7 +464,6 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                 </div>
               </div>
             </div>
-
 
             {/* 高度選擇 */}
             <div>
@@ -454,7 +477,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
-                {heightOptions.map((height) => (
+                {heightOptions.map(height => (
                   <option key={height.value} value={height.value}>
                     {height.name}
                   </option>
@@ -474,7 +497,7 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
               >
-                {textColorOptions.map((textColor) => (
+                {textColorOptions.map(textColor => (
                   <option key={textColor.value} value={textColor.value}>
                     {textColor.name}
                   </option>
@@ -488,13 +511,17 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-white rounded-lg shadow-md p-4">
               <div className={`relative ${formData.height} rounded-lg overflow-hidden`}>
-                {(formData.imageUrl || imagePreview) ? (
+                {formData.imageUrl || imagePreview ? (
                   // 顯示圖片背景
                   <div className="relative w-full h-full">
                     {hasLocalPath ? (
                       // 當是本地路徑時，顯示預設的無圖片狀態
-                      <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
-                        <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
+                      <div
+                        className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}
+                      >
+                        <div
+                          className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}
+                        >
                           <div>
                             <div className="text-sm opacity-80 mb-2">
                               {formData.subtitle || '副標題預覽'}
@@ -514,10 +541,11 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                         </div>
                       </div>
                     ) : (
-                      <img 
-                        src={imagePreview || formData.imageUrl} 
-                        alt="背景圖片" 
-                        className="w-full h-full object-cover rounded-lg"
+                      <Image
+                        src={imagePreview || formData.imageUrl}
+                        alt="背景圖片"
+                        fill
+                        className="object-cover rounded-lg"
                       />
                     )}
                     <div className="absolute inset-0 bg-black bg-opacity-30 p-6 flex flex-col justify-between">
@@ -536,23 +564,23 @@ export default function EditCulture({ params }: { params: Promise<{ id: string }
                   </div>
                 ) : (
                   // 顯示色塊背景
-                  <div className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}>
-                    <div className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}>
+                  <div
+                    className={`${formData.color} h-full p-6 rounded-lg relative overflow-hidden`}
+                  >
+                    <div
+                      className={`${formData.textColor} h-full flex flex-col justify-between relative z-10`}
+                    >
                       <div>
                         <div className="text-sm opacity-80 mb-2">
                           {formData.subtitle || '副標題預覽'}
                         </div>
-                        <h3 className="text-xl font-bold mb-3">
-                          {formData.title || '標題預覽'}
-                        </h3>
+                        <h3 className="text-xl font-bold mb-3">{formData.title || '標題預覽'}</h3>
                         <p className="text-sm opacity-90 leading-relaxed">
                           {formData.description || '描述內容預覽...'}
                         </p>
                       </div>
                       <div className="mt-4">
-                        <div className="inline-flex items-center text-sm opacity-80">
-                          了解更多
-                        </div>
+                        <div className="inline-flex items-center text-sm opacity-80">了解更多</div>
                       </div>
                     </div>
                   </div>
