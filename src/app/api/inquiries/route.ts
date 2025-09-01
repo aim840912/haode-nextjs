@@ -10,8 +10,8 @@ import { supabaseServerInquiryService } from '@/services/supabaseInquiryService'
 import { AuditLogger } from '@/services/auditLogService';
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter';
 import { withErrorHandler } from '@/lib/error-handler';
-import { withValidation, withQueryValidation, withBodyValidation } from '@/lib/validation-middleware';
-import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas';
+// import { withValidation, withQueryValidation, withBodyValidation } from '@/lib/validation-middleware';
+// import { InquirySchemas } from '@/lib/validation-schemas';
 import { z } from 'zod';
 import { success, created } from '@/lib/api-response';
 import { NotFoundError, AuthorizationError } from '@/lib/errors';
@@ -101,23 +101,13 @@ async function handlePOST(request: NextRequest, { validated }: { validated: any 
   return created(inquiry, '詢問單建立成功');
 }
 
-// 導出 API 處理器 - 套用驗證和錯誤處理中間件
-export const GET = withErrorHandler(
-  withQueryValidation(handleGET, InquirySchemas.query.merge(z.object({
-    admin: z.coerce.boolean().optional()
-  }))),
-  {
-    module: 'InquiriesAPI',
-    action: 'getInquiries',
-    enableAuditLog: true
-  }
-);
+// 導出 API 處理器 - 套用錯誤處理中間件
+export const GET = withErrorHandler(handleGET, {
+  module: 'InquiriesAPI',
+  enableAuditLog: true
+});
 
-export const POST = withErrorHandler(
-  withBodyValidation(handlePOST, InquirySchemas.create),
-  {
-    module: 'InquiriesAPI', 
-    action: 'createInquiry',
-    enableAuditLog: true
-  }
-);
+export const POST = withErrorHandler(handlePOST, {
+  module: 'InquiriesAPI',
+  enableAuditLog: true
+});

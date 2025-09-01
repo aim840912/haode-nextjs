@@ -315,4 +315,3 @@ export const BreadcrumbVariants = {
 // ============================================================================
 
 export default Breadcrumbs;
-export type { BreadcrumbItem, BreadcrumbsProps };
