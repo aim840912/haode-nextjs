@@ -32,11 +32,11 @@ class SearchHistoryManager {
 
   static addToHistory(searchTerm: string): void {
     if (typeof window === 'undefined' || !searchTerm.trim()) return
-    
+
     const history = this.getHistory()
     const filtered = history.filter(term => term !== searchTerm)
     const newHistory = [searchTerm, ...filtered].slice(0, MAX_SEARCH_HISTORY)
-    
+
     try {
       localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory))
     } catch (error) {
@@ -54,7 +54,11 @@ class SearchHistoryManager {
   }
 }
 
-export default function AdminProductsTable({ onDelete, onToggleActive, refreshTrigger }: AdminProductsTableProps) {
+export default function AdminProductsTable({
+  onDelete,
+  onToggleActive,
+  refreshTrigger,
+}: AdminProductsTableProps) {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -65,10 +69,10 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
     status: 'all',
     catalogVisibility: 'all',
     priceRange: { min: 0, max: 10000 },
-    sortBy: 'name'
+    sortBy: 'name',
   })
   const [searchHistory, setSearchHistory] = useState<string[]>([])
-  
+
   const { user } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
   const { success, error: errorToast, warning, loading: loadingToast, removeToast } = useToast()
@@ -88,27 +92,29 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
     try {
       setLoading(true)
       setError(null)
-      
+
       const timestamp = new Date().getTime()
       const response = await fetch(`/api/admin-proxy/products?t=${timestamp}`, {
         cache: 'no-cache',
         credentials: 'include',
         headers: {
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
+          Pragma: 'no-cache',
+        },
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
       }
-      
+
       const data = await response.json()
       const products = data.products || data
       setProducts(Array.isArray(products) ? products : [])
     } catch (error) {
-      logger.error('Error fetching products', error as Error, { metadata: { component: 'AdminProductsTable' } })
+      logger.error('Error fetching products', error as Error, {
+        metadata: { component: 'AdminProductsTable' },
+      })
       setError(error instanceof Error ? error.message : '載入產品資料失敗')
     } finally {
       setLoading(false)
@@ -128,19 +134,18 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
     // 搜尋篩選
     if (filters.search && filters.search.trim()) {
       const searchTerm = filters.search.toLowerCase()
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm) ||
-        product.description.toLowerCase().includes(searchTerm) ||
-        product.category.toLowerCase().includes(searchTerm) ||
-        product.id.toLowerCase().includes(searchTerm)
+      filtered = filtered.filter(
+        product =>
+          product.name.toLowerCase().includes(searchTerm) ||
+          product.description.toLowerCase().includes(searchTerm) ||
+          product.category.toLowerCase().includes(searchTerm) ||
+          product.id.toLowerCase().includes(searchTerm)
       )
     }
 
     // 類別篩選
     if (filters.categories.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.categories.includes(product.category)
-      )
+      filtered = filtered.filter(product => filters.categories.includes(product.category))
     }
 
     // 庫存狀態篩選
@@ -166,9 +171,9 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
 
     // 價格區間篩選
     if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
-      filtered = filtered.filter(product => 
-        product.price >= filters.priceRange.min && 
-        product.price <= filters.priceRange.max
+      filtered = filtered.filter(
+        product =>
+          product.price >= filters.priceRange.min && product.price <= filters.priceRange.max
       )
     }
 
@@ -196,52 +201,55 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
     return filtered
   }, [products, filters])
 
-  const handleFilterChange = useCallback((newFilters: AdminFilterState) => {
-    setFilters(newFilters)
-    
-    // 如果有搜尋詞且與之前不同，加入歷史記錄
-    if (newFilters.search && newFilters.search !== filters.search && newFilters.search.trim()) {
-      SearchHistoryManager.addToHistory(newFilters.search.trim())
-      setSearchHistory(SearchHistoryManager.getHistory())
-    }
-  }, [filters.search])
+  const handleFilterChange = useCallback(
+    (newFilters: AdminFilterState) => {
+      setFilters(newFilters)
+
+      // 如果有搜尋詞且與之前不同，加入歷史記錄
+      if (newFilters.search && newFilters.search !== filters.search && newFilters.search.trim()) {
+        SearchHistoryManager.addToHistory(newFilters.search.trim())
+        setSearchHistory(SearchHistoryManager.getHistory())
+      }
+    },
+    [filters.search]
+  )
 
   const handleDelete = async (id: string) => {
     if (!user) {
       warning('請先登入', '您需要登入後才能刪除產品')
       return
     }
-    
+
     const productToDelete = products.find(p => p.id === id)
     const productName = productToDelete?.name || '產品'
-    
+
     if (!confirm(`確定要刪除「${productName}」嗎？這將同時刪除產品的所有圖片資料。`)) return
-    
+
     if (csrfLoading || !csrfToken) {
       warning('請稍候', '正在初始化安全驗證...')
       return
     }
-    
+
     if (csrfError) {
       errorToast('安全驗證失敗', '請重新整理頁面後再試')
       return
     }
-    
+
     const loadingId = loadingToast('刪除產品中', `正在刪除「${productName}」...`)
-    
+
     try {
       const headers: HeadersInit = {}
-      
+
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
       }
 
-      const response = await fetch(`/api/admin-proxy/products?id=${id}`, { 
+      const response = await fetch(`/api/admin-proxy/products?id=${id}`, {
         method: 'DELETE',
         headers,
-        credentials: 'include'
+        credentials: 'include',
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
@@ -250,11 +258,11 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
       const data = await response.json()
       removeToast(loadingId)
       setProducts(prevProducts => prevProducts.filter(p => p.id !== id))
-      
+
       if (data.imageCleanup) {
         const { success: imageSuccess, deletedCount, verification } = data.imageCleanup
         let message = `產品「${productName}」已成功刪除`
-        
+
         if (imageSuccess && deletedCount > 0) {
           message += `\n🖼️ 已清理 ${deletedCount} 個圖片檔案`
           if (verification?.verified) {
@@ -267,27 +275,28 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
         } else if (!imageSuccess) {
           message += `\n⚠️ 圖片清理失敗: ${data.imageCleanup.error || '未知錯誤'}`
         }
-        
+
         success('刪除成功', message)
       } else {
         success('刪除成功', `產品「${productName}」已成功刪除`)
       }
-      
+
       onDelete?.(id)
-      
     } catch (error) {
-      logger.error('Error deleting product', error as Error, { metadata: { productId: id, component: 'AdminProductsTable' } })
+      logger.error('Error deleting product', error as Error, {
+        metadata: { productId: id, component: 'AdminProductsTable' },
+      })
       removeToast(loadingId)
-      
+
       const errorMessage = error instanceof Error ? error.message : '刪除失敗，請稍後再試'
       errorToast('刪除失敗', `無法刪除產品「${productName}」: ${errorMessage}`, [
         {
           label: '重試',
           onClick: () => handleDelete(id),
-          variant: 'primary'
-        }
+          variant: 'primary',
+        },
       ])
-      
+
       await fetchProducts()
     }
   }
@@ -297,33 +306,31 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
       warning('請先登入', '您需要登入後才能修改產品狀態')
       return
     }
-    
+
     const productToUpdate = products.find(p => p.id === id)
     const productName = productToUpdate?.name || '產品'
     const newActiveState = !isActive
     const actionText = newActiveState ? '啟用' : '停用'
-    
+
     if (csrfLoading || !csrfToken) {
       warning('請稍候', '正在初始化安全驗證...')
       return
     }
-    
+
     if (csrfError) {
       errorToast('安全驗證失敗', '請重新整理頁面後再試')
       return
     }
-    
+
     try {
-      setProducts(prevProducts => 
-        prevProducts.map(p => 
-          p.id === id ? { ...p, isActive: newActiveState } : p
-        )
+      setProducts(prevProducts =>
+        prevProducts.map(p => (p.id === id ? { ...p, isActive: newActiveState } : p))
       )
-      
+
       const headers: HeadersInit = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
-      
+
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
       }
@@ -332,32 +339,31 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
         method: 'PUT',
         headers,
         credentials: 'include',
-        body: JSON.stringify({ id, isActive: newActiveState })
+        body: JSON.stringify({ id, isActive: newActiveState }),
       })
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
+
       success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
       onToggleActive?.(id, newActiveState)
-      
     } catch (error) {
-      logger.error('Error updating product', error as Error, { metadata: { productId: id, component: 'AdminProductsTable' } })
-      
+      logger.error('Error updating product', error as Error, {
+        metadata: { productId: id, component: 'AdminProductsTable' },
+      })
+
       const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
       errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [
         {
           label: '重試',
           onClick: () => handleToggleActive(id, isActive),
-          variant: 'primary'
-        }
+          variant: 'primary',
+        },
       ])
-      
-      setProducts(prevProducts => 
-        prevProducts.map(p => 
-          p.id === id ? { ...p, isActive: isActive } : p
-        )
+
+      setProducts(prevProducts =>
+        prevProducts.map(p => (p.id === id ? { ...p, isActive: isActive } : p))
       )
     }
   }
@@ -367,27 +373,27 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
       warning('請先登入', '您需要登入後才能修改產品目錄狀態')
       return
     }
-    
+
     const productToUpdate = products.find(p => p.id === id)
     const productName = productToUpdate?.name || '產品'
     const newShowState = !showInCatalog
     const actionText = newShowState ? '顯示在目錄' : '從目錄隱藏'
-    
+
     if (csrfLoading || !csrfToken) {
       warning('請稍候', '正在初始化安全驗證...')
       return
     }
-    
+
     if (csrfError) {
       errorToast('安全驗證失敗', '請重新整理頁面後再試')
       return
     }
-    
+
     try {
       const headers: HeadersInit = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
-      
+
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
       }
@@ -396,26 +402,27 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
         method: 'PUT',
         headers,
         credentials: 'include',
-        body: JSON.stringify({ id, showInCatalog: newShowState })
+        body: JSON.stringify({ id, showInCatalog: newShowState }),
       })
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
+
       await fetchProducts()
       success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
-      
     } catch (error) {
-      logger.error('Error updating product', error as Error, { metadata: { productId: id, component: 'AdminProductsTable' } })
-      
+      logger.error('Error updating product', error as Error, {
+        metadata: { productId: id, component: 'AdminProductsTable' },
+      })
+
       const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
       errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [
         {
           label: '重試',
           onClick: () => handleToggleShowInCatalog(id, showInCatalog),
-          variant: 'primary'
-        }
+          variant: 'primary',
+        },
       ])
     }
   }
@@ -423,7 +430,6 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
   const clearSearchHistory = () => {
     SearchHistoryManager.clearHistory()
     setSearchHistory([])
-    setShowSearchHistory(false)
   }
 
   if (loading) {
@@ -452,7 +458,7 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
         <div className="p-6 text-center">
           <div className="text-red-600 mb-4">⚠️</div>
           <p className="text-red-600 mb-4">{error}</p>
-          <button 
+          <button
             onClick={fetchProducts}
             className="bg-amber-900 text-white px-4 py-2 rounded-lg hover:bg-amber-800 transition-colors"
           >
@@ -529,7 +535,7 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAndSortedProducts.map((product) => (
+            {filteredAndSortedProducts.map(product => (
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -543,12 +549,8 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
                       />
                     </div>
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {product.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {product.description}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                      <div className="text-sm text-gray-500">{product.description}</div>
                     </div>
                   </div>
                 </td>
@@ -558,20 +560,24 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium">NT$ {product.price}</span>
-                    {product.isOnSale && product.originalPrice && product.originalPrice > product.price && (
-                      <>
-                        <span className="text-xs text-gray-500 line-through">
-                          NT$ {product.originalPrice}
-                        </span>
-                        <span className="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-xs font-medium">
-                          特價
-                        </span>
-                      </>
-                    )}
+                    {product.isOnSale &&
+                      product.originalPrice &&
+                      product.originalPrice > product.price && (
+                        <>
+                          <span className="text-xs text-gray-500 line-through">
+                            NT$ {product.originalPrice}
+                          </span>
+                          <span className="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-xs font-medium">
+                            特價
+                          </span>
+                        </>
+                      )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span className={`font-medium ${product.inventory <= 0 ? 'text-red-600' : product.inventory <= 10 ? 'text-yellow-600' : 'text-green-600'}`}>
+                  <span
+                    className={`font-medium ${product.inventory <= 0 ? 'text-red-600' : product.inventory <= 10 ? 'text-yellow-600' : 'text-green-600'}`}
+                  >
                     {product.inventory}
                   </span>
                 </td>
@@ -589,11 +595,11 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
                       {product.isActive ? '上架中' : '已下架'}
                     </button>
                   ) : (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      product.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}
+                    >
                       {product.isActive ? '上架中' : '已下架'}
                     </span>
                   )}
@@ -614,11 +620,11 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
                         {showInCatalog ? '顯示中' : '已隱藏'}
                       </button>
                     ) : (
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        showInCatalog
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          showInCatalog ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
                         {showInCatalog ? '顯示中' : '已隱藏'}
                       </span>
                     )
@@ -649,12 +655,12 @@ export default function AdminProductsTable({ onDelete, onToggleActive, refreshTr
             ))}
           </tbody>
         </table>
-        
+
         {filteredAndSortedProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">沒有找到符合條件的產品</p>
             {user?.role === 'admin' && products.length === 0 && (
-              <Link 
+              <Link
                 href="/admin/products/add"
                 className="inline-block mt-4 bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
               >
