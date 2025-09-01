@@ -9,6 +9,10 @@ import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { deleteProductImages, ProductImageDeletionResult, listProductImages } from '@/lib/supabase-storage'
 import { SupabaseAuditLogService } from '@/services/auditLogService'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/error-handler'
+import { AdminProductSchemas } from '@/lib/validation-schemas'
+import { ValidationError } from '@/lib/errors'
+import { success, created } from '@/lib/api-response'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {
@@ -91,51 +95,57 @@ async function handlePOST(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
-  try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 })
-    }
-
-    const productData = await request.json()
-
-    // 轉換資料格式
-    const dbProduct: Record<string, unknown> = {
-      name: productData.name,
-      description: productData.description,
-      price: productData.price,
-      category: productData.category,
-      image_url: productData.images?.[0] || null,
-      stock: productData.inventory || 0,
-      is_active: productData.isActive !== false
-    }
-
-    // 如果前端提供了 ID，使用指定的 ID
-    if (productData.id) {
-      dbProduct.id = productData.id
-    }
-
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .insert([dbProduct])
-      .select()
-      .single()
-
-    if (error) throw error
-
-    // 清除產品快取，確保公開 API 能立即看到變更
-    try {
-      const { CachedProductService } = await import('@/services/cachedProductService')
-      await CachedProductService.clearGlobalCache()
-    } catch (cacheError) {
-      apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
-      // 不影響主要功能，只記錄警告
-    }
-
-    return NextResponse.json({ product: transformFromDB(data) }, { status: 201 })
-  } catch (error) {
-    apiLogger.error('Error creating product', error as Error)
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 })
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin not configured')
   }
+
+  // 驗證請求資料
+  const body = await request.json()
+  const result = AdminProductSchemas.create.safeParse(body)
+  
+  if (!result.success) {
+    const errorMessage = result.error.issues
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
+    throw new ValidationError(`產品資料驗證失敗: ${errorMessage}`)
+  }
+
+  const productData = result.data
+
+  // 轉換資料格式
+  const dbProduct: Record<string, unknown> = {
+    name: productData.name,
+    description: productData.description,
+    price: productData.price,
+    category: productData.category,
+    image_url: productData.images?.[0] || null,
+    stock: productData.inventory || 0,
+    is_active: productData.isActive !== false
+  }
+
+  // 如果前端提供了 ID，使用指定的 ID
+  if (productData.id) {
+    dbProduct.id = productData.id
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .insert([dbProduct])
+    .select()
+    .single()
+
+  if (error) throw error
+
+  // 清除產品快取，確保公開 API 能立即看到變更
+  try {
+    const { CachedProductService } = await import('@/services/cachedProductService')
+    await CachedProductService.clearGlobalCache()
+  } catch (cacheError) {
+    apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
+    // 不影響主要功能，只記錄警告
+  }
+
+  return created({ product: transformFromDB(data) }, '產品建立成功')
 }
 
 // PUT - 更新產品
@@ -147,53 +157,55 @@ async function handlePUT(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
-  try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 })
-    }
-
-    const { id, ...productData } = await request.json()
-
-    if (!id) {
-      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
-    }
-
-    // 轉換資料格式
-    const dbProduct: Record<string, unknown> = {}
-    
-    if (productData.name !== undefined) dbProduct.name = productData.name
-    if (productData.description !== undefined) dbProduct.description = productData.description
-    if (productData.price !== undefined) dbProduct.price = productData.price
-    if (productData.category !== undefined) dbProduct.category = productData.category
-    if (productData.images && productData.images.length > 0) dbProduct.image_url = productData.images[0]
-    if (productData.inventory !== undefined) dbProduct.stock = productData.inventory
-    if (productData.isActive !== undefined) dbProduct.is_active = productData.isActive
-
-    dbProduct.updated_at = new Date().toISOString()
-
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .update(dbProduct)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-
-    // 清除產品快取，確保公開 API 能立即看到變更
-    try {
-      const { CachedProductService } = await import('@/services/cachedProductService')
-      await CachedProductService.clearGlobalCache()
-    } catch (cacheError) {
-      apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
-      // 不影響主要功能，只記錄警告
-    }
-
-    return NextResponse.json({ product: transformFromDB(data) })
-  } catch (error) {
-    apiLogger.error('Error updating product', error as Error)
-    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin not configured')
   }
+
+  // 驗證請求資料
+  const body = await request.json()
+  const result = AdminProductSchemas.update.safeParse(body)
+  
+  if (!result.success) {
+    const errorMessage = result.error.issues
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
+    throw new ValidationError(`產品更新資料驗證失敗: ${errorMessage}`)
+  }
+
+  const { id, ...productData } = result.data
+
+  // 轉換資料格式
+  const dbProduct: Record<string, unknown> = {}
+  
+  if (productData.name !== undefined) dbProduct.name = productData.name
+  if (productData.description !== undefined) dbProduct.description = productData.description
+  if (productData.price !== undefined) dbProduct.price = productData.price
+  if (productData.category !== undefined) dbProduct.category = productData.category
+  if (productData.images && productData.images.length > 0) dbProduct.image_url = productData.images[0]
+  if (productData.inventory !== undefined) dbProduct.stock = productData.inventory
+  if (productData.isActive !== undefined) dbProduct.is_active = productData.isActive
+
+  dbProduct.updated_at = new Date().toISOString()
+
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .update(dbProduct)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+
+  // 清除產品快取，確保公開 API 能立即看到變更
+  try {
+    const { CachedProductService } = await import('@/services/cachedProductService')
+    await CachedProductService.clearGlobalCache()
+  } catch (cacheError) {
+    apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
+    // 不影響主要功能，只記錄警告
+  }
+
+  return success({ product: transformFromDB(data) }, '產品更新成功')
 }
 
 // DELETE - 刪除產品
@@ -205,17 +217,25 @@ async function handleDELETE(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
-  try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 })
-    }
+  if (!supabaseAdmin) {
+    throw new Error('Supabase admin not configured')
+  }
 
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
 
-    if (!id) {
-      return NextResponse.json({ error: 'Product ID is required' }, { status: 400 })
-    }
+  if (!id) {
+    throw new ValidationError('產品 ID 為必填參數')
+  }
+
+  // 驗證 ID 格式
+  const result = AdminProductSchemas.deleteParams.safeParse({ id })
+  if (!result.success) {
+    const errorMessage = result.error.issues
+      .map(err => `${err.path.join('.')}: ${err.message}`)
+      .join('; ')
+    throw new ValidationError(`產品 ID 驗證失敗: ${errorMessage}`)
+  }
 
     // 先獲取產品資料以便記錄審計日誌
     const { data: productData, error: fetchError } = await supabaseAdmin
@@ -313,17 +333,13 @@ async function handleDELETE(request: NextRequest) {
       // 不影響主要功能，只記錄警告
     }
 
-    return NextResponse.json({ 
-      message: 'Product deleted successfully',
+    return success({ 
+      message: '產品刪除成功',
       imageCleanup: {
         ...imageDeletionResult,
         verification: verificationResult
       }
-    })
-  } catch (error) {
-    apiLogger.error('Error deleting product', error as Error)
-    return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 })
-  }
+    }, '產品刪除成功')
 }
 
 // 套用 Rate Limiting 並導出 API 處理器
@@ -336,16 +352,38 @@ const adminRateLimitConfig = {
   message: '管理員 API 使用頻率超出限制，請稍後重試'
 };
 
-export const GET = withRateLimit(handleGET, {
+// 整合錯誤處理中間件
+const handleGETWithError = withErrorHandler(handleGET, {
+  module: 'AdminProductsAPI',
+  enableAuditLog: false
+});
+
+const handlePOSTWithError = withErrorHandler(handlePOST, {
+  module: 'AdminProductsAPI',
+  enableAuditLog: true
+});
+
+const handlePUTWithError = withErrorHandler(handlePUT, {
+  module: 'AdminProductsAPI', 
+  enableAuditLog: true
+});
+
+const handleDELETEWithError = withErrorHandler(handleDELETE, {
+  module: 'AdminProductsAPI',
+  enableAuditLog: true
+});
+
+// 導出 API 處理器（保留 Rate Limiting）
+export const GET = withRateLimit(handleGETWithError, {
   ...adminRateLimitConfig,
   maxRequests: 100 // GET 請求較寬鬆
 });
 
-export const POST = withRateLimit(handlePOST, adminRateLimitConfig);
+export const POST = withRateLimit(handlePOSTWithError, adminRateLimitConfig);
 
-export const PUT = withRateLimit(handlePUT, adminRateLimitConfig);
+export const PUT = withRateLimit(handlePUTWithError, adminRateLimitConfig);
 
-export const DELETE = withRateLimit(handleDELETE, {
+export const DELETE = withRateLimit(handleDELETEWithError, {
   ...adminRateLimitConfig,
   maxRequests: 20 // DELETE 請求較嚴格
 });

@@ -469,6 +469,44 @@ export function sanitizeHtml(html: string): string {
 /**
  * 基礎 CRUD 驗證配置
  */
+/**
+ * 管理員產品相關 Schema（對應現有 API 格式）
+ */
+export const AdminProductSchemas = {
+  /** 創建產品（管理員用）*/
+  create: z.object({
+    name: StringSchemas.nonEmpty.max(100, '產品名稱不能超過 100 字元'),
+    description: z.string().max(2000, '產品描述不能超過 2000 字元').transform((str) => {
+      return str.replace(/<[^>]*>/g, '').trim();
+    }),
+    price: NumberSchemas.price,
+    category: StringSchemas.nonEmpty.max(50, '分類名稱不能超過 50 字元'),
+    inventory: NumberSchemas.stock, // 前端使用 inventory，對應資料庫 stock
+    images: z.array(z.string().url('圖片必須是有效的 URL')).max(5, '最多只能上傳 5 張圖片').optional(),
+    isActive: z.boolean().default(true), // 前端使用 isActive，對應資料庫 is_active
+    id: StringSchemas.uuid.optional() // 允許指定 ID
+  }),
+  
+  /** 更新產品（管理員用）*/
+  update: z.object({
+    id: StringSchemas.uuid,
+    name: StringSchemas.nonEmpty.max(100, '產品名稱不能超過 100 字元').optional(),
+    description: z.string().max(2000, '產品描述不能超過 2000 字元').transform((str) => {
+      return str.replace(/<[^>]*>/g, '').trim();
+    }).optional(),
+    price: NumberSchemas.price.optional(),
+    category: StringSchemas.nonEmpty.max(50, '分類名稱不能超過 50 字元').optional(),
+    inventory: NumberSchemas.stock.optional(),
+    images: z.array(z.string().url('圖片必須是有效的 URL')).max(5, '最多只能上傳 5 張圖片').optional(),
+    isActive: z.boolean().optional()
+  }),
+  
+  /** 刪除產品 ID 驗證 */
+  deleteParams: z.object({
+    id: StringSchemas.uuid
+  })
+};
+
 export const CommonValidations = {
   /** UUID 參數驗證 */
   uuidParam: z.object({
