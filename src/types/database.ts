@@ -68,6 +68,62 @@ export type Database = {
           updated_at?: string
         }
       }
+      audit_logs: {
+        Row: {
+          id: string
+          user_id: string | null
+          user_email: string
+          user_name: string | null
+          user_role: string | null
+          action: string
+          resource_type: string
+          resource_id: string | null
+          resource_details: any
+          previous_data: any
+          new_data: any
+          ip_address: string | null
+          user_agent: string | null
+          session_id: string | null
+          metadata: any
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          user_email: string
+          user_name?: string | null
+          user_role?: string | null
+          action: string
+          resource_type: string
+          resource_id?: string | null
+          resource_details?: any
+          previous_data?: any
+          new_data?: any
+          ip_address?: string | null
+          user_agent?: string | null
+          session_id?: string | null
+          metadata?: any
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          user_email?: string
+          user_name?: string | null
+          user_role?: string | null
+          action?: string
+          resource_type?: string
+          resource_id?: string | null
+          resource_details?: any
+          previous_data?: any
+          new_data?: any
+          ip_address?: string | null
+          user_agent?: string | null
+          session_id?: string | null
+          metadata?: any
+          created_at?: string
+        }
+      }
       // 其他表的類型定義...
       locations: {
         Row: {

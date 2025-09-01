@@ -73,7 +73,7 @@ export class SupabaseAuditLogService implements AuditLogService {
       // 插入審計日誌
       const { error } = await createServiceSupabaseClient()
         .from('audit_logs')
-        .insert(auditData);
+        .insert(auditData as any);
 
       if (error) {
         dbLogger.info('審計日誌記錄失敗', {
@@ -223,7 +223,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_user_id: userId,
           limit_count: limit,
           offset_count: offset
-        });
+        } as any);
 
       if (error) {
         dbLogger.error('取得使用者活動歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
@@ -254,7 +254,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_resource_type: resourceType,
           target_resource_id: resourceId,
           limit_count: limit
-        });
+        } as any);
 
       if (error) {
         dbLogger.error('取得資源存取歷史失敗', new Error(`${error.message} (code: ${error.code})`), {

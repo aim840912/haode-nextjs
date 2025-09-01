@@ -1,12 +1,17 @@
 Failed to compile.
-./src/app/api/inquiries/route.ts:14:26
-Type error: Module '"@/lib/validation-schemas"' has no exported member 'CommonValidations'.
-  12 | import { withErrorHandler } from '@/lib/error-handler';
-  13 | import { withValidation, withQueryValidation, withBodyValidation } from '@/lib/validation-middleware';
-> 14 | import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas';
-     |                          ^
-  15 | import { z } from 'zod';
-  16 | import { success, created } from '@/lib/api-response';
-  17 | import { NotFoundError, AuthorizationError } from '@/lib/errors';
+./src/services/auditLogService.ts:76:17
+Type error: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "audit_logs", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string | null | undefined; user_email: string; user_name: string | undefined; user_role: UserRole | undefined; action: AuditAction; resource_type: ResourceType; ... 7 more ...; metadata: Record<...>; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "audit_logs", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string | null | undefined; user_email: string; user_name: string | undefined; user_role: UserRole | undefined; action: AuditAction; resource_type: ResourceType; ... 7 more ...; metadata: Record<...>; }' is not assignable to parameter of type 'never[]'.
+      Type '{ user_id: string | null | undefined; user_email: string; user_name: string | undefined; user_role: UserRole | undefined; action: AuditAction; resource_type: ResourceType; ... 7 more ...; metadata: Record<...>; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+  74 |       const { error } = await createServiceSupabaseClient()
+  75 |         .from('audit_logs')
+> 76 |         .insert(auditData);
+     |                 ^
+  77 |
+  78 |       if (error) {
+  79 |         dbLogger.info('審計日誌記錄失敗', {
 Next.js build worker exited with code: 1 and signal: null
 Error: Command "npm run build" exited with 1

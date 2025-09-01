@@ -99,7 +99,7 @@ export class SupabaseInquiryService implements InquiryService {
 
       const { data: inquiry, error: inquiryError } = await createServiceSupabaseClient()
         .from('inquiries')
-        .insert(inquiryData)
+        .insert(inquiryData as any)
         .select()
         .single();
 
@@ -122,7 +122,7 @@ export class SupabaseInquiryService implements InquiryService {
       
       if (data.inquiry_type === 'product' && data.items && data.items.length > 0) {
         const itemsData = data.items.map(item => ({
-          inquiry_id: inquiry.id,
+          inquiry_id: (inquiry as any).id,
           product_id: item.product_id,
           product_name: item.product_name,
           product_category: item.product_category,
@@ -134,7 +134,7 @@ export class SupabaseInquiryService implements InquiryService {
 
         const { data: items, error: itemsError } = await createServiceSupabaseClient()
           .from('inquiry_items')
-          .insert(itemsData)
+          .insert(itemsData as any)
           .select();
 
         if (itemsError) {
