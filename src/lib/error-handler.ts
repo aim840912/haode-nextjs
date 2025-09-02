@@ -21,6 +21,14 @@ import { captureError, addBreadcrumb, setUser, startTransaction, finishTransacti
 export type ApiHandler = (request: NextRequest, params?: unknown) => Promise<NextResponse>
 
 /**
+ * 動態路由處理器類型
+ */
+export type DynamicRouteHandler<T = Record<string, string>> = (
+  request: NextRequest, 
+  context: { params: Promise<T> }
+) => Promise<NextResponse>
+
+/**
  * 錯誤處理選項
  */
 export interface ErrorHandlerOptions {
@@ -296,13 +304,29 @@ class ErrorStatsCollector {
 // ErrorStatsCollector 將在檔案底部一起導出
 
 /**
- * 統一的錯誤處理中間件
+ * 統一的錯誤處理中間件 - 支持普通路由
  */
 export function withErrorHandler(
   handler: ApiHandler,
+  options?: ErrorHandlerOptions
+): ApiHandler
+
+/**
+ * 統一的錯誤處理中間件 - 支持動態路由
+ */
+export function withErrorHandler<T = Record<string, string>>(
+  handler: DynamicRouteHandler<T>,
+  options?: ErrorHandlerOptions
+): DynamicRouteHandler<T>
+
+/**
+ * 統一的錯誤處理中間件實作
+ */
+export function withErrorHandler<T = Record<string, string>>(
+  handler: ApiHandler | DynamicRouteHandler<T>,
   options: ErrorHandlerOptions = {}
-): ApiHandler {
-  return async (request: NextRequest, params?: unknown): Promise<NextResponse> => {
+): ApiHandler | DynamicRouteHandler<T> {
+  return async (request: NextRequest, context?: unknown): Promise<NextResponse> => {
     const startTime = performance.now()
     const traceId = generateTraceId()
 
@@ -350,13 +374,25 @@ export function withErrorHandler(
 
       if (options.enableRetry) {
         result = await withRetry(
-          () => handler(request, params),
+          () => {
+            // 檢查是否為動態路由處理器
+            if (context && typeof context === 'object' && 'params' in context) {
+              return (handler as DynamicRouteHandler<T>)(request, context as { params: Promise<T> })
+            } else {
+              return (handler as ApiHandler)(request, context)
+            }
+          },
           options.retryAttempts || 3,
           options.retryDelay || 1000,
           logContext
         )
       } else {
-        result = await handler(request, params)
+        // 檢查是否為動態路由處理器
+        if (context && typeof context === 'object' && 'params' in context) {
+          result = await (handler as DynamicRouteHandler<T>)(request, context as { params: Promise<T> })
+        } else {
+          result = await (handler as ApiHandler)(request, context)
+        }
       }
 
       // 記錄成功請求

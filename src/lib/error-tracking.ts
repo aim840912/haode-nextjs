@@ -98,7 +98,19 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
       name,
       operation,
       startTime: Date.now(),
-      id: Math.random().toString(36).substring(7)
+      id: Math.random().toString(36).substring(7),
+      status: 'ok', // 初始狀態
+      
+      // 添加 setStatus 方法以相容 Sentry API
+      setStatus: function(status: string) {
+        this.status = status
+        logger.debug(`事務狀態更新: ${name}`, {
+          metadata: {
+            transaction: this.id,
+            status: status
+          }
+        })
+      }
     }
     
     logger.debug(`開始事務追蹤: ${name}`, {
@@ -119,7 +131,8 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
       metadata: {
         transaction: transaction.id,
         operation: transaction.operation,
-        duration: `${duration}ms`
+        duration: `${duration}ms`,
+        status: transaction.status || 'ok'
       }
     })
   }

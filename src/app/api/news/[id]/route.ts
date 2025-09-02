@@ -1,60 +1,112 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { newsService } from '@/services/newsService'
+import { NewsSchemas, CommonValidations } from '@/lib/validation-schemas'
+import { ValidationError, NotFoundError } from '@/lib/errors'
+import { success } from '@/lib/api-response'
+import { withErrorHandler } from '@/lib/error-handler'
+import { apiLogger } from '@/lib/logger'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const newsItem = await newsService.getNewsById(id)
-    if (!newsItem) {
-      return NextResponse.json(
-        { error: 'News not found' },
-        { status: 404 }
-      )
-    }
-    return NextResponse.json(newsItem)
-  } catch (error) {
-    console.error('Error fetching news:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch news' },
-      { status: 500 }
-    )
+/**
+ * GET /api/news/[id] - 取得單一新聞
+ */
+async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  // 驗證 UUID 格式
+  const result = CommonValidations.uuidParam.safeParse({ id })
+  if (!result.success) {
+    const errors = result.error.issues
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ')
+    throw new ValidationError(`參數驗證失敗: ${errors}`)
   }
+
+  apiLogger.info('查詢單一新聞', {
+    metadata: { newsId: id },
+  })
+
+  const newsItem = await newsService.getNewsById(id)
+  if (!newsItem) {
+    throw new NotFoundError('新聞不存在')
+  }
+
+  return success(newsItem, '查詢成功')
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const body = await request.json()
-    const newsItem = await newsService.updateNews(id, body)
-    return NextResponse.json(newsItem)
-  } catch (error) {
-    console.error('Error updating news:', error)
-    return NextResponse.json(
-      { error: 'Failed to update news' },
-      { status: 500 }
-    )
+/**
+ * PUT /api/news/[id] - 更新新聞
+ */
+async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  // 驗證 UUID 格式
+  const paramResult = CommonValidations.uuidParam.safeParse({ id })
+  if (!paramResult.success) {
+    const errors = paramResult.error.issues
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ')
+    throw new ValidationError(`參數驗證失敗: ${errors}`)
   }
+
+  // 解析並驗證請求資料
+  const body = await request.json()
+  const result = NewsSchemas.update.safeParse(body)
+
+  if (!result.success) {
+    const errors = result.error.issues
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ')
+    throw new ValidationError(`資料驗證失敗: ${errors}`)
+  }
+
+  apiLogger.info('更新新聞', {
+    metadata: {
+      newsId: id,
+      changes: Object.keys(result.data),
+    },
+  })
+
+  const newsItem = await newsService.updateNews(id, result.data)
+
+  return success(newsItem, '新聞更新成功')
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    await newsService.deleteNews(id)
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error deleting news:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete news' },
-      { status: 500 }
-    )
+/**
+ * DELETE /api/news/[id] - 刪除新聞
+ */
+async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+
+  // 驗證 UUID 格式
+  const result = CommonValidations.uuidParam.safeParse({ id })
+  if (!result.success) {
+    const errors = result.error.issues
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ')
+    throw new ValidationError(`參數驗證失敗: ${errors}`)
   }
+
+  apiLogger.info('刪除新聞', {
+    metadata: { newsId: id },
+  })
+
+  await newsService.deleteNews(id)
+
+  return success({ id }, '新聞刪除成功')
 }
+
+// 導出處理器
+export const GET = withErrorHandler(handleGET, {
+  module: 'NewsAPI',
+  enableAuditLog: false,
+})
+
+export const PUT = withErrorHandler(handlePUT, {
+  module: 'NewsAPI',
+  enableAuditLog: true,
+})
+
+export const DELETE = withErrorHandler(handleDELETE, {
+  module: 'NewsAPI',
+  enableAuditLog: true,
+})

@@ -102,6 +102,9 @@ export class JsonNewsService implements NewsService {
   }
 }
 
-// 使用 Supabase 資料庫服務以支援 Storage 整合
-import { supabaseNewsService } from './supabaseNewsService'
-export const newsService: NewsService = supabaseNewsService
+// 使用 v2 統一架構的新聞服務適配器
+import { newsServiceAdapter } from './newsServiceAdapter'
+export const newsService: NewsService = newsServiceAdapter
+
+// 保持向後相容性的別名
+export { supabaseNewsService } from './newsServiceAdapter'

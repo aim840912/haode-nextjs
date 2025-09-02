@@ -5,32 +5,35 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { createInquiryService } from '@/services/inquiryService'
-import { supabaseServerInquiryService } from '@/services/supabaseInquiryService'
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
+import { inquiryServiceAdapter } from '@/services/inquiryServiceAdapter'
 import { AuditLogger } from '@/services/auditLogService'
-import { requireAuth, User } from '@/lib/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
+import { InquirySchemas } from '@/lib/validation-schemas'
+import { ValidationError, AuthorizationError } from '@/lib/errors'
+import { withErrorHandler } from '@/lib/error-handler'
 
-// 建立庫存查詢服務實例
-const inquiryService = createInquiryService(supabaseServerInquiryService)
+// 使用統一的詢問服務適配器
+const inquiryService = inquiryServiceAdapter
 
 // GET /api/inquiries - 取得庫存查詢單清單
-async function handleGET(request: NextRequest, { user }: { user: User }) {
-  // 解析查詢參數
+async function handleGET(request: NextRequest) {
+  // 驗證使用者認證
+  const user = await getCurrentUser()
+  if (!user) {
+    throw new AuthorizationError('未認證或會話已過期')
+  }
+  // 解析並驗證查詢參數
   const url = new URL(request.url)
-  const statusParam = url.searchParams.get('status')
-  const queryParams = {
-    page: parseInt(url.searchParams.get('page') || '1'),
-    limit: parseInt(url.searchParams.get('limit') || '10'),
-    search: url.searchParams.get('search') || undefined,
-    status:
-      statusParam &&
-      ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'].includes(statusParam)
-        ? (statusParam as 'pending' | 'quoted' | 'confirmed' | 'completed' | 'cancelled')
-        : undefined,
-    admin: url.searchParams.get('admin') === 'true',
+  const searchParams = Object.fromEntries(url.searchParams.entries())
+  const result = InquirySchemas.query.safeParse(searchParams)
+
+  if (!result.success) {
+    const errors = result.error.issues
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ')
+    throw new ValidationError(`查詢參數驗證失敗: ${errors}`)
   }
 
   // 檢查是否為管理員
@@ -42,21 +45,36 @@ async function handleGET(request: NextRequest, { user }: { user: User }) {
     .single()
 
   const isAdmin = profile?.role === 'admin'
-  const adminMode = queryParams.admin === true
+  const adminMode = result.data.admin === true
+
+  apiLogger.info('查詢庫存查詢單清單', {
+    metadata: {
+      userId: user.id,
+      userEmail: user.email,
+      isAdmin,
+      adminMode,
+      queryParams: result.data
+    }
+  })
 
   // 取得庫存查詢單清單
   let inquiries
   if (isAdmin && adminMode) {
-    inquiries = await inquiryService.getAllInquiries(queryParams)
+    inquiries = await inquiryService.getAllInquiries(result.data)
   } else {
-    inquiries = await inquiryService.getUserInquiries(user.id, queryParams)
+    inquiries = await inquiryService.getUserInquiries(user.id, result.data)
   }
 
   return success(inquiries, '庫存查詢單清單取得成功')
 }
 
 // POST /api/inquiries - 建立新庫存查詢單
-async function handlePOST(request: NextRequest, { user }: { user: User }) {
+async function handlePOST(request: NextRequest) {
+  // 驗證使用者認證
+  const user = await getCurrentUser()
+  if (!user) {
+    throw new AuthorizationError('未認證或會話已過期')
+  }
   // 取得使用者資訊用於審計日誌
   const supabase = await createServerSupabaseClient()
   const { data: profile } = await supabase
@@ -65,11 +83,28 @@ async function handlePOST(request: NextRequest, { user }: { user: User }) {
     .eq('id', user.id)
     .single()
 
-  // 解析請求資料
-  const requestData = await request.json()
+  // 解析並驗證請求資料
+  const body = await request.json()
+  const result = InquirySchemas.create.safeParse(body)
+
+  if (!result.success) {
+    const errors = result.error.issues
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
+      .join(', ')
+    throw new ValidationError(`資料驗證失敗: ${errors}`)
+  }
+
+  apiLogger.info('創建庫存查詢單', {
+    metadata: {
+      userId: user.id,
+      userEmail: user.email,
+      inquiryType: result.data.inquiry_type,
+      itemsCount: result.data.items?.length || 0
+    }
+  })
 
   // 建立庫存查詢單
-  const inquiry = await inquiryService.createInquiry(user.id, requestData)
+  const inquiry = await inquiryService.createInquiry(user.id, result.data)
 
   // 記錄詢問單建立的審計日誌
   AuditLogger.logInquiryCreate(
@@ -97,6 +132,13 @@ async function handlePOST(request: NextRequest, { user }: { user: User }) {
   return created(inquiry, '詢問單建立成功')
 }
 
-// 導出 API 處理器 - 使用新的權限中間件系統
-export const GET = requireAuth(handleGET)
-export const POST = requireAuth(handlePOST)
+// 導出 API 處理器 - 使用統一的錯誤處理系統
+export const GET = withErrorHandler(handleGET, {
+  module: 'InquiryAPI',
+  enableAuditLog: false
+})
+
+export const POST = withErrorHandler(handlePOST, {
+  module: 'InquiryAPI',
+  enableAuditLog: true
+})

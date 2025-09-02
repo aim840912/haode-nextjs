@@ -262,27 +262,28 @@ export async function getNewsService(): Promise<NewsService> {
 
 /**
  * 獲取文化服務實例
- * 直接使用 Supabase 實作，不再支援 JSON fallback
+ * 使用 v2 架構適配器，提供向後相容性
  */
 export async function getCultureService(): Promise<CultureService> {
   if (cultureServiceInstance) {
     return cultureServiceInstance
   }
 
-  console.log('🏭 初始化文化服務: Supabase 模式')
+  console.log('🏭 初始化文化服務: v2 架構模式')
   
   try {
-    const { SupabaseCultureService } = await import('./supabaseCultureService')
-    cultureServiceInstance = new SupabaseCultureService()
+    const { cultureServiceAdapter } = await import('./cultureServiceAdapter')
+    cultureServiceInstance = cultureServiceAdapter
     
     // 測試連線
     await cultureServiceInstance.getCultureItems()
-    console.log('✅ 文化 Supabase 服務初始化成功')
+    
+    console.log('✅ 文化服務 v2 架構初始化成功')
     
     return cultureServiceInstance
   } catch (error) {
-    console.error('❌ 文化 Supabase 服務初始化失敗:', error)
-    throw new Error('文化服務初始化失敗，請檢查 Supabase 連線設定')
+    console.error('❌ 文化服務初始化失敗:', error)
+    throw new Error('文化服務初始化失敗，請檢查服務配置')
   }
 }
 
