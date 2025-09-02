@@ -35,7 +35,7 @@ export class CultureServiceAdapter implements CultureService {
     item: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>
   ): Promise<CultureItem> {
     // 支援檔案上傳的擴展介面
-    return this.serviceV2.addCultureItem(item as Record<string, unknown>)
+    return this.serviceV2.addCultureItem(item)
   }
 
   async updateCultureItem(

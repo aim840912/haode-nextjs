@@ -14,6 +14,7 @@ import {
   InquiryQueryParams,
   InquiryStats,
   InquiryStatus,
+  InquiryItem,
 } from '@/types/inquiry'
 import { dbLogger } from '@/lib/logger'
 
@@ -88,7 +89,7 @@ export class InquiryServiceAdapter implements InquiryService {
    * @deprecated 此方法將在未來版本移除
    */
   async updateInquiryItems(inquiryId: string, items: Record<string, unknown>[]): Promise<void> {
-    return this.serviceV2.updateInquiryItems(inquiryId, items)
+    return this.serviceV2.updateInquiryItems(inquiryId, items as unknown as InquiryItem[])
   }
 }
 

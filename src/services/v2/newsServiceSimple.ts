@@ -64,7 +64,7 @@ export class NewsServiceV2Simple implements NewsService {
       metadata: context,
     })
 
-    if (error.code) {
+    if (error && typeof error === 'object' && 'code' in error) {
       throw ErrorFactory.fromSupabaseError(error, {
         module: this.moduleName,
         action: operation,
@@ -131,7 +131,7 @@ export class NewsServiceV2Simple implements NewsService {
       }
 
       const result = (data || []).map((record: Record<string, unknown>) =>
-        this.transformFromDB(record)
+        this.transformFromDB(record as unknown as SupabaseNewsRecord)
       )
 
       dbLogger.info('取得新聞列表成功', {
@@ -366,7 +366,7 @@ export class NewsServiceV2Simple implements NewsService {
       }
 
       const newsItems = (data || []).map((record: Record<string, unknown>) =>
-        this.transformFromDB(record)
+        this.transformFromDB(record as unknown as SupabaseNewsRecord)
       )
 
       // 按相關性排序

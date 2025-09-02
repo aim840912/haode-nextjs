@@ -124,7 +124,11 @@ async function handlePOST(request: NextRequest) {
       request
     ).catch(console.error)
 
-    return createSuccessResponse(inquiry, '農場參觀預約詢問已成功提交，我們將盡快與您聯繫', 201)
+    return createSuccessResponse(
+      inquiry as unknown as Record<string, unknown>,
+      '農場參觀預約詢問已成功提交，我們將盡快與您聯繫',
+      201
+    )
   } catch (error) {
     // 根據錯誤類型提供適當的回應
     if (error instanceof Error) {
