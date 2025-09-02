@@ -334,6 +334,86 @@ When multiple valid approaches exist, choose based on:
 - Stop after 3 failed attempts and reassess
 - Use appropriate logger (apiLogger, dbLogger, etc.) with proper context
 
+## API 開發準則
+
+### 統一權限中間件系統（已實作）
+
+**使用新的權限中間件**，取代手動的 getCurrentUser() 檢查：
+
+```typescript
+// 舊的方式（不推薦）
+export async function GET(request: NextRequest) {
+  const user = await getCurrentUser()
+  if (!user) {
+    return NextResponse.json({ error: '未認證' }, { status: 401 })
+  }
+  // 業務邏輯...
+}
+
+// 新的方式（推薦）
+import { requireAuth } from '@/lib/api-middleware'
+
+export const GET = requireAuth(async (req, { user }) => {
+  // user 已保證存在，直接使用
+  // 業務邏輯...
+  return success(data, '查詢成功')
+})
+```
+
+### 可用的權限中間件
+
+- **requireAuth**: 需要使用者登入
+- **requireAdmin**: 需要管理員權限
+- **optionalAuth**: 可選認證（公開 API 但可能需要使用者資訊）
+
+### 新版本 API 結構（/api/v1/）
+
+新的 API 應遵循版本化結構：
+
+```typescript
+// 檔案位置：src/app/api/v1/[resource]/route.ts
+import { requireAuth, success, ValidationError } from '@/lib/api-middleware'
+import { z } from 'zod'
+
+// 1. 定義驗證架構
+const CreateSchema = z.object({
+  name: z.string().min(1, '名稱不能為空'),
+  email: z.string().email('Email 格式不正確')
+})
+
+// 2. 實作處理函數
+async function handlePOST(req: NextRequest, { user }: { user: any }) {
+  const body = await req.json()
+  const result = CreateSchema.safeParse(body)
+  
+  if (!result.success) {
+    const errors = result.error.issues.map(issue => 
+      `${issue.path.join('.')}: ${issue.message}`
+    ).join(', ')
+    throw new ValidationError(`驗證失敗: ${errors}`)
+  }
+  
+  // 業務邏輯
+  const data = await service.create(result.data)
+  return success(data, '建立成功')
+}
+
+// 3. 匯出處理器
+export const POST = requireAuth(handlePOST)
+```
+
+### API 開發最佳實踐
+
+1. **使用 Zod 驗證**：所有輸入都應該驗證
+2. **統一回應格式**：使用 success(), created(), error() 等工具
+3. **適當的日誌記錄**：使用 apiLogger 記錄重要操作
+4. **錯誤處理**：拋出適當的錯誤類型（ValidationError, NotFoundError 等）
+5. **類型安全**：使用 TypeScript 確保類型安全
+
+### 參考範例
+
+查看 `src/app/api/v1/example/route.ts` 了解完整的實作範例。
+
 ##
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
