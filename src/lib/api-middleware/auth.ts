@@ -9,13 +9,10 @@ import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { withErrorHandler, ApiHandler } from '@/lib/error-handler'
 import { AuthorizationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
-// 使用者類型定義 - 兼容 Supabase User 類型
-export interface User {
-  id: string
-  email?: string
-  [key: string]: unknown // 允許額外屬性以兼容 Supabase User
-}
+// 使用者類型定義 - 直接使用 Supabase User 類型
+export type User = SupabaseUser
 
 // 中間件處理函數的類型定義
 export type AuthenticatedHandler = (
