@@ -6,6 +6,7 @@ import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/imag
 import { useCSRFTokenValue } from '@/hooks/useCSRFToken';
 import Image from 'next/image';
 import LoadingSpinner from './LoadingSpinner';
+import SortableImageGallery from './SortableImageGallery';
 
 interface UploadedImage {
   id: string;
@@ -14,6 +15,8 @@ interface UploadedImage {
   size: 'thumbnail' | 'medium' | 'large';
   file?: File;
   preview?: string;
+  position: number;
+  alt?: string;
 }
 
 interface ImageUploaderProps {
@@ -106,7 +109,9 @@ export default function ImageUploader({
           path: '',
           size: 'medium',
           file: processedFile,
-          preview: preview
+          preview: preview,
+          position: previewImages.length + i,
+          alt: `${processedFile.name} 預覽`
         };
 
         // 立即添加到預覽列表
@@ -119,7 +124,7 @@ export default function ImageUploader({
           if (generateMultipleSizes && result.multiple) {
             // 多尺寸上傳結果 - 直接替換臨時預覽
             const uploadedImages: UploadedImage[] = [];
-            Object.entries(result.urls).forEach(([size, urlData]) => {
+            Object.entries(result.urls).forEach(([size, urlData], index) => {
               const url = (urlData as any).url;
               uploadedImages.push({
                 id: `${productId}-${size}-${Date.now()}-${i}`,
@@ -127,7 +132,9 @@ export default function ImageUploader({
                 path: (urlData as any).path,
                 size: size as 'thumbnail' | 'medium' | 'large',
                 file: processedFile,
-                preview: url // 使用 Supabase URL
+                preview: url, // 使用 Supabase URL
+                position: tempImage.position + index,
+                alt: `${processedFile.name} (${size})`
               });
             });
             
@@ -145,7 +152,9 @@ export default function ImageUploader({
               path: result.path,
               size: result.size,
               file: processedFile,
-              preview: result.url // 使用 Supabase URL
+              preview: result.url, // 使用 Supabase URL
+              position: tempImage.position,
+              alt: `${processedFile.name} (${result.size})`
             };
             
             // 用上傳成功的圖片替換臨時預覽
@@ -159,7 +168,7 @@ export default function ImageUploader({
           logger.error('上傳失敗，保留本地預覽', uploadError instanceof Error ? uploadError : new Error('Unknown upload error'));
           setPreviewImages(prev => prev.map(img => 
             img.id === tempImage.id 
-              ? { ...img, id: `local-${productId}-${Date.now()}-${i}` }
+              ? { ...img, id: `local-${productId}-${Date.now()}-${i}`, alt: `${processedFile.name} (上傳失敗)` }
               : img
           ));
           throw uploadError; // 重新拋出錯誤，讓外層 catch 處理
@@ -245,20 +254,38 @@ export default function ImageUploader({
     if (!imageToRemove) return;
 
     try {
-      // 從伺服器刪除
-      await fetch('/api/upload/images', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ filePath: imageToRemove.path })
-      });
+      // 從伺服器刪除（如果有路径）
+      if (imageToRemove.path) {
+        await fetch('/api/upload/images', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ filePath: imageToRemove.path })
+        });
+      }
 
-      // 從預覽中移除
-      setPreviewImages(prev => prev.filter(img => img.id !== imageId));
+      // 從預覽中移除並重新計算位置
+      setPreviewImages(prev => {
+        const filtered = prev.filter(img => img.id !== imageId);
+        // 重新計算位置索引
+        return filtered.map((img, index) => ({
+          ...img,
+          position: index
+        }));
+      });
     } catch (error) {
       logger.error('刪除圖片失敗', error instanceof Error ? error : new Error('Unknown error'));
       onUploadError?.('刪除圖片失敗');
+    }
+  };
+
+  const handleImagesReorder = (reorderedImages: UploadedImage[]) => {
+    setPreviewImages(reorderedImages);
+    
+    // 通知上層組件排序已更改
+    if (onUploadSuccess) {
+      onUploadSuccess(reorderedImages);
     }
   };
 
@@ -341,52 +368,17 @@ export default function ImageUploader({
         )}
       </div>
 
-      {/* 圖片預覽 */}
+      {/* 可排序的圖片預覽 */}
       {previewImages.length > 0 && (
         <div className="space-y-3">
           <h4 className="font-medium text-gray-900">已上傳的圖片</h4>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {previewImages.map((image) => (
-              <div key={image.id} className="relative group">
-                <div className="aspect-square rounded-lg overflow-hidden border border-gray-200 relative">
-                  <Image
-                    src={image.preview || image.url || '/images/placeholder.jpg'}
-                    alt={`上傳的圖片 (${image.size})`}
-                    fill
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover"
-                    priority={true}
-                    onError={() => {
-                      logger.warn('預覽圖片載入失敗', {
-                        metadata: { preview: image.preview, url: image.url }
-                      });
-                    }}
-                    onLoad={() => {
-                      // Image loaded successfully
-                    }}
-                  />
-                </div>
-                
-                {/* 圖片資訊 */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                  <p className="text-white text-xs truncate">
-                    {image.size}
-                  </p>
-                </div>
-
-                {/* 刪除按鈕 */}
-                <button
-                  onClick={() => handleRemoveImage(image.id)}
-                  className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                  aria-label="刪除圖片"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            ))}
-          </div>
+          <SortableImageGallery
+            images={previewImages}
+            onImagesReorder={handleImagesReorder}
+            onImageRemove={handleRemoveImage}
+            layout="grid"
+            maxColumns={4}
+          />
         </div>
       )}
 
@@ -422,7 +414,9 @@ export function SingleImageUploader({
       id: 'initial',
       url: initialImage,
       path: '',
-      size
+      size,
+      position: 0,
+      alt: '當前圖片'
     } : null
   );
 

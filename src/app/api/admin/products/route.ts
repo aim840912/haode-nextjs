@@ -27,17 +27,41 @@ function transformFromDB(dbProduct: Record<string, unknown>): Product {
   // 安全地獲取產品名稱
   const productName = (dbProduct.name as string) || ''
   
-  // 取得圖片路徑，優先使用資料庫的值，否則使用預設對應
-  let imageUrl = (dbProduct.image_url as string) || defaultImages[productName] || '/images/placeholder.jpg'
+  // 取得圖片陣列，優先使用新的 images 欄位
+  let images: string[] = []
   
-  // 驗證圖片 URL
-  if (!imageUrl || typeof imageUrl !== 'string') {
-    imageUrl = '/images/placeholder.jpg'
+  try {
+    // 嘗試解析 images JSONB 欄位
+    if (dbProduct.images && typeof dbProduct.images === 'string') {
+      images = JSON.parse(dbProduct.images as string)
+    } else if (Array.isArray(dbProduct.images)) {
+      images = dbProduct.images
+    }
+  } catch (error) {
+    // JSON 解析失敗，使用空陣列
+    images = []
   }
   
-  // 修正錯誤的 Imgur 連結
-  if (imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png') && !imageUrl.includes('.jpeg') && !imageUrl.includes('.webp')) {
-    imageUrl = defaultImages[productName] || '/images/placeholder.jpg'
+  // 如果沒有新格式圖片，回退到舊的 image_url
+  if (images.length === 0) {
+    const imageUrl = (dbProduct.image_url as string) || defaultImages[productName] || '/images/placeholder.jpg'
+    
+    // 驗證圖片 URL
+    if (imageUrl && typeof imageUrl === 'string') {
+      // 修正錯誤的 Imgur 連結
+      if (imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png') && !imageUrl.includes('.jpeg') && !imageUrl.includes('.webp')) {
+        images = [defaultImages[productName] || '/images/placeholder.jpg']
+      } else {
+        images = [imageUrl]
+      }
+    } else {
+      images = ['/images/placeholder.jpg']
+    }
+  }
+  
+  // 確保至少有一張圖片
+  if (images.length === 0) {
+    images = ['/images/placeholder.jpg']
   }
 
   return {
@@ -46,7 +70,7 @@ function transformFromDB(dbProduct: Record<string, unknown>): Product {
     description: (dbProduct.description as string) || '',
     price: Number(dbProduct.price) || 0,
     category: (dbProduct.category as string) || '',
-    images: imageUrl ? [imageUrl] : [],
+    images: images, // 使用完整的圖片陣列
     inventory: Number(dbProduct.stock) || 0,
     isActive: Boolean(dbProduct.is_active),
     showInCatalog: dbProduct.show_in_catalog !== false, // 預設為 true
@@ -118,7 +142,8 @@ async function handlePOST(request: NextRequest) {
     description: productData.description,
     price: productData.price,
     category: productData.category,
-    image_url: productData.images?.[0] || null,
+    image_url: productData.images?.[0] || null, // 保持向後相容
+    images: JSON.stringify(productData.images || []), // 新增：儲存完整圖片陣列
     stock: productData.inventory || 0,
     is_active: productData.isActive !== false
   }
@@ -181,7 +206,10 @@ async function handlePUT(request: NextRequest) {
   if (productData.description !== undefined) dbProduct.description = productData.description
   if (productData.price !== undefined) dbProduct.price = productData.price
   if (productData.category !== undefined) dbProduct.category = productData.category
-  if (productData.images && productData.images.length > 0) dbProduct.image_url = productData.images[0]
+  if (productData.images !== undefined) {
+    dbProduct.image_url = productData.images.length > 0 ? productData.images[0] : null // 保持向後相容
+    dbProduct.images = JSON.stringify(productData.images) // 新增：更新完整圖片陣列
+  }
   if (productData.inventory !== undefined) dbProduct.stock = productData.inventory
   if (productData.isActive !== undefined) dbProduct.is_active = productData.isActive
 

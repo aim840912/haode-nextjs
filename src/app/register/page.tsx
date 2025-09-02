@@ -17,6 +17,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [successMessage, setSuccessMessage] = useState('')
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false)
   const { register } = useAuth()
   const { success, error: showError } = useToast()
   const router = useRouter()
@@ -34,8 +35,44 @@ export default function RegisterPage() {
     }
   }
 
+  // 檢查手機號碼是否已被使用
+  const checkPhoneAvailability = async (phone: string) => {
+    if (!phone || !/^09\d{8}$/.test(phone.replace(/[-\s]/g, ''))) {
+      return // 格式不正確時不檢查
+    }
+
+    setIsCheckingPhone(true)
+    try {
+      const response = await fetch(`/api/auth/check-phone?phone=${encodeURIComponent(phone)}`)
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.message || '檢查手機號碼時發生錯誤')
+      }
+
+      if (!result.data.available) {
+        setErrors(prev => ({
+          ...prev,
+          phone: '此手機號碼已被註冊'
+        }))
+      } else {
+        // 清除手機號碼錯誤
+        setErrors(prev => {
+          const newErrors = { ...prev }
+          delete newErrors.phone
+          return newErrors
+        })
+      }
+    } catch (error) {
+      console.error('Error checking phone availability:', error)
+      // 不顯示網路錯誤給使用者，避免影響註冊流程
+    } finally {
+      setIsCheckingPhone(false)
+    }
+  }
+
   // 處理失去焦點時的驗證
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleInputBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target
 
     // 對失去焦點的欄位進行驗證
@@ -46,6 +83,11 @@ export default function RegisterPage() {
       ...prev,
       [name]: error,
     }))
+
+    // 特殊處理：如果是手機號碼欄位且格式正確，檢查是否已被使用
+    if (name === 'phone' && !error && value.trim()) {
+      await checkPhoneAvailability(value.trim())
+    }
 
     // 特殊處理：如果是密碼欄位，也要重新驗證確認密碼欄位
     if (name === 'password' && formData.confirmPassword) {
@@ -132,6 +174,18 @@ export default function RegisterPage() {
     setSuccessMessage('')
 
     try {
+      // 最後一次檢查手機號碼是否可用
+      if (formData.phone) {
+        setIsCheckingPhone(true)
+        const phoneCheckResponse = await fetch(`/api/auth/check-phone?phone=${encodeURIComponent(formData.phone)}`)
+        const phoneCheckResult = await phoneCheckResponse.json()
+        
+        if (!phoneCheckResponse.ok || !phoneCheckResult.data.available) {
+          throw new Error('此手機號碼已被註冊，請使用其他手機號碼')
+        }
+        setIsCheckingPhone(false)
+      }
+
       await register({
         email: formData.email,
         password: formData.password,
@@ -149,13 +203,21 @@ export default function RegisterPage() {
       }, 2000)
     } catch (error) {
       console.error('Registration failed:', error)
-      const errorMessage = error instanceof Error ? error.message : '註冊失敗，請稍後再試'
+      let errorMessage = error instanceof Error ? error.message : '註冊失敗，請稍後再試'
+      
+      // 特殊處理手機號碼重複錯誤
+      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique') || errorMessage.includes('已被註冊')) {
+        errorMessage = '此手機號碼已被註冊，請使用其他手機號碼'
+        setErrors({ phone: errorMessage })
+      } else {
+        setErrors({ general: errorMessage })
+      }
 
-      // 顯示錯誤提示和設定錯誤狀態
+      // 顯示錯誤提示
       showError('註冊失敗', errorMessage)
-      setErrors({ general: errorMessage })
     } finally {
       setIsLoading(false)
+      setIsCheckingPhone(false)
     }
   }
 
@@ -242,18 +304,33 @@ export default function RegisterPage() {
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
                 手機號碼 *
               </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                value={formData.phone}
-                onChange={handleInputChange}
-                onBlur={handleInputBlur}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
-                placeholder="請輸入手機號碼（例：0912345678）"
-              />
+              <div className="relative">
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                  placeholder="請輸入手機號碼（例：0912345678）"
+                />
+                {isCheckingPhone && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
+                  </div>
+                )}
+                {!isCheckingPhone && formData.phone && !errors.phone && /^09\d{8}$/.test(formData.phone.replace(/[-\s]/g, '')) && (
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <span className="text-green-500 text-sm">✓</span>
+                  </div>
+                )}
+              </div>
               {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
+              {isCheckingPhone && (
+                <p className="mt-1 text-sm text-gray-500">檢查手機號碼中...</p>
+              )}
             </div>
 
             {/* Password Input */}

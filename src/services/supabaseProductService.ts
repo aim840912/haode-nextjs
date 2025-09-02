@@ -171,17 +171,41 @@ class SupabaseProductService implements ProductService {
     // 安全地獲取產品名稱
     const productName = (dbProduct.name as string) || ''
     
-    // 取得圖片路徑，優先使用資料庫的值，否則使用預設對應
-    let imageUrl = (dbProduct.image_url as string) || defaultImages[productName] || '/images/placeholder.jpg'
+    // 取得圖片陣列，優先使用新的 images 欄位
+    let images: string[] = []
     
-    // 驗證圖片 URL
-    if (!imageUrl || typeof imageUrl !== 'string') {
-      imageUrl = '/images/placeholder.jpg'
+    try {
+      // 嘗試解析 images JSONB 欄位
+      if (dbProduct.images && typeof dbProduct.images === 'string') {
+        images = JSON.parse(dbProduct.images as string)
+      } else if (Array.isArray(dbProduct.images)) {
+        images = dbProduct.images
+      }
+    } catch (error) {
+      // JSON 解析失敗，使用空陣列
+      images = []
     }
     
-    // 修正錯誤的 Imgur 連結
-    if (imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png') && !imageUrl.includes('.jpeg') && !imageUrl.includes('.webp')) {
-      imageUrl = defaultImages[productName] || '/images/placeholder.jpg'
+    // 如果沒有新格式圖片，回退到舊的 image_url
+    if (images.length === 0) {
+      const imageUrl = (dbProduct.image_url as string) || defaultImages[productName] || '/images/placeholder.jpg'
+      
+      // 驗證圖片 URL
+      if (imageUrl && typeof imageUrl === 'string') {
+        // 修正錯誤的 Imgur 連結
+        if (imageUrl.includes('imgur.com') && !imageUrl.includes('.jpg') && !imageUrl.includes('.png') && !imageUrl.includes('.jpeg') && !imageUrl.includes('.webp')) {
+          images = [defaultImages[productName] || '/images/placeholder.jpg']
+        } else {
+          images = [imageUrl]
+        }
+      } else {
+        images = ['/images/placeholder.jpg']
+      }
+    }
+    
+    // 確保至少有一張圖片
+    if (images.length === 0) {
+      images = ['/images/placeholder.jpg']
     }
     
     // 確保所有必要欄位都有有效值
@@ -194,7 +218,7 @@ class SupabaseProductService implements ProductService {
       description: (dbProduct.description as string) || '',
       category: (dbProduct.category as string) || '',
       price: price,
-      images: [imageUrl], // 始終確保有一個有效的圖片 URL
+      images: images, // 使用完整的圖片陣列
       inventory: stock,
       isActive: Boolean(dbProduct.is_active),
       showInCatalog: dbProduct.show_in_catalog !== undefined ? Boolean(dbProduct.show_in_catalog) : true,
@@ -210,7 +234,10 @@ class SupabaseProductService implements ProductService {
     if (product.description !== undefined) transformed.description = product.description
     if (product.price !== undefined) transformed.price = product.price
     if (product.category !== undefined) transformed.category = product.category
-    if (product.images && product.images.length > 0) transformed.image_url = product.images[0]
+    if (product.images !== undefined) {
+      transformed.image_url = product.images.length > 0 ? product.images[0] : null // 保持向後相容
+      transformed.images = JSON.stringify(product.images) // 新增：儲存完整圖片陣列
+    }
     if (product.inventory !== undefined) transformed.stock = product.inventory
     if (product.isActive !== undefined) transformed.is_active = product.isActive
     if (product.showInCatalog !== undefined) transformed.show_in_catalog = product.showInCatalog

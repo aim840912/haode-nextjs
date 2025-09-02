@@ -33,14 +33,31 @@ export function generateImageUrl(
   size: keyof ImageSizeConfig = 'medium',
   source: 'local' | 'supabase' = 'local'
 ): string {
+  // 如果 filename 已經是完整的 Supabase URL，直接返回
+  if (filename && filename.startsWith('https://') && filename.includes('supabase.co/storage')) {
+    return filename;
+  }
+  
   if (source === 'supabase') {
     return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/products/${productId}/${size}-${filename}`;
   }
   
+  // 處理 blob URL 或無效檔名的情況
+  if (!filename || filename.startsWith('blob:') || filename.includes('blob')) {
+    return `/images/products/${productId}-${size}.jpg`; // 使用預設副檔名
+  }
+  
   // 本地圖片路徑
   const baseFileName = filename.replace(/\.[^/.]+$/, ''); // 移除副檔名
-  const extension = filename.split('.').pop() || 'jpg';
-  return `/images/products/${productId}-${size}.${extension}`;
+  const extension = filename.split('.').pop();
+  
+  // 驗證副檔名是否有效
+  const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+  const finalExtension = extension && validExtensions.includes(extension.toLowerCase()) 
+    ? extension.toLowerCase() 
+    : 'jpg';
+    
+  return `/images/products/${productId}-${size}.${finalExtension}`;
 }
 
 /**
@@ -55,6 +72,30 @@ export function generateProductImageUrls(
     thumbnail: generateImageUrl(productId, filename, 'thumbnail', source),
     medium: generateImageUrl(productId, filename, 'medium', source),
     large: generateImageUrl(productId, filename, 'large', source)
+  };
+}
+
+/**
+ * 從 Supabase Storage URL 生成不同尺寸的圖片 URL
+ */
+export function generateImageUrlsFromSupabaseUrl(
+  supabaseUrl: string
+): Record<keyof ImageSizeConfig, string> {
+  // 如果不是 Supabase URL，返回原 URL 作為所有尺寸
+  if (!supabaseUrl.includes('supabase.co/storage')) {
+    return {
+      thumbnail: supabaseUrl,
+      medium: supabaseUrl,
+      large: supabaseUrl
+    };
+  }
+
+  // 由於 Supabase Storage 中可能只有 medium 尺寸的圖片
+  // 我們優先使用現有的 medium 圖片，避免請求不存在的縮圖
+  return {
+    thumbnail: supabaseUrl, // 使用 medium 圖片作為縮圖
+    medium: supabaseUrl,     // 原始 medium 圖片
+    large: supabaseUrl       // 使用 medium 圖片作為 large
   };
 }
 

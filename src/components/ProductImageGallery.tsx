@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Product, ProductImage } from '@/types/product';
 import OptimizedImage, { ResponsiveImage } from './OptimizedImage';
-import { generateProductImageUrls, preloadImages } from '@/lib/image-utils';
+import { generateProductImageUrls, generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/image-utils';
 
 interface ProductImageGalleryProps {
   product: Product;
@@ -165,8 +165,14 @@ export default function ProductImageGallery({
       {showThumbnails && imageUrls.length > 1 && (
         <div className="flex space-x-2 overflow-x-auto pb-2">
           {imageUrls.map((url, index) => {
-            const thumbnailUrl = product.productImages?.[index]?.url || 
-              generateProductImageUrls(product.id, url.split('/').pop() || '').thumbnail;
+            // 對於縮圖，直接使用主圖 URL 避免產生不存在的縮圖變體
+            let thumbnailUrl = url;
+            
+            // 只有當有明確的 productImages 且有縮圖時才使用
+            if (product.productImages?.[index]?.url && 
+                !product.productImages[index].url.includes('thumbnail-')) {
+              thumbnailUrl = product.productImages[index].url;
+            }
             
             return (
               <button
@@ -205,10 +211,14 @@ export function SimpleProductImage({
   size?: 'thumbnail' | 'medium' | 'large';
   className?: string;
 }) {
-  const imageUrl = product.primaryImageUrl || 
-    product.thumbnailUrl || 
-    product.images[0] || 
-    '/images/placeholder.jpg';
+  // 根據所需尺寸選擇最適合的圖片 URL
+  let imageUrl = product.primaryImageUrl || product.thumbnailUrl || product.images[0] || '/images/placeholder.jpg';
+  
+  // 如果是 Supabase Storage URL 且需要特定尺寸，生成對應的縮圖
+  if (imageUrl && imageUrl.includes('supabase.co/storage') && size !== 'medium') {
+    const imageUrls = generateImageUrlsFromSupabaseUrl(imageUrl);
+    imageUrl = imageUrls[size];
+  }
 
   const sizeMap = {
     thumbnail: { width: 200, height: 200 },

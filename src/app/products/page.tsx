@@ -41,6 +41,7 @@ interface ExtendedProduct extends Product {
   specifications?: { label: string; value: string }[];
   inStock?: boolean;
   image?: string;
+  allImages?: string[]; // 儲存所有圖片URL
   originalPrice?: number;
 }
 
@@ -170,6 +171,7 @@ function ProductsPage() {
         price: product.price,
         originalPrice: product.originalPrice || product.price,
         image: product.images?.[0] || '/images/placeholder.jpg',
+        allImages: product.images || [], // 儲存所有圖片URL
         description: product.description,
         features: getDefaultProductFeatures(),
         specifications: getDefaultProductSpecifications(),
@@ -486,53 +488,51 @@ function ProductsPage() {
                   {/* Product Info */}
                   <div className="p-6">
                     <div className="text-sm text-amber-600 mb-2">{product.category}</div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-3">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mb-6">{product.description}</p>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-6">{product.name}</h3>
 
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 mb-4">
+                      {/* 我有興趣按鈕 */}
+                      <button
+                        onClick={(e) => toggleInterest(product.id, product.name, e)}
+                        className="p-2 rounded-full hover:bg-amber-50 transition-colors"
+                        title={interestedProducts.has(product.id) ? '移除興趣' : '我有興趣'}
+                      >
+                        {interestedProducts.has(product.id) ? (
+                          <svg className="w-5 h-5 text-red-500 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${product.inStock
+                          ? 'bg-amber-900 text-white hover:bg-amber-800'
+                          : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }`}
+                        disabled={!product.inStock}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (product.inStock) {
+                            handleProductClick(product as unknown as ExtendedProduct);
+                          }
+                        }}
+                      >
+                        {product.inStock ? '查看詳情' : '暫時缺貨'}
+                      </button>
+                    </div>
 
                     {/* Price */}
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-2xl font-bold text-amber-900">NT$ {product.price}</span>
-                        {product.originalPrice > product.price && (
-                          <span className="ml-2 text-sm text-gray-500 line-through">
-                            NT$ {product.originalPrice}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* 我有興趣按鈕 */}
-                        <button
-                          onClick={(e) => toggleInterest(product.id, product.name, e)}
-                          className="p-2 rounded-full hover:bg-amber-50 transition-colors"
-                          title={interestedProducts.has(product.id) ? '移除興趣' : '我有興趣'}
-                        >
-                          {interestedProducts.has(product.id) ? (
-                            <svg className="w-5 h-5 text-red-500 fill-current" viewBox="0 0 24 24">
-                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 text-gray-400 hover:text-red-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                          )}
-                        </button>
-                        <button
-                          className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${product.inStock
-                            ? 'bg-amber-900 text-white hover:bg-amber-800'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            }`}
-                          disabled={!product.inStock}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (product.inStock) {
-                              handleProductClick(product as unknown as ExtendedProduct);
-                            }
-                          }}
-                        >
-                          {product.inStock ? '查看詳情' : '暫時缺貨'}
-                        </button>
-                      </div>
+                    <div>
+                      <span className="text-2xl font-bold text-amber-900 whitespace-nowrap">NT$ {product.price}</span>
+                      {product.originalPrice > product.price && (
+                        <span className="ml-2 text-sm text-gray-500 line-through whitespace-nowrap">
+                          NT$ {product.originalPrice}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -553,8 +553,8 @@ function ProductsPage() {
                   ...selectedProduct,
                   id: selectedProduct.id.toString(),
                   name: selectedProduct.name,
-                  images: selectedProduct.image ? [selectedProduct.image] : ['/images/placeholder.jpg'],
-                  galleryImages: selectedProduct.image ? [selectedProduct.image] : undefined,
+                  images: (selectedProduct.allImages && selectedProduct.allImages.length > 0) ? selectedProduct.allImages : ['/images/placeholder.jpg'],
+                  galleryImages: (selectedProduct.allImages && selectedProduct.allImages.length > 0) ? selectedProduct.allImages : undefined,
                   thumbnailUrl: selectedProduct.image,
                   primaryImageUrl: selectedProduct.image,
                   inventory: selectedProduct.inStock ? 100 : 0,
@@ -614,9 +614,9 @@ function ProductsPage() {
                 <div className="border-t pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <span className="text-3xl font-bold text-amber-900">NT$ {selectedProduct.price}</span>
+                      <span className="text-3xl font-bold text-amber-900 whitespace-nowrap">NT$ {selectedProduct.price}</span>
                       {selectedProduct.originalPrice && selectedProduct.originalPrice > selectedProduct.price && (
-                        <span className="ml-2 text-lg text-gray-500 line-through">
+                        <span className="ml-2 text-lg text-gray-500 line-through whitespace-nowrap">
                           NT$ {selectedProduct.originalPrice}
                         </span>
                       )}
@@ -679,7 +679,11 @@ function ProductsPage() {
                       ? '暫時缺貨'
                       : !user
                         ? '請先登入'
-                        : `立即詢問 - NT$ ${selectedProduct.price * quantity}`
+                        : (
+                          <span className="whitespace-nowrap">
+                            立即詢問 - NT$ {selectedProduct.price * quantity}
+                          </span>
+                        )
                     }
                   </button>
                 </div>
