@@ -37,7 +37,7 @@ export default function LocationsAdmin() {
       // 確保 data 是陣列
       if (Array.isArray(data)) {
         setLocations(data)
-        logger.info('門市資料載入成功', { count: data.length })
+        logger.info('門市資料載入成功', { metadata: { count: data.length } })
       } else {
         logger.error('API 回應格式錯誤：locations data 不是陣列', result)
         setLocations([])

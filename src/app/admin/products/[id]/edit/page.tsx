@@ -60,7 +60,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         
         // 檢查回應格式是否正確
         if (!responseData.success || !responseData.data) {
-          logger.error('產品資料格式錯誤', { responseData })
+          logger.error('產品資料格式錯誤', undefined, { metadata: { responseData } })
           alert('產品資料格式錯誤')
           router.push('/admin/products')
           return
@@ -87,15 +87,15 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
           showInCatalog: product.showInCatalog ?? true
         })
         
-        logger.info('產品資料載入成功', { productId: id, productName: product.name })
+        logger.info('產品資料載入成功', { metadata: { productId: id, productName: product.name } })
       } else {
         const errorText = await response.text().catch(() => 'Unknown error')
-        logger.error('產品載入失敗', { productId: id, status: response.status, error: errorText })
+        logger.error('產品載入失敗', undefined, { metadata: { productId: id, status: response.status, error: errorText } })
         alert(`產品不存在 (${response.status})`)
         router.push('/admin/products')
       }
     } catch (error) {
-      logger.error('產品載入發生錯誤', { productId: id, error: error instanceof Error ? error.message : String(error) })
+      logger.error('產品載入發生錯誤', error instanceof Error ? error : new Error(String(error)), { metadata: { productId: id } })
       alert(`載入失敗: ${error instanceof Error ? error.message : '未知錯誤'}`)
     } finally {
       setInitialLoading(false)
@@ -218,8 +218,8 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     }))
   }
 
-  const handleImageUploadSuccess = (images: Array<{ url: string; fileName: string }>) => {
-    const urls = images.map(img => img.url)
+  const handleImageUploadSuccess = (images: Array<{ id: string; url?: string; path: string; size: string; position: number }>) => {
+    const urls = images.map(img => img.url || img.path).filter(Boolean)
     setUploadedImages(prev => [...prev, ...urls])
     
     // 同時更新 formData 中的 images

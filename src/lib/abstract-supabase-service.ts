@@ -29,7 +29,8 @@ import { dbLogger } from './logger'
 /**
  * Supabase 查詢建構器類型
  */
-type SupabaseQueryBuilder = ReturnType<SupabaseClient['from']>
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseQueryBuilder = any
 
 /**
  * 資料轉換器介面
@@ -117,10 +118,11 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
     
     // Debug logging
     dbLogger.debug('Creating Supabase query', {
-      tableName: this.config.tableName,
-      useAdmin,
-      clientType: client.constructor.name,
-      queryHasEq: typeof query?.eq === 'function'
+      metadata: {
+        tableName: this.config.tableName,
+        useAdmin,
+        clientType: client.constructor.name
+      }
     })
     
     return query
