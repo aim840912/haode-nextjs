@@ -72,7 +72,11 @@ export function LoadingManager({
     tasks.forEach(task => {
       if (task.timeout) {
         const timeoutId = setTimeout(() => {
-          logger.warn('Loading task timed out', { taskId: task.id, timeout: task.timeout, module: 'LoadingManager', action: 'handleTimeout' })
+          logger.warn('Loading task timed out', { 
+            module: 'LoadingManager', 
+            action: 'handleTimeout',
+            metadata: { taskId: task.id, timeout: task.timeout }
+          })
           stopLoading(task.id)
         }, task.timeout)
         timeoutIds.push(timeoutId)

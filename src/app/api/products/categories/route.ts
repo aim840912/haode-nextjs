@@ -13,7 +13,10 @@ export async function GET() {
     
     return NextResponse.json(categories)
   } catch (error) {
-    apiLogger.error('Error fetching categories:', { module: 'ProductCategories', action: 'GET /api/products/categories', error })
+    apiLogger.error('Error fetching categories:', error as Error, { 
+      module: 'ProductCategories', 
+      action: 'GET /api/products/categories' 
+    })
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 })
   }
 }

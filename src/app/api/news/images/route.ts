@@ -20,7 +20,10 @@ async function ensureNewsBucketExists() {
       await initializeNewsBucket();
       bucketInitialized = true;
     } catch (error) {
-      apiLogger.error('無法初始化新聞 storage bucket:', error);
+      apiLogger.error('無法初始化新聞 storage bucket:', error as Error, {
+        module: 'NewsImageAPI',
+        action: 'initializeBucket'
+      });
       // 繼續執行，可能 bucket 已存在
     }
   }
@@ -55,7 +58,11 @@ export async function POST(request: NextRequest) {
       // 上傳主圖片和縮圖
       apiLogger.info(`📸 開始新聞圖片多檔案上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
       const results = await uploadNewsImageWithThumbnail(file, newsId);
-      apiLogger.info('📸 新聞圖片多檔案上傳完成:', results);
+      apiLogger.info('📸 新聞圖片多檔案上傳完成:', {
+        module: 'NewsImageAPI',
+        action: 'uploadImage',
+        metadata: { results }
+      });
       
       return NextResponse.json({
         success: true,
@@ -69,7 +76,11 @@ export async function POST(request: NextRequest) {
       // 單一檔案上傳（使用伺服器端函數繞過 RLS）
       apiLogger.info(`📸 開始新聞圖片上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
       const result = await uploadNewsImageServer(file, newsId);
-      apiLogger.info('📸 新聞圖片上傳完成:', result);
+      apiLogger.info('📸 新聞圖片上傳完成:', {
+        module: 'NewsImageAPI',
+        action: 'uploadImage',
+        metadata: { result }
+      });
       
       return NextResponse.json({
         success: true,
@@ -83,7 +94,10 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    apiLogger.error('新聞圖片上傳失敗:', error);
+    apiLogger.error('新聞圖片上傳失敗:', error as Error, {
+      module: 'NewsImageAPI',
+      action: 'uploadImage'
+    });
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
@@ -119,7 +133,10 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    apiLogger.error('新聞圖片刪除失敗:', error);
+    apiLogger.error('新聞圖片刪除失敗:', error as Error, {
+      module: 'NewsImageAPI',
+      action: 'deleteImage'
+    });
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
@@ -156,7 +173,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    apiLogger.error('列出新聞圖片失敗:', error);
+    apiLogger.error('列出新聞圖片失敗:', error as Error, { module: 'NewsImageAPI', action: 'listImages' });
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(

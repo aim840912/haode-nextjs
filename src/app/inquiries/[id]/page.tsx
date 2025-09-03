@@ -74,7 +74,11 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
       setInquiry(result.data);
 
     } catch (err) {
-      logger.error('Error fetching inquiry', err as Error, { inquiryId, module: 'InquiryDetailPage', action: 'fetchInquiry' });
+      logger.error('Error fetching inquiry', err as Error, { 
+        module: 'InquiryDetailPage', 
+        action: 'fetchInquiry',
+        metadata: { inquiryId }
+      });
       setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);

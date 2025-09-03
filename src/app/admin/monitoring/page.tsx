@@ -140,7 +140,11 @@ export default function MonitoringDashboard() {
       if (errorStatsResult.success) {
         setErrorStats(errorStatsResult.data.errorStats)
       } else {
-        logger.warn('錯誤統計載入失敗', { message: errorStatsResult.message, module: 'MonitoringPage', action: 'fetchMetrics' })
+        logger.warn('錯誤統計載入失敗', { 
+          module: 'MonitoringPage', 
+          action: 'fetchMetrics',
+          metadata: { message: errorStatsResult.message }
+        })
         // 錯誤統計失敗不影響整體載入
       }
 

@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     return response;
 
   } catch (error) {
-    apiLogger.error('CSRF token generation failed:', { module: 'CSRFToken', action: 'GET /api/csrf-token', error });
+    apiLogger.error('CSRF token generation failed:', error as Error, { module: 'CSRFToken', action: 'GET /api/csrf-token' });
     
     return NextResponse.json(
       { 
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    apiLogger.error('CSRF token validation failed:', { module: 'CSRFToken', action: 'POST /api/csrf-token', error });
+    apiLogger.error('CSRF token validation failed:', error as Error, { module: 'CSRFToken', action: 'POST /api/csrf-token' });
     
     return NextResponse.json(
       { 
@@ -227,7 +227,7 @@ export async function DELETE(request: NextRequest) {
     return response;
 
   } catch (error) {
-    apiLogger.error('CSRF token deletion failed:', { module: 'CSRFToken', action: 'DELETE /api/csrf-token', error });
+    apiLogger.error('CSRF token deletion failed:', error as Error, { module: 'CSRFToken', action: 'DELETE /api/csrf-token' });
     
     return NextResponse.json(
       { 

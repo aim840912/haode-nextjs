@@ -42,7 +42,11 @@ export default function LocationsPage() {
           setSelectedStore(data[0])
         }
       } else {
-        logger.error('API 回應格式錯誤：locations data 不是陣列', new Error('非陣列格式'), { result, module: 'LocationsPage', action: 'fetchLocations' })
+        logger.error('API 回應格式錯誤：locations data 不是陣列', new Error('非陣列格式'), { 
+          module: 'LocationsPage', 
+          action: 'fetchLocations',
+          metadata: { result }
+        })
         setStoreLocations([])
       }
     } catch (error) {

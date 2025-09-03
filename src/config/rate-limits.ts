@@ -382,17 +382,29 @@ export function listAllConfigs(): RateLimitConfigCollection {
  */
 export function validateConfig(config: RateLimitConfig): boolean {
   if (!config.maxRequests || config.maxRequests <= 0) {
-    logger.error('Invalid maxRequests', { maxRequests: config.maxRequests, module: 'RateLimitConfig', action: 'validateConfig' });
+    logger.error('Invalid maxRequests', { 
+      module: 'RateLimitConfig', 
+      action: 'validateConfig',
+      metadata: { maxRequests: config.maxRequests }
+    });
     return false;
   }
 
   if (!config.windowMs || config.windowMs <= 0) {
-    logger.error('Invalid windowMs', { windowMs: config.windowMs, module: 'RateLimitConfig', action: 'validateConfig' });
+    logger.error('Invalid windowMs', { 
+      module: 'RateLimitConfig', 
+      action: 'validateConfig',
+      metadata: { windowMs: config.windowMs }
+    });
     return false;
   }
 
   if (!Object.values(IdentifierStrategy).includes(config.strategy)) {
-    logger.error('Invalid strategy', { strategy: config.strategy, module: 'RateLimitConfig', action: 'validateConfig' });
+    logger.error('Invalid strategy', { 
+      module: 'RateLimitConfig', 
+      action: 'validateConfig',
+      metadata: { strategy: config.strategy }
+    });
     return false;
   }
 

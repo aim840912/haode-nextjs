@@ -89,7 +89,10 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse(auditLogs);
 
   } catch (error) {
-    apiLogger.error('Error fetching audit logs:', { module: 'AuditLogs', action: 'GET /api/audit-logs', error });
+    apiLogger.error('Error fetching audit logs:', error as Error, { 
+      module: 'AuditLogs', 
+      action: 'GET /api/audit-logs' 
+    });
     return createErrorResponse(
       '取得審計日誌失敗', 
       500, 

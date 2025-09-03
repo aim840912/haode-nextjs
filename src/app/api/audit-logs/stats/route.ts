@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse(stats);
 
   } catch (error) {
-    apiLogger.error('Error fetching audit log stats:', { module: 'AuditLogs', action: 'GET /api/audit-logs/stats', error });
+    apiLogger.error('Error fetching audit log stats:', error as Error, { module: 'AuditLogs', action: 'GET /api/audit-logs/stats' });
     return createErrorResponse(
       '取得審計統計失敗', 
       500, 

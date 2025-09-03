@@ -74,7 +74,7 @@ async function handleGET(
       .single();
 
     if (error) {
-      apiLogger.error('取得審計日誌失敗', error, {
+      apiLogger.error('取得審計日誌失敗', error as Error, {
         module: 'AuditLogDetailAPI',
         action: 'GET /api/audit-logs/[id]',
         metadata: { auditLogId: id }
@@ -180,7 +180,7 @@ async function handleDELETE(
       ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
       user_agent: request.headers.get('user-agent') || undefined
     }).catch(error => {
-      apiLogger.error('記錄刪除審計日誌操作失敗', error, {
+      apiLogger.error('記錄刪除審計日誌操作失敗', error as Error, {
         module: 'AuditLogDetailAPI',
         action: 'DELETE /api/audit-logs/[id]'
       });

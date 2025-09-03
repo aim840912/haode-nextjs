@@ -166,7 +166,7 @@ async function handleDeleteByIds(
     ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
     user_agent: request.headers.get('user-agent') || undefined
   }).catch(error => {
-    apiLogger.error('記錄批量刪除審計日誌失敗', error, {
+    apiLogger.error('記錄批量刪除審計日誌失敗', error as Error, {
       module: 'AuditLogBatchAPI',
       action: 'handleDeleteByIds'
     });
@@ -246,7 +246,7 @@ async function handleDeleteByFilters(
     ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
     user_agent: request.headers.get('user-agent') || undefined
   }).catch(error => {
-    apiLogger.error('記錄按條件批量刪除審計日誌失敗', error, {
+    apiLogger.error('記錄按條件批量刪除審計日誌失敗', error as Error, {
       module: 'AuditLogBatchAPI',
       action: 'handleDeleteByFilters'
     });
@@ -282,7 +282,7 @@ async function handleCleanupOld(
       .rpc('cleanup_old_audit_logs', { days_to_keep: daysToKeep });
 
     if (error) {
-      apiLogger.error('清理舊審計日誌失敗', error, {
+      apiLogger.error('清理舊審計日誌失敗', error as Error, {
         module: 'AuditLogBatchAPI',
         action: 'handleCleanupOld',
         metadata: { daysToKeep }
@@ -310,7 +310,7 @@ async function handleCleanupOld(
       ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
       user_agent: request.headers.get('user-agent') || undefined
     }).catch(error => {
-      apiLogger.error('記錄清理舊審計日誌操作失敗', error, {
+      apiLogger.error('記錄清理舊審計日誌操作失敗', error as Error, {
         module: 'AuditLogBatchAPI',
         action: 'handleCleanupOld'
       });
@@ -328,7 +328,7 @@ async function handleCleanupOld(
     );
 
   } catch (error) {
-    apiLogger.error('清理舊審計日誌異常', error, {
+    apiLogger.error('清理舊審計日誌異常', error as Error, {
       module: 'AuditLogBatchAPI',
       action: 'handleCleanupOld',
       metadata: { daysToKeep }

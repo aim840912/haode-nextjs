@@ -19,7 +19,11 @@ export default function FarmTourCalendarPage() {
   // 處理日期點擊 - 未來可以開啟快速新增表單
   const handleDateClick = (date: Date) => {
     // TODO: 開啟快速新增農場導覽預約表單
-    logger.debug('選擇日期', { date, module: 'FarmTourCalendarPage', action: 'handleDateClick' });
+    logger.debug('選擇日期', { 
+      module: 'FarmTourCalendarPage', 
+      action: 'handleDateClick',
+      metadata: { date: date.toISOString() }
+    });
   };
 
   return (

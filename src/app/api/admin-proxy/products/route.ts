@@ -43,7 +43,7 @@ async function validateAdminUser() {
 
     return { isValid: true }
   } catch (error) {
-    apiLogger.error('Admin validation error', error, {
+    apiLogger.error('Admin validation error', error as Error, {
       module: 'AdminProxyAPI',
       action: 'validateAdminUser'
     })
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    apiLogger.error('Admin proxy GET error', error, {
+    apiLogger.error('Admin proxy GET error', error as Error, {
       module: 'AdminProxyAPI',
       action: 'GET /api/admin-proxy/products'
     })
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    apiLogger.error('Admin proxy POST error', error, {
+    apiLogger.error('Admin proxy POST error', error as Error, {
       module: 'AdminProxyAPI',
       action: 'POST /api/admin-proxy/products'
     })
@@ -167,7 +167,7 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    apiLogger.error('Admin proxy PUT error', error, {
+    apiLogger.error('Admin proxy PUT error', error as Error, {
       module: 'AdminProxyAPI',
       action: 'PUT /api/admin-proxy/products'
     })
@@ -233,7 +233,7 @@ export async function DELETE(request: NextRequest) {
       throw error
     }
   } catch (error) {
-    apiLogger.error('Admin proxy DELETE error', error, {
+    apiLogger.error('Admin proxy DELETE error', error as Error, {
       module: 'AdminProxyAPI',
       action: 'DELETE /api/admin-proxy/products'
     })
