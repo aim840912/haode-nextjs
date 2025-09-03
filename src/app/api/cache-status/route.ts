@@ -2,191 +2,178 @@ import { NextResponse } from 'next/server'
 import { UnifiedCacheManager } from '@/lib/unified-cache-manager'
 import { getProductService } from '@/services/serviceFactory'
 import { cacheLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/error-handler'
+import { ValidationError } from '@/lib/errors'
+import { success, created } from '@/lib/api-response'
 
-export async function GET(request: Request) {
-  try {
-    const url = new URL(request.url)
-    const detailed = url.searchParams.get('detailed') === 'true'
-    const benchmark = url.searchParams.get('benchmark') === 'true'
+async function handleGET(request: Request) {
+  const url = new URL(request.url)
+  const detailed = url.searchParams.get('detailed') === 'true'
+  const benchmark = url.searchParams.get('benchmark') === 'true'
 
-    // 獲取統一快取管理器的資訊
-    const unifiedInfo = UnifiedCacheManager.getInfo()
-    const unifiedMetrics = UnifiedCacheManager.getMetrics()
+  // 獲取統一快取管理器的資訊
+  const unifiedInfo = UnifiedCacheManager.getInfo()
+  const unifiedMetrics = UnifiedCacheManager.getMetrics()
 
-    // 獲取服務實例並檢查快取統計
-    const productService = await getProductService()
-    let serviceStats: { unified?: unknown } | null = null
+  // 獲取服務實例並檢查快取統計
+  const productService = await getProductService()
+  let serviceStats: { unified?: unknown } | null = null
 
-    // 檢查是否是快取服務
-    if ('getCacheStats' in productService && typeof productService.getCacheStats === 'function') {
-      const stats = (productService as { getCacheStats: () => unknown }).getCacheStats()
-      serviceStats = stats as { unified?: unknown } | null
-    }
-
-    // 快取配置檢查
-    const cacheConfig = {
-      kvAvailable: unifiedInfo.kvAvailable,
-      kvUrl: unifiedInfo.kvAvailable ? '***configured***' : null,
-      memoryFallback: true,
-      unifiedCacheEnabled: true,
-      environment: process.env.NODE_ENV || 'development',
-    }
-
-    // 基本回應
-    const response = {
-      timestamp: new Date().toISOString(),
-      cacheEnabled: true,
-      health: calculateHealthScore(unifiedMetrics),
-      config: cacheConfig,
-      stats: {
-        unified: unifiedMetrics,
-        service: serviceStats,
-        info: unifiedInfo,
-      },
-      recommendations: generateCacheRecommendations(
-        unifiedInfo.kvAvailable,
-        unifiedMetrics,
-        serviceStats
-      ),
-    }
-
-    // 詳細監控資訊
-    if (detailed) {
-      const detailedStats = await getDetailedCacheStats()
-      ;(response as typeof response & { detailed: unknown }).detailed = detailedStats
-    }
-
-    // 效能基準測試
-    if (benchmark) {
-      const benchmarkResults = await runCacheBenchmark()
-      ;(response as typeof response & { benchmark: unknown }).benchmark = benchmarkResults
-    }
-
-    return NextResponse.json(response)
-  } catch (error) {
-    return NextResponse.json(
-      {
-        timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: '快取狀態檢查失敗',
-      },
-      { status: 500 }
-    )
+  // 檢查是否是快取服務
+  if ('getCacheStats' in productService && typeof productService.getCacheStats === 'function') {
+    const stats = (productService as { getCacheStats: () => unknown }).getCacheStats()
+    serviceStats = stats as { unified?: unknown } | null
   }
+
+  // 快取配置檢查
+  const cacheConfig = {
+    kvAvailable: unifiedInfo.kvAvailable,
+    kvUrl: unifiedInfo.kvAvailable ? '***configured***' : null,
+    memoryFallback: true,
+    unifiedCacheEnabled: true,
+    environment: process.env.NODE_ENV || 'development',
+  }
+
+  // 基本回應
+  const response = {
+    timestamp: new Date().toISOString(),
+    cacheEnabled: true,
+    health: calculateHealthScore(unifiedMetrics),
+    config: cacheConfig,
+    stats: {
+      unified: unifiedMetrics,
+      service: serviceStats,
+      info: unifiedInfo,
+    },
+    recommendations: generateCacheRecommendations(
+      unifiedInfo.kvAvailable,
+      unifiedMetrics,
+      serviceStats
+    ),
+  }
+
+  // 詳細監控資訊
+  if (detailed) {
+    const detailedStats = await getDetailedCacheStats()
+    ;(response as typeof response & { detailed: unknown }).detailed = detailedStats
+  }
+
+  // 效能基準測試
+  if (benchmark) {
+    const benchmarkResults = await runCacheBenchmark()
+    ;(response as typeof response & { benchmark: unknown }).benchmark = benchmarkResults
+  }
+
+  return success(response, '快取狀態查詢成功')
 }
 
-export async function POST(request: Request) {
-  try {
-    const { action } = await request.json()
+export const GET = withErrorHandler(handleGET, {
+  module: 'CacheStatus',
+  enableAuditLog: false,
+})
 
-    if (action === 'clear') {
-      // 清除快取
-      const productService = await getProductService()
+async function handlePOST(request: Request) {
+  const { action } = await request.json()
 
-      if ('clearCache' in productService && typeof productService.clearCache === 'function') {
-        await (productService as { clearCache: () => Promise<void> }).clearCache()
+  if (action === 'clear') {
+    // 清除快取
+    const productService = await getProductService()
 
-        return NextResponse.json({
+    if ('clearCache' in productService && typeof productService.clearCache === 'function') {
+      await (productService as { clearCache: () => Promise<void> }).clearCache()
+
+      return success(
+        {
           timestamp: new Date().toISOString(),
-          message: '快取已清除',
           action: 'clear',
-        })
-      } else {
-        return NextResponse.json(
-          {
-            timestamp: new Date().toISOString(),
-            message: '快取服務不支援清除功能',
-            action: 'clear',
-          },
-          { status: 400 }
-        )
-      }
+        },
+        '快取已清除'
+      )
+    } else {
+      throw new ValidationError('快取服務不支援清除功能')
     }
+  }
 
-    if (action === 'warmup') {
-      // 使用統一快取管理器的預熱功能
-      const start = Date.now()
+  if (action === 'warmup') {
+    // 使用統一快取管理器的預熱功能
+    const start = Date.now()
 
-      // 擴展預熱任務，涵蓋更多關鍵資料
-      await UnifiedCacheManager.warmUp([
-        {
-          key: 'products:list',
-          fetcher: async () => {
-            const productService = await getProductService()
-            return productService.getProducts()
-          },
-          options: { ttl: 600, tags: ['products', 'product-list'] },
+    // 擴展預熱任務，涵蓋更多關鍵資料
+    await UnifiedCacheManager.warmUp([
+      {
+        key: 'products:list',
+        fetcher: async () => {
+          const productService = await getProductService()
+          return productService.getProducts()
         },
-        {
-          key: 'products:all',
-          fetcher: async () => {
-            const productService = await getProductService()
-            return productService.getAllProducts
-              ? productService.getAllProducts()
-              : productService.getProducts()
-          },
-          options: { ttl: 300, tags: ['products', 'admin'] },
+        options: { ttl: 600, tags: ['products', 'product-list'] },
+      },
+      {
+        key: 'products:all',
+        fetcher: async () => {
+          const productService = await getProductService()
+          return productService.getAllProducts
+            ? productService.getAllProducts()
+            : productService.getProducts()
         },
-      ])
+        options: { ttl: 300, tags: ['products', 'admin'] },
+      },
+    ])
 
-      const duration = Date.now() - start
+    const duration = Date.now() - start
 
-      cacheLogger.info('快取預熱操作完成', { metadata: { duration, action: 'warmup' } })
+    cacheLogger.info('快取預熱操作完成', { metadata: { duration, action: 'warmup' } })
 
-      return NextResponse.json({
+    return success(
+      {
         timestamp: new Date().toISOString(),
-        message: '統一快取預熱完成',
         action: 'warmup',
         duration,
         method: 'unified-cache-manager',
         tasksCompleted: 2,
-      })
-    }
-
-    if (action === 'benchmark') {
-      // 執行效能基準測試
-      const benchmarkResults = await runCacheBenchmark()
-
-      return NextResponse.json({
-        timestamp: new Date().toISOString(),
-        message: '快取效能基準測試完成',
-        action: 'benchmark',
-        results: benchmarkResults,
-      })
-    }
-
-    if (action === 'reset-metrics') {
-      // 重設統計指標
-      UnifiedCacheManager.resetMetrics()
-
-      cacheLogger.info('快取統計指標已重設', { metadata: { action: 'reset-metrics' } })
-
-      return NextResponse.json({
-        timestamp: new Date().toISOString(),
-        message: '快取統計指標已重設',
-        action: 'reset-metrics',
-      })
-    }
-
-    return NextResponse.json(
-      {
-        timestamp: new Date().toISOString(),
-        error: 'Invalid action',
-        availableActions: ['clear', 'warmup', 'benchmark', 'reset-metrics'],
       },
-      { status: 400 }
-    )
-  } catch (error) {
-    return NextResponse.json(
-      {
-        timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error',
-        message: '快取操作失敗',
-      },
-      { status: 500 }
+      '統一快取預熱完成'
     )
   }
+
+  if (action === 'benchmark') {
+    // 執行效能基準測試
+    const benchmarkResults = await runCacheBenchmark()
+
+    return success(
+      {
+        timestamp: new Date().toISOString(),
+        action: 'benchmark',
+        results: benchmarkResults,
+      },
+      '快取效能基準測試完成'
+    )
+  }
+
+  if (action === 'reset-metrics') {
+    // 重設統計指標
+    UnifiedCacheManager.resetMetrics()
+
+    cacheLogger.info('快取統計指標已重設', { metadata: { action: 'reset-metrics' } })
+
+    return success(
+      {
+        timestamp: new Date().toISOString(),
+        action: 'reset-metrics',
+      },
+      '快取統計指標已重設'
+    )
+  }
+
+  throw new ValidationError(
+    `Invalid action. Available actions: clear, warmup, benchmark, reset-metrics`
+  )
 }
+
+export const POST = withErrorHandler(handlePOST, {
+  module: 'CacheStatus',
+  enableAuditLog: true,
+})
 
 /**
  * 計算快取健康評分 (0-100)
