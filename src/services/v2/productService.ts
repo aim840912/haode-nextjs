@@ -9,7 +9,7 @@
  */
 
 import path from 'path'
-import { Product } from '@/types/product'
+import { Product, ProductImage } from '@/types/product'
 import { AbstractSupabaseService, DataTransformer, SupabaseServiceConfig } from '@/lib/abstract-supabase-service'
 import { AbstractJsonService, JsonEntity, JsonServiceConfig, SearchConfig } from '@/lib/abstract-json-service'
 import { BaseService, SearchableService, PaginatedService, QueryOptions, PaginatedQueryOptions, PaginatedResult } from '@/lib/base-service'
@@ -82,24 +82,24 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     }
 
     return {
-      id: record.id,
-      name: record.name,
-      description: record.description,
-      category: record.category,
-      price: record.price,
-      originalPrice: record.original_price,
-      isOnSale: record.is_on_sale || false,
-      saleEndDate: record.sale_end_date,
+      id: record.id as string,
+      name: record.name as string,
+      description: record.description as string,
+      category: record.category as string,
+      price: record.price as number,
+      originalPrice: record.original_price as number | undefined,
+      isOnSale: (record.is_on_sale as boolean) || false,
+      saleEndDate: record.sale_end_date as string | undefined,
       images,
-      productImages: record.product_images,
-      primaryImageUrl: record.primary_image_url,
-      thumbnailUrl: record.thumbnail_url,
-      galleryImages: record.gallery_images || [],
-      inventory: record.stock || 0,
-      isActive: record.is_active !== false, // 預設為 true
-      showInCatalog: record.show_in_catalog !== false, // 預設為 true
-      createdAt: record.created_at,
-      updatedAt: record.updated_at
+      productImages: record.product_images as ProductImage[] | undefined,
+      primaryImageUrl: record.primary_image_url as string | undefined,
+      thumbnailUrl: record.thumbnail_url as string | undefined,
+      galleryImages: (record.gallery_images as string[]) || [],
+      inventory: (record.stock as number) || 0,
+      isActive: (record.is_active as boolean) !== false, // 預設為 true
+      showInCatalog: (record.show_in_catalog as boolean) !== false, // 預設為 true
+      createdAt: record.created_at as string,
+      updatedAt: record.updated_at as string
     }
   }
 
@@ -133,7 +133,7 @@ export class SupabaseProductService
   extends AbstractSupabaseService<Product, CreateProductDTO, UpdateProductDTO> 
   implements SearchableService<Product> {
   
-  private transformer: ProductDataTransformer
+  protected transformer: ProductDataTransformer
 
   constructor() {
     const config: SupabaseServiceConfig = {
