@@ -1,61 +1,71 @@
-'use client';
+'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, LoginRequest, RegisterRequest } from '@/types/auth';
-import { supabase, getUserProfile, signInUser, signOutUser, signUpUser, updateProfile as updateUserProfile } from '@/lib/supabase-auth';
-import { UserInterestsService } from '@/services/userInterestsService';
-import { Session } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { User, LoginRequest, RegisterRequest } from '@/types/auth'
+import {
+  supabase,
+  getUserProfile,
+  signInUser,
+  signOutUser,
+  signUpUser,
+  updateProfile as updateUserProfile,
+} from '@/lib/supabase-auth'
+import { UserInterestsService } from '@/services/userInterestsService'
+import { Session } from '@supabase/supabase-js'
+import { logger } from '@/lib/logger'
 
 interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
-  logout: () => Promise<void>;
-  updateProfile: (updates: Partial<User>) => Promise<void>;
+  user: User | null
+  isLoading: boolean
+  login: (credentials: LoginRequest) => Promise<void>
+  register: (userData: RegisterRequest) => Promise<void>
+  logout: () => Promise<void>
+  updateProfile: (updates: Partial<User>) => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // 監聽 Supabase 認證狀態變化
   useEffect(() => {
     // 取得初始 session
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      handleAuthStateChange(session);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }: { data: { session: Session | null } }) => {
+        handleAuthStateChange(session)
+      })
 
     // 監聽認證狀態變化
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-      handleAuthStateChange(session);
-    });
+      handleAuthStateChange(session)
+    })
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => subscription.unsubscribe()
+  }, [])
 
   // 處理認證狀態變化
   const handleAuthStateChange = async (session: Session | null) => {
     if (session?.user) {
       try {
         // 從 profiles 表取得使用者詳細資訊
-        const profile = await getUserProfile(session.user.id);
+        const profile = await getUserProfile(session.user.id)
         if (profile) {
           const userData: User = {
             id: profile.id,
@@ -66,14 +76,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             role: profile.role,
             createdAt: profile.created_at,
             updatedAt: profile.updated_at,
-          };
-          setUser(userData);
+          }
+          setUser(userData)
 
           // 同步興趣清單（登入成功後）
-          await syncUserInterests(userData.id);
+          await syncUserInterests(userData.id)
         } else {
           // 如果找不到 profile，建立基本使用者資訊
-          console.warn('Profile not found, creating basic user info');
+          console.warn('Profile not found, creating basic user info')
           const basicUser: User = {
             id: session.user.id,
             email: session.user.email!,
@@ -81,14 +91,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             role: 'customer',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-          };
-          setUser(basicUser);
+          }
+          setUser(basicUser)
 
           // 同步興趣清單（登入成功後）
-          await syncUserInterests(basicUser.id);
+          await syncUserInterests(basicUser.id)
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching profile:', error)
         // 即使取得 profile 失敗，仍然設定基本使用者資訊
         const basicUser: User = {
           id: session.user.id,
@@ -97,80 +107,84 @@ export function AuthProvider({ children }: AuthProviderProps) {
           role: 'customer',
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        };
-        setUser(basicUser);
+        }
+        setUser(basicUser)
 
         // 同步興趣清單（登入成功後）
-        await syncUserInterests(basicUser.id);
+        await syncUserInterests(basicUser.id)
       }
     } else {
-      setUser(null);
+      setUser(null)
     }
-    setIsLoading(false);
-  };
+    setIsLoading(false)
+  }
 
   // 同步使用者興趣清單
   const syncUserInterests = async (userId: string) => {
     try {
       // 取得本地興趣清單
-      const localInterests = UserInterestsService.getLocalInterests();
+      const localInterests = UserInterestsService.getLocalInterests()
 
       // 同步到雲端並取得合併後的清單
-      const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests);
+      const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests)
 
       // 清除本地儲存，改用雲端資料
-      UserInterestsService.clearLocalInterests();
+      UserInterestsService.clearLocalInterests()
 
-      console.log('User interests synced:', mergedInterests.length, 'products');
+      logger.debug('User interests synced', {
+        metadata: { count: mergedInterests.length, action: 'sync_interests' },
+      })
     } catch (error) {
-      console.error('Error syncing user interests:', error);
+      logger.error('Error syncing user interests', error as Error, {
+        metadata: { action: 'sync_interests' },
+      })
     }
-  };
+  }
 
   const login = async (credentials: LoginRequest): Promise<void> => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await signInUser(credentials.email, credentials.password);
+      await signInUser(credentials.email, credentials.password)
       // 認證狀態變化會由 onAuthStateChange 處理
     } catch (error) {
-      setIsLoading(false);
-      throw error;
+      setIsLoading(false)
+      throw error
     }
-  };
+  }
 
   const register = async (userData: RegisterRequest): Promise<void> => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await signUpUser(userData.email, userData.password, userData.name, userData.phone);
+      await signUpUser(userData.email, userData.password, userData.name, userData.phone)
       // 認證狀態變化會由 onAuthStateChange 處理
     } catch (error) {
-      setIsLoading(false);
-      throw error;
+      setIsLoading(false)
+      throw error
     }
-  };
+  }
 
   const logout = async () => {
     try {
       // 立即清除使用者狀態，避免在登出過程中查詢 profile
-      setUser(null);
-      setIsLoading(false);
-      await signOutUser();
+      setUser(null)
+      setIsLoading(false)
+      await signOutUser()
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Logout error:', error)
       // 確保狀態已清除
-      setUser(null);
-      setIsLoading(false);
+      setUser(null)
+      setIsLoading(false)
     }
-  };
+  }
 
   const updateProfile = async (updates: Partial<User>): Promise<void> => {
     if (!user) {
-      throw new Error('未登入');
+      throw new Error('未登入')
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
       const updatedProfile = await updateUserProfile(user.id, {
@@ -178,7 +192,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         phone: updates.phone,
         address: updates.address,
         role: updates.role,
-      });
+      })
 
       if (updatedProfile) {
         const updatedUser: User = {
@@ -188,15 +202,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
           address: updatedProfile.address || undefined,
           role: updatedProfile.role,
           updatedAt: updatedProfile.updated_at,
-        };
-        setUser(updatedUser);
+        }
+        setUser(updatedUser)
       }
     } catch (error) {
-      throw error;
+      throw error
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const value: AuthContextType = {
     user,
@@ -205,11 +219,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     updateProfile,
-  };
+  }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
