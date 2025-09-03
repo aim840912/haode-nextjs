@@ -1,22 +1,20 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { supabaseProductService } from '@/services/supabaseProductService'
-import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/error-handler'
+import { success } from '@/lib/api-response'
 
-export async function GET() {
-  try {
-    const products = await supabaseProductService.getProducts()
-    
-    // 提取所有唯一的分類
-    const categories = [...new Set(products.map(product => product.category))]
-      .filter(category => category && category.trim() !== '')
-      .sort()
-    
-    return NextResponse.json(categories)
-  } catch (error) {
-    apiLogger.error('Error fetching categories:', error as Error, { 
-      module: 'ProductCategories', 
-      action: 'GET /api/products/categories' 
-    })
-    return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 })
-  }
+async function handleGET(request: NextRequest) {
+  const products = await supabaseProductService.getProducts()
+
+  // 提取所有唯一的分類
+  const categories = [...new Set(products.map(product => product.category))]
+    .filter(category => category && category.trim() !== '')
+    .sort()
+
+  return success(categories, '成功取得產品分類')
 }
+
+export const GET = withErrorHandler(handleGET, {
+  module: 'ProductCategories',
+  enableAuditLog: false,
+})

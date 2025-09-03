@@ -87,16 +87,82 @@
 - ⚡ **維護效率大幅提升** - 統一的日誌格式和追蹤系統
 - 🎯 **剩餘 console.* 僅限於：logger.ts 本身、除錯元件、文件和 deprecated 檔案**（合理排除）
 
-### 2️⃣ **完成 API 錯誤處理中間件覆蓋** (2-3 天)
-**為什麼優先**：
-- 🛡️ 提升系統穩定性和錯誤追蹤
-- 📊 統一錯誤格式，改善前端錯誤處理
-- 🔄 17 個 API 路由待處理（41% 覆蓋缺口）
+### 2️⃣ **完成 API 錯誤處理中間件覆蓋** 🚧 **進行中** (2-3 天)
 
-**執行方式**：
-1. 優先處理高流量 API（products, inquiries 相關）
-2. 同時加入 Zod 驗證（如果還沒有）
-3. 確保審計日誌整合
+**現狀分析**：
+- ✅ **已覆蓋**: 26/41 個 API 路由（63%）使用了 withErrorHandler
+- 🔄 **待處理**: 15 個 API 路由（37%）未使用統一錯誤處理
+
+**未處理的 API 路由清單**：
+```
+src/app/api/admin-proxy/locations/route.ts
+src/app/api/admin-proxy/products/route.ts
+src/app/api/audit-logs/route.ts
+src/app/api/audit-logs/stats/route.ts
+src/app/api/cache-status/route.ts
+src/app/api/csrf-token/route.ts
+src/app/api/culture/[id]/route.ts
+src/app/api/data-strategy/route.ts
+src/app/api/debug/auth-status/route.ts
+src/app/api/farm-tour/[id]/route.ts
+src/app/api/farm-tour/inquiry/route.ts
+src/app/api/news/images/route.ts
+src/app/api/products/categories/route.ts
+src/app/api/reset-service/route.ts
+src/app/api/v1/example/route.ts
+```
+
+## 🎯 三階段執行計劃
+
+### 🏆 第一階段：高優先級 API（5個）
+- [x] `/api/products/categories/route.ts` - 產品分類（核心功能）✅ 完成
+- [ ] `/api/admin-proxy/products/route.ts` - 管理員產品代理
+- [ ] `/api/admin-proxy/locations/route.ts` - 管理員地點代理
+- [ ] `/api/farm-tour/inquiry/route.ts` - 農場參觀詢問
+- [ ] `/api/farm-tour/[id]/route.ts` - 農場參觀詳情
+
+### 🔧 第二階段：系統管理 API（5個）
+- [ ] `/api/audit-logs/route.ts` - 審計日誌
+- [ ] `/api/audit-logs/stats/route.ts` - 審計統計
+- [ ] `/api/cache-status/route.ts` - 快取狀態
+- [ ] `/api/data-strategy/route.ts` - 資料策略
+- [ ] `/api/reset-service/route.ts` - 重置服務
+
+### 🛡️ 第三階段：其他 API（5個）
+- [ ] `/api/csrf-token/route.ts` - CSRF 令牌
+- [ ] `/api/debug/auth-status/route.ts` - 除錯認證狀態
+- [ ] `/api/culture/[id]/route.ts` - 文化內容詳情
+- [ ] `/api/news/images/route.ts` - 新聞圖片
+- [ ] `/api/v1/example/route.ts` - API 範例
+
+### 🔧 每個 API 的標準改造步驟：
+
+1. **引入必要模組**
+   ```typescript
+   import { withErrorHandler } from '@/lib/error-handler'
+   import { success, created } from '@/lib/api-response'
+   import { ValidationError, NotFoundError } from '@/lib/errors'
+   ```
+
+2. **將現有函數改為 handler 函數**
+   ```typescript
+   async function handleGET(request: NextRequest) {
+     // 原有邏輯，移除 try-catch，直接拋出錯誤
+   }
+   ```
+
+3. **導出時包裹 withErrorHandler**
+   ```typescript
+   export const GET = withErrorHandler(handleGET, {
+     module: 'ModuleName',
+     enableAuditLog: false // 或 true
+   })
+   ```
+
+**執行原則**：
+- 一次只處理一個 API，完成後立即測試
+- 每階段完成後更新進度
+- 出現問題立即記錄並調整策略
 
 ### 3️⃣ **性能監控基礎建設** (3-4 天)
 **為什麼優先**：
