@@ -29,9 +29,9 @@ export class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // 使用統一 logger 記錄 React 元件錯誤
     logger.fatal('ErrorBoundary 捕獲 React 組件錯誤', error, {
-      component: 'ErrorBoundary',
       action: 'componentDidCatch',
       metadata: {
+        component: 'ErrorBoundary',
         errorMessage: error.message,
         errorStack: error.stack,
         componentStack: errorInfo.componentStack,

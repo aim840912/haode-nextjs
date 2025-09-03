@@ -52,7 +52,11 @@ export default function GoogleAnalyticsProvider({ children }: GoogleAnalyticsPro
         observer.observe({ entryTypes: ['paint'] })
       } catch (error) {
         // 某些瀏覽器可能不支援 Paint Timing API
-        logger.warn('Paint Timing API not supported', { error, module: 'GoogleAnalyticsProvider', action: 'observePaintTiming' })
+        logger.warn('Paint Timing API not supported', { 
+          module: 'GoogleAnalyticsProvider', 
+          action: 'observePaintTiming',
+          metadata: { error }
+        })
       }
 
       return () => observer.disconnect()

@@ -40,7 +40,11 @@ class SearchHistoryManager {
     try {
       localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory))
     } catch (error) {
-      logger.warn('Failed to save search history', { error, module: 'SearchHistoryManager', action: 'addToHistory' })
+      logger.warn('Failed to save search history', { 
+        module: 'SearchHistoryManager', 
+        action: 'addToHistory',
+        metadata: { error }
+      })
     }
   }
 
@@ -49,7 +53,11 @@ class SearchHistoryManager {
     try {
       localStorage.removeItem(SEARCH_HISTORY_KEY)
     } catch (error) {
-      logger.warn('Failed to clear search history', { error, module: 'SearchHistoryManager', action: 'clearHistory' })
+      logger.warn('Failed to clear search history', { 
+        module: 'SearchHistoryManager', 
+        action: 'clearHistory',
+        metadata: { error }
+      })
     }
   }
 }

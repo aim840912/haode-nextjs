@@ -47,7 +47,11 @@ export function SearchBar({
         setSuggestions(data.results || [])
         setShowDropdown(data.results?.length > 0)
       } catch (error) {
-        logger.error('搜尋建議失敗', error as Error, { module: 'SearchBar', action: 'fetchSuggestions', query: debouncedQuery })
+        logger.error('搜尋建議失敗', error as Error, { 
+          module: 'SearchBar', 
+          action: 'fetchSuggestions',
+          metadata: { query: debouncedQuery }
+        })
         setSuggestions([])
         setShowDropdown(false)
       } finally {

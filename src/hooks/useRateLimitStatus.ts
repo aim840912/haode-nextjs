@@ -199,12 +199,14 @@ export function useRateLimitStatus(): UseRateLimitStatusReturn {
         label: '了解更多',
         onClick: () => {
           logger.info('Rate Limit Info', {
-            limit: error.limit,
-            remaining: error.remaining,
-            resetTime: new Date(error.resetTime * 1000),
-            retryAfter: error.retryAfter,
             module: 'useRateLimitStatus',
-            action: 'showRateLimitInfo'
+            action: 'showRateLimitInfo',
+            metadata: {
+              limit: error.limit,
+              remaining: error.remaining,
+              resetTime: new Date(error.resetTime * 1000),
+              retryAfter: error.retryAfter
+            }
           });
         }
       }

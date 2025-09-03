@@ -114,7 +114,7 @@ async function logAuthFailure(
     });
   } catch (error) {
     // 審計日誌失敗不應該影響主要流程
-    authLogger.error('記錄認證失敗審計日誌失敗', error, {
+    authLogger.error('記錄認證失敗審計日誌失敗', error as Error, {
       module: 'AdminAuthMiddleware',
       action: 'logAuthFailure'
     });
@@ -135,7 +135,7 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
     const envAdminKey = process.env.ADMIN_API_KEY;
     
     if (!envAdminKey) {
-      authLogger.error('ADMIN_API_KEY 未在環境變數中配置', {
+      authLogger.error('ADMIN_API_KEY 未在環境變數中配置', new Error('Environment variable not configured'), {
         module: 'AdminAuthMiddleware',
         action: 'checkAdminPermission',
         metadata: { reason: 'env_not_configured' }
@@ -152,7 +152,7 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
     
     // 2. 驗證環境變數中的 API Key 格式
     if (!validateApiKeyFormat(envAdminKey)) {
-      authLogger.error('ADMIN_API_KEY 格式無效或不安全', {
+      authLogger.error('ADMIN_API_KEY 格式無效或不安全', new Error('Invalid API key format'), {
         module: 'AdminAuthMiddleware', 
         action: 'checkAdminPermission',
         metadata: { reason: 'env_key_invalid_format' }
@@ -222,7 +222,7 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
     };
     
   } catch (error) {
-    authLogger.error('認證過程中發生意外錯誤', error, {
+    authLogger.error('認證過程中發生意外錯誤', error as Error, {
       module: 'AdminAuthMiddleware',
       action: 'checkAdminPermission',
       metadata: { clientInfo }

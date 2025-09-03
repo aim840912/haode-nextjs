@@ -31,9 +31,9 @@ export class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErr
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // 使用 authLogger 記錄認證錯誤邊界錯誤
     authLogger.fatal('AuthErrorBoundary 捕獲認證相關錯誤', error, {
-      component: 'AuthErrorBoundary',
       action: 'componentDidCatch',
       metadata: {
+        component: 'AuthErrorBoundary',
         errorMessage: error.message,
         errorStack: error.stack,
         componentStack: errorInfo.componentStack,
@@ -49,8 +49,8 @@ export class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErr
     // 在開發環境下記錄詳細錯誤信息
     if (process.env.NODE_ENV === 'development') {
       authLogger.debug('認證錯誤詳情（開發模式）', {
-        component: 'AuthErrorBoundary', 
         metadata: {
+          component: 'AuthErrorBoundary',
           error: error.message,
           stack: error.stack,
           componentStack: errorInfo.componentStack,

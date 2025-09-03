@@ -148,8 +148,7 @@ class ApiClient {
         apiLogger.warn('No CSRF token available for write operation', {
           module: 'api-client',
           action: 'prepareHeaders',
-          method,
-          endpoint: 'unknown'
+          metadata: { method, endpoint: 'unknown' }
         });
       }
     }
@@ -269,13 +268,15 @@ class ApiClient {
             apiLogger.warn('Rate limit exceeded, retrying after delay', {
               module: 'api-client',
               action: 'executeWithRetry',
-              attempt: attempt + 1,
-              maxAttempts: retries + 1,
-              waitTime,
-              rateLimitInfo: {
-                limit: error.limit,
-                remaining: error.remaining,
-                resetTime: new Date(error.resetTime * 1000).toLocaleTimeString()
+              metadata: {
+                attempt: attempt + 1,
+                maxAttempts: retries + 1,
+                waitTime,
+                rateLimitInfo: {
+                  limit: error.limit,
+                  remaining: error.remaining,
+                  resetTime: new Date(error.resetTime * 1000).toLocaleTimeString()
+                }
               }
             });
             await new Promise(resolve => setTimeout(resolve, waitTime));
@@ -290,10 +291,12 @@ class ApiClient {
           apiLogger.warn('API request failed, retrying', {
             module: 'api-client',
             action: 'executeWithRetry',
-            attempt: attempt + 1,
-            maxAttempts: retries + 1,
-            error: error.message,
-            url
+            metadata: {
+              attempt: attempt + 1,
+              maxAttempts: retries + 1,
+              error: (error as Error).message,
+              url
+            }
           });
           const exponentialBackoff = retryDelay * Math.pow(2, attempt);
           await new Promise(resolve => setTimeout(resolve, exponentialBackoff));

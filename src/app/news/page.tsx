@@ -45,7 +45,11 @@ export default function NewsPage() {
         if (Array.isArray(data)) {
           setNews(data)
         } else {
-          logger.error('API 回應格式錯誤：news data 不是陣列', new Error('非陣列格式'), { result, module: 'NewsPage', action: 'fetchNews' })
+          logger.error('API 回應格式錯誤：news data 不是陣列', new Error('非陣列格式'), { 
+            module: 'NewsPage', 
+            action: 'fetchNews',
+            metadata: { result }
+          })
           setNews([])
         }
       } else {

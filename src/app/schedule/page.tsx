@@ -44,7 +44,11 @@ export default function SchedulePage() {
         
         // 確保 data 是陣列
         if (!Array.isArray(data)) {
-          logger.error('API 回應格式錯誤：schedule data 不是陣列', new Error('非陣列格式'), { result, module: 'SchedulePage', action: 'fetchSchedule' });
+          logger.error('API 回應格式錯誤：schedule data 不是陣列', new Error('非陣列格式'), { 
+            module: 'SchedulePage', 
+            action: 'fetchSchedule',
+            metadata: { result }
+          });
           setMarketSchedule([]);
           setFilteredSchedule([]);
           return;

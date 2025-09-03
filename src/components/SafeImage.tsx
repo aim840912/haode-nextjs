@@ -42,7 +42,11 @@ export default function SafeImage({
   }, [src, fallbackSrc])
 
   const handleError = () => {
-    logger.warn('SafeImage: 圖片載入失敗', { imgSrc, module: 'SafeImage', action: 'handleError' })
+    logger.warn('SafeImage: 圖片載入失敗', { 
+      module: 'SafeImage', 
+      action: 'handleError',
+      metadata: { imgSrc }
+    })
     if (!hasError) {
       setHasError(true)
       setIsLoading(false)

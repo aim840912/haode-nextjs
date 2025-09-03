@@ -382,7 +382,7 @@ export function listAllConfigs(): RateLimitConfigCollection {
  */
 export function validateConfig(config: RateLimitConfig): boolean {
   if (!config.maxRequests || config.maxRequests <= 0) {
-    logger.error('Invalid maxRequests', { 
+    logger.error('Invalid maxRequests', new Error(`maxRequests: ${config.maxRequests}`), { 
       module: 'RateLimitConfig', 
       action: 'validateConfig',
       metadata: { maxRequests: config.maxRequests }
@@ -391,7 +391,7 @@ export function validateConfig(config: RateLimitConfig): boolean {
   }
 
   if (!config.windowMs || config.windowMs <= 0) {
-    logger.error('Invalid windowMs', { 
+    logger.error('Invalid windowMs', new Error(`windowMs: ${config.windowMs}`), { 
       module: 'RateLimitConfig', 
       action: 'validateConfig',
       metadata: { windowMs: config.windowMs }
@@ -400,7 +400,7 @@ export function validateConfig(config: RateLimitConfig): boolean {
   }
 
   if (!Object.values(IdentifierStrategy).includes(config.strategy)) {
-    logger.error('Invalid strategy', { 
+    logger.error('Invalid strategy', new Error(`strategy: ${config.strategy}`), { 
       module: 'RateLimitConfig', 
       action: 'validateConfig',
       metadata: { strategy: config.strategy }
@@ -415,11 +415,13 @@ export function validateConfig(config: RateLimitConfig): boolean {
 if (process.env.NODE_ENV === 'development' && 
     process.env.DEBUG_RATE_LIMITING === 'true') {
   logger.info('Rate Limiting Configuration loaded', {
-    environment: process.env.NODE_ENV,
-    rateLimitingEnabled: ENVIRONMENT_CONFIG.enableInDevelopment,
-    totalApiConfigs: Object.keys(API_RATE_LIMITS).length,
-    whitelistIps: ENVIRONMENT_CONFIG.developmentWhitelist.length,
     module: 'RateLimitConfig',
-    action: 'initialization'
+    action: 'initialization',
+    metadata: {
+      environment: process.env.NODE_ENV,
+      rateLimitingEnabled: ENVIRONMENT_CONFIG.enableInDevelopment,
+      totalApiConfigs: Object.keys(API_RATE_LIMITS).length,
+      whitelistIps: ENVIRONMENT_CONFIG.developmentWhitelist.length
+    }
   });
 }

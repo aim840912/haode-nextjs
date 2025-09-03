@@ -60,11 +60,19 @@ export default function NewsDetailPage() {
       } else if (response.status === 404) {
         setNewsItem(null)
       } else {
-        logger.error('Failed to fetch news', new Error(`HTTP ${response.status}: ${response.statusText}`), { newsId: id, module: 'NewsDetailPage', action: 'fetchNewsDetail' })
+        logger.error('Failed to fetch news', new Error(`HTTP ${response.status}: ${response.statusText}`), { 
+          module: 'NewsDetailPage', 
+          action: 'fetchNewsDetail',
+          metadata: { newsId: id }
+        })
         setNewsItem(null)
       }
     } catch (error) {
-      logger.error('Error fetching news detail', error as Error, { newsId: id, module: 'NewsDetailPage', action: 'fetchNewsDetail' })
+      logger.error('Error fetching news detail', error as Error, { 
+        module: 'NewsDetailPage', 
+        action: 'fetchNewsDetail',
+        metadata: { newsId: id }
+      })
       setNewsItem(null)
     } finally {
       setLoading(false)

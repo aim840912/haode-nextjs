@@ -78,7 +78,11 @@ export function useImageBlob(
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'base64 處理失敗';
-        logger.error('base64 處理錯誤', err as Error, { src, module: 'useImageBlob', action: 'processBase64' });
+        logger.error('base64 處理錯誤', err as Error, { 
+          module: 'useImageBlob', 
+          action: 'processBase64',
+          metadata: { src }
+        });
         setError(errorMsg);
         setProcessedSrc(fallbackSrc || null);
         setIsLoading(false);

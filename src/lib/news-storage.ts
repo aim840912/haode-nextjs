@@ -38,18 +38,22 @@ export async function initializeNewsBucket() {
       dbLogger.info('新聞 Storage bucket 建立成功', {
         module: 'news-storage',
         action: 'initializeNewsBucket',
-        bucket: NEWS_STORAGE_BUCKET,
-        bucketData: data
+        metadata: {
+          bucket: NEWS_STORAGE_BUCKET,
+          bucketData: data
+        }
       });
     }
 
     return true;
   } catch (error) {
-    dbLogger.error('初始化新聞 storage bucket 失敗', {
+    dbLogger.error('初始化新聞 storage bucket 失敗', error as Error, {
       module: 'news-storage',
       action: 'initializeNewsBucket',
-      bucket: NEWS_STORAGE_BUCKET,
-      error: error instanceof Error ? error.message : String(error)
+      metadata: {
+        bucket: NEWS_STORAGE_BUCKET,
+        error: error instanceof Error ? error.message : String(error)
+      }
     });
     throw error;
   }
@@ -261,8 +265,10 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
     dbLogger.info('開始刪除新聞圖片', {
       module: 'news-storage',
       action: 'deleteAllNewsImages',
-      newsId,
-      bucket: NEWS_STORAGE_BUCKET
+      metadata: {
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET
+      }
     });
     
     // 列出新聞資料夾下的所有檔案
