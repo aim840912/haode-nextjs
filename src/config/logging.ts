@@ -128,12 +128,12 @@ export const LOG_TEMPLATES = {
 }
 
 // 敏感資料遮蔽函數
-export function maskSensitiveData(data: any): any {
+export function maskSensitiveData(data: unknown): unknown {
   if (!loggingConfig.maskSensitiveData) return data
   
   if (typeof data !== 'object' || data === null) return data
   
-  const masked = { ...data }
+  const masked = { ...data } as Record<string, unknown>
   
   for (const field of SENSITIVE_FIELDS) {
     if (field in masked) {

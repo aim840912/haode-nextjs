@@ -1,5 +1,12 @@
 import { Location } from '@/types/location'
 import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { dbLogger } from '@/lib/logger'
+
+/**
+ * @deprecated 此服務已被 LocationServiceV2Simple 取代
+ * 請使用 locationServiceAdapter 以獲得更好的錯誤處理和日誌記錄
+ * 保留此檔案僅為向後相容性考量
+ */
 
 interface LocationService {
   getLocations(): Promise<Location[]>
@@ -21,7 +28,10 @@ class SupabaseLocationService implements LocationService {
       
       return data?.map(this.transformFromDB) || []
     } catch (error) {
-      console.error('Error fetching locations:', error)
+      dbLogger.error('取得地點清單失敗', error as Error, {
+        module: 'SupabaseLocationService',
+        action: 'getLocations'
+      })
       return []
     }
   }
@@ -38,7 +48,10 @@ class SupabaseLocationService implements LocationService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error adding location:', error)
+      dbLogger.error('新增地點失敗', error as Error, {
+        module: 'SupabaseLocationService',
+        action: 'addLocation'
+      })
       throw error
     }
   }
@@ -57,7 +70,10 @@ class SupabaseLocationService implements LocationService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error updating location:', error)
+      dbLogger.error('更新地點失敗', error as Error, {
+        module: 'SupabaseLocationService',
+        action: 'updateLocation'
+      })
       throw error
     }
   }
@@ -71,7 +87,10 @@ class SupabaseLocationService implements LocationService {
       
       if (error) throw error
     } catch (error) {
-      console.error('Error deleting location:', error)
+      dbLogger.error('刪除地點失敗', error as Error, {
+        module: 'SupabaseLocationService',
+        action: 'deleteLocation'
+      })
       throw error
     }
   }
@@ -91,7 +110,10 @@ class SupabaseLocationService implements LocationService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error fetching location by id:', error)
+      dbLogger.error('根據 ID 取得地點失敗', error as Error, {
+        module: 'SupabaseLocationService',
+        action: 'getLocationById'
+      })
       return null
     }
   }

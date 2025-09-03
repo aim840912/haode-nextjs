@@ -1,6 +1,12 @@
 import { ScheduleItem, ScheduleService } from '@/types/schedule'
 import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { dbLogger } from '@/lib/logger'
 
+/**
+ * @deprecated 此服務已被 ScheduleServiceV2Simple 取代
+ * 請使用 scheduleServiceAdapter 以獲得更好的錯誤處理和日誌記錄
+ * 保留此檔案僅為向後相容性考量
+ */
 export class SupabaseScheduleService implements ScheduleService {
   async getSchedule(): Promise<ScheduleItem[]> {
     try {
@@ -10,13 +16,19 @@ export class SupabaseScheduleService implements ScheduleService {
         .order('date', { ascending: true })
 
       if (error) {
-        console.error('Error fetching schedule:', error)
+        dbLogger.error('取得排程清單失敗', error as Error, {
+          module: 'SupabaseScheduleService',
+          action: 'getSchedule'
+        })
         throw new Error('Failed to fetch schedule')
       }
 
       return data?.map(this.transformToScheduleItem) || []
     } catch (error) {
-      console.error('Error in getSchedule:', error)
+      dbLogger.error('排程清單查詢例外', error as Error, {
+        module: 'SupabaseScheduleService',
+        action: 'getSchedule'
+      })
       return []
     }
   }
@@ -42,7 +54,10 @@ export class SupabaseScheduleService implements ScheduleService {
       .single()
 
     if (error) {
-      console.error('Error adding schedule:', error)
+      dbLogger.error('新增排程失敗', error as Error, {
+      module: 'SupabaseScheduleService',
+      action: 'addSchedule'
+    })
       throw new Error('Failed to add schedule')
     }
 
@@ -71,7 +86,10 @@ export class SupabaseScheduleService implements ScheduleService {
       .single()
 
     if (error) {
-      console.error('Error updating schedule:', error)
+      dbLogger.error('更新排程失敗', error as Error, {
+      module: 'SupabaseScheduleService',
+      action: 'updateSchedule'
+    })
       throw new Error('Failed to update schedule')
     }
 
@@ -85,7 +103,10 @@ export class SupabaseScheduleService implements ScheduleService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting schedule:', error)
+      dbLogger.error('刪除排程失敗', error as Error, {
+      module: 'SupabaseScheduleService',
+      action: 'deleteSchedule'
+    })
       throw new Error('Failed to delete schedule')
     }
   }
@@ -101,7 +122,10 @@ export class SupabaseScheduleService implements ScheduleService {
       if (error.code === 'PGRST116') {
         return null
       }
-      console.error('Error fetching schedule by id:', error)
+      dbLogger.error('根據 ID 取得排程失敗', error as Error, {
+      module: 'SupabaseScheduleService',
+      action: 'getScheduleById'
+    })
       throw new Error('Failed to fetch schedule')
     }
 

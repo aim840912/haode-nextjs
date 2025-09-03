@@ -19,6 +19,20 @@ interface UploadedImage {
   alt?: string;
 }
 
+interface UploadUrlData {
+  url: string;
+  path: string;
+}
+
+interface UploadResult {
+  multiple?: boolean;
+  urls?: Record<string, UploadUrlData>;
+  // 單一上傳結果
+  url?: string;
+  path?: string;
+  size?: 'thumbnail' | 'medium' | 'large';
+}
+
 interface ImageUploaderProps {
   productId: string;
   onUploadSuccess?: (images: UploadedImage[]) => void;
@@ -119,17 +133,17 @@ export default function ImageUploader({
 
         try {
           // 上傳到伺服器
-          const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes, csrfToken);
+          const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes, csrfToken) as UploadResult;
           
           if (generateMultipleSizes && result.multiple) {
             // 多尺寸上傳結果 - 直接替換臨時預覽
             const uploadedImages: UploadedImage[] = [];
             Object.entries(result.urls).forEach(([size, urlData], index) => {
-              const url = (urlData as any).url;
+              const url = urlData.url;
               uploadedImages.push({
                 id: `${productId}-${size}-${Date.now()}-${i}`,
                 url: url,
-                path: (urlData as any).path,
+                path: urlData.path,
                 size: size as 'thumbnail' | 'medium' | 'large',
                 file: processedFile,
                 preview: url, // 使用 Supabase URL

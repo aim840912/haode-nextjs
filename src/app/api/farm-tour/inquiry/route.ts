@@ -9,6 +9,7 @@ import { inquiryServiceAdapter } from '@/services/inquiryServiceAdapter'
 import { AuditLogger } from '@/services/auditLogService'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
+import { apiLogger } from '@/lib/logger'
 
 // 農場參觀預約詢問的資料介面
 interface FarmTourInquiryRequest {
@@ -122,7 +123,13 @@ async function handlePOST(request: NextRequest) {
         visitor_count: inquiry.visitor_count,
       },
       request
-    ).catch(console.error)
+    ).catch(error => {
+      apiLogger.error('農場參觀詢問審計日誌記錄失敗', error instanceof Error ? error : new Error('Unknown audit error'), {
+        module: 'FarmTourInquiryAPI',
+        action: 'auditLog',
+        metadata: { inquiryId: inquiry.id, userId: user.id }
+      })
+    })
 
     return createSuccessResponse(
       inquiry as unknown as Record<string, unknown>,

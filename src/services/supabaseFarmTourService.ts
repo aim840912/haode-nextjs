@@ -1,5 +1,12 @@
 import { FarmTourActivity } from '@/types/farmTour'
 import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { dbLogger } from '@/lib/logger'
+
+/**
+ * @deprecated 此服務已被 FarmTourServiceV2Simple 取代
+ * 請使用 farmTourServiceAdapter 以獲得更好的錯誤處理和日誌記錄
+ * 保留此檔案僅為向後相容性考量
+ */
 
 export class SupabaseFarmTourService {
   async getAll(): Promise<FarmTourActivity[]> {
@@ -10,13 +17,19 @@ export class SupabaseFarmTourService {
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error('Error fetching farm tour activities:', error)
+        dbLogger.error('取得農場體驗活動失敗', error as Error, {
+        module: 'SupabaseFarmTourService',
+        action: 'getAll'
+      })
         throw new Error('Failed to fetch farm tour activities')
       }
       
       return data?.map(this.transformFromDB) || []
     } catch (error) {
-      console.error('Error in getAll:', error)
+      dbLogger.error('農場體驗活動查詢例外', error as Error, {
+        module: 'SupabaseFarmTourService',
+        action: 'getAll'
+      })
       return []
     }
   }
@@ -36,7 +49,10 @@ export class SupabaseFarmTourService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error fetching farm tour activity by id:', error)
+      dbLogger.error('根據 ID 取得農場體驗活動失敗', error as Error, {
+      module: 'SupabaseFarmTourService',
+      action: 'getById'
+    })
       return null
     }
   }
@@ -63,7 +79,10 @@ export class SupabaseFarmTourService {
       .single()
 
     if (error) {
-      console.error('Error adding farm tour activity:', error)
+      dbLogger.error('新增農場體驗活動失敗', error as Error, {
+      module: 'SupabaseFarmTourService',
+      action: 'create'
+    })
       throw new Error('Failed to add farm tour activity')
     }
 
@@ -93,7 +112,10 @@ export class SupabaseFarmTourService {
       .single()
 
     if (error) {
-      console.error('Error updating farm tour activity:', error)
+      dbLogger.error('更新農場體驗活動失敗', error as Error, {
+      module: 'SupabaseFarmTourService',
+      action: 'update'
+    })
       throw new Error('Failed to update farm tour activity')
     }
     
@@ -108,7 +130,10 @@ export class SupabaseFarmTourService {
       .eq('id', id)
 
     if (error) {
-      console.error('Error deleting farm tour activity:', error)
+      dbLogger.error('刪除農場體驗活動失敗', error as Error, {
+      module: 'SupabaseFarmTourService',
+      action: 'delete'
+    })
       throw new Error('Failed to delete farm tour activity')
     }
 

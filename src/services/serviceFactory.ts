@@ -12,6 +12,7 @@ import { NewsService } from '@/types/news'
 import { CultureService } from '@/types/culture'
 import { LocationService } from '@/types/location'
 import { shouldUseSupabase, shouldFallbackToJson, shouldUseCache, getStrategyInfo } from '@/config/data-strategy'
+import { dbLogger } from '@/lib/logger'
 
 // 定義服務介面類型
 interface FarmTourService {
@@ -22,6 +23,18 @@ interface FarmTourService {
   delete(id: string): Promise<boolean>
 }
 
+interface UserInterestsService {
+  getUserInterests(userId: string): Promise<string[]>
+  addInterest(userId: string, productId: string): Promise<boolean>
+  removeInterest(userId: string, productId: string): Promise<boolean>
+  addMultipleInterests(userId: string, productIds: string[]): Promise<boolean>
+  toggleInterest(userId: string, productId: string): Promise<boolean>
+  syncLocalInterests(userId: string, localInterests: string[]): Promise<string[]>
+  clearLocalInterests(): void
+  getLocalInterests(): string[]
+  setLocalInterests(interests: string[]): void
+}
+
 // 服務實例快取
 let productServiceInstance: ProductService | null = null
 let scheduleServiceInstance: ScheduleService | null = null
@@ -29,64 +42,47 @@ let farmTourServiceInstance: FarmTourService | null = null
 let newsServiceInstance: NewsService | null = null
 let cultureServiceInstance: CultureService | null = null
 let locationServiceInstance: LocationService | null = null
+let userInterestsServiceInstance: UserInterestsService | null = null
 
 /**
  * 獲取產品服務實例
- * 根據當前資料策略自動選擇實作
+ * 使用 v2 架構適配器，提供向後相容性
  */
 export async function getProductService(): Promise<ProductService> {
-  // 如果已有實例且策略未改變，直接返回
+  // 如果已有實例，直接返回
   if (productServiceInstance) {
     return productServiceInstance
   }
 
-  const useSupabase = shouldUseSupabase('products')
-  const strategy = getStrategyInfo()
-
-  console.log(`🏭 初始化產品服務: ${useSupabase ? 'Supabase' : 'JSON'} 模式`)
-
+  dbLogger.info('初始化產品服務', { 
+    module: 'ServiceFactory', 
+    action: 'getProductService', 
+    metadata: { architecture: 'v2' } 
+  })
+  
   try {
-    if (useSupabase) {
-      // 動態載入 Supabase 服務
-      const { supabaseProductService } = await import('./supabaseProductService')
-      
-      // 優先使用 Supabase，發生錯誤時才 fallback
-      try {
-        // 簡單測試連線
-        await supabaseProductService.getProducts()
-        
-        // 包裝快取層
-        productServiceInstance = await createCachedProductService(supabaseProductService)
-        console.log('✅ Supabase 服務（含快取）初始化成功')
-      } catch (error) {
-        console.warn('⚠️ Supabase 連線失敗，嘗試 fallback 到 JSON 模式:', error)
-        
-        if (shouldFallbackToJson()) {
-          const jsonService = await createJsonService()
-          productServiceInstance = await createCachedProductService(jsonService)
-          console.log('🔄 已切換到 JSON fallback 模式（含快取）')
-        } else {
-          // 不允許 fallback 時，拋出錯誤
-          throw error
-        }
-      }
-    } else {
-      const jsonService = await createJsonService()
-      productServiceInstance = await createCachedProductService(jsonService)
-    }
-  } catch (error) {
-    console.error('❌ 服務初始化失敗:', error)
+    const { productServiceAdapter } = await import('./productServiceAdapter')
     
-    if (shouldFallbackToJson()) {
-      console.log('🔄 嘗試 fallback 到 JSON 服務')
-      const jsonService = await createJsonService()
-      productServiceInstance = await createCachedProductService(jsonService)
-    } else {
-      throw error
-    }
+    // 測試連線
+    await productServiceAdapter.getProducts()
+    
+    // 包裝快取層
+    productServiceInstance = await createCachedProductService(productServiceAdapter)
+    
+    dbLogger.info('產品服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getProductService', 
+      metadata: { architecture: 'v2', cached: true } 
+    })
+    
+    return productServiceInstance
+  } catch (error) {
+    dbLogger.error('產品服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getProductService' 
+    })
+    throw new Error('產品服務初始化失敗，請檢查服務配置')
   }
-
-  return productServiceInstance
 }
 
 /**
@@ -95,7 +91,10 @@ export async function getProductService(): Promise<ProductService> {
 async function createJsonService(): Promise<ProductService> {
   const { JsonProductService } = await import('./productService')
   const service = new (JsonProductService as any)()
-  console.log('✅ JSON 服務初始化成功')
+  dbLogger.info('JSON 服務初始化成功', { 
+    module: 'ServiceFactory', 
+    action: 'createJsonService' 
+  })
   return service
 }
 
@@ -109,7 +108,10 @@ export async function createCachedProductService(baseService: ProductService): P
   const shouldCache = shouldUseCache('products')
   
   if (!shouldCache) {
-    console.log('📋 快取策略停用，使用基礎服務')
+    dbLogger.debug('快取策略停用，使用基礎服務', { 
+      module: 'ServiceFactory', 
+      action: 'createCachedProductService' 
+    })
     return baseService
   }
 
@@ -117,9 +119,17 @@ export async function createCachedProductService(baseService: ProductService): P
   const { CachedProductService } = await import('./cachedProductService')
   
   if (hasKV) {
-    console.log('🚀 創建 KV 快取包裝服務')
+    dbLogger.info('創建 KV 快取包裝服務', { 
+      module: 'ServiceFactory', 
+      action: 'createCachedProductService', 
+      metadata: { cacheType: 'kv' } 
+    })
   } else {
-    console.log('🚀 創建內存快取包裝服務')
+    dbLogger.info('創建內存快取包裝服務', { 
+      module: 'ServiceFactory', 
+      action: 'createCachedProductService', 
+      metadata: { cacheType: 'memory' } 
+    })
   }
   
   return new CachedProductService(baseService)
@@ -136,7 +146,11 @@ async function createService<T>(
 ): Promise<T> {
   const useSupabase = shouldUseSupabase(serviceType as any)
   
-  console.log(`🏭 初始化${serviceType}服務: ${useSupabase ? 'Supabase' : 'JSON'} 模式`)
+  dbLogger.info(`初始化${serviceType}服務`, { 
+    module: 'ServiceFactory', 
+    action: 'createService', 
+    metadata: { serviceType, mode: useSupabase ? 'Supabase' : 'JSON' } 
+  })
 
   try {
     if (useSupabase) {
@@ -147,14 +161,26 @@ async function createService<T>(
       if (testConnection) {
         try {
           await testConnection(supabaseService)
-          console.log(`✅ ${serviceType} Supabase 服務初始化成功`)
+          dbLogger.info(`${serviceType} Supabase 服務初始化成功`, { 
+            module: 'ServiceFactory', 
+            action: 'createService', 
+            metadata: { serviceType } 
+          })
           return supabaseService
         } catch (error) {
-          console.warn(`⚠️ ${serviceType} Supabase 連線失敗，嘗試 fallback 到 JSON 模式:`, error)
+          dbLogger.warn(`${serviceType} Supabase 連線失敗，嘗試 fallback`, error instanceof Error ? error : new Error('Unknown error'), { 
+            module: 'ServiceFactory', 
+            action: 'createService', 
+            metadata: { serviceType } 
+          })
           
           if (shouldFallbackToJson()) {
             const jsonService = await jsonServiceCreator()
-            console.log(`🔄 ${serviceType} 已切換到 JSON fallback 模式`)
+            dbLogger.info(`${serviceType} 已切換到 JSON fallback 模式`, { 
+              module: 'ServiceFactory', 
+              action: 'createService', 
+              metadata: { serviceType } 
+            })
             return jsonService
           } else {
             throw error
@@ -167,10 +193,18 @@ async function createService<T>(
       return await jsonServiceCreator()
     }
   } catch (error) {
-    console.error(`❌ ${serviceType} 服務初始化失敗:`, error)
+    dbLogger.error(`${serviceType} 服務初始化失敗`, error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'createService', 
+      metadata: { serviceType } 
+    })
     
     if (shouldFallbackToJson()) {
-      console.log(`🔄 ${serviceType} 嘗試 fallback 到 JSON 服務`)
+      dbLogger.info(`${serviceType} 嘗試 fallback 到 JSON 服務`, { 
+        module: 'ServiceFactory', 
+        action: 'createService', 
+        metadata: { serviceType } 
+      })
       return await jsonServiceCreator()
     } else {
       throw error
@@ -186,78 +220,121 @@ const serviceInstances = {
   news: newsServiceInstance,
   culture: cultureServiceInstance,
   locations: locationServiceInstance,
+  userInterests: userInterestsServiceInstance,
 }
 
 /**
  * 獲取排程服務實例
+ * 使用 v2 架構適配器，提供向後相容性
  */
 export async function getScheduleService(): Promise<ScheduleService> {
   if (scheduleServiceInstance) {
     return scheduleServiceInstance
   }
 
-  scheduleServiceInstance = await createService(
-    'schedule',
-    async () => {
-      const { supabaseScheduleService } = await import('./supabaseScheduleService')
-      return { supabaseScheduleService }
-    },
-    async () => {
-      const { JsonScheduleService } = await import('./scheduleService')
-      return new (JsonScheduleService as any)()
-    },
-    (service) => (service as any).getSchedule()
-  )
-
-  return scheduleServiceInstance!
+  dbLogger.info('初始化排程服務', { 
+    module: 'ServiceFactory', 
+    action: 'getScheduleService', 
+    metadata: { architecture: 'v2' } 
+  })
+  
+  try {
+    const { scheduleServiceAdapter } = await import('./scheduleServiceAdapter')
+    scheduleServiceInstance = scheduleServiceAdapter
+    
+    // 測試連線
+    await scheduleServiceInstance.getSchedule()
+    
+    dbLogger.info('排程服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getScheduleService', 
+      metadata: { architecture: 'v2' } 
+    })
+    
+    return scheduleServiceInstance
+  } catch (error) {
+    dbLogger.error('排程服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getScheduleService' 
+    })
+    throw new Error('排程服務初始化失敗，請檢查服務配置')
+  }
 }
 
 /**
  * 獲取農場體驗服務實例
+ * 使用 v2 架構適配器，提供向後相容性
  */
 export async function getFarmTourService(): Promise<FarmTourService> {
   if (farmTourServiceInstance) {
     return farmTourServiceInstance
   }
 
-  farmTourServiceInstance = await createService(
-    'farmTour',
-    async () => {
-      const { supabaseFarmTourService } = await import('./supabaseFarmTourService')
-      return { supabaseFarmTourService }
-    },
-    async () => {
-      const farmTourService = await import('./farmTourService')
-      return farmTourService.farmTourService
-    },
-    (service) => service.getAll()
-  )
-
-  return farmTourServiceInstance!
+  dbLogger.info('初始化農場體驗服務', { 
+    module: 'ServiceFactory', 
+    action: 'getFarmTourService', 
+    metadata: { architecture: 'v2' } 
+  })
+  
+  try {
+    const { farmTourServiceAdapter } = await import('./farmTourServiceAdapter')
+    farmTourServiceInstance = farmTourServiceAdapter
+    
+    // 測試連線
+    await farmTourServiceInstance.getAll()
+    
+    dbLogger.info('農場體驗服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getFarmTourService', 
+      metadata: { architecture: 'v2' } 
+    })
+    
+    return farmTourServiceInstance
+  } catch (error) {
+    dbLogger.error('農場體驗服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getFarmTourService' 
+    })
+    throw new Error('農場體驗服務初始化失敗，請檢查服務配置')
+  }
 }
 
 /**
  * 獲取新聞服務實例
+ * 使用 v2 架構適配器，提供向後相容性
  */
 export async function getNewsService(): Promise<NewsService> {
   if (newsServiceInstance) {
     return newsServiceInstance
   }
 
-  newsServiceInstance = await createService(
-    'news',
-    async () => {
-      const { supabaseNewsService } = await import('./supabaseNewsService')
-      return { supabaseNewsService }
-    },
-    async () => {
-      const { JsonNewsService } = await import('./newsService')
-      return new (JsonNewsService as any)()
-    },
-    (service) => service.getNews()
-  )
-
-  return newsServiceInstance!
+  dbLogger.info('初始化新聞服務', { 
+    module: 'ServiceFactory', 
+    action: 'getNewsService', 
+    metadata: { architecture: 'v2' } 
+  })
+  
+  try {
+    const { newsServiceAdapter } = await import('./newsServiceAdapter')
+    newsServiceInstance = newsServiceAdapter
+    
+    // 測試連線
+    await newsServiceInstance.getNews()
+    
+    dbLogger.info('新聞服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getNewsService', 
+      metadata: { architecture: 'v2' } 
+    })
+    
+    return newsServiceInstance
+  } catch (error) {
+    dbLogger.error('新聞服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getNewsService' 
+    })
+    throw new Error('新聞服務初始化失敗，請檢查服務配置')
+  }
 }
 
 /**
@@ -269,7 +346,11 @@ export async function getCultureService(): Promise<CultureService> {
     return cultureServiceInstance
   }
 
-  console.log('🏭 初始化文化服務: v2 架構模式')
+  dbLogger.info('初始化文化服務', { 
+    module: 'ServiceFactory', 
+    action: 'getCultureService', 
+    metadata: { architecture: 'v2' } 
+  })
   
   try {
     const { cultureServiceAdapter } = await import('./cultureServiceAdapter')
@@ -278,37 +359,58 @@ export async function getCultureService(): Promise<CultureService> {
     // 測試連線
     await cultureServiceInstance.getCultureItems()
     
-    console.log('✅ 文化服務 v2 架構初始化成功')
+    dbLogger.info('文化服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getCultureService', 
+      metadata: { architecture: 'v2' } 
+    })
     
     return cultureServiceInstance
   } catch (error) {
-    console.error('❌ 文化服務初始化失敗:', error)
+    dbLogger.error('文化服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getCultureService' 
+    })
     throw new Error('文化服務初始化失敗，請檢查服務配置')
   }
 }
 
 /**
  * 獲取地點服務實例
+ * 使用 v2 架構適配器，提供向後相容性
  */
 export async function getLocationService(): Promise<LocationService> {
   if (locationServiceInstance) {
     return locationServiceInstance
   }
 
-  locationServiceInstance = await createService(
-    'locations',
-    async () => {
-      const { supabaseLocationService } = await import('./supabaseLocationService')
-      return { supabaseLocationService }
-    },
-    async () => {
-      const { JsonLocationService } = await import('./locationService')
-      return new (JsonLocationService as any)()
-    },
-    (service) => service.getLocations()
-  )
-
-  return locationServiceInstance!
+  dbLogger.info('初始化地點服務', { 
+    module: 'ServiceFactory', 
+    action: 'getLocationService', 
+    metadata: { architecture: 'v2' } 
+  })
+  
+  try {
+    const { locationServiceAdapter } = await import('./locationServiceAdapter')
+    locationServiceInstance = locationServiceAdapter
+    
+    // 測試連線
+    await locationServiceInstance.getLocations()
+    
+    dbLogger.info('地點服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getLocationService', 
+      metadata: { architecture: 'v2' } 
+    })
+    
+    return locationServiceInstance
+  } catch (error) {
+    dbLogger.error('地點服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getLocationService' 
+    })
+    throw new Error('地點服務初始化失敗，請檢查服務配置')
+  }
 }
 
 
@@ -322,7 +424,11 @@ export function resetServiceInstances() {
   newsServiceInstance = null
   cultureServiceInstance = null
   locationServiceInstance = null
-  console.log('🔄 所有服務實例已重設')
+  userInterestsServiceInstance = null
+  dbLogger.info('所有服務實例已重設', { 
+    module: 'ServiceFactory', 
+    action: 'resetServiceInstances' 
+  })
 }
 
 /**
@@ -367,5 +473,40 @@ export async function healthCheck(): Promise<{
       responseTime: Date.now() - start,
       error: error instanceof Error ? error.message : 'Unknown error'
     }
+  }
+}
+
+/**
+ * 獲取使用者興趣服務實例
+ * 使用 v2 架構適配器，提供向後相容性
+ */
+export async function getUserInterestsService(): Promise<UserInterestsService> {
+  if (userInterestsServiceInstance) {
+    return userInterestsServiceInstance
+  }
+
+  dbLogger.info('初始化使用者興趣服務', { 
+    module: 'ServiceFactory', 
+    action: 'getUserInterestsService', 
+    metadata: { architecture: 'v2' } 
+  })
+  
+  try {
+    const { UserInterestsService } = await import('./userInterestsServiceAdapter')
+    userInterestsServiceInstance = UserInterestsService
+    
+    dbLogger.info('使用者興趣服務初始化成功', { 
+      module: 'ServiceFactory', 
+      action: 'getUserInterestsService', 
+      metadata: { architecture: 'v2' } 
+    })
+    
+    return userInterestsServiceInstance
+  } catch (error) {
+    dbLogger.error('使用者興趣服務初始化失敗', error instanceof Error ? error : new Error('Unknown error'), { 
+      module: 'ServiceFactory', 
+      action: 'getUserInterestsService' 
+    })
+    throw new Error('使用者興趣服務初始化失敗，請檢查服務配置')
   }
 }

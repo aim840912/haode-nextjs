@@ -1,4 +1,5 @@
 import { ProductImage } from '@/types/product';
+import { apiLogger } from '@/lib/logger';
 
 export interface ImageSizeConfig {
   thumbnail: { width: 200; height: 200 }
@@ -151,7 +152,16 @@ export async function compressImage(
     const compressedFile = await imageCompression(file, compressOptions);
     return compressedFile;
   } catch (error) {
-    console.error('圖片壓縮失敗:', error);
+    apiLogger.error('圖片壓縮失敗', error instanceof Error ? error : new Error('Unknown compression error'), {
+      module: 'ImageUtils',
+      action: 'compressImage',
+      metadata: { 
+        fileName: file.name,
+        fileSize: file.size,
+        maxSizeMB: options.maxSizeMB,
+        maxWidthOrHeight: options.maxWidthOrHeight
+      }
+    });
     return file; // 壓縮失敗時返回原檔案
   }
 }
@@ -257,6 +267,10 @@ export async function preloadImages(urls: string[]): Promise<void> {
   try {
     await Promise.all(urls.map(url => preloadImage(url)));
   } catch (error) {
-    console.warn('部分圖片預載入失敗:', error);
+    apiLogger.warn('部分圖片預載入失敗', error instanceof Error ? error : new Error('Unknown preload error'), {
+      module: 'ImageUtils',
+      action: 'preloadImages',
+      metadata: { urlCount: urls.length, urls: urls.slice(0, 3) } // 只記錄前3個URL避免日誌過長
+    });
   }
 }

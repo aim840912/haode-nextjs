@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { farmTourService } from '@/services/farmTourService'
+import { farmTourServiceAdapter } from '@/services/farmTourServiceAdapter'
 
 // GET - 根據ID獲取活動
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const activity = await farmTourService.getById(id)
+    const activity = await farmTourServiceAdapter.getById(id)
     if (!activity) {
       return NextResponse.json({ error: 'Activity not found' }, { status: 404 })
     }
@@ -20,7 +20,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params
     const body = await request.json()
-    const updatedActivity = await farmTourService.update(id, body)
+    const updatedActivity = await farmTourServiceAdapter.update(id, body)
     
     if (!updatedActivity) {
       return NextResponse.json({ error: 'Activity not found' }, { status: 404 })
@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const success = await farmTourService.delete(id)
+    const success = await farmTourServiceAdapter.delete(id)
     
     if (!success) {
       return NextResponse.json({ error: 'Activity not found' }, { status: 404 })

@@ -347,9 +347,23 @@ export function getRateLimitConfig(pathname: string): RateLimitConfig | null {
 }
 
 /**
+ * 速率限制配置集合介面
+ */
+export interface RateLimitConfigCollection {
+  securityLevels: typeof SecurityLevel;
+  apiCategories: typeof APICategory;
+  environmentConfig: typeof ENVIRONMENT_CONFIG;
+  baseConfigs: typeof BASE_CONFIGS;
+  apiRateLimits: typeof API_RATE_LIMITS;
+  globalRateLimit: typeof GLOBAL_RATE_LIMIT;
+  antiDdosLimit: typeof ANTI_DDOS_LIMIT;
+  specialPaths: typeof SPECIAL_PATHS;
+}
+
+/**
  * 開發工具：列出所有配置
  */
-export function listAllConfigs(): Record<string, any> {
+export function listAllConfigs(): RateLimitConfigCollection {
   return {
     securityLevels: SecurityLevel,
     apiCategories: APICategory,

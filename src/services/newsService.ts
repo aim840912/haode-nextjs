@@ -1,6 +1,7 @@
 import { NewsItem, NewsService } from '@/types/news'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { dbLogger } from '@/lib/logger'
 
 export class JsonNewsService implements NewsService {
   private readonly filePath = path.join(process.cwd(), 'src/data/news.json')
@@ -10,7 +11,11 @@ export class JsonNewsService implements NewsService {
       const data = await fs.readFile(this.filePath, 'utf-8')
       return JSON.parse(data)
     } catch (error) {
-      console.error('Error reading news:', error)
+      dbLogger.error('JSON 新聞檔案讀取失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'JsonNewsService',
+        action: 'getNews',
+        metadata: { filePath: this.filePath }
+      })
       return []
     }
   }

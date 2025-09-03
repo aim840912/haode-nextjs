@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { locationService } from '@/services/locationService'
+import { locationServiceAdapter } from '@/services/locationServiceAdapter'
 import { LocationSchemas } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
@@ -34,7 +34,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     metadata: { locationId: result.data.id },
   })
 
-  const location = await locationService.getLocationById(result.data.id)
+  const location = await locationServiceAdapter.getLocationById(result.data.id)
   if (!location) {
     throw new NotFoundError('地點不存在')
   }
@@ -75,7 +75,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     },
   })
 
-  const updatedLocation = await locationService.updateLocation(paramResult.data.id, result.data)
+  const updatedLocation = await locationServiceAdapter.updateLocation(paramResult.data.id, result.data)
 
   return success(updatedLocation, '地點更新成功')
 }
@@ -99,7 +99,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     metadata: { locationId: result.data.id },
   })
 
-  await locationService.deleteLocation(result.data.id)
+  await locationServiceAdapter.deleteLocation(result.data.id)
 
   return success({ id: result.data.id }, '地點刪除成功')
 }

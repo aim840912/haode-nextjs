@@ -1,6 +1,7 @@
 import { ScheduleItem, ScheduleService } from '@/types/schedule'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { dbLogger } from '@/lib/logger'
 
 export class JsonScheduleService implements ScheduleService {
   private readonly filePath = path.join(process.cwd(), 'src/data/schedule.json')
@@ -10,7 +11,10 @@ export class JsonScheduleService implements ScheduleService {
       const data = await fs.readFile(this.filePath, 'utf-8')
       return JSON.parse(data)
     } catch (error) {
-      console.error('Error reading schedule:', error)
+      dbLogger.error('讀取排程 JSON 檔案失敗', error as Error, {
+        module: 'JsonScheduleService',
+        action: 'getSchedule'
+      })
       return []
     }
   }

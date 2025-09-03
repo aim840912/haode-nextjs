@@ -16,10 +16,10 @@ export default function ImageDebugger({ imageUrl, className = '' }: ImageDebugge
     setLoadStatus('success');
   };
 
-  const handleError = (e: any) => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     console.error('❌ 圖片載入失敗:', imageUrl, e);
     setLoadStatus('error');
-    setErrorDetails(e.target?.error || '未知錯誤');
+    setErrorDetails('圖片載入失敗');
   };
 
   const testDirectAccess = async () => {

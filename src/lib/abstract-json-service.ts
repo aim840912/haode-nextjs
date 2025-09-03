@@ -175,13 +175,14 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
       await this.ensureDirectoryExists()
       const data = await fs.readFile(this.config.filePath, this.config.encoding!)
       return JSON.parse(data)
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
         // 檔案不存在，建立空陣列
         await this.writeJsonFile([])
         return []
       }
-      throw new InternalServerError(`讀取 JSON 檔案失敗: ${error.message}`, {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      throw new InternalServerError(`讀取 JSON 檔案失敗: ${message}`, {
         module: this.metadata.name,
         action: 'readJsonFile',
         originalError: error
@@ -219,8 +220,9 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
         this.cacheTimestamp = Date.now()
       }
 
-    } catch (error: any) {
-      throw new InternalServerError(`寫入 JSON 檔案失敗: ${error.message}`, {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      throw new InternalServerError(`寫入 JSON 檔案失敗: ${message}`, {
         module: this.metadata.name,
         action: 'writeJsonFile',
         originalError: error

@@ -1,6 +1,7 @@
 import { FarmTourActivity } from '@/types/farmTour'
 import fs from 'fs/promises'
 import path from 'path'
+import { dbLogger } from '@/lib/logger'
 
 const DATA_FILE = path.join(process.cwd(), 'src/data/farm-tour.json')
 
@@ -11,7 +12,11 @@ class JsonFarmTourService {
       const data = await fs.readFile(DATA_FILE, 'utf-8')
       return JSON.parse(data)
     } catch (error) {
-      console.error('Error reading farm tour data:', error)
+      dbLogger.error('農場體驗資料讀取失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'JsonFarmTourService',
+        action: 'getAll',
+        metadata: { dataFile: DATA_FILE }
+      })
       return []
     }
   }

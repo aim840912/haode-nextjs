@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { locationService } from '@/services/locationService'
+import { locationServiceAdapter } from '@/services/locationServiceAdapter'
 import { LocationSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
@@ -26,7 +26,7 @@ async function handleGET(request: NextRequest) {
     metadata: { params: result.data },
   })
 
-  const locations = await locationService.getLocations()
+  const locations = await locationServiceAdapter.getLocations()
   return success(locations, '查詢成功')
 }
 
@@ -53,7 +53,7 @@ async function handlePOST(request: NextRequest) {
     },
   })
 
-  const newLocation = await locationService.addLocation(result.data)
+  const newLocation = await locationServiceAdapter.addLocation(result.data)
   return created(newLocation, '地點創建成功')
 }
 

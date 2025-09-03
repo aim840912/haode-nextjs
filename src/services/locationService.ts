@@ -1,6 +1,7 @@
 import { Location } from '@/types/location'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { dbLogger } from '@/lib/logger'
 
 interface LocationService {
   getLocations(): Promise<Location[]>
@@ -18,7 +19,11 @@ export class JsonLocationService implements LocationService {
       const data = await fs.readFile(this.filePath, 'utf-8')
       return JSON.parse(data)
     } catch (error) {
-      console.error('Error reading locations:', error)
+      dbLogger.error('地點資料讀取失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'JsonLocationService',
+        action: 'getLocations',
+        metadata: { filePath: this.filePath }
+      })
       return []
     }
   }

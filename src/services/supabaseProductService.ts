@@ -1,5 +1,12 @@
 import { Product, ProductService } from '@/types/product'
 import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { dbLogger } from '@/lib/logger'
+
+/**
+ * @deprecated 此服務已被 ProductServiceV2 (UnifiedProductService) 取代
+ * 請使用 productServiceAdapter 以獲得更好的錯誤處理和日誌記錄
+ * 保留此檔案僅為向後相容性考量
+ */
 
 class SupabaseProductService implements ProductService {
   async getProducts(): Promise<Product[]> {
@@ -11,13 +18,19 @@ class SupabaseProductService implements ProductService {
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error('Supabase query error:', error)
+        dbLogger.error('Supabase 查詢錯誤', error as Error, {
+          module: 'SupabaseProductService',
+          action: 'getProducts'
+        })
         throw error
       }
       
       return data?.map(this.transformFromDB) || []
     } catch (error) {
-      console.error('Error in getProducts:', error)
+      dbLogger.error('產品查詢例外', error as Error, {
+        module: 'SupabaseProductService',
+        action: 'getProducts'
+      })
       return []
     }
   }
@@ -51,7 +64,7 @@ class SupabaseProductService implements ProductService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error adding product:', error)
+      dbLogger.error('Error adding product:', error)
       throw error
     }
   }
@@ -70,7 +83,7 @@ class SupabaseProductService implements ProductService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      console.error('Error updating product:', error)
+      dbLogger.error('Error updating product:', error)
       throw error
     }
   }
@@ -83,7 +96,7 @@ class SupabaseProductService implements ProductService {
         await deleteProductImages(id)
       } catch (storageError) {
         // 圖片刪除失敗不應該阻止產品刪除，但要記錄錯誤
-        console.warn('刪除產品圖片時發生警告:', storageError)
+        dbLogger.warn('刪除產品圖片時發生警告:', storageError)
       }
       
       // 然後刪除資料庫記錄
@@ -94,7 +107,7 @@ class SupabaseProductService implements ProductService {
       
       if (error) throw error
     } catch (error) {
-      console.error('Error deleting product:', error)
+      dbLogger.error('Error deleting product:', error)
       throw error
     }
   }
@@ -154,7 +167,7 @@ class SupabaseProductService implements ProductService {
         return getRelevanceScore(b) - getRelevanceScore(a)
       })
     } catch (error) {
-      console.error('Error searching products:', error)
+      dbLogger.error('Error searching products:', error)
       return []
     }
   }

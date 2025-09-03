@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { apiLogger } from '@/lib/logger'
 
 /**
  * Admin Proxy API for Locations
@@ -42,7 +43,10 @@ async function validateAdminUser() {
 
     return { isValid: true }
   } catch (error) {
-    console.error('Admin validation error:', error)
+    apiLogger.error('管理員驗證失敗', error instanceof Error ? error : new Error('Unknown validation error'), {
+      module: 'AdminProxyLocations',
+      action: 'validateAdminUser'
+    })
     return { isValid: false, error: '驗證過程發生錯誤' }
   }
 }
@@ -107,7 +111,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    console.error('Admin proxy GET error:', error)
+    apiLogger.error('管理員代理 GET 請求失敗', error instanceof Error ? error : new Error('Unknown GET error'), {
+      module: 'AdminProxyLocations',
+      action: 'GET'
+    })
     return NextResponse.json(
       { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
@@ -132,7 +139,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    console.error('Admin proxy POST error:', error)
+    apiLogger.error('管理員代理 POST 請求失敗', error instanceof Error ? error : new Error('Unknown POST error'), {
+      module: 'AdminProxyLocations',
+      action: 'POST'
+    })
     return NextResponse.json(
       { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
@@ -157,7 +167,10 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    console.error('Admin proxy PUT error:', error)
+    apiLogger.error('管理員代理 PUT 請求失敗', error instanceof Error ? error : new Error('Unknown PUT error'), {
+      module: 'AdminProxyLocations',
+      action: 'PUT'
+    })
     return NextResponse.json(
       { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }
@@ -220,7 +233,10 @@ export async function DELETE(request: NextRequest) {
       throw error
     }
   } catch (error) {
-    console.error('Admin proxy DELETE error:', error)
+    apiLogger.error('管理員代理 DELETE 請求失敗', error instanceof Error ? error : new Error('Unknown DELETE error'), {
+      module: 'AdminProxyLocations',
+      action: 'DELETE'
+    })
     return NextResponse.json(
       { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
       { status: 500 }

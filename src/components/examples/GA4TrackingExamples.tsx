@@ -5,11 +5,35 @@
 
 import { useGoogleAnalytics } from '@/components/GoogleAnalyticsProvider'
 import { productEvents, interactionEvents, conversionEvents } from '@/lib/analytics'
+import { Product } from '@/types/product'
+
+// 類型定義
+interface FormData {
+  name: string;
+  email: string;
+  message: string;
+  [key: string]: unknown;
+}
+
+interface OrderItem {
+  product_id: string;
+  product_name: string;
+  category?: string;
+  quantity: number;
+  price: number;
+}
+
+interface OrderData {
+  id: string;
+  total: number;
+  currency?: string;
+  items: OrderItem[];
+}
 
 export function ProductPageExample() {
   const { trackEvent } = useGoogleAnalytics()
 
-  const handleViewProduct = (product: any) => {
+  const handleViewProduct = (product: Product) => {
     // 追蹤產品瀏覽事件
     productEvents.viewProduct({
       product_id: product.id,
@@ -20,7 +44,7 @@ export function ProductPageExample() {
     })
   }
 
-  const handleAddToCart = (product: any, quantity: number) => {
+  const handleAddToCart = (product: Product, quantity: number) => {
     // 追蹤加入購物車事件
     productEvents.addToCart({
       product_id: product.id,
@@ -47,7 +71,7 @@ export function ProductPageExample() {
 export function ContactFormExample() {
   const { trackEvent } = useGoogleAnalytics()
 
-  const handleFormSubmit = (formData: any) => {
+  const handleFormSubmit = (formData: FormData) => {
     // 追蹤表單提交事件
     interactionEvents.contactUs('form', JSON.stringify({
       name: formData.name ? 'provided' : 'not_provided',
@@ -72,12 +96,12 @@ export function ContactFormExample() {
 }
 
 export function PurchaseExample() {
-  const handlePurchaseComplete = (orderData: any) => {
+  const handlePurchaseComplete = (orderData: OrderData) => {
     // 追蹤購買完成事件
     productEvents.purchase({
       transaction_id: orderData.id,
       value: orderData.total,
-      items: orderData.items.map((item: any) => ({
+      items: orderData.items.map((item: OrderItem) => ({
         item_id: item.product_id,
         item_name: item.product_name,
         category: item.category || '農產品',

@@ -1,6 +1,13 @@
 import { Product, ProductService } from '@/types/product'
 import { promises as fs } from 'fs'
 import path from 'path'
+import { dbLogger } from '@/lib/logger'
+
+/**
+ * @deprecated 此服務已被 ProductServiceV2 (UnifiedProductService) 取代
+ * 請使用 productServiceAdapter 以獲得更好的錯誤處理和日誌記錄
+ * 保留此檔案僅為向後相容性考量
+ */
 
 export class JsonProductService implements ProductService {
   private readonly filePath = path.join(process.cwd(), 'src/data/products.json')
@@ -10,7 +17,10 @@ export class JsonProductService implements ProductService {
       const data = await fs.readFile(this.filePath, 'utf-8')
       return JSON.parse(data)
     } catch (error) {
-      console.error('Error reading products:', error)
+      dbLogger.error('讀取產品 JSON 檔案失敗', error as Error, {
+        module: 'JsonProductService',
+        action: 'getProducts'
+      })
       return []
     }
   }
@@ -55,7 +65,10 @@ export class JsonProductService implements ProductService {
       await deleteProductImages(id)
     } catch (storageError) {
       // 圖片刪除失敗不應該阻止產品刪除，但要記錄警告
-      console.warn('刪除產品圖片時發生警告:', storageError)
+      dbLogger.warn('刪除產品圖片時發生警告', storageError as Error, {
+        module: 'JsonProductService',
+        action: 'deleteProduct',
+      })
     }
     
     // 然後從檔案中刪除產品記錄

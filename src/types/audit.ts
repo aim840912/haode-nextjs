@@ -38,13 +38,13 @@ export interface AuditLog {
   action: AuditAction;
   resource_type: ResourceType;
   resource_id: string;
-  resource_details?: Record<string, any>;
-  previous_data?: Record<string, any>;
-  new_data?: Record<string, any>;
+  resource_details?: Record<string, unknown>;
+  previous_data?: Record<string, unknown>;
+  new_data?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   session_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 
@@ -57,13 +57,13 @@ export interface CreateAuditLogRequest {
   action: AuditAction;
   resource_type: ResourceType;
   resource_id: string;
-  resource_details?: Record<string, any>;
-  previous_data?: Record<string, any>;
-  new_data?: Record<string, any>;
+  resource_details?: Record<string, unknown>;
+  previous_data?: Record<string, unknown>;
+  new_data?: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   session_id?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // 審計日誌查詢參數
@@ -240,7 +240,7 @@ export class AuditLogUtils {
   // 建立資源詳情摘要
   static createResourceSummary(
     resourceType: ResourceType, 
-    resourceDetails?: Record<string, any>
+    resourceDetails?: Record<string, unknown>
   ): string {
     if (!resourceDetails) return '';
 

@@ -11,6 +11,7 @@
 import { kv } from '@vercel/kv';
 import { auditLogService } from './auditLogService';
 import { AuditAction } from '@/types/audit';
+import { dbLogger } from '@/lib/logger';
 
 /**
  * Rate Limiting 統計資料介面
@@ -127,7 +128,11 @@ export class RateLimitMonitoringService {
       }
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to record event:', error);
+      dbLogger.error('Rate Limit 事件記錄失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'recordRateLimitEvent',
+        metadata: { ip, path, strategy }
+      });
     }
   }
 
@@ -181,7 +186,11 @@ export class RateLimitMonitoringService {
       }
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to record violation:', error);
+      dbLogger.error('違規事件記錄失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'recordViolation',
+        metadata: { ip, path, strategy }
+      });
     }
   }
 
@@ -227,7 +236,11 @@ export class RateLimitMonitoringService {
       }
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to check auto block:', error);
+      dbLogger.error('自動封鎖檢查失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'checkAutoBlock',
+        metadata: { ip }
+      });
     }
   }
 
@@ -277,10 +290,23 @@ export class RateLimitMonitoringService {
         }
       });
 
-      console.warn(`[Rate Limit Monitor] IP ${ip} blocked for ${reason}, expires: ${expiresAt.toISOString()}`);
+      dbLogger.warn('IP 已被封鎖', undefined, {
+        module: 'RateLimitMonitoringService',
+        action: 'blockIP',
+        metadata: {
+          ip,
+          reason,
+          expiresAt: expiresAt.toISOString(),
+          violationCount: metadata.violationCount
+        }
+      });
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to block IP:', error);
+      dbLogger.error('IP 封鎖失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'blockIP',
+        metadata: { ip, reason }
+      });
     }
   }
 
@@ -308,7 +334,11 @@ export class RateLimitMonitoringService {
       return blockInfo;
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to check IP block:', error);
+      dbLogger.error('IP 封鎖狀態檢查失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'isIPBlocked',
+        metadata: { ip }
+      });
       return null;
     }
   }
@@ -343,11 +373,23 @@ export class RateLimitMonitoringService {
           }
         });
 
-        console.info(`[Rate Limit Monitor] IP ${ip} unblocked: ${reason}`);
+        dbLogger.info('IP 已解除封鎖', undefined, {
+          module: 'RateLimitMonitoringService',
+          action: 'unblockIP',
+          metadata: {
+            ip,
+            reason,
+            originalBlockReason: blockInfo.reason
+          }
+        });
       }
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to unblock IP:', error);
+      dbLogger.error('IP 解封失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'unblockIP',
+        metadata: { ip, reason }
+      });
     }
   }
 
@@ -391,7 +433,10 @@ export class RateLimitMonitoringService {
       };
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to get stats:', error);
+      dbLogger.error('統計資料獲取失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'getStats'
+      });
       return this.getEmptyStats();
     }
   }
@@ -427,10 +472,26 @@ export class RateLimitMonitoringService {
         }
       });
 
-      console.warn(`[Rate Limit Monitor] Alert created: ${alert.type} - ${alert.message}`);
+      dbLogger.warn('監控警報已創建', undefined, {
+        module: 'RateLimitMonitoringService',
+        action: 'createAlert',
+        metadata: {
+          alertId,
+          type: alert.type,
+          severity: alert.severity,
+          message: alert.message
+        }
+      });
 
     } catch (error) {
-      console.error('[Rate Limit Monitor] Failed to create alert:', error);
+      dbLogger.error('監控警報創建失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        module: 'RateLimitMonitoringService',
+        action: 'createAlert',
+        metadata: {
+          type: alert.type,
+          severity: alert.severity
+        }
+      });
     }
   }
 

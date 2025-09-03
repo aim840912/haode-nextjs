@@ -23,7 +23,8 @@
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_wait_for",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(find:*)"
     ],
     "deny": []
   },
