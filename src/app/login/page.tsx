@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/components/Toast'
 import AuthErrorBoundary from '@/components/AuthErrorBoundary'
+import { logger } from '@/lib/logger'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,9 +21,9 @@ export default function LoginPage() {
     setError('')
 
     try {
-      console.log('開始登入流程...', { email })
+      logger.debug('開始登入流程', { metadata: { email, action: 'login_start' } })
       await login({ email, password })
-      console.log('登入成功')
+      logger.info('登入成功', { metadata: { email, action: 'login_success' } })
 
       // 顯示成功提示
       success('登入成功', '歡迎回來！')
@@ -30,7 +31,7 @@ export default function LoginPage() {
       // 使用 Next.js router 進行導航，而不是強制重新載入
       router.push('/')
     } catch (err) {
-      console.error('登入錯誤:', err)
+      logger.error('登入錯誤', err as Error, { metadata: { email, action: 'login_error' } })
       const errorMessage = err instanceof Error ? err.message : '登入失敗，請稍後再試'
 
       // 顯示錯誤提示和設定錯誤狀態

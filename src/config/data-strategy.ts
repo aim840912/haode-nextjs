@@ -1,9 +1,11 @@
 /**
  * 混合資料策略配置
- * 
+ *
  * 根據環境和資料類型決定使用 JSON 檔案還是 Supabase
  * 符合 advice.md 中的三階段漸進式策略
  */
+
+import { logger } from '@/lib/logger'
 
 export type DataSource = 'json' | 'supabase' | 'cache+json' | 'cache+supabase'
 
@@ -16,12 +18,12 @@ export interface DataStrategyConfig {
   culture: DataSource
   locations: DataSource
   reviews: DataSource
-  
+
   // 動態資料（需要即時性）
   orders: DataSource
   inventory: DataSource
   users: DataSource
-  
+
   // 系統設定
   useCache: boolean
   fallbackToJson: boolean
@@ -33,10 +35,8 @@ export interface DataStrategyConfig {
 export function getDataStrategy(): DataStrategyConfig {
   const useSupabase = process.env.USE_SUPABASE === 'true'
   const nodeEnv = process.env.NODE_ENV
-  const isProduction = nodeEnv === 'production'
   const hasSupabaseConfig = !!(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && 
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   )
 
   // 全 Supabase 策略 - 統一使用 Supabase
@@ -54,7 +54,7 @@ export function getDataStrategy(): DataStrategyConfig {
       inventory: 'json',
       users: 'json',
       useCache: false,
-      fallbackToJson: true
+      fallbackToJson: true,
     }
   }
 
@@ -71,14 +71,16 @@ export function getDataStrategy(): DataStrategyConfig {
     inventory: 'cache+supabase',
     users: 'cache+supabase',
     useCache: true,
-    fallbackToJson: true  // 保留 JSON 作為緊急 fallback
+    fallbackToJson: true, // 保留 JSON 作為緊急 fallback
   }
 }
 
 /**
  * 檢查特定資料類型是否應該使用 Supabase
  */
-export function shouldUseSupabase(dataType: keyof Omit<DataStrategyConfig, 'useCache' | 'fallbackToJson'>): boolean {
+export function shouldUseSupabase(
+  dataType: keyof Omit<DataStrategyConfig, 'useCache' | 'fallbackToJson'>
+): boolean {
   const strategy = getDataStrategy()
   const source = strategy[dataType]
   return source.includes('supabase')
@@ -87,7 +89,9 @@ export function shouldUseSupabase(dataType: keyof Omit<DataStrategyConfig, 'useC
 /**
  * 檢查是否應該使用快取
  */
-export function shouldUseCache(dataType: keyof Omit<DataStrategyConfig, 'useCache' | 'fallbackToJson'>): boolean {
+export function shouldUseCache(
+  dataType: keyof Omit<DataStrategyConfig, 'useCache' | 'fallbackToJson'>
+): boolean {
   const strategy = getDataStrategy()
   const source = strategy[dataType]
   return strategy.useCache && source.includes('cache')
@@ -106,30 +110,32 @@ export function shouldFallbackToJson(): boolean {
  */
 export function getStrategyInfo() {
   const strategy = getDataStrategy()
-  
+
   return {
     environment: process.env.NODE_ENV || 'development',
     useSupabase: process.env.USE_SUPABASE === 'true',
     hasSupabaseConfig: !!(
-      process.env.NEXT_PUBLIC_SUPABASE_URL && 
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     ),
     strategy,
     summary: {
       primaryDataSource: strategy.products.includes('supabase') ? 'Supabase' : 'JSON',
       cacheEnabled: strategy.useCache,
-      fallbackEnabled: strategy.fallbackToJson
-    }
+      fallbackEnabled: strategy.fallbackToJson,
+    },
   }
 }
 
-// 輸出策略資訊到控制台（僅開發環境）
+// 輸出策略資訊（僅開發環境）
 if (process.env.NODE_ENV === 'development') {
   const info = getStrategyInfo()
-  console.log('🔧 資料策略配置:', {
-    環境: info.environment,
-    主要資料源: info.summary.primaryDataSource,
-    快取啟用: info.summary.cacheEnabled ? '是' : '否',
-    Fallback機制: info.summary.fallbackEnabled ? '是' : '否'
+  logger.debug('資料策略配置', {
+    metadata: {
+      environment: info.environment,
+      primaryDataSource: info.summary.primaryDataSource,
+      cacheEnabled: info.summary.cacheEnabled,
+      fallbackEnabled: info.summary.fallbackEnabled,
+      action: 'data_strategy_config',
+    },
   })
 }
