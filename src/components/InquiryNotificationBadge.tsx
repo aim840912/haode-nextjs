@@ -3,25 +3,26 @@
  * 為管理員顯示未讀庫存查詢數量的通知徽章，支援點擊導航和動畫效果
  */
 
-'use client';
+'use client'
 
-import { useRouter } from 'next/navigation';
-import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext';
-import { useAuth } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation'
+import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
+import { useAuth } from '@/lib/auth-context'
+import { shouldShowErrorInDevelopment } from '@/lib/error-utils'
 
 interface InquiryNotificationBadgeProps {
   /** 徽章大小 */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg'
   /** 是否顯示圖標 */
-  showIcon?: boolean;
+  showIcon?: boolean
   /** 自訂 CSS 類別 */
-  className?: string;
+  className?: string
   /** 點擊事件回調 */
-  onClick?: () => void;
+  onClick?: () => void
 }
 
 // 庫存查詢管理圖標元件
-function InquiryIcon({ className = "w-5 h-5" }: { className?: string }) {
+function InquiryIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg
       className={className}
@@ -37,38 +38,38 @@ function InquiryIcon({ className = "w-5 h-5" }: { className?: string }) {
         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
       />
     </svg>
-  );
+  )
 }
 
 export default function InquiryNotificationBadge({
   size = 'sm',
   showIcon = true,
   className = '',
-  onClick
+  onClick,
 }: InquiryNotificationBadgeProps) {
-  const { user } = useAuth();
-  const { stats, loading, error, isRetrying, retryCount } = useInquiryStatsContext();
-  const router = useRouter();
+  const { user } = useAuth()
+  const { stats, loading, error, isRetrying, retryCount } = useInquiryStatsContext()
+  const router = useRouter()
 
   // 只有管理員才顯示
-  const isAdmin = user?.role === 'admin';
-  if (!isAdmin) return null;
+  const isAdmin = user?.role === 'admin'
+  if (!isAdmin) return null
 
   // 取得未讀數量
-  const unreadCount = stats?.unread_count || 0;
-  const hasUnread = unreadCount > 0;
+  const unreadCount = stats?.unread_count || 0
+  const hasUnread = unreadCount > 0
 
   // 處理點擊事件
   const handleClick = () => {
     if (onClick) {
-      onClick();
+      onClick()
     } else {
-      router.push('/admin/inquiries');
+      router.push('/admin/inquiries')
     }
-  };
+  }
 
   // 格式化顯示數量
-  const displayCount = unreadCount > 99 ? '99+' : unreadCount.toString();
+  const displayCount = unreadCount > 99 ? '99+' : unreadCount.toString()
 
   // 大小相關的樣式
   const sizeClasses = {
@@ -76,39 +77,40 @@ export default function InquiryNotificationBadge({
       container: 'w-8 h-8',
       icon: 'w-5 h-5',
       badge: 'w-4 h-4 text-[10px]',
-      badgePosition: '-top-1 -right-1'
+      badgePosition: '-top-1 -right-1',
     },
     md: {
       container: 'w-8 h-8',
       icon: 'w-5 h-5',
       badge: 'w-5 h-5 text-xs',
-      badgePosition: '-top-2 -right-2'
+      badgePosition: '-top-2 -right-2',
     },
     lg: {
       container: 'w-10 h-10',
       icon: 'w-6 h-6',
       badge: 'w-6 h-6 text-sm',
-      badgePosition: '-top-2 -right-2'
-    }
-  };
+      badgePosition: '-top-2 -right-2',
+    },
+  }
 
-  const currentSize = sizeClasses[size];
+  const currentSize = sizeClasses[size]
 
-  // 判斷是否顯示錯誤狀態
-  const shouldShowError = error && process.env.NODE_ENV === 'development' && !isRetrying;
-  const hasData = stats !== null;
-  
+  // 判斷是否顯示錯誤狀態 - 使用新的錯誤過濾邏輯
+  const shouldShowError = error && shouldShowErrorInDevelopment(error) && !isRetrying
+  const hasData = stats !== null
+
   // 載入或錯誤狀態顯示
   if ((loading && !hasData) || shouldShowError) {
-    const iconColorClass = shouldShowError 
-      ? 'text-red-400 hover:text-red-600' 
-      : 'text-gray-400 hover:text-gray-600';
-      
-    const title = shouldShowError 
-      ? `庫存查詢 (錯誤: ${error})` 
-      : loading 
-        ? '庫存查詢 (載入中...)' 
-        : '庫存查詢';
+    const iconColorClass = shouldShowError
+      ? 'text-red-400 hover:text-red-600'
+      : 'text-gray-400 hover:text-gray-600'
+
+    // 移除錯誤訊息從 title 屬性，防止出現在控制台
+    const title = shouldShowError
+      ? '庫存查詢 (發生錯誤)'
+      : loading
+        ? '庫存查詢 (載入中...)'
+        : '庫存查詢'
 
     return showIcon ? (
       <div className={`relative ${currentSize.container} ${className}`}>
@@ -122,22 +124,22 @@ export default function InquiryNotificationBadge({
             <InquiryIcon className={currentSize.icon} />
           </div>
         </button>
-        
+
         {/* 重試指示器 */}
         {isRetrying && (
           <div className="absolute -top-1 -right-1 w-3 h-3">
             <div className="w-full h-full bg-yellow-400 rounded-full animate-ping"></div>
           </div>
         )}
-        
-        {/* 開發模式錯誤指示器 */}
+
+        {/* 開發模式錯誤指示器 - 過濾速率限制錯誤 */}
         {shouldShowError && (
           <div className="absolute -top-1 -right-1 w-3 h-3">
             <div className="w-full h-full bg-red-500 rounded-full"></div>
           </div>
         )}
       </div>
-    ) : null;
+    ) : null
   }
 
   return (
@@ -158,11 +160,9 @@ export default function InquiryNotificationBadge({
             <InquiryIcon className={currentSize.icon} />
           </div>
         )}
-        
-        {!showIcon && !hasUnread && (
-          <span className="text-xs font-medium text-gray-600">查詢</span>
-        )}
-        
+
+        {!showIcon && !hasUnread && <span className="text-xs font-medium text-gray-600">查詢</span>}
+
         {/* 未讀數量徽章 */}
         {hasUnread && (
           <span
@@ -178,7 +178,7 @@ export default function InquiryNotificationBadge({
             `}
             style={{
               animationDuration: hasUnread ? '2s' : undefined,
-              animationIterationCount: hasUnread ? 'infinite' : undefined
+              animationIterationCount: hasUnread ? 'infinite' : undefined,
             }}
           >
             {displayCount}
@@ -200,12 +200,12 @@ export default function InquiryNotificationBadge({
         </div>
       )}
 
-      {/* 開發模式錯誤指示器 */}
-      {error && process.env.NODE_ENV === 'development' && !isRetrying && (
+      {/* 開發模式錯誤指示器 - 過濾速率限制錯誤 */}
+      {error && shouldShowErrorInDevelopment(error) && !isRetrying && (
         <div className="absolute top-0 right-0 w-2 h-2">
           <div className="w-full h-full bg-red-500 rounded-full animate-pulse"></div>
         </div>
       )}
     </div>
-  );
+  )
 }

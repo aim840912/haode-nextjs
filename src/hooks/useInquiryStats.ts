@@ -24,6 +24,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { supabase } from '@/lib/supabase-auth'
 import { logger } from '@/lib/logger'
+import { isRateLimitError, isNetworkError, getUserFriendlyErrorMessage } from '@/lib/error-utils'
 
 // 全域請求去重機制
 interface PendingRequest {
@@ -320,8 +321,8 @@ export function useInquiryStats(
       }
 
       const errorMessage = err instanceof Error ? err.message : '未知錯誤'
-      const isRateLimitError = errorMessage.includes('頻繁') || errorMessage.includes('10 分鐘')
-      const isNetworkError = errorMessage.includes('fetch') || errorMessage.includes('網路')
+      const isRateLimit = isRateLimitError(errorMessage)
+      const isNetwork = isNetworkError(errorMessage)
 
       logger.error(
         '[useInquiryStats] Error fetching inquiry stats',
@@ -330,8 +331,8 @@ export function useInquiryStats(
           metadata: {
             retryCount,
             consecutiveErrors,
-            isRateLimitError,
-            isNetworkError,
+            isRateLimitError: isRateLimit,
+            isNetworkError: isNetwork,
           },
         }
       )
@@ -339,12 +340,17 @@ export function useInquiryStats(
       setConsecutiveErrors(prev => prev + 1)
 
       // 對於速率限制和網路錯誤，完全靜默處理，不顯示給使用者
-      if (isRateLimitError || isNetworkError) {
-        // 靜默處理，不設定錯誤訊息
+      if (isRateLimit || isNetwork) {
+        // 靜默處理，確保不設定任何錯誤訊息
+        // 如果當前有錯誤狀態且是速率限制錯誤，清除它
+        if (error && isRateLimitError(error)) {
+          setError(null)
+          setLastErrorMessage('')
+        }
 
         // 實作自動重試邏輯
         if (retryCount < 3) {
-          const delay = getRetryDelay(retryCount, isRateLimitError)
+          const delay = getRetryDelay(retryCount, isRateLimit)
           setRetryCount(prev => prev + 1)
           setIsRetrying(true)
 
@@ -365,10 +371,11 @@ export function useInquiryStats(
           setIsRetrying(false)
         }
       } else {
-        // 其他錯誤：實施去重機制
-        if (lastErrorMessage !== errorMessage) {
-          setError(errorMessage)
-          setLastErrorMessage(errorMessage)
+        // 其他錯誤：使用用戶友好的錯誤訊息並實施去重機制
+        const friendlyMessage = getUserFriendlyErrorMessage(errorMessage)
+        if (friendlyMessage && lastErrorMessage !== friendlyMessage) {
+          setError(friendlyMessage)
+          setLastErrorMessage(friendlyMessage)
         }
         setIsRetrying(false)
       }
