@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/components/Toast'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -53,7 +54,7 @@ export default function RegisterPage() {
       if (!result.data.available) {
         setErrors(prev => ({
           ...prev,
-          phone: '此手機號碼已被註冊'
+          phone: '此手機號碼已被註冊',
         }))
       } else {
         // 清除手機號碼錯誤
@@ -64,7 +65,9 @@ export default function RegisterPage() {
         })
       }
     } catch (error) {
-      console.error('Error checking phone availability:', error)
+      logger.error('Error checking phone availability', error as Error, {
+        metadata: { phone: formData.phone, action: 'phone_availability_check' },
+      })
       // 不顯示網路錯誤給使用者，避免影響註冊流程
     } finally {
       setIsCheckingPhone(false)
@@ -177,9 +180,11 @@ export default function RegisterPage() {
       // 最後一次檢查手機號碼是否可用
       if (formData.phone) {
         setIsCheckingPhone(true)
-        const phoneCheckResponse = await fetch(`/api/auth/check-phone?phone=${encodeURIComponent(formData.phone)}`)
+        const phoneCheckResponse = await fetch(
+          `/api/auth/check-phone?phone=${encodeURIComponent(formData.phone)}`
+        )
         const phoneCheckResult = await phoneCheckResponse.json()
-        
+
         if (!phoneCheckResponse.ok || !phoneCheckResult.data.available) {
           throw new Error('此手機號碼已被註冊，請使用其他手機號碼')
         }
@@ -202,11 +207,17 @@ export default function RegisterPage() {
         router.push('/login')
       }, 2000)
     } catch (error) {
-      console.error('Registration failed:', error)
+      logger.error('Registration failed', error as Error, {
+        metadata: { email: formData.email, phone: formData.phone, action: 'registration_failed' },
+      })
       let errorMessage = error instanceof Error ? error.message : '註冊失敗，請稍後再試'
-      
+
       // 特殊處理手機號碼重複錯誤
-      if (errorMessage.includes('duplicate key') || errorMessage.includes('unique') || errorMessage.includes('已被註冊')) {
+      if (
+        errorMessage.includes('duplicate key') ||
+        errorMessage.includes('unique') ||
+        errorMessage.includes('已被註冊')
+      ) {
         errorMessage = '此手機號碼已被註冊，請使用其他手機號碼'
         setErrors({ phone: errorMessage })
       } else {
@@ -321,16 +332,17 @@ export default function RegisterPage() {
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-500"></div>
                   </div>
                 )}
-                {!isCheckingPhone && formData.phone && !errors.phone && /^09\d{8}$/.test(formData.phone.replace(/[-\s]/g, '')) && (
-                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <span className="text-green-500 text-sm">✓</span>
-                  </div>
-                )}
+                {!isCheckingPhone &&
+                  formData.phone &&
+                  !errors.phone &&
+                  /^09\d{8}$/.test(formData.phone.replace(/[-\s]/g, '')) && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <span className="text-green-500 text-sm">✓</span>
+                    </div>
+                  )}
               </div>
               {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-              {isCheckingPhone && (
-                <p className="mt-1 text-sm text-gray-500">檢查手機號碼中...</p>
-              )}
+              {isCheckingPhone && <p className="mt-1 text-sm text-gray-500">檢查手機號碼中...</p>}
             </div>
 
             {/* Password Input */}

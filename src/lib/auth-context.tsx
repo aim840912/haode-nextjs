@@ -83,7 +83,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await syncUserInterests(userData.id)
         } else {
           // 如果找不到 profile，建立基本使用者資訊
-          console.warn('Profile not found, creating basic user info')
+          logger.warn('Profile not found, creating basic user info', {
+            metadata: { userId: session.user.id, action: 'profile_not_found' },
+          })
           const basicUser: User = {
             id: session.user.id,
             email: session.user.email!,
@@ -98,7 +100,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
           await syncUserInterests(basicUser.id)
         }
       } catch (error) {
-        console.error('Error fetching profile:', error)
+        logger.error('Error fetching profile', error as Error, {
+          metadata: { userId: session.user.id, action: 'fetch_profile_error' },
+        })
         // 即使取得 profile 失敗，仍然設定基本使用者資訊
         const basicUser: User = {
           id: session.user.id,
@@ -172,7 +176,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setIsLoading(false)
       await signOutUser()
     } catch (error) {
-      console.error('Logout error:', error)
+      logger.error('Logout error', error as Error, { metadata: { action: 'logout_error' } })
       // 確保狀態已清除
       setUser(null)
       setIsLoading(false)
