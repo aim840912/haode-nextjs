@@ -277,12 +277,14 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       .list(newsId);
 
     if (listError) {
-      dbLogger.error('列出新聞圖片失敗', {
+      dbLogger.error('列出新聞圖片失敗', new Error(listError.message), {
         module: 'news-storage',
         action: 'deleteAllNewsImages',
-        newsId,
-        bucket: NEWS_STORAGE_BUCKET,
-        error: listError.message
+        metadata: {
+          newsId,
+          bucket: NEWS_STORAGE_BUCKET,
+          error: listError.message
+        }
       });
       throw new SupabaseStorageError('列出新聞圖片失敗', listError);
     }
@@ -291,8 +293,10 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       dbLogger.info('新聞沒有圖片需要刪除', {
         module: 'news-storage',
         action: 'deleteAllNewsImages',
-        newsId,
-        bucket: NEWS_STORAGE_BUCKET
+        metadata: {
+          newsId,
+          bucket: NEWS_STORAGE_BUCKET
+        }
       });
       return;
     }
@@ -300,10 +304,12 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
     dbLogger.info('發現檔案需要刪除', {
       module: 'news-storage',
       action: 'deleteAllNewsImages',
-      newsId,
-      bucket: NEWS_STORAGE_BUCKET,
-      fileCount: files.length,
-      fileNames: files.map((f: any) => f.name)
+      metadata: {
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET,
+        fileCount: files.length,
+        fileNames: files.map((f: any) => f.name)
+      }
     });
 
     // 建立要刪除的檔案路徑列表
@@ -315,12 +321,14 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       .remove(filePaths);
 
     if (deleteError) {
-      dbLogger.error('批量刪除新聞圖片失敗', {
+      dbLogger.error('批量刪除新聞圖片失敗', new Error(deleteError.message), {
         module: 'news-storage',
         action: 'deleteAllNewsImages',
-        newsId,
-        bucket: NEWS_STORAGE_BUCKET,
-        error: deleteError.message
+        metadata: {
+          newsId,
+          bucket: NEWS_STORAGE_BUCKET,
+          error: deleteError.message
+        }
       });
       throw new SupabaseStorageError('批量刪除新聞圖片失敗', deleteError);
     }
@@ -328,21 +336,25 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
     dbLogger.info('成功刪除新聞圖片', {
       module: 'news-storage',
       action: 'deleteAllNewsImages',
-      newsId,
-      bucket: NEWS_STORAGE_BUCKET,
-      deletedCount: filePaths.length
+      metadata: {
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET,
+        deletedCount: filePaths.length
+      }
     });
     
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
       throw error;
     }
-    dbLogger.error('刪除新聞圖片過程發生未知錯誤', {
+    dbLogger.error('刪除新聞圖片過程發生未知錯誤', error as Error, {
       module: 'news-storage',
       action: 'deleteAllNewsImages',
-      newsId,
-      bucket: NEWS_STORAGE_BUCKET,
-      error: error instanceof Error ? error.message : String(error)
+      metadata: {
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET,
+        error: error instanceof Error ? error.message : String(error)
+      }
     });
     throw new SupabaseStorageError('刪除新聞圖片過程發生未知錯誤', error);
   }

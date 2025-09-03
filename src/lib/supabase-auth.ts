@@ -155,12 +155,14 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
     .single()
 
   if (error) {
-    authLogger.error('Failed to fetch user profile', {
+    authLogger.error('Failed to fetch user profile', new Error(error.message), {
       module: 'supabase-auth',
       action: 'getUserProfile',
-      userId,
-      error: error.message,
-      code: error.code
+      metadata: {
+        userId,
+        error: error.message,
+        code: error.code
+      }
     })
     return null
   }
@@ -177,12 +179,14 @@ export async function upsertProfile(profile: Partial<Profile> & { id: string }):
     .single()
 
   if (error) {
-    authLogger.error('Failed to upsert user profile', {
+    authLogger.error('Failed to upsert user profile', new Error(error.message), {
       module: 'supabase-auth',
       action: 'upsertProfile',
-      userId: profile.id,
-      error: error.message,
-      code: error.code
+      metadata: {
+        userId: profile.id,
+        error: error.message,
+        code: error.code
+      }
     })
     return null
   }
@@ -200,12 +204,14 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
     .single()
 
   if (error) {
-    authLogger.error('Failed to update user profile', {
+    authLogger.error('Failed to update user profile', new Error(error.message), {
       module: 'supabase-auth',
       action: 'updateProfile',
-      userId,
-      error: error.message,
-      code: error.code
+      metadata: {
+        userId,
+        error: error.message,
+        code: error.code
+      }
     })
     return null
   }

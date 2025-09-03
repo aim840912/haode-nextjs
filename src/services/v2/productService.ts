@@ -72,9 +72,12 @@ export class ProductDataTransformer implements DataTransformer<Product> {
           images = record.images
         }
       } catch (error) {
-        dbLogger.warn('Failed to parse images JSON', error, {
+        dbLogger.warn('Failed to parse images JSON', {
           module: 'ProductService',
-          action: 'transformFromSupabase'
+          action: 'transformFromSupabase',
+          metadata: {
+            error: error instanceof Error ? error.message : String(error)
+          }
         })
         images = []
       }
