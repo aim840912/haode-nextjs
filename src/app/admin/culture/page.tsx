@@ -32,8 +32,8 @@ export default function CultureAdmin() {
   const fetchCultureItems = async () => {
     try {
       const response = await fetch('/api/culture')
-      const data = await response.json()
-      setCultureItems(data)
+      const result = await response.json()
+      setCultureItems(result.data || [])
     } catch (error) {
       logger.error('Error fetching culture items:', error instanceof Error ? error : new Error('Unknown error'))
     } finally {

@@ -26,7 +26,7 @@ export interface CreateProductDTO {
   isOnSale?: boolean
   saleEndDate?: string
   images: string[]
-  productImages?: any[]
+  productImages?: Array<Record<string, unknown>>
   primaryImageUrl?: string
   thumbnailUrl?: string
   galleryImages?: string[]
@@ -47,7 +47,7 @@ export interface UpdateProductDTO {
   isOnSale?: boolean
   saleEndDate?: string
   images?: string[]
-  productImages?: any[]
+  productImages?: Array<Record<string, unknown>>
   primaryImageUrl?: string
   thumbnailUrl?: string
   galleryImages?: string[]
@@ -60,7 +60,27 @@ export interface UpdateProductDTO {
  * Supabase 資料庫記錄與 Product 實體的轉換器
  */
 export class ProductDataTransformer implements DataTransformer<Product> {
-  fromDB(record: any): Product {
+  fromDB(record: Record<string, unknown>): Product {
+    // Parse images from JSON string if needed
+    let images: string[] = []
+    if (record.images) {
+      try {
+        if (typeof record.images === 'string') {
+          images = JSON.parse(record.images)
+        } else if (Array.isArray(record.images)) {
+          images = record.images
+        }
+      } catch (error) {
+        console.warn('Failed to parse images JSON:', error)
+        images = []
+      }
+    }
+
+    // Ensure images is always an array with at least a placeholder
+    if (!images || images.length === 0) {
+      images = ['/images/placeholder.jpg']
+    }
+
     return {
       id: record.id,
       name: record.name,
@@ -70,12 +90,12 @@ export class ProductDataTransformer implements DataTransformer<Product> {
       originalPrice: record.original_price,
       isOnSale: record.is_on_sale || false,
       saleEndDate: record.sale_end_date,
-      images: record.images || [],
+      images,
       productImages: record.product_images,
       primaryImageUrl: record.primary_image_url,
       thumbnailUrl: record.thumbnail_url,
       galleryImages: record.gallery_images || [],
-      inventory: record.inventory || 0,
+      inventory: record.stock || 0,
       isActive: record.is_active !== false, // 預設為 true
       showInCatalog: record.show_in_catalog !== false, // 預設為 true
       createdAt: record.created_at,
@@ -83,8 +103,8 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     }
   }
 
-  toDB(entity: Partial<Product>): any {
-    const record: any = {}
+  toDB(entity: Partial<Product>): Record<string, unknown> {
+    const record: Record<string, unknown> = {}
     
     if (entity.name !== undefined) record.name = entity.name
     if (entity.description !== undefined) record.description = entity.description
@@ -98,7 +118,7 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     if (entity.primaryImageUrl !== undefined) record.primary_image_url = entity.primaryImageUrl
     if (entity.thumbnailUrl !== undefined) record.thumbnail_url = entity.thumbnailUrl
     if (entity.galleryImages !== undefined) record.gallery_images = entity.galleryImages
-    if (entity.inventory !== undefined) record.inventory = entity.inventory
+    if (entity.inventory !== undefined) record.stock = entity.inventory
     if (entity.isActive !== undefined) record.is_active = entity.isActive
     if (entity.showInCatalog !== undefined) record.show_in_catalog = entity.showInCatalog
     
@@ -113,6 +133,8 @@ export class SupabaseProductService
   extends AbstractSupabaseService<Product, CreateProductDTO, UpdateProductDTO> 
   implements SearchableService<Product> {
   
+  private transformer: ProductDataTransformer
+
   constructor() {
     const config: SupabaseServiceConfig = {
       tableName: 'products',
@@ -126,6 +148,7 @@ export class SupabaseProductService
     
     const transformer = new ProductDataTransformer()
     super(config, transformer)
+    this.transformer = transformer
   }
 
   /**
@@ -143,9 +166,7 @@ export class SupabaseProductService
         this.handleError(error, 'search', { query })
       }
 
-      const result = (data || []).map((record: any) => this.transformFromDB(record))
-      
-      this.getClient().storage.from('test').download('test.txt')
+      const result = (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
       
       return result
     } catch (error) {
@@ -166,7 +187,7 @@ export class SupabaseProductService
         this.handleError(error, 'findAllAdmin')
       }
 
-      return (data || []).map((record: any) => this.transformFromDB(record))
+      return (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
     } catch (error) {
       this.handleError(error, 'findAllAdmin')
     }
@@ -174,13 +195,27 @@ export class SupabaseProductService
 
   /**
    * 覆寫 findAll，只回傳上架的產品
+   * 直接實作以避免抽象服務的問題
    */
   async findAll(): Promise<Product[]> {
-    return super.findAll({
-      filters: { is_active: true },
-      sortBy: 'created_at',
-      sortOrder: 'desc'
-    })
+    try {
+      const { getSupabaseServer } = await import('@/lib/supabase-auth')
+      const client = getSupabaseServer()
+      
+      const { data, error } = await client
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        throw error
+      }
+
+      return (data || []).map((record: Record<string, unknown>) => this.transformer.fromDB(record))
+    } catch (error) {
+      throw error
+    }
   }
 }
 
@@ -324,12 +359,12 @@ export class UnifiedProductService implements IProductService {
   }
 
   // 分頁操作
-  async findAllPaginated(options?: any): Promise<any> {
+  async findAllPaginated(options?: PaginatedQueryOptions): Promise<PaginatedResult<Product>> {
     return this.service.findAllPaginated(options)
   }
 
   // 搜尋操作
-  async search(query: string, options?: any): Promise<Product[]> {
+  async search(query: string, options?: QueryOptions): Promise<Product[]> {
     return this.service.search(query, options)
   }
 

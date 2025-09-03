@@ -9,7 +9,7 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseServer, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { 
   BaseService, 
   PaginatedService,
@@ -29,16 +29,16 @@ import { dbLogger } from './logger'
 /**
  * Supabase 查詢建構器類型
  */
-type SupabaseQueryBuilder = any // 暫時使用 any 以解決型別問題
+type SupabaseQueryBuilder = ReturnType<SupabaseClient['from']>
 
 /**
  * 資料轉換器介面
  */
-export interface DataTransformer<T, DbRecord = any> {
+export interface DataTransformer<T, DbRecord = Record<string, unknown>> {
   /** 從資料庫記錄轉換為實體 */
   fromDB(record: DbRecord): T
   /** 從實體轉換為資料庫記錄 */
-  toDB(entity: Partial<T>): Partial<DbRecord>
+  toDB(entity: Partial<T>): Partial<Record<string, unknown>>
 }
 
 /**
@@ -61,7 +61,7 @@ export interface SupabaseServiceConfig extends ServiceConfig {
  * 提供標準 CRUD 操作的 Supabase 實作
  * 子類別只需要定義表格名稱和資料轉換邏輯
  */
-export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = any> 
+export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unknown>, UpdateDTO = Record<string, unknown>> 
   implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T> {
   
   protected readonly client: SupabaseClient
@@ -82,8 +82,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
       ...config
     }
 
-    this.client = supabase
-    this.adminClient = supabaseAdmin
+    this.client = getSupabaseServer()
+    this.adminClient = getSupabaseAdmin()
     this.transformer = transformer
     
     this.metadata = {
@@ -98,10 +98,14 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
    * 取得適當的 Supabase 客戶端
    */
   protected getClient(useAdmin: boolean = this.config.useAdminClient!): SupabaseClient {
-    if (useAdmin && this.adminClient) {
-      return this.adminClient
+    // Always get fresh client instances to avoid initialization issues
+    if (useAdmin) {
+      const adminClient = getSupabaseAdmin()
+      if (adminClient) {
+        return adminClient
+      }
     }
-    return this.client
+    return getSupabaseServer()
   }
 
   /**
@@ -109,7 +113,17 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
    */
   protected createQuery(useAdmin: boolean = false): SupabaseQueryBuilder {
     const client = this.getClient(useAdmin)
-    return client.from(this.config.tableName)
+    const query = client.from(this.config.tableName)
+    
+    // Debug logging
+    dbLogger.debug('Creating Supabase query', {
+      tableName: this.config.tableName,
+      useAdmin,
+      clientType: client.constructor.name,
+      queryHasEq: typeof query?.eq === 'function'
+    })
+    
+    return query
   }
 
   /**
@@ -118,32 +132,42 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
   protected applyQueryOptions(query: SupabaseQueryBuilder, options?: QueryOptions): SupabaseQueryBuilder {
     const normalizedOptions = normalizeQueryOptions(options)
     
-    // 套用過濾條件
-    if (Object.keys(normalizedOptions.filters).length > 0) {
-      Object.entries(normalizedOptions.filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          query = query.eq(key, value)
-        }
+    try {
+      // 套用過濾條件
+      if (Object.keys(normalizedOptions.filters).length > 0) {
+        Object.entries(normalizedOptions.filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value)
+          }
+        })
+      }
+
+      // 套用排序
+      query = query.order(normalizedOptions.sortBy, { 
+        ascending: normalizedOptions.sortOrder === 'asc' 
       })
+
+      // 套用軟刪除過濾
+      if (this.config.softDeleteField) {
+        query = query.is(this.config.softDeleteField, null)
+      }
+
+      return query
+    } catch (error) {
+      dbLogger.error('Query builder error', error as Error, {
+        tableName: this.config.tableName,
+        options: normalizedOptions,
+        queryType: typeof query,
+        queryMethods: Object.getOwnPropertyNames(query)
+      })
+      throw error
     }
-
-    // 套用排序
-    query = query.order(normalizedOptions.sortBy, { 
-      ascending: normalizedOptions.sortOrder === 'asc' 
-    })
-
-    // 套用軟刪除過濾
-    if (this.config.softDeleteField) {
-      query = query.is(this.config.softDeleteField, null)
-    }
-
-    return query
   }
 
   /**
    * 處理 Supabase 錯誤
    */
-  protected handleError(error: any, operation: string, context?: any): never {
+  protected handleError(error: unknown, operation: string, context?: Record<string, unknown>): never {
     dbLogger.error(`Supabase ${operation} 操作失敗`, error as Error, {
       module: this.metadata.name,
       action: operation,
@@ -160,7 +184,7 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
   /**
    * 轉換資料庫記錄為實體
    */
-  protected transformFromDB(record: any): T {
+  protected transformFromDB(record: Record<string, unknown>): T {
     if (this.transformer) {
       return this.transformer.fromDB(record)
     }
@@ -170,7 +194,7 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
   /**
    * 轉換實體為資料庫記錄
    */
-  protected transformToDB(entity: Partial<T>): any {
+  protected transformToDB(entity: Partial<T>): Record<string, unknown> {
     if (this.transformer) {
       return this.transformer.toDB(entity)
     }
@@ -182,8 +206,30 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
    */
   async findAll(options?: QueryOptions): Promise<T[]> {
     try {
-      let query = this.createQuery()
-      query = this.applyQueryOptions(query, options)
+      const normalizedOptions = normalizeQueryOptions(options)
+      const client = this.getClient()
+      
+      // Build query directly to avoid abstraction issues
+      let query = client.from(this.config.tableName)
+      
+      // Apply filters
+      if (Object.keys(normalizedOptions.filters).length > 0) {
+        Object.entries(normalizedOptions.filters).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            query = query.eq(key, value)
+          }
+        })
+      }
+      
+      // Apply ordering
+      query = query.order(normalizedOptions.sortBy, { 
+        ascending: normalizedOptions.sortOrder === 'asc' 
+      })
+      
+      // Apply soft delete filtering
+      if (this.config.softDeleteField) {
+        query = query.is(this.config.softDeleteField, null)
+      }
       
       const { data, error } = await query.select('*')
       
@@ -249,7 +295,7 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
    */
   async create(data: CreateDTO): Promise<T> {
     try {
-      const dbData = this.transformToDB(data as any)
+      const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
       
       const { data: result, error } = await client
@@ -281,7 +327,7 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
    */
   async update(id: string, data: UpdateDTO): Promise<T> {
     try {
-      const dbData = this.transformToDB(data as any)
+      const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
       
       let query = client.from(this.config.tableName)
@@ -453,7 +499,7 @@ export abstract class AbstractSupabaseService<T, CreateDTO = any, UpdateDTO = an
   async getHealthStatus(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy'
     timestamp: string
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   }> {
     try {
       // 簡單的連線測試

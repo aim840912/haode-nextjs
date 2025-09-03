@@ -19,10 +19,22 @@ export default function ScheduleAdmin() {
   const fetchSchedule = async () => {
     try {
       const response = await fetch('/api/schedule')
-      const data = await response.json()
-      setSchedule(data)
+      const result = await response.json()
+      
+      // 處理統一 API 回應格式
+      const data = result.data || result
+      
+      // 確保 data 是陣列
+      if (Array.isArray(data)) {
+        setSchedule(data)
+        logger.info('行程資料載入成功', { count: data.length })
+      } else {
+        logger.error('API 回應格式錯誤：schedule data 不是陣列', result)
+        setSchedule([])
+      }
     } catch (error) {
       logger.error('Error fetching schedule:', error instanceof Error ? error : new Error('Unknown error'))
+      setSchedule([])
     } finally {
       setLoading(false)
     }
@@ -96,33 +108,33 @@ export default function ScheduleAdmin() {
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 mb-8">
           <h1 className="text-3xl font-bold text-gray-900">擺攤行程管理</h1>
-          <div className="space-x-4">
+          <div className="flex flex-wrap gap-3">
             {user?.role === 'admin' && (
               <Link 
                 href="/admin/schedule/add"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium whitespace-nowrap"
               >
                 新增行程
               </Link>
             )}
             <Link 
               href="/schedule/calendar"
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap"
             >
               <span>📅</span>
               <span>預覽客戶行事曆</span>
             </Link>
             <Link 
               href="/schedule"
-              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium whitespace-nowrap"
             >
               查看行程頁面
             </Link>
             <Link 
               href="/"
-              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium whitespace-nowrap"
             >
               回到首頁
             </Link>

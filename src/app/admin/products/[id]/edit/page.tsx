@@ -56,7 +56,17 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     try {
       const response = await fetch(`/api/products/${id}`)
       if (response.ok) {
-        const product: Product = await response.json()
+        const responseData = await response.json()
+        
+        // 檢查回應格式是否正確
+        if (!responseData.success || !responseData.data) {
+          logger.error('產品資料格式錯誤', { responseData })
+          alert('產品資料格式錯誤')
+          router.push('/admin/products')
+          return
+        }
+        
+        const product: Product = responseData.data
         
         // 根據是否為特價商品來設定正確的價格顯示
         const isOnSale = product.isOnSale || false
@@ -76,12 +86,17 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
           isActive: product.isActive,
           showInCatalog: product.showInCatalog ?? true
         })
+        
+        logger.info('產品資料載入成功', { productId: id, productName: product.name })
       } else {
-        alert('產品不存在')
+        const errorText = await response.text().catch(() => 'Unknown error')
+        logger.error('產品載入失敗', { productId: id, status: response.status, error: errorText })
+        alert(`產品不存在 (${response.status})`)
         router.push('/admin/products')
       }
     } catch (error) {
-      alert('載入失敗')
+      logger.error('產品載入發生錯誤', { productId: id, error: error instanceof Error ? error.message : String(error) })
+      alert(`載入失敗: ${error instanceof Error ? error.message : '未知錯誤'}`)
     } finally {
       setInitialLoading(false)
     }
@@ -203,7 +218,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     }))
   }
 
-  const handleImageUploadSuccess = (images: any[]) => {
+  const handleImageUploadSuccess = (images: Array<{ url: string; fileName: string }>) => {
     const urls = images.map(img => img.url)
     setUploadedImages(prev => [...prev, ...urls])
     

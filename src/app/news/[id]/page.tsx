@@ -38,14 +38,16 @@ export default function NewsDetailPage() {
       const response = await fetch(`/api/news/${id}`)
       
       if (response.ok) {
-        const currentNews = await response.json()
+        const result = await response.json()
+        const currentNews = result.data || result
         setNewsItem(currentNews)
         
         // 取得相關新聞（同類別的其他新聞）
         if (currentNews) {
           const allNewsResponse = await fetch('/api/news')
           if (allNewsResponse.ok) {
-            const allNews = await allNewsResponse.json()
+            const allNewsResult = await allNewsResponse.json()
+            const allNews = allNewsResult.data || []
             const related = allNews
               .filter((item: NewsItem) => 
                 item.category === currentNews.category && item.id !== id

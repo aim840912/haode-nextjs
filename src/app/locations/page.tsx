@@ -6,6 +6,16 @@ import { Location } from '@/types/location'
 import Link from 'next/link'
 import SimpleImage, { AvatarSimpleImage } from '@/components/SimpleImage'
 
+// 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
+const isValidImageUrl = (url: string | undefined): boolean => {
+  if (!url) return false
+  // 檢查是否包含 emoji 字符
+  const emojiRegex = /[\u{1F000}-\u{1F9FF}]|[\u{1F300}-\u{1F5FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
+  if (emojiRegex.test(url)) return false
+  // 檢查是否為有效的相對或絕對路徑
+  return url.startsWith('/') || url.startsWith('http://') || url.startsWith('https://')
+}
+
 export default function LocationsPage() {
   const [storeLocations, setStoreLocations] = useState<Location[]>([])
   const [selectedStore, setSelectedStore] = useState<Location | null>(null)
@@ -114,7 +124,7 @@ export default function LocationsPage() {
             <div className="bg-white rounded-xl shadow-lg p-8">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center">
-                  {selectedStore.image && selectedStore.image.startsWith('/') && (
+                  {isValidImageUrl(selectedStore.image) && (
                     <AvatarSimpleImage
                       src={selectedStore.image}
                       alt={selectedStore.title}
@@ -232,7 +242,7 @@ export default function LocationsPage() {
                 </button>
               </div>
               <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg overflow-hidden relative">
-                {selectedStore.image ? (
+                {isValidImageUrl(selectedStore.image) ? (
                   <SimpleImage
                     src={selectedStore.image}
                     alt={`${selectedStore.name}門市位置`}
@@ -242,8 +252,10 @@ export default function LocationsPage() {
                     priority
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-gray-400 text-lg">暫無圖片</span>
+                  <div className="w-full h-full flex flex-col items-center justify-center">
+                    <div className="text-6xl mb-4">🏔️</div>
+                    <span className="text-gray-600 text-lg font-medium">{selectedStore.name}</span>
+                    <span className="text-gray-400 text-sm mt-1">門市位置圖片</span>
                   </div>
                 )}
               </div>

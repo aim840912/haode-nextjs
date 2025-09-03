@@ -7,6 +7,16 @@ import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import AdminProtection from '@/components/AdminProtection'
 
+// 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 img 標籤）
+const isValidImageUrl = (url: string | undefined): boolean => {
+  if (!url) return false
+  // 檢查是否包含 emoji 字符
+  const emojiRegex = /[\u{1F000}-\u{1F9FF}]|[\u{1F300}-\u{1F5FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
+  if (emojiRegex.test(url)) return false
+  // 檢查是否為有效的相對或絕對路徑
+  return url.startsWith('/') || url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')
+}
+
 export default function LocationsAdmin() {
   const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
@@ -19,10 +29,22 @@ export default function LocationsAdmin() {
   const fetchLocations = async () => {
     try {
       const response = await fetch('/api/locations')
-      const data = await response.json()
-      setLocations(data)
+      const result = await response.json()
+      
+      // 處理統一 API 回應格式
+      const data = result.data || result
+      
+      // 確保 data 是陣列
+      if (Array.isArray(data)) {
+        setLocations(data)
+        logger.info('門市資料載入成功', { count: data.length })
+      } else {
+        logger.error('API 回應格式錯誤：locations data 不是陣列', result)
+        setLocations([])
+      }
     } catch (error) {
       logger.error('Error fetching locations:', error instanceof Error ? error : new Error('Unknown error'))
+      setLocations([])
     } finally {
       setLoading(false)
     }
@@ -90,19 +112,24 @@ export default function LocationsAdmin() {
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
                 <div className="mb-3">
                   {location.image ? (
-                    location.image.startsWith('data:') || location.image.startsWith('/') ? (
+                    isValidImageUrl(location.image) ? (
                       <img 
                         src={location.image} 
                         alt={location.title}
                         className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
-                        <span className="text-gray-400 text-sm">無圖片</span>
+                      // 當圖片是 emoji 或無效 URL 時，顯示 emoji 或佔位符
+                      <div className="w-16 h-16 bg-amber-50 rounded-lg mx-auto flex items-center justify-center border-2 border-white shadow-sm">
+                        <span className="text-2xl">
+                          {location.image.includes('🏔️') ? '🏔️' : 
+                           location.image.includes('🏪') ? '🏪' : 
+                           location.image.includes('🏢') ? '🏢' : '🏪'}
+                        </span>
                       </div>
                     )
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center border-2 border-white shadow-sm">
                       <span className="text-gray-400 text-sm">無圖片</span>
                     </div>
                   )}

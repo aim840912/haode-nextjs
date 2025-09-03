@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { productService } from '@/services/productService'
+import { productServiceAdapter as productService } from '@/services/productServiceAdapter'
 import { withProductsCache } from '@/lib/api-cache-middleware'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'
