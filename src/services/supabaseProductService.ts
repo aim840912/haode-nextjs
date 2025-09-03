@@ -64,7 +64,7 @@ class SupabaseProductService implements ProductService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      dbLogger.error('Error adding product:', error)
+      dbLogger.error('Error adding product:', error instanceof Error ? error : new Error('Unknown error'))
       throw error
     }
   }
@@ -83,7 +83,7 @@ class SupabaseProductService implements ProductService {
       
       return this.transformFromDB(data)
     } catch (error) {
-      dbLogger.error('Error updating product:', error)
+      dbLogger.error('Error updating product:', error instanceof Error ? error : new Error('Unknown error'))
       throw error
     }
   }
@@ -96,7 +96,9 @@ class SupabaseProductService implements ProductService {
         await deleteProductImages(id)
       } catch (storageError) {
         // 圖片刪除失敗不應該阻止產品刪除，但要記錄錯誤
-        dbLogger.warn('刪除產品圖片時發生警告:', storageError)
+        dbLogger.warn('刪除產品圖片時發生警告:', { 
+          metadata: { error: storageError instanceof Error ? storageError.message : 'Unknown storage error' }
+        })
       }
       
       // 然後刪除資料庫記錄
@@ -107,7 +109,7 @@ class SupabaseProductService implements ProductService {
       
       if (error) throw error
     } catch (error) {
-      dbLogger.error('Error deleting product:', error)
+      dbLogger.error('Error deleting product:', error instanceof Error ? error : new Error('Unknown error'))
       throw error
     }
   }
@@ -167,7 +169,7 @@ class SupabaseProductService implements ProductService {
         return getRelevanceScore(b) - getRelevanceScore(a)
       })
     } catch (error) {
-      dbLogger.error('Error searching products:', error)
+      dbLogger.error('Error searching products:', error instanceof Error ? error : new Error('Unknown error'))
       return []
     }
   }

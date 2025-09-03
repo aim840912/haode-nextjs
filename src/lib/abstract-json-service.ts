@@ -185,7 +185,7 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
       throw new InternalServerError(`讀取 JSON 檔案失敗: ${message}`, {
         module: this.metadata.name,
         action: 'readJsonFile',
-        originalError: error
+        originalError: error instanceof Error ? error : undefined
       })
     }
   }
@@ -225,7 +225,7 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
       throw new InternalServerError(`寫入 JSON 檔案失敗: ${message}`, {
         module: this.metadata.name,
         action: 'writeJsonFile',
-        originalError: error
+        originalError: error instanceof Error ? error : undefined
       })
     } finally {
       this.isWriting = false

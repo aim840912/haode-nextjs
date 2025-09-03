@@ -339,7 +339,7 @@ async function handleDELETE(request: NextRequest) {
         action: 'delete',
         resource_type: 'product' as any, // 暫時使用 any，稍後會更新 type
         resource_id: id,
-        resource_details: productData ? transformFromDB(productData) : {},
+        resource_details: productData ? transformFromDB(productData) as unknown as Record<string, unknown> : {},
         metadata: {
           imageCleanup: imageDeletionResult,
           verification: verificationResult

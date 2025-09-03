@@ -65,9 +65,12 @@ export class JsonProductService implements ProductService {
       await deleteProductImages(id)
     } catch (storageError) {
       // 圖片刪除失敗不應該阻止產品刪除，但要記錄警告
-      dbLogger.warn('刪除產品圖片時發生警告', storageError as Error, {
+      dbLogger.warn('刪除產品圖片時發生警告', {
         module: 'JsonProductService',
         action: 'deleteProduct',
+        metadata: { 
+          error: storageError instanceof Error ? storageError.message : 'Unknown storage error' 
+        }
       })
     }
     

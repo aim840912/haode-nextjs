@@ -138,7 +138,7 @@ export default function ImageUploader({
           if (generateMultipleSizes && result.multiple) {
             // 多尺寸上傳結果 - 直接替換臨時預覽
             const uploadedImages: UploadedImage[] = [];
-            Object.entries(result.urls).forEach(([size, urlData], index) => {
+            Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
               const url = urlData.url;
               uploadedImages.push({
                 id: `${productId}-${size}-${Date.now()}-${i}`,
@@ -161,14 +161,14 @@ export default function ImageUploader({
           } else {
             // 單一尺寸上傳結果
             const uploadedImage: UploadedImage = {
-              id: `${productId}-${result.size}-${Date.now()}-${i}`,
-              url: result.url,
-              path: result.path,
-              size: result.size,
+              id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
+              url: result.url || '',
+              path: result.path || '',
+              size: result.size || 'medium',
               file: processedFile,
-              preview: result.url, // 使用 Supabase URL
+              preview: result.url || '', // 使用 Supabase URL
               position: tempImage.position,
-              alt: `${processedFile.name} (${result.size})`
+              alt: `${processedFile.name} (${result.size || 'medium'})`
             };
             
             // 用上傳成功的圖片替換臨時預覽

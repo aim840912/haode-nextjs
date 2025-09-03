@@ -24,7 +24,7 @@ export class ProductServiceAdapter implements ProductService {
 
   constructor() {
     // 建立統一服務實例 (預設使用 Supabase)
-    this.unifiedService = new UnifiedProductService()
+    this.unifiedService = new UnifiedProductService(new SupabaseProductService())
     
     // 建立適配器實例
     this.legacyAdapter = new LegacyProductServiceAdapter(this.unifiedService)
@@ -150,7 +150,8 @@ export class ProductServiceAdapter implements ProductService {
    */
   switchServiceType(type: 'supabase' | 'json'): void {
     // 重新建立統一服務實例
-    const newUnifiedService = new UnifiedProductService()
+    const baseService = type === 'supabase' ? new SupabaseProductService() : new JsonProductService()
+    const newUnifiedService = new UnifiedProductService(baseService)
     
     // 更新適配器引用
     ;(this as any).legacyAdapter = new LegacyProductServiceAdapter(newUnifiedService)

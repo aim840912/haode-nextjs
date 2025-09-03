@@ -267,10 +267,14 @@ export async function preloadImages(urls: string[]): Promise<void> {
   try {
     await Promise.all(urls.map(url => preloadImage(url)));
   } catch (error) {
-    apiLogger.warn('部分圖片預載入失敗', error instanceof Error ? error : new Error('Unknown preload error'), {
+    apiLogger.warn('部分圖片預載入失敗', {
       module: 'ImageUtils',
       action: 'preloadImages',
-      metadata: { urlCount: urls.length, urls: urls.slice(0, 3) } // 只記錄前3個URL避免日誌過長
+      metadata: { 
+        error: error instanceof Error ? error.message : 'Unknown preload error',
+        urlCount: urls.length, 
+        urls: urls.slice(0, 3) 
+      }
     });
   }
 }

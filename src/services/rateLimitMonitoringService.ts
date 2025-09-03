@@ -290,7 +290,7 @@ export class RateLimitMonitoringService {
         }
       });
 
-      dbLogger.warn('IP 已被封鎖', undefined, {
+      dbLogger.warn('IP 已被封鎖', {
         module: 'RateLimitMonitoringService',
         action: 'blockIP',
         metadata: {
@@ -373,7 +373,7 @@ export class RateLimitMonitoringService {
           }
         });
 
-        dbLogger.info('IP 已解除封鎖', undefined, {
+        dbLogger.info('IP 已解除封鎖', {
           module: 'RateLimitMonitoringService',
           action: 'unblockIP',
           metadata: {
@@ -465,14 +465,14 @@ export class RateLimitMonitoringService {
         resource_id: alertId,
         user_id: null,
         user_email: 'system',
-        resource_details: alertData,
+        resource_details: alertData as unknown as Record<string, unknown>,
         metadata: {
           severity: alert.severity,
           alert: alert.severity === 'critical' || alert.severity === 'high'
         }
       });
 
-      dbLogger.warn('監控警報已創建', undefined, {
+      dbLogger.warn('監控警報已創建', {
         module: 'RateLimitMonitoringService',
         action: 'createAlert',
         metadata: {

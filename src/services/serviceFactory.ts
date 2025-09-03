@@ -168,10 +168,13 @@ async function createService<T>(
           })
           return supabaseService
         } catch (error) {
-          dbLogger.warn(`${serviceType} Supabase 連線失敗，嘗試 fallback`, error instanceof Error ? error : new Error('Unknown error'), { 
+          dbLogger.warn(`${serviceType} Supabase 連線失敗，嘗試 fallback`, { 
             module: 'ServiceFactory', 
             action: 'createService', 
-            metadata: { serviceType } 
+            metadata: { 
+              serviceType,
+              error: error instanceof Error ? error.message : 'Unknown error'
+            } 
           })
           
           if (shouldFallbackToJson()) {
