@@ -37,9 +37,11 @@ type SupabaseQueryBuilder = any
  */
 export interface DataTransformer<T, DbRecord = Record<string, unknown>> {
   /** 從資料庫記錄轉換為實體 */
-  fromDB(record: DbRecord): T
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fromDB(record: any): T
   /** 從實體轉換為資料庫記錄 */
-  toDB(entity: Partial<T>): Partial<Record<string, unknown>>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  toDB(entity: any): Partial<Record<string, unknown>>
 }
 
 /**
@@ -112,9 +114,11 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 建立查詢建構器
    */
-  protected createQuery(useAdmin: boolean = false): SupabaseQueryBuilder {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected createQuery(useAdmin: boolean = false): any {
     const client = this.getClient(useAdmin)
-    const query = client.from(this.config.tableName)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const query: any = client.from(this.config.tableName)
     
     // Debug logging
     dbLogger.debug('Creating Supabase query', {
@@ -131,7 +135,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 套用查詢選項到查詢建構器
    */
-  protected applyQueryOptions(query: SupabaseQueryBuilder, options?: QueryOptions): SupabaseQueryBuilder {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected applyQueryOptions(query: any, options?: QueryOptions): any {
     const normalizedOptions = normalizeQueryOptions(options)
     
     try {
@@ -157,10 +162,12 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       return query
     } catch (error) {
       dbLogger.error('Query builder error', error as Error, {
-        tableName: this.config.tableName,
-        options: normalizedOptions,
-        queryType: typeof query,
-        queryMethods: Object.getOwnPropertyNames(query)
+        metadata: {
+          tableName: this.config.tableName,
+          options: normalizedOptions,
+          queryType: typeof query,
+          queryMethods: Object.getOwnPropertyNames(query)
+        }
       })
       throw error
     }
@@ -186,7 +193,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 轉換資料庫記錄為實體
    */
-  protected transformFromDB(record: Record<string, unknown>): T {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected transformFromDB(record: any): T {
     if (this.transformer) {
       return this.transformer.fromDB(record)
     }
@@ -196,11 +204,12 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 轉換實體為資料庫記錄
    */
-  protected transformToDB(entity: Partial<T>): Record<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected transformToDB(entity: any): Record<string, unknown> {
     if (this.transformer) {
       return this.transformer.toDB(entity)
     }
-    return entity
+    return entity as Record<string, unknown>
   }
 
   /**
@@ -212,7 +221,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       const client = this.getClient()
       
       // Build query directly to avoid abstraction issues
-      let query = client.from(this.config.tableName)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query: any = client.from(this.config.tableName)
       
       // Apply filters
       if (Object.keys(normalizedOptions.filters).length > 0) {
@@ -332,7 +342,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
       
-      let query = client.from(this.config.tableName)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query: any = client.from(this.config.tableName)
       
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
@@ -378,7 +389,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
     try {
       const client = this.getClient(true) // 使用管理員權限
       
-      let query = client.from(this.config.tableName)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query: any = client.from(this.config.tableName)
       
       if (this.config.softDeleteField) {
         // 軟刪除
