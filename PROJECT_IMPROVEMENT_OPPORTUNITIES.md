@@ -116,7 +116,7 @@ src/app/api/v1/example/route.ts
 
 ### 🏆 第一階段：高優先級 API（5個）
 - [x] `/api/products/categories/route.ts` - 產品分類（核心功能）✅ 完成
-- [ ] `/api/admin-proxy/products/route.ts` - 管理員產品代理
+- [x] `/api/admin-proxy/products/route.ts` - 管理員產品代理 ✅ 完成
 - [ ] `/api/admin-proxy/locations/route.ts` - 管理員地點代理
 - [ ] `/api/farm-tour/inquiry/route.ts` - 農場參觀詢問
 - [ ] `/api/farm-tour/[id]/route.ts` - 農場參觀詳情

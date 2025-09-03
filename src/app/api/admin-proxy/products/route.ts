@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/error-handler'
+import { AuthorizationError, ValidationError } from '@/lib/errors'
 
 /**
  * Admin Proxy API for Products
- * 
+ *
  * 這個代理 API 提供安全的方式讓前端管理介面存取 Admin API，
  * 避免將 ADMIN_API_KEY 暴露到前端代碼中。
- * 
+ *
  * 驗證流程：
  * 1. 檢查 Supabase session 是否有效
  * 2. 檢查用戶是否為管理員
@@ -17,43 +18,36 @@ import { apiLogger } from '@/lib/logger'
 
 async function validateAdminUser() {
   const supabase = await createServerSupabaseClient()
-  
-  try {
-    // 檢查用戶認證狀態
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
-    if (authError || !user) {
-      return { isValid: false, error: '未登入或認證失效' }
-    }
 
-    // 從 profiles 表獲取用戶角色
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  // 檢查用戶認證狀態
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
 
-    if (profileError || !profile) {
-      return { isValid: false, error: '無法獲取用戶資料' }
-    }
+  if (authError || !user) {
+    throw new AuthorizationError('未登入或認證失效')
+  }
 
-    if (profile.role !== 'admin') {
-      return { isValid: false, error: '需要管理員權限' }
-    }
+  // 從 profiles 表獲取用戶角色
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
 
-    return { isValid: true }
-  } catch (error) {
-    apiLogger.error('Admin validation error', error as Error, {
-      module: 'AdminProxyAPI',
-      action: 'validateAdminUser'
-    })
-    return { isValid: false, error: '驗證過程發生錯誤' }
+  if (profileError || !profile) {
+    throw new AuthorizationError('無法獲取用戶資料')
+  }
+
+  if (profile.role !== 'admin') {
+    throw new AuthorizationError('需要管理員權限')
   }
 }
 
 async function forwardToAdminAPI(method: string, body?: unknown, request?: NextRequest) {
   const adminKey = process.env.ADMIN_API_KEY
-  
+
   if (!adminKey) {
     throw new Error('ADMIN_API_KEY not configured')
   }
@@ -64,10 +58,11 @@ async function forwardToAdminAPI(method: string, body?: unknown, request?: NextR
     const requestUrl = new URL(request.url)
     baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
   } else {
-    baseUrl = process.env.NEXTAUTH_URL || 
-              (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+    baseUrl =
+      process.env.NEXTAUTH_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
   }
-  
+
   const adminApiUrl = `${baseUrl}/api/admin/products`
 
   const controller = new AbortController()
@@ -78,10 +73,10 @@ async function forwardToAdminAPI(method: string, body?: unknown, request?: NextR
       method,
       headers: {
         'Content-Type': 'application/json',
-        'X-Admin-Key': adminKey
+        'X-Admin-Key': adminKey,
       },
       body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal
+      signal: controller.signal,
     })
 
     clearTimeout(timeoutId)
@@ -96,150 +91,99 @@ async function forwardToAdminAPI(method: string, body?: unknown, request?: NextR
 }
 
 // GET - 獲取所有產品（包含未啟用的）
-export async function GET(request: NextRequest) {
-  try {
-    const validation = await validateAdminUser()
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 401 }
-      )
-    }
+async function handleGET(request: NextRequest) {
+  await validateAdminUser()
 
-    const response = await forwardToAdminAPI('GET', undefined, request)
-    const data = await response.json()
+  const response = await forwardToAdminAPI('GET', undefined, request)
+  const data = await response.json()
 
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    apiLogger.error('Admin proxy GET error', error as Error, {
-      module: 'AdminProxyAPI',
-      action: 'GET /api/admin-proxy/products'
-    })
-    return NextResponse.json(
-      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json(data, { status: response.status })
 }
+
+export const GET = withErrorHandler(handleGET, {
+  module: 'AdminProxyAPI',
+  enableAuditLog: true,
+})
 
 // POST - 新增產品
-export async function POST(request: NextRequest) {
-  try {
-    const validation = await validateAdminUser()
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 401 }
-      )
-    }
+async function handlePOST(request: NextRequest) {
+  await validateAdminUser()
 
-    const body = await request.json()
-    const response = await forwardToAdminAPI('POST', body, request)
-    const data = await response.json()
+  const body = await request.json()
+  const response = await forwardToAdminAPI('POST', body, request)
+  const data = await response.json()
 
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    apiLogger.error('Admin proxy POST error', error as Error, {
-      module: 'AdminProxyAPI',
-      action: 'POST /api/admin-proxy/products'
-    })
-    return NextResponse.json(
-      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json(data, { status: response.status })
 }
+
+export const POST = withErrorHandler(handlePOST, {
+  module: 'AdminProxyAPI',
+  enableAuditLog: true,
+})
 
 // PUT - 更新產品
-export async function PUT(request: NextRequest) {
-  try {
-    const validation = await validateAdminUser()
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 401 }
-      )
-    }
+async function handlePUT(request: NextRequest) {
+  await validateAdminUser()
 
-    const body = await request.json()
-    const response = await forwardToAdminAPI('PUT', body, request)
-    const data = await response.json()
+  const body = await request.json()
+  const response = await forwardToAdminAPI('PUT', body, request)
+  const data = await response.json()
 
-    return NextResponse.json(data, { status: response.status })
-  } catch (error) {
-    apiLogger.error('Admin proxy PUT error', error as Error, {
-      module: 'AdminProxyAPI',
-      action: 'PUT /api/admin-proxy/products'
-    })
-    return NextResponse.json(
-      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
-      { status: 500 }
-    )
-  }
+  return NextResponse.json(data, { status: response.status })
 }
+
+export const PUT = withErrorHandler(handlePUT, {
+  module: 'AdminProxyAPI',
+  enableAuditLog: true,
+})
 
 // DELETE - 刪除產品
-export async function DELETE(request: NextRequest) {
+async function handleDELETE(request: NextRequest) {
+  await validateAdminUser()
+
+  const { searchParams } = new URL(request.url)
+  const id = searchParams.get('id')
+
+  if (!id) {
+    throw new ValidationError('Product ID is required')
+  }
+
+  // 構建帶有 query 參數的 URL
+  const adminKey = process.env.ADMIN_API_KEY
+  if (!adminKey) {
+    throw new Error('ADMIN_API_KEY not configured')
+  }
+
+  // 動態獲取基礎 URL，使用當前請求的 origin
+  const requestUrl = new URL(request.url)
+  const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
+  const adminApiUrl = `${baseUrl}/api/admin/products?id=${id}`
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 秒超時
+
   try {
-    const validation = await validateAdminUser()
-    if (!validation.isValid) {
-      return NextResponse.json(
-        { error: validation.error },
-        { status: 401 }
-      )
-    }
-
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Product ID is required' },
-        { status: 400 }
-      )
-    }
-
-    // 構建帶有 query 參數的 URL
-    const adminKey = process.env.ADMIN_API_KEY
-    if (!adminKey) {
-      throw new Error('ADMIN_API_KEY not configured')
-    }
-
-    // 動態獲取基礎 URL，使用當前請求的 origin
-    const requestUrl = new URL(request.url)
-    const baseUrl = `${requestUrl.protocol}//${requestUrl.host}`
-    const adminApiUrl = `${baseUrl}/api/admin/products?id=${id}`
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 秒超時
-
-    try {
-      const response = await fetch(adminApiUrl, {
-        method: 'DELETE',
-        headers: {
-          'X-Admin-Key': adminKey
-        },
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-      const data = await response.json()
-      return NextResponse.json(data, { status: response.status })
-    } catch (error) {
-      clearTimeout(timeoutId)
-      if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error(`Request timeout: ${adminApiUrl}`)
-      }
-      throw error
-    }
-  } catch (error) {
-    apiLogger.error('Admin proxy DELETE error', error as Error, {
-      module: 'AdminProxyAPI',
-      action: 'DELETE /api/admin-proxy/products'
+    const response = await fetch(adminApiUrl, {
+      method: 'DELETE',
+      headers: {
+        'X-Admin-Key': adminKey,
+      },
+      signal: controller.signal,
     })
-    return NextResponse.json(
-      { error: `代理請求失敗: ${error instanceof Error ? error.message : '未知錯誤'}` },
-      { status: 500 }
-    )
+
+    clearTimeout(timeoutId)
+    const data = await response.json()
+    return NextResponse.json(data, { status: response.status })
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout: ${adminApiUrl}`)
+    }
+    throw error
   }
 }
+
+export const DELETE = withErrorHandler(handleDELETE, {
+  module: 'AdminProxyAPI',
+  enableAuditLog: true,
+})
