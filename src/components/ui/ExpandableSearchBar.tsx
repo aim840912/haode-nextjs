@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useDebounce } from '@/hooks/useDebounce'
 import { SearchResult } from '@/types/search'
+import { logger } from '@/lib/logger'
 
 interface ExpandableSearchBarProps {
   placeholder?: string
@@ -50,7 +51,7 @@ export function ExpandableSearchBar({
         setSuggestions(data.results || [])
         setShowDropdown(data.results?.length > 0)
       } catch (error) {
-        console.error('搜尋建議失敗:', error)
+        logger.error('搜尋建議失敗', error as Error, { module: 'ExpandableSearchBar', action: 'fetchSuggestions', query: debouncedQuery })
         setSuggestions([])
         setShowDropdown(false)
       } finally {

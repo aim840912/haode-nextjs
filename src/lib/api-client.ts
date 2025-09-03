@@ -10,6 +10,8 @@
 
 'use client';
 
+import { apiLogger } from '@/lib/logger';
+
 /**
  * 從 cookie 中獲取 CSRF token
  */
@@ -143,7 +145,12 @@ class ApiClient {
       if (csrfToken) {
         preparedHeaders['X-CSRF-Token'] = csrfToken;
       } else {
-        console.warn('[API Client] No CSRF token available for write operation');
+        apiLogger.warn('No CSRF token available for write operation', {
+          module: 'api-client',
+          action: 'prepareHeaders',
+          method,
+          endpoint: 'unknown'
+        });
       }
     }
 
@@ -259,12 +266,18 @@ class ApiClient {
           // 檢查是否啟用了 rate limit 重試
           if (rateLimitRetry && attempt < retries) {
             const waitTime = Math.min(error.retryAfter * 1000, maxRetryWait);
-            console.warn(
-              `[API Client] Rate limit exceeded (attempt ${attempt + 1}/${retries + 1}): ` +
-              `waiting ${waitTime}ms before retry. ` +
-              `Limit: ${error.limit}, Remaining: ${error.remaining}, ` +
-              `Reset: ${new Date(error.resetTime * 1000).toLocaleTimeString()}`
-            );
+            apiLogger.warn('Rate limit exceeded, retrying after delay', {
+              module: 'api-client',
+              action: 'executeWithRetry',
+              attempt: attempt + 1,
+              maxAttempts: retries + 1,
+              waitTime,
+              rateLimitInfo: {
+                limit: error.limit,
+                remaining: error.remaining,
+                resetTime: new Date(error.resetTime * 1000).toLocaleTimeString()
+              }
+            });
             await new Promise(resolve => setTimeout(resolve, waitTime));
             continue;
           }
@@ -274,7 +287,14 @@ class ApiClient {
 
         // 其他錯誤的重試邏輯（網路錯誤、5xx 錯誤等）
         if (attempt < retries) {
-          console.warn(`API request failed (attempt ${attempt + 1}/${retries + 1}):`, error);
+          apiLogger.warn('API request failed, retrying', {
+            module: 'api-client',
+            action: 'executeWithRetry',
+            attempt: attempt + 1,
+            maxAttempts: retries + 1,
+            error: error.message,
+            url
+          });
           const exponentialBackoff = retryDelay * Math.pow(2, attempt);
           await new Promise(resolve => setTimeout(resolve, exponentialBackoff));
           continue;

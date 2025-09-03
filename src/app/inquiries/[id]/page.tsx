@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { supabase } from '@/lib/supabase-auth';
+import { logger } from '@/lib/logger';
 import { 
   InquiryWithItems, 
   INQUIRY_STATUS_LABELS,
@@ -73,7 +74,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
       setInquiry(result.data);
 
     } catch (err) {
-      console.error('Error fetching inquiry:', err);
+      logger.error('Error fetching inquiry', err as Error, { inquiryId, module: 'InquiryDetailPage', action: 'fetchInquiry' });
       setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);

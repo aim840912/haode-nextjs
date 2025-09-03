@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { auditLogService } from '@/services/auditLogService';
+import { apiLogger } from '@/lib/logger';
 
 // 統一的錯誤回應函數
 function createErrorResponse(message: string, status: number, details?: string) {
@@ -113,7 +114,7 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse(stats);
 
   } catch (error) {
-    console.error('Error fetching audit log stats:', error);
+    apiLogger.error('Error fetching audit log stats:', { module: 'AuditLogs', action: 'GET /api/audit-logs/stats', error });
     return createErrorResponse(
       '取得審計統計失敗', 
       500, 

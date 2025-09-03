@@ -7,6 +7,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-auth'
+import { logger } from '@/lib/logger'
 import {
   InquiryWithItems,
   InquiryStatus,
@@ -69,7 +70,7 @@ function InquiriesPage() {
 
       setInquiries(result.data || [])
     } catch (err) {
-      console.error('Error fetching inquiries:', err)
+      logger.error('Error fetching inquiries', err as Error, { module: 'InquiriesPage', action: 'fetchInquiries' })
       setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤')
     } finally {
       setIsLoading(false)

@@ -6,6 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { auditLogService } from '@/services/auditLogService';
+import { apiLogger } from '@/lib/logger';
+import { withErrorHandler } from '@/lib/error-handler';
+import { success, error as errorResponse } from '@/lib/api-response';
+import { ValidationError, AuthorizationError } from '@/lib/errors';
 
 // 統一的錯誤回應函數
 function createErrorResponse(message: string, status: number, details?: string) {
@@ -38,13 +42,12 @@ function createSuccessResponse(data?: any, message?: string, status: number = 20
 }
 
 // POST /api/audit-logs/batch - 批量操作審計日誌
-export async function POST(request: NextRequest) {
-  try {
-    // 驗證使用者認證
-    const user = await getCurrentUser();
-    if (!user) {
-      return createErrorResponse('未認證或會話已過期', 401);
-    }
+async function handlePOST(request: NextRequest) {
+  // 驗證使用者認證
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new AuthorizationError('未認證或會話已過期');
+  }
 
     // 檢查權限（只有管理員可以批量操作審計日誌）
     const supabase = await createServerSupabaseClient();
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!profile || profile.role !== 'admin') {
-      return createErrorResponse('權限不足，只有管理員可以批量操作審計日誌', 403);
+      throw new AuthorizationError('權限不足，只有管理員可以批量操作審計日誌');
     }
 
     // 解析請求內容
@@ -63,7 +66,7 @@ export async function POST(request: NextRequest) {
     const { operation, ids, filters } = body;
 
     if (!operation) {
-      return createErrorResponse('缺少操作類型 (operation)', 400);
+      throw new ValidationError('缺少操作類型 (operation)');
     }
 
     switch (operation) {
@@ -77,18 +80,20 @@ export async function POST(request: NextRequest) {
         return await handleCleanupOld(supabase, user, profile, filters?.days || 365, request);
       
       default:
-        return createErrorResponse('不支援的操作類型', 400);
+        throw new ValidationError('不支援的操作類型');
     }
 
-  } catch (error) {
-    console.error('Error in batch audit logs operation:', error);
-    return createErrorResponse(
-      '批量操作失敗', 
-      500, 
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-  }
+  apiLogger.info('批量審計日誌操作完成', {
+    module: 'AuditLogBatchAPI',
+    action: 'POST /api/audit-logs/batch',
+    metadata: { operation: body.operation }
+  });
 }
+
+export const POST = withErrorHandler(handlePOST, {
+  module: 'AuditLogBatchAPI',
+  enableAuditLog: true
+});
 
 // 按 ID 批量刪除
 async function handleDeleteByIds(
@@ -99,11 +104,11 @@ async function handleDeleteByIds(
   request: NextRequest
 ) {
   if (!ids || !Array.isArray(ids) || ids.length === 0) {
-    return createErrorResponse('缺少要刪除的日誌 ID 列表', 400);
+    throw new ValidationError('缺少要刪除的日誌 ID 列表');
   }
 
   if (ids.length > 100) {
-    return createErrorResponse('單次最多只能刪除 100 筆記錄', 400);
+    throw new ValidationError('單次最多只能刪除 100 筆記錄');
   }
 
   // 先取得要刪除的日誌資料
@@ -113,12 +118,16 @@ async function handleDeleteByIds(
     .in('id', ids);
 
   if (fetchError) {
-    console.error('取得待刪除審計日誌失敗:', fetchError);
-    return createErrorResponse('取得待刪除審計日誌失敗', 500, fetchError.message);
+    apiLogger.error('取得待刪除審計日誌失敗', fetchError, {
+      module: 'AuditLogBatchAPI',
+      action: 'handleDeleteByIds',
+      metadata: { ids }
+    });
+    throw new Error('取得待刪除審計日誌失敗');
   }
 
   if (!logsToDelete || logsToDelete.length === 0) {
-    return createErrorResponse('找不到指定的審計日誌', 404);
+    throw new ValidationError('找不到指定的審計日誌');
   }
 
   // 執行批量刪除
@@ -129,8 +138,12 @@ async function handleDeleteByIds(
     .select();
 
   if (deleteError) {
-    console.error('批量刪除審計日誌失敗:', deleteError);
-    return createErrorResponse('批量刪除審計日誌失敗', 500, deleteError.message);
+    apiLogger.error('批量刪除審計日誌失敗', deleteError, {
+      module: 'AuditLogBatchAPI',
+      action: 'handleDeleteByIds',
+      metadata: { ids, deletedCount: data?.length || 0 }
+    });
+    throw new Error('批量刪除審計日誌失敗');
   }
 
   const deletedCount = data?.length || 0;
@@ -152,9 +165,20 @@ async function handleDeleteByIds(
     },
     ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
     user_agent: request.headers.get('user-agent') || undefined
-  }).catch(console.error);
+  }).catch(error => {
+    apiLogger.error('記錄批量刪除審計日誌失敗', error, {
+      module: 'AuditLogBatchAPI',
+      action: 'handleDeleteByIds'
+    });
+  });
 
-  return createSuccessResponse(
+  apiLogger.info('批量刪除審計日誌成功', {
+    module: 'AuditLogBatchAPI',
+    action: 'handleDeleteByIds',
+    metadata: { deletedCount, idsCount: ids.length }
+  });
+
+  return success(
     { deleted_count: deletedCount },
     `成功刪除 ${deletedCount} 筆審計日誌`
   );
@@ -194,8 +218,12 @@ async function handleDeleteByFilters(
   const { data, error: deleteError } = await query.select();
 
   if (deleteError) {
-    console.error('按條件批量刪除審計日誌失敗:', deleteError);
-    return createErrorResponse('按條件批量刪除審計日誌失敗', 500, deleteError.message);
+    apiLogger.error('按條件批量刪除審計日誌失敗', deleteError, {
+      module: 'AuditLogBatchAPI',
+      action: 'handleDeleteByFilters',
+      metadata: { filters }
+    });
+    throw new Error('按條件批量刪除審計日誌失敗');
   }
 
   const deletedCount = data?.length || 0;
@@ -217,9 +245,20 @@ async function handleDeleteByFilters(
     },
     ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
     user_agent: request.headers.get('user-agent') || undefined
-  }).catch(console.error);
+  }).catch(error => {
+    apiLogger.error('記錄按條件批量刪除審計日誌失敗', error, {
+      module: 'AuditLogBatchAPI',
+      action: 'handleDeleteByFilters'
+    });
+  });
 
-  return createSuccessResponse(
+  apiLogger.info('按條件批量刪除審計日誌成功', {
+    module: 'AuditLogBatchAPI',
+    action: 'handleDeleteByFilters',
+    metadata: { deletedCount, filters }
+  });
+
+  return success(
     { deleted_count: deletedCount },
     `成功刪除 ${deletedCount} 筆符合條件的審計日誌`
   );
@@ -243,8 +282,12 @@ async function handleCleanupOld(
       .rpc('cleanup_old_audit_logs', { days_to_keep: daysToKeep });
 
     if (error) {
-      console.error('清理舊審計日誌失敗:', error);
-      return createErrorResponse('清理舊審計日誌失敗', 500, error.message);
+      apiLogger.error('清理舊審計日誌失敗', error, {
+        module: 'AuditLogBatchAPI',
+        action: 'handleCleanupOld',
+        metadata: { daysToKeep }
+      });
+      throw new Error('清理舊審計日誌失敗');
     }
 
     const deletedCount = data || 0;
@@ -266,32 +309,47 @@ async function handleCleanupOld(
       },
       ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
       user_agent: request.headers.get('user-agent') || undefined
-    }).catch(console.error);
+    }).catch(error => {
+      apiLogger.error('記錄清理舊審計日誌操作失敗', error, {
+        module: 'AuditLogBatchAPI',
+        action: 'handleCleanupOld'
+      });
+    });
 
-    return createSuccessResponse(
+    apiLogger.info('清理舊審計日誌成功', {
+      module: 'AuditLogBatchAPI',
+      action: 'handleCleanupOld',
+      metadata: { deletedCount, daysToKeep }
+    });
+
+    return success(
       { deleted_count: deletedCount, days_kept: daysToKeep },
       `成功清理 ${deletedCount} 筆舊審計日誌（保留最近 ${daysToKeep} 天）`
     );
 
   } catch (error) {
-    console.error('清理舊審計日誌異常:', error);
-    return createErrorResponse('清理舊審計日誌失敗', 500, error instanceof Error ? error.message : 'Unknown error');
+    apiLogger.error('清理舊審計日誌異常', error, {
+      module: 'AuditLogBatchAPI',
+      action: 'handleCleanupOld',
+      metadata: { daysToKeep }
+    });
+    throw error;
   }
 }
 
 // 處理其他不支援的 HTTP 方法
 export async function GET() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }
 
 export async function PUT() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }
 
 export async function DELETE() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }
 
 export async function PATCH() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }

@@ -1,6 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
+import { authLogger } from '@/lib/logger'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -154,7 +155,13 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
     .single()
 
   if (error) {
-    console.error('Error fetching profile:', error)
+    authLogger.error('Failed to fetch user profile', {
+      module: 'supabase-auth',
+      action: 'getUserProfile',
+      userId,
+      error: error.message,
+      code: error.code
+    })
     return null
   }
 
@@ -170,7 +177,13 @@ export async function upsertProfile(profile: Partial<Profile> & { id: string }):
     .single()
 
   if (error) {
-    console.error('Error upserting profile:', error)
+    authLogger.error('Failed to upsert user profile', {
+      module: 'supabase-auth',
+      action: 'upsertProfile',
+      userId: profile.id,
+      error: error.message,
+      code: error.code
+    })
     return null
   }
 
@@ -187,7 +200,13 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
     .single()
 
   if (error) {
-    console.error('Error updating profile:', error)
+    authLogger.error('Failed to update user profile', {
+      module: 'supabase-auth',
+      action: 'updateProfile',
+      userId,
+      error: error.message,
+      code: error.code
+    })
     return null
   }
 

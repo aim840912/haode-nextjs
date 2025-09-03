@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { auditLogService } from '@/services/auditLogService';
+import { apiLogger } from '@/lib/logger';
 import { 
   AuditLogQueryParams,
   AuditAction,
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest) {
     return createSuccessResponse(auditLogs);
 
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
+    apiLogger.error('Error fetching audit logs:', { module: 'AuditLogs', action: 'GET /api/audit-logs', error });
     return createErrorResponse(
       '取得審計日誌失敗', 
       500, 

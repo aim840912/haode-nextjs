@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { base64ToBlobUrl, revokeBlobUrl } from '@/lib/image-blob-utils';
+import { logger } from '@/lib/logger';
 
 interface UseImageBlobOptions {
   fallbackSrc?: string;
@@ -77,7 +78,7 @@ export function useImageBlob(
         }
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : 'base64 處理失敗';
-        console.error('❌ base64 處理錯誤:', errorMsg);
+        logger.error('base64 處理錯誤', err as Error, { src, module: 'useImageBlob', action: 'processBase64' });
         setError(errorMsg);
         setProcessedSrc(fallbackSrc || null);
         setIsLoading(false);

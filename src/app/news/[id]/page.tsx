@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArticleStructuredData } from '@/components/StructuredData'
 import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
+import { logger } from '@/lib/logger'
 
 interface NewsItem {
   id: string
@@ -59,11 +60,11 @@ export default function NewsDetailPage() {
       } else if (response.status === 404) {
         setNewsItem(null)
       } else {
-        console.error('Failed to fetch news:', response.statusText)
+        logger.error('Failed to fetch news', new Error(`HTTP ${response.status}: ${response.statusText}`), { newsId: id, module: 'NewsDetailPage', action: 'fetchNewsDetail' })
         setNewsItem(null)
       }
     } catch (error) {
-      console.error('Error fetching news detail:', error)
+      logger.error('Error fetching news detail', error as Error, { newsId: id, module: 'NewsDetailPage', action: 'fetchNewsDetail' })
       setNewsItem(null)
     } finally {
       setLoading(false)

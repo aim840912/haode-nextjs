@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger'
 
 interface SafeImageProps {
   src: string
@@ -41,7 +42,7 @@ export default function SafeImage({
   }, [src, fallbackSrc])
 
   const handleError = () => {
-    console.warn(`SafeImage: 圖片載入失敗 - ${imgSrc}`)
+    logger.warn('SafeImage: 圖片載入失敗', { imgSrc, module: 'SafeImage', action: 'handleError' })
     if (!hasError) {
       setHasError(true)
       setIsLoading(false)

@@ -13,6 +13,7 @@ import { Product, ProductImage } from '@/types/product'
 import { AbstractSupabaseService, DataTransformer, SupabaseServiceConfig } from '@/lib/abstract-supabase-service'
 import { AbstractJsonService, JsonEntity, JsonServiceConfig, SearchConfig } from '@/lib/abstract-json-service'
 import { BaseService, SearchableService, PaginatedService, QueryOptions, PaginatedQueryOptions, PaginatedResult } from '@/lib/base-service'
+import { dbLogger } from '@/lib/logger'
 
 /**
  * 產品建立 DTO
@@ -71,7 +72,10 @@ export class ProductDataTransformer implements DataTransformer<Product> {
           images = record.images
         }
       } catch (error) {
-        console.warn('Failed to parse images JSON:', error)
+        dbLogger.warn('Failed to parse images JSON', error, {
+          module: 'ProductService',
+          action: 'transformFromSupabase'
+        })
         images = []
       }
     }

@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next'
 import { NewsItem } from '@/types/news'
 import { supabaseProductService } from '@/services/supabaseProductService'
+import { logger } from '@/lib/logger'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://haode-nextjs.vercel.app/'
@@ -64,7 +65,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }))
   } catch (error) {
-    console.error('Error generating product sitemap:', error)
+    logger.error('Error generating product sitemap', error as Error, { module: 'sitemap', action: 'generateProductSitemap' })
   }
 
   // 動態新聞頁面
@@ -83,7 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }))
     }
   } catch (error) {
-    console.error('Error generating news sitemap:', error)
+    logger.error('Error generating news sitemap', error as Error, { module: 'sitemap', action: 'generateNewsSitemap' })
   }
 
   return [...staticPages, ...productPages, ...newsPages]

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { trackPageView, trackError, performanceEvents, logGAStatus } from '@/lib/analytics'
+import { logger } from '@/lib/logger'
 
 interface GoogleAnalyticsProviderProps {
   children: React.ReactNode
@@ -51,7 +52,7 @@ export default function GoogleAnalyticsProvider({ children }: GoogleAnalyticsPro
         observer.observe({ entryTypes: ['paint'] })
       } catch (error) {
         // 某些瀏覽器可能不支援 Paint Timing API
-        console.warn('Paint Timing API not supported:', error)
+        logger.warn('Paint Timing API not supported', { error, module: 'GoogleAnalyticsProvider', action: 'observePaintTiming' })
       }
 
       return () => observer.disconnect()

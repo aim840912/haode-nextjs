@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
 import { resetServiceInstances, getCurrentServiceType, healthCheck } from '@/services/serviceFactory'
+import { apiLogger } from '@/lib/logger'
 
 export async function POST() {
   try {
-    console.log('🔄 重置服務實例...')
+    apiLogger.info('重置服務實例...', { module: 'ResetService', action: 'POST /api/reset-service' })
     
     // 重置服務實例
     resetServiceInstances()

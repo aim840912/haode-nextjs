@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { auditLogService } from '@/services/auditLogService';
 import { AuditAction } from '@/types/audit';
+import { authLogger } from '@/lib/logger';
 
 /**
  * Admin API 認證結果
@@ -113,7 +114,10 @@ async function logAuthFailure(
     });
   } catch (error) {
     // 審計日誌失敗不應該影響主要流程
-    console.error('Failed to log auth failure:', error);
+    authLogger.error('記錄認證失敗審計日誌失敗', error, {
+      module: 'AdminAuthMiddleware',
+      action: 'logAuthFailure'
+    });
   }
 }
 
@@ -131,7 +135,11 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
     const envAdminKey = process.env.ADMIN_API_KEY;
     
     if (!envAdminKey) {
-      console.error('[Admin Auth] ADMIN_API_KEY not configured in environment variables');
+      authLogger.error('ADMIN_API_KEY 未在環境變數中配置', {
+        module: 'AdminAuthMiddleware',
+        action: 'checkAdminPermission',
+        metadata: { reason: 'env_not_configured' }
+      });
       await logAuthFailure('env_not_configured', clientInfo);
       
       return {
@@ -144,7 +152,11 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
     
     // 2. 驗證環境變數中的 API Key 格式
     if (!validateApiKeyFormat(envAdminKey)) {
-      console.error('[Admin Auth] ADMIN_API_KEY format is invalid or insecure');
+      authLogger.error('ADMIN_API_KEY 格式無效或不安全', {
+        module: 'AdminAuthMiddleware', 
+        action: 'checkAdminPermission',
+        metadata: { reason: 'env_key_invalid_format' }
+      });
       await logAuthFailure('env_key_invalid_format', clientInfo);
       
       return {
@@ -210,7 +222,11 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
     };
     
   } catch (error) {
-    console.error('[Admin Auth] Unexpected error during authentication:', error);
+    authLogger.error('認證過程中發生意外錯誤', error, {
+      module: 'AdminAuthMiddleware',
+      action: 'checkAdminPermission',
+      metadata: { clientInfo }
+    });
     
     return {
       isValid: false,
@@ -227,10 +243,14 @@ export async function checkAdminPermission(request: NextRequest): Promise<AdminA
 export function createAuthErrorResponse(result: AdminAuthResult): NextResponse {
   // 記錄詳細錯誤供調試，但不返回給客戶端
   if (process.env.NODE_ENV === 'development') {
-    console.log('[Admin Auth] Authentication failed:', {
-      error: result.error,
-      statusCode: result.statusCode,
-      metadata: result.metadata
+    authLogger.debug('管理員認證失敗（開發模式）', {
+      module: 'AdminAuthMiddleware',
+      action: 'createAuthErrorResponse', 
+      metadata: {
+        error: result.error,
+        statusCode: result.statusCode,
+        clientMetadata: result.metadata
+      }
     });
   }
   

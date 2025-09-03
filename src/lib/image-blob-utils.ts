@@ -2,6 +2,7 @@
  * 圖片 Blob URL 工具函數
  * 用於將 base64 圖片轉換為 Blob URL，提升渲染效能並減少記憶體使用
  */
+import { dbLogger } from '@/lib/logger';
 
 interface BlobCacheItem {
   blobUrl: string;
@@ -20,7 +21,11 @@ export function base64ToBlobUrl(base64Data: string): string | null {
   try {
     // 檢查是否為有效的 base64 格式
     if (!base64Data.startsWith('data:image/')) {
-      console.warn('⚠️ 不是有效的 base64 圖片格式');
+      dbLogger.warn('不是有效的 base64 圖片格式', {
+        module: 'image-blob-utils',
+        action: 'base64ToBlobUrl',
+        base64Prefix: base64Data.substring(0, 50)
+      });
       return null;
     }
 
@@ -28,14 +33,23 @@ export function base64ToBlobUrl(base64Data: string): string | null {
     const cacheKey = base64Data.substring(0, 100); // 使用前100字符作為快取鍵
     const cached = blobCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY) {
-      console.log('✅ 使用快取的 Blob URL');
+      dbLogger.info('使用快取的 Blob URL', {
+        module: 'image-blob-utils',
+        action: 'base64ToBlobUrl',
+        cacheKey: cacheKey.substring(0, 30),
+        cacheAge: Math.round((Date.now() - cached.timestamp) / 1000) + 's'
+      });
       return cached.blobUrl;
     }
 
     // 解析 base64 資料
     const [header, data] = base64Data.split(',');
     if (!data) {
-      console.error('❌ base64 資料格式錯誤');
+      dbLogger.error('base64 資料格式錯誤', {
+        module: 'image-blob-utils',
+        action: 'base64ToBlobUrl',
+        base64Prefix: base64Data.substring(0, 50)
+      });
       return null;
     }
 
@@ -43,7 +57,9 @@ export function base64ToBlobUrl(base64Data: string): string | null {
     const mimeMatch = header.match(/data:([^;]+)/);
     const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
 
-    console.log(`🔄 轉換 base64 為 Blob URL`, {
+    dbLogger.info('轉換 base64 為 Blob URL', {
+      module: 'image-blob-utils',
+      action: 'base64ToBlobUrl',
       mimeType,
       dataLength: data.length,
       estimatedSize: `${Math.round((data.length * 3) / 4 / 1024)}KB`
@@ -67,15 +83,22 @@ export function base64ToBlobUrl(base64Data: string): string | null {
       size: blob.size
     });
 
-    console.log(`✅ 成功轉換 base64 為 Blob URL:`, {
+    dbLogger.info('成功轉換 base64 為 Blob URL', {
+      module: 'image-blob-utils',
+      action: 'base64ToBlobUrl',
       blobUrl: blobUrl.substring(0, 50) + '...',
-      blobSize: `${Math.round(blob.size / 1024)}KB`
+      blobSize: `${Math.round(blob.size / 1024)}KB`,
+      cacheKey: cacheKey.substring(0, 30)
     });
 
     return blobUrl;
 
   } catch (error) {
-    console.error('❌ base64 轉 Blob URL 失敗:', error);
+    dbLogger.error('base64 轉 Blob URL 失敗', {
+      module: 'image-blob-utils',
+      action: 'base64ToBlobUrl',
+      error: error instanceof Error ? error.message : String(error)
+    });
     return null;
   }
 }
@@ -96,7 +119,11 @@ export function cleanupBlobCache(): void {
   }
 
   if (cleanedCount > 0) {
-    console.log(`🧹 清理了 ${cleanedCount} 個過期的 Blob URL`);
+    dbLogger.info('清理過期的 Blob URL', {
+      module: 'image-blob-utils',
+      action: 'cleanupBlobCache',
+      cleanedCount
+    });
   }
 }
 
@@ -115,9 +142,18 @@ export function revokeBlobUrl(blobUrl: string): void {
       }
     }
     
-    console.log('🗑️ 已清理 Blob URL');
+    dbLogger.info('已清理 Blob URL', {
+      module: 'image-blob-utils',
+      action: 'revokeBlobUrl',
+      blobUrl: blobUrl.substring(0, 50) + '...'
+    });
   } catch (error) {
-    console.error('❌ 清理 Blob URL 失敗:', error);
+    dbLogger.error('清理 Blob URL 失敗', {
+      module: 'image-blob-utils',
+      action: 'revokeBlobUrl',
+      blobUrl: blobUrl.substring(0, 50) + '...',
+      error: error instanceof Error ? error.message : String(error)
+    });
   }
 }
 

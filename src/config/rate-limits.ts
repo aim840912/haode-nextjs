@@ -6,6 +6,7 @@
  */
 
 import { RateLimitConfig, IdentifierStrategy } from '@/lib/rate-limiter';
+import { logger } from '@/lib/logger';
 
 /**
  * 安全等級定義
@@ -381,17 +382,17 @@ export function listAllConfigs(): RateLimitConfigCollection {
  */
 export function validateConfig(config: RateLimitConfig): boolean {
   if (!config.maxRequests || config.maxRequests <= 0) {
-    console.error('[Rate Limit Config] Invalid maxRequests:', config.maxRequests);
+    logger.error('Invalid maxRequests', { maxRequests: config.maxRequests, module: 'RateLimitConfig', action: 'validateConfig' });
     return false;
   }
 
   if (!config.windowMs || config.windowMs <= 0) {
-    console.error('[Rate Limit Config] Invalid windowMs:', config.windowMs);
+    logger.error('Invalid windowMs', { windowMs: config.windowMs, module: 'RateLimitConfig', action: 'validateConfig' });
     return false;
   }
 
   if (!Object.values(IdentifierStrategy).includes(config.strategy)) {
-    console.error('[Rate Limit Config] Invalid strategy:', config.strategy);
+    logger.error('Invalid strategy', { strategy: config.strategy, module: 'RateLimitConfig', action: 'validateConfig' });
     return false;
   }
 
@@ -401,9 +402,12 @@ export function validateConfig(config: RateLimitConfig): boolean {
 // 開發環境下輸出配置資訊
 if (process.env.NODE_ENV === 'development' && 
     process.env.DEBUG_RATE_LIMITING === 'true') {
-  console.log('[Rate Limiting] Configuration loaded:');
-  console.log(`- Environment: ${process.env.NODE_ENV}`);
-  console.log(`- Rate limiting enabled: ${ENVIRONMENT_CONFIG.enableInDevelopment}`);
-  console.log(`- Total API configs: ${Object.keys(API_RATE_LIMITS).length}`);
-  console.log(`- Whitelist IPs: ${ENVIRONMENT_CONFIG.developmentWhitelist.length}`);
+  logger.info('Rate Limiting Configuration loaded', {
+    environment: process.env.NODE_ENV,
+    rateLimitingEnabled: ENVIRONMENT_CONFIG.enableInDevelopment,
+    totalApiConfigs: Object.keys(API_RATE_LIMITS).length,
+    whitelistIps: ENVIRONMENT_CONFIG.developmentWhitelist.length,
+    module: 'RateLimitConfig',
+    action: 'initialization'
+  });
 }

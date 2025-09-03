@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AdminProtection from '@/components/AdminProtection';
 import FarmTourCalendar from '@/components/calendar/FarmTourCalendar';
+import { logger } from '@/lib/logger';
 
 export default function FarmTourCalendarPage() {
   const router = useRouter();
@@ -18,7 +19,7 @@ export default function FarmTourCalendarPage() {
   // 處理日期點擊 - 未來可以開啟快速新增表單
   const handleDateClick = (date: Date) => {
     // TODO: 開啟快速新增農場導覽預約表單
-    console.log('選擇日期:', date);
+    logger.debug('選擇日期', { date, module: 'FarmTourCalendarPage', action: 'handleDateClick' });
   };
 
   return (

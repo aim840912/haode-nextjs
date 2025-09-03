@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { logger } from '@/lib/logger';
 
 interface ScheduleItem {
   id: string;
@@ -43,7 +44,7 @@ export default function SchedulePage() {
         
         // 確保 data 是陣列
         if (!Array.isArray(data)) {
-          console.error('API 回應格式錯誤：schedule data 不是陣列', result);
+          logger.error('API 回應格式錯誤：schedule data 不是陣列', new Error('非陣列格式'), { result, module: 'SchedulePage', action: 'fetchSchedule' });
           setMarketSchedule([]);
           setFilteredSchedule([]);
           return;
@@ -53,7 +54,7 @@ export default function SchedulePage() {
         setFilteredSchedule(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load schedule');
-        console.error('Error fetching schedule:', err);
+        logger.error('Error fetching schedule', err as Error, { module: 'SchedulePage', action: 'fetchSchedule' });
       } finally {
         setLoading(false);
       }

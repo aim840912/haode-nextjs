@@ -9,6 +9,7 @@ import {
 } from '@/lib/news-storage';
 import { SupabaseStorageError } from '@/lib/supabase-storage';
 import { validateImageFile } from '@/lib/image-utils';
+import { apiLogger } from '@/lib/logger';
 
 // 初始化 news bucket
 let bucketInitialized = false;
@@ -19,7 +20,7 @@ async function ensureNewsBucketExists() {
       await initializeNewsBucket();
       bucketInitialized = true;
     } catch (error) {
-      console.error('無法初始化新聞 storage bucket:', error);
+      apiLogger.error('無法初始化新聞 storage bucket:', error);
       // 繼續執行，可能 bucket 已存在
     }
   }
@@ -52,9 +53,9 @@ export async function POST(request: NextRequest) {
 
     if (generateThumbnail) {
       // 上傳主圖片和縮圖
-      console.log(`📸 開始新聞圖片多檔案上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
+      apiLogger.info(`📸 開始新聞圖片多檔案上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
       const results = await uploadNewsImageWithThumbnail(file, newsId);
-      console.log('📸 新聞圖片多檔案上傳完成:', results);
+      apiLogger.info('📸 新聞圖片多檔案上傳完成:', results);
       
       return NextResponse.json({
         success: true,
@@ -66,9 +67,9 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // 單一檔案上傳（使用伺服器端函數繞過 RLS）
-      console.log(`📸 開始新聞圖片上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
+      apiLogger.info(`📸 開始新聞圖片上傳，新聞ID: ${newsId}, 檔案: ${file.name}`);
       const result = await uploadNewsImageServer(file, newsId);
-      console.log('📸 新聞圖片上傳完成:', result);
+      apiLogger.info('📸 新聞圖片上傳完成:', result);
       
       return NextResponse.json({
         success: true,
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('新聞圖片上傳失敗:', error);
+    apiLogger.error('新聞圖片上傳失敗:', error);
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
@@ -118,7 +119,7 @@ export async function DELETE(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('新聞圖片刪除失敗:', error);
+    apiLogger.error('新聞圖片刪除失敗:', error);
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(
@@ -155,7 +156,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('列出新聞圖片失敗:', error);
+    apiLogger.error('列出新聞圖片失敗:', error);
 
     if (error instanceof SupabaseStorageError) {
       return NextResponse.json(

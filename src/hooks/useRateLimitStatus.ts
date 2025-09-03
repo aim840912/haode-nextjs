@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { RateLimitError } from '@/lib/api-client';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate Limit 狀態資訊
@@ -197,11 +198,13 @@ export function useRateLimitStatus(): UseRateLimitStatusReturn {
       action: {
         label: '了解更多',
         onClick: () => {
-          console.info('Rate Limit Info:', {
+          logger.info('Rate Limit Info', {
             limit: error.limit,
             remaining: error.remaining,
             resetTime: new Date(error.resetTime * 1000),
-            retryAfter: error.retryAfter
+            retryAfter: error.retryAfter,
+            module: 'useRateLimitStatus',
+            action: 'showRateLimitInfo'
           });
         }
       }

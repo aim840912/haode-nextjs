@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import SimpleImage from '@/components/SimpleImage'
 import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
+import { logger } from '@/lib/logger'
 
 interface NewsItem {
   id: string
@@ -44,7 +45,7 @@ export default function NewsPage() {
         if (Array.isArray(data)) {
           setNews(data)
         } else {
-          console.error('API 回應格式錯誤：news data 不是陣列', result)
+          logger.error('API 回應格式錯誤：news data 不是陣列', new Error('非陣列格式'), { result, module: 'NewsPage', action: 'fetchNews' })
           setNews([])
         }
       } else {
@@ -53,13 +54,13 @@ export default function NewsPage() {
         setNews(newsData.default)
       }
     } catch (error) {
-      console.error('Error fetching news:', error)
+      logger.error('Error fetching news', error as Error, { module: 'NewsPage', action: 'fetchNews' })
       // 載入本地資料作為備案
       try {
         const newsData = await import('@/data/news.json')
         setNews(newsData.default)
       } catch (importError) {
-        console.error('Error importing local news data:', importError)
+        logger.error('Error importing local news data', importError as Error, { module: 'NewsPage', action: 'importLocalNewsData' })
       }
     } finally {
       setLoading(false)

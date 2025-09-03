@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { CSRFTokenManager, validateOrigin } from '@/lib/auth-middleware';
+import { apiLogger } from '@/lib/logger';
 
 /**
  * GET /api/csrf-token
@@ -82,7 +83,7 @@ export async function GET(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('CSRF token generation failed:', error);
+    apiLogger.error('CSRF token generation failed:', { module: 'CSRFToken', action: 'GET /api/csrf-token', error });
     
     return NextResponse.json(
       { 
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     );
 
   } catch (error) {
-    console.error('CSRF token validation failed:', error);
+    apiLogger.error('CSRF token validation failed:', { module: 'CSRFToken', action: 'POST /api/csrf-token', error });
     
     return NextResponse.json(
       { 
@@ -226,7 +227,7 @@ export async function DELETE(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('CSRF token deletion failed:', error);
+    apiLogger.error('CSRF token deletion failed:', { module: 'CSRFToken', action: 'DELETE /api/csrf-token', error });
     
     return NextResponse.json(
       { 

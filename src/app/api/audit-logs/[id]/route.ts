@@ -6,6 +6,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { auditLogService } from '@/services/auditLogService';
+import { apiLogger } from '@/lib/logger';
+import { withErrorHandler } from '@/lib/error-handler';
+import { success, error as errorResponse } from '@/lib/api-response';
+import { ValidationError, AuthorizationError, NotFoundError } from '@/lib/errors';
 
 // 統一的錯誤回應函數
 function createErrorResponse(message: string, status: number, details?: string) {
@@ -38,18 +42,17 @@ function createSuccessResponse(data?: any, message?: string, status: number = 20
 }
 
 // GET /api/audit-logs/[id] - 取得單個審計日誌詳情
-export async function GET(
+async function handleGET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  const { id } = await params;
 
-    // 驗證使用者認證
-    const user = await getCurrentUser();
-    if (!user) {
-      return createErrorResponse('未認證或會話已過期', 401);
-    }
+  // 驗證使用者認證
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new AuthorizationError('未認證或會話已過期');
+  }
 
     // 檢查權限（只有管理員和稽核人員可以查看審計日誌詳情）
     const supabase = await createServerSupabaseClient();
@@ -60,7 +63,7 @@ export async function GET(
       .single();
 
     if (!profile || !['admin', 'auditor'].includes(profile.role)) {
-      return createErrorResponse('權限不足，只有管理員和稽核人員可以查看審計日誌', 403);
+      throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌');
     }
 
     // 取得審計日誌
@@ -71,39 +74,45 @@ export async function GET(
       .single();
 
     if (error) {
-      console.error('取得審計日誌失敗:', error);
-      return createErrorResponse('取得審計日誌失敗', 500, error.message);
+      apiLogger.error('取得審計日誌失敗', error, {
+        module: 'AuditLogDetailAPI',
+        action: 'GET /api/audit-logs/[id]',
+        metadata: { auditLogId: id }
+      });
+      throw new Error('取得審計日誌失敗');
     }
 
     if (!auditLog) {
-      return createErrorResponse('找不到指定的審計日誌', 404);
+      throw new NotFoundError('找不到指定的審計日誌');
     }
 
-    return createSuccessResponse(auditLog);
+    apiLogger.info('取得審計日誌詳情成功', {
+      module: 'AuditLogDetailAPI',
+      action: 'GET /api/audit-logs/[id]',
+      metadata: { auditLogId: id }
+    });
 
-  } catch (error) {
-    console.error('Error fetching audit log:', error);
-    return createErrorResponse(
-      '取得審計日誌失敗', 
-      500, 
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-  }
+    return success(auditLog);
+
 }
 
+export const GET = withErrorHandler(handleGET, {
+  module: 'AuditLogDetailAPI',
+  enableAuditLog: false
+});
+
 // DELETE /api/audit-logs/[id] - 刪除單個審計日誌
-export async function DELETE(
+async function handleDELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params;
+  const { id } = await params;
 
-    // 驗證使用者認證
-    const user = await getCurrentUser();
-    if (!user) {
-      return createErrorResponse('未認證或會話已過期', 401);
-    }
+  // 驗證使用者認證
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new AuthorizationError('未認證或會話已過期');
+  }
 
     // 檢查權限（只有管理員可以刪除審計日誌）
     const supabase = await createServerSupabaseClient();
@@ -114,7 +123,7 @@ export async function DELETE(
       .single();
 
     if (!profile || profile.role !== 'admin') {
-      return createErrorResponse('權限不足，只有管理員可以刪除審計日誌', 403);
+      throw new AuthorizationError('權限不足，只有管理員可以刪除審計日誌');
     }
 
     // 先取得要刪除的日誌資料（用於記錄刪除操作）
@@ -125,12 +134,16 @@ export async function DELETE(
       .single();
 
     if (fetchError) {
-      console.error('取得待刪除審計日誌失敗:', fetchError);
-      return createErrorResponse('找不到指定的審計日誌', 404);
+      apiLogger.error('取得待刪除審計日誌失敗', fetchError, {
+        module: 'AuditLogDetailAPI',
+        action: 'DELETE /api/audit-logs/[id]',
+        metadata: { auditLogId: id }
+      });
+      throw new NotFoundError('找不到指定的審計日誌');
     }
 
     if (!auditLogToDelete) {
-      return createErrorResponse('找不到指定的審計日誌', 404);
+      throw new NotFoundError('找不到指定的審計日誌');
     }
 
     // 執行刪除操作
@@ -140,8 +153,12 @@ export async function DELETE(
       .eq('id', id);
 
     if (deleteError) {
-      console.error('刪除審計日誌失敗:', deleteError);
-      return createErrorResponse('刪除審計日誌失敗', 500, deleteError.message);
+      apiLogger.error('刪除審計日誌失敗', deleteError, {
+        module: 'AuditLogDetailAPI',
+        action: 'DELETE /api/audit-logs/[id]',
+        metadata: { auditLogId: id }
+      });
+      throw new Error('刪除審計日誌失敗');
     }
 
     // 記錄刪除操作的審計日誌
@@ -162,29 +179,36 @@ export async function DELETE(
       },
       ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
       user_agent: request.headers.get('user-agent') || undefined
-    }).catch(console.error); // 不讓審計日誌記錄失敗影響主要操作
+    }).catch(error => {
+      apiLogger.error('記錄刪除審計日誌操作失敗', error, {
+        module: 'AuditLogDetailAPI',
+        action: 'DELETE /api/audit-logs/[id]'
+      });
+    }); // 不讓審計日誌記錄失敗影響主要操作
 
-    return createSuccessResponse(null, '審計日誌已成功刪除');
+    apiLogger.info('刪除審計日誌成功', {
+      module: 'AuditLogDetailAPI',
+      action: 'DELETE /api/audit-logs/[id]',
+      metadata: { auditLogId: id }
+    });
 
-  } catch (error) {
-    console.error('Error deleting audit log:', error);
-    return createErrorResponse(
-      '刪除審計日誌失敗', 
-      500, 
-      error instanceof Error ? error.message : 'Unknown error'
-    );
-  }
+    return success(null, '審計日誌已成功刪除');
 }
+
+export const DELETE = withErrorHandler(handleDELETE, {
+  module: 'AuditLogDetailAPI',
+  enableAuditLog: true
+});
 
 // 處理其他不支援的 HTTP 方法
 export async function POST() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }
 
 export async function PUT() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }
 
 export async function PATCH() {
-  return createErrorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405);
 }

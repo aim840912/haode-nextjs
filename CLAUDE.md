@@ -91,7 +91,13 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 
 ### Logging Standards
 
-**專案已完成 console.log 替換** - 主要 API 路由已使用統一 logger 系統
+**專案 console.log 替換 100% 完成** - 所有應用程式碼已使用統一 logger 系統 🎊 (2025-09-03 完成)
+- ✅ 所有 API 路由 (9個檔案，35處)
+- ✅ 所有核心服務 (1個檔案，1處)  
+- ✅ 所有 React 元件 (8個檔案，10處)
+- ✅ 所有工具庫和設定 (9個檔案，25處)
+- ✅ 所有頁面元件 (9個檔案，16處)
+- 📊 總計：36個檔案，105處 console.* → 結構化 logger
 
 - **NEVER use console.log/warn/error** - Use the project's logger system instead
 - **Import the appropriate logger**:
@@ -111,6 +117,178 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
   - `cacheLogger` for cache operations
   - `authLogger` for authentication logic
 - **錯誤自動記錄**: 使用 `withErrorHandler` 中間件時，錯誤會自動記錄到適當級別
+
+#### Logger 使用範例
+
+**API 路由日誌記錄**:
+```typescript
+import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/error-handler'
+import { ValidationError } from '@/lib/errors'
+
+// ✅ 正確：使用 apiLogger 記錄 API 操作
+async function handlePOST(req: NextRequest) {
+  apiLogger.info('開始建立新資源', {
+    module: 'ResourceAPI',
+    action: 'create',
+    requestId: req.headers.get('x-request-id')
+  })
+  
+  try {
+    const result = await service.create(data)
+    apiLogger.info('資源建立成功', {
+      module: 'ResourceAPI', 
+      action: 'create',
+      metadata: { resourceId: result.id }
+    })
+    return success(result, '建立成功')
+  } catch (error) {
+    // 錯誤會被 withErrorHandler 自動記錄
+    throw new ValidationError('建立失敗')
+  }
+}
+
+export const POST = withErrorHandler(handlePOST, {
+  module: 'ResourceAPI'
+})
+
+// ❌ 錯誤：不要使用 console.log
+// console.log('Creating resource...') // 禁止
+```
+
+**認證系統日誌記錄**:
+```typescript
+import { authLogger } from '@/lib/logger'
+
+// ✅ 正確：使用 authLogger 記錄認證事件
+export async function authenticateUser(token: string) {
+  authLogger.info('使用者認證開始', {
+    module: 'Auth',
+    action: 'authenticate'
+  })
+  
+  try {
+    const user = await verifyToken(token)
+    authLogger.info('使用者認證成功', {
+      module: 'Auth',
+      action: 'authenticate', 
+      metadata: { userId: user.id }
+    })
+    return user
+  } catch (error) {
+    authLogger.error('使用者認證失敗', error as Error, {
+      module: 'Auth',
+      action: 'authenticate',
+      metadata: { tokenPreview: token.substring(0, 10) + '...' }
+    })
+    throw error
+  }
+}
+```
+
+**資料庫操作日誌記錄**:
+```typescript
+import { dbLogger } from '@/lib/logger'
+
+// ✅ 正確：使用 dbLogger 記錄資料庫操作
+export class ProductService {
+  async findById(id: string) {
+    const timer = dbLogger.timer('查詢產品')
+    
+    try {
+      dbLogger.debug('開始查詢產品', {
+        module: 'ProductService',
+        action: 'findById',
+        metadata: { productId: id }
+      })
+      
+      const result = await this.supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (result.error) {
+        dbLogger.error('產品查詢失敗', result.error as Error, {
+          module: 'ProductService',
+          action: 'findById',
+          metadata: { productId: id }
+        })
+        throw ErrorFactory.fromSupabaseError(result.error)
+      }
+      
+      const duration = timer.end({ metadata: { productId: id } })
+      dbLogger.info(`產品查詢完成 (${duration.toFixed(2)}ms)`, {
+        module: 'ProductService',
+        action: 'findById',
+        metadata: { productId: id, found: !!result.data }
+      })
+      
+      return result.data
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+}
+```
+
+**React 元件錯誤處理**:
+```typescript
+import { logger } from '@/lib/logger'
+import React from 'react'
+
+// ✅ 正確：使用 logger.fatal 記錄嚴重錯誤
+export class ErrorBoundary extends React.Component {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    logger.fatal('React 元件發生嚴重錯誤', error, {
+      component: 'ErrorBoundary',
+      action: 'componentDidCatch',
+      metadata: {
+        errorMessage: error.message,
+        componentStack: errorInfo.componentStack,
+        errorBoundary: this.constructor.name
+      }
+    })
+  }
+}
+
+// ❌ 錯誤：不要使用 console.error
+// console.error('Component error:', error) // 禁止
+```
+
+**工具函數日誌記錄**:
+```typescript
+import { logger } from '@/lib/logger'
+
+// ✅ 正確：使用適當的日誌級別
+export function processImageUpload(file: File) {
+  logger.info('開始處理圖片上傳', {
+    module: 'ImageUtils',
+    action: 'processUpload',
+    metadata: { 
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type 
+    }
+  })
+  
+  if (file.size > MAX_FILE_SIZE) {
+    logger.warn('圖片檔案過大', {
+      module: 'ImageUtils', 
+      action: 'processUpload',
+      metadata: { 
+        fileName: file.name,
+        fileSize: file.size,
+        maxSize: MAX_FILE_SIZE 
+      }
+    })
+    throw new ValidationError('圖片檔案不能超過 10MB')
+  }
+  
+  // 處理邏輯...
+}
+```
 
 ### Error Handling
 
@@ -306,6 +484,7 @@ When multiple valid approaches exist, choose based on:
 - [ ] Tests written and passing
 - [ ] Code follows project conventions
 - [ ] No linter/formatter warnings
+- [ ] **No console.log/warn/error in production code** - Use project logger system
 - [ ] Commit messages are clear
 - [ ] Implementation matches plan
 - [ ] No TODOs without issue numbers
@@ -333,6 +512,7 @@ When multiple valid approaches exist, choose based on:
 - Learn from existing implementations
 - Stop after 3 failed attempts and reassess
 - Use appropriate logger (apiLogger, dbLogger, etc.) with proper context
+- **檢查 console.* 使用**: 定期執行 `grep -r "console\." src/ --exclude-dir=node_modules` 確保沒有新的 console 使用
 
 ## API 開發準則
 

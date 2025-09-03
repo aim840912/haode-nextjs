@@ -1,6 +1,7 @@
 'use client'
 
 import { Component, ReactNode, ErrorInfo } from 'react'
+import { logger } from '@/lib/logger'
 
 interface Props {
   children: ReactNode
@@ -26,7 +27,17 @@ export class ErrorBoundary extends Component<Props, State> {
   }
   
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error as Error, errorInfo)
+    // 使用統一 logger 記錄 React 元件錯誤
+    logger.fatal('ErrorBoundary 捕獲 React 組件錯誤', error, {
+      component: 'ErrorBoundary',
+      action: 'componentDidCatch',
+      metadata: {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        componentStack: errorInfo.componentStack,
+        errorBoundary: 'global'
+      }
+    });
     
     // 呼叫自定義錯誤處理器
     if (this.props.onError) {

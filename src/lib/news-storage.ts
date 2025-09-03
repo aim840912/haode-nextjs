@@ -1,6 +1,7 @@
 import { supabase, supabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { SupabaseStorageError } from './supabase-storage';
+import { dbLogger } from '@/lib/logger';
 
 export const NEWS_STORAGE_BUCKET = 'news';
 
@@ -34,12 +35,22 @@ export async function initializeNewsBucket() {
         throw new SupabaseStorageError('建立新聞 storage bucket 失敗', error);
       }
 
-      console.log('新聞 Storage bucket 建立成功:', data);
+      dbLogger.info('新聞 Storage bucket 建立成功', {
+        module: 'news-storage',
+        action: 'initializeNewsBucket',
+        bucket: NEWS_STORAGE_BUCKET,
+        bucketData: data
+      });
     }
 
     return true;
   } catch (error) {
-    console.error('初始化新聞 storage bucket 失敗:', error);
+    dbLogger.error('初始化新聞 storage bucket 失敗', {
+      module: 'news-storage',
+      action: 'initializeNewsBucket',
+      bucket: NEWS_STORAGE_BUCKET,
+      error: error instanceof Error ? error.message : String(error)
+    });
     throw error;
   }
 }
@@ -247,7 +258,12 @@ export async function deleteNewsImage(filePath: string): Promise<void> {
  */
 export async function deleteAllNewsImages(newsId: string): Promise<void> {
   try {
-    console.log(`🗑️ 開始刪除新聞 ${newsId} 的圖片...`);
+    dbLogger.info('開始刪除新聞圖片', {
+      module: 'news-storage',
+      action: 'deleteAllNewsImages',
+      newsId,
+      bucket: NEWS_STORAGE_BUCKET
+    });
     
     // 列出新聞資料夾下的所有檔案
     const { data: files, error: listError } = await supabase.storage
@@ -255,16 +271,34 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       .list(newsId);
 
     if (listError) {
-      console.error(`❌ 列出新聞 ${newsId} 圖片失敗:`, listError);
+      dbLogger.error('列出新聞圖片失敗', {
+        module: 'news-storage',
+        action: 'deleteAllNewsImages',
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET,
+        error: listError.message
+      });
       throw new SupabaseStorageError('列出新聞圖片失敗', listError);
     }
 
     if (!files || files.length === 0) {
-      console.log(`ℹ️ 新聞 ${newsId} 沒有圖片需要刪除`);
+      dbLogger.info('新聞沒有圖片需要刪除', {
+        module: 'news-storage',
+        action: 'deleteAllNewsImages',
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET
+      });
       return;
     }
 
-    console.log(`📁 發現 ${files.length} 個檔案需要刪除:`, files.map((f: any) => f.name));
+    dbLogger.info('發現檔案需要刪除', {
+      module: 'news-storage',
+      action: 'deleteAllNewsImages',
+      newsId,
+      bucket: NEWS_STORAGE_BUCKET,
+      fileCount: files.length,
+      fileNames: files.map((f: any) => f.name)
+    });
 
     // 建立要刪除的檔案路徑列表
     const filePaths = files.map((file: any) => `${newsId}/${file.name}`);
@@ -275,17 +309,35 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       .remove(filePaths);
 
     if (deleteError) {
-      console.error(`❌ 批量刪除新聞 ${newsId} 圖片失敗:`, deleteError);
+      dbLogger.error('批量刪除新聞圖片失敗', {
+        module: 'news-storage',
+        action: 'deleteAllNewsImages',
+        newsId,
+        bucket: NEWS_STORAGE_BUCKET,
+        error: deleteError.message
+      });
       throw new SupabaseStorageError('批量刪除新聞圖片失敗', deleteError);
     }
 
-    console.log(`✅ 成功刪除新聞 ${newsId} 的 ${filePaths.length} 張圖片`);
+    dbLogger.info('成功刪除新聞圖片', {
+      module: 'news-storage',
+      action: 'deleteAllNewsImages',
+      newsId,
+      bucket: NEWS_STORAGE_BUCKET,
+      deletedCount: filePaths.length
+    });
     
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
       throw error;
     }
-    console.error(`💥 刪除新聞 ${newsId} 圖片過程發生未知錯誤:`, error);
+    dbLogger.error('刪除新聞圖片過程發生未知錯誤', {
+      module: 'news-storage',
+      action: 'deleteAllNewsImages',
+      newsId,
+      bucket: NEWS_STORAGE_BUCKET,
+      error: error instanceof Error ? error.message : String(error)
+    });
     throw new SupabaseStorageError('刪除新聞圖片過程發生未知錯誤', error);
   }
 }

@@ -2,6 +2,7 @@
 
 import { Component, ReactNode, ErrorInfo } from 'react';
 import Link from 'next/link';
+import { authLogger } from '@/lib/logger';
 
 interface AuthErrorBoundaryState {
   hasError: boolean;
@@ -28,7 +29,17 @@ export class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErr
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('AuthErrorBoundary 捕獲錯誤:', error as Error, errorInfo);
+    // 使用 authLogger 記錄認證錯誤邊界錯誤
+    authLogger.fatal('AuthErrorBoundary 捕獲認證相關錯誤', error, {
+      component: 'AuthErrorBoundary',
+      action: 'componentDidCatch',
+      metadata: {
+        errorMessage: error.message,
+        errorStack: error.stack,
+        componentStack: errorInfo.componentStack,
+        errorBoundary: 'authentication'
+      }
+    });
     
     this.setState({
       error,
@@ -37,10 +48,13 @@ export class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErr
 
     // 在開發環境下記錄詳細錯誤信息
     if (process.env.NODE_ENV === 'development') {
-      console.error('驗證錯誤詳情:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
+      authLogger.debug('認證錯誤詳情（開發模式）', {
+        component: 'AuthErrorBoundary', 
+        metadata: {
+          error: error.message,
+          stack: error.stack,
+          componentStack: errorInfo.componentStack,
+        }
       });
     }
   }

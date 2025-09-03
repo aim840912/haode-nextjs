@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { Location } from '@/types/location'
 import Link from 'next/link'
 import SimpleImage, { AvatarSimpleImage } from '@/components/SimpleImage'
+import { logger } from '@/lib/logger'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -41,11 +42,11 @@ export default function LocationsPage() {
           setSelectedStore(data[0])
         }
       } else {
-        console.error('API 回應格式錯誤：locations data 不是陣列', result)
+        logger.error('API 回應格式錯誤：locations data 不是陣列', new Error('非陣列格式'), { result, module: 'LocationsPage', action: 'fetchLocations' })
         setStoreLocations([])
       }
     } catch (error) {
-      console.error('Error fetching locations:', error)
+      logger.error('Error fetching locations', error as Error, { module: 'LocationsPage', action: 'fetchLocations' })
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseProductService } from '@/services/supabaseProductService'
+import { apiLogger } from '@/lib/logger'
 
 export async function GET() {
   try {
@@ -12,7 +13,7 @@ export async function GET() {
     
     return NextResponse.json(categories)
   } catch (error) {
-    console.error('Error fetching categories:', error)
+    apiLogger.error('Error fetching categories:', { module: 'ProductCategories', action: 'GET /api/products/categories', error })
     return NextResponse.json({ error: 'Failed to fetch categories' }, { status: 500 })
   }
 }

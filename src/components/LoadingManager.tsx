@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
 import LoadingSpinner, { LoadingOverlay } from './LoadingSpinner'
+import { logger } from '@/lib/logger'
 
 interface LoadingTask {
   id: string
@@ -71,7 +72,7 @@ export function LoadingManager({
     tasks.forEach(task => {
       if (task.timeout) {
         const timeoutId = setTimeout(() => {
-          console.warn(`Loading task "${task.id}" timed out after ${task.timeout}ms`)
+          logger.warn('Loading task timed out', { taskId: task.id, timeout: task.timeout, module: 'LoadingManager', action: 'handleTimeout' })
           stopLoading(task.id)
         }, task.timeout)
         timeoutIds.push(timeoutId)

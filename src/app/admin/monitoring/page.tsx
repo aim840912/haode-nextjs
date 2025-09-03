@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { logger } from '@/lib/logger'
 import {
   ChartBarIcon,
   ClockIcon,
@@ -139,13 +140,13 @@ export default function MonitoringDashboard() {
       if (errorStatsResult.success) {
         setErrorStats(errorStatsResult.data.errorStats)
       } else {
-        console.warn('錯誤統計載入失敗:', errorStatsResult.message)
+        logger.warn('錯誤統計載入失敗', { message: errorStatsResult.message, module: 'MonitoringPage', action: 'fetchMetrics' })
         // 錯誤統計失敗不影響整體載入
       }
 
       setLastRefresh(new Date().toLocaleString('zh-TW'))
     } catch (err) {
-      console.error('獲取指標時發生錯誤:', err)
+      logger.error('獲取指標時發生錯誤', err as Error, { module: 'MonitoringPage', action: 'fetchMetrics' })
       setError(err instanceof Error ? err.message : '未知錯誤')
       setSystemHealth(prev => ({ ...prev, status: 'error' }))
     } finally {
