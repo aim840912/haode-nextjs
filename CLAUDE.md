@@ -10,7 +10,7 @@ The orignal prompt is from: https://www.dzombak.com/blog/2025/08/getting-good-re
 - **Learning from existing code** - Study and plan before implementing
 - **Pragmatic over dogmatic** - Adapt to project reality
 - **Clear intent over clever code** - Be boring and obvious
-- **使用繁體中文**
+- **使用繁體中文** - use this languague
 
 ### Simplicity Means
 
@@ -93,7 +93,7 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 
 **專案 console.log 替換 100% 完成** - 所有應用程式碼已使用統一 logger 系統 🎊 (2025-09-03 完成)
 - ✅ 所有 API 路由 (9個檔案，35處)
-- ✅ 所有核心服務 (1個檔案，1處)  
+- ✅ 所有核心服務 (1個檔案，1處)
 - ✅ 所有 React 元件 (8個檔案，10處)
 - ✅ 所有工具庫和設定 (9個檔案，25處)
 - ✅ 所有頁面元件 (9個檔案，16處)
@@ -106,7 +106,7 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
   ```
 - **Use appropriate log levels**:
   - `logger.debug()` - Development debugging info
-  - `logger.info()` - General information and user actions  
+  - `logger.info()` - General information and user actions
   - `logger.warn()` - Warnings that don't break functionality
   - `logger.error()` - Errors with recovery possible
   - `logger.fatal()` - Critical system errors
@@ -122,7 +122,7 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 
 **專案 API 錯誤處理覆蓋率 100% 達成** - 所有 API 路由已使用統一錯誤處理系統 🎯 (2025-09-04 完成)
 - ✅ 所有核心 API 路由 (35個檔案)
-- ✅ 所有系統管理 API (5個檔案)  
+- ✅ 所有系統管理 API (5個檔案)
 - ✅ 所有新版本 API (/api/v1/)
 - 📊 總計：40個 API 路由檔案，從 58% → 100% 覆蓋率
 
@@ -146,11 +146,11 @@ async function handlePOST(req: NextRequest) {
     action: 'create',
     requestId: req.headers.get('x-request-id')
   })
-  
+
   try {
     const result = await service.create(data)
     apiLogger.info('資源建立成功', {
-      module: 'ResourceAPI', 
+      module: 'ResourceAPI',
       action: 'create',
       metadata: { resourceId: result.id }
     })
@@ -179,12 +179,12 @@ export async function authenticateUser(token: string) {
     module: 'Auth',
     action: 'authenticate'
   })
-  
+
   try {
     const user = await verifyToken(token)
     authLogger.info('使用者認證成功', {
       module: 'Auth',
-      action: 'authenticate', 
+      action: 'authenticate',
       metadata: { userId: user.id }
     })
     return user
@@ -207,20 +207,20 @@ import { dbLogger } from '@/lib/logger'
 export class ProductService {
   async findById(id: string) {
     const timer = dbLogger.timer('查詢產品')
-    
+
     try {
       dbLogger.debug('開始查詢產品', {
         module: 'ProductService',
         action: 'findById',
         metadata: { productId: id }
       })
-      
+
       const result = await this.supabase
         .from('products')
         .select('*')
         .eq('id', id)
         .single()
-      
+
       if (result.error) {
         dbLogger.error('產品查詢失敗', result.error as Error, {
           module: 'ProductService',
@@ -229,14 +229,14 @@ export class ProductService {
         })
         throw ErrorFactory.fromSupabaseError(result.error)
       }
-      
+
       const duration = timer.end({ metadata: { productId: id } })
       dbLogger.info(`產品查詢完成 (${duration.toFixed(2)}ms)`, {
         module: 'ProductService',
         action: 'findById',
         metadata: { productId: id, found: !!result.data }
       })
-      
+
       return result.data
     } catch (error) {
       timer.end()
@@ -279,26 +279,26 @@ export function processImageUpload(file: File) {
   logger.info('開始處理圖片上傳', {
     module: 'ImageUtils',
     action: 'processUpload',
-    metadata: { 
+    metadata: {
       fileName: file.name,
       fileSize: file.size,
-      fileType: file.type 
+      fileType: file.type
     }
   })
-  
+
   if (file.size > MAX_FILE_SIZE) {
     logger.warn('圖片檔案過大', {
-      module: 'ImageUtils', 
+      module: 'ImageUtils',
       action: 'processUpload',
-      metadata: { 
+      metadata: {
         fileName: file.name,
         fileSize: file.size,
-        maxSize: MAX_FILE_SIZE 
+        maxSize: MAX_FILE_SIZE
       }
     })
     throw new ValidationError('圖片檔案不能超過 10MB')
   }
-  
+
   // 處理邏輯...
 }
 ```
@@ -317,7 +317,7 @@ export function processImageUpload(file: File) {
 #### 可用的錯誤類型
 
 - `ValidationError` - 輸入驗證失敗 (400)
-- `AuthorizationError` - 權限不足 (403) 
+- `AuthorizationError` - 權限不足 (403)
 - `NotFoundError` - 資源不存在 (404)
 - `MethodNotAllowedError` - HTTP 方法不支援 (405) ← 新增
 - `DatabaseError` - 資料庫操作失敗 (500)
@@ -342,12 +342,12 @@ import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 
 async function handlePOST(request: NextRequest) {
   const data = await request.json()
-  
+
   // 使用標準錯誤類別
   if (!data.title) {
     throw new ValidationError('標題為必填欄位')
   }
-  
+
   const result = await service.create(data)
   return created(result, '建立成功')
 }
@@ -394,15 +394,15 @@ When multiple valid approaches exist, choose based on:
 1. **使用錯誤處理中間件**:
    ```typescript
    import { withErrorHandler } from '@/lib/error-handler'
-   
+
    async function handleMethod(request: NextRequest, params?: any) {
      // 業務邏輯 - 直接拋出錯誤，中間件會處理
      if (!isValid) throw new ValidationError('驗證失敗')
-     
+
      const result = await service.operation()
      return success(result, '操作成功')
    }
-   
+
    export const METHOD = withErrorHandler(handleMethod, {
      module: 'YourModule',
      enableAuditLog: true // 根據需要
@@ -412,13 +412,13 @@ When multiple valid approaches exist, choose based on:
 2. **使用統一回應格式**:
    ```typescript
    import { success, created, successWithPagination } from '@/lib/api-response'
-   
+
    // 一般成功回應
    return success(data, '操作成功')
-   
+
    // 建立資源回應
    return created(resource, '建立成功')
-   
+
    // 分頁回應
    return successWithPagination(paginatedResult, '查詢成功')
    ```
@@ -459,7 +459,7 @@ async function handleGET(
 1. **使用基礎介面**:
    ```typescript
    import { BaseService, PaginatedService, SearchableService } from '@/lib/base-service'
-   
+
    // 定義服務介面
    interface IYourService extends BaseService<EntityType, CreateDTO, UpdateDTO> {
      // 自定義方法
@@ -470,7 +470,7 @@ async function handleGET(
    ```typescript
    // Supabase 服務
    import { AbstractSupabaseService } from '@/lib/abstract-supabase-service'
-   
+
    class YourSupabaseService extends AbstractSupabaseService<Entity, CreateDTO, UpdateDTO> {
      constructor() {
        super({
@@ -480,10 +480,10 @@ async function handleGET(
        })
      }
    }
-   
+
    // JSON 檔案服務
    import { AbstractJsonService } from '@/lib/abstract-json-service'
-   
+
    class YourJsonService extends AbstractJsonService<Entity, CreateDTO, UpdateDTO> {
      constructor() {
        super({
@@ -496,7 +496,7 @@ async function handleGET(
 
 3. **統一方法命名**:
    - `findAll()` - 取得所有資料
-   - `findById(id)` - 根據 ID 取得資料  
+   - `findById(id)` - 根據 ID 取得資料
    - `create(data)` - 建立新資料
    - `update(id, data)` - 更新資料
    - `delete(id)` - 刪除資料
@@ -508,7 +508,7 @@ async function handleGET(
    // 建立適配器以相容舊介面
    class LegacyServiceAdapter {
      constructor(private service: INewService) {}
-     
+
      async getItems() { return this.service.findAll() }
      async addItem(data) { return this.service.create(data) }
      // ... 其他舊方法對應
@@ -650,14 +650,14 @@ const CreateSchema = z.object({
 async function handlePOST(req: NextRequest, { user }: { user: any }) {
   const body = await req.json()
   const result = CreateSchema.safeParse(body)
-  
+
   if (!result.success) {
-    const errors = result.error.issues.map(issue => 
+    const errors = result.error.issues.map(issue =>
       `${issue.path.join('.')}: ${issue.message}`
     ).join(', ')
     throw new ValidationError(`驗證失敗: ${errors}`)
   }
-  
+
   // 業務邏輯
   const data = await service.create(result.data)
   return success(data, '建立成功')
@@ -686,5 +686,5 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 
-      
+
       IMPORTANT: this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task.

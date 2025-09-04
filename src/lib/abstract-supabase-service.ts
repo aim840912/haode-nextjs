@@ -1,6 +1,6 @@
 /**
  * Supabase 抽象服務類別
- * 
+ *
  * 提供基於 Supabase 的服務實作基礎：
  * - 統一的資料庫操作
  * - 自動錯誤處理和轉換
@@ -10,10 +10,9 @@
 
 import { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseServer, getSupabaseAdmin } from '@/lib/supabase-auth'
-import { 
-  BaseService, 
+import {
+  BaseService,
   PaginatedService,
-  SearchableService,
   PaginatedResult,
   QueryOptions,
   PaginatedQueryOptions,
@@ -21,27 +20,42 @@ import {
   ServiceMetadata,
   createPaginatedResult,
   normalizeQueryOptions,
-  normalizePaginatedQueryOptions
+  normalizePaginatedQueryOptions,
 } from './base-service'
-import { ErrorFactory, DatabaseError, NotFoundError, ValidationError } from './errors'
+import { ErrorFactory, NotFoundError } from './errors'
 import { dbLogger } from './logger'
+import {
+  SupabaseQueryBuilder,
+  DataTransformer as InfraDataTransformer,
+} from '@/types/infrastructure.types'
 
 /**
- * Supabase 查詢建構器類型
+ * 資料轉換器介面（使用基礎設施類型）
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SupabaseQueryBuilder = any
+export interface DataTransformer<T, DbRecord = Record<string, unknown>>
+  extends InfraDataTransformer<T, DbRecord> {
+  // 為了滿足 ESLint，添加方法聲明
+  transform(record: DbRecord): T
+  reverseTransform?(entity: T): DbRecord
+}
 
 /**
- * 資料轉換器介面
+ * 資料庫記錄類型
  */
-export interface DataTransformer<T, DbRecord = Record<string, unknown>> {
-  /** 從資料庫記錄轉換為實體 */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fromDB(record: any): T
-  /** 從實體轉換為資料庫記錄 */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  toDB(entity: any): Partial<Record<string, unknown>>
+type DatabaseRecord = Record<string, unknown>
+
+/**
+ * 查詢建構器回應類型
+ */
+interface QueryResponse<T> {
+  data: T | null
+  error: Error | null
+}
+
+interface QueryArrayResponse<T> {
+  data: T[] | null
+  error: Error | null
+  count?: number | null
 }
 
 /**
@@ -60,20 +74,24 @@ export interface SupabaseServiceConfig extends ServiceConfig {
 
 /**
  * 抽象 Supabase 服務基礎類別
- * 
+ *
  * 提供標準 CRUD 操作的 Supabase 實作
  * 子類別只需要定義表格名稱和資料轉換邏輯
  */
-export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unknown>, UpdateDTO = Record<string, unknown>> 
-  implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T> {
-  
+export abstract class AbstractSupabaseService<
+    T,
+    CreateDTO = Record<string, unknown>,
+    UpdateDTO = Record<string, unknown>,
+  >
+  implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T>
+{
   protected readonly client: SupabaseClient
   protected readonly adminClient: SupabaseClient | null
   protected readonly config: SupabaseServiceConfig
   protected readonly metadata: ServiceMetadata
-  protected readonly transformer?: DataTransformer<T>
+  protected readonly transformer?: DataTransformer<T, DatabaseRecord>
 
-  constructor(config: SupabaseServiceConfig, transformer?: DataTransformer<T>) {
+  constructor(config: SupabaseServiceConfig, transformer?: DataTransformer<T, DatabaseRecord>) {
     this.config = {
       enableCache: false,
       cacheTTL: 300, // 5分鐘
@@ -82,18 +100,18 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       maxPageSize: 100,
       useAdminClient: false,
       defaultIncludes: [],
-      ...config
+      ...config,
     }
 
     this.client = getSupabaseServer()
     this.adminClient = getSupabaseAdmin()
     this.transformer = transformer
-    
+
     this.metadata = {
       name: `${config.tableName}Service`,
       version: '1.0.0',
       description: `Supabase service for ${config.tableName}`,
-      features: ['crud', 'pagination', 'caching']
+      features: ['crud', 'pagination', 'caching'],
     }
   }
 
@@ -114,31 +132,33 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 建立查詢建構器
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected createQuery(useAdmin: boolean = false): any {
+  protected createQuery<TRecord = DatabaseRecord>(
+    useAdmin: boolean = false
+  ): SupabaseQueryBuilder<TRecord> {
     const client = this.getClient(useAdmin)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const query: any = client.from(this.config.tableName)
-    
+    const query = client.from(this.config.tableName) as SupabaseQueryBuilder<TRecord>
+
     // Debug logging
     dbLogger.debug('Creating Supabase query', {
       metadata: {
         tableName: this.config.tableName,
         useAdmin,
-        clientType: client.constructor.name
-      }
+        clientType: client.constructor.name,
+      },
     })
-    
+
     return query
   }
 
   /**
    * 套用查詢選項到查詢建構器
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected applyQueryOptions(query: any, options?: QueryOptions): any {
+  protected applyQueryOptions<TRecord = DatabaseRecord>(
+    query: SupabaseQueryBuilder<TRecord>,
+    options?: QueryOptions
+  ): SupabaseQueryBuilder<TRecord> {
     const normalizedOptions = normalizeQueryOptions(options)
-    
+
     try {
       // 套用過濾條件
       if (Object.keys(normalizedOptions.filters).length > 0) {
@@ -150,8 +170,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       }
 
       // 套用排序
-      query = query.order(normalizedOptions.sortBy, { 
-        ascending: normalizedOptions.sortOrder === 'asc' 
+      query = query.order(normalizedOptions.sortBy, {
+        ascending: normalizedOptions.sortOrder === 'asc',
       })
 
       // 套用軟刪除過濾
@@ -166,8 +186,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
           tableName: this.config.tableName,
           options: normalizedOptions,
           queryType: typeof query,
-          queryMethods: Object.getOwnPropertyNames(query)
-        }
+          queryMethods: Object.getOwnPropertyNames(query),
+        },
       })
       throw error
     }
@@ -176,25 +196,28 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 處理 Supabase 錯誤
    */
-  protected handleError(error: unknown, operation: string, context?: Record<string, unknown>): never {
+  protected handleError(
+    error: unknown,
+    operation: string,
+    context?: Record<string, unknown>
+  ): never {
     dbLogger.error(`Supabase ${operation} 操作失敗`, error as Error, {
       module: this.metadata.name,
       action: operation,
-      metadata: context
+      metadata: context,
     })
 
     throw ErrorFactory.fromSupabaseError(error, {
       module: this.metadata.name,
       action: operation,
-      ...context
+      ...context,
     })
   }
 
   /**
    * 轉換資料庫記錄為實體
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected transformFromDB(record: any): T {
+  protected transformFromDB(record: DatabaseRecord): T {
     if (this.transformer) {
       return this.transformer.fromDB(record)
     }
@@ -204,8 +227,7 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   /**
    * 轉換實體為資料庫記錄
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected transformToDB(entity: any): Record<string, unknown> {
+  protected transformToDB(entity: Partial<CreateDTO> | Partial<UpdateDTO>): DatabaseRecord {
     if (this.transformer) {
       return this.transformer.toDB(entity)
     }
@@ -219,11 +241,10 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
     try {
       const normalizedOptions = normalizeQueryOptions(options)
       const client = this.getClient()
-      
+
       // Build query directly to avoid abstraction issues
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = client.from(this.config.tableName)
-      
+      let query = client.from(this.config.tableName) as SupabaseQueryBuilder<DatabaseRecord>
+
       // Apply filters
       if (Object.keys(normalizedOptions.filters).length > 0) {
         Object.entries(normalizedOptions.filters).forEach(([key, value]) => {
@@ -232,29 +253,31 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
           }
         })
       }
-      
+
       // Apply ordering
-      query = query.order(normalizedOptions.sortBy, { 
-        ascending: normalizedOptions.sortOrder === 'asc' 
+      query = query.order(normalizedOptions.sortBy, {
+        ascending: normalizedOptions.sortOrder === 'asc',
       })
-      
+
       // Apply soft delete filtering
       if (this.config.softDeleteField) {
         query = query.is(this.config.softDeleteField, null)
       }
-      
-      const { data, error } = await query.select('*')
-      
+
+      const { data, error } = (await query.select('*')) as Promise<
+        QueryArrayResponse<DatabaseRecord>
+      >
+
       if (error) {
         this.handleError(error, 'findAll', { options })
       }
 
-      const result = (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
-      
+      const result = (data || []).map((record: DatabaseRecord) => this.transformFromDB(record))
+
       dbLogger.info(`取得 ${this.config.tableName} 列表成功`, {
         module: this.metadata.name,
         action: 'findAll',
-        metadata: { count: result.length, options }
+        metadata: { count: result.length, options },
       })
 
       return result
@@ -268,18 +291,17 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
    */
   async findById(id: string): Promise<T | null> {
     try {
-      let query = this.createQuery()
-      
+      let query = this.createQuery<DatabaseRecord>()
+
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = (query as any).is(this.config.softDeleteField, null)
+        query = query.is(this.config.softDeleteField, null)
       }
 
-      const { data, error } = await query
-        .select('*')
-        .eq('id', id)
-        .single()
-      
+      const { data, error } = (await query.select('*').eq('id', id).single()) as Promise<
+        QueryResponse<DatabaseRecord>
+      >
+
       if (error) {
         if (error.code === 'PGRST116') {
           // 找不到記錄
@@ -289,11 +311,11 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       }
 
       const result = data ? this.transformFromDB(data) : null
-      
+
       dbLogger.debug(`取得 ${this.config.tableName} 詳情`, {
         module: this.metadata.name,
         action: 'findById',
-        metadata: { id, found: !!result }
+        metadata: { id, found: !!result },
       })
 
       return result
@@ -309,23 +331,23 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
     try {
       const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
-      
-      const { data: result, error } = await client
+
+      const { data: result, error } = (await client
         .from(this.config.tableName)
         .insert([dbData])
         .select()
-        .single()
-      
+        .single()) as Promise<QueryResponse<DatabaseRecord>>
+
       if (error) {
         this.handleError(error, 'create', { data: dbData })
       }
 
       const entity = this.transformFromDB(result)
-      
+
       dbLogger.info(`建立 ${this.config.tableName} 成功`, {
         module: this.metadata.name,
         action: 'create',
-        metadata: { id: result.id }
+        metadata: { id: result.id },
       })
 
       return entity
@@ -341,21 +363,20 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
     try {
       const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = client.from(this.config.tableName)
-      
+
+      let query = client.from(this.config.tableName) as SupabaseQueryBuilder<DatabaseRecord>
+
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = (query as any).is(this.config.softDeleteField, null)
+        query = query.is(this.config.softDeleteField, null)
       }
 
-      const { data: result, error } = await query
+      const { data: result, error } = (await query
         .update(dbData)
         .eq('id', id)
         .select()
-        .single()
-      
+        .single()) as Promise<QueryResponse<DatabaseRecord>>
+
       if (error) {
         this.handleError(error, 'update', { id, data: dbData })
       }
@@ -364,16 +385,16 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
         throw new NotFoundError(`${this.config.tableName} not found`, {
           module: this.metadata.name,
           action: 'update',
-          context: { id }
+          context: { id },
         })
       }
 
       const entity = this.transformFromDB(result)
-      
+
       dbLogger.info(`更新 ${this.config.tableName} 成功`, {
         module: this.metadata.name,
         action: 'update',
-        metadata: { id }
+        metadata: { id },
       })
 
       return entity
@@ -388,37 +409,33 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   async delete(id: string): Promise<void> {
     try {
       const client = this.getClient(true) // 使用管理員權限
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let query: any = client.from(this.config.tableName)
-      
+
+      const query = client.from(this.config.tableName) as SupabaseQueryBuilder<DatabaseRecord>
+
       if (this.config.softDeleteField) {
         // 軟刪除
         const { error } = await query
           .update({ [this.config.softDeleteField]: new Date().toISOString() })
           .eq('id', id)
           .is(this.config.softDeleteField, null)
-        
+
         if (error) {
           this.handleError(error, 'delete', { id })
         }
       } else {
         // 硬刪除
-        const { error } = await query
-          .delete()
-          .eq('id', id)
-        
+        const { error } = await query.delete().eq('id', id)
+
         if (error) {
           this.handleError(error, 'delete', { id })
         }
       }
-      
+
       dbLogger.info(`刪除 ${this.config.tableName} 成功`, {
         module: this.metadata.name,
         action: 'delete',
-        metadata: { id, softDelete: !!this.config.softDeleteField }
+        metadata: { id, softDelete: !!this.config.softDeleteField },
       })
-
     } catch (error) {
       this.handleError(error, 'delete', { id })
     }
@@ -429,18 +446,17 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
    */
   async exists(id: string): Promise<boolean> {
     try {
-      let query = this.createQuery()
-      
+      let query = this.createQuery<{ id: string }>()
+
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = (query as any).is(this.config.softDeleteField, null)
+        query = query.is(this.config.softDeleteField, null)
       }
 
-      const { data, error } = await query
-        .select('id')
-        .eq('id', id)
-        .single()
-      
+      const { data, error } = (await query.select('id').eq('id', id).single()) as Promise<
+        QueryResponse<{ id: string }>
+      >
+
       if (error && error.code !== 'PGRST116') {
         this.handleError(error, 'exists', { id })
       }
@@ -457,14 +473,16 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   async findAllPaginated(options?: PaginatedQueryOptions): Promise<PaginatedResult<T>> {
     try {
       const normalizedOptions = normalizePaginatedQueryOptions(options)
-      
+
       // 取得總數
       let countQuery = this.createQuery()
       countQuery = this.applyQueryOptions(countQuery, normalizedOptions)
-      
-      const { count, error: countError } = await countQuery
-        .select('*', { count: 'exact', head: true })
-      
+
+      const { count, error: countError } = await countQuery.select('*', {
+        count: 'exact',
+        head: true,
+      })
+
       if (countError) {
         this.handleError(countError, 'findAllPaginated:count', { options })
       }
@@ -472,33 +490,33 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
       // 取得分頁資料
       let dataQuery = this.createQuery()
       dataQuery = this.applyQueryOptions(dataQuery, normalizedOptions)
-      
+
       const offset = (normalizedOptions.page - 1) * normalizedOptions.limit
       const { data, error: dataError } = await dataQuery
         .select('*')
         .range(offset, offset + normalizedOptions.limit - 1)
-      
+
       if (dataError) {
         this.handleError(dataError, 'findAllPaginated:data', { options })
       }
 
-      const items = (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
+      const items = (data || []).map((record: DatabaseRecord) => this.transformFromDB(record))
       const result = createPaginatedResult(
         items,
         count || 0,
         normalizedOptions.page,
         normalizedOptions.limit
       )
-      
+
       dbLogger.info(`分頁查詢 ${this.config.tableName} 成功`, {
         module: this.metadata.name,
         action: 'findAllPaginated',
-        metadata: { 
-          page: normalizedOptions.page, 
+        metadata: {
+          page: normalizedOptions.page,
           limit: normalizedOptions.limit,
           total: count,
-          itemCount: items.length
-        }
+          itemCount: items.length,
+        },
       })
 
       return result as PaginatedResult<T>
@@ -517,13 +535,10 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
   }> {
     try {
       // 簡單的連線測試
-      const { error } = await this.createQuery()
-        .select('id')
-        .limit(1)
-        .single()
-      
+      const { error } = await this.createQuery().select('id').limit(1).single()
+
       const isHealthy = !error || error.code === 'PGRST116' // 表格可能為空
-      
+
       return {
         status: isHealthy ? 'healthy' : 'degraded',
         timestamp: new Date().toISOString(),
@@ -531,8 +546,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
           tableName: this.config.tableName,
           clientType: this.config.useAdminClient ? 'admin' : 'standard',
           cacheEnabled: this.config.enableCache,
-          error: error?.message
-        }
+          error: error?.message,
+        },
       }
     } catch (error) {
       return {
@@ -540,8 +555,8 @@ export abstract class AbstractSupabaseService<T, CreateDTO = Record<string, unkn
         timestamp: new Date().toISOString(),
         details: {
           tableName: this.config.tableName,
-          error: (error as Error).message
-        }
+          error: (error as Error).message,
+        },
       }
     }
   }

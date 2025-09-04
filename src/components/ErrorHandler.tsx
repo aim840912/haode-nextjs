@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 import { useAsyncLoading } from './LoadingManager'
+import { AsyncOperation } from '@/types/infrastructure.types'
 
 // 錯誤類型定義
 export enum ErrorType {
@@ -11,7 +12,7 @@ export enum ErrorType {
   AUTHORIZATION = 'authorization',
   SERVER = 'server',
   CLIENT = 'client',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export interface AppError {
@@ -20,7 +21,7 @@ export interface AppError {
   message: string
   originalError?: Error
   timestamp: number
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   retryable?: boolean
   retryCount?: number
 }
@@ -30,7 +31,7 @@ interface ErrorContextType {
   addError: (error: Partial<AppError>) => string
   removeError: (id: string) => void
   clearErrors: () => void
-  retryOperation: (errorId: string, operation: () => Promise<any>) => Promise<void>
+  retryOperation: <T = unknown>(errorId: string, operation: AsyncOperation<T>) => Promise<void>
 }
 
 const ErrorContext = createContext<ErrorContextType | null>(null)
@@ -41,43 +42,46 @@ interface ErrorHandlerProps {
   autoRemoveTimeout?: number
 }
 
-export function ErrorHandler({ 
-  children, 
+export function ErrorHandler({
+  children,
   maxErrors = 5,
-  autoRemoveTimeout = 5000 
+  autoRemoveTimeout = 5000,
 }: ErrorHandlerProps) {
   const [errors, setErrors] = useState<AppError[]>([])
 
-  const addError = useCallback((errorData: Partial<AppError>): string => {
-    const id = errorData.id || `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    
-    const newError: AppError = {
-      id,
-      type: errorData.type || ErrorType.UNKNOWN,
-      message: errorData.message || '發生未知錯誤',
-      originalError: errorData.originalError,
-      timestamp: Date.now(),
-      context: errorData.context,
-      retryable: errorData.retryable ?? false,
-      retryCount: errorData.retryCount || 0,
-      ...errorData
-    }
+  const addError = useCallback(
+    (errorData: Partial<AppError>): string => {
+      const id = errorData.id || `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-    setErrors(prev => {
-      const updated = [newError, ...prev]
-      // 限制錯誤數量
-      return updated.slice(0, maxErrors)
-    })
+      const newError: AppError = {
+        id,
+        type: errorData.type || ErrorType.UNKNOWN,
+        message: errorData.message || '發生未知錯誤',
+        originalError: errorData.originalError,
+        timestamp: Date.now(),
+        context: errorData.context,
+        retryable: errorData.retryable ?? false,
+        retryCount: errorData.retryCount || 0,
+        ...errorData,
+      }
 
-    // 自動移除錯誤（非重試錯誤）
-    if (!newError.retryable && autoRemoveTimeout > 0) {
-      setTimeout(() => {
-        removeError(id)
-      }, autoRemoveTimeout)
-    }
+      setErrors(prev => {
+        const updated = [newError, ...prev]
+        // 限制錯誤數量
+        return updated.slice(0, maxErrors)
+      })
 
-    return id
-  }, [maxErrors, autoRemoveTimeout])
+      // 自動移除錯誤（非重試錯誤）
+      if (!newError.retryable && autoRemoveTimeout > 0) {
+        setTimeout(() => {
+          removeError(id)
+        }, autoRemoveTimeout)
+      }
+
+      return id
+    },
+    [maxErrors, autoRemoveTimeout]
+  )
 
   const removeError = useCallback((id: string) => {
     setErrors(prev => prev.filter(error => error.id !== id))
@@ -87,31 +91,34 @@ export function ErrorHandler({
     setErrors([])
   }, [])
 
-  const retryOperation = useCallback(async (errorId: string, operation: () => Promise<any>) => {
-    const error = errors.find(e => e.id === errorId)
-    if (!error || !error.retryable) return
+  const retryOperation = useCallback(
+    async <T = unknown,>(errorId: string, operation: AsyncOperation<T>) => {
+      const error = errors.find(e => e.id === errorId)
+      if (!error || !error.retryable) return
 
-    try {
-      await operation()
-      removeError(errorId)
-    } catch (err) {
-      // 更新重試次數
-      setErrors(prev => prev.map(e => 
-        e.id === errorId 
-          ? { ...e, retryCount: (e.retryCount || 0) + 1 }
-          : e
-      ))
-    }
-  }, [errors, removeError])
+      try {
+        await operation()
+        removeError(errorId)
+      } catch {
+        // 更新重試次數
+        setErrors(prev =>
+          prev.map(e => (e.id === errorId ? { ...e, retryCount: (e.retryCount || 0) + 1 } : e))
+        )
+      }
+    },
+    [errors, removeError]
+  )
 
   return (
-    <ErrorContext.Provider value={{
-      errors,
-      addError,
-      removeError,
-      clearErrors,
-      retryOperation
-    }}>
+    <ErrorContext.Provider
+      value={{
+        errors,
+        addError,
+        removeError,
+        clearErrors,
+        retryOperation,
+      }}
+    >
       {children}
       <ErrorDisplay />
     </ErrorContext.Provider>
@@ -127,17 +134,44 @@ export function useErrorHandler() {
 }
 
 // 錯誤處理工具函數
-export function classifyError(error: Error | any): ErrorType {
+export function classifyError(error: Error | unknown): ErrorType {
   if (!error) return ErrorType.UNKNOWN
 
-  const message = error.message?.toLowerCase() || ''
-  
+  // 類型守衛：檢查是否為 Error 類型
+  const isError = (obj: unknown): obj is Error => {
+    return obj instanceof Error || (typeof obj === 'object' && obj !== null && 'message' in obj)
+  }
+
+  // 類型守衛：檢查是否有狀態碼屬性
+  const hasStatus = (obj: unknown): obj is { status: number } => {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'status' in obj &&
+      typeof (obj as { status: unknown }).status === 'number'
+    )
+  }
+
+  // 類型守衛：檢查是否有 name 屬性
+  const hasName = (obj: unknown): obj is { name: string } => {
+    return (
+      typeof obj === 'object' &&
+      obj !== null &&
+      'name' in obj &&
+      typeof (obj as { name: unknown }).name === 'string'
+    )
+  }
+
+  const message = isError(error) ? error.message?.toLowerCase() || '' : String(error).toLowerCase()
+  const errorName = hasName(error) ? error.name : ''
+  const status = hasStatus(error) ? error.status : 0
+
   // 網路錯誤
   if (
     message.includes('network') ||
     message.includes('fetch') ||
     message.includes('connection') ||
-    error.name === 'NetworkError'
+    errorName === 'NetworkError'
   ) {
     return ErrorType.NETWORK
   }
@@ -146,40 +180,28 @@ export function classifyError(error: Error | any): ErrorType {
   if (
     message.includes('validation') ||
     message.includes('invalid') ||
-    error.name === 'ValidationError'
+    errorName === 'ValidationError'
   ) {
     return ErrorType.VALIDATION
   }
 
   // 認證錯誤
-  if (
-    message.includes('unauthorized') ||
-    message.includes('authentication') ||
-    error.status === 401
-  ) {
+  if (message.includes('unauthorized') || message.includes('authentication') || status === 401) {
     return ErrorType.AUTHENTICATION
   }
 
   // 授權錯誤
-  if (
-    message.includes('forbidden') ||
-    message.includes('authorization') ||
-    error.status === 403
-  ) {
+  if (message.includes('forbidden') || message.includes('authorization') || status === 403) {
     return ErrorType.AUTHORIZATION
   }
 
   // 伺服器錯誤
-  if (
-    error.status >= 500 ||
-    message.includes('server') ||
-    message.includes('internal')
-  ) {
+  if (status >= 500 || message.includes('server') || message.includes('internal')) {
     return ErrorType.SERVER
   }
 
   // 客戶端錯誤
-  if (error.status >= 400 && error.status < 500) {
+  if (status >= 400 && status < 500) {
     return ErrorType.CLIENT
   }
 
@@ -194,17 +216,14 @@ export function getErrorMessage(type: ErrorType, originalMessage?: string): stri
     [ErrorType.AUTHORIZATION]: '您沒有權限執行此操作',
     [ErrorType.SERVER]: '伺服器暫時無法回應，請稍後再試',
     [ErrorType.CLIENT]: '請求失敗，請檢查輸入的資料',
-    [ErrorType.UNKNOWN]: '發生未知錯誤，請稍後再試'
+    [ErrorType.UNKNOWN]: '發生未知錯誤，請稍後再試',
   }
 
   return originalMessage || messages[type]
 }
 
 export function isRetryableError(type: ErrorType): boolean {
-  return [
-    ErrorType.NETWORK,
-    ErrorType.SERVER
-  ].includes(type)
+  return [ErrorType.NETWORK, ErrorType.SERVER].includes(type)
 }
 
 // 便利的錯誤處理 Hook
@@ -212,38 +231,41 @@ export function useAsyncWithError() {
   const { addError } = useErrorHandler()
   const { executeWithLoading } = useAsyncLoading()
 
-  const executeWithErrorHandling = useCallback(async (
-    asyncFunction: () => Promise<any>,
-    options: {
-      taskId?: string
-      loadingMessage?: string
-      errorMessage?: string
-      context?: Record<string, any>
-      timeout?: number
-    } = {}
-  ): Promise<any> => {
-    try {
-      return await executeWithLoading(
-        asyncFunction,
-        options.taskId,
-        options.loadingMessage,
-        options.timeout
-      )
-    } catch (error) {
-      const errorType = classifyError(error)
-      const errorMessage = getErrorMessage(errorType, options.errorMessage)
-      
-      addError({
-        type: errorType,
-        message: errorMessage,
-        originalError: error instanceof Error ? error : new Error(String(error)),
-        context: options.context,
-        retryable: isRetryableError(errorType)
-      })
+  const executeWithErrorHandling = useCallback(
+    async <T = unknown,>(
+      asyncFunction: AsyncOperation<T>,
+      options: {
+        taskId?: string
+        loadingMessage?: string
+        errorMessage?: string
+        context?: Record<string, unknown>
+        timeout?: number
+      } = {}
+    ): Promise<T> => {
+      try {
+        return await executeWithLoading(
+          asyncFunction,
+          options.taskId,
+          options.loadingMessage,
+          options.timeout
+        )
+      } catch (error) {
+        const errorType = classifyError(error)
+        const errorMessage = getErrorMessage(errorType, options.errorMessage)
 
-      return null
-    }
-  }, [addError, executeWithLoading])
+        addError({
+          type: errorType,
+          message: errorMessage,
+          originalError: error instanceof Error ? error : new Error(String(error)),
+          context: options.context,
+          retryable: isRetryableError(errorType),
+        })
+
+        throw error
+      }
+    },
+    [addError, executeWithLoading]
+  )
 
   return { executeWithErrorHandling }
 }
@@ -257,11 +279,11 @@ function ErrorDisplay() {
   return (
     <div className="fixed top-20 right-4 z-50 space-y-2 max-w-sm">
       {errors.slice(0, 3).map(error => (
-        <ErrorToast 
-          key={error.id} 
-          error={error} 
+        <ErrorToast
+          key={error.id}
+          error={error}
           onDismiss={() => removeError(error.id)}
-          onRetry={error.retryable ? (operation) => retryOperation(error.id, operation) : undefined}
+          onRetry={error.retryable ? operation => retryOperation(error.id, operation) : undefined}
         />
       ))}
     </div>
@@ -271,7 +293,7 @@ function ErrorDisplay() {
 interface ErrorToastProps {
   error: AppError
   onDismiss: () => void
-  onRetry?: (operation: () => Promise<any>) => void
+  onRetry?: (operation: AsyncOperation) => void
 }
 
 function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
@@ -309,22 +331,20 @@ function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
   }
 
   return (
-    <div className={`
+    <div
+      className={`
       border rounded-lg p-4 shadow-lg transition-all duration-300
       ${getErrorColor(error.type)}
-    `}>
+    `}
+    >
       <div className="flex items-start space-x-3">
         <span className="text-xl">{getErrorIcon(error.type)}</span>
-        
+
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium">
-            {error.message}
-          </p>
-          
+          <p className="text-sm font-medium">{error.message}</p>
+
           {error.retryCount && error.retryCount > 0 && (
-            <p className="text-xs opacity-75 mt-1">
-              重試次數: {error.retryCount}
-            </p>
+            <p className="text-xs opacity-75 mt-1">重試次數: {error.retryCount}</p>
           )}
         </div>
 
@@ -337,7 +357,7 @@ function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
               重試
             </button>
           )}
-          
+
           <button
             onClick={onDismiss}
             className="text-xs opacity-60 hover:opacity-100 transition-opacity"
