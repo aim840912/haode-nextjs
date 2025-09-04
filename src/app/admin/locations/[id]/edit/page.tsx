@@ -229,8 +229,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
         return
       }
 
-      setImageFile(file)
-
       // 創建預覽
       const reader = new FileReader()
       reader.onload = event => {
@@ -243,7 +241,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
   }
 
   const clearImage = () => {
-    setImageFile(null)
     setImagePreview(null)
     setFormData(prev => ({ ...prev, image: '' }))
   }

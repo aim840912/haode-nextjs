@@ -89,7 +89,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
       module: 'Culture',
       metadata: {
         ...itemData,
-        imageFile: itemData.imageFile ? `File: ${itemData.imageFile.name}` : undefined,
+        imageFile: itemData.imageFile ? `File: ${(itemData.imageFile as File).name}` : undefined,
       },
     })
   } else {
