@@ -114,22 +114,6 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     }
   }, [])
 
-  // 載入興趣產品數量
-  useEffect(() => {
-    updateInterestedCount()
-
-    // 監聽自定義事件（同頁面更新）
-    const handleCustomUpdate = () => {
-      updateInterestedCount()
-    }
-
-    window.addEventListener('interestedProductsUpdated', handleCustomUpdate)
-
-    return () => {
-      window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
-    }
-  }, [user, updateInterestedCount])
-
   const updateInterestedCount = async () => {
     if (user) {
       // 已登入：從資料庫取得數量
@@ -153,6 +137,22 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
       }
     }
   }
+
+  // 載入興趣產品數量
+  useEffect(() => {
+    updateInterestedCount()
+
+    // 監聽自定義事件（同頁面更新）
+    const handleCustomUpdate = () => {
+      updateInterestedCount()
+    }
+
+    window.addEventListener('interestedProductsUpdated', handleCustomUpdate)
+
+    return () => {
+      window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
+    }
+  }, [user]) // 移除 updateInterestedCount 依賴，因為它不會改變
 
   const handleLogout = async () => {
     if (isLoggingOut) return

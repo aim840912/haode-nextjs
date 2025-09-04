@@ -4,12 +4,12 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/api-middleware'
+import { requireAdmin, type AdminHandler } from '@/lib/api-middleware'
 import { success } from '@/lib/api-response'
 import { getRateLimitStats } from '@/services/rateLimitMonitoringService'
 import { apiLogger } from '@/lib/logger'
 
-async function handleGET(request: NextRequest, { user }: { user: { id: string; email: string } }) {
+const handleGET: AdminHandler = async (request, { user }) => {
   apiLogger.info('管理員查詢 Rate Limiting 統計', {
     metadata: {
       userId: user.id,
