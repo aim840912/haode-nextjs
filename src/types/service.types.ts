@@ -6,8 +6,8 @@
 
 import { SupabaseClient } from '@supabase/supabase-js'
 
-// Supabase 客戶端類型 (使用 unknown 類型避免 any)
-export type ServiceSupabaseClient = SupabaseClient<unknown, 'public', unknown>
+// Supabase 客戶端類型 (使用適當的泛型避免類型衝突)
+export type ServiceSupabaseClient = SupabaseClient<any, 'public', any>
 
 // 錯誤處理上下文
 export interface ServiceErrorContext {

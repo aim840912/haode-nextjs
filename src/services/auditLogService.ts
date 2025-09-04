@@ -73,7 +73,7 @@ export class SupabaseAuditLogService implements AuditLogService {
       // 插入審計日誌
       const { error } = await createServiceSupabaseClient()
         .from('audit_logs')
-        .insert(auditData);
+        .insert(auditData as any);
 
       if (error) {
         dbLogger.info('審計日誌記錄失敗', {
