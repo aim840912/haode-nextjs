@@ -59,19 +59,19 @@ const nextConfig: NextConfig = {
     // Content Security Policy 配置
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com",
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com${process.env.NODE_ENV === 'development' ? ' https://vercel.live https://*.vercel.live' : ''}`,
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
-      "connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com",
+      `connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com${process.env.NODE_ENV === 'development' ? ' https://vercel.live wss://vercel.live' : ''}`,
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
       "frame-ancestors 'none'", // 防止 clickjacking
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
-      "upgrade-insecure-requests", // 自動升級 HTTP 到 HTTPS
-      ...(process.env.NODE_ENV === 'production' ? ["block-all-mixed-content"] : [])
+      'upgrade-insecure-requests', // 自動升級 HTTP 到 HTTPS
+      ...(process.env.NODE_ENV === 'production' ? ['block-all-mixed-content'] : []),
     ].join('; ')
 
     // 安全標頭配置
@@ -98,7 +98,8 @@ const nextConfig: NextConfig = {
       },
       {
         key: 'Permissions-Policy',
-        value: 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
+        value:
+          'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()',
       },
       {
         key: 'Cross-Origin-Embedder-Policy',
