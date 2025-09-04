@@ -153,8 +153,9 @@ function KPIOverviewPanel() {
 
   useEffect(() => {
     fetchKPIReport()
-    const interval = setInterval(fetchKPIReport, 5 * 60 * 1000) // 每5分鐘刷新
-    return () => clearInterval(interval)
+    // 暫時停用自動刷新以修復無限迴圈問題
+    // const interval = setInterval(fetchKPIReport, 5 * 60 * 1000) // 每5分鐘刷新
+    // return () => clearInterval(interval)
   }, [])
 
   const getHealthScoreColor = (score: number) => {
@@ -400,8 +401,9 @@ function RateLimitingPanel() {
 
   useEffect(() => {
     fetchRateLimitStats()
-    const interval = setInterval(fetchRateLimitStats, 2 * 60 * 1000) // 每2分鐘刷新
-    return () => clearInterval(interval)
+    // 暫時停用自動刷新以修復無限迴圈問題
+    // const interval = setInterval(fetchRateLimitStats, 2 * 60 * 1000) // 每2分鐘刷新
+    // return () => clearInterval(interval)
   }, [])
 
   if (loading) {
@@ -691,11 +693,11 @@ export default function MonitoringDashboard() {
   useEffect(() => {
     fetchMetrics()
 
-    // 設定自動刷新（每5分鐘）
-    const interval = setInterval(fetchMetrics, 5 * 60 * 1000)
-
-    return () => clearInterval(interval)
-  }, [timeRange, fetchMetrics])
+    // 暫時停用自動刷新以修復無限迴圈問題
+    // const interval = setInterval(fetchMetrics, 5 * 60 * 1000)
+    // return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeRange]) // 只依賴 timeRange，fetchMetrics 會使用最新的狀態
 
   const getStatusColor = (status: SystemHealth['status']) => {
     switch (status) {
