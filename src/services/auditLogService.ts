@@ -11,7 +11,7 @@
  * - ❌ 不記錄靜態頁面訪問：page_view
  */
 
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import {
   AuditLogService,
@@ -23,7 +23,6 @@ import {
   ResourceAccessStats,
   AuditLogUtils,
   ResourceType,
-  AuditAction,
   AuditTypeGuards,
 } from '@/types/audit'
 import { Database } from '@/types/database'
@@ -56,7 +55,7 @@ export class SupabaseAuditLogService implements AuditLogService {
       }
 
       // 準備審計日誌資料
-      const auditData = {
+      const auditData: Database['public']['Tables']['audit_logs']['Insert'] = {
         user_id: request.user_id,
         user_email: request.user_email,
         user_name: request.user_name,
@@ -64,17 +63,17 @@ export class SupabaseAuditLogService implements AuditLogService {
         action: request.action,
         resource_type: request.resource_type,
         resource_id: request.resource_id,
-        resource_details: request.resource_details || {},
-        previous_data: request.previous_data || {},
-        new_data: request.new_data || {},
+        resource_details: (request.resource_details || {}) as JsonValue,
+        previous_data: (request.previous_data || {}) as JsonValue,
+        new_data: (request.new_data || {}) as JsonValue,
         ip_address: request.ip_address,
         user_agent: request.user_agent,
         session_id: request.session_id,
-        metadata: request.metadata || {},
-      } satisfies Database['public']['Tables']['audit_logs']['Insert']
+        metadata: (request.metadata || {}) as JsonValue,
+      }
 
       // 插入審計日誌
-      const { error } = await createServiceSupabaseClient().from('audit_logs').insert(auditData)
+      const { error } = await supabaseAdmin!.from('audit_logs').insert([auditData])
 
       if (error) {
         dbLogger.info('審計日誌記錄失敗', {
@@ -119,7 +118,7 @@ export class SupabaseAuditLogService implements AuditLogService {
 
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
-      const { data, error } = await createServiceSupabaseClient()
+      const { data, error } = await supabaseAdmin!
         .from('audit_logs')
         .select('id')
         .eq('user_email', request.user_email)
@@ -152,7 +151,7 @@ export class SupabaseAuditLogService implements AuditLogService {
   // 查詢審計日誌
   async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLog[]> {
     try {
-      let query = createServiceSupabaseClient().from('audit_logs').select('*')
+      let query = supabaseAdmin!.from('audit_logs').select('*')
 
       // 套用篩選條件
       if (params) {
@@ -231,7 +230,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     offset: number = 0
   ): Promise<AuditLog[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient().rpc('get_user_audit_history', {
+      const { data, error } = await supabaseAdmin!.rpc('get_user_audit_history', {
         target_user_id: userId,
         limit_count: limit,
         offset_count: offset,
@@ -268,14 +267,11 @@ export class SupabaseAuditLogService implements AuditLogService {
     limit: number = 100
   ): Promise<AuditLog[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient().rpc(
-        'get_resource_audit_history',
-        {
-          target_resource_type: resourceType,
-          target_resource_id: resourceId,
-          limit_count: limit,
-        } as Database['public']['Functions']['get_resource_audit_history']['Args']
-      )
+      const { data, error } = await supabaseAdmin!.rpc('get_resource_audit_history', {
+        target_resource_type: resourceType,
+        target_resource_id: resourceId,
+        limit_count: limit,
+      } as Database['public']['Functions']['get_resource_audit_history']['Args'])
 
       if (error) {
         dbLogger.error(
@@ -304,7 +300,7 @@ export class SupabaseAuditLogService implements AuditLogService {
   // 取得審計統計
   async getAuditStats(days: number = 30): Promise<AuditStats[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient()
+      const { data, error } = await supabaseAdmin!
         .from('audit_stats')
         .select('*')
         .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -333,7 +329,7 @@ export class SupabaseAuditLogService implements AuditLogService {
   // 取得使用者活動統計
   async getUserActivityStats(days: number = 30): Promise<UserActivityStats[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient()
+      const { data, error } = await supabaseAdmin!
         .from('user_activity_stats')
         .select('*')
         .gte('first_activity', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -366,7 +362,7 @@ export class SupabaseAuditLogService implements AuditLogService {
   // 取得資源存取統計
   async getResourceAccessStats(days: number = 30): Promise<ResourceAccessStats[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient()
+      const { data, error } = await supabaseAdmin!
         .from('resource_access_stats')
         .select('*')
         .gte('first_accessed', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())

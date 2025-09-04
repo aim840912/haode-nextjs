@@ -1,7 +1,7 @@
 /**
  * 文化服務 v2 簡化實作
  * 基於統一架構的文化項目管理服務
- * 
+ *
  * 功能：
  * - 標準化 CRUD 操作
  * - 統一錯誤處理和日誌記錄
@@ -11,16 +11,17 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { CultureItem, CultureService } from '@/types/culture'
-import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject, BaseDbRecord } from '@/types/service.types'
-import { 
-  uploadCultureImageToStorage, 
+import { ServiceSupabaseClient, ServiceErrorContext } from '@/types/service.types'
+import { Database } from '@/types/database'
+import {
+  uploadCultureImageToStorage,
   deleteCultureImages,
   initializeCultureStorageBucket,
-  uploadBase64ToCultureStorage
+  uploadBase64ToCultureStorage,
 } from '@/lib/culture-storage'
 
 /**
@@ -42,7 +43,8 @@ interface SupabaseCultureRecord {
 /**
  * 建立文化項目的擴展介面（支援檔案上傳）
  */
-export interface CreateCultureItemRequest extends Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'> {
+export interface CreateCultureItemRequest
+  extends Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'> {
   imageFile?: File
   image?: string // base64 向後相容
 }
@@ -50,7 +52,8 @@ export interface CreateCultureItemRequest extends Omit<CultureItem, 'id' | 'crea
 /**
  * 更新文化項目的擴展介面（支援檔案上傳）
  */
-export interface UpdateCultureItemRequest extends Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>> {
+export interface UpdateCultureItemRequest
+  extends Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>> {
   imageFile?: File
   image?: string // base64 向後相容
 }
@@ -92,14 +95,14 @@ export class CultureServiceV2Simple implements CultureService {
     dbLogger.error(`文化服務 ${operation} 操作失敗`, error as Error, {
       module: this.moduleName,
       action: operation,
-      metadata: context
+      metadata: context,
     })
 
     if (error && typeof error === 'object' && 'code' in error) {
       throw ErrorFactory.fromSupabaseError(error, {
         module: this.moduleName,
         action: operation,
-        ...context
+        ...context,
       })
     }
 
@@ -112,7 +115,7 @@ export class CultureServiceV2Simple implements CultureService {
   private transformFromDB(dbItem: SupabaseCultureRecord): CultureItem {
     // 根據分類設定顏色和表情符號
     const categoryConfig = this.getCategoryConfig(dbItem.category)
-    
+
     // 處理圖片 URL
     const imageUrl = dbItem.images?.[0]
     let processedImageUrl = imageUrl
@@ -121,14 +124,14 @@ export class CultureServiceV2Simple implements CultureService {
       dbLogger.debug('處理圖片 URL', {
         module: this.moduleName,
         action: 'transformFromDB',
-        metadata: { imageUrl: imageUrl?.substring(0, 100) + '...' }
+        metadata: { imageUrl: imageUrl?.substring(0, 100) + '...' },
       })
 
       // 如果是 base64 圖片，保持原樣
       if (imageUrl.startsWith('data:image/')) {
         processedImageUrl = imageUrl
         dbLogger.debug('偵測到 base64 圖片格式')
-      } 
+      }
       // 如果是 HTTP(S) URL，保持原樣
       else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         processedImageUrl = imageUrl
@@ -139,7 +142,7 @@ export class CultureServiceV2Simple implements CultureService {
         dbLogger.warn('未知圖片格式', {
           module: this.moduleName,
           action: 'transformFromDB',
-          metadata: { imageUrl: imageUrl?.substring(0, 50) + '...' }
+          metadata: { imageUrl: imageUrl?.substring(0, 50) + '...' },
         })
         processedImageUrl = imageUrl
       }
@@ -156,22 +159,24 @@ export class CultureServiceV2Simple implements CultureService {
       emoji: categoryConfig.emoji,
       imageUrl: processedImageUrl,
       createdAt: dbItem.created_at,
-      updatedAt: dbItem.updated_at
+      updatedAt: dbItem.updated_at,
     }
   }
 
   /**
    * 轉換實體為資料庫記錄
    */
-  private transformToDB(itemData: CreateCultureItemRequest | UpdateCultureItemRequest): UpdateDataObject {
+  private transformToDB(
+    itemData: CreateCultureItemRequest | UpdateCultureItemRequest
+  ): Database['public']['Tables']['culture']['Insert'] {
     return {
-      title: itemData.title,
+      title: itemData.title || '',
       description: itemData.description,
       content: itemData.subtitle,
       category: 'culture', // 預設分類
       year: new Date().getFullYear(),
       is_featured: true,
-      images: [] // 圖片將在後續處理中更新
+      images: [], // 圖片將在後續處理中更新
     }
   }
 
@@ -184,26 +189,26 @@ export class CultureServiceV2Simple implements CultureService {
         color: 'bg-green-400',
         height: 'h-48',
         textColor: 'text-white',
-        emoji: '🌾'
+        emoji: '🌾',
       },
       culture: {
         color: 'bg-orange-400',
         height: 'h-56',
         textColor: 'text-white',
-        emoji: '🏮'
+        emoji: '🏮',
       },
       tradition: {
         color: 'bg-blue-400',
         height: 'h-52',
         textColor: 'text-white',
-        emoji: '🏡'
+        emoji: '🏡',
       },
       default: {
         color: 'bg-amber-400',
         height: 'h-48',
         textColor: 'text-white',
-        emoji: '🎨'
-      }
+        emoji: '🎨',
+      },
     }
 
     return configs[category as keyof typeof configs] || configs.default
@@ -231,16 +236,20 @@ export class CultureServiceV2Simple implements CultureService {
       dbLogger.info('載入文化項目成功', {
         module: this.moduleName,
         action: 'getCultureItems',
-        metadata: { count: result.length }
+        metadata: { count: result.length },
       })
 
       return result
     } catch (error) {
       // 對於公開的 API，記錄錯誤但拋出以便前端處理
-      dbLogger.error('取得文化項目失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: this.moduleName,
-        action: 'getCultureItems'
-      })
+      dbLogger.error(
+        '取得文化項目失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: this.moduleName,
+          action: 'getCultureItems',
+        }
+      )
       throw error
     }
   }
@@ -251,11 +260,7 @@ export class CultureServiceV2Simple implements CultureService {
   async getCultureItemById(id: string): Promise<CultureItem | null> {
     try {
       const client = this.getSupabaseClient()
-      const { data, error } = await client
-        .from('culture')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await client.from('culture').select('*').eq('id', id).single()
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -269,16 +274,20 @@ export class CultureServiceV2Simple implements CultureService {
       dbLogger.debug('取得文化項目詳情', {
         module: this.moduleName,
         action: 'getCultureItemById',
-        metadata: { id, found: !!result }
+        metadata: { id, found: !!result },
       })
 
       return result
     } catch (error) {
-      dbLogger.error('根據 ID 取得文化項目失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: this.moduleName,
-        action: 'getCultureItemById',
-        metadata: { id }
-      })
+      dbLogger.error(
+        '根據 ID 取得文化項目失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: this.moduleName,
+          action: 'getCultureItemById',
+          metadata: { id },
+        }
+      )
       return null
     }
   }
@@ -286,7 +295,9 @@ export class CultureServiceV2Simple implements CultureService {
   /**
    * 新增文化項目
    */
-  async addCultureItem(itemData: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }): Promise<CultureItem> {
+  async addCultureItem(
+    itemData: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }
+  ): Promise<CultureItem> {
     try {
       // 類型轉換以支援檔案上傳
       const extendedData = itemData as CreateCultureItemRequest
@@ -301,8 +312,8 @@ export class CultureServiceV2Simple implements CultureService {
           title: extendedData.title,
           imageFile: extendedData.imageFile ? `File: ${extendedData.imageFile.name}` : undefined,
           hasImageUrl: !!extendedData.imageUrl,
-          hasBase64: !!extendedData.image
-        }
+          hasBase64: !!extendedData.image,
+        },
       })
 
       // 確保 Storage bucket 存在
@@ -313,7 +324,9 @@ export class CultureServiceV2Simple implements CultureService {
         dbLogger.warn('Storage bucket 初始化警告', {
           module: this.moduleName,
           action: 'initializeBucket',
-          metadata: { error: bucketError instanceof Error ? bucketError.message : String(bucketError) }
+          metadata: {
+            error: bucketError instanceof Error ? bucketError.message : String(bucketError),
+          },
         })
       }
 
@@ -325,8 +338,8 @@ export class CultureServiceV2Simple implements CultureService {
       // 先插入資料庫記錄以取得 ID
       const insertData = this.transformToDB(extendedData)
 
-      const { data, error } = await client
-        .from('culture')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (client.from('culture') as any)
         .insert([insertData])
         .select()
         .single()
@@ -335,7 +348,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'addCultureItem:insertRecord', { itemData: insertData })
       }
 
-      const cultureId = data.id
+      const cultureId = data?.id as string
       const images: string[] = []
 
       try {
@@ -344,20 +357,20 @@ export class CultureServiceV2Simple implements CultureService {
           dbLogger.info('上傳檔案到 Storage', {
             module: this.moduleName,
             action: 'uploadImageFile',
-            metadata: { fileName: extendedData.imageFile.name, cultureId }
+            metadata: { fileName: extendedData.imageFile.name, cultureId },
           })
           const { url } = await uploadCultureImageToStorage(extendedData.imageFile, cultureId)
           images.push(url)
           dbLogger.info('Storage 上傳成功', {
             module: this.moduleName,
             action: 'uploadImageFile',
-            metadata: { url, cultureId }
+            metadata: { url, cultureId },
           })
         } else if (extendedData.imageUrl) {
           dbLogger.info('使用提供的 imageUrl', {
             module: this.moduleName,
             action: 'useImageUrl',
-            metadata: { imageUrl: extendedData.imageUrl?.substring(0, 100) + '...', cultureId }
+            metadata: { imageUrl: extendedData.imageUrl?.substring(0, 100) + '...', cultureId },
           })
           images.push(extendedData.imageUrl)
         } else if (extendedData.image && extendedData.image.startsWith('data:image/')) {
@@ -365,21 +378,21 @@ export class CultureServiceV2Simple implements CultureService {
           dbLogger.info('轉換 base64 圖片到 Storage', {
             module: this.moduleName,
             action: 'convertBase64',
-            metadata: { cultureId }
+            metadata: { cultureId },
           })
           const { url } = await uploadBase64ToCultureStorage(extendedData.image, cultureId)
           images.push(url)
           dbLogger.info('Base64 轉換上傳成功', {
             module: this.moduleName,
             action: 'convertBase64',
-            metadata: { url, cultureId }
+            metadata: { url, cultureId },
           })
         }
 
         // 更新資料庫中的圖片 URL
         if (images.length > 0) {
-          const { error: updateError } = await client
-            .from('culture')
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: updateError } = await (client.from('culture') as any)
             .update({ images })
             .eq('id', cultureId)
 
@@ -389,7 +402,7 @@ export class CultureServiceV2Simple implements CultureService {
               dbLogger.warn('清理上傳檔案失敗', {
                 module: this.moduleName,
                 action: 'cleanup',
-                metadata: { cultureId }
+                metadata: { cultureId },
               })
             })
             this.handleError(updateError, 'addCultureItem:updateImages', { cultureId, images })
@@ -398,7 +411,7 @@ export class CultureServiceV2Simple implements CultureService {
           dbLogger.info('資料庫圖片 URL 更新成功', {
             module: this.moduleName,
             action: 'updateImages',
-            metadata: { images, cultureId }
+            metadata: { images, cultureId },
           })
         }
 
@@ -410,29 +423,30 @@ export class CultureServiceV2Simple implements CultureService {
           metadata: {
             id: result.id,
             title: result.title,
-            hasImage: !!result.imageUrl
-          }
+            hasImage: !!result.imageUrl,
+          },
         })
 
         return result
       } catch (uploadError) {
-        dbLogger.error('圖片處理失敗，清理資料庫記錄', uploadError instanceof Error ? uploadError : new Error('Unknown upload error'), {
-          module: this.moduleName,
-          action: 'cleanup',
-          metadata: { cultureId }
-        })
+        dbLogger.error(
+          '圖片處理失敗，清理資料庫記錄',
+          uploadError instanceof Error ? uploadError : new Error('Unknown upload error'),
+          {
+            module: this.moduleName,
+            action: 'cleanup',
+            metadata: { cultureId },
+          }
+        )
 
         // 如果圖片處理失敗，刪除已建立的資料庫記錄
-        const deleteResult = await client
-          .from('culture')
-          .delete()
-          .eq('id', cultureId)
-        
+        const deleteResult = await client.from('culture').delete().eq('id', cultureId)
+
         if (deleteResult.error) {
           dbLogger.error('清理資料庫記錄失敗', new Error('Database cleanup failed'), {
             module: this.moduleName,
             action: 'cleanup',
-            metadata: { cultureId }
+            metadata: { cultureId },
           })
         }
 
@@ -446,7 +460,10 @@ export class CultureServiceV2Simple implements CultureService {
   /**
    * 更新文化項目
    */
-  async updateCultureItem(id: string, itemData: Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }): Promise<CultureItem> {
+  async updateCultureItem(
+    id: string,
+    itemData: Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }
+  ): Promise<CultureItem> {
     try {
       // 類型轉換以支援檔案上傳
       const extendedData = itemData as UpdateCultureItemRequest
@@ -459,8 +476,8 @@ export class CultureServiceV2Simple implements CultureService {
           title: extendedData.title,
           imageFile: extendedData.imageFile ? `File: ${extendedData.imageFile.name}` : undefined,
           hasImageUrl: extendedData.imageUrl !== undefined,
-          hasBase64: !!extendedData.image
-        }
+          hasBase64: !!extendedData.image,
+        },
       })
 
       const client = this.getAdminClient()
@@ -471,7 +488,8 @@ export class CultureServiceV2Simple implements CultureService {
       const dbUpdateData: Record<string, unknown> = {}
 
       if (extendedData.title !== undefined) dbUpdateData.title = extendedData.title
-      if (extendedData.description !== undefined) dbUpdateData.description = extendedData.description
+      if (extendedData.description !== undefined)
+        dbUpdateData.description = extendedData.description
       if (extendedData.subtitle !== undefined) dbUpdateData.content = extendedData.subtitle
 
       // 處理圖片更新
@@ -482,7 +500,7 @@ export class CultureServiceV2Simple implements CultureService {
         dbLogger.info('上傳新檔案到 Storage', {
           module: this.moduleName,
           action: 'updateImageFile',
-          metadata: { fileName: extendedData.imageFile.name, cultureId: id }
+          metadata: { fileName: extendedData.imageFile.name, cultureId: id },
         })
         // 先刪除舊圖片
         await deleteCultureImages(id)
@@ -493,14 +511,14 @@ export class CultureServiceV2Simple implements CultureService {
         dbLogger.info('新檔案上傳成功', {
           module: this.moduleName,
           action: 'updateImageFile',
-          metadata: { url, cultureId: id }
+          metadata: { url, cultureId: id },
         })
       } else if (extendedData.imageUrl !== undefined) {
         if (extendedData.imageUrl) {
           dbLogger.info('使用新的 imageUrl', {
             module: this.moduleName,
             action: 'updateImageUrl',
-            metadata: { imageUrl: extendedData.imageUrl?.substring(0, 100) + '...', cultureId: id }
+            metadata: { imageUrl: extendedData.imageUrl?.substring(0, 100) + '...', cultureId: id },
           })
           images.push(extendedData.imageUrl)
         }
@@ -510,7 +528,7 @@ export class CultureServiceV2Simple implements CultureService {
         dbLogger.info('轉換新的 base64 圖片到 Storage', {
           module: this.moduleName,
           action: 'updateBase64',
-          metadata: { cultureId: id }
+          metadata: { cultureId: id },
         })
         await deleteCultureImages(id)
         const { url } = await uploadBase64ToCultureStorage(extendedData.image, id)
@@ -519,7 +537,7 @@ export class CultureServiceV2Simple implements CultureService {
         dbLogger.info('Base64 轉換更新成功', {
           module: this.moduleName,
           action: 'updateBase64',
-          metadata: { url, cultureId: id }
+          metadata: { url, cultureId: id },
         })
       }
 
@@ -527,8 +545,8 @@ export class CultureServiceV2Simple implements CultureService {
         dbUpdateData.images = images
       }
 
-      const { data, error } = await client
-        .from('culture')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (client.from('culture') as any)
         .update(dbUpdateData)
         .eq('id', id)
         .select()
@@ -550,8 +568,8 @@ export class CultureServiceV2Simple implements CultureService {
         metadata: {
           id,
           changes: Object.keys(dbUpdateData),
-          title: result.title
-        }
+          title: result.title,
+        },
       })
 
       return result
@@ -568,7 +586,7 @@ export class CultureServiceV2Simple implements CultureService {
       dbLogger.info('刪除文化項目開始', {
         module: this.moduleName,
         action: 'deleteCultureItem',
-        metadata: { id }
+        metadata: { id },
       })
 
       // 先刪除 Storage 中的所有圖片
@@ -579,13 +597,13 @@ export class CultureServiceV2Simple implements CultureService {
           dbLogger.info(`成功刪除 ${deletionResult.deletedCount} 張圖片`, {
             module: this.moduleName,
             action: 'deleteImages',
-            metadata: { id, deletedCount: deletionResult.deletedCount }
+            metadata: { id, deletedCount: deletionResult.deletedCount },
           })
         } else {
           dbLogger.warn('刪除圖片時發生警告', {
             module: this.moduleName,
             action: 'deleteImages',
-            metadata: { id, error: deletionResult.error }
+            metadata: { id, error: deletionResult.error },
           })
         }
       } catch (storageError) {
@@ -595,8 +613,8 @@ export class CultureServiceV2Simple implements CultureService {
           action: 'deleteImages',
           metadata: {
             id,
-            error: storageError instanceof Error ? storageError.message : String(storageError)
-          }
+            error: storageError instanceof Error ? storageError.message : String(storageError),
+          },
         })
       }
 
@@ -606,10 +624,7 @@ export class CultureServiceV2Simple implements CultureService {
       }
 
       // 刪除資料庫記錄
-      const { error } = await client
-        .from('culture')
-        .delete()
-        .eq('id', id)
+      const { error } = await client.from('culture').delete().eq('id', id)
 
       if (error) {
         this.handleError(error, 'deleteCultureItem', { id })
@@ -618,7 +633,7 @@ export class CultureServiceV2Simple implements CultureService {
       dbLogger.info('文化項目刪除完成', {
         module: this.moduleName,
         action: 'deleteCultureItem',
-        metadata: { id }
+        metadata: { id },
       })
     } catch (error) {
       this.handleError(error, 'deleteCultureItem', { id })
@@ -666,10 +681,7 @@ export class CultureServiceV2Simple implements CultureService {
     try {
       // 簡單的連線測試
       const client = this.getSupabaseClient()
-      const { error } = await client
-        .from('culture')
-        .select('id')
-        .limit(1)
+      const { error } = await client.from('culture').select('id').limit(1)
 
       const isHealthy = !error || error.code === 'PGRST116' // 表格可能為空
 
@@ -680,8 +692,8 @@ export class CultureServiceV2Simple implements CultureService {
           moduleName: this.moduleName,
           tableName: 'culture',
           storageIntegration: 'enabled',
-          error: error?.message
-        }
+          error: error?.message,
+        },
       }
     } catch (error) {
       return {
@@ -689,8 +701,8 @@ export class CultureServiceV2Simple implements CultureService {
         timestamp: new Date().toISOString(),
         details: {
           moduleName: this.moduleName,
-          error: (error as Error).message
-        }
+          error: (error as Error).message,
+        },
       }
     }
   }

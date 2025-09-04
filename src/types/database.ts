@@ -74,6 +74,44 @@ export type Database = {
           updated_at?: string
         }
       }
+      culture: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          content: string | null
+          category: string
+          year: number
+          is_featured: boolean | null
+          images: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          content?: string | null
+          category: string
+          year: number
+          is_featured?: boolean | null
+          images?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          content?: string | null
+          category?: string
+          year?: number
+          is_featured?: boolean | null
+          images?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+      }
       audit_logs: {
         Row: {
           id: string
