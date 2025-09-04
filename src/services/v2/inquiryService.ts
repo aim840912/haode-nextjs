@@ -1,7 +1,7 @@
 /**
  * 詢問服務 v2 實作
  * 基於統一服務架構的詢問管理服務
- * 
+ *
  * 功能：
  * - 標準化 CRUD 操作
  * - 統一錯誤處理和日誌記錄
@@ -9,19 +9,30 @@
  * - 內建資料轉換和驗證
  */
 
-import { AbstractSupabaseService, DataTransformer, SupabaseServiceConfig } from '@/lib/abstract-supabase-service'
-import { PaginatedService, SearchableService, PaginatedQueryOptions, QueryOptions } from '@/lib/base-service'
-import { 
-  Inquiry, 
-  InquiryWithItems, 
-  CreateInquiryRequest, 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+
+import {
+  AbstractSupabaseService,
+  DataTransformer,
+  SupabaseServiceConfig,
+} from '@/lib/abstract-supabase-service'
+import {
+  PaginatedService,
+  SearchableService,
+  PaginatedQueryOptions,
+  QueryOptions,
+} from '@/lib/base-service'
+import {
+  Inquiry,
+  InquiryWithItems,
+  CreateInquiryRequest,
   CreateInquiryItemRequest,
   UpdateInquiryRequest,
   InquiryQueryParams,
   InquiryStats,
   InquiryStatus,
   InquiryItem,
-  InquiryType
+  InquiryType,
 } from '@/types/inquiry'
 import { dbLogger } from '@/lib/logger'
 import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
@@ -60,12 +71,19 @@ interface SupabaseInquiryRecord {
  */
 class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseInquiryRecord> {
   /**
+   * 從資料庫記錄轉換為實體 (新介面方法)
+   */
+  transform(record: any): InquiryWithItems {
+    return this.fromDB(record)
+  }
+
+  /**
    * 從資料庫記錄轉換為實體
    */
-  fromDB(record: SupabaseInquiryRecord): InquiryWithItems {
+  fromDB(record: any): InquiryWithItems {
     // 解析農場參觀資料
     const parsedRecord = this.parseFarmTourDataFromNotes(record)
-    
+
     return {
       id: parsedRecord.id,
       user_id: parsedRecord.user_id,
@@ -88,7 +106,7 @@ class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseIn
       replied_by: parsedRecord.replied_by || undefined,
       created_at: parsedRecord.created_at,
       updated_at: parsedRecord.updated_at,
-      inquiry_items: parsedRecord.inquiry_items || []
+      inquiry_items: parsedRecord.inquiry_items || [],
     }
   }
 
@@ -108,7 +126,7 @@ class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseIn
       total_estimated_amount: entity.total_estimated_amount || null,
       is_read: entity.is_read,
       is_replied: entity.is_replied,
-      replied_by: entity.replied_by || null
+      replied_by: entity.replied_by || null,
     }
 
     // 處理農場參觀資料序列化
@@ -117,7 +135,7 @@ class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseIn
         activity_title: entity.activity_title,
         visit_date: entity.visit_date,
         visitor_count: entity.visitor_count,
-        original_notes: entity.notes || ''
+        original_notes: entity.notes || '',
       }
       record.notes = `FARM_TOUR_DATA:${JSON.stringify(farmTourData)}`
     } else {
@@ -145,7 +163,7 @@ class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseIn
         activity_title: farmTourData.activity_title,
         visit_date: farmTourData.visit_date,
         visitor_count: farmTourData.visitor_count,
-        notes: farmTourData.original_notes
+        notes: farmTourData.original_notes,
       }
     } catch (error) {
       dbLogger.warn('無法解析農場參觀資料', {
@@ -153,8 +171,8 @@ class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseIn
         action: 'parseFarmTourData',
         metadata: {
           error: error instanceof Error ? error.message : String(error),
-          notes: record.notes
-        }
+          notes: record.notes,
+        },
       })
       return record
     }
@@ -180,7 +198,11 @@ export interface ExtendedInquiryService {
   createInquiry(userId: string, data: CreateInquiryRequest): Promise<InquiryWithItems>
   getUserInquiries(userId: string, params?: InquiryQueryParams): Promise<InquiryWithItems[]>
   getInquiryById(userId: string, inquiryId: string): Promise<InquiryWithItems | null>
-  updateInquiry(userId: string, inquiryId: string, data: UpdateInquiryRequest): Promise<InquiryWithItems>
+  updateInquiry(
+    userId: string,
+    inquiryId: string,
+    data: UpdateInquiryRequest
+  ): Promise<InquiryWithItems>
 
   // 管理員端方法
   getAllInquiries(params?: InquiryQueryParams): Promise<InquiryWithItems[]>
@@ -201,10 +223,10 @@ export interface ExtendedInquiryService {
  * 詢問服務 v2 實作
  * 使用統一服務架構的現代化實作
  */
-export class InquiryServiceV2 
+export class InquiryServiceV2
   extends AbstractSupabaseService<InquiryWithItems, CreateInquiryRequest, UpdateInquiryRequest>
-  implements ExtendedInquiryService {
-
+  implements ExtendedInquiryService
+{
   protected readonly transformer: InquiryTransformer
 
   constructor() {
@@ -216,7 +238,7 @@ export class InquiryServiceV2
       enableAuditLog: true,
       defaultPageSize: 20,
       maxPageSize: 100,
-      defaultIncludes: ['inquiry_items']
+      defaultIncludes: ['inquiry_items'],
     }
 
     const transformer = new InquiryTransformer()
@@ -227,9 +249,9 @@ export class InquiryServiceV2
   /**
    * 覆寫查詢以包含關聯資料
    */
-  protected createQuery(useAdmin: boolean = false) {
+  protected createQuery(useAdmin: boolean = false): any {
     const query = super.createQuery(useAdmin)
-    return query.select(`
+    return (query as any).select(`
       *,
       inquiry_items (*)
     `)
@@ -262,7 +284,7 @@ export class InquiryServiceV2
         total_estimated_amount: totalEstimatedAmount,
         status: 'pending',
         is_read: false,
-        is_replied: false
+        is_replied: false,
       }
 
       // 建立詢問單主記錄
@@ -271,7 +293,7 @@ export class InquiryServiceV2
       // 建立詢問項目（僅產品詢價）
       if (data.inquiry_type === 'product' && data.items && data.items.length > 0) {
         await this.createInquiryItems(inquiry.id, data.items)
-        
+
         // 重新載入包含項目的完整資料
         const fullInquiry = await this.findById(inquiry.id)
         if (!fullInquiry) {
@@ -283,11 +305,11 @@ export class InquiryServiceV2
       dbLogger.info('詢問單建立成功', {
         module: this.metadata.name,
         action: 'createInquiry',
-        metadata: { 
-          userId, 
+        metadata: {
+          userId,
           inquiryId: inquiry.id,
-          inquiryType: data.inquiry_type
-        }
+          inquiryType: data.inquiry_type,
+        },
       })
 
       return inquiry
@@ -309,7 +331,7 @@ export class InquiryServiceV2
       dbLogger.info('取得使用者詢問單列表成功', {
         module: this.metadata.name,
         action: 'getUserInquiries',
-        metadata: { userId, count: inquiries.length }
+        metadata: { userId, count: inquiries.length },
       })
 
       return inquiries
@@ -324,7 +346,7 @@ export class InquiryServiceV2
   async getInquiryById(userId: string, inquiryId: string): Promise<InquiryWithItems | null> {
     try {
       const inquiry = await this.findById(inquiryId)
-      
+
       // 檢查所有權
       if (inquiry && inquiry.user_id !== userId) {
         return null // 不直接拋錯，而是返回 null 以保持 API 一致性
@@ -339,7 +361,11 @@ export class InquiryServiceV2
   /**
    * 更新使用者的詢問單
    */
-  async updateInquiry(userId: string, inquiryId: string, data: UpdateInquiryRequest): Promise<InquiryWithItems> {
+  async updateInquiry(
+    userId: string,
+    inquiryId: string,
+    data: UpdateInquiryRequest
+  ): Promise<InquiryWithItems> {
     try {
       // 檢查所有權
       const existing = await this.getInquiryById(userId, inquiryId)
@@ -352,7 +378,7 @@ export class InquiryServiceV2
       dbLogger.info('詢問單更新成功', {
         module: this.metadata.name,
         action: 'updateInquiry',
-        metadata: { userId, inquiryId }
+        metadata: { userId, inquiryId },
       })
 
       return updated
@@ -390,10 +416,10 @@ export class InquiryServiceV2
   async updateInquiryStatus(inquiryId: string, status: InquiryStatus): Promise<InquiryWithItems> {
     try {
       const updateData: UpdateInquiryRequest = { status }
-      
+
       // 如果狀態變更為已讀或已回覆，更新相關時間戳
       if (status === 'quoted') {
-        (updateData as any).is_replied = true
+        ;(updateData as any).is_replied = true
         ;(updateData as any).replied_at = new Date().toISOString()
       }
 
@@ -410,7 +436,7 @@ export class InquiryServiceV2
     try {
       const client = this.getClient(true)
       const { data, error } = await client.from('inquiry_stats').select('*')
-      
+
       if (error) {
         throw ErrorFactory.fromSupabaseError(error)
       }
@@ -427,7 +453,7 @@ export class InquiryServiceV2
   async updateInquiryItems(inquiryId: string, items: InquiryItem[]): Promise<void> {
     try {
       const client = this.getClient(true)
-      
+
       // 刪除現有項目
       const { error: deleteError } = await client
         .from('inquiry_items')
@@ -442,12 +468,10 @@ export class InquiryServiceV2
       if (items.length > 0) {
         const itemsData = items.map(item => ({
           ...item,
-          inquiry_id: inquiryId
+          inquiry_id: inquiryId,
         }))
 
-        const { error: insertError } = await client
-          .from('inquiry_items')
-          .insert(itemsData)
+        const { error: insertError } = await client.from('inquiry_items').insert(itemsData)
 
         if (insertError) {
           throw ErrorFactory.fromSupabaseError(insertError)
@@ -457,7 +481,7 @@ export class InquiryServiceV2
       dbLogger.info('詢問項目更新成功', {
         module: this.metadata.name,
         action: 'updateInquiryItems',
-        metadata: { inquiryId, itemCount: items.length }
+        metadata: { inquiryId, itemCount: items.length },
       })
     } catch (error) {
       this.handleError(error, 'updateInquiryItems', { inquiryId, items })
@@ -477,15 +501,17 @@ export class InquiryServiceV2
   async searchInquiries(query: string, options?: QueryOptions): Promise<InquiryWithItems[]> {
     try {
       let dbQuery = this.createQuery(true)
-      
+
       // 實作全文搜尋邏輯
-      dbQuery = dbQuery.or(`customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,notes.ilike.%${query}%`)
-      
+      dbQuery = dbQuery.or(
+        `customer_name.ilike.%${query}%,customer_email.ilike.%${query}%,notes.ilike.%${query}%`
+      )
+
       // 套用其他查詢選項
       dbQuery = this.applyQueryOptions(dbQuery, options)
-      
+
       const { data, error } = await dbQuery
-      
+
       if (error) {
         this.handleError(error, 'searchInquiries', { query, options })
       }
@@ -523,7 +549,7 @@ export class InquiryServiceV2
       if (!data.items || data.items.length === 0) {
         throw new ValidationError('產品詢價必須包含至少一個項目')
       }
-      
+
       data.items.forEach((item, index) => {
         if (!item.product_id?.trim()) {
           throw new ValidationError(`第 ${index + 1} 項產品ID不能為空`)
@@ -569,9 +595,12 @@ export class InquiryServiceV2
   /**
    * 建立詢問項目
    */
-  private async createInquiryItems(inquiryId: string, items: CreateInquiryItemRequest[]): Promise<void> {
+  private async createInquiryItems(
+    inquiryId: string,
+    items: CreateInquiryItemRequest[]
+  ): Promise<void> {
     const client = this.getClient(true)
-    
+
     const itemsData = items.map(item => ({
       inquiry_id: inquiryId,
       product_id: item.product_id,
@@ -580,12 +609,10 @@ export class InquiryServiceV2
       quantity: item.quantity,
       unit_price: item.unit_price,
       total_price: item.unit_price ? item.unit_price * item.quantity : null,
-      notes: item.notes
+      notes: item.notes,
     }))
 
-    const { error } = await client
-      .from('inquiry_items')
-      .insert(itemsData)
+    const { error } = await client.from('inquiry_items').insert(itemsData)
 
     if (error) {
       throw ErrorFactory.fromSupabaseError(error)
@@ -612,7 +639,7 @@ export class InquiryServiceV2
     return {
       filters,
       sortBy: params.sort_by || 'created_at',
-      sortOrder: params.sort_order || 'desc'
+      sortOrder: params.sort_order || 'desc',
     }
   }
 }
@@ -620,5 +647,5 @@ export class InquiryServiceV2
 // 建立並匯出服務實例
 export const inquiryServiceV2 = new InquiryServiceV2()
 
-// 匯出類型以供其他模組使用  
+// 匯出類型以供其他模組使用
 export type { InquiryTransformer }

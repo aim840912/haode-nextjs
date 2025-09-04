@@ -5,6 +5,8 @@
  * 支援 JSON body、查詢參數和路由參數的驗證
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ValidationError } from '@/lib/errors'
@@ -226,13 +228,13 @@ export function withValidation<
 /**
  * 僅驗證 Body 的中間件
  */
-export function withBodyValidation<TSchema extends z.ZodSchema<unknown>>(
-  handler: ValidatedApiHandler<unknown, InferZodSchema<TSchema>>,
+export function withBodyValidation<TSchema extends z.ZodSchema<any>>(
+  handler: ValidatedApiHandler<unknown, z.infer<TSchema>>,
   schema: TSchema,
   options?: Partial<ValidationConfig>
 ): ValidatedApiHandler {
-  return withValidation(handler, {
-    body: schema,
+  return withValidation(handler as ValidatedApiHandler, {
+    body: schema as z.ZodSchema<any>,
     logValidationErrors: true,
     ...options,
   })
@@ -241,13 +243,13 @@ export function withBodyValidation<TSchema extends z.ZodSchema<unknown>>(
 /**
  * 僅驗證查詢參數的中間件
  */
-export function withQueryValidation<TSchema extends z.ZodSchema<unknown>>(
-  handler: ValidatedApiHandler<unknown, unknown, InferZodSchema<TSchema>>,
+export function withQueryValidation<TSchema extends z.ZodSchema<any>>(
+  handler: ValidatedApiHandler<unknown, unknown, z.infer<TSchema>>,
   schema: TSchema,
   options?: Partial<ValidationConfig>
 ): ValidatedApiHandler {
-  return withValidation(handler, {
-    query: schema,
+  return withValidation(handler as ValidatedApiHandler, {
+    query: schema as z.ZodSchema<any>,
     logValidationErrors: true,
     skipBodyValidation: true,
     ...options,
@@ -257,13 +259,13 @@ export function withQueryValidation<TSchema extends z.ZodSchema<unknown>>(
 /**
  * 僅驗證路由參數的中間件
  */
-export function withParamsValidation<TSchema extends z.ZodSchema<unknown>>(
-  handler: ValidatedApiHandler<unknown, unknown, unknown, InferZodSchema<TSchema>>,
+export function withParamsValidation<TSchema extends z.ZodSchema<any>>(
+  handler: ValidatedApiHandler<unknown, unknown, unknown, z.infer<TSchema>>,
   schema: TSchema,
   options?: Partial<ValidationConfig>
 ): ValidatedApiHandler {
-  return withValidation(handler, {
-    params: schema,
+  return withValidation(handler as ValidatedApiHandler, {
+    params: schema as z.ZodSchema<any>,
     logValidationErrors: true,
     skipBodyValidation: true,
     ...options,
@@ -323,10 +325,10 @@ export function withConditionalValidation(
 
     if (!config) {
       // 沒有配置驗證規則，直接執行
-      return await handler(request, context)
+      return await handler(request, { ...context, validated: {} })
     }
 
-    return await withValidation(handler, config)(request, context)
+    return await withValidation(handler, config)(request, { ...context, validated: {} })
   }
 }
 

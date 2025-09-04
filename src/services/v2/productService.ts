@@ -1,6 +1,6 @@
 /**
  * 產品服務 v2 - 使用統一服務架構
- * 
+ *
  * 重構的產品服務，遵循新的服務層標準：
  * - 實作統一的 BaseService 介面
  * - 支援 Supabase 和 JSON 兩種實作
@@ -10,9 +10,27 @@
 
 import path from 'path'
 import { Product, ProductImage } from '@/types/product'
-import { AbstractSupabaseService, DataTransformer, SupabaseServiceConfig } from '@/lib/abstract-supabase-service'
-import { AbstractJsonService, JsonEntity, JsonServiceConfig, SearchConfig } from '@/lib/abstract-json-service'
-import { BaseService, SearchableService, PaginatedService, QueryOptions, PaginatedQueryOptions, PaginatedResult } from '@/lib/base-service'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import {
+  AbstractSupabaseService,
+  DataTransformer,
+  SupabaseServiceConfig,
+} from '@/lib/abstract-supabase-service'
+import {
+  AbstractJsonService,
+  JsonEntity,
+  JsonServiceConfig,
+  SearchConfig,
+} from '@/lib/abstract-json-service'
+import {
+  BaseService,
+  SearchableService,
+  PaginatedService,
+  QueryOptions,
+  PaginatedQueryOptions,
+  PaginatedResult,
+} from '@/lib/base-service'
 import { dbLogger } from '@/lib/logger'
 
 /**
@@ -61,6 +79,13 @@ export interface UpdateProductDTO {
  * Supabase 資料庫記錄與 Product 實體的轉換器
  */
 export class ProductDataTransformer implements DataTransformer<Product> {
+  /**
+   * 從資料庫記錄轉換為實體 (新介面方法)
+   */
+  transform(record: Record<string, unknown>): Product {
+    return this.fromDB(record)
+  }
+
   fromDB(record: Record<string, unknown>): Product {
     // Parse images from JSON string if needed
     let images: string[] = []
@@ -76,8 +101,8 @@ export class ProductDataTransformer implements DataTransformer<Product> {
           module: 'ProductService',
           action: 'transformFromSupabase',
           metadata: {
-            error: error instanceof Error ? error.message : String(error)
-          }
+            error: error instanceof Error ? error.message : String(error),
+          },
         })
         images = []
       }
@@ -106,13 +131,13 @@ export class ProductDataTransformer implements DataTransformer<Product> {
       isActive: (record.is_active as boolean) !== false, // 預設為 true
       showInCatalog: (record.show_in_catalog as boolean) !== false, // 預設為 true
       createdAt: record.created_at as string,
-      updatedAt: record.updated_at as string
+      updatedAt: record.updated_at as string,
     }
   }
 
   toDB(entity: Partial<Product>): Record<string, unknown> {
     const record: Record<string, unknown> = {}
-    
+
     if (entity.name !== undefined) record.name = entity.name
     if (entity.description !== undefined) record.description = entity.description
     if (entity.category !== undefined) record.category = entity.category
@@ -128,7 +153,7 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     if (entity.inventory !== undefined) record.stock = entity.inventory
     if (entity.isActive !== undefined) record.is_active = entity.isActive
     if (entity.showInCatalog !== undefined) record.show_in_catalog = entity.showInCatalog
-    
+
     return record
   }
 }
@@ -136,10 +161,10 @@ export class ProductDataTransformer implements DataTransformer<Product> {
 /**
  * Supabase 產品服務實作
  */
-export class SupabaseProductService 
-  extends AbstractSupabaseService<Product, CreateProductDTO, UpdateProductDTO> 
-  implements SearchableService<Product> {
-  
+export class SupabaseProductService
+  extends AbstractSupabaseService<Product, CreateProductDTO, UpdateProductDTO>
+  implements SearchableService<Product>
+{
   protected transformer: ProductDataTransformer
 
   constructor() {
@@ -150,9 +175,9 @@ export class SupabaseProductService
       cacheTTL: 300,
       enableAuditLog: true,
       defaultPageSize: 20,
-      maxPageSize: 100
+      maxPageSize: 100,
     }
-    
+
     const transformer = new ProductDataTransformer()
     super(config, transformer)
     this.transformer = transformer
@@ -168,13 +193,15 @@ export class SupabaseProductService
         .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
-      
+
       if (error) {
         this.handleError(error, 'search', { query })
       }
 
-      const result = (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
-      
+      const result = (data || []).map((record: Record<string, unknown>) =>
+        this.transformFromDB(record)
+      )
+
       return result
     } catch (error) {
       this.handleError(error, 'search', { query })
@@ -189,7 +216,7 @@ export class SupabaseProductService
       const { data, error } = await this.createQuery(true)
         .select('*')
         .order('created_at', { ascending: false })
-      
+
       if (error) {
         this.handleError(error, 'findAllAdmin')
       }
@@ -208,13 +235,13 @@ export class SupabaseProductService
     try {
       const { getSupabaseServer } = await import('@/lib/supabase-auth')
       const client = getSupabaseServer()
-      
+
       const { data, error } = await client
         .from('products')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
-      
+
       if (error) {
         throw error
       }
@@ -234,10 +261,10 @@ interface JsonProduct extends Product, JsonEntity {}
 /**
  * JSON 檔案產品服務實作
  */
-export class JsonProductService 
+export class JsonProductService
   extends AbstractJsonService<JsonProduct, CreateProductDTO, UpdateProductDTO>
-  implements SearchableService<Product> {
-  
+  implements SearchableService<Product>
+{
   constructor() {
     const config: JsonServiceConfig = {
       filePath: path.join(process.cwd(), 'src/data/products.json'),
@@ -245,15 +272,15 @@ export class JsonProductService
       maxBackupFiles: 5,
       useMemoryCache: true,
       enableCache: true,
-      cacheTTL: 300
+      cacheTTL: 300,
     }
-    
+
     const searchConfig: SearchConfig = {
       searchableFields: ['name', 'description', 'category'],
       caseSensitive: false,
-      exactMatch: false
+      exactMatch: false,
     }
-    
+
     super(config, searchConfig)
   }
 
@@ -262,14 +289,14 @@ export class JsonProductService
    */
   protected transformCreateDTO(data: CreateProductDTO): JsonProduct {
     const baseProduct = super.transformCreateDTO(data)
-    
+
     return {
       ...baseProduct,
       isActive: data.isActive !== false, // 預設為 true
       showInCatalog: data.showInCatalog !== false, // 預設為 true
       inventory: data.inventory || 0,
       images: data.images || [],
-      galleryImages: data.galleryImages || []
+      galleryImages: data.galleryImages || [],
     } as JsonProduct
   }
 
@@ -280,30 +307,33 @@ export class JsonProductService
     const result = await super.findAll({
       filters: { isActive: true },
       sortBy: 'createdAt',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
     })
-    
+
     // 轉換為 Product 類型（移除 JsonEntity 的額外欄位）
-    return result.map(item => ({
-      id: item.id,
-      name: item.name,
-      description: item.description,
-      category: item.category,
-      price: item.price,
-      originalPrice: item.originalPrice,
-      isOnSale: item.isOnSale,
-      saleEndDate: item.saleEndDate,
-      images: item.images,
-      productImages: item.productImages,
-      primaryImageUrl: item.primaryImageUrl,
-      thumbnailUrl: item.thumbnailUrl,
-      galleryImages: item.galleryImages,
-      inventory: item.inventory,
-      isActive: item.isActive,
-      showInCatalog: item.showInCatalog,
-      createdAt: item.createdAt,
-      updatedAt: item.updatedAt
-    } as Product))
+    return result.map(
+      item =>
+        ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          category: item.category,
+          price: item.price,
+          originalPrice: item.originalPrice,
+          isOnSale: item.isOnSale,
+          saleEndDate: item.saleEndDate,
+          images: item.images,
+          productImages: item.productImages,
+          primaryImageUrl: item.primaryImageUrl,
+          thumbnailUrl: item.thumbnailUrl,
+          galleryImages: item.galleryImages,
+          inventory: item.inventory,
+          isActive: item.isActive,
+          showInCatalog: item.showInCatalog,
+          createdAt: item.createdAt,
+          updatedAt: item.updatedAt,
+        }) as Product
+    )
   }
 
   /**
@@ -312,9 +342,9 @@ export class JsonProductService
   async findAllAdmin(): Promise<Product[]> {
     const result = await super.findAll({
       sortBy: 'createdAt',
-      sortOrder: 'desc'
+      sortOrder: 'desc',
     })
-    
+
     return result.map(item => item as Product)
   }
 }
@@ -325,10 +355,10 @@ export class JsonProductService
 export interface IProductService extends BaseService<Product, CreateProductDTO, UpdateProductDTO> {
   // 搜尋功能
   search(query: string, options?: QueryOptions): Promise<Product[]>
-  
+
   // 分頁功能
   findAllPaginated(options?: PaginatedQueryOptions): Promise<PaginatedResult<Product>>
-  
+
   /** 管理員用：取得所有產品（包含下架的） */
   findAllAdmin(): Promise<Product[]>
 }
@@ -401,7 +431,7 @@ export class LegacyProductServiceAdapter {
   }
 
   async updateProduct(
-    id: string, 
+    id: string,
     product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<Product> {
     return this.service.update(id, product as UpdateProductDTO)

@@ -108,7 +108,7 @@ export interface PaginatedApiResponse<TData = unknown> extends ApiResponse<TData
 /**
  * API 請求選項
  */
-export interface ApiRequestOptions extends Omit<RequestInit, 'body'> {
+export interface ApiRequestOptions extends RequestInit {
   skipCSRF?: boolean
   retries?: number
   retryDelay?: number

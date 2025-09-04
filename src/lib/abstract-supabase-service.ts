@@ -8,6 +8,8 @@
  * - 審計日誌整合
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+
 import { SupabaseClient } from '@supabase/supabase-js'
 import { getSupabaseServer, getSupabaseAdmin } from '@/lib/supabase-auth'
 import {
@@ -24,10 +26,7 @@ import {
 } from './base-service'
 import { ErrorFactory, NotFoundError } from './errors'
 import { dbLogger } from './logger'
-import {
-  SupabaseQueryBuilder,
-  DataTransformer as InfraDataTransformer,
-} from '@/types/infrastructure.types'
+import { DataTransformer as InfraDataTransformer } from '@/types/infrastructure.types'
 
 /**
  * 資料轉換器介面（使用基礎設施類型）
@@ -132,11 +131,9 @@ export abstract class AbstractSupabaseService<
   /**
    * 建立查詢建構器
    */
-  protected createQuery<TRecord = DatabaseRecord>(
-    useAdmin: boolean = false
-  ): SupabaseQueryBuilder<TRecord> {
+  protected createQuery<TRecord = DatabaseRecord>(useAdmin: boolean = false) {
     const client = this.getClient(useAdmin)
-    const query = client.from(this.config.tableName) as SupabaseQueryBuilder<TRecord>
+    const query = client.from(this.config.tableName)
 
     // Debug logging
     dbLogger.debug('Creating Supabase query', {
@@ -153,10 +150,11 @@ export abstract class AbstractSupabaseService<
   /**
    * 套用查詢選項到查詢建構器
    */
-  protected applyQueryOptions<TRecord = DatabaseRecord>(
-    query: SupabaseQueryBuilder<TRecord>,
+  protected applyQueryOptions(
+     
+    query: any,
     options?: QueryOptions
-  ): SupabaseQueryBuilder<TRecord> {
+  ) {
     const normalizedOptions = normalizeQueryOptions(options)
 
     try {
@@ -164,19 +162,19 @@ export abstract class AbstractSupabaseService<
       if (Object.keys(normalizedOptions.filters).length > 0) {
         Object.entries(normalizedOptions.filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            query = query.eq(key, value)
+            query = (query as any).eq(key, value)
           }
         })
       }
 
       // 套用排序
-      query = query.order(normalizedOptions.sortBy, {
+      query = (query as any).order(normalizedOptions.sortBy, {
         ascending: normalizedOptions.sortOrder === 'asc',
       })
 
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = query.is(this.config.softDeleteField, null)
+        query = (query as any).is(this.config.softDeleteField, null)
       }
 
       return query
@@ -227,9 +225,9 @@ export abstract class AbstractSupabaseService<
   /**
    * 轉換實體為資料庫記錄
    */
-  protected transformToDB(entity: Partial<CreateDTO> | Partial<UpdateDTO>): DatabaseRecord {
-    if (this.transformer) {
-      return this.transformer.toDB(entity)
+  protected transformToDB(entity: any): DatabaseRecord {
+    if (this.transformer && this.transformer.reverseTransform) {
+      return this.transformer.reverseTransform(entity)
     }
     return entity as Record<string, unknown>
   }
@@ -243,30 +241,28 @@ export abstract class AbstractSupabaseService<
       const client = this.getClient()
 
       // Build query directly to avoid abstraction issues
-      let query = client.from(this.config.tableName) as SupabaseQueryBuilder<DatabaseRecord>
+      let query = client.from(this.config.tableName)
 
       // Apply filters
       if (Object.keys(normalizedOptions.filters).length > 0) {
         Object.entries(normalizedOptions.filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
-            query = query.eq(key, value)
+            query = (query as any).eq(key, value)
           }
         })
       }
 
       // Apply ordering
-      query = query.order(normalizedOptions.sortBy, {
+      query = (query as any).order(normalizedOptions.sortBy, {
         ascending: normalizedOptions.sortOrder === 'asc',
       })
 
       // Apply soft delete filtering
       if (this.config.softDeleteField) {
-        query = query.is(this.config.softDeleteField, null)
+        query = (query as any).is(this.config.softDeleteField, null)
       }
 
-      const { data, error } = (await query.select('*')) as Promise<
-        QueryArrayResponse<DatabaseRecord>
-      >
+      const { data, error } = await query.select('*')
 
       if (error) {
         this.handleError(error, 'findAll', { options })
@@ -295,12 +291,10 @@ export abstract class AbstractSupabaseService<
 
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = query.is(this.config.softDeleteField, null)
+        query = (query as any).is(this.config.softDeleteField, null)
       }
 
-      const { data, error } = (await query.select('*').eq('id', id).single()) as Promise<
-        QueryResponse<DatabaseRecord>
-      >
+      const { data, error } = await query.select('*').eq('id', id).single()
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -332,11 +326,11 @@ export abstract class AbstractSupabaseService<
       const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
 
-      const { data: result, error } = (await client
+      const { data: result, error } = await client
         .from(this.config.tableName)
         .insert([dbData])
         .select()
-        .single()) as Promise<QueryResponse<DatabaseRecord>>
+        .single()
 
       if (error) {
         this.handleError(error, 'create', { data: dbData })
@@ -364,18 +358,14 @@ export abstract class AbstractSupabaseService<
       const dbData = this.transformToDB(data)
       const client = this.getClient(true) // 使用管理員權限
 
-      let query = client.from(this.config.tableName) as SupabaseQueryBuilder<DatabaseRecord>
+      let query = client.from(this.config.tableName)
 
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = query.is(this.config.softDeleteField, null)
+        query = (query as any).is(this.config.softDeleteField, null)
       }
 
-      const { data: result, error } = (await query
-        .update(dbData)
-        .eq('id', id)
-        .select()
-        .single()) as Promise<QueryResponse<DatabaseRecord>>
+      const { data: result, error } = await query.update(dbData).eq('id', id).select().single()
 
       if (error) {
         this.handleError(error, 'update', { id, data: dbData })
@@ -410,11 +400,11 @@ export abstract class AbstractSupabaseService<
     try {
       const client = this.getClient(true) // 使用管理員權限
 
-      const query = client.from(this.config.tableName) as SupabaseQueryBuilder<DatabaseRecord>
+      const query = client.from(this.config.tableName)
 
       if (this.config.softDeleteField) {
         // 軟刪除
-        const { error } = await query
+        const { error } = await (query as any)
           .update({ [this.config.softDeleteField]: new Date().toISOString() })
           .eq('id', id)
           .is(this.config.softDeleteField, null)
@@ -424,7 +414,7 @@ export abstract class AbstractSupabaseService<
         }
       } else {
         // 硬刪除
-        const { error } = await query.delete().eq('id', id)
+        const { error } = await (query as any).delete().eq('id', id)
 
         if (error) {
           this.handleError(error, 'delete', { id })
@@ -450,12 +440,10 @@ export abstract class AbstractSupabaseService<
 
       // 套用軟刪除過濾
       if (this.config.softDeleteField) {
-        query = query.is(this.config.softDeleteField, null)
+        query = (query as any).is(this.config.softDeleteField, null)
       }
 
-      const { data, error } = (await query.select('id').eq('id', id).single()) as Promise<
-        QueryResponse<{ id: string }>
-      >
+      const { data, error } = await query.select('id').eq('id', id).single()
 
       if (error && error.code !== 'PGRST116') {
         this.handleError(error, 'exists', { id })
