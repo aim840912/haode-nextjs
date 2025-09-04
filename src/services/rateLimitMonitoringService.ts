@@ -1,6 +1,6 @@
 /**
  * Rate Limiting 監控服務
- * 
+ *
  * 提供 rate limiting 的統計、分析和監控功能：
  * - 實時統計超限事件
  * - 惡意 IP 識別和自動封鎖
@@ -8,41 +8,41 @@
  * - 效能分析和建議
  */
 
-import { kv } from '@vercel/kv';
-import { auditLogService } from './auditLogService';
-import { AuditAction } from '@/types/audit';
-import { dbLogger } from '@/lib/logger';
+import { kv } from '@vercel/kv'
+import { auditLogService } from './auditLogService'
+import { AuditAction } from '@/types/audit'
+import { dbLogger } from '@/lib/logger'
 
 /**
  * Rate Limiting 統計資料介面
  */
 export interface RateLimitStats {
   /** 總請求數 */
-  totalRequests: number;
+  totalRequests: number
   /** 被限制的請求數 */
-  limitedRequests: number;
+  limitedRequests: number
   /** 限制率 (%) */
-  limitRate: number;
+  limitRate: number
   /** 最近 24 小時的統計 */
   last24Hours: {
-    requests: number;
-    limited: number;
-    rate: number;
-  };
+    requests: number
+    limited: number
+    rate: number
+  }
   /** 最近 1 小時的統計 */
   lastHour: {
-    requests: number;
-    limited: number;
-    rate: number;
-  };
+    requests: number
+    limited: number
+    rate: number
+  }
   /** 活躍的被封鎖 IP 數量 */
-  blockedIPs: number;
+  blockedIPs: number
   /** 最常觸發限制的 IP */
   topOffendingIPs: Array<{
-    ip: string;
-    violations: number;
-    lastViolation: string;
-  }>;
+    ip: string
+    violations: number
+    lastViolation: string
+  }>
 }
 
 /**
@@ -52,45 +52,45 @@ export enum BlockReason {
   RATE_LIMIT_EXCEEDED = 'rate_limit_exceeded',
   SUSPICIOUS_ACTIVITY = 'suspicious_activity',
   MANUAL_BLOCK = 'manual_block',
-  ANTI_DDOS = 'anti_ddos'
+  ANTI_DDOS = 'anti_ddos',
 }
 
 /**
  * IP 封鎖資訊
  */
 export interface IPBlockInfo {
-  ip: string;
-  reason: BlockReason;
-  blockedAt: string;
-  expiresAt: string;
-  violationCount: number;
-  lastViolation: string;
-  userAgent?: string;
-  country?: string;
+  ip: string
+  reason: BlockReason
+  blockedAt: string
+  expiresAt: string
+  violationCount: number
+  lastViolation: string
+  userAgent?: string
+  country?: string
 }
 
 /**
  * 監控警報
  */
 export interface MonitoringAlert {
-  id: string;
-  type: 'high_violation_rate' | 'suspicious_ip' | 'ddos_attempt' | 'system_overload';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  message: string;
-  details: Record<string, unknown>;
-  triggeredAt: string;
-  resolved: boolean;
-  resolvedAt?: string;
+  id: string
+  type: 'high_violation_rate' | 'suspicious_ip' | 'ddos_attempt' | 'system_overload'
+  severity: 'low' | 'medium' | 'high' | 'critical'
+  message: string
+  details: Record<string, unknown>
+  triggeredAt: string
+  resolved: boolean
+  resolvedAt?: string
 }
 
 /**
  * Rate Limiting 監控服務類別
  */
 export class RateLimitMonitoringService {
-  private static readonly STATS_KEY_PREFIX = 'rate_limit_stats:';
-  private static readonly BLOCK_KEY_PREFIX = 'ip_block:';
-  private static readonly VIOLATION_KEY_PREFIX = 'violations:';
-  private static readonly ALERT_KEY_PREFIX = 'monitoring_alert:';
+  private static readonly STATS_KEY_PREFIX = 'rate_limit_stats:'
+  private static readonly BLOCK_KEY_PREFIX = 'ip_block:'
+  private static readonly VIOLATION_KEY_PREFIX = 'violations:'
+  private static readonly ALERT_KEY_PREFIX = 'monitoring_alert:'
 
   /**
    * 記錄 rate limiting 事件
@@ -102,37 +102,40 @@ export class RateLimitMonitoringService {
     limited: boolean,
     details: Record<string, unknown> = {}
   ): Promise<void> {
-    const now = Date.now();
-    const hourKey = `${RateLimitMonitoringService.STATS_KEY_PREFIX}hour:${Math.floor(now / (60 * 60 * 1000))}`;
-    const dayKey = `${RateLimitMonitoringService.STATS_KEY_PREFIX}day:${Math.floor(now / (24 * 60 * 60 * 1000))}`;
-    
+    const now = Date.now()
+    const hourKey = `${RateLimitMonitoringService.STATS_KEY_PREFIX}hour:${Math.floor(now / (60 * 60 * 1000))}`
+    const dayKey = `${RateLimitMonitoringService.STATS_KEY_PREFIX}day:${Math.floor(now / (24 * 60 * 60 * 1000))}`
+
     try {
       // 更新統計計數器
       await Promise.all([
         kv.hincrby(hourKey, 'total_requests', 1),
         kv.hincrby(dayKey, 'total_requests', 1),
         kv.expire(hourKey, 2 * 60 * 60), // 2 小時 TTL
-        kv.expire(dayKey, 48 * 60 * 60)  // 48 小時 TTL
-      ]);
+        kv.expire(dayKey, 48 * 60 * 60), // 48 小時 TTL
+      ])
 
       if (limited) {
         // 更新限制統計
         await Promise.all([
           kv.hincrby(hourKey, 'limited_requests', 1),
           kv.hincrby(dayKey, 'limited_requests', 1),
-          this.recordViolation(ip, path, strategy, details)
-        ]);
+          this.recordViolation(ip, path, strategy, details),
+        ])
 
         // 檢查是否需要自動封鎖
-        await this.checkAutoBlock(ip, details);
+        await this.checkAutoBlock(ip, details)
       }
-
     } catch (error) {
-      dbLogger.error('Rate Limit 事件記錄失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: 'RateLimitMonitoringService',
-        action: 'recordRateLimitEvent',
-        metadata: { ip, path, strategy }
-      });
+      dbLogger.error(
+        'Rate Limit 事件記錄失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: 'RateLimitMonitoringService',
+          action: 'recordRateLimitEvent',
+          metadata: { ip, path, strategy },
+        }
+      )
     }
   }
 
@@ -145,28 +148,29 @@ export class RateLimitMonitoringService {
     strategy: string,
     details: Record<string, unknown>
   ): Promise<void> {
-    const violationKey = `${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}${ip}`;
-    const now = new Date().toISOString();
+    const violationKey = `${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}${ip}`
+    const now = new Date().toISOString()
 
     try {
       // 增加違反計數
-      const count = await kv.hincrby(violationKey, 'count', 1);
-      
+      const count = await kv.hincrby(violationKey, 'count', 1)
+
       // 更新最後違反時間
       await kv.hset(violationKey, {
         last_violation: now,
         last_path: path,
         last_strategy: strategy,
-        user_agent: details.userAgent || 'unknown'
-      });
+        user_agent: details.userAgent || 'unknown',
+      })
 
       // 設置過期時間（24 小時）
-      await kv.expire(violationKey, 24 * 60 * 60);
+      await kv.expire(violationKey, 24 * 60 * 60)
 
       // 記錄到審計日誌
-      if (count % 5 === 0) { // 每 5 次違反記錄一次
+      if (count % 5 === 0) {
+        // 每 5 次違反記錄一次
         await auditLogService.log({
-          action: 'rate_limit_violation_milestone' as AuditAction,
+          action: 'unauthorized_access', // 使用有效的 AuditAction
           resource_type: 'rate_limiter',
           resource_id: ip,
           user_id: null,
@@ -176,21 +180,25 @@ export class RateLimitMonitoringService {
             path,
             strategy,
             violationCount: count,
-            ...details
+            violationType: 'rate_limit_violation_milestone',
+            ...details,
           },
           metadata: {
             severity: count > 50 ? 'high' : count > 20 ? 'medium' : 'low',
-            alert: count > 50
-          }
-        });
+            alert: count > 50,
+          },
+        })
       }
-
     } catch (error) {
-      dbLogger.error('違規事件記錄失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: 'RateLimitMonitoringService',
-        action: 'recordViolation',
-        metadata: { ip, path, strategy }
-      });
+      dbLogger.error(
+        '違規事件記錄失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: 'RateLimitMonitoringService',
+          action: 'recordViolation',
+          metadata: { ip, path, strategy },
+        }
+      )
     }
   }
 
@@ -199,26 +207,26 @@ export class RateLimitMonitoringService {
    */
   private async checkAutoBlock(ip: string, details: Record<string, unknown>): Promise<void> {
     try {
-      const violationKey = `${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}${ip}`;
-      const violationData = await kv.hgetall(violationKey);
-      
-      if (!violationData || !violationData.count) return;
+      const violationKey = `${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}${ip}`
+      const violationData = await kv.hgetall(violationKey)
 
-      const violationCount = parseInt(violationData.count as string);
-      const threshold = this.getAutoBlockThreshold(details);
+      if (!violationData || !violationData.count) return
+
+      const violationCount = parseInt(violationData.count as string)
+      const threshold = this.getAutoBlockThreshold(details)
 
       if (violationCount >= threshold) {
         await this.blockIP(
-          ip, 
-          BlockReason.RATE_LIMIT_EXCEEDED, 
+          ip,
+          BlockReason.RATE_LIMIT_EXCEEDED,
           this.getBlockDuration(violationCount),
           {
             violationCount,
             autoBlocked: true,
             lastViolation: violationData.last_violation as string,
-            userAgent: violationData.user_agent as string
+            userAgent: violationData.user_agent as string,
           }
-        );
+        )
 
         // 創建高優先級警報
         await this.createAlert({
@@ -230,17 +238,20 @@ export class RateLimitMonitoringService {
             violationCount,
             threshold,
             autoBlocked: true,
-            userAgent: violationData.user_agent
-          }
-        });
+            userAgent: violationData.user_agent,
+          },
+        })
       }
-
     } catch (error) {
-      dbLogger.error('自動封鎖檢查失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: 'RateLimitMonitoringService',
-        action: 'checkAutoBlock',
-        metadata: { ip }
-      });
+      dbLogger.error(
+        '自動封鎖檢查失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: 'RateLimitMonitoringService',
+          action: 'checkAutoBlock',
+          metadata: { ip },
+        }
+      )
     }
   }
 
@@ -253,42 +264,44 @@ export class RateLimitMonitoringService {
     durationMs: number,
     metadata: Record<string, unknown> = {}
   ): Promise<void> {
-    const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`;
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + durationMs);
+    const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`
+    const now = new Date()
+    const expiresAt = new Date(now.getTime() + durationMs)
 
     const blockInfo: IPBlockInfo = {
       ip,
       reason,
       blockedAt: now.toISOString(),
       expiresAt: expiresAt.toISOString(),
-      violationCount: metadata.violationCount || 0,
-      lastViolation: metadata.lastViolation || now.toISOString(),
-      userAgent: metadata.userAgent,
-      country: metadata.country
-    };
+      violationCount: typeof metadata.violationCount === 'number' ? metadata.violationCount : 0,
+      lastViolation:
+        typeof metadata.lastViolation === 'string' ? metadata.lastViolation : now.toISOString(),
+      userAgent: typeof metadata.userAgent === 'string' ? metadata.userAgent : undefined,
+      country: typeof metadata.country === 'string' ? metadata.country : undefined,
+    }
 
     try {
       // 存儲封鎖資訊
-      await kv.hset(blockKey, blockInfo);
-      await kv.expire(blockKey, Math.ceil(durationMs / 1000));
+      await kv.hset(blockKey, blockInfo as unknown as Record<string, unknown>)
+      await kv.expire(blockKey, Math.ceil(durationMs / 1000))
 
       // 記錄到審計日誌
       await auditLogService.log({
-        action: 'ip_blocked' as AuditAction,
+        action: 'status_change', // 使用有效的 AuditAction，IP封鎖是狀態變更
         resource_type: 'security',
         resource_id: ip,
         user_id: null,
         user_email: 'system',
         resource_details: {
           ...blockInfo,
-          ...metadata
+          operationType: 'ip_blocked',
+          ...metadata,
         },
         metadata: {
           severity: 'high',
-          alert: true
-        }
-      });
+          alert: true,
+        },
+      })
 
       dbLogger.warn('IP 已被封鎖', {
         module: 'RateLimitMonitoringService',
@@ -297,16 +310,15 @@ export class RateLimitMonitoringService {
           ip,
           reason,
           expiresAt: expiresAt.toISOString(),
-          violationCount: metadata.violationCount
-        }
-      });
-
+          violationCount: metadata.violationCount,
+        },
+      })
     } catch (error) {
       dbLogger.error('IP 封鎖失敗', error instanceof Error ? error : new Error('Unknown error'), {
         module: 'RateLimitMonitoringService',
         action: 'blockIP',
-        metadata: { ip, reason }
-      });
+        metadata: { ip, reason },
+      })
     }
   }
 
@@ -314,32 +326,35 @@ export class RateLimitMonitoringService {
    * 檢查 IP 是否被封鎖
    */
   async isIPBlocked(ip: string): Promise<IPBlockInfo | null> {
-    const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`;
-    
+    const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`
+
     try {
-      const blockData = await kv.hgetall(blockKey);
-      
+      const blockData = await kv.hgetall(blockKey)
+
       if (!blockData || !blockData.ip) {
-        return null;
+        return null
       }
 
-      const blockInfo = blockData as unknown as IPBlockInfo;
-      
+      const blockInfo = blockData as unknown as IPBlockInfo
+
       // 檢查是否已過期
       if (new Date() > new Date(blockInfo.expiresAt)) {
-        await kv.del(blockKey);
-        return null;
+        await kv.del(blockKey)
+        return null
       }
 
-      return blockInfo;
-
+      return blockInfo
     } catch (error) {
-      dbLogger.error('IP 封鎖狀態檢查失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: 'RateLimitMonitoringService',
-        action: 'isIPBlocked',
-        metadata: { ip }
-      });
-      return null;
+      dbLogger.error(
+        'IP 封鎖狀態檢查失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: 'RateLimitMonitoringService',
+          action: 'isIPBlocked',
+          metadata: { ip },
+        }
+      )
+      return null
     }
   }
 
@@ -347,17 +362,17 @@ export class RateLimitMonitoringService {
    * 解除 IP 封鎖
    */
   async unblockIP(ip: string, reason: string = 'manual_unblock'): Promise<void> {
-    const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`;
-    
+    const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`
+
     try {
-      const blockInfo = await kv.hgetall(blockKey);
-      
+      const blockInfo = await kv.hgetall(blockKey)
+
       if (blockInfo && blockInfo.ip) {
-        await kv.del(blockKey);
-        
+        await kv.del(blockKey)
+
         // 記錄解封事件
         await auditLogService.log({
-          action: 'ip_unblocked' as AuditAction,
+          action: 'status_change', // 使用有效的 AuditAction，IP解封是狀態變更
           resource_type: 'security',
           resource_id: ip,
           user_id: null,
@@ -366,12 +381,13 @@ export class RateLimitMonitoringService {
             ip,
             reason,
             originalBlockReason: blockInfo.reason,
-            unblockedAt: new Date().toISOString()
+            unblockedAt: new Date().toISOString(),
+            operationType: 'ip_unblocked',
           },
           metadata: {
-            severity: 'medium'
-          }
-        });
+            severity: 'medium',
+          },
+        })
 
         dbLogger.info('IP 已解除封鎖', {
           module: 'RateLimitMonitoringService',
@@ -379,17 +395,16 @@ export class RateLimitMonitoringService {
           metadata: {
             ip,
             reason,
-            originalBlockReason: blockInfo.reason
-          }
-        });
+            originalBlockReason: blockInfo.reason,
+          },
+        })
       }
-
     } catch (error) {
       dbLogger.error('IP 解封失敗', error instanceof Error ? error : new Error('Unknown error'), {
         module: 'RateLimitMonitoringService',
         action: 'unblockIP',
-        metadata: { ip, reason }
-      });
+        metadata: { ip, reason },
+      })
     }
   }
 
@@ -397,22 +412,22 @@ export class RateLimitMonitoringService {
    * 獲取統計資料
    */
   async getStats(): Promise<RateLimitStats> {
-    const now = Date.now();
-    const currentHour = Math.floor(now / (60 * 60 * 1000));
-    const currentDay = Math.floor(now / (24 * 60 * 60 * 1000));
+    const now = Date.now()
+    const currentHour = Math.floor(now / (60 * 60 * 1000))
+    const currentDay = Math.floor(now / (24 * 60 * 60 * 1000))
 
     try {
       const [hourStats, dayStats, blockedIPs, topOffenders] = await Promise.all([
         kv.hgetall(`${RateLimitMonitoringService.STATS_KEY_PREFIX}hour:${currentHour}`),
         kv.hgetall(`${RateLimitMonitoringService.STATS_KEY_PREFIX}day:${currentDay}`),
         this.getBlockedIPsCount(),
-        this.getTopOffendingIPs()
-      ]);
+        this.getTopOffendingIPs(),
+      ])
 
-      const hourRequests = parseInt(hourStats?.total_requests as string) || 0;
-      const hourLimited = parseInt(hourStats?.limited_requests as string) || 0;
-      const dayRequests = parseInt(dayStats?.total_requests as string) || 0;
-      const dayLimited = parseInt(dayStats?.limited_requests as string) || 0;
+      const hourRequests = parseInt(hourStats?.total_requests as string) || 0
+      const hourLimited = parseInt(hourStats?.limited_requests as string) || 0
+      const dayRequests = parseInt(dayStats?.total_requests as string) || 0
+      const dayLimited = parseInt(dayStats?.limited_requests as string) || 0
 
       return {
         totalRequests: dayRequests,
@@ -421,56 +436,64 @@ export class RateLimitMonitoringService {
         last24Hours: {
           requests: dayRequests,
           limited: dayLimited,
-          rate: dayRequests > 0 ? (dayLimited / dayRequests) * 100 : 0
+          rate: dayRequests > 0 ? (dayLimited / dayRequests) * 100 : 0,
         },
         lastHour: {
           requests: hourRequests,
           limited: hourLimited,
-          rate: hourRequests > 0 ? (hourLimited / hourRequests) * 100 : 0
+          rate: hourRequests > 0 ? (hourLimited / hourRequests) * 100 : 0,
         },
         blockedIPs,
-        topOffendingIPs: topOffenders
-      };
-
+        topOffendingIPs: topOffenders,
+      }
     } catch (error) {
-      dbLogger.error('統計資料獲取失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: 'RateLimitMonitoringService',
-        action: 'getStats'
-      });
-      return this.getEmptyStats();
+      dbLogger.error(
+        '統計資料獲取失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: 'RateLimitMonitoringService',
+          action: 'getStats',
+        }
+      )
+      return this.getEmptyStats()
     }
   }
 
   /**
    * 創建監控警報
    */
-  private async createAlert(alert: Omit<MonitoringAlert, 'id' | 'triggeredAt' | 'resolved'>): Promise<void> {
-    const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  private async createAlert(
+    alert: Omit<MonitoringAlert, 'id' | 'triggeredAt' | 'resolved'>
+  ): Promise<void> {
+    const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     const alertData: MonitoringAlert = {
       id: alertId,
       triggeredAt: new Date().toISOString(),
       resolved: false,
-      ...alert
-    };
+      ...alert,
+    }
 
     try {
-      const alertKey = `${RateLimitMonitoringService.ALERT_KEY_PREFIX}${alertId}`;
-      await kv.hset(alertKey, alertData);
-      await kv.expire(alertKey, 7 * 24 * 60 * 60); // 保留 7 天
+      const alertKey = `${RateLimitMonitoringService.ALERT_KEY_PREFIX}${alertId}`
+      await kv.hset(alertKey, alertData as unknown as Record<string, unknown>)
+      await kv.expire(alertKey, 7 * 24 * 60 * 60) // 保留 7 天
 
       // 記錄到審計日誌
       await auditLogService.log({
-        action: 'monitoring_alert_created' as AuditAction,
+        action: 'create', // 使用有效的 AuditAction，創建監控警報
         resource_type: 'monitoring',
         resource_id: alertId,
         user_id: null,
         user_email: 'system',
-        resource_details: alertData as unknown as Record<string, unknown>,
+        resource_details: {
+          ...alertData,
+          operationType: 'monitoring_alert_created',
+        } as Record<string, unknown>,
         metadata: {
           severity: alert.severity,
-          alert: alert.severity === 'critical' || alert.severity === 'high'
-        }
-      });
+          alert: alert.severity === 'critical' || alert.severity === 'high',
+        },
+      })
 
       dbLogger.warn('監控警報已創建', {
         module: 'RateLimitMonitoringService',
@@ -479,19 +502,22 @@ export class RateLimitMonitoringService {
           alertId,
           type: alert.type,
           severity: alert.severity,
-          message: alert.message
-        }
-      });
-
+          message: alert.message,
+        },
+      })
     } catch (error) {
-      dbLogger.error('監控警報創建失敗', error instanceof Error ? error : new Error('Unknown error'), {
-        module: 'RateLimitMonitoringService',
-        action: 'createAlert',
-        metadata: {
-          type: alert.type,
-          severity: alert.severity
+      dbLogger.error(
+        '監控警報創建失敗',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          module: 'RateLimitMonitoringService',
+          action: 'createAlert',
+          metadata: {
+            type: alert.type,
+            severity: alert.severity,
+          },
         }
-      });
+      )
     }
   }
 
@@ -500,10 +526,11 @@ export class RateLimitMonitoringService {
    */
   private getAutoBlockThreshold(details: Record<string, unknown>): number {
     // 根據不同情境設定不同閾值
-    if (details.path?.includes('/api/auth/')) return 10; // 認證 API 更嚴格
-    if (details.path?.includes('/api/payment/')) return 5; // 支付 API 最嚴格
-    if (details.path?.includes('/api/admin/')) return 50; // 管理 API 較寬鬆
-    return 25; // 預設閾值
+    const path = typeof details.path === 'string' ? details.path : ''
+    if (path.includes('/api/auth/')) return 10 // 認證 API 更嚴格
+    if (path.includes('/api/payment/')) return 5 // 支付 API 最嚴格
+    if (path.includes('/api/admin/')) return 50 // 管理 API 較寬鬆
+    return 25 // 預設閾值
   }
 
   /**
@@ -511,10 +538,10 @@ export class RateLimitMonitoringService {
    */
   private getBlockDuration(violationCount: number): number {
     // 基於違反次數的遞增封鎖時間
-    if (violationCount >= 100) return 24 * 60 * 60 * 1000; // 24 小時
-    if (violationCount >= 50) return 4 * 60 * 60 * 1000;   // 4 小時
-    if (violationCount >= 25) return 60 * 60 * 1000;       // 1 小時
-    return 15 * 60 * 1000; // 15 分鐘
+    if (violationCount >= 100) return 24 * 60 * 60 * 1000 // 24 小時
+    if (violationCount >= 50) return 4 * 60 * 60 * 1000 // 4 小時
+    if (violationCount >= 25) return 60 * 60 * 1000 // 1 小時
+    return 15 * 60 * 1000 // 15 分鐘
   }
 
   /**
@@ -524,36 +551,39 @@ export class RateLimitMonitoringService {
     try {
       // 這是一個簡化的實作，實際上應該掃描所有 block keys
       // 在生產環境中可能需要維護一個單獨的計數器
-      const keys = await kv.keys(`${RateLimitMonitoringService.BLOCK_KEY_PREFIX}*`);
-      return keys.length;
+      const keys = await kv.keys(`${RateLimitMonitoringService.BLOCK_KEY_PREFIX}*`)
+      return keys.length
     } catch {
-      return 0;
+      return 0
     }
   }
 
   /**
    * 獲取違反次數最多的 IP
    */
-  private async getTopOffendingIPs(): Promise<Array<{ ip: string; violations: number; lastViolation: string }>> {
+  private async getTopOffendingIPs(): Promise<
+    Array<{ ip: string; violations: number; lastViolation: string }>
+  > {
     try {
       // 這是簡化實作，實際應該從索引中獲取
-      const keys = await kv.keys(`${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}*`);
-      const results = [];
+      const keys = await kv.keys(`${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}*`)
+      const results = []
 
-      for (const key of keys.slice(0, 10)) { // 只取前 10 個
-        const data = await kv.hgetall(key);
+      for (const key of keys.slice(0, 10)) {
+        // 只取前 10 個
+        const data = await kv.hgetall(key)
         if (data && data.count) {
           results.push({
             ip: key.replace(RateLimitMonitoringService.VIOLATION_KEY_PREFIX, ''),
             violations: parseInt(data.count as string),
-            lastViolation: data.last_violation as string || 'unknown'
-          });
+            lastViolation: (data.last_violation as string) || 'unknown',
+          })
         }
       }
 
-      return results.sort((a, b) => b.violations - a.violations);
+      return results.sort((a, b) => b.violations - a.violations)
     } catch {
-      return [];
+      return []
     }
   }
 
@@ -568,13 +598,13 @@ export class RateLimitMonitoringService {
       last24Hours: { requests: 0, limited: 0, rate: 0 },
       lastHour: { requests: 0, limited: 0, rate: 0 },
       blockedIPs: 0,
-      topOffendingIPs: []
-    };
+      topOffendingIPs: [],
+    }
   }
 }
 
 // 創建全域監控服務實例
-export const rateLimitMonitor = new RateLimitMonitoringService();
+export const rateLimitMonitor = new RateLimitMonitoringService()
 
 // 導出便利函數
 export async function recordRateLimitEvent(
@@ -584,11 +614,11 @@ export async function recordRateLimitEvent(
   limited: boolean,
   details: Record<string, unknown> = {}
 ): Promise<void> {
-  return rateLimitMonitor.recordRateLimitEvent(ip, path, strategy, limited, details);
+  return rateLimitMonitor.recordRateLimitEvent(ip, path, strategy, limited, details)
 }
 
 export async function isIPBlocked(ip: string): Promise<IPBlockInfo | null> {
-  return rateLimitMonitor.isIPBlocked(ip);
+  return rateLimitMonitor.isIPBlocked(ip)
 }
 
 export async function blockIP(
@@ -597,13 +627,13 @@ export async function blockIP(
   durationMs: number,
   metadata: Record<string, unknown> = {}
 ): Promise<void> {
-  return rateLimitMonitor.blockIP(ip, reason, durationMs, metadata);
+  return rateLimitMonitor.blockIP(ip, reason, durationMs, metadata)
 }
 
 export async function unblockIP(ip: string, reason?: string): Promise<void> {
-  return rateLimitMonitor.unblockIP(ip, reason);
+  return rateLimitMonitor.unblockIP(ip, reason)
 }
 
 export async function getRateLimitStats(): Promise<RateLimitStats> {
-  return rateLimitMonitor.getStats();
+  return rateLimitMonitor.getStats()
 }

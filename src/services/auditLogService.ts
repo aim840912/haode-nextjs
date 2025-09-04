@@ -1,7 +1,7 @@
 /**
  * 審計日誌服務實作
  * 提供審計日誌的記錄、查詢和統計功能
- * 
+ *
  * 審計策略：
  * - ✅ 記錄重要操作：建立(create)、更新(update)、刪除(delete)
  * - ✅ 記錄狀態變更：status_change
@@ -11,9 +11,9 @@
  * - ❌ 不記錄靜態頁面訪問：page_view
  */
 
-import { createServiceSupabaseClient } from '@/lib/supabase-server';
-import { dbLogger } from '@/lib/logger';
-import { 
+import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { dbLogger } from '@/lib/logger'
+import {
   AuditLogService,
   AuditLog,
   CreateAuditLogRequest,
@@ -23,20 +23,21 @@ import {
   ResourceAccessStats,
   AuditLogUtils,
   ResourceType,
-  AuditAction
-} from '@/types/audit';
+  AuditAction,
+  AuditTypeGuards,
+} from '@/types/audit'
+import { Database } from '@/types/database'
 
 // Supabase 審計日誌服務實作
 export class SupabaseAuditLogService implements AuditLogService {
-  
   // 記錄審計日誌
   async log(request: CreateAuditLogRequest): Promise<void> {
     try {
       // 驗證請求資料
-      const validation = AuditLogUtils.validateAuditLogRequest(request);
+      const validation = AuditLogUtils.validateAuditLogRequest(request)
       if (!validation.isValid) {
-        dbLogger.info('審計日誌驗證失敗', { metadata: { errors: validation.errors } });
-        return; // 不拋出錯誤，避免影響主要業務流程
+        dbLogger.info('審計日誌驗證失敗', { metadata: { errors: validation.errors } })
+        return // 不拋出錯誤，避免影響主要業務流程
       }
 
       // 檢查是否為重複操作（5分鐘內相同使用者、相同動作、相同資源）
@@ -46,10 +47,10 @@ export class SupabaseAuditLogService implements AuditLogService {
             action: request.action,
             resource: request.resource_type,
             resourceId: request.resource_id,
-            user: request.user_email
-          }
-        });
-        return;
+            user: request.user_email,
+          },
+        })
+        return
       }
 
       // 準備審計日誌資料
@@ -67,13 +68,11 @@ export class SupabaseAuditLogService implements AuditLogService {
         ip_address: request.ip_address,
         user_agent: request.user_agent,
         session_id: request.session_id,
-        metadata: request.metadata || {}
-      };
+        metadata: request.metadata || {},
+      }
 
       // 插入審計日誌
-      const { error } = await createServiceSupabaseClient()
-        .from('audit_logs')
-        .insert(auditData as any);
+      const { error } = await createServiceSupabaseClient().from('audit_logs').insert(auditData)
 
       if (error) {
         dbLogger.info('審計日誌記錄失敗', {
@@ -82,9 +81,9 @@ export class SupabaseAuditLogService implements AuditLogService {
             code: error.code,
             details: error.details,
             hint: error.hint,
-            data: auditData
-          }
-        });
+            data: auditData,
+          },
+        })
         // 不拋出錯誤，避免影響主要業務流程
       } else {
         dbLogger.info('審計日誌記錄成功', {
@@ -92,15 +91,18 @@ export class SupabaseAuditLogService implements AuditLogService {
             action: request.action,
             resource: request.resource_type,
             resourceId: request.resource_id,
-            user: request.user_email
-          }
-        });
+            user: request.user_email,
+          },
+        })
       }
-
     } catch (error) {
-      dbLogger.error('審計日誌記錄異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'log_audit_entry' }
-      });
+      dbLogger.error(
+        '審計日誌記錄異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'log_audit_entry' },
+        }
+      )
       // 不拋出錯誤，避免影響主要業務流程
     }
   }
@@ -110,11 +112,11 @@ export class SupabaseAuditLogService implements AuditLogService {
     try {
       // 只對查看操作進行重複檢查，避免影響重要的修改操作
       if (!['view', 'view_list'].includes(request.action)) {
-        return false;
+        return false
       }
 
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+
       const { data, error } = await createServiceSupabaseClient()
         .from('audit_logs')
         .select('id')
@@ -123,153 +125,177 @@ export class SupabaseAuditLogService implements AuditLogService {
         .eq('resource_type', request.resource_type)
         .eq('resource_id', request.resource_id)
         .gte('created_at', fiveMinutesAgo)
-        .limit(1);
+        .limit(1)
 
       if (error) {
         dbLogger.error('檢查重複日誌失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'check_duplicate_log' }
-        });
-        return false; // 發生錯誤時不阻止記錄
+          metadata: { context: 'check_duplicate_log' },
+        })
+        return false // 發生錯誤時不阻止記錄
       }
 
-      return (data && data.length > 0);
+      return data && data.length > 0
     } catch (error) {
-      dbLogger.error('檢查重複日誌異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'check_duplicate_log' }
-      });
-      return false; // 發生錯誤時不阻止記錄
+      dbLogger.error(
+        '檢查重複日誌異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'check_duplicate_log' },
+        }
+      )
+      return false // 發生錯誤時不阻止記錄
     }
   }
 
   // 查詢審計日誌
   async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLog[]> {
     try {
-      let query = createServiceSupabaseClient()
-        .from('audit_logs')
-        .select('*');
+      let query = createServiceSupabaseClient().from('audit_logs').select('*')
 
       // 套用篩選條件
       if (params) {
         if (params.user_id) {
-          query = query.eq('user_id', params.user_id);
+          query = query.eq('user_id', params.user_id)
         }
         if (params.user_email) {
-          query = query.ilike('user_email', `%${params.user_email}%`);
+          query = query.ilike('user_email', `%${params.user_email}%`)
         }
         if (params.user_role) {
-          query = query.eq('user_role', params.user_role);
+          query = query.eq('user_role', params.user_role)
         }
         if (params.action) {
-          query = query.eq('action', params.action);
+          query = query.eq('action', params.action)
         }
         if (params.resource_type) {
-          query = query.eq('resource_type', params.resource_type);
+          query = query.eq('resource_type', params.resource_type)
         }
         if (params.resource_id) {
-          query = query.eq('resource_id', params.resource_id);
+          query = query.eq('resource_id', params.resource_id)
         }
         if (params.start_date) {
-          query = query.gte('created_at', params.start_date);
+          query = query.gte('created_at', params.start_date)
         }
         if (params.end_date) {
-          query = query.lte('created_at', params.end_date);
+          query = query.lte('created_at', params.end_date)
         }
         if (params.ip_address) {
           // 使用文字轉換來支援部分匹配和 INET 類型兼容
-          query = query.filter('ip_address::text', 'ilike', `%${params.ip_address}%`);
+          query = query.filter('ip_address::text', 'ilike', `%${params.ip_address}%`)
         }
 
         // 排序
-        const sortBy = params.sort_by || 'created_at';
-        const sortOrder = params.sort_order || 'desc';
-        query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+        const sortBy = params.sort_by || 'created_at'
+        const sortOrder = params.sort_order || 'desc'
+        query = query.order(sortBy, { ascending: sortOrder === 'asc' })
 
         // 分頁
         if (params.limit) {
-          query = query.limit(params.limit);
+          query = query.limit(params.limit)
         }
         if (params.offset) {
-          query = query.range(params.offset, (params.offset + (params.limit || 50)) - 1);
+          query = query.range(params.offset, params.offset + (params.limit || 50) - 1)
         }
       } else {
         // 預設排序
-        query = query.order('created_at', { ascending: false });
+        query = query.order('created_at', { ascending: false })
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query
 
       if (error) {
         dbLogger.error('查詢審計日誌失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_audit_logs' }
-        });
-        throw new Error(`查詢審計日誌失敗: ${error.message}`);
+          metadata: { context: 'get_audit_logs' },
+        })
+        throw new Error(`查詢審計日誌失敗: ${error.message}`)
       }
 
-      return data || [];
-
+      return data || []
     } catch (error) {
-      dbLogger.error('查詢審計日誌異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'get_audit_logs' }
-      });
-      throw new Error(error instanceof Error ? error.message : '查詢審計日誌時發生未知錯誤');
+      dbLogger.error(
+        '查詢審計日誌異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'get_audit_logs' },
+        }
+      )
+      throw new Error(error instanceof Error ? error.message : '查詢審計日誌時發生未知錯誤')
     }
   }
 
   // 取得使用者活動歷史
-  async getUserHistory(userId: string, limit: number = 100, offset: number = 0): Promise<AuditLog[]> {
+  async getUserHistory(
+    userId: string,
+    limit: number = 100,
+    offset: number = 0
+  ): Promise<AuditLog[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient()
-        .rpc('get_user_audit_history', {
-          target_user_id: userId,
-          limit_count: limit,
-          offset_count: offset
-        } as any);
+      const { data, error } = await createServiceSupabaseClient().rpc('get_user_audit_history', {
+        target_user_id: userId,
+        limit_count: limit,
+        offset_count: offset,
+      })
 
       if (error) {
-        dbLogger.error('取得使用者活動歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_user_history', userId }
-        });
-        throw new Error(`取得使用者活動歷史失敗: ${error.message}`);
+        dbLogger.error(
+          '取得使用者活動歷史失敗',
+          new Error(`${error.message} (code: ${error.code})`),
+          {
+            metadata: { context: 'get_user_history', userId },
+          }
+        )
+        throw new Error(`取得使用者活動歷史失敗: ${error.message}`)
       }
 
-      return data || [];
-
+      return data || []
     } catch (error) {
-      dbLogger.error('取得使用者活動歷史異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'get_user_history', userId }
-      });
-      throw new Error(error instanceof Error ? error.message : '取得使用者活動歷史時發生未知錯誤');
+      dbLogger.error(
+        '取得使用者活動歷史異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'get_user_history', userId },
+        }
+      )
+      throw new Error(error instanceof Error ? error.message : '取得使用者活動歷史時發生未知錯誤')
     }
   }
 
   // 取得資源存取歷史
   async getResourceHistory(
-    resourceType: ResourceType, 
-    resourceId: string, 
+    resourceType: ResourceType,
+    resourceId: string,
     limit: number = 100
   ): Promise<AuditLog[]> {
     try {
-      const { data, error } = await createServiceSupabaseClient()
-        .rpc('get_resource_audit_history', {
+      const { data, error } = await createServiceSupabaseClient().rpc(
+        'get_resource_audit_history',
+        {
           target_resource_type: resourceType,
           target_resource_id: resourceId,
-          limit_count: limit
-        } as any);
+          limit_count: limit,
+        }
+      )
 
       if (error) {
-        dbLogger.error('取得資源存取歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_resource_history', resourceType, resourceId }
-        });
-        throw new Error(`取得資源存取歷史失敗: ${error.message}`);
+        dbLogger.error(
+          '取得資源存取歷史失敗',
+          new Error(`${error.message} (code: ${error.code})`),
+          {
+            metadata: { context: 'get_resource_history', resourceType, resourceId },
+          }
+        )
+        throw new Error(`取得資源存取歷史失敗: ${error.message}`)
       }
 
-      return data || [];
-
+      return data || []
     } catch (error) {
-      dbLogger.error('取得資源存取歷史異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'get_resource_history', resourceType, resourceId }
-      });
-      throw new Error(error instanceof Error ? error.message : '取得資源存取歷史時發生未知錯誤');
+      dbLogger.error(
+        '取得資源存取歷史異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'get_resource_history', resourceType, resourceId },
+        }
+      )
+      throw new Error(error instanceof Error ? error.message : '取得資源存取歷史時發生未知錯誤')
     }
   }
 
@@ -280,22 +306,25 @@ export class SupabaseAuditLogService implements AuditLogService {
         .from('audit_stats')
         .select('*')
         .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
 
       if (error) {
         dbLogger.error('取得審計統計失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_audit_stats', days }
-        });
-        throw new Error(`取得審計統計失敗: ${error.message}`);
+          metadata: { context: 'get_audit_stats', days },
+        })
+        throw new Error(`取得審計統計失敗: ${error.message}`)
       }
 
-      return data || [];
-
+      return data || []
     } catch (error) {
-      dbLogger.error('取得審計統計異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'get_audit_stats', days }
-      });
-      throw new Error(error instanceof Error ? error.message : '取得審計統計時發生未知錯誤');
+      dbLogger.error(
+        '取得審計統計異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'get_audit_stats', days },
+        }
+      )
+      throw new Error(error instanceof Error ? error.message : '取得審計統計時發生未知錯誤')
     }
   }
 
@@ -306,22 +335,29 @@ export class SupabaseAuditLogService implements AuditLogService {
         .from('user_activity_stats')
         .select('*')
         .gte('first_activity', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .order('total_actions', { ascending: false });
+        .order('total_actions', { ascending: false })
 
       if (error) {
-        dbLogger.error('取得使用者活動統計失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_user_activity_stats', days }
-        });
-        throw new Error(`取得使用者活動統計失敗: ${error.message}`);
+        dbLogger.error(
+          '取得使用者活動統計失敗',
+          new Error(`${error.message} (code: ${error.code})`),
+          {
+            metadata: { context: 'get_user_activity_stats', days },
+          }
+        )
+        throw new Error(`取得使用者活動統計失敗: ${error.message}`)
       }
 
-      return data || [];
-
+      return data || []
     } catch (error) {
-      dbLogger.error('取得使用者活動統計異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'get_user_activity_stats', days }
-      });
-      throw new Error(error instanceof Error ? error.message : '取得使用者活動統計時發生未知錯誤');
+      dbLogger.error(
+        '取得使用者活動統計異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'get_user_activity_stats', days },
+        }
+      )
+      throw new Error(error instanceof Error ? error.message : '取得使用者活動統計時發生未知錯誤')
     }
   }
 
@@ -332,32 +368,38 @@ export class SupabaseAuditLogService implements AuditLogService {
         .from('resource_access_stats')
         .select('*')
         .gte('first_accessed', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .order('access_count', { ascending: false });
+        .order('access_count', { ascending: false })
 
       if (error) {
-        dbLogger.error('取得資源存取統計失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_resource_access_stats', days }
-        });
-        throw new Error(`取得資源存取統計失敗: ${error.message}`);
+        dbLogger.error(
+          '取得資源存取統計失敗',
+          new Error(`${error.message} (code: ${error.code})`),
+          {
+            metadata: { context: 'get_resource_access_stats', days },
+          }
+        )
+        throw new Error(`取得資源存取統計失敗: ${error.message}`)
       }
 
-      return data || [];
-
+      return data || []
     } catch (error) {
-      dbLogger.error('取得資源存取統計異常', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'get_resource_access_stats', days }
-      });
-      throw new Error(error instanceof Error ? error.message : '取得資源存取統計時發生未知錯誤');
+      dbLogger.error(
+        '取得資源存取統計異常',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'get_resource_access_stats', days },
+        }
+      )
+      throw new Error(error instanceof Error ? error.message : '取得資源存取統計時發生未知錯誤')
     }
   }
 }
 
 // 審計日誌服務實例
-export const auditLogService = new SupabaseAuditLogService();
+export const auditLogService = new SupabaseAuditLogService()
 
 // 審計日誌輔助函數
 export class AuditLogger {
-  
   // 記錄詢問單查看
   static async logInquiryView(
     userId: string | null,
@@ -372,14 +414,15 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: AuditTypeGuards.toUserRole(userRole),
       action: 'view',
       resource_type: 'inquiry',
       resource_id: inquiryId,
       resource_details: inquiryDetails,
-      ip_address: request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined
-    });
+      ip_address:
+        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
+      user_agent: request?.headers.get('user-agent') || undefined,
+    })
   }
 
   // 記錄詢問單列表查看
@@ -396,16 +439,17 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: AuditTypeGuards.toUserRole(userRole),
       action: 'view_list',
       resource_type: 'inquiry',
       resource_id: 'list',
       metadata: {
-        filters: filters || {}
+        filters: filters || {},
       },
-      ip_address: request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined
-    });
+      ip_address:
+        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
+      user_agent: request?.headers.get('user-agent') || undefined,
+    })
   }
 
   // 記錄詢問單建立
@@ -422,7 +466,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: AuditTypeGuards.toUserRole(userRole),
       action: 'create',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -430,11 +474,12 @@ export class AuditLogger {
       resource_details: {
         customer_name: inquiryData.customer_name,
         customer_email: inquiryData.customer_email,
-        total_amount: inquiryData.total_estimated_amount
+        total_amount: inquiryData.total_estimated_amount,
       },
-      ip_address: request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined
-    });
+      ip_address:
+        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
+      user_agent: request?.headers.get('user-agent') || undefined,
+    })
   }
 
   // 記錄詢問單更新
@@ -452,18 +497,19 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: AuditTypeGuards.toUserRole(userRole),
       action: 'update',
       resource_type: 'inquiry',
       resource_id: inquiryId,
       previous_data: previousData,
       new_data: newData,
       resource_details: {
-        customer_name: newData.customer_name || previousData.customer_name
+        customer_name: newData.customer_name || previousData.customer_name,
       },
-      ip_address: request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined
-    });
+      ip_address:
+        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
+      user_agent: request?.headers.get('user-agent') || undefined,
+    })
   }
 
   // 記錄詢問單刪除
@@ -480,18 +526,19 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: AuditTypeGuards.toUserRole(userRole),
       action: 'delete',
       resource_type: 'inquiry',
       resource_id: inquiryId,
       previous_data: inquiryData,
       resource_details: {
         customer_name: inquiryData.customer_name,
-        customer_email: inquiryData.customer_email
+        customer_email: inquiryData.customer_email,
       },
-      ip_address: request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined
-    });
+      ip_address:
+        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
+      user_agent: request?.headers.get('user-agent') || undefined,
+    })
   }
 
   // 記錄詢問單狀態變更
@@ -510,7 +557,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: AuditTypeGuards.toUserRole(userRole),
       action: 'status_change',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -520,14 +567,15 @@ export class AuditLogger {
       metadata: {
         status_change: {
           from: previousStatus,
-          to: newStatus
-        }
+          to: newStatus,
+        },
       },
-      ip_address: request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined
-    });
+      ip_address:
+        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
+      user_agent: request?.headers.get('user-agent') || undefined,
+    })
   }
 }
 
 // 匯出預設審計日誌服務
-export default auditLogService;
+export default auditLogService

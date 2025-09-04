@@ -1,13 +1,14 @@
 /**
  * 服務層統一類型定義
- * 
+ *
  * 用於替代服務層中的 any 類型使用
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
+import { Database } from './database'
 
-// Supabase 客戶端類型 (使用適當的泛型避免類型衝突)
-export type ServiceSupabaseClient = SupabaseClient<any, 'public', any>
+// Supabase 客戶端類型 (使用完整的 Database 類型定義)
+export type ServiceSupabaseClient = SupabaseClient<Database>
 
 // 錯誤處理上下文
 export interface ServiceErrorContext {
