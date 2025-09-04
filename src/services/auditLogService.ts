@@ -73,7 +73,7 @@ export class SupabaseAuditLogService implements AuditLogService {
       // 插入審計日誌
       const { error } = await createServiceSupabaseClient()
         .from('audit_logs')
-        .insert(auditData as any);
+        .insert(auditData);
 
       if (error) {
         dbLogger.info('審計日誌記錄失敗', {
@@ -223,7 +223,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_user_id: userId,
           limit_count: limit,
           offset_count: offset
-        } as any);
+        });
 
       if (error) {
         dbLogger.error('取得使用者活動歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
@@ -254,7 +254,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_resource_type: resourceType,
           target_resource_id: resourceId,
           limit_count: limit
-        } as any);
+        });
 
       if (error) {
         dbLogger.error('取得資源存取歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
@@ -365,14 +365,14 @@ export class AuditLogger {
     userName: string | undefined,
     userRole: string | undefined,
     inquiryId: string,
-    inquiryDetails?: Record<string, any>,
+    inquiryDetails?: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await auditLogService.log({
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: userRole,
       action: 'view',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -389,14 +389,14 @@ export class AuditLogger {
     userEmail: string,
     userName: string | undefined,
     userRole: string | undefined,
-    filters?: Record<string, any>,
+    filters?: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await auditLogService.log({
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: userRole,
       action: 'view_list',
       resource_type: 'inquiry',
       resource_id: 'list',
@@ -415,14 +415,14 @@ export class AuditLogger {
     userName: string | undefined,
     userRole: string | undefined,
     inquiryId: string,
-    inquiryData: Record<string, any>,
+    inquiryData: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await auditLogService.log({
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: userRole,
       action: 'create',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -444,15 +444,15 @@ export class AuditLogger {
     userName: string | undefined,
     userRole: string | undefined,
     inquiryId: string,
-    previousData: Record<string, any>,
-    newData: Record<string, any>,
+    previousData: Record<string, unknown>,
+    newData: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await auditLogService.log({
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: userRole,
       action: 'update',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -473,14 +473,14 @@ export class AuditLogger {
     userName: string | undefined,
     userRole: string | undefined,
     inquiryId: string,
-    inquiryData: Record<string, any>,
+    inquiryData: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await auditLogService.log({
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: userRole,
       action: 'delete',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -503,14 +503,14 @@ export class AuditLogger {
     inquiryId: string,
     previousStatus: string,
     newStatus: string,
-    inquiryDetails?: Record<string, any>,
+    inquiryDetails?: Record<string, unknown>,
     request?: Request
   ): Promise<void> {
     await auditLogService.log({
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole as any,
+      user_role: userRole,
       action: 'status_change',
       resource_type: 'inquiry',
       resource_id: inquiryId,

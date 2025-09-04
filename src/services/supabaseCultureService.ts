@@ -22,7 +22,7 @@ export class SupabaseCultureService implements CultureService {
         throw new Error(`資料庫查詢失敗: ${error.message}`)
       }
       
-      const result = data?.map((item: any) => this.transformFromDB(item)) || []
+      const result = data?.map((item: Record<string, unknown>) => this.transformFromDB(item)) || []
       dbLogger.info('載入文化項目', { 
         metadata: { count: result.length } 
       })
@@ -115,10 +115,10 @@ export class SupabaseCultureService implements CultureService {
           metadata: { imageUrl: itemData.imageUrl?.substring(0, 100) + '...' } 
         });
         images.push(itemData.imageUrl);
-      } else if ((itemData as any).image && (itemData as any).image.startsWith('data:image/')) {
+      } else if ('image' in itemData && typeof itemData.image === 'string' && itemData.image.startsWith('data:image/')) {
         // 處理 base64 圖片（向後相容）
         dbLogger.info('📷 轉換 base64 圖片到 Storage');
-        const { url } = await uploadBase64ToCultureStorage((itemData as any).image, cultureId);
+        const { url } = await uploadBase64ToCultureStorage(itemData.image as string, cultureId);
         images.push(url);
         dbLogger.info('✅ Base64 轉換上傳成功', { 
           metadata: { url } 
@@ -168,7 +168,7 @@ export class SupabaseCultureService implements CultureService {
       }
     });
     
-    const dbUpdateData: Record<string, any> = {}
+    const dbUpdateData: Record<string, unknown> = {}
     
     if (itemData.title !== undefined) dbUpdateData.title = itemData.title
     if (itemData.description !== undefined) dbUpdateData.description = itemData.description
@@ -199,11 +199,11 @@ export class SupabaseCultureService implements CultureService {
         images.push(itemData.imageUrl);
       }
       shouldUpdateImages = true;
-    } else if ((itemData as any).image && (itemData as any).image.startsWith('data:image/')) {
+    } else if ('image' in itemData && typeof itemData.image === 'string' && itemData.image.startsWith('data:image/')) {
       // 處理 base64 圖片（向後相容）
       dbLogger.info('📷 轉換新的 base64 圖片到 Storage');
       await deleteCultureImages(id);
-      const { url } = await uploadBase64ToCultureStorage((itemData as any).image, id);
+      const { url } = await uploadBase64ToCultureStorage(itemData.image as string, id);
       images.push(url);
       shouldUpdateImages = true;
       dbLogger.info('✅ Base64 轉換更新成功', { 
@@ -272,7 +272,7 @@ export class SupabaseCultureService implements CultureService {
     });
   }
 
-  private transformFromDB(dbItem: Record<string, any>): CultureItem {
+  private transformFromDB(dbItem: Record<string, unknown>): CultureItem {
     // 根據分類設定顏色和表情符號
     const categoryConfig = this.getCategoryConfig(dbItem.category)
     

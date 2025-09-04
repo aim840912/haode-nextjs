@@ -301,7 +301,7 @@ export class CultureServiceV2Simple implements CultureService {
           title: extendedData.title,
           imageFile: extendedData.imageFile ? `File: ${extendedData.imageFile.name}` : undefined,
           hasImageUrl: !!extendedData.imageUrl,
-          hasBase64: !!(extendedData as any).image
+          hasBase64: !!extendedData.image
         }
       })
 
@@ -360,14 +360,14 @@ export class CultureServiceV2Simple implements CultureService {
             metadata: { imageUrl: extendedData.imageUrl?.substring(0, 100) + '...', cultureId }
           })
           images.push(extendedData.imageUrl)
-        } else if ((extendedData as any).image && (extendedData as any).image.startsWith('data:image/')) {
+        } else if (extendedData.image && extendedData.image.startsWith('data:image/')) {
           // 處理 base64 圖片（向後相容）
           dbLogger.info('轉換 base64 圖片到 Storage', {
             module: this.moduleName,
             action: 'convertBase64',
             metadata: { cultureId }
           })
-          const { url } = await uploadBase64ToCultureStorage((extendedData as any).image, cultureId)
+          const { url } = await uploadBase64ToCultureStorage(extendedData.image, cultureId)
           images.push(url)
           dbLogger.info('Base64 轉換上傳成功', {
             module: this.moduleName,
@@ -459,7 +459,7 @@ export class CultureServiceV2Simple implements CultureService {
           title: extendedData.title,
           imageFile: extendedData.imageFile ? `File: ${extendedData.imageFile.name}` : undefined,
           hasImageUrl: extendedData.imageUrl !== undefined,
-          hasBase64: !!(extendedData as any).image
+          hasBase64: !!extendedData.image
         }
       })
 
@@ -468,7 +468,7 @@ export class CultureServiceV2Simple implements CultureService {
         throw new Error('管理員客戶端未初始化')
       }
 
-      const dbUpdateData: Record<string, any> = {}
+      const dbUpdateData: Record<string, unknown> = {}
 
       if (extendedData.title !== undefined) dbUpdateData.title = extendedData.title
       if (extendedData.description !== undefined) dbUpdateData.description = extendedData.description
@@ -505,7 +505,7 @@ export class CultureServiceV2Simple implements CultureService {
           images.push(extendedData.imageUrl)
         }
         shouldUpdateImages = true
-      } else if ((extendedData as any).image && (extendedData as any).image.startsWith('data:image/')) {
+      } else if (extendedData.image && extendedData.image.startsWith('data:image/')) {
         // 處理 base64 圖片（向後相容）
         dbLogger.info('轉換新的 base64 圖片到 Storage', {
           module: this.moduleName,
@@ -513,7 +513,7 @@ export class CultureServiceV2Simple implements CultureService {
           metadata: { cultureId: id }
         })
         await deleteCultureImages(id)
-        const { url } = await uploadBase64ToCultureStorage((extendedData as any).image, id)
+        const { url } = await uploadBase64ToCultureStorage(extendedData.image, id)
         images.push(url)
         shouldUpdateImages = true
         dbLogger.info('Base64 轉換更新成功', {
@@ -661,7 +661,7 @@ export class CultureServiceV2Simple implements CultureService {
   async getHealthStatus(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy'
     timestamp: string
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   }> {
     try {
       // 簡單的連線測試

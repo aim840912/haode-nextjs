@@ -77,7 +77,7 @@ export interface MonitoringAlert {
   type: 'high_violation_rate' | 'suspicious_ip' | 'ddos_attempt' | 'system_overload';
   severity: 'low' | 'medium' | 'high' | 'critical';
   message: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   triggeredAt: string;
   resolved: boolean;
   resolvedAt?: string;
@@ -100,7 +100,7 @@ export class RateLimitMonitoringService {
     path: string,
     strategy: string,
     limited: boolean,
-    details: Record<string, any> = {}
+    details: Record<string, unknown> = {}
   ): Promise<void> {
     const now = Date.now();
     const hourKey = `${RateLimitMonitoringService.STATS_KEY_PREFIX}hour:${Math.floor(now / (60 * 60 * 1000))}`;
@@ -143,7 +143,7 @@ export class RateLimitMonitoringService {
     ip: string,
     path: string,
     strategy: string,
-    details: Record<string, any>
+    details: Record<string, unknown>
   ): Promise<void> {
     const violationKey = `${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}${ip}`;
     const now = new Date().toISOString();
@@ -167,7 +167,7 @@ export class RateLimitMonitoringService {
       if (count % 5 === 0) { // 每 5 次違反記錄一次
         await auditLogService.log({
           action: 'rate_limit_violation_milestone' as AuditAction,
-          resource_type: 'rate_limiter' as any,
+          resource_type: 'rate_limiter',
           resource_id: ip,
           user_id: null,
           user_email: 'system',
@@ -197,7 +197,7 @@ export class RateLimitMonitoringService {
   /**
    * 檢查是否需要自動封鎖 IP
    */
-  private async checkAutoBlock(ip: string, details: Record<string, any>): Promise<void> {
+  private async checkAutoBlock(ip: string, details: Record<string, unknown>): Promise<void> {
     try {
       const violationKey = `${RateLimitMonitoringService.VIOLATION_KEY_PREFIX}${ip}`;
       const violationData = await kv.hgetall(violationKey);
@@ -251,7 +251,7 @@ export class RateLimitMonitoringService {
     ip: string,
     reason: BlockReason,
     durationMs: number,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, unknown> = {}
   ): Promise<void> {
     const blockKey = `${RateLimitMonitoringService.BLOCK_KEY_PREFIX}${ip}`;
     const now = new Date();
@@ -270,13 +270,13 @@ export class RateLimitMonitoringService {
 
     try {
       // 存儲封鎖資訊
-      await kv.hset(blockKey, blockInfo as any);
+      await kv.hset(blockKey, blockInfo);
       await kv.expire(blockKey, Math.ceil(durationMs / 1000));
 
       // 記錄到審計日誌
       await auditLogService.log({
         action: 'ip_blocked' as AuditAction,
-        resource_type: 'security' as any,
+        resource_type: 'security',
         resource_id: ip,
         user_id: null,
         user_email: 'system',
@@ -358,7 +358,7 @@ export class RateLimitMonitoringService {
         // 記錄解封事件
         await auditLogService.log({
           action: 'ip_unblocked' as AuditAction,
-          resource_type: 'security' as any,
+          resource_type: 'security',
           resource_id: ip,
           user_id: null,
           user_email: 'system',
@@ -455,13 +455,13 @@ export class RateLimitMonitoringService {
 
     try {
       const alertKey = `${RateLimitMonitoringService.ALERT_KEY_PREFIX}${alertId}`;
-      await kv.hset(alertKey, alertData as any);
+      await kv.hset(alertKey, alertData);
       await kv.expire(alertKey, 7 * 24 * 60 * 60); // 保留 7 天
 
       // 記錄到審計日誌
       await auditLogService.log({
         action: 'monitoring_alert_created' as AuditAction,
-        resource_type: 'monitoring' as any,
+        resource_type: 'monitoring',
         resource_id: alertId,
         user_id: null,
         user_email: 'system',
@@ -498,7 +498,7 @@ export class RateLimitMonitoringService {
   /**
    * 獲取自動封鎖閾值
    */
-  private getAutoBlockThreshold(details: Record<string, any>): number {
+  private getAutoBlockThreshold(details: Record<string, unknown>): number {
     // 根據不同情境設定不同閾值
     if (details.path?.includes('/api/auth/')) return 10; // 認證 API 更嚴格
     if (details.path?.includes('/api/payment/')) return 5; // 支付 API 最嚴格
@@ -582,7 +582,7 @@ export async function recordRateLimitEvent(
   path: string,
   strategy: string,
   limited: boolean,
-  details: Record<string, any> = {}
+  details: Record<string, unknown> = {}
 ): Promise<void> {
   return rateLimitMonitor.recordRateLimitEvent(ip, path, strategy, limited, details);
 }
@@ -595,7 +595,7 @@ export async function blockIP(
   ip: string,
   reason: BlockReason,
   durationMs: number,
-  metadata: Record<string, any> = {}
+  metadata: Record<string, unknown> = {}
 ): Promise<void> {
   return rateLimitMonitor.blockIP(ip, reason, durationMs, metadata);
 }
