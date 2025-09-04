@@ -14,6 +14,7 @@ import { supabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { Location, LocationService } from '@/types/location'
+import { UpdateDataObject } from '@/types/service.types'
 
 /**
  * 資料庫記錄類型
@@ -51,7 +52,7 @@ export class LocationServiceV2Simple implements LocationService {
   /**
    * 統一錯誤處理方法
    */
-  private handleError(error: any, action: string): never {
+  private handleError(error: unknown, action: string): never {
     dbLogger.error(`地點服務 ${action} 操作失敗`, error as Error, {
       module: this.moduleName,
       action,
@@ -215,7 +216,7 @@ export class LocationServiceV2Simple implements LocationService {
       }
 
       // 建立更新資料對象
-      const updateData: any = {}
+      const updateData: UpdateDataObject = {}
       if (locationData.name !== undefined) updateData.name = locationData.name
       if (locationData.title !== undefined) updateData.title = locationData.title
       if (locationData.address !== undefined) updateData.address = locationData.address

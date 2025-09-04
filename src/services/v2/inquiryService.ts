@@ -15,6 +15,7 @@ import {
   Inquiry, 
   InquiryWithItems, 
   CreateInquiryRequest, 
+  CreateInquiryItemRequest,
   UpdateInquiryRequest,
   InquiryQueryParams,
   InquiryStats,
@@ -489,7 +490,7 @@ export class InquiryServiceV2
         this.handleError(error, 'searchInquiries', { query, options })
       }
 
-      return (data || []).map((record: any) => this.transformFromDB(record))
+      return (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
     } catch (error) {
       this.handleError(error, 'searchInquiries', { query, options })
     }
@@ -568,7 +569,7 @@ export class InquiryServiceV2
   /**
    * 建立詢問項目
    */
-  private async createInquiryItems(inquiryId: string, items: any[]): Promise<void> {
+  private async createInquiryItems(inquiryId: string, items: CreateInquiryItemRequest[]): Promise<void> {
     const client = this.getClient(true)
     
     const itemsData = items.map(item => ({

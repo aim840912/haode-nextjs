@@ -15,6 +15,7 @@ import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { CultureItem, CultureService } from '@/types/culture'
+import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject, BaseDbRecord } from '@/types/service.types'
 import { 
   uploadCultureImageToStorage, 
   deleteCultureImages,
@@ -73,28 +74,28 @@ export class CultureServiceV2Simple implements CultureService {
   /**
    * 取得 Supabase 客戶端
    */
-  private getSupabaseClient(): any {
+  private getSupabaseClient(): ServiceSupabaseClient {
     return createServiceSupabaseClient()
   }
 
   /**
    * 取得管理員客戶端
    */
-  private getAdminClient(): any {
+  private getAdminClient(): ServiceSupabaseClient {
     return supabaseAdmin
   }
 
   /**
    * 處理錯誤
    */
-  private handleError(error: any, operation: string, context?: any): never {
+  private handleError(error: unknown, operation: string, context?: ServiceErrorContext): never {
     dbLogger.error(`文化服務 ${operation} 操作失敗`, error as Error, {
       module: this.moduleName,
       action: operation,
       metadata: context
     })
 
-    if (error.code) {
+    if (error && typeof error === 'object' && 'code' in error) {
       throw ErrorFactory.fromSupabaseError(error, {
         module: this.moduleName,
         action: operation,
@@ -162,7 +163,7 @@ export class CultureServiceV2Simple implements CultureService {
   /**
    * 轉換實體為資料庫記錄
    */
-  private transformToDB(itemData: CreateCultureItemRequest | UpdateCultureItemRequest): any {
+  private transformToDB(itemData: CreateCultureItemRequest | UpdateCultureItemRequest): UpdateDataObject {
     return {
       title: itemData.title,
       description: itemData.description,
@@ -225,7 +226,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'getCultureItems')
       }
 
-      const result = (data || []).map((item: any) => this.transformFromDB(item))
+      const result = (data || []).map((item: SupabaseCultureRecord) => this.transformFromDB(item))
 
       dbLogger.info('載入文化項目成功', {
         module: this.moduleName,
@@ -422,17 +423,18 @@ export class CultureServiceV2Simple implements CultureService {
         })
 
         // 如果圖片處理失敗，刪除已建立的資料庫記錄
-        await client
+        const deleteResult = await client
           .from('culture')
           .delete()
           .eq('id', cultureId)
-          .catch(() => {
-            dbLogger.error('清理資料庫記錄失敗', new Error('Database cleanup failed'), {
-              module: this.moduleName,
-              action: 'cleanup',
-              metadata: { cultureId }
-            })
+        
+        if (deleteResult.error) {
+          dbLogger.error('清理資料庫記錄失敗', new Error('Database cleanup failed'), {
+            module: this.moduleName,
+            action: 'cleanup',
+            metadata: { cultureId }
           })
+        }
 
         throw new Error('圖片處理失敗，無法建立文化項目')
       }

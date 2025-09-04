@@ -13,6 +13,7 @@ import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { supabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { UpdateDataObject } from '@/types/service.types'
 import { FarmTourActivity } from '@/types/farmTour'
 
 /**
@@ -55,7 +56,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   /**
    * 統一錯誤處理方法
    */
-  private handleError(error: any, action: string): never {
+  private handleError(error: unknown, action: string): never {
     dbLogger.error(`農場體驗服務 ${action} 操作失敗`, error as Error, {
       module: this.moduleName,
       action,
@@ -258,7 +259,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       }
 
       // 建立更新資料對象
-      const updateData: any = {}
+      const updateData: UpdateDataObject = {}
       if (activityData.title !== undefined) updateData.title = activityData.title
       if (activityData.season !== undefined) updateData.season = activityData.season
       if (activityData.months !== undefined) updateData.months = activityData.months

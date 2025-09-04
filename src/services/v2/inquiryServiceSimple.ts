@@ -6,6 +6,7 @@
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 import {
   InquiryService,
   InquiryWithItems,
@@ -56,21 +57,21 @@ export class InquiryServiceV2Simple implements InquiryService {
   /**
    * 取得 Supabase 客戶端
    */
-  private getSupabaseClient(): any {
+  private getSupabaseClient(): ServiceSupabaseClient {
     return createServiceSupabaseClient()
   }
 
   /**
    * 處理錯誤
    */
-  private handleError(error: any, operation: string, context?: any): never {
+  private handleError(error: unknown, operation: string, context?: ServiceErrorContext): never {
     dbLogger.error(`詢問服務 ${operation} 操作失敗`, error as Error, {
       module: this.moduleName,
       action: operation,
       metadata: context
     })
 
-    if (error.code) {
+    if (error && typeof error === 'object' && 'code' in error) {
       throw ErrorFactory.fromSupabaseError(error, {
         module: this.moduleName,
         action: operation,
@@ -271,7 +272,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getUserInquiries', { userId, params })
       }
 
-      const result = (data || []).map((record: any) => this.transformFromDB(record))
+      const result = (data || []).map((record: SupabaseInquiryRecord) => this.transformFromDB(record))
 
       dbLogger.info('取得使用者詢問單列表成功', {
         module: this.moduleName,
@@ -320,7 +321,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       }
 
       const client = this.getSupabaseClient()
-      const updateData: any = {
+      const updateData: UpdateDataObject = {
         ...data,
         notes: this.serializeFarmTourData(data)
       }
@@ -375,7 +376,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getAllInquiries', { params })
       }
 
-      return (data || []).map((record: any) => this.transformFromDB(record))
+      return (data || []).map((record: SupabaseInquiryRecord) => this.transformFromDB(record))
     } catch (error) {
       this.handleError(error, 'getAllInquiries', { params })
     }
@@ -384,7 +385,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   async updateInquiryStatus(inquiryId: string, status: InquiryStatus): Promise<InquiryWithItems> {
     try {
       const client = this.getSupabaseClient()
-      const updateData: any = { status }
+      const updateData: UpdateDataObject = { status }
 
       // 如果狀態變更為已回覆，更新相關時間戳
       if (status === 'quoted') {
@@ -492,7 +493,7 @@ export class InquiryServiceV2Simple implements InquiryService {
 
       // 建立新項目
       if (items.length > 0) {
-        const itemsData = items.map((item: any) => ({
+        const itemsData = items.map((item: InquiryItem) => ({
           ...item,
           inquiry_id: inquiryId
         }))
@@ -580,7 +581,7 @@ export class InquiryServiceV2Simple implements InquiryService {
     return total > 0 ? total : null
   }
 
-  private applyQueryParams(query: any, params?: InquiryQueryParams): any {
+  private applyQueryParams(query: any, params?: InquiryQueryParams): any { // TODO: 需要 Supabase 查詢類型
     if (!params) return query
 
     // 狀態篩選

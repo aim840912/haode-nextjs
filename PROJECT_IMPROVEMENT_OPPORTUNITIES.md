@@ -49,8 +49,9 @@
 
 ## 🚀 未來工作計劃（優先順序）
 
-### 1️⃣ **TypeScript 類型安全第二階段** ⚡ 進行中 → **第一批次完成** ✅ (2025-09-04)
+### 1️⃣ **TypeScript 類型安全第二階段** ⚡ 進行中 → **第二批次完成** ✅ (2025-09-04)
 **已完成第一批次：消除 28 個 any 類型使用** 
+**已完成第二批次：消除 20 個 any 類型使用** 
 
 **✅ 第一批次完成項目：**
 - [x] **創建核心類型定義系統** - 新增 `/src/types/` 目錄
@@ -63,10 +64,22 @@
 - [x] **錯誤追蹤模組類型化** (6個 any → Transaction 類型)
   - [x] `error-tracking.ts` - 完整的 Transaction 和 breadcrumb 類型
 
+**✅ 第二批次完成項目：**
+- [x] **創建服務層統一類型系統** - 新增 `service.types.ts`
+  - [x] `ServiceSupabaseClient`, `ServiceErrorContext`, `UpdateDataObject` 類型定義
+- [x] **V2 服務層類型安全化** (19個 any → 具體類型)
+  - [x] `cultureServiceSimple.ts` (5個 any)
+  - [x] `inquiryServiceSimple.ts` (8個 any)
+  - [x] `locationServiceSimple.ts` (2個 any)
+  - [x] `farmTourServiceSimple.ts` (2個 any)
+  - [x] `scheduleServiceSimple.ts` (2個 any)
+- [x] **類型相容性修復** (1個類型錯誤修復)
+  - [x] `inquiryService.ts` - `CreateInquiryItemRequest` vs `InquiryItem` 類型匹配
+
 **📊 進度統計：**
-- **已修復**：28 個 any 類型 → 具體類型 ✅
-- **剩餘**：約 95 個 any 類型（原 123 個）
-- **完成度**：23% → 下一批次目標：服務層類型安全
+- **已修復**：48 個 any 類型 → 具體類型 ✅
+- **剩餘**：約 72 個 any 類型（原 120 個）
+- **完成度**：40% → 下一批次目標：核心服務類型安全
 
 **🔄 下一批次工作項目：**
 - [ ] 改善服務層的泛型類型使用 (約 20 個 any)
