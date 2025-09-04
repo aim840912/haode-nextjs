@@ -52,6 +52,12 @@ const LocationIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const MonitoringIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+  </svg>
+)
+
 const AuditIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11C15.4,11 16,11.4 16,12V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V12C8,11.4 8.4,11 9,11V10.5C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10.5V11H13.8V10.5C13.8,8.7 12.8,8.2 12,8.2Z" />
@@ -122,7 +128,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     return () => {
       window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
     }
-  }, [user])
+  }, [user, updateInterestedCount])
 
   const updateInterestedCount = async () => {
     if (user) {
@@ -174,7 +180,6 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     : 'px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 flex items-center space-x-1 border border-amber-200'
 
   const loginClasses = 'text-amber-900 bg-amber-50 hover:bg-amber-100'
-  const logoutClasses = 'text-white bg-red-600 hover:bg-red-700 border-red-600'
 
   if (isLoading) {
     return (
@@ -277,6 +282,15 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                     管理功能
                   </p>
                 </div>
+
+                <Link
+                  href="/admin/monitoring"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <MonitoringIcon className="w-4 h-4 mr-2" />
+                  監控儀表板
+                </Link>
 
                 <Link
                   href="/admin/products"

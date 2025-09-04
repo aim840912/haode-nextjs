@@ -30,6 +30,10 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     throw new NotFoundError('產品不存在')
   }
 
+  // 記錄產品瀏覽指標
+  const { recordProductView } = await import('@/lib/metrics')
+  recordProductView(id)
+
   return success(product, '查詢成功')
 }
 

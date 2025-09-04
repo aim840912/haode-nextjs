@@ -54,6 +54,11 @@ async function handlePOST(request: NextRequest) {
   })
 
   const newsItem = await newsService.addNews(result.data)
+
+  // 記錄新聞建立指標
+  const { recordBusinessAction } = await import('@/lib/metrics')
+  recordBusinessAction('news_created', { newsId: newsItem.id, category: result.data.category })
+
   return created(newsItem, '新聞創建成功')
 }
 

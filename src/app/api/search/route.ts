@@ -94,6 +94,10 @@ async function handleGET(request: NextRequest) {
     },
   })
 
+  // 記錄搜尋查詢指標
+  const { recordSearchQuery } = await import('@/lib/metrics')
+  recordSearchQuery(query)
+
   return success(response, '搜尋完成')
 }
 

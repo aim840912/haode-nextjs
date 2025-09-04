@@ -53,8 +53,8 @@ async function handleGET(request: NextRequest) {
       userEmail: user.email,
       isAdmin,
       adminMode,
-      queryParams: result.data
-    }
+      queryParams: result.data,
+    },
   })
 
   // 取得庫存查詢單清單
@@ -99,12 +99,16 @@ async function handlePOST(request: NextRequest) {
       userId: user.id,
       userEmail: user.email,
       inquiryType: result.data.inquiry_type,
-      itemsCount: result.data.items?.length || 0
-    }
+      itemsCount: result.data.items?.length || 0,
+    },
   })
 
   // 建立庫存查詢單
   const inquiry = await inquiryService.createInquiry(user.id, result.data)
+
+  // 記錄詢問提交指標
+  const { recordInquirySubmit } = await import('@/lib/metrics')
+  recordInquirySubmit(result.data.inquiry_type || '一般詢問', user.id)
 
   // 記錄詢問單建立的審計日誌
   AuditLogger.logInquiryCreate(
@@ -135,10 +139,10 @@ async function handlePOST(request: NextRequest) {
 // 導出 API 處理器 - 使用統一的錯誤處理系統
 export const GET = withErrorHandler(handleGET, {
   module: 'InquiryAPI',
-  enableAuditLog: false
+  enableAuditLog: false,
 })
 
 export const POST = withErrorHandler(handlePOST, {
   module: 'InquiryAPI',
-  enableAuditLog: true
+  enableAuditLog: true,
 })

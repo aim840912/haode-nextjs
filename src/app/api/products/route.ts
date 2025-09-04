@@ -98,6 +98,10 @@ async function handlePOST(request: NextRequest) {
   }
   const product = await productService.addProduct(productData)
 
+  // 記錄新產品建立指標
+  const { recordBusinessAction } = await import('@/lib/metrics')
+  recordBusinessAction('product_created', { productId: product.id, category: product.category })
+
   // 清除產品快取，確保變更立即生效
   try {
     const { CachedProductService } = await import('@/services/cachedProductService')
