@@ -1,18 +1,18 @@
 /**
  * 錯誤追蹤整合模組
- * 
+ *
  * 功能特色：
  * - 與現有 logger 系統無縫整合
  * - 支援多種錯誤追蹤服務（可擴展）
  * - 自動捕獲和分組錯誤
  * - 使用者上下文追蹤
  * - 效能監控整合
- * 
+ *
  * 目前支援：內建錯誤收集系統
  * 未來可擴展：Sentry, LogRocket, Rollbar 等
  */
 
-import { LogEntry, LogContext } from './logger'
+import { LogContext } from './logger'
 import { logger } from './logger'
 import { Transaction } from '@/types/api.types'
 
@@ -38,13 +38,13 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
     data?: Record<string, unknown>
     timestamp: number
   }> = []
-  
+
   private currentUser: {
     id?: string
     email?: string
     username?: string
   } = {}
-  
+
   private readonly maxBreadcrumbs = 50
 
   captureError(error: Error, context?: LogContext): void {
@@ -53,8 +53,8 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
       metadata: {
         ...(context?.metadata || {}),
         user: this.currentUser,
-        breadcrumbs: this.getRecentBreadcrumbs(10)
-      }
+        breadcrumbs: this.getRecentBreadcrumbs(10),
+      },
     })
   }
 
@@ -64,8 +64,8 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
       metadata: {
         ...(context?.metadata || {}),
         user: this.currentUser,
-        breadcrumbs: this.getRecentBreadcrumbs(5)
-      }
+        breadcrumbs: this.getRecentBreadcrumbs(5),
+      },
     })
   }
 
@@ -75,19 +75,23 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
       metadata: {
         userId,
         email,
-        username
-      }
+        username,
+      },
     })
   }
 
-  addBreadcrumb(message: string, category: string = 'custom', data?: Record<string, any>): void {
+  addBreadcrumb(
+    message: string,
+    category: string = 'custom',
+    data?: Record<string, unknown>
+  ): void {
     this.breadcrumbs.push({
       message,
       category,
       data,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
-    
+
     // 維持麵包屑數量在合理範圍
     if (this.breadcrumbs.length > this.maxBreadcrumbs) {
       this.breadcrumbs = this.breadcrumbs.slice(-this.maxBreadcrumbs)
@@ -101,43 +105,43 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
       startTime: Date.now(),
       id: Math.random().toString(36).substring(7),
       status: 'ok', // 初始狀態
-      
+
       // 添加 setStatus 方法以相容 Sentry API
-      setStatus: function(status: string) {
+      setStatus: function (status: string) {
         this.status = status
         logger.debug(`事務狀態更新: ${name}`, {
           metadata: {
             transaction: this.id,
-            status: status
-          }
+            status: status,
+          },
         })
-      }
+      },
     }
-    
+
     logger.debug(`開始事務追蹤: ${name}`, {
       metadata: {
         transaction: transaction.id,
-        operation
-      }
+        operation,
+      },
     })
-    
+
     return transaction
   }
 
   finishTransaction(transaction: Transaction | null): void {
     if (!transaction) return
-    
+
     const duration = Date.now() - transaction.startTime
     logger.info(`事務完成: ${transaction.name}`, {
       metadata: {
         transaction: transaction.id,
         operation: transaction.operation,
         duration: `${duration}ms`,
-        status: transaction.status || 'ok'
-      }
+        status: transaction.status || 'ok',
+      },
     })
   }
-  
+
   private getRecentBreadcrumbs(limit: number) {
     return this.breadcrumbs.slice(-limit)
   }
@@ -164,8 +168,8 @@ export function captureError(error: Error, context?: LogContext): void {
     logger.error('錯誤追蹤失敗', undefined, {
       metadata: {
         originalError: error.message,
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
   }
 }
@@ -180,24 +184,24 @@ export function captureFatalError(error: Error, context?: LogContext): void {
       ...context,
       metadata: {
         ...(context?.metadata || {}),
-        fatal: true
-      }
+        fatal: true,
+      },
     })
-    
+
     // 同時使用一般錯誤追蹤
-    errorTracker.captureError(error, { 
-      ...context, 
-      metadata: { 
-        ...(context?.metadata || {}), 
-        severity: 'fatal' 
-      } 
+    errorTracker.captureError(error, {
+      ...context,
+      metadata: {
+        ...(context?.metadata || {}),
+        severity: 'fatal',
+      },
     })
   } catch (trackingError) {
     logger.error('致命錯誤追蹤失敗', undefined, {
       metadata: {
         originalError: error.message,
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
   }
 }
@@ -212,8 +216,8 @@ export function captureWarning(message: string, context?: LogContext): void {
     logger.error('警告追蹤失敗', undefined, {
       metadata: {
         originalMessage: message,
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
   }
 }
@@ -221,7 +225,11 @@ export function captureWarning(message: string, context?: LogContext): void {
 /**
  * 添加使用者操作麵包屑（用於錯誤重現）
  */
-export function addBreadcrumb(message: string, category: string = 'custom', data?: Record<string, any>): void {
+export function addBreadcrumb(
+  message: string,
+  category: string = 'custom',
+  data?: Record<string, unknown>
+): void {
   try {
     errorTracker.addBreadcrumb(message, category, data)
   } catch (trackingError) {
@@ -229,8 +237,8 @@ export function addBreadcrumb(message: string, category: string = 'custom', data
       metadata: {
         message,
         category,
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
   }
 }
@@ -245,8 +253,8 @@ export function setUser(userId: string, email?: string, username?: string): void
     logger.error('使用者上下文設定失敗', undefined, {
       metadata: {
         userId,
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
   }
 }
@@ -262,8 +270,8 @@ export function startTransaction(name: string, operation: string = 'custom'): Tr
       metadata: {
         name,
         operation,
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
     return null
   }
@@ -274,14 +282,14 @@ export function startTransaction(name: string, operation: string = 'custom'): Tr
  */
 export function finishTransaction(transaction: Transaction | null): void {
   if (!transaction) return
-  
+
   try {
     errorTracker.finishTransaction(transaction)
   } catch (trackingError) {
     logger.debug('事務完成失敗', {
       metadata: {
-        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error'
-      }
+        trackingError: trackingError instanceof Error ? trackingError.message : 'Unknown error',
+      },
     })
   }
 }
@@ -298,8 +306,8 @@ export async function flushErrorTracking(timeout: number = 5000): Promise<boolea
   } catch (error) {
     logger.error('錯誤追蹤佇列清空失敗', undefined, {
       metadata: {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
     })
     return false
   }
