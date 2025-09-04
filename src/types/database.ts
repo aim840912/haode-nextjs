@@ -83,7 +83,7 @@ export type Database = {
           user_role: UserRole | null
           action: AuditAction
           resource_type: ResourceType
-          resource_id: string | null
+          resource_id: string
           resource_details: JsonValue
           previous_data: JsonValue
           new_data: JsonValue
@@ -101,7 +101,7 @@ export type Database = {
           user_role?: UserRole | null
           action: AuditAction
           resource_type: ResourceType
-          resource_id?: string | null
+          resource_id: string
           resource_details?: JsonValue
           previous_data?: JsonValue
           new_data?: JsonValue

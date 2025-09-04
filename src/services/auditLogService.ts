@@ -28,6 +28,8 @@ import {
 } from '@/types/audit'
 import { Database } from '@/types/database'
 
+type JsonValue = Database['public']['Tables']['audit_logs']['Row']['resource_details']
+
 // Supabase 審計日誌服務實作
 export class SupabaseAuditLogService implements AuditLogService {
   // 記錄審計日誌
@@ -69,7 +71,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         user_agent: request.user_agent,
         session_id: request.session_id,
         metadata: request.metadata || {},
-      }
+      } satisfies Database['public']['Tables']['audit_logs']['Insert']
 
       // 插入審計日誌
       const { error } = await createServiceSupabaseClient().from('audit_logs').insert(auditData)
@@ -233,7 +235,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         target_user_id: userId,
         limit_count: limit,
         offset_count: offset,
-      })
+      } as Database['public']['Functions']['get_user_audit_history']['Args'])
 
       if (error) {
         dbLogger.error(
@@ -272,7 +274,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_resource_type: resourceType,
           target_resource_id: resourceId,
           limit_count: limit,
-        }
+        } as Database['public']['Functions']['get_resource_audit_history']['Args']
       )
 
       if (error) {
