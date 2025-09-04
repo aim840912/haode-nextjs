@@ -1,6 +1,7 @@
 import { supabase, supabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { dbLogger } from './logger';
+import { SupabaseStorageBucket, SupabaseStorageFile } from '@/types/supabase.types';
 
 export class CultureStorageError extends Error {
   constructor(message: string, public cause?: unknown) {
@@ -27,7 +28,7 @@ export async function initializeCultureStorageBucket() {
       throw new CultureStorageError('無法列出 storage buckets', listError);
     }
 
-    const bucketExists = buckets?.some((bucket: any) => bucket.name === CULTURE_STORAGE_BUCKET);
+    const bucketExists = buckets?.some((bucket: SupabaseStorageBucket) => bucket.name === CULTURE_STORAGE_BUCKET);
 
     if (!bucketExists) {
       // 建立 bucket
@@ -167,10 +168,10 @@ export async function deleteCultureImages(cultureId: string): Promise<{
     }
 
     dbLogger.info(`📁 在資料夾 ${cultureId} 發現 ${files.length} 個檔案:`, 
-      files.map((f: any) => f.name));
+      files.map((f: SupabaseStorageFile) => f.name));
 
     // 建立要刪除的檔案路徑列表
-    const filePaths = files.map((file: any) => `${cultureId}/${file.name}`);
+    const filePaths = files.map((file: SupabaseStorageFile) => `${cultureId}/${file.name}`);
 
     // 批量刪除所有圖片
     const { error: deleteError } = await supabaseAdmin!.storage
@@ -186,7 +187,7 @@ export async function deleteCultureImages(cultureId: string): Promise<{
     return {
       success: true,
       deletedCount: filePaths.length,
-      deletedFiles: files.map((f: any) => f.name)
+      deletedFiles: files.map((f: SupabaseStorageFile) => f.name)
     };
     
   } catch (error) {
@@ -213,7 +214,7 @@ export async function deleteCultureImages(cultureId: string): Promise<{
 export async function listCultureImages(cultureId: string): Promise<Array<{
   name: string;
   url: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }>> {
   try {
     const { data, error } = await supabaseAdmin!.storage
@@ -224,7 +225,7 @@ export async function listCultureImages(cultureId: string): Promise<Array<{
       throw new CultureStorageError('列出時光典藏圖片失敗', error);
     }
 
-    return (data || []).map((file: any) => {
+    return (data || []).map((file: SupabaseStorageFile) => {
       const { data: urlData } = supabaseAdmin!.storage
         .from(CULTURE_STORAGE_BUCKET)
         .getPublicUrl(`${cultureId}/${file.name}`);
@@ -262,7 +263,7 @@ export async function checkCultureImageExists(filePath: string): Promise<boolean
       return false;
     }
 
-    return (data || []).some((file: any) => file.name === fileName);
+    return (data || []).some((file: SupabaseStorageFile) => file.name === fileName);
   } catch (error) {
     return false;
   }

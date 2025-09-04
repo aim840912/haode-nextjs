@@ -1,6 +1,7 @@
 import { supabase, supabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { dbLogger } from '@/lib/logger';
+import { SupabaseStorageBucket, SupabaseStorageFile, StorageFileWithUrl } from '@/types/supabase.types';
 
 export class SupabaseStorageError extends Error {
   constructor(message: string, public cause?: unknown) {
@@ -27,7 +28,7 @@ export async function initializeStorageBucket() {
       throw new SupabaseStorageError('無法列出 storage buckets', listError);
     }
 
-    const bucketExists = buckets?.some((bucket: any) => bucket.name === STORAGE_BUCKET);
+    const bucketExists = buckets?.some((bucket: SupabaseStorageBucket) => bucket.name === STORAGE_BUCKET);
 
     if (!bucketExists) {
       // 建立 bucket
@@ -185,8 +186,8 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
         
         if (allFolders) {
           const tempFolders = allFolders
-            .filter((folder: any) => folder.name.startsWith('temp-'))
-            .map((folder: any) => folder.name);
+            .filter((folder: SupabaseStorageFile) => folder.name.startsWith('temp-'))
+            .map((folder: SupabaseStorageFile) => folder.name);
           
           possibleFolders.push(...tempFolders);
         }
@@ -208,10 +209,10 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
           continue; // 跳過此資料夾
         }
 
-        dbLogger.debug('在資料夾發現檔案', { metadata: { folder, fileCount: files.length, productId, files: files.map((f: any) => f.name) } });
+        dbLogger.debug('在資料夾發現檔案', { metadata: { folder, fileCount: files.length, productId, files: files.map((f: SupabaseStorageFile) => f.name) } });
 
         // 建立要刪除的檔案路徑列表
-        const filePaths = files.map((file: any) => `${folder}/${file.name}`);
+        const filePaths = files.map((file: SupabaseStorageFile) => `${folder}/${file.name}`);
 
         // 批量刪除所有圖片
         const { error: deleteError } = await supabase.storage
@@ -219,7 +220,7 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
           .remove(filePaths);
 
         if (!deleteError) {
-          allDeletedFiles.push(...files.map((f: any) => f.name));
+          allDeletedFiles.push(...files.map((f: SupabaseStorageFile) => f.name));
           totalDeletedCount += filePaths.length;
           dbLogger.info('成功刪除資料夾圖片', { metadata: { folder, deletedCount: filePaths.length, productId } });
           folderCleanedUp = true;
@@ -276,7 +277,7 @@ export async function deleteProductImages(productId: string): Promise<ProductIma
 export async function listProductImages(productId: string): Promise<Array<{
   name: string;
   url: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }>> {
   try {
     const { data, error } = await supabase.storage
@@ -287,7 +288,7 @@ export async function listProductImages(productId: string): Promise<Array<{
       throw new SupabaseStorageError('列出圖片失敗', error);
     }
 
-    return (data || []).map((file: any) => {
+    return (data || []).map((file: SupabaseStorageFile) => {
       const { data: urlData } = supabase.storage
         .from(STORAGE_BUCKET)
         .getPublicUrl(`${productId}/${file.name}`);
@@ -320,7 +321,7 @@ export async function checkImageExists(filePath: string): Promise<boolean> {
     }
 
     const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-    return (data || []).some((file: any) => file.name === fileName);
+    return (data || []).some((file: SupabaseStorageFile) => file.name === fileName);
   } catch (error) {
     return false;
   }

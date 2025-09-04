@@ -14,6 +14,7 @@
 
 import { LogEntry, LogContext } from './logger'
 import { logger } from './logger'
+import { Transaction } from '@/types/api.types'
 
 /**
  * 錯誤追蹤提供者介面
@@ -22,9 +23,9 @@ interface ErrorTrackingProvider {
   captureError(error: Error, context?: LogContext): void
   captureWarning(message: string, context?: LogContext): void
   setUser(userId: string, email?: string, username?: string): void
-  addBreadcrumb(message: string, category?: string, data?: Record<string, any>): void
-  startTransaction(name: string, operation?: string): any
-  finishTransaction(transaction: any): void
+  addBreadcrumb(message: string, category?: string, data?: Record<string, unknown>): void
+  startTransaction(name: string, operation?: string): Transaction
+  finishTransaction(transaction: Transaction | null): void
 }
 
 /**
@@ -34,7 +35,7 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
   private breadcrumbs: Array<{
     message: string
     category: string
-    data?: Record<string, any>
+    data?: Record<string, unknown>
     timestamp: number
   }> = []
   
@@ -93,7 +94,7 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
     }
   }
 
-  startTransaction(name: string, operation: string = 'custom'): any {
+  startTransaction(name: string, operation: string = 'custom'): Transaction {
     const transaction = {
       name,
       operation,
@@ -123,7 +124,7 @@ class BuiltInErrorTracker implements ErrorTrackingProvider {
     return transaction
   }
 
-  finishTransaction(transaction: any): void {
+  finishTransaction(transaction: Transaction | null): void {
     if (!transaction) return
     
     const duration = Date.now() - transaction.startTime
@@ -253,7 +254,7 @@ export function setUser(userId: string, email?: string, username?: string): void
 /**
  * 開始效能追蹤事務
  */
-export function startTransaction(name: string, operation: string = 'custom'): any {
+export function startTransaction(name: string, operation: string = 'custom'): Transaction | null {
   try {
     return errorTracker.startTransaction(name, operation)
   } catch (trackingError) {
@@ -271,7 +272,7 @@ export function startTransaction(name: string, operation: string = 'custom'): an
 /**
  * 完成效能追蹤事務
  */
-export function finishTransaction(transaction: any): void {
+export function finishTransaction(transaction: Transaction | null): void {
   if (!transaction) return
   
   try {

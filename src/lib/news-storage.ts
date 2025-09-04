@@ -2,6 +2,7 @@ import { supabase, supabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { SupabaseStorageError } from './supabase-storage';
 import { dbLogger } from '@/lib/logger';
+import { SupabaseStorageBucket, SupabaseStorageFile } from '@/types/supabase.types';
 
 export const NEWS_STORAGE_BUCKET = 'news';
 
@@ -21,7 +22,7 @@ export async function initializeNewsBucket() {
       throw new SupabaseStorageError('無法列出 storage buckets', listError);
     }
 
-    const bucketExists = buckets?.some((bucket: any) => bucket.name === NEWS_STORAGE_BUCKET);
+    const bucketExists = buckets?.some((bucket: SupabaseStorageBucket) => bucket.name === NEWS_STORAGE_BUCKET);
 
     if (!bucketExists) {
       // 建立新聞專用 bucket
@@ -308,12 +309,12 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
         newsId,
         bucket: NEWS_STORAGE_BUCKET,
         fileCount: files.length,
-        fileNames: files.map((f: any) => f.name)
+        fileNames: files.map((f: SupabaseStorageFile) => f.name)
       }
     });
 
     // 建立要刪除的檔案路徑列表
-    const filePaths = files.map((file: any) => `${newsId}/${file.name}`);
+    const filePaths = files.map((file: SupabaseStorageFile) => `${newsId}/${file.name}`);
 
     // 批量刪除所有圖片
     const { error: deleteError } = await supabase.storage
@@ -366,7 +367,7 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
 export async function listNewsImages(newsId: string): Promise<Array<{
   name: string;
   url: string;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }>> {
   try {
     const { data, error } = await supabase.storage
@@ -377,7 +378,7 @@ export async function listNewsImages(newsId: string): Promise<Array<{
       throw new SupabaseStorageError('列出新聞圖片失敗', error);
     }
 
-    return (data || []).map((file: any) => {
+    return (data || []).map((file: SupabaseStorageFile) => {
       const { data: urlData } = supabase.storage
         .from(NEWS_STORAGE_BUCKET)
         .getPublicUrl(`${newsId}/${file.name}`);
@@ -435,7 +436,7 @@ export async function checkNewsImageExists(filePath: string): Promise<boolean> {
     }
 
     const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-    return (data || []).some((file: any) => file.name === fileName);
+    return (data || []).some((file: SupabaseStorageFile) => file.name === fileName);
   } catch (error) {
     return false;
   }
