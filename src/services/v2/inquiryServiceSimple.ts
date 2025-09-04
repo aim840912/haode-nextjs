@@ -3,7 +3,7 @@
  * 直接實作業務邏輯，使用統一的錯誤處理和日誌記錄
  */
 
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
@@ -17,7 +17,6 @@ import {
   InquiryStatus,
   InquiryItem,
   InquiryType,
-  Inquiry
 } from '@/types/inquiry'
 
 /**
@@ -58,7 +57,7 @@ export class InquiryServiceV2Simple implements InquiryService {
    * 取得 Supabase 客戶端
    */
   private getSupabaseClient(): ServiceSupabaseClient {
-    return createServiceSupabaseClient()
+    return supabaseAdmin!
   }
 
   /**
@@ -68,14 +67,14 @@ export class InquiryServiceV2Simple implements InquiryService {
     dbLogger.error(`詢問服務 ${operation} 操作失敗`, error as Error, {
       module: this.moduleName,
       action: operation,
-      metadata: context
+      metadata: context,
     })
 
     if (error && typeof error === 'object' && 'code' in error) {
       throw ErrorFactory.fromSupabaseError(error, {
         module: this.moduleName,
         action: operation,
-        ...context
+        ...context,
       })
     }
 
@@ -100,7 +99,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         activity_title: farmTourData.activity_title,
         visit_date: farmTourData.visit_date,
         visitor_count: farmTourData.visitor_count,
-        notes: farmTourData.original_notes
+        notes: farmTourData.original_notes,
       }
     } catch (error) {
       dbLogger.warn('無法解析農場參觀資料', {
@@ -108,8 +107,8 @@ export class InquiryServiceV2Simple implements InquiryService {
         action: 'parseFarmTourData',
         metadata: {
           error: error instanceof Error ? error.message : String(error),
-          notes: record.notes
-        }
+          notes: record.notes,
+        },
       })
       return record
     }
@@ -120,7 +119,7 @@ export class InquiryServiceV2Simple implements InquiryService {
    */
   private transformFromDB(record: SupabaseInquiryRecord): InquiryWithItems {
     const parsedRecord = this.parseFarmTourDataFromNotes(record)
-    
+
     return {
       id: parsedRecord.id,
       user_id: parsedRecord.user_id,
@@ -143,7 +142,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       replied_by: parsedRecord.replied_by || undefined,
       created_at: parsedRecord.created_at,
       updated_at: parsedRecord.updated_at,
-      inquiry_items: parsedRecord.inquiry_items || []
+      inquiry_items: parsedRecord.inquiry_items || [],
     }
   }
 
@@ -156,7 +155,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         activity_title: data.activity_title,
         visit_date: data.visit_date,
         visitor_count: data.visitor_count,
-        original_notes: data.notes || ''
+        original_notes: data.notes || '',
       }
       return `FARM_TOUR_DATA:${JSON.stringify(farmTourData)}`
     }
@@ -186,14 +185,14 @@ export class InquiryServiceV2Simple implements InquiryService {
         total_estimated_amount: totalEstimatedAmount,
         status: 'pending' as InquiryStatus,
         is_read: false,
-        is_replied: false
+        is_replied: false,
       }
 
       const client = this.getSupabaseClient()
 
       // 建立詢問單主記錄
-      const { data: inquiry, error: inquiryError } = await client
-        .from('inquiries')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: inquiry, error: inquiryError } = await (client.from('inquiries') as any)
         .insert([inquiryData])
         .select()
         .single()
@@ -213,18 +212,21 @@ export class InquiryServiceV2Simple implements InquiryService {
           quantity: item.quantity,
           unit_price: item.unit_price,
           total_price: item.unit_price ? item.unit_price * item.quantity : null,
-          notes: item.notes
+          notes: item.notes,
         }))
 
-        const { data: items, error: itemsError } = await client
-          .from('inquiry_items')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: items, error: itemsError } = await (client.from('inquiry_items') as any)
           .insert(itemsData)
           .select()
 
         if (itemsError) {
           // 清除已建立的詢問單
           await client.from('inquiries').delete().eq('id', inquiry.id)
-          this.handleError(itemsError, 'createInquiryItems', { inquiryId: inquiry.id, items: itemsData })
+          this.handleError(itemsError, 'createInquiryItems', {
+            inquiryId: inquiry.id,
+            items: itemsData,
+          })
         }
 
         inquiryItems = items || []
@@ -232,7 +234,7 @@ export class InquiryServiceV2Simple implements InquiryService {
 
       const result = this.transformFromDB({
         ...inquiry,
-        inquiry_items: inquiryItems
+        inquiry_items: inquiryItems,
       })
 
       dbLogger.info('詢問單建立成功', {
@@ -242,8 +244,8 @@ export class InquiryServiceV2Simple implements InquiryService {
           userId,
           inquiryId: result.id,
           inquiryType: data.inquiry_type,
-          itemsCount: inquiryItems.length
-        }
+          itemsCount: inquiryItems.length,
+        },
       })
 
       return result
@@ -257,10 +259,12 @@ export class InquiryServiceV2Simple implements InquiryService {
       const client = this.getSupabaseClient()
       let query = client
         .from('inquiries')
-        .select(`
+        .select(
+          `
           *,
           inquiry_items (*)
-        `)
+        `
+        )
         .eq('user_id', userId)
 
       // 應用查詢參數
@@ -272,12 +276,14 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getUserInquiries', { userId, params })
       }
 
-      const result = (data || []).map((record: SupabaseInquiryRecord) => this.transformFromDB(record))
+      const result = (data || []).map((record: SupabaseInquiryRecord) =>
+        this.transformFromDB(record)
+      )
 
       dbLogger.info('取得使用者詢問單列表成功', {
         module: this.moduleName,
         action: 'getUserInquiries',
-        metadata: { userId, count: result.length }
+        metadata: { userId, count: result.length },
       })
 
       return result
@@ -291,10 +297,12 @@ export class InquiryServiceV2Simple implements InquiryService {
       const client = this.getSupabaseClient()
       const { data, error } = await client
         .from('inquiries')
-        .select(`
+        .select(
+          `
           *,
           inquiry_items (*)
-        `)
+        `
+        )
         .eq('id', inquiryId)
         .eq('user_id', userId)
         .single()
@@ -312,7 +320,11 @@ export class InquiryServiceV2Simple implements InquiryService {
     }
   }
 
-  async updateInquiry(userId: string, inquiryId: string, data: UpdateInquiryRequest): Promise<InquiryWithItems> {
+  async updateInquiry(
+    userId: string,
+    inquiryId: string,
+    data: UpdateInquiryRequest
+  ): Promise<InquiryWithItems> {
     try {
       // 檢查所有權
       const existing = await this.getInquiryById(userId, inquiryId)
@@ -323,18 +335,20 @@ export class InquiryServiceV2Simple implements InquiryService {
       const client = this.getSupabaseClient()
       const updateData: UpdateDataObject = {
         ...data,
-        notes: this.serializeFarmTourData(data)
+        notes: this.serializeFarmTourData(data),
       }
 
-      const { data: updated, error } = await client
-        .from('inquiries')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: updated, error } = await (client.from('inquiries') as any)
         .update(updateData)
         .eq('id', inquiryId)
         .eq('user_id', userId)
-        .select(`
+        .select(
+          `
           *,
           inquiry_items (*)
-        `)
+        `
+        )
         .single()
 
       if (error) {
@@ -346,7 +360,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       dbLogger.info('詢問單更新成功', {
         module: this.moduleName,
         action: 'updateInquiry',
-        metadata: { userId, inquiryId }
+        metadata: { userId, inquiryId },
       })
 
       return result
@@ -360,9 +374,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   async getAllInquiries(params?: InquiryQueryParams): Promise<InquiryWithItems[]> {
     try {
       const client = this.getSupabaseClient()
-      let query = client
-        .from('inquiries')
-        .select(`
+      let query = client.from('inquiries').select(`
           *,
           inquiry_items (*)
         `)
@@ -393,14 +405,16 @@ export class InquiryServiceV2Simple implements InquiryService {
         updateData.replied_at = new Date().toISOString()
       }
 
-      const { data: updated, error } = await client
-        .from('inquiries')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: updated, error } = await (client.from('inquiries') as any)
         .update(updateData)
         .eq('id', inquiryId)
-        .select(`
+        .select(
+          `
           *,
           inquiry_items (*)
-        `)
+        `
+        )
         .single()
 
       if (error) {
@@ -431,10 +445,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   async deleteInquiry(inquiryId: string): Promise<void> {
     try {
       const client = this.getSupabaseClient()
-      const { error } = await client
-        .from('inquiries')
-        .delete()
-        .eq('id', inquiryId)
+      const { error } = await client.from('inquiries').delete().eq('id', inquiryId)
 
       if (error) {
         this.handleError(error, 'deleteInquiry', { inquiryId })
@@ -443,7 +454,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       dbLogger.info('詢問單刪除成功', {
         module: this.moduleName,
         action: 'deleteInquiry',
-        metadata: { inquiryId }
+        metadata: { inquiryId },
       })
     } catch (error) {
       this.handleError(error, 'deleteInquiry', { inquiryId })
@@ -457,10 +468,12 @@ export class InquiryServiceV2Simple implements InquiryService {
       const client = this.getSupabaseClient()
       const { data, error } = await client
         .from('inquiries')
-        .select(`
+        .select(
+          `
           *,
           inquiry_items (*)
-        `)
+        `
+        )
         .eq('id', inquiryId)
         .single()
 
@@ -495,22 +508,24 @@ export class InquiryServiceV2Simple implements InquiryService {
       if (items.length > 0) {
         const itemsData = items.map((item: InquiryItem) => ({
           ...item,
-          inquiry_id: inquiryId
+          inquiry_id: inquiryId,
         }))
 
-        const { error: insertError } = await client
-          .from('inquiry_items')
-          .insert(itemsData)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: insertError } = await (client.from('inquiry_items') as any).insert(itemsData)
 
         if (insertError) {
-          this.handleError(insertError, 'updateInquiryItems:insert', { inquiryId, items: itemsData })
+          this.handleError(insertError, 'updateInquiryItems:insert', {
+            inquiryId,
+            items: itemsData,
+          })
         }
       }
 
       dbLogger.info('詢問項目更新成功', {
         module: this.moduleName,
         action: 'updateInquiryItems',
-        metadata: { inquiryId, itemCount: items.length }
+        metadata: { inquiryId, itemCount: items.length },
       })
     } catch (error) {
       this.handleError(error, 'updateInquiryItems', { inquiryId, items })
@@ -581,7 +596,9 @@ export class InquiryServiceV2Simple implements InquiryService {
     return total > 0 ? total : null
   }
 
-  private applyQueryParams(query: any, params?: InquiryQueryParams): any { // TODO: 需要 Supabase 查詢類型
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private applyQueryParams(query: any, params?: InquiryQueryParams): any {
+    // TODO: 需要 Supabase 查詢類型
     if (!params) return query
 
     // 狀態篩選
