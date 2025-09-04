@@ -1,18 +1,26 @@
-# 圖片優化使用指南
+# 圖片優化使用指南（統一更新版）
 
 ## 🚫 禁止使用原生 `<img>` 標籤
 
-**重要**: 本專案禁止使用原生 `<img>` 標籤，請使用以下優化組件：
+**重要**: 本專案禁止使用原生 `<img>` 標籤，請使用統一的優化組件：
 
-## 🖼️ 推薦組件
+## 🖼️ 統一圖片組件 - OptimizedImage
 
-### 1. SimpleImage（主要組件）
+### 1. OptimizedImage（主要組件）
+
+**所有圖片都應使用此統一組件**，具備以下功能：
+- ⚡ 智能懶加載（Intersection Observer）
+- 🖼️ 自動 Blur Placeholder
+- 📱 響應式圖片支援
+- 🔄 Base64 到 Blob 轉換
+- ⚠️ 多層錯誤處理
+- 🎨 預建響應式和頭像組件
 
 ```typescript
-import SimpleImage from '@/components/SimpleImage'
+import OptimizedImage from '@/components/OptimizedImage'
 
 // 基本使用
-<SimpleImage
+<OptimizedImage
   src="/images/example.jpg"
   alt="範例圖片"
   width={400}
@@ -20,7 +28,7 @@ import SimpleImage from '@/components/SimpleImage'
 />
 
 // Fill 模式（適合容器內圖片）
-<SimpleImage
+<OptimizedImage
   src="/images/example.jpg"
   alt="範例圖片"
   fill
@@ -29,75 +37,100 @@ import SimpleImage from '@/components/SimpleImage'
 />
 
 // 首屏重要圖片
-<SimpleImage
+<OptimizedImage
   src="/images/hero.jpg"
   alt="主要圖片"
   fill
-  priority // 優先載入
+  priority // 優先載入，跳過懶加載
   sizes="100vw"
+/>
+
+// 啟用多層 fallback（類似舊 SafeImage）
+<OptimizedImage
+  src="/images/example.jpg"
+  alt="範例圖片"
+  width={400}
+  height={300}
+  enableMultiLevelFallback={true}
+  showErrorDetails={true}
 />
 ```
 
-### 2. ResponsiveSimpleImage（響應式圖片）
+### 2. 響應式圖片組件
 
 ```typescript
-import { ResponsiveSimpleImage } from '@/components/SimpleImage'
+import { ResponsiveImage } from '@/components/OptimizedImage'
 
-<ResponsiveSimpleImage
+<ResponsiveImage
   src="/images/example.jpg"
   alt="響應式圖片"
   aspectRatio="aspect-video" // 或 "aspect-square", "aspect-[4/3]"
 />
 ```
 
-### 3. AvatarSimpleImage（頭像圖片）
+### 3. 頭像圖片組件
 
 ```typescript
-import { AvatarSimpleImage } from '@/components/SimpleImage'
+import { AvatarImage } from '@/components/OptimizedImage'
 
-<AvatarSimpleImage
+<AvatarImage
   src="/images/avatar.jpg"
   alt="使用者頭像"
   size="md" // sm, md, lg, xl
 />
 ```
 
-## 📐 Sizes 屬性指南
+### 4. 兼容性別名（舊組件遷移）
 
-正確的 `sizes` 屬性對效能至關重要：
+為了順利遷移，我們提供兼容性別名：
 
 ```typescript
-// 卡片網格（3 欄）
+// SafeImage 別名（啟用多層 fallback）
+import { SafeImage } from '@/components/OptimizedImage'
+
+// SimpleImage 別名（啟用錯誤詳情）
+import { SimpleImage } from '@/components/OptimizedImage'
+
+// 其他響應式和頭像組件別名也有提供
+import { ResponsiveSimpleImage, AvatarSimpleImage } from '@/components/OptimizedImage'
+```
+
+## 📐 優化的 Sizes 屬性
+
+統一組件提供更好的預設 sizes 配置：
+
+```typescript
+// 新的預設配置（自動套用）
 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+
+// 響應式產品圖片
+sizes="(max-width: 480px) 100vw, (max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
 
 // 全寬橫幅
 sizes="100vw"
-
-// 側邊欄圖片（固定寬度）
-sizes="(max-width: 768px) 100vw, 300px"
 
 // 頭像（小圖）
 sizes="64px"
 ```
 
-## ⚡ 效能最佳實踐
+## ⚡ 增強的效能功能
 
-### 1. 優先級設定
+### 1. 智能懶加載
 ```typescript
-// 首屏圖片設為 priority
-<SimpleImage priority={true} />
+// 預設啟用懶加載，提前 100px 開始載入
+<OptimizedImage lazy={true} threshold={0.1} />
 
-// 前 3 個項目設為優先
-<SimpleImage priority={index < 3} />
+// 首屏重要圖片跳過懶加載
+<OptimizedImage priority={true} />
 ```
 
-### 2. 品質設定
+### 2. 優化的品質和 Placeholder
 ```typescript
-// 一般圖片
-<SimpleImage quality={85} /> // 預設值
+// 新的預設值：品質 80，自動 blur placeholder
+<OptimizedImage quality={80} placeholder="blur" />
 
 // 背景圖片（可降低品質）
-<SimpleImage quality={75} />
+<OptimizedImage quality={75} />
 
 // 重要圖片（提高品質）
 <SimpleImage quality={95} />

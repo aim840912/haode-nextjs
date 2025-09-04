@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { CultureItem } from '@/types/culture'
-import SimpleImage from '@/components/SimpleImage'
+import { SimpleImage } from '@/components/OptimizedImage'
 import Breadcrumbs, { createCultureBreadcrumbs } from '@/components/Breadcrumbs'
 
 export default function CulturePage() {
@@ -78,10 +78,7 @@ export default function CulturePage() {
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <Breadcrumbs 
-            items={createCultureBreadcrumbs()}
-            enableStructuredData={true}
-          />
+          <Breadcrumbs items={createCultureBreadcrumbs()} enableStructuredData={true} />
         </div>
       </div>
 

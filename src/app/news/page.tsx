@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import SimpleImage from '@/components/SimpleImage'
+import { SimpleImage } from '@/components/OptimizedImage'
 import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
 import { logger } from '@/lib/logger'
 
@@ -37,18 +37,18 @@ export default function NewsPage() {
       const response = await fetch('/api/news')
       if (response.ok) {
         const result = await response.json()
-        
+
         // 處理統一 API 回應格式
         const data = result.data || result
-        
+
         // 確保 data 是陣列
         if (Array.isArray(data)) {
           setNews(data)
         } else {
-          logger.error('API 回應格式錯誤：news data 不是陣列', new Error('非陣列格式'), { 
-            module: 'NewsPage', 
+          logger.error('API 回應格式錯誤：news data 不是陣列', new Error('非陣列格式'), {
+            module: 'NewsPage',
             action: 'fetchNews',
-            metadata: { result }
+            metadata: { result },
           })
           setNews([])
         }
@@ -58,13 +58,19 @@ export default function NewsPage() {
         setNews(newsData.default)
       }
     } catch (error) {
-      logger.error('Error fetching news', error as Error, { module: 'NewsPage', action: 'fetchNews' })
+      logger.error('Error fetching news', error as Error, {
+        module: 'NewsPage',
+        action: 'fetchNews',
+      })
       // 載入本地資料作為備案
       try {
         const newsData = await import('@/data/news.json')
         setNews(newsData.default)
       } catch (importError) {
-        logger.error('Error importing local news data', importError as Error, { module: 'NewsPage', action: 'importLocalNewsData' })
+        logger.error('Error importing local news data', importError as Error, {
+          module: 'NewsPage',
+          action: 'importLocalNewsData',
+        })
       }
     } finally {
       setLoading(false)
@@ -98,10 +104,7 @@ export default function NewsPage() {
       {/* Breadcrumb */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <Breadcrumbs 
-            items={createNewsBreadcrumbs()}
-            enableStructuredData={true}
-          />
+          <Breadcrumbs items={createNewsBreadcrumbs()} enableStructuredData={true} />
         </div>
       </div>
 

@@ -4,14 +4,15 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Location } from '@/types/location'
 import Link from 'next/link'
-import SimpleImage, { AvatarSimpleImage } from '@/components/SimpleImage'
+import { SimpleImage, AvatarSimpleImage } from '@/components/OptimizedImage'
 import { logger } from '@/lib/logger'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {
   if (!url) return false
   // 檢查是否包含 emoji 字符
-  const emojiRegex = /[\u{1F000}-\u{1F9FF}]|[\u{1F300}-\u{1F5FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
+  const emojiRegex =
+    /[\u{1F000}-\u{1F9FF}]|[\u{1F300}-\u{1F5FF}]|[\u{1F600}-\u{1F64F}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
   if (emojiRegex.test(url)) return false
   // 檢查是否為有效的相對或絕對路徑
   return url.startsWith('/') || url.startsWith('http://') || url.startsWith('https://')
@@ -31,10 +32,10 @@ export default function LocationsPage() {
     try {
       const response = await fetch('/api/locations')
       const result = await response.json()
-      
+
       // 處理統一 API 回應格式
       const data = result.data || result
-      
+
       // 確保 data 是陣列
       if (Array.isArray(data)) {
         setStoreLocations(data)
@@ -42,15 +43,18 @@ export default function LocationsPage() {
           setSelectedStore(data[0])
         }
       } else {
-        logger.error('API 回應格式錯誤：locations data 不是陣列', new Error('非陣列格式'), { 
-          module: 'LocationsPage', 
+        logger.error('API 回應格式錯誤：locations data 不是陣列', new Error('非陣列格式'), {
+          module: 'LocationsPage',
           action: 'fetchLocations',
-          metadata: { result }
+          metadata: { result },
         })
         setStoreLocations([])
       }
     } catch (error) {
-      logger.error('Error fetching locations', error as Error, { module: 'LocationsPage', action: 'fetchLocations' })
+      logger.error('Error fetching locations', error as Error, {
+        module: 'LocationsPage',
+        action: 'fetchLocations',
+      })
     } finally {
       setLoading(false)
     }

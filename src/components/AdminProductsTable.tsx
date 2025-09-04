@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { useToast } from '@/components/Toast'
-import SafeImage from './SafeImage'
+import { SafeImage } from './OptimizedImage'
 import { logger } from '@/lib/logger'
 import AdminProductFilter, { AdminFilterState } from './AdminProductFilter'
 
@@ -40,10 +40,10 @@ class SearchHistoryManager {
     try {
       localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory))
     } catch (error) {
-      logger.warn('Failed to save search history', { 
-        module: 'SearchHistoryManager', 
+      logger.warn('Failed to save search history', {
+        module: 'SearchHistoryManager',
         action: 'addToHistory',
-        metadata: { error }
+        metadata: { error },
       })
     }
   }
@@ -53,10 +53,10 @@ class SearchHistoryManager {
     try {
       localStorage.removeItem(SEARCH_HISTORY_KEY)
     } catch (error) {
-      logger.warn('Failed to clear search history', { 
-        module: 'SearchHistoryManager', 
+      logger.warn('Failed to clear search history', {
+        module: 'SearchHistoryManager',
         action: 'clearHistory',
-        metadata: { error }
+        metadata: { error },
       })
     }
   }
