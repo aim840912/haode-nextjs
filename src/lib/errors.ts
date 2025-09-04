@@ -1,6 +1,6 @@
 /**
  * 統一的錯誤處理系統
- * 
+ *
  * 提供標準化的錯誤類別和處理機制：
  * - 統一的錯誤格式和分類
  * - HTTP 狀態碼自動對應
@@ -13,14 +13,14 @@
  */
 export enum ErrorType {
   VALIDATION = 'VALIDATION_ERROR',
-  AUTHENTICATION = 'AUTHENTICATION_ERROR', 
+  AUTHENTICATION = 'AUTHENTICATION_ERROR',
   AUTHORIZATION = 'AUTHORIZATION_ERROR',
   NOT_FOUND = 'NOT_FOUND_ERROR',
   CONFLICT = 'CONFLICT_ERROR',
   DATABASE = 'DATABASE_ERROR',
   EXTERNAL_SERVICE = 'EXTERNAL_SERVICE_ERROR',
   RATE_LIMIT = 'RATE_LIMIT_ERROR',
-  INTERNAL = 'INTERNAL_SERVER_ERROR'
+  INTERNAL = 'INTERNAL_SERVER_ERROR',
 }
 
 /**
@@ -32,7 +32,7 @@ export interface ErrorDetails {
   /** 相關的動作或操作 */
   action?: string
   /** 附加的上下文資訊 */
-  context?: Record<string, any>
+  context?: Record<string, unknown>
   /** 原始錯誤（如果有的話） */
   originalError?: Error
   /** 錯誤追蹤 ID */
@@ -48,7 +48,7 @@ export interface ErrorResponse {
     code: string
     type: ErrorType
     message: string
-    details?: any
+    details?: unknown
     timestamp: string
     traceId?: string
   }
@@ -74,7 +74,7 @@ export abstract class AppError extends Error {
     details?: ErrorDetails
   ) {
     super(message)
-    
+
     this.name = this.constructor.name
     this.statusCode = statusCode
     this.errorType = errorType
@@ -84,7 +84,7 @@ export abstract class AppError extends Error {
 
     // 確保正確的原型鏈
     Object.setPrototypeOf(this, new.target.prototype)
-    
+
     // 捕獲堆疊追蹤
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor)
@@ -110,8 +110,8 @@ export abstract class AppError extends Error {
         message: this.message,
         details: process.env.NODE_ENV === 'development' ? this.details : undefined,
         timestamp: new Date().toISOString(),
-        traceId: this.traceId
-      }
+        traceId: this.traceId,
+      },
     }
   }
 
@@ -127,7 +127,7 @@ export abstract class AppError extends Error {
       errorCode: this.errorCode,
       details: this.details,
       traceId: this.traceId,
-      stack: this.stack
+      stack: this.stack,
     }
   }
 }
@@ -136,17 +136,8 @@ export abstract class AppError extends Error {
  * 驗證錯誤 (400)
  */
 export class ValidationError extends AppError {
-  constructor(
-    message: string = '資料驗證失敗',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      400,
-      ErrorType.VALIDATION,
-      'VALIDATION_FAILED',
-      details
-    )
+  constructor(message: string = '資料驗證失敗', details?: ErrorDetails) {
+    super(message, 400, ErrorType.VALIDATION, 'VALIDATION_FAILED', details)
   }
 }
 
@@ -154,17 +145,8 @@ export class ValidationError extends AppError {
  * 認證錯誤 (401)
  */
 export class AuthenticationError extends AppError {
-  constructor(
-    message: string = '認證失敗，請重新登入',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      401,
-      ErrorType.AUTHENTICATION,
-      'AUTHENTICATION_FAILED',
-      details
-    )
+  constructor(message: string = '認證失敗，請重新登入', details?: ErrorDetails) {
+    super(message, 401, ErrorType.AUTHENTICATION, 'AUTHENTICATION_FAILED', details)
   }
 }
 
@@ -172,17 +154,8 @@ export class AuthenticationError extends AppError {
  * 授權錯誤 (403)
  */
 export class AuthorizationError extends AppError {
-  constructor(
-    message: string = '權限不足，無法執行此操作',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      403,
-      ErrorType.AUTHORIZATION,
-      'INSUFFICIENT_PERMISSIONS',
-      details
-    )
+  constructor(message: string = '權限不足，無法執行此操作', details?: ErrorDetails) {
+    super(message, 403, ErrorType.AUTHORIZATION, 'INSUFFICIENT_PERMISSIONS', details)
   }
 }
 
@@ -190,17 +163,8 @@ export class AuthorizationError extends AppError {
  * 資源不存在錯誤 (404)
  */
 export class NotFoundError extends AppError {
-  constructor(
-    message: string = '請求的資源不存在',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      404,
-      ErrorType.NOT_FOUND,
-      'RESOURCE_NOT_FOUND',
-      details
-    )
+  constructor(message: string = '請求的資源不存在', details?: ErrorDetails) {
+    super(message, 404, ErrorType.NOT_FOUND, 'RESOURCE_NOT_FOUND', details)
   }
 }
 
@@ -208,17 +172,8 @@ export class NotFoundError extends AppError {
  * 衝突錯誤 (409)
  */
 export class ConflictError extends AppError {
-  constructor(
-    message: string = '資源衝突，操作無法完成',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      409,
-      ErrorType.CONFLICT,
-      'RESOURCE_CONFLICT',
-      details
-    )
+  constructor(message: string = '資源衝突，操作無法完成', details?: ErrorDetails) {
+    super(message, 409, ErrorType.CONFLICT, 'RESOURCE_CONFLICT', details)
   }
 }
 
@@ -226,17 +181,8 @@ export class ConflictError extends AppError {
  * 資料庫錯誤 (500)
  */
 export class DatabaseError extends AppError {
-  constructor(
-    message: string = '資料庫操作失敗',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      500,
-      ErrorType.DATABASE,
-      'DATABASE_OPERATION_FAILED',
-      details
-    )
+  constructor(message: string = '資料庫操作失敗', details?: ErrorDetails) {
+    super(message, 500, ErrorType.DATABASE, 'DATABASE_OPERATION_FAILED', details)
   }
 }
 
@@ -249,13 +195,7 @@ export class ExternalServiceError extends AppError {
     statusCode: number = 503,
     details?: ErrorDetails
   ) {
-    super(
-      message,
-      statusCode,
-      ErrorType.EXTERNAL_SERVICE,
-      'EXTERNAL_SERVICE_UNAVAILABLE',
-      details
-    )
+    super(message, statusCode, ErrorType.EXTERNAL_SERVICE, 'EXTERNAL_SERVICE_UNAVAILABLE', details)
   }
 }
 
@@ -263,17 +203,17 @@ export class ExternalServiceError extends AppError {
  * 頻率限制錯誤 (429)
  */
 export class RateLimitError extends AppError {
-  constructor(
-    message: string = '請求頻率過高，請稍後再試',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      429,
-      ErrorType.RATE_LIMIT,
-      'RATE_LIMIT_EXCEEDED',
-      details
-    )
+  constructor(message: string = '請求頻率過高，請稍後再試', details?: ErrorDetails) {
+    super(message, 429, ErrorType.RATE_LIMIT, 'RATE_LIMIT_EXCEEDED', details)
+  }
+}
+
+/**
+ * 方法不允許錯誤 (405)
+ */
+export class MethodNotAllowedError extends AppError {
+  constructor(message: string = '不支援的 HTTP 方法', details?: ErrorDetails) {
+    super(message, 405, ErrorType.VALIDATION, 'METHOD_NOT_ALLOWED', details)
   }
 }
 
@@ -281,17 +221,8 @@ export class RateLimitError extends AppError {
  * 內部伺服器錯誤 (500)
  */
 export class InternalServerError extends AppError {
-  constructor(
-    message: string = '內部伺服器錯誤',
-    details?: ErrorDetails
-  ) {
-    super(
-      message,
-      500,
-      ErrorType.INTERNAL,
-      'INTERNAL_SERVER_ERROR',
-      details
-    )
+  constructor(message: string = '內部伺服器錯誤', details?: ErrorDetails) {
+    super(message, 500, ErrorType.INTERNAL, 'INTERNAL_SERVER_ERROR', details)
   }
 }
 
@@ -302,64 +233,42 @@ export class ErrorFactory {
   /**
    * 根據 Supabase 錯誤創建適當的應用程式錯誤
    */
-  static fromSupabaseError(error: any, context?: Partial<ErrorDetails>): AppError {
+  static fromSupabaseError(error: Error | unknown, context?: Partial<ErrorDetails>): AppError {
     const details: ErrorDetails = {
       ...context,
-      originalError: error,
-      module: context?.module || 'Database'
+      originalError: error instanceof Error ? error : new Error(String(error)),
+      module: context?.module || 'Database',
     }
 
+    const errorMessage = error instanceof Error ? error.message : String(error)
+
     // RLS 政策錯誤
-    if (error.message?.includes('row-level security policy') || 
-        error.message?.includes('policy')) {
-      return new AuthorizationError(
-        ' 資料庫權限設定問題，請聯繫系統管理員',
-        details
-      )
+    if (errorMessage?.includes('row-level security policy') || errorMessage?.includes('policy')) {
+      return new AuthorizationError(' 資料庫權限設定問題，請聯繫系統管理員', details)
     }
 
     // 權限錯誤
-    if (error.message?.includes('permission') || 
-        error.message?.includes('violates')) {
-      return new AuthorizationError(
-        '權限不足，請確認您已正確登入',
-        details
-      )
+    if (errorMessage?.includes('permission') || errorMessage?.includes('violates')) {
+      return new AuthorizationError('權限不足，請確認您已正確登入', details)
     }
 
     // 連接錯誤
-    if (error.message?.includes('connection') || 
-        error.message?.includes('timeout')) {
-      return new ExternalServiceError(
-        '資料庫連線問題，請稍後再試',
-        503,
-        details
-      )
+    if (errorMessage?.includes('connection') || errorMessage?.includes('timeout')) {
+      return new ExternalServiceError('資料庫連線問題，請稍後再試', 503, details)
     }
 
     // 唯一性約束錯誤
-    if (error.message?.includes('duplicate') || 
-        error.message?.includes('unique')) {
-      return new ConflictError(
-        '資料已存在，請勿重複提交',
-        details
-      )
+    if (errorMessage?.includes('duplicate') || errorMessage?.includes('unique')) {
+      return new ConflictError('資料已存在，請勿重複提交', details)
     }
 
     // 外鍵約束錯誤
-    if (error.message?.includes('foreign key') || 
-        error.message?.includes('constraint')) {
-      return new ValidationError(
-        '資料關聯錯誤，請檢查相關資料是否存在',
-        details
-      )
+    if (errorMessage?.includes('foreign key') || errorMessage?.includes('constraint')) {
+      return new ValidationError('資料關聯錯誤，請檢查相關資料是否存在', details)
     }
 
     // 一般資料庫錯誤
-    return new DatabaseError(
-      `資料庫操作失敗: ${error.message}`,
-      details
-    )
+    return new DatabaseError(`資料庫操作失敗: ${errorMessage}`, details)
   }
 
   /**
@@ -368,7 +277,7 @@ export class ErrorFactory {
   static fromError(error: Error, context?: Partial<ErrorDetails>): AppError {
     const details: ErrorDetails = {
       ...context,
-      originalError: error
+      originalError: error,
     }
 
     // 如果已經是 AppError，直接返回
@@ -377,10 +286,7 @@ export class ErrorFactory {
     }
 
     // 其他一般錯誤
-    return new InternalServerError(
-      error.message || '未知錯誤',
-      details
-    )
+    return new InternalServerError(error.message || '未知錯誤', details)
   }
 
   /**
@@ -390,9 +296,7 @@ export class ErrorFactory {
     errors: string[] | string,
     context?: Partial<ErrorDetails>
   ): ValidationError {
-    const message = Array.isArray(errors) 
-      ? `資料驗證失敗: ${errors.join(', ')}`
-      : errors
+    const message = Array.isArray(errors) ? `資料驗證失敗: ${errors.join(', ')}` : errors
 
     return new ValidationError(message, context)
   }
@@ -422,14 +326,14 @@ export class ErrorUtils {
         code: error.errorCode,
         message: error.message,
         statusCode: error.statusCode,
-        traceId: error.traceId
+        traceId: error.traceId,
       }
     }
 
     return {
       type: 'UNKNOWN_ERROR',
       message: error.message,
-      name: error.name
+      name: error.name,
     }
   }
 

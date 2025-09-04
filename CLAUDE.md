@@ -118,6 +118,19 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
   - `authLogger` for authentication logic
 - **錯誤自動記錄**: 使用 `withErrorHandler` 中間件時，錯誤會自動記錄到適當級別
 
+### API Error Handling Standards
+
+**專案 API 錯誤處理覆蓋率 100% 達成** - 所有 API 路由已使用統一錯誤處理系統 🎯 (2025-09-04 完成)
+- ✅ 所有核心 API 路由 (35個檔案)
+- ✅ 所有系統管理 API (5個檔案)  
+- ✅ 所有新版本 API (/api/v1/)
+- 📊 總計：40個 API 路由檔案，從 58% → 100% 覆蓋率
+
+**重要提醒**：
+- requireAuth 和 requireAdmin 已內建 withErrorHandler，不要重複包裝
+- 所有錯誤都會自動記錄到 apiLogger，無需手動記錄
+- 使用 MethodNotAllowedError 處理不支援的 HTTP 方法
+
 #### Logger 使用範例
 
 **API 路由日誌記錄**:
@@ -301,6 +314,24 @@ export function processImageUpload(file: File) {
 - **包含除錯上下文**: 每個錯誤都有追蹤 ID 和詳細上下文
 - **Never silently swallow exceptions** - 所有例外都應適當處理和記錄
 
+#### 可用的錯誤類型
+
+- `ValidationError` - 輸入驗證失敗 (400)
+- `AuthorizationError` - 權限不足 (403) 
+- `NotFoundError` - 資源不存在 (404)
+- `MethodNotAllowedError` - HTTP 方法不支援 (405) ← 新增
+- `DatabaseError` - 資料庫操作失敗 (500)
+- `ErrorFactory.fromSupabaseError()` - 自動轉換 Supabase 錯誤
+
+**處理不支援的 HTTP 方法**：
+```typescript
+async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
+  throw new MethodNotAllowedError(`不支援的方法: ${request.method}`)
+}
+
+export const PUT = withErrorHandler(handleUnsupportedMethod, { module: 'YourAPI' })
+```
+
 #### 錯誤處理使用範例
 
 **API 路由使用錯誤處理中間件**:
@@ -398,6 +429,29 @@ When multiple valid approaches exist, choose based on:
    - 權限錯誤: `throw new AuthorizationError('權限不足')`
    - 資料庫錯誤: `throw ErrorFactory.fromSupabaseError(error)`
 
+#### 動態路由參數處理 (Next.js 15+)
+
+**重要**：Next.js 15 中，動態路由參數是 Promise：
+
+```typescript
+// ✅ 正確：等待 params Promise
+async function handleGET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params  // 必須 await
+  // 使用 id...
+}
+
+// ❌ 錯誤：直接使用 params
+async function handleGET(
+  request: NextRequest,
+  { params }: { params: { id: string } }  // 這會造成類型錯誤
+) {
+  const { id } = params
+}
+```
+
 ### 服務層開發標準
 
 **專案已實施統一服務架構** - 所有新服務都應遵循以下模式：
@@ -489,6 +543,17 @@ When multiple valid approaches exist, choose based on:
 - [ ] Implementation matches plan
 - [ ] No TODOs without issue numbers
 
+### API 開發完成檢查清單
+
+- [ ] 使用適當的錯誤處理中間件 (requireAuth/requireAdmin/optionalAuth/withErrorHandler)
+- [ ] 所有錯誤使用標準錯誤類型 (ValidationError, NotFoundError, MethodNotAllowedError 等)
+- [ ] 動態路由參數正確使用 await (Next.js 15+)
+- [ ] 使用 apiLogger 而非 console.log
+- [ ] 回應使用統一格式 (success, created, successWithPagination)
+- [ ] TypeScript 類型檢查通過
+- [ ] 處理不支援的 HTTP 方法時返回 MethodNotAllowedError
+- [ ] 不要重複包裝權限中間件和 withErrorHandler
+
 ### Test Guidelines
 
 - Test behavior, not implementation
@@ -518,6 +583,8 @@ When multiple valid approaches exist, choose based on:
 
 ### 統一權限中間件系統（已實作）
 
+**重要**：權限中間件已包含錯誤處理，無需重複包裝！
+
 **使用新的權限中間件**，取代手動的 getCurrentUser() 檢查：
 
 ```typescript
@@ -545,6 +612,24 @@ export const GET = requireAuth(async (req, { user }) => {
 - **requireAuth**: 需要使用者登入
 - **requireAdmin**: 需要管理員權限
 - **optionalAuth**: 可選認證（公開 API 但可能需要使用者資訊）
+
+```typescript
+// ✅ 正確：直接使用權限中間件
+export const GET = requireAuth(handleGET)
+export const POST = requireAdmin(handlePOST)
+export const DELETE = optionalAuth(handleDELETE)
+
+// ❌ 錯誤：重複包裝（會造成雙重錯誤處理）
+export const GET = requireAuth(withErrorHandler(handleGET, { module: 'API' }))
+
+// ✅ 正確：非權限相關的 API 使用 withErrorHandler
+export const GET = withErrorHandler(handlePublicGET, { module: 'PublicAPI' })
+```
+
+**中間件優先級**：
+1. 如果需要認證：使用 `requireAuth` 或 `requireAdmin`
+2. 如果是公開 API 但可能有用戶：使用 `optionalAuth`
+3. 如果是純公開 API：使用 `withErrorHandler`
 
 ### 新版本 API 結構（/api/v1/）
 

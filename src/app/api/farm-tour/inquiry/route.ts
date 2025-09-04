@@ -118,7 +118,7 @@ export const POST = withRateLimit(wrappedPOST, {
 
 // 處理其他不支援的 HTTP 方法
 
-async function handleUnsupportedMethods() {
+async function handleUnsupportedMethods(request: NextRequest): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 

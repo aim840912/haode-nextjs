@@ -18,10 +18,21 @@ export default function FarmTourAdmin() {
   const fetchActivities = async () => {
     try {
       const response = await fetch('/api/farm-tour')
-      const data = await response.json()
-      setActivities(data)
+      const result = await response.json()
+
+      // 處理新的統一回應格式
+      if (result.success && result.data) {
+        setActivities(result.data) // 從 data 屬性取得活動陣列
+      } else {
+        // 向後相容：如果是舊格式（直接陣列）
+        setActivities(Array.isArray(result) ? result : [])
+      }
     } catch (error) {
-      logger.error('Error fetching farm tour activities:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error fetching farm tour activities:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
+      setActivities([]) // 錯誤時設為空陣列
     } finally {
       setLoading(false)
     }
@@ -29,13 +40,22 @@ export default function FarmTourAdmin() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('確定要刪除此體驗活動嗎？')) return
-    
+
     try {
-      await fetch(`/api/farm-tour/${id}`, { method: 'DELETE' })
-      setActivities(activities.filter(activity => activity.id !== id))
+      const response = await fetch(`/api/farm-tour/${id}`, { method: 'DELETE' })
+      const result = await response.json()
+
+      if (result.success) {
+        setActivities(activities.filter(activity => activity.id !== id))
+      } else {
+        throw new Error(result.error || '刪除失敗')
+      }
     } catch (error) {
-      logger.error('Error deleting activity:', error instanceof Error ? error : new Error('Unknown error'))
-      alert('刪除失敗')
+      logger.error(
+        'Error deleting activity:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
+      alert(error instanceof Error ? error.message : '刪除失敗')
     }
   }
 
@@ -44,17 +64,25 @@ export default function FarmTourAdmin() {
       const response = await fetch(`/api/farm-tour/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ available: !available })
+        body: JSON.stringify({ available: !available }),
       })
-      
-      if (response.ok) {
-        setActivities(activities.map(activity => 
-          activity.id === id ? { ...activity, available: !available } : activity
-        ))
+      const result = await response.json()
+
+      if (result.success) {
+        setActivities(
+          activities.map(activity =>
+            activity.id === id ? { ...activity, available: !available } : activity
+          )
+        )
+      } else {
+        throw new Error(result.error || '更新狀態失敗')
       }
     } catch (error) {
-      logger.error('Error updating availability:', error instanceof Error ? error : new Error('Unknown error'))
-      alert('更新狀態失敗')
+      logger.error(
+        'Error updating availability:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
+      alert(error instanceof Error ? error.message : '更新狀態失敗')
     }
   }
 
@@ -62,7 +90,7 @@ export default function FarmTourAdmin() {
     return new Date(dateString).toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
@@ -81,32 +109,32 @@ export default function FarmTourAdmin() {
           <h1 className="text-3xl font-bold text-gray-900">觀光果園管理</h1>
           <div className="flex flex-wrap gap-3">
             {user?.role === 'admin' && (
-              <Link 
+              <Link
                 href="/admin/farm-tour/add"
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
               >
                 新增體驗活動
               </Link>
             )}
-            <Link 
+            <Link
               href="/admin/farm-tour/calendar"
               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
               預約行事曆
             </Link>
-            <Link 
+            <Link
               href="/admin/inquiries"
               className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
             >
               詢問單管理
             </Link>
-            <Link 
+            <Link
               href="/farm-tour"
               className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm"
             >
               查看果園頁面
             </Link>
-            <Link 
+            <Link
               href="/"
               className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
             >
@@ -117,8 +145,11 @@ export default function FarmTourAdmin() {
 
         {/* Activities Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {activities.map((activity) => (
-            <div key={activity.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+          {activities.map(activity => (
+            <div
+              key={activity.id}
+              className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+            >
               {/* Activity Preview */}
               <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
                 <div className="text-4xl mb-3">{activity.image}</div>
@@ -137,11 +168,11 @@ export default function FarmTourAdmin() {
 
                 {/* Status */}
                 <div className="mb-4">
-                  <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    activity.available 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-red-100 text-red-800'
-                  }`}>
+                  <div
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      activity.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
+                  >
                     {activity.available ? '✅ 開放預約' : '❌ 暫停開放'}
                   </div>
                 </div>
@@ -167,7 +198,7 @@ export default function FarmTourAdmin() {
                 <div className="text-xs text-gray-500 mb-4">
                   建立：{formatDate(activity.createdAt)}
                 </div>
-                
+
                 {/* Controls */}
                 {user?.role === 'admin' ? (
                   <div className="space-y-2">
@@ -197,9 +228,7 @@ export default function FarmTourAdmin() {
                     </button>
                   </div>
                 ) : (
-                  <div className="text-center text-gray-400 text-sm py-2">
-                    需要管理員權限
-                  </div>
+                  <div className="text-center text-gray-400 text-sm py-2">需要管理員權限</div>
                 )}
               </div>
             </div>
@@ -210,7 +239,7 @@ export default function FarmTourAdmin() {
           <div className="text-center py-12">
             <p className="text-gray-500 mb-4">尚無體驗活動</p>
             {user?.role === 'admin' && (
-              <Link 
+              <Link
                 href="/admin/farm-tour/add"
                 className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
@@ -231,7 +260,7 @@ export default function FarmTourAdmin() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
               <div className="text-3xl mr-4">✅</div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
@@ -12,8 +12,8 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [activityId, setActivityId] = useState<string>('')
-  const { user, isLoading } = useAuth()
-  
+  const { user } = useAuth()
+
   const [formData, setFormData] = useState({
     season: '春季',
     months: '',
@@ -25,28 +25,80 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     includes: [''],
     image: '🌱',
     available: true,
-    note: ''
+    note: '',
   })
 
   const seasonOptions = [
     { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
     { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
     { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
-    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' }
+    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' },
   ]
 
   const emojiOptions = [
-    '🌱', '🌸', '🍑', '🍎', '🫖', '🌾', '🌿', '🍃',
-    '🌽', '🥕', '🍓', '🍄', '🌻', '☘️', '🦋', '🐝'
+    '🌱',
+    '🌸',
+    '🍑',
+    '🍎',
+    '🫖',
+    '🌾',
+    '🌿',
+    '🍃',
+    '🌽',
+    '🥕',
+    '🍓',
+    '🍄',
+    '🌻',
+    '☘️',
+    '🦋',
+    '🐝',
   ]
+
+  const fetchActivity = useCallback(
+    async (id: string) => {
+      try {
+        const response = await fetch(`/api/farm-tour/${id}`)
+        const result = await response.json()
+
+        if (response.ok && (result.success ? result.data : result)) {
+          const activity: FarmTourActivity = result.success ? result.data : result
+          setFormData({
+            season: activity.season,
+            months: activity.months,
+            title: activity.title,
+            highlight: activity.highlight,
+            activities: activity.activities,
+            price: activity.price,
+            duration: activity.duration,
+            includes: activity.includes,
+            image: activity.image,
+            available: activity.available,
+            note: activity.note,
+          })
+        } else {
+          const errorMessage = result.error || '活動不存在'
+          alert(errorMessage)
+          router.push('/admin/farm-tour')
+        }
+      } catch (error) {
+        logger.error(
+          'Error fetching activity:',
+          error instanceof Error ? error : new Error('Unknown error')
+        )
+        alert('載入失敗')
+      } finally {
+        setInitialLoading(false)
+      }
+    },
+    [router]
+  )
 
   useEffect(() => {
     params.then(({ id }) => {
       setActivityId(id)
       fetchActivity(id)
     })
-  }, [params])
-
+  }, [params, fetchActivity])
 
   // 未登入檢查
   if (!user) {
@@ -57,13 +109,13 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -73,36 +125,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
         </div>
       </div>
     )
-  }
-
-  const fetchActivity = async (id: string) => {
-    try {
-      const response = await fetch(`/api/farm-tour/${id}`)
-      if (response.ok) {
-        const activity: FarmTourActivity = await response.json()
-        setFormData({
-          season: activity.season,
-          months: activity.months,
-          title: activity.title,
-          highlight: activity.highlight,
-          activities: activity.activities,
-          price: activity.price,
-          duration: activity.duration,
-          includes: activity.includes,
-          image: activity.image,
-          available: activity.available,
-          note: activity.note
-        })
-      } else {
-        alert('活動不存在')
-        router.push('/admin/farm-tour')
-      }
-    } catch (error) {
-      logger.error('Error fetching activity:', error instanceof Error ? error : new Error('Unknown error'))
-      alert('載入失敗')
-    } finally {
-      setInitialLoading(false)
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,28 +138,40 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
         body: JSON.stringify({
           ...formData,
           activities: formData.activities.filter(activity => activity.trim() !== ''),
-          includes: formData.includes.filter(include => include.trim() !== '')
-        })
+          includes: formData.includes.filter(include => include.trim() !== ''),
+        }),
       })
+      const result = await response.json()
 
-      if (response.ok) {
+      if (result.success) {
         router.push('/admin/farm-tour')
       } else {
-        alert('更新失敗')
+        const errorMessage = result.error || '更新失敗'
+        alert(errorMessage)
       }
     } catch (error) {
-      logger.error('Error updating farm tour activity:', error instanceof Error ? error : new Error('Unknown error'))
-      alert('更新失敗')
+      logger.error(
+        'Error updating farm tour activity:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
+      alert(error instanceof Error ? error.message : '更新失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]:
+        type === 'number'
+          ? Number(value)
+          : type === 'checkbox'
+            ? (e.target as HTMLInputElement).checked
+            : value,
     }))
   }
 
@@ -146,49 +180,49 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     setFormData(prev => ({
       ...prev,
       season,
-      months: selectedSeason?.months || prev.months
+      months: selectedSeason?.months || prev.months,
     }))
   }
 
   const addActivityField = () => {
     setFormData(prev => ({
       ...prev,
-      activities: [...prev.activities, '']
+      activities: [...prev.activities, ''],
     }))
   }
 
   const removeActivityField = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      activities: prev.activities.filter((_, i) => i !== index)
+      activities: prev.activities.filter((_, i) => i !== index),
     }))
   }
 
   const updateActivityField = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      activities: prev.activities.map((activity, i) => i === index ? value : activity)
+      activities: prev.activities.map((activity, i) => (i === index ? value : activity)),
     }))
   }
 
   const addIncludeField = () => {
     setFormData(prev => ({
       ...prev,
-      includes: [...prev.includes, '']
+      includes: [...prev.includes, ''],
     }))
   }
 
   const removeIncludeField = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      includes: prev.includes.filter((_, i) => i !== index)
+      includes: prev.includes.filter((_, i) => i !== index),
     }))
   }
 
   const updateIncludeField = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      includes: prev.includes.map((include, i) => i === index ? value : include)
+      includes: prev.includes.map((include, i) => (i === index ? value : include)),
     }))
   }
 
@@ -205,10 +239,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/farm-tour"
-              className="text-green-600 hover:text-green-800"
-            >
+            <Link href="/admin/farm-tour" className="text-green-600 hover:text-green-800">
               ← 回到果園管理
             </Link>
           </div>
@@ -221,16 +252,14 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             {/* 基本資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    季節 *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">季節 *</label>
                   <select
                     name="season"
                     value={formData.season}
-                    onChange={(e) => handleSeasonChange(e.target.value)}
+                    onChange={e => handleSeasonChange(e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   >
@@ -243,9 +272,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    月份 *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">月份 *</label>
                   <input
                     type="text"
                     name="months"
@@ -259,9 +286,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活動標題 *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動標題 *</label>
                 <input
                   type="text"
                   name="title"
@@ -274,9 +299,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活動亮點 *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動亮點 *</label>
                 <input
                   type="text"
                   name="highlight"
@@ -292,17 +315,15 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             {/* 活動內容 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
-              
+
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活動項目
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動項目</label>
                 {formData.activities.map((activity, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={activity}
-                      onChange={(e) => updateActivityField(index, e.target.value)}
+                      onChange={e => updateActivityField(index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                       placeholder="輸入活動項目"
                     />
@@ -330,7 +351,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             {/* 費用與時間 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">費用與時間</h3>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -349,9 +370,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    活動時長 *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">活動時長 *</label>
                   <input
                     type="text"
                     name="duration"
@@ -368,14 +387,14 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             {/* 費用包含 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">費用包含</h3>
-              
+
               <div className="mb-4">
                 {formData.includes.map((include, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={include}
-                      onChange={(e) => updateIncludeField(index, e.target.value)}
+                      onChange={e => updateIncludeField(index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                       placeholder="輸入包含項目"
                     />
@@ -403,11 +422,9 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             {/* 其他設定 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
-              
+
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  選擇圖示
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-3">選擇圖示</label>
                 <div className="grid grid-cols-8 gap-2 mb-3">
                   {emojiOptions.map(emoji => (
                     <button
@@ -415,7 +432,9 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, image: emoji }))}
                       className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
-                        formData.image === emoji ? 'bg-green-100 border-green-500' : 'border-gray-300'
+                        formData.image === emoji
+                          ? 'bg-green-100 border-green-500'
+                          : 'border-gray-300'
                       }`}
                     >
                       {emoji}
@@ -433,9 +452,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  注意事項
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">注意事項</label>
                 <textarea
                   name="note"
                   value={formData.note}
@@ -489,9 +506,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   {formData.title || '活動標題預覽'}
                 </h3>
                 <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                  <span className="bg-white px-2 py-1 rounded-full">
-                    {formData.season}
-                  </span>
+                  <span className="bg-white px-2 py-1 rounded-full">{formData.season}</span>
                   <span className="bg-white px-2 py-1 rounded-full">
                     {formData.months || '月份'}
                   </span>
@@ -508,21 +523,21 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
                   <div className="space-y-1">
-                    {formData.activities.filter(a => a.trim()).map((activity, index) => (
-                      <div key={index} className="flex items-center text-xs text-gray-600">
-                        <span className="mr-2 text-green-500">✓</span>
-                        <span>{activity}</span>
-                      </div>
-                    ))}
+                    {formData.activities
+                      .filter(a => a.trim())
+                      .map((activity, index) => (
+                        <div key={index} className="flex items-center text-xs text-gray-600">
+                          <span className="mr-2 text-green-500">✓</span>
+                          <span>{activity}</span>
+                        </div>
+                      ))}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                   <div className="flex items-center">
                     <span className="mr-2">💰</span>
-                    <span className="font-bold text-amber-900">
-                      NT$ {formData.price || 0}
-                    </span>
+                    <span className="font-bold text-amber-900">NT$ {formData.price || 0}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="mr-2">⏱️</span>
@@ -533,11 +548,16 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">費用包含</h4>
                   <div className="flex flex-wrap gap-1">
-                    {formData.includes.filter(i => i.trim()).map((include, index) => (
-                      <span key={index} className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
-                        {include}
-                      </span>
-                    ))}
+                    {formData.includes
+                      .filter(i => i.trim())
+                      .map((include, index) => (
+                        <span
+                          key={index}
+                          className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"
+                        >
+                          {include}
+                        </span>
+                      ))}
                   </div>
                 </div>
 
@@ -547,11 +567,11 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   </div>
                 )}
 
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  formData.available 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
+                <div
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
+                >
                   {formData.available ? '✅ 開放預約' : '❌ 暫停開放'}
                 </div>
               </div>

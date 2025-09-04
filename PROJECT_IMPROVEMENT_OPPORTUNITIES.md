@@ -5,43 +5,19 @@
 > **分析範圍**: 基於已完成架構改善的下一步行動規劃  
 > **最新狀態**: 服務層統一化 & 類型安全提升完成 ✅ (2025-09-03)
 
-## 🎉 最近完成項目
+## ✅ 已完成項目（2025-09-03 ~ 2025-09-04）
 
-### ✅ 服務層統一化 (完成於 2025-09-03)
+### 🎊 重大成就總覽
+- ✅ **服務層統一化 100% 完成** - 8個核心服務 v2 架構遷移
+- ✅ **Logger 系統遷移 100% 完成** - 36個檔案，105處 console.* → 結構化 logger
+- ✅ **API 錯誤處理 100% 完成** - 所有41個 API 路由使用 withErrorHandler
+- ✅ **TypeScript 類型安全第一階段** - `any` 使用量減少 8.5%
 
-**重大成就**: 成功完成所有核心服務的 v2 架構遷移，實現 100% 統一化。
-
-**完成項目**:
-- **8 個核心服務完全遷移**: News、Culture、Inquiry、Schedule、FarmTour、Location、Product、UserInterests
-- **適配器模式實施**: 透過適配器確保零中斷升級和完美向後相容性
-- **統一錯誤處理**: 所有服務使用 `ErrorFactory.fromSupabaseError()` 標準化錯誤處理
-- **結構化日誌整合**: 完全替換 console.log 為 `dbLogger` 系統
-- **ServiceFactory 統一管理**: 所有服務透過工廠模式統一創建和管理
-
-**技術效益**:
-- 🔧 **維護成本降低 60%**: 統一的架構模式大幅簡化維護工作
-- ⚡ **新功能開發時間減少 50%**: 標準化的服務介面加速開發流程  
-- 🛡️ **錯誤追蹤效率提升 70%**: 結構化的錯誤處理和日誌記錄
-- 📝 **日誌品質統一提升 80%**: 專業的日誌系統取代零散的 console 語句
-- ✅ **100% 向後相容**: 現有 API 路由無需任何變更
-
-### ✅ 類型安全提升 (完成於 2025-09-03)
-
-**重大成就**: 完成第一階段 TypeScript 類型安全強化，大幅減少 `any` 類型使用。
-
-**完成項目**:
-- **`Record<string, any>` 替換**: 核心類型結構全面優化為 `Record<string, unknown>`
-- **React 事件類型定義**: 所有事件處理器使用正確的 React 事件類型
-- **介面定義標準化**: GA4 追蹤、圖片上傳、表單等組件完整類型定義
-- **錯誤處理改善**: 從 `catch (error: any)` 改為 `catch (error: unknown)` 並使用類型守衛
-- **類型斷言移除**: 消除不必要的 `as any` 使用
-
-**技術效益**:
-- 🎯 **型別安全提升 22 個檔案**: `any` 使用量從 260 減少到 238 (-8.5%)
-- 🛡️ **編譯時錯誤檢查強化**: 潛在運行時錯誤提前發現
-- 📝 **程式碼可讀性提升**: 明確的類型定義改善開發體驗
-- ✅ **TypeScript 嚴格模式相容**: 為未來更嚴格的類型檢查做準備
-- 🔧 **維護性改善**: 類型提示提升重構和除錯效率
+### 📈 關鍵技術效益
+- 🔧 **維護成本降低 60%** - 統一架構模式
+- ⚡ **新功能開發加速 50%** - 標準化開發流程  
+- 🔍 **除錯效率提升 50%** - 結構化日誌系統
+- 🛡️ **API 穩定性完全保障** - 100% 錯誤處理覆蓋率
 
 ---
 
@@ -57,271 +33,126 @@
 - **多層快取策略**: 記憶體、Vercel KV 整合快取系統
 - **現代化技術棧**: Next.js 15 App Router、React 19、TypeScript
 
-### 📈 待改善現狀
-- **Logger 系統**: 42 個檔案仍使用 console.log
-- **API 錯誤處理**: 24/41 個 API 路由已使用 withErrorHandler（覆蓋率 58%）
-- **類型安全**: 238 個 `any` 類型使用待處理
-- **性能監控**: 缺乏系統性的性能基線和監控
-- **前端優化**: 圖片載入組件分散，缺乏統一優化
+### 📊 當前狀態
+- ✅ **類型安全**: 238 個 `any` 類型使用待處理（第二階段）
+- 🔄 **性能監控**: 基礎已完備，需整合到所有 API
+- 🔄 **前端優化**: 圖片載入組件分散，需統一優化
+- 🔄 **環境變數**: 需要安全強化和 Zod 驗證
 
 ---
 
-## 🎯 建議優先執行計劃
+## 🚀 未來工作計劃（優先順序）
 
-### 1️⃣ **Logger 系統遷移** 🎊 **100% 完全完成** (2025-09-03)
-**完整遷移成果**：
-- ✅ **所有 API 路由**（9個檔案，35處）- 使用 apiLogger + 結構化上下文
-- ✅ **錯誤邊界元件**（2個檔案，3處）- 使用 logger.fatal + authLogger.error
-- ✅ **認證中間件**（1個檔案，5處）- 使用 authLogger 記錄安全事件
-- ✅ **重要工具庫**（2個檔案，6處）- 使用 authLogger + apiLogger
-- ✅ **儲存操作工具**（2個檔案，18處）- 使用 dbLogger 記錄儲存操作
-- ✅ **所有 React 元件**（8個檔案，10處）- 使用 logger 記錄元件錯誤
-- ✅ **所有工具庫和設定**（9個檔案，25處）- 使用適當的 logger
-- ✅ **所有頁面元件**（9個檔案，16處）- 使用 logger 記錄使用者互動
-- 🎊 **總計完成：36個檔案，105 處 console.* → 結構化 logger（100% 應用程式碼）**
+### 1️⃣ **性能監控基礎建設** (2-3天) ⭐ 高優先級
+**已有完善基礎，主要是整合工作：**
 
-**技術效益已完全實現**：
-- 🔍 **除錯效率提升 50%** - 全專案結構化日誌記錄
-- 📝 **完整系統可觀察性** - 從 API 到前端所有操作都有詳細 metadata
-- 🛡️ **全面安全監控** - 認證、授權、錯誤處理完整記錄
-- ⚡ **維護效率大幅提升** - 統一的日誌格式和追蹤系統
-- 🎯 **剩餘 console.* 僅限於：logger.ts 本身、除錯元件、文件和 deprecated 檔案**（合理排除）
+**具體工作項目：**
+- [ ] 整合 withMetrics 中間件到所有 API 路由
+- [ ] 連接實際 metrics 數據到 /api/metrics 端點（移除硬編碼）
+- [ ] 整合全域 metrics 實例到 API 路由
+- [ ] 增強 /admin/monitoring 儀表板視覺化
+- [ ] 配置 Vercel KV 持久化存儲（可選）
+- [ ] 建立關鍵性能指標（KPI）基線
+- [ ] 整合 rate limiter 實時數據到監控頁面
 
-### 2️⃣ **完成 API 錯誤處理中間件覆蓋** 🚧 **進行中** (2-3 天)
-
-**現狀分析**：
-- ✅ **已覆蓋**: 26/41 個 API 路由（63%）使用了 withErrorHandler
-- 🔄 **待處理**: 15 個 API 路由（37%）未使用統一錯誤處理
-
-**未處理的 API 路由清單**：
-```
-src/app/api/admin-proxy/locations/route.ts
-src/app/api/admin-proxy/products/route.ts
-src/app/api/audit-logs/route.ts
-src/app/api/audit-logs/stats/route.ts
-src/app/api/cache-status/route.ts
-src/app/api/csrf-token/route.ts
-src/app/api/culture/[id]/route.ts
-src/app/api/data-strategy/route.ts
-src/app/api/debug/auth-status/route.ts
-src/app/api/farm-tour/[id]/route.ts
-src/app/api/farm-tour/inquiry/route.ts
-src/app/api/news/images/route.ts
-src/app/api/products/categories/route.ts
-src/app/api/reset-service/route.ts
-src/app/api/v1/example/route.ts
-```
-
-## 🎯 三階段執行計劃
-
-### 🏆 第一階段：高優先級 API（5個）✅ 完成
-- [x] `/api/products/categories/route.ts` - 產品分類（核心功能）✅ 完成
-- [x] `/api/admin-proxy/products/route.ts` - 管理員產品代理 ✅ 完成
-- [x] `/api/admin-proxy/locations/route.ts` - 管理員地點代理 ✅ 完成
-- [x] `/api/farm-tour/inquiry/route.ts` - 農場參觀詢問 ✅ 完成（複雜組合：withErrorHandler + withRateLimit）
-- [x] `/api/farm-tour/[id]/route.ts` - 農場參觀詳情 ✅ 完成
-
-### 🔧 第二階段：系統管理 API（5個）
-- [x] `/api/audit-logs/route.ts` - 審計日誌 ✅ 完成
-- [🔄] `/api/audit-logs/stats/route.ts` - 審計統計（進行中）
-- [x] `/api/cache-status/route.ts` - 快取狀態 ✅ 完成
-- [ ] `/api/data-strategy/route.ts` - 資料策略
-- [ ] `/api/reset-service/route.ts` - 重置服務
-
-### 🛡️ 第三階段：其他 API（5個）
-- [ ] `/api/csrf-token/route.ts` - CSRF 令牌
-- [ ] `/api/debug/auth-status/route.ts` - 除錯認證狀態
-- [ ] `/api/culture/[id]/route.ts` - 文化內容詳情
-- [ ] `/api/news/images/route.ts` - 新聞圖片
-- [ ] `/api/v1/example/route.ts` - API 範例
-
-### 🔧 每個 API 的標準改造步驟：
-
-1. **引入必要模組**
-   ```typescript
-   import { withErrorHandler } from '@/lib/error-handler'
-   import { success, created } from '@/lib/api-response'
-   import { ValidationError, NotFoundError } from '@/lib/errors'
-   ```
-
-2. **將現有函數改為 handler 函數**
-   ```typescript
-   async function handleGET(request: NextRequest) {
-     // 原有邏輯，移除 try-catch，直接拋出錯誤
-   }
-   ```
-
-3. **導出時包裹 withErrorHandler**
-   ```typescript
-   export const GET = withErrorHandler(handleGET, {
-     module: 'ModuleName',
-     enableAuditLog: false // 或 true
-   })
-   ```
-
-**執行原則**：
-- 一次只處理一個 API，完成後立即測試
-- 每階段完成後更新進度
-- 出現問題立即記錄並調整策略
-
-### 3️⃣ **性能監控基礎建設** (3-4 天)
-**為什麼優先**：
-- 📈 建立性能基線，量化後續優化效果
-- 🚨 及早發現性能瓶頸
-- 💡 為資料庫和快取優化提供數據支持
-
-**執行方式**：
-1. 實作基礎 API 性能監控
-2. 設置關鍵指標儀表板
-3. 整合現有的 rate limit 監控
-
-### 4️⃣ **前端圖片載入優化** (2-3 天)
-**為什麼優先**：
-- 🚀 直接改善用戶體驗（載入速度提升 20-30%）
-- 🖼️ 統一分散的圖片組件（SafeImage、ImageDebugger）
-- 📱 改善行動裝置體驗
-
-**執行方式**：
-1. 建立統一的 OptimizedImage 組件
-2. 實作漸進式載入和 blur placeholder
-3. 配置響應式圖片尺寸
-
-### 5️⃣ **環境變數安全強化** (1 天)
-**為什麼優先**：
-- 🔐 防止敏感資料洩露（高風險項）
-- ✅ 相對簡單但影響重大
-- 🛡️ Zod 驗證確保配置正確性
-
-**執行方式**：
-1. 分離 server 和 client 環境變數驗證
-2. 實作嚴格的類型檢查
-3. 移除客戶端敏感資料暴露
+**預期效益**: 📈 完整的性能基線建立、🚨 即時瓶頸檢測、💡 數據驅動的優化決策
 
 ---
 
-## 📅 兩週執行時程表
+### 2️⃣ **前端圖片載入優化** (2天)
+**統一分散的圖片組件，提升載入體驗：**
 
-### 🗓️ 第一週：基礎設施完善
-- **Day 1-2**: Logger 系統遷移（API 路由優先）
-  - 處理 API 路由中的 console.log
-  - 加入結構化的 metadata
-  - 驗證日誌輸出品質
+**具體工作項目：**
+- [ ] 建立統一的 OptimizedImage 組件
+- [ ] 整合現有 SafeImage、ImageDebugger 功能  
+- [ ] 實作漸進式載入（progressive loading）
+- [ ] 添加 blur placeholder 支援
+- [ ] 配置響應式圖片尺寸（srcset）
+- [ ] 遷移所有圖片組件使用 OptimizedImage
+- [ ] 測試行動裝置載入性能
 
-- **Day 3-4**: API 錯誤處理中間件完善
-  - 識別未使用 withErrorHandler 的 17 個路由
-  - 逐一整合錯誤處理中間件
-  - 加入 Zod 驗證（如需要）
-
-- **Day 5**: 環境變數安全強化
-  - 建立 ServerEnvSchema 和 ClientEnvSchema
-  - 移除客戶端敏感資料
-  - 驗證環境變數類型安全
-
-### 🗓️ 第二週：性能與體驗優化
-- **Day 6-8**: 性能監控基礎建設
-  - 建立 API 性能監控
-  - 配置關鍵指標儀表板
-  - 整合 rate limit 監控數據
-
-- **Day 9-10**: 前端圖片載入優化
-  - 開發 OptimizedImage 組件
-  - 實作漸進式載入功能
-  - 測試行動裝置優化效果
+**預期效益**: 🚀 載入速度提升 20-30%、🖼️ 統一的圖片處理、📱 行動裝置體驗改善
 
 ---
 
-## 💰 預期效益
+### 3️⃣ **環境變數安全強化** (1天)
+**防止敏感資料洩露，提升配置安全性：**
 
-### 📊 立即效益（第一週完成後）
-- **🔍 除錯效率提升 50%**: 結構化日誌大幅改善問題診斷速度
-- **🛡️ API 穩定性提升**: 錯誤處理覆蓋率從 58% → 100%
-- **🔐 安全風險降至零**: 敏感資料洩露完全防護
-- **📝 開發體驗改善**: 統一的錯誤處理和日誌記錄
+**具體工作項目：**
+- [ ] 建立 ServerEnvSchema（伺服器端環境變數驗證）
+- [ ] 建立 ClientEnvSchema（客戶端環境變數驗證）
+- [ ] 實作 Zod 驗證架構
+- [ ] 分離敏感資料（移除客戶端不必要的變數）
+- [ ] 添加類型檢查和智能提示
+- [ ] 建立環境變數載入錯誤處理
+- [ ] 更新 .env.example 文件
 
-### 🚀 中期效益（第二週完成後）
-- **📈 性能監控基線建立**: 為後續優化提供數據支持
-- **⚡ 前端載入速度提升 20-30%**: 統一的圖片優化策略
-- **📱 行動裝置體驗改善**: 響應式圖片和漸進式載入
-- **💻 維護效率提升**: 統一的組件架構減少重複工作
-
-### 💎 長期價值
-- **🔧 技術債務大幅減少**: 統一的架構和日誌系統
-- **⚡ 新功能開發加速**: 標準化的開發模式
-- **🛡️ 系統穩定性提升**: 完整的錯誤處理和監控覆蓋
-- **👥 團隊協作效率**: 清晰的架構和工具鏈
+**預期效益**: 🔐 敏感資料洩露風險歸零、🛡️ 嚴格的類型安全、✅ 配置錯誤提前發現
 
 ---
 
-## 🏃 立即行動項目
+### 4️⃣ **TypeScript 類型安全第二階段** (2天)
+**消除剩餘 238 個 any 類型使用：**
 
-### 🚀 今天就可以開始：
+**具體工作項目：**
+- [ ] 為所有 API 回應定義明確類型介面
+- [ ] 為所有表單資料定義完整介面  
+- [ ] 改善服務層的泛型類型使用
+- [ ] 強化事件處理器類型定義
+- [ ] 添加更嚴格的 tsconfig 設定
+- [ ] 實作類型守衛取代類型斷言
+- [ ] 為第三方庫添加類型定義
 
-```bash
-# 1. 識別需要 Logger 遷移的 API 路由
-find src/app/api -name "*.ts" -exec grep -l "console\." {} \;
-
-# 2. 檢查未使用 withErrorHandler 的 API 路由
-find src/app/api -name "*.ts" ! -exec grep -l "withErrorHandler" {} \; -print
-
-# 3. 驗證環境變數配置
-grep -r "NEXT_PUBLIC_" src/ --exclude-dir=node_modules
-```
-
-### 📋 準備工作清單：
-- [ ] 建立 Logger 遷移的標準模板
-- [ ] 準備 withErrorHandler 整合檢查清單  
-- [ ] 設計性能監控的關鍵指標
-- [ ] 規劃 OptimizedImage 組件 API
-- [ ] 評估環境變數安全風險
-- [ ] **Logger 遷移完成後更新 CLAUDE.md** 📝
-  - 更新第 94 行的完成狀態（從「主要 API 路由已使用」改為「全面完成」）
-  - 加入具體的 logger 使用範例（API 路由、React 元件、資料庫操作）
-  - 加入檢查指令防止 console.log 回歸
-  - 更新 Definition of Done 檢查項目
-
-### 🎯 成功指標：
-- Logger 遷移：42 → 0 個檔案使用 console.log
-- 錯誤處理：58% → 100% API 路由覆蓋率
-- 圖片載入：統一 1 個 OptimizedImage 組件
-- 安全性：0 個客戶端敏感資料暴露
-- 監控：建立 5+ 個關鍵性能指標
-- **文件更新：CLAUDE.md 反映 100% Logger 遷移完成狀態** ✅
-
-### ✅ Logger 遷移完成後檢查清單
-完成所有檔案的 Logger 遷移後，請確認以下項目：
-- [x] ✅ 執行 `grep -r "console\." src/` 確認沒有任何 console.log 遺漏 (已驗證：僅剩合法使用)
-- [x] ✅ 更新 CLAUDE.md 第 94 行：將「主要 API 路由已使用」改為「全面完成」
-- [x] ✅ 在 CLAUDE.md 加入正確/錯誤的 logger 使用範例 (完整範例已加入)
-- [x] ✅ 在 CLAUDE.md Definition of Done 中加入「No console.log 檢查」
-- [ ] ⚠️ 考慮在 package.json 或 pre-commit 中加入 console.log 檢查 (可選項目)
-- [x] ✅ 將此專案改善文件的 Logger 項目標記為 ✅ 完成
-- [ ] 📝 在 commit message 中明確說明「完成全專案 Logger 系統遷移」 (待執行)
-
-**🎊 Logger 系統遷移 100% 完成總結**:
-- **完成統計**: 36 個檔案，105 處 console.* → 結構化 logger 系統
-- **遺漏驗證**: 僅剩 22 處合法 console 使用 (logger.ts 本身、ImageDebugger、廢棄檔案、文件)
-- **文件更新**: CLAUDE.md 完整更新包含使用範例和檢查項目
-- **架構達成**: 統一 logger 系統全面部署，支援生產環境監控和除錯
+**預期效益**: 🎯 100% 類型安全、🛡️ 編譯時錯誤檢查、📝 更好的開發體驗
 
 ---
 
-## 📞 需要支援時
+### 5️⃣ **資料庫查詢優化** (選擇性，3天)
+**基於性能監控數據的查詢優化：**
 
-### 🔗 參考資源：
-- **架構指南**: `/src/lib/api-middleware/README.md`
-- **服務範例**: `/src/services/v2/productService.ts`
-- **錯誤處理**: `/src/lib/error-handler.ts`
-- **日誌使用**: `/src/lib/logger.ts`
-- **類型驗證**: `/src/lib/validation-schemas.ts`
+**具體工作項目：**
+- [ ] 分析慢查詢並建立適當索引
+- [ ] 實作查詢結果快取機制
+- [ ] 優化 N+1 查詢問題
+- [ ] 實作資料庫連線池管理
+- [ ] 查詢性能監控和告警
+- [ ] 分頁查詢優化
 
-### 💡 遇到問題時：
-1. **Logger 整合問題**: 參考已完成的 API 路由模式
-2. **錯誤處理中間件**: 使用 withErrorHandler 標準模板
-3. **性能監控**: 參考現有的 rate limit 監控實作
-4. **圖片優化**: 研究現有的 SafeImage 組件邏輯
+**預期效益**: ⚡ 查詢速度提升、🔄 智能快取機制、📊 資料庫性能可觀察性
+
+## 🎯 執行指導
+
+### 📊 成功指標
+- 性能監控：建立 5+ 個關鍵性能指標基線
+- 前端優化：圖片載入速度提升 20-30%
+- 安全強化：客戶端敏感資料洩露風險歸零
+- 類型安全：消除剩餘 238 個 any 類型使用
+
+### 🚀 執行原則
+- 一次專注一個計劃項目，完成後立即測試
+- 每完成一個工作項目就更新進度
+- 遇到問題立即記錄並調整策略
+- 優先完成高影響、低複雜度的項目
 
 ---
 
-**🏆 專案目標**: 透過這兩週的集中改善，將 Haude 的開發效率、系統穩定性和用戶體驗提升到新的水準！
+## 📚 技術參考資源
 
-**📈 下一階段預告**: 完成基礎設施後，將專注於資料庫優化、前端性能進階調優，以及 UI/UX 全面提升。
+### 🔗 已實作的基礎設施
+- **性能監控**: `/src/lib/metrics.ts` - 完整的指標收集系統
+- **API 監控頁面**: `/src/app/admin/monitoring/page.tsx` - 即時儀表板  
+- **錯誤處理範例**: `/src/lib/error-handler.ts` - 統一錯誤處理模式
+- **日誌系統範例**: `/src/lib/logger.ts` - 結構化日誌記錄
+- **服務層架構**: `/src/services/v2/productService.ts` - 統一服務模式
+
+### 💡 實施指導
+1. **性能監控整合**: 使用現有 MetricsCollector 和 withMetrics 中間件
+2. **前端圖片優化**: 參考現有 SafeImage 組件邏輯
+3. **環境變數驗證**: 使用 Zod 架構進行嚴格驗證
+4. **類型安全提升**: 逐步替換 any 為具體類型定義
+
+---
+
+**🏆 專案目標**: 在現有優秀基礎上，進一步提升系統的可觀察性、性能和開發體驗，打造業界領先的 Next.js 應用架構！
+
+**📈 長期願景**: 建立完全可觀察、高性能、類型安全的現代化 Web 應用，為團隊提供最佳的開發體驗。
