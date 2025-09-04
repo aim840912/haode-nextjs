@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import GoogleAnalyticsProvider from '@/components/GoogleAnalyticsProvider'
 import { InquiryStatsProvider } from '@/contexts/InquiryStatsContext'
-import { validateOnStartup } from '@/lib/env-validator'
+import { validateOnStartup } from '@/lib/env'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 
