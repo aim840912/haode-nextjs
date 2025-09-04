@@ -223,7 +223,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_user_id: userId,
           limit_count: limit,
           offset_count: offset
-        });
+        } as any);
 
       if (error) {
         dbLogger.error('取得使用者活動歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
@@ -254,7 +254,7 @@ export class SupabaseAuditLogService implements AuditLogService {
           target_resource_type: resourceType,
           target_resource_id: resourceId,
           limit_count: limit
-        });
+        } as any);
 
       if (error) {
         dbLogger.error('取得資源存取歷史失敗', new Error(`${error.message} (code: ${error.code})`), {
@@ -372,7 +372,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole,
+      user_role: userRole as any,
       action: 'view',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -396,7 +396,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole,
+      user_role: userRole as any,
       action: 'view_list',
       resource_type: 'inquiry',
       resource_id: 'list',
@@ -422,7 +422,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole,
+      user_role: userRole as any,
       action: 'create',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -452,7 +452,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole,
+      user_role: userRole as any,
       action: 'update',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -480,7 +480,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole,
+      user_role: userRole as any,
       action: 'delete',
       resource_type: 'inquiry',
       resource_id: inquiryId,
@@ -510,7 +510,7 @@ export class AuditLogger {
       user_id: userId,
       user_email: userEmail,
       user_name: userName,
-      user_role: userRole,
+      user_role: userRole as any,
       action: 'status_change',
       resource_type: 'inquiry',
       resource_id: inquiryId,
