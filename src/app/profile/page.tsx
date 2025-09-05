@@ -71,13 +71,6 @@ export default function ProfilePage() {
     }
   }, [user])
 
-  // 載入興趣清單
-  useEffect(() => {
-    if (user) {
-      loadInterestedProducts()
-    }
-  }, [user, loadInterestedProducts])
-
   const loadInterestedProducts = async () => {
     if (!user) return
 
@@ -97,6 +90,13 @@ export default function ProfilePage() {
       setInterestedProducts([])
     }
   }
+
+  // 載入興趣清單
+  useEffect(() => {
+    if (user) {
+      loadInterestedProducts()
+    }
+  }, [user, loadInterestedProducts])
 
   const fetchInterestedProductsData = async (productIds: string[]) => {
     setLoadingInterests(true)
