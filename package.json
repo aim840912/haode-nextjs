@@ -61,7 +61,6 @@
     "browser-image-compression": "^2.0.2",
     "jsonwebtoken": "^9.0.2",
     "next": "15.4.6",
-    "next-intl": "^3.26.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "uuid": "^11.1.0",

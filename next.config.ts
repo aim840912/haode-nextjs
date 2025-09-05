@@ -36,19 +36,44 @@ const nextConfig: NextConfig = {
 
   // 實驗性功能
   experimental: {
-    // 暫時禁用 optimizePackageImports 來修復 Supabase SSR 問題
-    // optimizePackageImports: ['@/components', '@/lib'],
-    // 暫時禁用 optimizeCss 以避免 critters 依賴問題
-    // optimizeCss: true
+    // 重新啟用包優化（Supabase SSR 問題已在新版本修復）
+    optimizePackageImports: ['@/components', '@/lib'],
+    // 暫時禁用 CSS 優化以避免 critters 依賴問題
+    // optimizeCss: true,
   },
 
   // 建置優化配置 - 支援 Turbopack
   ...(process.env.NODE_ENV === 'production' && {
     webpack: config => {
-      // 生產環境的 webpack 優化
+      // 修復客戶端變數在伺服器端的問題
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      }
+
+      // 生產環境的 webpack 優化（暫時簡化以避免 vendors.js 問題）
       config.optimization = {
         ...config.optimization,
-        splitChunks: false, // 避免 vendors.js 問題
+        splitChunks: {
+          chunks: 'all',
+          maxInitialRequests: 25,
+          minSize: 20000,
+          cacheGroups: {
+            default: {
+              minChunks: 1,
+              priority: -20,
+              reuseExistingChunk: true,
+            },
+            defaultVendors: {
+              test: /[\\/]node_modules[\\/]/,
+              priority: -10,
+              reuseExistingChunk: true,
+            },
+          },
+        },
       }
       return config
     },
@@ -171,8 +196,8 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // 輸出配置 - 暫時禁用 standalone 模式以修復 Supabase SSR 問題
-  // output: 'standalone',
+  // 輸出配置 - 啟用 standalone 模式以減小部署包大小
+  output: 'standalone',
 
   // Gzip 壓縮設定
   compress: true,
