@@ -1,6 +1,6 @@
 /**
  * Supabase 相關統一類型定義
- * 
+ *
  * 用於替代 storage 和服務層中的 any 類型
  */
 
@@ -92,10 +92,24 @@ export interface BaseEntity {
   updated_at: string
 }
 
+// 分頁選項
+export interface PaginationOptions {
+  page?: number // 頁碼（1-based）
+  limit?: number // 每頁記錄數
+  offset?: number // 偏移量（0-based）
+  sortBy?: string // 排序欄位
+  sortOrder?: 'asc' | 'desc' // 排序方向
+}
+
 // 分頁結果
 export interface PaginatedResult<T> {
   data: T[]
-  count: number
-  hasMore: boolean
+  total: number // 總記錄數
+  count: number // 當前頁記錄數
+  page: number // 當前頁碼
+  totalPages: number // 總頁數
+  hasMore: boolean // 是否有下一頁
+  hasPrev: boolean // 是否有上一頁
   nextOffset?: number
+  prevOffset?: number
 }
