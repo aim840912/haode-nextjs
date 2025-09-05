@@ -1,24 +1,23 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/components/Toast';
 import Link from 'next/link';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
-import { supabase } from '@/lib/supabase-auth';
+import { inquiryApi } from '@/lib/api-client';
 import { 
   InquiryWithItems, 
   InquiryStatus,
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
-  InquiryUtils,
-  InquiryQueryParams
+  InquiryUtils
 } from '@/types/inquiry';
 
 function InquiryListPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const { success, error: showError, warning } = useToast();
+  const { success, error: showError } = useToast();
   
   // 狀態管理
   const [inquiries, setInquiries] = useState<InquiryWithItems[]>([]);
@@ -31,49 +30,37 @@ function InquiryListPage() {
   const isInitialized = useRef(false);
 
   // 取得使用者詢問單
-  const fetchUserInquiries = async () => {
+  const fetchUserInquiries = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      // 取得認證 token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('請重新登入');
-      }
-
       // 建立查詢參數
-      const params = new URLSearchParams();
+      const params: Record<string, string | number> = {};
       if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
+        params.status = statusFilter;
       }
-      params.append('sort_by', 'created_at');
-      params.append('sort_order', 'desc');
-      params.append('limit', '100'); // 先載入較多資料，前端進行分頁
+      params.sort_by = 'created_at';
+      params.sort_order = 'desc';
+      params.limit = 100; // 先載入較多資料，前端進行分頁
 
-      // 呼叫 API（使用者模式，不是管理員模式）
-      const response = await fetch(`/api/inquiries?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
+      // 使用新的 v1 API
+      const response = await inquiryApi.list(params);
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || '取得詢問單列表失敗');
+      if (response.success && response.data) {
+        setInquiries(response.data as InquiryWithItems[]);
+      } else {
+        throw new Error(response.message || '取得詢問單列表失敗');
       }
 
-      setInquiries(result.data || []);
-
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '載入詢問單時發生錯誤');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, statusFilter]);
 
   // 清理本地快取功能
   const clearLocalCache = () => {
@@ -135,14 +122,14 @@ function InquiryListPage() {
       isInitialized.current = true;
       fetchUserInquiries();
     }
-  }, [user]);
+  }, [user, fetchUserInquiries]);
 
   // 當狀態篩選條件改變時重新載入（跳過初始值）
   useEffect(() => {
     if (user && isInitialized.current) {
       fetchUserInquiries();
     }
-  }, [statusFilter]);
+  }, [statusFilter, user, fetchUserInquiries]);
 
   // 重置分頁當篩選條件改變
   useEffect(() => {

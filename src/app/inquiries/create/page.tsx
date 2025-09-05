@@ -3,143 +3,82 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { useCSRFToken } from '@/hooks/useCSRFToken';
-import { CreateInquiryRequest, CreateInquiryItemRequest } from '@/types/inquiry';
+import { CreateInquiryItemRequest } from '@/types/inquiry';
+import { useEnhancedInquiryForm } from '@/hooks/useEnhancedInquiryForm';
 import { logger } from '@/lib/logger';
-
-interface FormData {
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  notes: string;
-  delivery_address: string;
-  preferred_delivery_date: string;
-}
 
 // 內部組件使用 useSearchParams
 function InquiryFormContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { token: csrfToken } = useCSRFToken();
 
   // URL 參數
   const productName = searchParams.get('product') || '';
   const quantity = parseInt(searchParams.get('quantity') || '1');
   const productId = searchParams.get('productId') || '';
 
-  // 表單狀態
-  const [formData, setFormData] = useState<FormData>({
-    customer_name: '',
+  // 使用增強的詢價表單 Hook
+  const inquiryForm = useEnhancedInquiryForm({
     customer_email: user?.email || '',
-    customer_phone: '',
-    notes: '',
-    delivery_address: '',
-    preferred_delivery_date: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [productQuantity, setProductQuantity] = useState(quantity);
 
   // 當使用者狀態改變時，更新表單中的 email
   useEffect(() => {
-    if (user?.email) {
-      setFormData(prev => ({ ...prev, customer_email: user.email }));
+    if (user?.email && inquiryForm.data.customer_email !== user.email) {
+      inquiryForm.updateField('customer_email', user.email);
     }
-  }, [user]);
+  }, [user?.email, inquiryForm]);
+
+  // 產品數量狀態
+  const [productQuantity, setProductQuantity] = useState(quantity);
 
   // 如果沒有必要的產品資訊，重定向到產品頁面
   useEffect(() => {
     if (!productName || !productId) {
       router.replace('/products');
-    }
-  }, [productName, productId, router]);
-
-  const handleFormChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleQuantityChange = (newQuantity: number) => {
-    setProductQuantity(Math.max(1, newQuantity));
-  };
-
-  const handleSubmitInquiry = async () => {
-    if (!user) {
-      setSubmitError('請先登入以提交詢價');
       return;
     }
 
-    // 基本驗證
-    if (!formData.customer_name || !formData.customer_email) {
-      setSubmitError('請填寫必要資訊：姓名和 Email');
-      return;
-    }
-
-    if (!productId || !productName) {
-      setSubmitError('產品資訊不完整');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitError(null);
-
-    try {
-      // 建立詢價項目
+    // 自動添加產品到詢價項目中（如果還沒有）
+    if (inquiryForm.data.items.length === 0) {
       const inquiryItem: CreateInquiryItemRequest = {
         product_id: productId,
         product_name: productName,
         quantity: productQuantity,
         notes: `產品詢價 - ${productName}`
       };
-
-      // 建立詢價單請求
-      const inquiryRequest: CreateInquiryRequest = {
-        customer_name: formData.customer_name,
-        customer_email: formData.customer_email,
-        customer_phone: formData.customer_phone || undefined,
-        inquiry_type: 'product',
-        notes: formData.notes || undefined,
-        delivery_address: formData.delivery_address || undefined,
-        preferred_delivery_date: formData.preferred_delivery_date || undefined,
-        items: [inquiryItem]
-      };
-
-      // 準備請求標頭
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-
-      // 添加 CSRF token 到標頭
-      if (csrfToken) {
-        headers['x-csrf-token'] = csrfToken;
-        logger.info('CSRF token being sent', { metadata: { csrfTokenLength: csrfToken.length } });
-      } else {
-        logger.warn('No CSRF token available for request');
-      }
-
-      const response = await fetch('/api/inquiries', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(inquiryRequest),
+      
+      inquiryForm.addItem(inquiryItem);
+      
+      logger.info('自動添加產品到詢價表單', {
+        metadata: { productId, productName, quantity: productQuantity }
       });
+    }
+  }, [productName, productId, productQuantity, inquiryForm, router]);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || '提交詢價失敗');
-      }
+  const handleQuantityChange = (newQuantity: number) => {
+    const validQuantity = Math.max(1, newQuantity);
+    setProductQuantity(validQuantity);
+    
+    // 更新詢價項目中的數量
+    if (inquiryForm.data.items.length > 0) {
+      inquiryForm.updateItem(0, { quantity: validQuantity });
+    }
+  };
 
-      const result = await response.json();
-      logger.info('Inquiry created successfully', { metadata: { inquiryId: result.data.id } });
+  const handleSubmitInquiry = async () => {
+    if (!user) {
+      // 設定用戶錯誤到表單狀態中
+      inquiryForm.updateField('customer_email', ''); // 觸發驗證
+      return;
+    }
 
-      // 成功後重定向到詢價單詳情頁面
-      router.push(`/inquiries/${result.data.id}`);
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '提交詢價時發生未知錯誤';
-      logger.error('Error creating inquiry', undefined, { metadata: { error: errorMessage } });
-      setSubmitError(errorMessage);
-    } finally {
-      setIsSubmitting(false);
+    // 使用 Hook 的提交方法
+    const success = await inquiryForm.submitForm();
+    
+    if (success) {
+      logger.info('詢價表單提交成功');
     }
   };
 
@@ -156,16 +95,32 @@ function InquiryFormContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white">
-      <div className="container mx-auto px-6 py-20">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-20">
         <div className="max-w-2xl mx-auto">
           {/* 頁面標題 */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-amber-900 mb-2">產品詢價</h1>
-            <p className="text-gray-600">填寫以下資訊，我們將儘快為您報價</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 mb-2">產品詢價</h1>
+            <p className="text-gray-600 text-sm sm:text-base px-4 sm:px-0">填寫以下資訊，我們將儘快為您報價</p>
+            
+            {/* 自動儲存指示器 */}
+            {inquiryForm.isAutoSaving && (
+              <div className="mt-2 flex items-center justify-center text-sm text-blue-600">
+                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full mr-2"></div>
+                正在自動儲存...
+              </div>
+            )}
+            {inquiryForm.isDirty && !inquiryForm.isAutoSaving && (
+              <div className="mt-2 text-sm text-green-600 flex items-center justify-center">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                表單已自動儲存
+              </div>
+            )}
           </div>
 
           {/* 產品資訊卡片 */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
             <h3 className="text-xl font-semibold text-amber-900 mb-4">詢價產品</h3>
             <div className="bg-amber-50 rounded-lg p-4">
               <div className="flex justify-between items-start mb-3">
@@ -176,15 +131,16 @@ function InquiryFormContent() {
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => handleQuantityChange(productQuantity - 1)}
-                    className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center"
+                    className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 active:bg-amber-300 flex items-center justify-center text-lg sm:text-base font-semibold transition-colors touch-manipulation"
                     type="button"
+                    disabled={productQuantity <= 1}
                   >
                     -
                   </button>
-                  <span className="font-medium min-w-[3ch] text-center">{productQuantity}</span>
+                  <span className="font-medium min-w-[4ch] text-center text-lg sm:text-base">{productQuantity}</span>
                   <button
                     onClick={() => handleQuantityChange(productQuantity + 1)}
-                    className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 flex items-center justify-center"
+                    className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 active:bg-amber-300 flex items-center justify-center text-lg sm:text-base font-semibold transition-colors touch-manipulation"
                     type="button"
                   >
                     +
@@ -195,7 +151,7 @@ function InquiryFormContent() {
           </div>
 
           {/* 詢價表單 */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6">
             {!user && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                 <p className="text-yellow-800 text-sm">
@@ -214,34 +170,55 @@ function InquiryFormContent() {
                     <label className="block text-gray-700 mb-1 font-medium">姓名 *</label>
                     <input
                       type="text"
-                      value={formData.customer_name}
-                      onChange={(e) => handleFormChange('customer_name', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      value={inquiryForm.data.customer_name}
+                      onChange={(e) => inquiryForm.updateField('customer_name', e.target.value)}
+                      className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                        inquiryForm.validation.customer_name 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
                       placeholder="請輸入您的姓名"
                       required
                     />
+                    {inquiryForm.validation.customer_name && (
+                      <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.customer_name}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-gray-700 mb-1 font-medium">Email *</label>
                     <input
                       type="email"
-                      value={formData.customer_email}
-                      onChange={(e) => handleFormChange('customer_email', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      value={inquiryForm.data.customer_email}
+                      onChange={(e) => inquiryForm.updateField('customer_email', e.target.value)}
+                      className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                        inquiryForm.validation.customer_email 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
                       placeholder="請輸入您的 Email"
                       required
                     />
+                    {inquiryForm.validation.customer_email && (
+                      <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.customer_email}</p>
+                    )}
                   </div>
                 </div>
                 <div className="mt-4">
                   <label className="block text-gray-700 mb-1 font-medium">聯絡電話</label>
                   <input
                     type="tel"
-                    value={formData.customer_phone}
-                    onChange={(e) => handleFormChange('customer_phone', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    value={inquiryForm.data.customer_phone}
+                    onChange={(e) => inquiryForm.updateField('customer_phone', e.target.value)}
+                    className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                      inquiryForm.validation.customer_phone 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-300'
+                    }`}
                     placeholder="請輸入您的聯絡電話"
                   />
+                  {inquiryForm.validation.customer_phone && (
+                    <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.customer_phone}</p>
+                  )}
                 </div>
               </div>
 
@@ -253,21 +230,35 @@ function InquiryFormContent() {
                     <label className="block text-gray-700 mb-1 font-medium">配送地址</label>
                     <input
                       type="text"
-                      value={formData.delivery_address}
-                      onChange={(e) => handleFormChange('delivery_address', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      value={inquiryForm.data.delivery_address}
+                      onChange={(e) => inquiryForm.updateField('delivery_address', e.target.value)}
+                      className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                        inquiryForm.validation.delivery_address 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
                       placeholder="請輸入配送地址（可選）"
                     />
+                    {inquiryForm.validation.delivery_address && (
+                      <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.delivery_address}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-gray-700 mb-1 font-medium">希望配送日期</label>
                     <input
                       type="date"
-                      value={formData.preferred_delivery_date}
-                      onChange={(e) => handleFormChange('preferred_delivery_date', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                      value={inquiryForm.data.preferred_delivery_date}
+                      onChange={(e) => inquiryForm.updateField('preferred_delivery_date', e.target.value)}
+                      className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                        inquiryForm.validation.preferred_delivery_date 
+                          ? 'border-red-300 bg-red-50' 
+                          : 'border-gray-300'
+                      }`}
                       min={new Date().toISOString().split('T')[0]}
                     />
+                    {inquiryForm.validation.preferred_delivery_date && (
+                      <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.preferred_delivery_date}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -276,37 +267,89 @@ function InquiryFormContent() {
               <div>
                 <label className="block text-gray-700 mb-1 font-medium">特殊需求或備註</label>
                 <textarea
-                  value={formData.notes}
-                  onChange={(e) => handleFormChange('notes', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 h-24 text-gray-900 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  value={inquiryForm.data.notes}
+                  onChange={(e) => inquiryForm.updateField('notes', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 sm:px-3 sm:py-2 h-24 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
                   placeholder="如有特殊需求或其他說明，請在此註明"
                 />
               </div>
 
               {/* 錯誤訊息 */}
-              {submitError && (
+              {(inquiryForm.submitError || inquiryForm.validation.general) && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <p className="text-red-700 text-sm">{submitError}</p>
+                  <div className="flex items-start">
+                    <svg className="w-5 h-5 text-red-400 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <div>
+                      <p className="text-red-700 text-sm font-medium">
+                        {inquiryForm.submitError || inquiryForm.validation.general}
+                      </p>
+                      {Object.keys(inquiryForm.validation).length > 0 && (
+                        <p className="text-red-600 text-xs mt-1">
+                          請檢查並修正上述標記的欄位錯誤
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 成功訊息 */}
+              {inquiryForm.submitSuccess && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                    <p className="text-green-700 text-sm font-medium">
+                      詢價單已成功提交！正在跳轉到詢價單詳情頁...
+                    </p>
+                  </div>
                 </div>
               )}
 
               {/* 提交按鈕 */}
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   onClick={() => router.back()}
-                  className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
-                  disabled={isSubmitting}
+                  className="w-full sm:flex-1 bg-gray-100 text-gray-700 py-4 sm:py-3 rounded-lg font-semibold hover:bg-gray-200 active:bg-gray-300 transition-colors touch-manipulation"
+                  disabled={inquiryForm.isSubmitting}
                 >
                   返回
                 </button>
                 <button
                   onClick={handleSubmitInquiry}
-                  disabled={isSubmitting || !user}
-                  className="flex-1 bg-amber-900 text-white py-3 rounded-lg font-semibold hover:bg-amber-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={inquiryForm.isSubmitting || !user || inquiryForm.submitSuccess}
+                  className="w-full sm:flex-1 bg-amber-900 text-white py-4 sm:py-3 rounded-lg font-semibold hover:bg-amber-800 active:bg-amber-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative touch-manipulation"
                 >
-                  {isSubmitting ? '提交中...' : '提交詢價'}
+                  {inquiryForm.isSubmitting && (
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    </div>
+                  )}
+                  <span className={inquiryForm.isSubmitting ? 'ml-6' : ''}>
+                    {inquiryForm.submitSuccess
+                      ? '提交成功'
+                      : inquiryForm.isSubmitting
+                      ? '提交中...'
+                      : '提交詢價'
+                    }
+                  </span>
                 </button>
               </div>
+              
+              {/* 清理自動儲存按鈕 */}
+              {inquiryForm.isDirty && !inquiryForm.submitSuccess && (
+                <div className="text-center pt-4 border-t border-gray-200">
+                  <button
+                    onClick={inquiryForm.clearAutoSave}
+                    className="text-sm text-gray-500 hover:text-gray-700 underline"
+                  >
+                    清除自動儲存的資料
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
