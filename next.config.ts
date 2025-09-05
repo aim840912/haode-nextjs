@@ -84,8 +84,8 @@ const nextConfig: NextConfig = {
     // Content Security Policy 配置
     const csp = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://chec.io${process.env.NODE_ENV === 'development' ? ' https://vercel.live https://*.vercel.live' : ''}`,
-      `script-src-elem 'self' 'unsafe-inline' https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://chec.io${process.env.NODE_ENV === 'development' ? ' https://vercel.live https://*.vercel.live' : ''}`,
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${process.env.NODE_ENV === 'development' ? ' http://localhost:*' : ''}`,
+      `script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${process.env.NODE_ENV === 'development' ? ' http://localhost:*' : ''}`,
       "worker-src 'self' blob:",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:",
