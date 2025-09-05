@@ -183,8 +183,8 @@ function AddProduct() {
     }))
   }
 
-  const handleImageUploadSuccess = (images: any[]) => {
-    const urls = images.map(img => img.url)
+  const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
+    const urls = images.map(img => img.url).filter((url): url is string => Boolean(url))
     setUploadedImages(prev => [...prev, ...urls])
   }
 

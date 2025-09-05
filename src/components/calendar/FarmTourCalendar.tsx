@@ -6,6 +6,8 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import listPlugin from '@fullcalendar/list';
+import type { EventClickArg, EventDropArg, DatesSetArg } from '@fullcalendar/core';
+import type { DateClickArg } from '@fullcalendar/interaction';
 import { useFarmTourCalendar } from '@/hooks/useFarmTourCalendar';
 import { INQUIRY_STATUS_LABELS, type InquiryStatus } from '@/types/inquiry';
 import { useAuth } from '@/lib/auth-context';
@@ -37,7 +39,6 @@ export default function FarmTourCalendar({
   onDateClick
 }: FarmTourCalendarProps) {
   const { user } = useAuth();
-  const [selectedView, setSelectedView] = useState(defaultView);
   
   const {
     events,
@@ -56,7 +57,7 @@ export default function FarmTourCalendar({
   });
 
   // 處理事件點擊
-  const handleEventClick = useCallback((clickInfo: any) => {
+  const handleEventClick = useCallback((clickInfo: EventClickArg) => {
     const eventId = clickInfo.event.id;
     logger.debug('行事曆事件被點擊');
     
@@ -72,7 +73,7 @@ export default function FarmTourCalendar({
   }, [events, onEventClick]);
 
   // 處理日期點擊
-  const handleDateClick = useCallback((dateClickInfo: any) => {
+  const handleDateClick = useCallback((dateClickInfo: DateClickArg) => {
     const clickedDate = dateClickInfo.date;
     logger.debug('行事曆日期被點擊');
     
@@ -91,7 +92,7 @@ export default function FarmTourCalendar({
   }, [onDateClick, user]);
 
   // 處理事件拖放
-  const handleEventDrop = useCallback(async (dropInfo: any) => {
+  const handleEventDrop = useCallback(async (dropInfo: EventDropArg) => {
     if (user?.role !== 'admin') {
       dropInfo.revert(); // 恢復原位置
       alert('只有管理員可以調整預約時間');
@@ -100,6 +101,12 @@ export default function FarmTourCalendar({
 
     const eventId = dropInfo.event.id;
     const newDate = dropInfo.event.start;
+
+    if (!newDate) {
+      dropInfo.revert();
+      alert('無法獲取新的日期時間');
+      return;
+    }
 
     logger.debug('事件被拖放');
 
@@ -127,7 +134,7 @@ export default function FarmTourCalendar({
   }, [user, updateEventTime, events]);
 
   // 處理視圖變更和資料載入
-  const handleDatesSet = useCallback((dateInfo: any) => {
+  const handleDatesSet = useCallback((dateInfo: DatesSetArg) => {
     fetchEvents(dateInfo.start, dateInfo.end);
   }, [fetchEvents]);
 

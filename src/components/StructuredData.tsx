@@ -1,7 +1,7 @@
 import { FC } from 'react'
 
 interface StructuredDataProps {
-  data: Record<string, any>
+  data: Record<string, unknown>
 }
 
 const StructuredData: FC<StructuredDataProps> = ({ data }) => {
@@ -82,7 +82,14 @@ export const FarmStructuredData = () => {
 }
 
 // 產品結構化資料
-export const ProductStructuredData = ({ product }: { product: any }) => {
+export const ProductStructuredData = ({ product }: { product: {
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  inventory: number;
+  images?: string[];
+} }) => {
   const data = {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -110,7 +117,14 @@ export const ProductStructuredData = ({ product }: { product: any }) => {
 }
 
 // 文章結構化資料
-export const ArticleStructuredData = ({ article }: { article: any }) => {
+export const ArticleStructuredData = ({ article }: { article: {
+  title: string;
+  summary: string;
+  imageUrl?: string;
+  publishedDate: string;
+  modifiedDate?: string;
+  author?: string;
+} }) => {
   const data = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -129,8 +143,8 @@ export const ArticleStructuredData = ({ article }: { article: any }) => {
         "url": "https://haode-nextjs.vercel.app/logo.png"
       }
     },
-    "datePublished": article.publishDate,
-    "dateModified": article.updatedAt || article.publishDate
+    "datePublished": article.publishedDate,
+    "dateModified": article.modifiedDate || article.publishedDate
   }
 
   return <StructuredData data={data} />

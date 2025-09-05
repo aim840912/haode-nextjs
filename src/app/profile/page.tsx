@@ -19,7 +19,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [interestedProducts, setInterestedProducts] = useState<string[]>([]);
-  const [interestedProductsData, setInterestedProductsData] = useState<any[]>([]);
+  const [interestedProductsData, setInterestedProductsData] = useState<Array<{ id: string; isActive: boolean }>>([]);
   const [loadingInterests, setLoadingInterests] = useState(false);
 
   // 表單狀態
@@ -116,7 +116,7 @@ export default function ProfilePage() {
           return;
         }
         
-        const filteredProducts = allProducts.filter((product: any) => 
+        const filteredProducts = allProducts.filter((product: { id: string; isActive: boolean }) => 
           productIds.includes(product.id) && product.isActive
         );
         setInterestedProductsData(filteredProducts);

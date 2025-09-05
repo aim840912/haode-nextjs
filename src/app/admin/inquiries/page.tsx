@@ -37,7 +37,13 @@ function AdminInquiriesPage() {
     unread: number;
     unreplied: number;
   }>({ total: 0, unread: 0, unreplied: 0 });
-  const [detailedStats, setDetailedStats] = useState<any>(null);
+  const [detailedStats, setDetailedStats] = useState<{
+    daily_trends: Array<{
+      date: string;
+      total_inquiries: number;
+      replied_inquiries: number;
+    }>;
+  } | null>(null);
 
   // 取得詳細統計資料
   const fetchDetailedStats = async () => {
@@ -432,7 +438,11 @@ function AdminInquiriesPage() {
             <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">最近 7 天趨勢</h3>
               <div className="grid grid-cols-7 gap-2">
-                {detailedStats.daily_trends.map((day: any, index: number) => (
+                {detailedStats.daily_trends.map((day: {
+                  date: string;
+                  total_inquiries: number;
+                  replied_inquiries: number;
+                }, index: number) => (
                   <div key={index} className="text-center">
                     <div className="text-xs text-gray-500 mb-2">
                       {new Date(day.date).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })}
@@ -441,7 +451,7 @@ function AdminInquiriesPage() {
                       <div className="text-lg font-bold text-gray-900">{day.total_inquiries}</div>
                       <div className="text-xs text-gray-600">新詢問</div>
                       <div className="text-xs text-green-600 mt-1">
-                        {day.reply_rate}% 回覆率
+                        {day.total_inquiries > 0 ? Math.round((day.replied_inquiries / day.total_inquiries) * 100) : 0}% 回覆率
                       </div>
                     </div>
                   </div>

@@ -145,8 +145,8 @@ export default function NewsDetailPage() {
           title: newsItem.title,
           summary: newsItem.summary,
           imageUrl: newsItem.imageUrl || newsItem.image,
-          publishDate: newsItem.publishedAt,
-          updatedAt: newsItem.publishedAt // 假設沒有單獨的更新時間
+          publishedDate: newsItem.publishedAt,
+          modifiedDate: newsItem.publishedAt // 假設沒有單獨的更新時間
         }} 
       />
       

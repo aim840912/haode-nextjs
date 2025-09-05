@@ -10,6 +10,26 @@ import { apiLogger } from '@/lib/logger';
 import { withErrorHandler } from '@/lib/error-handler';
 import { success, error as errorResponse } from '@/lib/api-response';
 import { ValidationError, AuthorizationError } from '@/lib/errors';
+import type { Database } from '@/types/database';
+import type { User } from '@supabase/supabase-js';
+import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js';
+
+// 型別定義
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type PartialProfile = Pick<ProfileRow, 'role' | 'name'>;
+
+interface BatchRequestBody {
+  operation: 'delete_by_ids' | 'delete_by_filters' | 'cleanup_old';
+  ids?: string[];
+  filters?: {
+    start_date?: string;
+    end_date?: string;
+    user_email?: string;
+    action?: string;
+    resource_type?: string;
+    days?: number;
+  };
+}
 
 // 統一的錯誤回應函數
 function createErrorResponse(message: string, status: number, details?: string) {
@@ -26,20 +46,6 @@ function createErrorResponse(message: string, status: number, details?: string) 
   );
 }
 
-// 統一的成功回應函數
-function createSuccessResponse(data?: any, message?: string, status: number = 200) {
-  return NextResponse.json(
-    { 
-      success: true,
-      data,
-      message
-    },
-    { 
-      status,
-      headers: { 'Content-Type': 'application/json' }
-    }
-  );
-}
 
 // POST /api/audit-logs/batch - 批量操作審計日誌
 async function handlePOST(request: NextRequest) {
@@ -62,7 +68,7 @@ async function handlePOST(request: NextRequest) {
     }
 
     // 解析請求內容
-    const body = await request.json();
+    const body = (await request.json()) as BatchRequestBody;
     const { operation, ids, filters } = body;
 
     if (!operation) {
@@ -71,9 +77,15 @@ async function handlePOST(request: NextRequest) {
 
     switch (operation) {
       case 'delete_by_ids':
+        if (!ids || !Array.isArray(ids)) {
+          throw new ValidationError('delete_by_ids 操作需要提供 ids 陣列');
+        }
         return await handleDeleteByIds(supabase, user, profile, ids, request);
       
       case 'delete_by_filters':
+        if (!filters) {
+          throw new ValidationError('delete_by_filters 操作需要提供 filters 物件');
+        }
         return await handleDeleteByFilters(supabase, user, profile, filters, request);
       
       case 'cleanup_old':
@@ -86,7 +98,7 @@ async function handlePOST(request: NextRequest) {
   apiLogger.info('批量審計日誌操作完成', {
     module: 'AuditLogBatchAPI',
     action: 'POST /api/audit-logs/batch',
-    metadata: { operation: body.operation }
+    metadata: { operation }
   });
 }
 
@@ -97,9 +109,9 @@ export const POST = withErrorHandler(handlePOST, {
 
 // 按 ID 批量刪除
 async function handleDeleteByIds(
-  supabase: any, 
-  user: any, 
-  profile: any, 
+  supabase: RealSupabaseClient<Database>, 
+  user: User, 
+  profile: PartialProfile, 
   ids: string[], 
   request: NextRequest
 ) {
@@ -141,12 +153,12 @@ async function handleDeleteByIds(
     apiLogger.error('批量刪除審計日誌失敗', deleteError, {
       module: 'AuditLogBatchAPI',
       action: 'handleDeleteByIds',
-      metadata: { ids, deletedCount: data?.length || 0 }
+      metadata: { ids, attemptedCount: ids.length }
     });
     throw new Error('批量刪除審計日誌失敗');
   }
 
-  const deletedCount = data?.length || 0;
+  const deletedCount = Array.isArray(data) ? data.length : 0;
 
   // 記錄批量刪除操作的審計日誌
   await auditLogService.log({
@@ -186,10 +198,10 @@ async function handleDeleteByIds(
 
 // 按條件批量刪除
 async function handleDeleteByFilters(
-  supabase: any, 
-  user: any, 
-  profile: any, 
-  filters: any, 
+  supabase: RealSupabaseClient<Database>, 
+  user: User, 
+  profile: PartialProfile, 
+  filters: NonNullable<BatchRequestBody['filters']>, 
   request: NextRequest
 ) {
   if (!filters) {
@@ -226,7 +238,7 @@ async function handleDeleteByFilters(
     throw new Error('按條件批量刪除審計日誌失敗');
   }
 
-  const deletedCount = data?.length || 0;
+  const deletedCount = Array.isArray(data) ? data.length : 0;
 
   // 記錄批量刪除操作的審計日誌
   await auditLogService.log({
@@ -266,9 +278,9 @@ async function handleDeleteByFilters(
 
 // 清理舊日誌
 async function handleCleanupOld(
-  supabase: any, 
-  user: any, 
-  profile: any, 
+  supabase: RealSupabaseClient<Database>, 
+  user: User, 
+  profile: PartialProfile, 
   daysToKeep: number, 
   request: NextRequest
 ) {
@@ -277,8 +289,9 @@ async function handleCleanupOld(
   }
 
   try {
-    // 呼叫資料庫清理函數
-    const { data, error } = await supabase
+    // 呼叫資料庫清理函數 
+    // Note: RPC 類型推導問題，使用類型斷言
+    const { data, error } = await (supabase as { rpc: (fn: string, params: Record<string, unknown>) => Promise<{ data: number | null; error: unknown | null }> })
       .rpc('cleanup_old_audit_logs', { days_to_keep: daysToKeep });
 
     if (error) {

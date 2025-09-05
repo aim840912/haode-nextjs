@@ -272,7 +272,7 @@ export class PaginationUtils {
 /**
  * 增強的 API 錯誤處理函數
  */
-export function handleApiError(error: any, options: ResponseOptions = {}): NextResponse {
+export function handleApiError(error: unknown, options: ResponseOptions = {}): NextResponse {
   // 使用新的 logger 系統而非 console.error
   apiLogger.error('API 錯誤處理', error as Error, {
     module: 'API',

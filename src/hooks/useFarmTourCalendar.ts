@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
+import type FullCalendar from '@fullcalendar/react';
 import { useAuth } from '@/lib/auth-context';
 import { logger } from '@/lib/logger';
 import type { CalendarEvent, CalendarResponse, CalendarStatistics } from '@/app/api/farm-tour/calendar/route';
@@ -29,7 +30,7 @@ export interface UseFarmTourCalendarReturn {
   setStatusFilter: (filter: InquiryStatus[] | 'all') => void;
   
   // 行事曆參考
-  calendarRef: React.RefObject<any>;
+  calendarRef: React.RefObject<FullCalendar>;
 }
 
 export function useFarmTourCalendar(options: UseFarmTourCalendarOptions = {}): UseFarmTourCalendarReturn {
@@ -40,7 +41,7 @@ export function useFarmTourCalendar(options: UseFarmTourCalendarOptions = {}): U
   } = options;
 
   const { user } = useAuth();
-  const calendarRef = useRef<any>(null);
+  const calendarRef = useRef<FullCalendar>(null);
 
   // 狀態管理
   const [events, setEvents] = useState<CalendarEvent[]>([]);

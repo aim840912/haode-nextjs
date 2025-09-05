@@ -125,7 +125,7 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
   /**
    * 驗證實體資料（子類別可以覆寫）
    */
-  protected validateEntity(data: any): void {
+  protected validateEntity(data: unknown): void {
     // 基礎驗證 - 子類別可以擴展
     if (!data) {
       throw new ValidationError('資料不能為空')
@@ -176,7 +176,7 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
       const data = await fs.readFile(this.config.filePath, this.config.encoding!)
       return JSON.parse(data)
     } catch (error: unknown) {
-      if (error instanceof Error && 'code' in error && (error as any).code === 'ENOENT') {
+      if (error instanceof Error && 'code' in error && (error as NodeJS.ErrnoException).code === 'ENOENT') {
         // 檔案不存在，建立空陣列
         await this.writeJsonFile([])
         return []
@@ -319,20 +319,24 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
       result = result.filter(item => {
         return Object.entries(normalizedOptions.filters).every(([key, value]) => {
           if (value === undefined || value === null) return true
-          return (item as any)[key] === value
+          return (item as Record<string, unknown>)[key] === value
         })
       })
     }
 
     // 套用排序
     result.sort((a, b) => {
-      const aValue = (a as any)[normalizedOptions.sortBy]
-      const bValue = (b as any)[normalizedOptions.sortBy]
+      const aValue = (a as Record<string, unknown>)[normalizedOptions.sortBy]
+      const bValue = (b as Record<string, unknown>)[normalizedOptions.sortBy]
+      
+      // 處理 unknown 類型的比較
+      const aStr = String(aValue)
+      const bStr = String(bValue)
       
       if (normalizedOptions.sortOrder === 'asc') {
-        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0
+        return aStr > bStr ? 1 : aStr < bStr ? -1 : 0
       } else {
-        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0
+        return aStr < bStr ? 1 : aStr > bStr ? -1 : 0
       }
     })
 

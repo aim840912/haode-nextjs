@@ -193,9 +193,17 @@ export interface AuthenticatedRequest extends NextRequest {
   };
 }
 
+interface JWTPayload {
+  userId: string;
+  email: string;
+  isAdmin?: boolean;
+  iat?: number;
+  exp?: number;
+}
+
 export function verifyToken(token: string) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET as string) as any;
+    const decoded = jwt.verify(token, JWT_SECRET as string) as JWTPayload;
     return {
       id: decoded.userId,
       email: decoded.email,
