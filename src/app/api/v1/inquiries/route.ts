@@ -55,8 +55,7 @@ const CreateInquirySchema = z
     customer_email: z.string().email('Email格式不正確'),
     customer_phone: z.string().optional(),
     inquiry_type: z.enum(['product', 'farm_tour'], {
-      required_error: '詢問類型為必填',
-      invalid_type_error: '詢問類型必須是 product 或 farm_tour',
+      message: '詢問類型必須是 product 或 farm_tour',
     }),
     notes: z.string().max(1000, '備註長度不能超過1000字元').optional(),
     delivery_address: z.string().max(200, '配送地址長度不能超過200字元').optional(),
@@ -101,7 +100,7 @@ const CreateInquirySchema = z
  * 支援分頁、篩選、搜尋功能
  * 權限：需要使用者登入
  */
-async function handleGET(request: NextRequest, { user }: { user: User }) {
+async function handleGET(request: NextRequest, user: User) {
   // 解析並驗證查詢參數
   const url = new URL(request.url)
   const queryParams = Object.fromEntries(url.searchParams.entries())
@@ -197,13 +196,11 @@ async function handleGET(request: NextRequest, { user }: { user: User }) {
 
   const paginationData = {
     items: enhancedInquiries,
-    pagination: {
-      page: params.page,
-      limit: params.limit,
-      total,
-      hasMore,
-      totalPages: Math.ceil(total / params.limit),
-    },
+    total,
+    page: params.page,
+    limit: params.limit,
+    hasMore,
+    totalPages: Math.ceil(total / params.limit),
     filters: {
       status: params.status,
       inquiry_type: params.inquiry_type,
@@ -219,7 +216,7 @@ async function handleGET(request: NextRequest, { user }: { user: User }) {
  * POST /api/v1/inquiries - 建立新詢價
  * 權限：需要使用者登入
  */
-async function handlePOST(request: NextRequest, { user }: { user: User }) {
+async function handlePOST(request: NextRequest, user: User) {
   // 解析並驗證請求資料
   const body = await request.json()
   const result = CreateInquirySchema.safeParse(body)

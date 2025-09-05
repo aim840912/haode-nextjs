@@ -25,31 +25,27 @@ export interface User {
   role?: string
 }
 
-// API 處理器類型定義
-export type AuthenticatedHandler = (
+// 內部處理器類型定義（帶認證資訊）
+type AuthenticatedInternalHandler = (
   request: NextRequest,
-  context: { user: User; params?: Promise<Record<string, string>> }
+  user: User,
+  context?: unknown
 ) => Promise<Response>
 
-export type AdminHandler = (
+type AdminInternalHandler = (
   request: NextRequest,
-  context: { user: User; isAdmin: true; params?: Promise<Record<string, string>> }
+  user: User & { isAdmin: true },
+  context?: unknown
 ) => Promise<Response>
 
-export type OptionalAuthHandler = (
+type OptionalAuthInternalHandler = (
   request: NextRequest,
-  context: { user: User | null }
+  user: User | null,
+  context?: unknown
 ) => Promise<Response>
 
-export type ParameterizedHandler<T = Record<string, string>> = (
-  request: NextRequest,
-  context: { user: User; params: Promise<T> }
-) => Promise<Response>
-
-export type AdminParameterizedHandler<T = Record<string, string>> = (
-  request: NextRequest,
-  context: { user: User; isAdmin: true; params: Promise<T> }
-) => Promise<Response>
+// Next.js 15 相容的標準處理器類型
+export type NextRouteHandler = (request: NextRequest, context?: unknown) => Promise<Response>
 
 /**
  * 取得使用者資訊並檢查管理員權限
@@ -85,13 +81,8 @@ async function getUserWithAdminCheck(userId: string): Promise<User> {
  * 需要使用者認證的中間件
  * 驗證使用者已登入，但不要求管理員權限
  */
-export function requireAuth(
-  handler: AuthenticatedHandler
-): (
-  request: NextRequest,
-  context?: { params?: Promise<Record<string, string>> }
-) => Promise<Response> {
-  return async (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
+export function requireAuth(handler: AuthenticatedInternalHandler): NextRouteHandler {
+  return async (request: NextRequest, context?: unknown) => {
     try {
       // 取得當前使用者
       const currentUser = await getCurrentUser()
@@ -120,8 +111,8 @@ export function requireAuth(
         },
       })
 
-      // 處理參數化路由
-      return handler(request, { user, params: context?.params })
+      // 呼叫業務處理器
+      return handler(request, user, context)
     } catch (err) {
       apiLogger.error('認證中間件錯誤', err as Error, {
         metadata: {
@@ -139,13 +130,8 @@ export function requireAuth(
  * 需要管理員權限的中間件
  * 驗證使用者已登入且具有管理員權限
  */
-export function requireAdmin(
-  handler: AdminHandler
-): (
-  request: NextRequest,
-  context?: { params?: Promise<Record<string, string>> }
-) => Promise<Response> {
-  return async (request: NextRequest, context?: { params?: Promise<Record<string, string>> }) => {
+export function requireAdmin(handler: AdminInternalHandler): NextRouteHandler {
+  return async (request: NextRequest, context?: unknown) => {
     try {
       // 取得當前使用者
       const currentUser = await getCurrentUser()
@@ -187,8 +173,8 @@ export function requireAdmin(
         },
       })
 
-      // 處理參數化路由
-      return handler(request, { user, isAdmin: true, params: context?.params })
+      // 呼叫業務處理器，確保 user 有 isAdmin: true 屬性
+      return handler(request, { ...user, isAdmin: true } as User & { isAdmin: true }, context)
     } catch (err) {
       apiLogger.error('管理員認證中間件錯誤', err as Error, {
         metadata: {
@@ -206,13 +192,8 @@ export function requireAdmin(
  * 可選認證的中間件
  * 使用者可以是登入或未登入狀態，適用於公開但可能需要使用者資訊的 API
  */
-export function optionalAuth(
-  handler: OptionalAuthHandler
-): (
-  request: NextRequest,
-  _context?: { params?: Promise<Record<string, string>> }
-) => Promise<Response> {
-  return async (request: NextRequest, _context?: { params?: Promise<Record<string, string>> }) => {
+export function optionalAuth(handler: OptionalAuthInternalHandler): NextRouteHandler {
+  return async (request: NextRequest, context?: unknown) => {
     try {
       // 嘗試取得當前使用者（不拋錯誤）
       let user: User | null = null
@@ -249,7 +230,7 @@ export function optionalAuth(
         })
       }
 
-      return handler(request, { user })
+      return handler(request, user, context)
     } catch (err) {
       apiLogger.error('可選認證中間件錯誤', err as Error, {
         metadata: {
@@ -263,33 +244,7 @@ export function optionalAuth(
   }
 }
 
-/**
- * 建立支援參數的認證處理器
- * 用於動態路由 [id] 等場景
- */
-export function createParameterizedAuth<T = Record<string, string>>(
-  handler: ParameterizedHandler<T>
-): (request: NextRequest, context: { params: Promise<T> }) => Promise<Response> {
-  return (request: NextRequest, context: { params: Promise<T> }) => {
-    return requireAuth((req, authContext) =>
-      handler(req, { ...authContext, params: context.params })
-    )(request, context)
-  }
-}
-
-/**
- * 建立支援參數的管理員處理器
- * 用於管理員專用的動態路由
- */
-export function createParameterizedAdmin<T = Record<string, string>>(
-  handler: AdminParameterizedHandler<T>
-): (request: NextRequest, context: { params: Promise<T> }) => Promise<Response> {
-  return (request: NextRequest, context: { params: Promise<T> }) => {
-    return requireAdmin((req, adminContext) =>
-      handler(req, { ...adminContext, params: context.params })
-    )(request, context)
-  }
-}
+// 舊版輔助函數已移除 - 現在直接使用 requireAuth/requireAdmin 即可
 
 /**
  * 檢查使用者是否有權限存取特定資源

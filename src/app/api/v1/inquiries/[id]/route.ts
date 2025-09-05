@@ -40,8 +40,8 @@ const UpdateInquirySchema = z.object({
 
 // 管理員更新詢價狀態架構
 const AdminUpdateStatusSchema = z.object({
-  status: z.enum(['pending', 'quoted', 'confirmed', 'completed', 'cancelled'], {
-    required_error: '狀態為必填',
+  status: z.enum(['pending', 'quoted', 'confirmed', 'completed', 'cancelled']).refine(val => val, {
+    message: '狀態為必填',
   }),
   notes: z.string().max(1000, '備註長度不能超過1000字元').optional(),
 })
@@ -50,11 +50,9 @@ const AdminUpdateStatusSchema = z.object({
  * GET /api/v1/inquiries/[id] - 取得單一詢價詳情
  * 權限：使用者只能查看自己的詢價，管理員可查看所有
  */
-async function handleGET(
-  request: NextRequest,
-  { user, params }: { user: User; params?: Promise<{ id: string }> }
-) {
-  const { id } = params ? await params : { id: '' }
+async function handleGET(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  const { id } = routeContext?.params ? await routeContext.params : { id: '' }
 
   if (!id) {
     throw new ValidationError('缺少詢價 ID')
@@ -88,8 +86,7 @@ async function handleGET(
     try {
       await inquiryServiceV2.update(id, {
         is_read: true,
-        read_at: new Date().toISOString(),
-      })
+      } as Partial<UpdateInquiryRequest>)
       inquiry.is_read = true
       inquiry.read_at = new Date().toISOString()
 
@@ -129,11 +126,9 @@ async function handleGET(
  * PUT /api/v1/inquiries/[id] - 更新詢價資料
  * 權限：使用者只能更新自己的詢價，管理員可更新所有
  */
-async function handlePUT(
-  request: NextRequest,
-  { user, params }: { user: User; params?: Promise<{ id: string }> }
-) {
-  const { id } = params ? await params : { id: '' }
+async function handlePUT(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  const { id } = routeContext?.params ? await routeContext.params : { id: '' }
 
   if (!id) {
     throw new ValidationError('缺少詢價 ID')
@@ -202,6 +197,7 @@ async function handlePUT(
 
   if (updateData.status === 'quoted' && !updateData.is_replied) {
     finalUpdateData.is_replied = true
+    // @ts-expect-error - 管理員更新時設置回覆時間和回覆人
     finalUpdateData.replied_at = new Date().toISOString()
     // @ts-expect-error - 管理員更新時設置回覆人
     finalUpdateData.replied_by = user.isAdmin ? user.id : undefined
@@ -236,9 +232,11 @@ async function handlePUT(
  */
 async function handlePATCH(
   request: NextRequest,
-  { user, params }: { user: User; isAdmin: true; params?: Promise<{ id: string }> }
+  user: User & { isAdmin: true },
+  context?: unknown
 ) {
-  const { id } = params ? await params : { id: '' }
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  const { id } = routeContext?.params ? await routeContext.params : { id: '' }
 
   if (!id) {
     throw new ValidationError('缺少詢價 ID')
@@ -310,9 +308,11 @@ async function handlePATCH(
  */
 async function handleDELETE(
   request: NextRequest,
-  { user, params }: { user: User; isAdmin: true; params?: Promise<{ id: string }> }
+  user: User & { isAdmin: true },
+  context?: unknown
 ) {
-  const { id } = params ? await params : { id: '' }
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  const { id } = routeContext?.params ? await routeContext.params : { id: '' }
 
   if (!id) {
     throw new ValidationError('缺少詢價 ID')

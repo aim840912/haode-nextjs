@@ -124,7 +124,7 @@ class ExampleService {
  * 支援分頁、搜尋、排序、篩選
  * 權限：可選認證（登入使用者看到更多資料）
  */
-async function handleGET(request: NextRequest, { user }: { user: User | null }) {
+async function handleGET(request: NextRequest, user: User | null) {
   // 解析查詢參數並驗證
   const url = new URL(request.url)
   const queryParams = Object.fromEntries(url.searchParams.entries())
@@ -161,7 +161,7 @@ async function handleGET(request: NextRequest, { user }: { user: User | null }) 
  * POST /api/v1/example - 建立新資源
  * 權限：需要使用者登入
  */
-async function handlePOST(request: NextRequest, { user }: { user: User }) {
+async function handlePOST(request: NextRequest, user: User) {
   // 解析並驗證請求資料
   const body = await request.json()
   const result = CreateExampleSchema.safeParse(body)
@@ -190,11 +190,10 @@ async function handlePOST(request: NextRequest, { user }: { user: User }) {
  * PUT /api/v1/example/[id] - 更新資源
  * 權限：需要使用者登入（只能更新自己的資源，管理員可更新所有）
  */
-async function handlePUT(
-  request: NextRequest,
-  { user, params }: { user: User; params?: Record<string, string> }
-) {
-  const resourceId = params?.id
+async function handlePUT(request: NextRequest, user: User) {
+  // 從 URL 中獲取 ID（因為這是一個範例，我們從查詢參數中獲取）
+  const url = new URL(request.url)
+  const resourceId = url.searchParams.get('id')
   if (!resourceId) {
     throw new ValidationError('缺少資源 ID')
   }
@@ -239,11 +238,10 @@ async function handlePUT(
  * DELETE /api/v1/example/[id] - 刪除資源
  * 權限：需要管理員權限
  */
-async function handleDELETE(
-  request: NextRequest,
-  { user, params }: { user: User; isAdmin: true; params?: Record<string, string> }
-) {
-  const resourceId = params?.id
+async function handleDELETE(request: NextRequest, user: User & { isAdmin: true }) {
+  // 從 URL 中獲取 ID（因為這是一個範例，我們從查詢參數中獲取）
+  const url = new URL(request.url)
+  const resourceId = url.searchParams.get('id')
   if (!resourceId) {
     throw new ValidationError('缺少資源 ID')
   }

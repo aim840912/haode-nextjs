@@ -16,7 +16,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { z } from 'zod'
 import { inquiryServiceV2 } from '@/services/v2/inquiryService'
-import { InquiryStatus, InquiryType, InquiryUtils, Inquiry } from '@/types/inquiry'
+import { InquiryStatus, InquiryType, InquiryUtils } from '@/types/inquiry'
 
 // 統計資料介面定義
 interface InquiryBasicStats {
@@ -124,8 +124,14 @@ class InquiryStatsCalculator {
         ? repliedInquiries.reduce((sum, inquiry) => {
             return (
               sum +
-                InquiryUtils.calculateResponseTime({ ...inquiry, inquiry_items: [] } as Inquiry) ||
-              0
+              (InquiryUtils.calculateResponseTime({
+                ...inquiry,
+                inquiry_items: [],
+                user_id: '',
+                customer_name: '',
+                customer_email: '',
+                updated_at: inquiry.created_at,
+              }) ?? 0)
             )
           }, 0) / repliedInquiries.length
         : 0
@@ -269,7 +275,7 @@ class InquiryStatsCalculator {
  * GET /api/v1/inquiries/stats - 取得詢價統計資料
  * 權限：使用者登入（管理員看全部，使用者看自己的）
  */
-async function handleGET(request: NextRequest, { user }: { user: User }) {
+async function handleGET(request: NextRequest, user: User) {
   const startTime = Date.now()
 
   // 解析並驗證查詢參數
@@ -317,8 +323,11 @@ async function handleGET(request: NextRequest, { user }: { user: User }) {
     inquiries = await inquiryServiceV2.getAllInquiries({
       start_date: startDate.toISOString(),
       end_date: endDate.toISOString(),
-      status: 'status' in params ? params.status : undefined,
-      inquiry_type: 'inquiry_type' in params ? params.inquiry_type : undefined,
+      status: 'status' in params ? (params as { status: InquiryStatus }).status : undefined,
+      inquiry_type:
+        'inquiry_type' in params
+          ? (params as { inquiry_type: InquiryType }).inquiry_type
+          : undefined,
     })
   } else {
     // 一般使用者模式：只查詢自己的詢價

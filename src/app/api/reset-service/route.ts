@@ -8,7 +8,7 @@ import { apiLogger } from '@/lib/logger'
 import { requireAdmin } from '@/lib/api-middleware'
 import { success } from '@/lib/api-response'
 
-async function handlePOST(request: NextRequest, { user }: { user: { id: string } }) {
+async function handlePOST(request: NextRequest, user: { id: string }) {
   apiLogger.info('管理員開始重置服務實例', {
     module: 'ResetService',
     action: 'POST',

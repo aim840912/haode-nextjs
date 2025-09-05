@@ -13,7 +13,7 @@ import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 
 // GET /api/audit-logs/stats - 取得審計日誌統計
-async function handleGET(request: NextRequest, { user }: { user: { id: string; role?: string } }) {
+async function handleGET(request: NextRequest, user: { id: string; role?: string }) {
   apiLogger.info('開始查詢審計日誌統計', {
     module: 'AuditLogsStats',
     action: 'GET',
@@ -121,7 +121,7 @@ async function handleGET(request: NextRequest, { user }: { user: { id: string; r
 export const GET = requireAuth(handleGET)
 
 // 處理其他不支援的 HTTP 方法
-async function handleUnsupportedMethod(_request: NextRequest): Promise<never> {
+async function handleUnsupportedMethod(): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 
