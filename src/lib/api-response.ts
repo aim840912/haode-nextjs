@@ -1,24 +1,24 @@
 /**
  * API 回應工具函數
- * 
+ *
  * 提供統一的 API 回應格式和處理工具：
  * - 標準化的成功和錯誤回應格式
- * - 分頁回應支援  
+ * - 分頁回應支援
  * - 整合新的錯誤處理系統
  */
 
 import { NextResponse } from 'next/server'
-import { AppError, ErrorResponse, ErrorFactory } from './errors'
+import { AppError, ErrorResponse, ErrorFactory, AuthenticationError, NotFoundError } from './errors'
 import { apiLogger } from './logger'
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-  timestamp: string;
-  requestId?: string;
-  meta?: ResponseMeta;
+export interface ApiResponse<T = unknown> {
+  success: boolean
+  data?: T
+  error?: string
+  message?: string
+  timestamp: string
+  requestId?: string
+  meta?: ResponseMeta
 }
 
 /**
@@ -35,7 +35,7 @@ export interface ResponseMeta {
     hasPrev: boolean
   }
   /** 統計資訊 */
-  stats?: Record<string, any>
+  stats?: Record<string, unknown>
   /** 執行時間 */
   executionTime?: number
 }
@@ -81,30 +81,30 @@ export class ApiResponseBuilder {
       data,
       message,
       timestamp: new Date().toISOString(),
-      requestId: options.requestId
-    };
-    
+      requestId: options.requestId,
+    }
+
     const headers = this.buildHeaders(options)
     return NextResponse.json(response, {
       status: 200,
-      headers
-    });
+      headers,
+    })
   }
-  
+
   static created<T>(data: T, message?: string, options: ResponseOptions = {}): NextResponse {
     const response: ApiResponse<T> = {
       success: true,
       data,
       message: message || '資源創建成功',
       timestamp: new Date().toISOString(),
-      requestId: options.requestId
-    };
-    
+      requestId: options.requestId,
+    }
+
     const headers = this.buildHeaders(options)
     return NextResponse.json(response, {
       status: 201,
-      headers
-    });
+      headers,
+    })
   }
 
   /**
@@ -116,7 +116,7 @@ export class ApiResponseBuilder {
     options: ResponseOptions = {}
   ): NextResponse {
     const totalPages = Math.ceil(result.total / result.limit)
-    
+
     const response: ApiResponse<T[]> = {
       success: true,
       data: result.items,
@@ -130,37 +130,40 @@ export class ApiResponseBuilder {
           total: result.total,
           totalPages,
           hasNext: result.page < totalPages,
-          hasPrev: result.page > 1
-        }
-      }
-    };
+          hasPrev: result.page > 1,
+        },
+      },
+    }
 
     const headers = this.buildHeaders(options)
     return NextResponse.json(response, {
       status: 200,
-      headers
-    });
+      headers,
+    })
   }
-  
+
   static error(message: string, status: number = 400, options: ResponseOptions = {}): NextResponse {
     const response: ApiResponse = {
       success: false,
       error: message,
       timestamp: new Date().toISOString(),
-      requestId: options.requestId
-    };
-    
+      requestId: options.requestId,
+    }
+
     const headers = this.buildHeaders(options)
     return NextResponse.json(response, {
       status,
-      headers
-    });
+      headers,
+    })
   }
 
   /**
    * 使用新錯誤系統的錯誤回應
    */
-  static errorFromAppError(error: AppError, options: ResponseOptions = {}): NextResponse<ErrorResponse> {
+  static errorFromAppError(
+    error: AppError,
+    options: ResponseOptions = {}
+  ): NextResponse<ErrorResponse> {
     const response = error.toResponse()
     response.requestId = options.requestId
 
@@ -169,7 +172,7 @@ export class ApiResponseBuilder {
 
     return NextResponse.json(response, {
       status: error.statusCode,
-      headers
+      headers,
     })
   }
 
@@ -180,7 +183,7 @@ export class ApiResponseBuilder {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Powered-By': 'Haude Farm API',
-      ...options.headers
+      ...options.headers,
     }
 
     // 快取控制
@@ -196,38 +199,47 @@ export class ApiResponseBuilder {
 
     return headers
   }
-  
+
   // 保持向後相容性的快捷方法
   static badRequest(message: string = '請求格式錯誤', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 400, options);
+    return this.error(message, 400, options)
   }
-  
+
   static unauthorized(message: string = '未授權訪問', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 401, options);
+    return this.error(message, 401, options)
   }
-  
+
   static forbidden(message: string = '禁止訪問', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 403, options);
+    return this.error(message, 403, options)
   }
-  
+
   static notFound(message: string = '資源不存在', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 404, options);
+    return this.error(message, 404, options)
   }
-  
-  static methodNotAllowed(message: string = '不支援的請求方法', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 405, options);
+
+  static methodNotAllowed(
+    message: string = '不支援的請求方法',
+    options: ResponseOptions = {}
+  ): NextResponse {
+    return this.error(message, 405, options)
   }
-  
+
   static conflict(message: string = '資源衝突', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 409, options);
+    return this.error(message, 409, options)
   }
-  
-  static tooManyRequests(message: string = '請求過於頻繁', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 429, options);
+
+  static tooManyRequests(
+    message: string = '請求過於頻繁',
+    options: ResponseOptions = {}
+  ): NextResponse {
+    return this.error(message, 429, options)
   }
-  
-  static internalError(message: string = '伺服器內部錯誤', options: ResponseOptions = {}): NextResponse {
-    return this.error(message, 500, options);
+
+  static internalError(
+    message: string = '伺服器內部錯誤',
+    options: ResponseOptions = {}
+  ): NextResponse {
+    return this.error(message, 500, options)
   }
 
   /**
@@ -237,7 +249,7 @@ export class ApiResponseBuilder {
     const headers = this.buildHeaders(options)
     return new NextResponse(null, {
       status: 204,
-      headers
+      headers,
     })
   }
 }
@@ -277,9 +289,9 @@ export function handleApiError(error: unknown, options: ResponseOptions = {}): N
   apiLogger.error('API 錯誤處理', error as Error, {
     module: 'API',
     action: 'handleApiError',
-    requestId: options.requestId
-  });
-  
+    requestId: options.requestId,
+  })
+
   // 如果已經是 AppError，直接使用
   if (error instanceof AppError) {
     return ApiResponseBuilder.errorFromAppError(error, options)
@@ -288,16 +300,19 @@ export function handleApiError(error: unknown, options: ResponseOptions = {}): N
   // 根據錯誤名稱創建適當的 AppError
   let appError: AppError
 
-  if (error.name === 'ValidationError') {
-    appError = ErrorFactory.createValidationError(error.message)
-  } else if (error.name === 'UnauthorizedError') {
-    appError = new (require('./errors').AuthenticationError)(error.message)
-  } else if (error.name === 'NotFoundError') {
-    appError = new (require('./errors').NotFoundError)(error.message)
+  // 首先確保 error 是 Error 類型
+  const errorObj = error as Error
+
+  if (errorObj.name === 'ValidationError') {
+    appError = ErrorFactory.createValidationError(errorObj.message)
+  } else if (errorObj.name === 'UnauthorizedError') {
+    appError = new AuthenticationError(errorObj.message)
+  } else if (errorObj.name === 'NotFoundError') {
+    appError = new NotFoundError(errorObj.message)
   } else {
-    appError = ErrorFactory.fromError(error)
+    appError = ErrorFactory.fromError(errorObj)
   }
-  
+
   return ApiResponseBuilder.errorFromAppError(appError, options)
 }
 
@@ -316,15 +331,11 @@ export async function handleApiOperation<T>(
     return await operation()
   } catch (error) {
     // 使用 logger 記錄錯誤
-    apiLogger.error(
-      `API 操作失敗: ${errorContext?.action || 'unknown'}`,
-      error as Error,
-      {
-        module: errorContext?.module || 'API',
-        action: errorContext?.action,
-        requestId: errorContext?.requestId
-      }
-    )
+    apiLogger.error(`API 操作失敗: ${errorContext?.action || 'unknown'}`, error as Error, {
+      module: errorContext?.module || 'API',
+      action: errorContext?.action,
+      requestId: errorContext?.requestId,
+    })
 
     // 重新拋出錯誤讓上層處理
     throw error
@@ -332,23 +343,22 @@ export async function handleApiOperation<T>(
 }
 
 // 快捷方法匯出 - 使用箭頭函數保持正確的 this 上下文
-export const success = <T>(data: T, message?: string, options: ResponseOptions = {}) => 
+export const success = <T>(data: T, message?: string, options: ResponseOptions = {}) =>
   ApiResponseBuilder.success(data, message, options)
 
-export const created = <T>(data: T, message?: string, options: ResponseOptions = {}) => 
+export const created = <T>(data: T, message?: string, options: ResponseOptions = {}) =>
   ApiResponseBuilder.created(data, message, options)
 
 export const successWithPagination = <T>(
-  result: PaginatedResult<T>, 
-  message?: string, 
+  result: PaginatedResult<T>,
+  message?: string,
   options: ResponseOptions = {}
 ) => ApiResponseBuilder.successWithPagination(result, message, options)
 
-export const error = (message: string, status: number = 400, options: ResponseOptions = {}) => 
+export const error = (message: string, status: number = 400, options: ResponseOptions = {}) =>
   ApiResponseBuilder.error(message, status, options)
 
-export const errorFromAppError = (error: AppError, options: ResponseOptions = {}) => 
+export const errorFromAppError = (error: AppError, options: ResponseOptions = {}) =>
   ApiResponseBuilder.errorFromAppError(error, options)
 
-export const noContent = (options: ResponseOptions = {}) => 
-  ApiResponseBuilder.noContent(options)
+export const noContent = (options: ResponseOptions = {}) => ApiResponseBuilder.noContent(options)
