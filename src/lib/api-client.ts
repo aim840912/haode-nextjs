@@ -12,6 +12,7 @@
 
 import { apiLogger } from '@/lib/logger'
 import { ApiResponse, ApiRequestOptions, ApiRequestData } from '@/types/infrastructure.types'
+import { CreateInquiryRequest } from '@/types/inquiry'
 
 /**
  * 從 cookie 中獲取 CSRF token
@@ -617,7 +618,7 @@ export const inquiryApi = {
         }
       })
     }
-    
+
     const endpoint = `/inquiries${searchParams.toString() ? `?${searchParams}` : ''}`
     return v1ApiClient.get(endpoint)
   },
@@ -626,7 +627,7 @@ export const inquiryApi = {
   get: (id: string) => v1ApiClient.get(`/inquiries/${id}`),
 
   // 創建詢價單
-  create: (data: Record<string, unknown>) => v1ApiClient.post('/inquiries', data),
+  create: (data: CreateInquiryRequest) => v1ApiClient.post('/inquiries', data),
 
   // 更新詢價單
   update: (id: string, data: Record<string, unknown>) => v1ApiClient.put(`/inquiries/${id}`, data),
