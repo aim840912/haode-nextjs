@@ -96,44 +96,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }
 
-  // 監聽 Supabase 認證狀態變化
-  useEffect(() => {
-    // 取得初始 session，加入錯誤處理
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }: { data: { session: Session | null } }) => {
-        handleAuthStateChange(session)
-      })
-      .catch(error => {
-        logger.error('Failed to get initial session', error as Error, {
-          metadata: { action: 'get_initial_session' },
-        })
-        // 如果是 refresh token 錯誤，強制登出
-        if (isRefreshTokenError(error)) {
-          handleForceLogout('refresh_token_error')
-        }
-        setIsLoading(false)
-      })
-
-    // 監聽認證狀態變化
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-      // 特殊處理 TOKEN_REFRESHED 和 SIGNED_OUT 事件
-      if (event === 'TOKEN_REFRESHED' && !session) {
-        logger.warn('Token refresh failed, forcing logout', {
-          metadata: { action: 'token_refresh_failed' },
-        })
-        handleForceLogout('token_refresh_failed')
-        return
-      }
-
-      handleAuthStateChange(session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [handleAuthStateChange, isRefreshTokenError, handleForceLogout])
-
   // 處理認證狀態變化
   const handleAuthStateChange = useCallback(
     async (session: Session | null) => {
@@ -221,6 +183,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
     },
     [isRefreshTokenError, handleForceLogout]
   )
+
+  // 監聽 Supabase 認證狀態變化
+  useEffect(() => {
+    // 取得初始 session，加入錯誤處理
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }: { data: { session: Session | null } }) => {
+        handleAuthStateChange(session)
+      })
+      .catch((error: unknown) => {
+        logger.error('Failed to get initial session', error as Error, {
+          metadata: { action: 'get_initial_session' },
+        })
+        // 如果是 refresh token 錯誤，強制登出
+        if (isRefreshTokenError(error)) {
+          handleForceLogout('refresh_token_error')
+        }
+        setIsLoading(false)
+      })
+
+    // 監聽認證狀態變化
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
+      // 特殊處理 TOKEN_REFRESHED 和 SIGNED_OUT 事件
+      if (event === 'TOKEN_REFRESHED' && !session) {
+        logger.warn('Token refresh failed, forcing logout', {
+          metadata: { action: 'token_refresh_failed' },
+        })
+        handleForceLogout('token_refresh_failed')
+        return
+      }
+
+      handleAuthStateChange(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [handleAuthStateChange, isRefreshTokenError, handleForceLogout])
 
   // 同步使用者興趣清單
   const syncUserInterests = async (userId: string) => {
