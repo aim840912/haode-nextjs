@@ -22,11 +22,14 @@ function getBrowserSupabaseClient() {
   if (typeof window === 'undefined') {
     throw new Error('getBrowserSupabaseClient should only be called in browser environment')
   }
-  
+
   if (!globalThis.__supabase_browser_client__) {
-    globalThis.__supabase_browser_client__ = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey)
+    globalThis.__supabase_browser_client__ = createBrowserClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey
+    )
   }
-  
+
   return globalThis.__supabase_browser_client__
 }
 
@@ -36,10 +39,12 @@ export function getSupabaseClient() {
 }
 
 // 使用 Proxy 實現真正的延遲初始化，避免模組載入時立即執行
-export const supabase = new Proxy({} as any, {
+export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Database>>, {
   get(target, prop) {
-    let client: any
-    
+    let client:
+      | ReturnType<typeof createBrowserClient<Database>>
+      | ReturnType<typeof createClient<Database>>
+
     // 根據環境選擇正確的客戶端
     if (typeof window === 'undefined') {
       // 服務器環境：使用服務端客戶端
@@ -48,16 +53,16 @@ export const supabase = new Proxy({} as any, {
       // 瀏覽器環境：使用瀏覽器客戶端
       client = getBrowserSupabaseClient()
     }
-    
-    const value = client[prop as keyof typeof client]
-    
+
+    const value = (client as Record<string | symbol, unknown>)[prop]
+
     // 如果是函數，確保 this 綁定正確
     if (typeof value === 'function') {
-      return value.bind(client)
+      return (value as (...args: unknown[]) => unknown).bind(client)
     }
-    
+
     return value
-  }
+  },
 })
 
 /**
@@ -65,18 +70,14 @@ export const supabase = new Proxy({} as any, {
  */
 function getServerSupabaseClient() {
   if (!globalThis.__supabase_server_client__) {
-    globalThis.__supabase_server_client__ = createClient<Database>(
-      supabaseUrl,
-      supabaseAnonKey,
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    )
+    globalThis.__supabase_server_client__ = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
   }
-  
+
   return globalThis.__supabase_server_client__
 }
 
@@ -87,7 +88,7 @@ function getAdminSupabaseClient() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return null
   }
-  
+
   if (!globalThis.__supabase_admin_client__) {
     globalThis.__supabase_admin_client__ = createClient<Database>(
       supabaseUrl,
@@ -95,12 +96,12 @@ function getAdminSupabaseClient() {
       {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
-        }
+          persistSession: false,
+        },
       }
     )
   }
-  
+
   return globalThis.__supabase_admin_client__
 }
 
@@ -115,19 +116,19 @@ export function getSupabaseAdmin() {
 }
 
 // 使用 Proxy 實現延遲初始化的服務端客戶端
-export const supabaseServer = new Proxy({} as any, {
+export const supabaseServer = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(target, prop) {
     const client = getServerSupabaseClient()
     return client[prop as keyof typeof client]
-  }
+  },
 })
 
 // 使用 Proxy 實現延遲初始化的管理員客戶端
-export const supabaseAdmin = new Proxy({} as any, {
+export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(target, prop) {
     const client = getAdminSupabaseClient()
     return client && client[prop as keyof typeof client]
-  }
+  },
 })
 
 // Profile 相關功能
@@ -148,11 +149,7 @@ export interface Profile {
 
 // 取得使用者 profile
 export async function getUserProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single()
 
   if (error) {
     authLogger.error('Failed to fetch user profile', new Error(error.message), {
@@ -161,8 +158,8 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
       metadata: {
         userId,
         error: error.message,
-        code: error.code
-      }
+        code: error.code,
+      },
     })
     return null
   }
@@ -171,12 +168,10 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
 }
 
 // 建立或更新使用者 profile
-export async function upsertProfile(profile: Partial<Profile> & { id: string }): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .upsert(profile)
-    .select()
-    .single()
+export async function upsertProfile(
+  profile: Partial<Profile> & { id: string }
+): Promise<Profile | null> {
+  const { data, error } = await supabase.from('profiles').upsert(profile).select().single()
 
   if (error) {
     authLogger.error('Failed to upsert user profile', new Error(error.message), {
@@ -185,8 +180,8 @@ export async function upsertProfile(profile: Partial<Profile> & { id: string }):
       metadata: {
         userId: profile.id,
         error: error.message,
-        code: error.code
-      }
+        code: error.code,
+      },
     })
     return null
   }
@@ -195,7 +190,10 @@ export async function upsertProfile(profile: Partial<Profile> & { id: string }):
 }
 
 // 更新使用者 profile
-export async function updateProfile(userId: string, updates: Partial<Profile>): Promise<Profile | null> {
+export async function updateProfile(
+  userId: string,
+  updates: Partial<Profile>
+): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
     .update(updates)
@@ -210,8 +208,8 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
       metadata: {
         userId,
         error: error.message,
-        code: error.code
-      }
+        code: error.code,
+      },
     })
     return null
   }
@@ -236,6 +234,55 @@ export async function signUpUser(email: string, password: string, name: string, 
     throw new Error(error.message)
   }
 
+  // 後端補救機制：確保電話號碼儲存到 profiles 表
+  if (data.user && phone) {
+    try {
+      // 等待一點時間讓觸發器執行
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // 檢查 profile 是否已建立且有電話號碼
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('id', data.user.id)
+        .single()
+
+      if (profileError) {
+        authLogger.warn('無法檢查 profile', {
+          module: 'signUpUser',
+          action: 'profile_check',
+          metadata: { userId: data.user.id, error: profileError.message },
+        })
+      } else if (!profile?.phone && phone) {
+        // 如果觸發器沒有儲存電話號碼，手動更新
+        authLogger.info('補救機制：更新電話號碼到 profile', {
+          module: 'signUpUser',
+          action: 'phone_remedy',
+          metadata: { userId: data.user.id, phone: phone.substring(0, 3) + '***' },
+        })
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ phone })
+          .eq('id', data.user.id)
+
+        if (updateError) {
+          authLogger.error('無法更新電話號碼', updateError as Error, {
+            module: 'signUpUser',
+            action: 'phone_update',
+            metadata: { userId: data.user.id },
+          })
+        }
+      }
+    } catch (remedyError) {
+      authLogger.error('後端補救機制執行失敗', remedyError as Error, {
+        module: 'signUpUser',
+        action: 'remedy_mechanism',
+        metadata: { userId: data.user.id },
+      })
+      // 不拋出錯誤，避免影響註冊流程
+    }
+  }
+
   return data
 }
 
@@ -256,13 +303,13 @@ export async function signInUser(email: string, password: string) {
 // 登出使用者
 export async function signOutUser() {
   const { error } = await supabase.auth.signOut()
-  
+
   if (error) {
     throw new Error(error.message)
   }
 }
 
 // 監聽認證狀態變化
-export function onAuthStateChange(callback: (event: string, session: any) => void) {
+export function onAuthStateChange(callback: (event: string, session: unknown) => void) {
   return supabase.auth.onAuthStateChange(callback)
 }

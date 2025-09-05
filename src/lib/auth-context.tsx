@@ -42,7 +42,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true)
 
   // 檢查是否為 refresh token 錯誤
-  const isRefreshTokenError = (error: unknown): boolean => {
+  const isRefreshTokenError = useCallback((error: unknown): boolean => {
     const err = error as { message?: string; name?: string }
     return (
       err?.message?.includes('Invalid Refresh Token') ||
@@ -50,10 +50,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       err?.message?.includes('Refresh Token Not Found') ||
       err?.name === 'AuthApiError'
     )
-  }
+  }, [])
 
   // 強制登出並清理狀態
-  const handleForceLogout = async (reason: string) => {
+  const handleForceLogout = useCallback(async (reason: string) => {
     logger.info('Force logout triggered', {
       metadata: { reason, action: 'force_logout' },
     })
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         metadata: { reason, action: 'force_logout_error' },
       })
     }
-  }
+  }, [])
 
   // 處理認證狀態變化
   const handleAuthStateChange = useCallback(
@@ -181,7 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false)
       }
     },
-    [isRefreshTokenError, handleForceLogout]
+    [isRefreshTokenError, handleForceLogout, syncUserInterests]
   )
 
   // 監聽 Supabase 認證狀態變化
@@ -223,7 +223,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [handleAuthStateChange, isRefreshTokenError, handleForceLogout])
 
   // 同步使用者興趣清單
-  const syncUserInterests = async (userId: string) => {
+  const syncUserInterests = useCallback(async (userId: string) => {
     try {
       // 取得本地興趣清單
       const localInterests = UserInterestsService.getLocalInterests()
@@ -242,7 +242,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         metadata: { action: 'sync_interests' },
       })
     }
-  }
+  }, [])
 
   const login = async (credentials: LoginRequest): Promise<void> => {
     setIsLoading(true)

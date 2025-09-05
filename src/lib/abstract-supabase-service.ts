@@ -150,11 +150,7 @@ export abstract class AbstractSupabaseService<
   /**
    * 套用查詢選項到查詢建構器
    */
-  protected applyQueryOptions(
-     
-    query: any,
-    options?: QueryOptions
-  ) {
+  protected applyQueryOptions(query: any, options?: QueryOptions) {
     const normalizedOptions = normalizeQueryOptions(options)
 
     try {
@@ -238,10 +234,9 @@ export abstract class AbstractSupabaseService<
   async findAll(options?: QueryOptions): Promise<T[]> {
     try {
       const normalizedOptions = normalizeQueryOptions(options)
-      const client = this.getClient()
 
-      // Build query directly to avoid abstraction issues
-      let query = client.from(this.config.tableName)
+      // Use createQuery method to get proper query builder
+      let query = this.createQuery<DatabaseRecord>()
 
       // Apply filters
       if (Object.keys(normalizedOptions.filters).length > 0) {

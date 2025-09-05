@@ -1,6 +1,6 @@
 /**
  * 統一的日誌管理系統
- * 
+ *
  * 功能特色：
  * - 環境感知的日誌級別控制
  * - 結構化的日誌格式
@@ -17,7 +17,7 @@ export enum LogLevel {
   INFO = 1,
   WARN = 2,
   ERROR = 3,
-  FATAL = 4
+  FATAL = 4,
 }
 
 export interface LogContext {
@@ -25,7 +25,7 @@ export interface LogContext {
   requestId?: string
   module?: string
   action?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 export interface LogEntry {
@@ -45,12 +45,35 @@ class Logger {
   constructor() {
     this.isDevelopment = process.env.NODE_ENV === 'development'
     this.isProduction = process.env.NODE_ENV === 'production'
-    
+
     // 根據環境設定最低日誌級別
-    if (this.isProduction) {
-      this.minLevel = LogLevel.WARN  // 生產環境只記錄警告以上
+    const configuredLevel = process.env.LOG_LEVEL
+    if (configuredLevel) {
+      // 使用明確設定的日誌級別
+      switch (configuredLevel.toUpperCase()) {
+        case 'DEBUG':
+          this.minLevel = LogLevel.DEBUG
+          break
+        case 'INFO':
+          this.minLevel = LogLevel.INFO
+          break
+        case 'WARN':
+          this.minLevel = LogLevel.WARN
+          break
+        case 'ERROR':
+          this.minLevel = LogLevel.ERROR
+          break
+        case 'FATAL':
+          this.minLevel = LogLevel.FATAL
+          break
+        default:
+          this.minLevel = LogLevel.INFO
+          break
+      }
+    } else if (this.isProduction) {
+      this.minLevel = LogLevel.WARN // 生產環境只記錄警告以上
     } else if (process.env.NODE_ENV === 'test') {
-      this.minLevel = LogLevel.INFO  // 測試環境記錄資訊以上
+      this.minLevel = LogLevel.INFO // 測試環境記錄資訊以上
     } else {
       this.minLevel = LogLevel.DEBUG // 開發環境記錄所有
     }
@@ -62,15 +85,15 @@ class Logger {
 
   private formatMessage(level: LogLevel, message: string, context?: LogContext): LogEntry {
     const now = new Date()
-    const timestamp = this.isDevelopment 
-      ? now.toLocaleString('zh-TW', { 
-          year: 'numeric', 
-          month: '2-digit', 
+    const timestamp = this.isDevelopment
+      ? now.toLocaleString('zh-TW', {
+          year: 'numeric',
+          month: '2-digit',
           day: '2-digit',
-          hour: '2-digit', 
-          minute: '2-digit', 
+          hour: '2-digit',
+          minute: '2-digit',
           second: '2-digit',
-          fractionalSecondDigits: 3
+          fractionalSecondDigits: 3,
         })
       : now.toISOString()
 
@@ -79,7 +102,7 @@ class Logger {
       level,
       levelName: LogLevel[level],
       message,
-      context
+      context,
     }
   }
 
@@ -100,14 +123,20 @@ class Logger {
 
   private getLevelEmoji(level: LogLevel): string {
     if (!this.isDevelopment) return '' // 生產環境不使用表情符號
-    
+
     switch (level) {
-      case LogLevel.DEBUG: return '🐛'
-      case LogLevel.INFO: return '📝'
-      case LogLevel.WARN: return '⚠️'
-      case LogLevel.ERROR: return '❌'
-      case LogLevel.FATAL: return '💀'
-      default: return '📄'
+      case LogLevel.DEBUG:
+        return '🐛'
+      case LogLevel.INFO:
+        return '📝'
+      case LogLevel.WARN:
+        return '⚠️'
+      case LogLevel.ERROR:
+        return '❌'
+      case LogLevel.FATAL:
+        return '💀'
+      default:
+        return '📄'
     }
   }
 
@@ -115,7 +144,7 @@ class Logger {
     if (!this.shouldLog(level)) return
 
     const entry = this.formatMessage(level, message, context)
-    
+
     if (error && error.stack) {
       entry.stack = error.stack
     }
@@ -123,21 +152,21 @@ class Logger {
     // Console 輸出
     const consoleMethod = this.getConsoleMethod(level)
     const emoji = this.getLevelEmoji(level)
-    
+
     if (this.isDevelopment) {
       // 開發環境：彩色格式化輸出
       const prefix = `${emoji} [${entry.levelName}] ${entry.timestamp}`
       const contextStr = context ? ` | ${JSON.stringify(context)}` : ''
-      
+
       console[consoleMethod](`${prefix} | ${message}${contextStr}`)
-      
+
       if (error?.stack && level >= LogLevel.ERROR) {
         console.error(error.stack)
       }
     } else {
       // 生產環境：結構化 JSON 輸出
       console[consoleMethod](JSON.stringify(entry))
-      
+
       if (error && level >= LogLevel.ERROR) {
         // 送到錯誤追蹤服務 (Sentry)
         this.sendToErrorTracking(entry, error)
@@ -204,7 +233,7 @@ class Logger {
         action: entry.context?.action,
         requestId: entry.context?.requestId,
         userId: entry.context?.userId,
-        metadata: entry.context?.metadata
+        metadata: entry.context?.metadata,
       }
 
       if (entry.level === LogLevel.FATAL) {
@@ -218,7 +247,7 @@ class Logger {
       // 記錄麵包屑追蹤
       addBreadcrumb(entry.message, entry.context?.module || 'logger', {
         level: entry.levelName.toLowerCase(),
-        timestamp: entry.timestamp
+        timestamp: entry.timestamp,
       })
     } catch (sentryError) {
       // 避免 Sentry 錯誤影響主要功能

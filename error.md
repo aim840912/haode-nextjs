@@ -1,13 +1,12 @@
 Failed to compile.
-./src/hooks/useEnhancedInquiryForm.ts:313:48
-Type error: Argument of type 'CreateInquiryRequest' is not assignable to parameter of type 'Record<string, unknown>'.
-  Index signature for type 'string' is missing in type 'CreateInquiryRequest'.
-  311 |
-  312 |       // 使用新的 v1 API
-> 313 |       const response = await inquiryApi.create(inquiryRequest)
-      |                                                ^
-  314 |
-  315 |       if (response.success && response.data) {
-  316 |         logger.info('詢價單建立成功', {
+./src/lib/auth-context.tsx:107:14
+Type error: Parameter 'error' implicitly has an 'any' type.
+  105 |         handleAuthStateChange(session)
+  106 |       })
+> 107 |       .catch(error => {
+      |              ^
+  108 |         logger.error('Failed to get initial session', error as Error, {
+  109 |           metadata: { action: 'get_initial_session' },
+  110 |         })
 Next.js build worker exited with code: 1 and signal: null
 Error: Command "npm run build" exited with 1
