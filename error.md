@@ -1,8 +1,12 @@
 Failed to compile.
-src/app/api/admin/kpi-report/route.ts
-Type error: Route "src/app/api/admin/kpi-report/route.ts" has an invalid "GET" export:
-  Type "{ params?: Promise<Record<string, string>> | undefined; } | undefined" is not a valid type for the function's second argument.
-    Expected "RouteContext", got "{ params?: Promise<Record<string, string>> | undefined; } | undefined".
-      Expected "RouteContext", got "undefined".
+./src/app/api/admin/products/route.ts:343:7
+Type error: Type '"product"' is not assignable to type 'ResourceType'.
+  341 |       user_role: 'admin',
+  342 |       action: 'delete',
+> 343 |       resource_type: 'product' as const, // 指定具體的資源類型
+      |       ^
+  344 |       resource_id: id,
+  345 |       resource_details: productData
+  346 |         ? (transformFromDB(productData) as unknown as Record<string, unknown>)
 Next.js build worker exited with code: 1 and signal: null
 Error: Command "npm run build" exited with 1

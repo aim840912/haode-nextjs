@@ -538,6 +538,19 @@ export function createRateLimitMiddleware(config: RateLimitConfig) {
   return rateLimiter.createMiddleware(config)
 }
 
+// 重載：專門處理 ApiHandler 類型
+export function withRateLimit(
+  handler: (request: NextRequest, params?: unknown) => Promise<Response | NextResponse>,
+  config: RateLimitConfig
+): (request: NextRequest, params?: unknown) => Promise<Response | NextResponse>
+
+// 重載：處理一般泛型函數
+export function withRateLimit<T extends (...args: unknown[]) => Promise<Response | NextResponse>>(
+  handler: T,
+  config: RateLimitConfig
+): T
+
+// 實作
 export function withRateLimit<T extends (...args: unknown[]) => Promise<Response | NextResponse>>(
   handler: T,
   config: RateLimitConfig

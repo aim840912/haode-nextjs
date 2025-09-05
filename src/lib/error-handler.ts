@@ -13,18 +13,27 @@ import { AppError, ErrorFactory, ErrorUtils, ErrorResponse } from './errors'
 import { logger, apiLogger } from './logger'
 import { LogContext } from './logger'
 import { recordApiRequest } from './metrics'
-import { captureError, addBreadcrumb, setUser, startTransaction, finishTransaction } from './error-tracking'
+import {
+  captureError,
+  addBreadcrumb,
+  setUser,
+  startTransaction,
+  finishTransaction,
+} from './error-tracking'
 
 /**
  * API 路由處理器類型
  */
-export type ApiHandler = (request: NextRequest, params?: unknown) => Promise<NextResponse>
+export type ApiHandler = (
+  request: NextRequest,
+  params?: unknown
+) => Promise<Response | NextResponse>
 
 /**
  * 動態路由處理器類型
  */
 export type DynamicRouteHandler<T = Record<string, string>> = (
-  request: NextRequest, 
+  request: NextRequest,
   context: { params: Promise<T> }
 ) => Promise<NextResponse>
 
@@ -71,7 +80,7 @@ class ErrorStatsCollector {
   private alertThresholds = {
     errorRatePerMinute: 10, // 每分鐘錯誤超過 10 次就警告
     criticalErrorsPerHour: 5, // 每小時致命錯誤超過 5 次就警告
-    sameErrorPattern: 5 // 相同錯誤模式出現超過 5 次就警告
+    sameErrorPattern: 5, // 相同錯誤模式出現超過 5 次就警告
   }
 
   private constructor() {
@@ -132,7 +141,7 @@ class ErrorStatsCollector {
       byPath: {} as Record<string, number>,
       topPatterns: this.getTopErrorPatterns(5),
       trends: this.getErrorTrends(),
-      alerts: this.getActiveAlerts()
+      alerts: this.getActiveAlerts(),
     }
 
     recentErrors.forEach(stat => {
@@ -180,7 +189,7 @@ class ErrorStatsCollector {
     return {
       lastHour: this.stats.filter(stat => stat.timestamp >= hourAgo).length,
       lastDay: this.stats.filter(stat => stat.timestamp >= dayAgo).length,
-      hourlyAverage: this.stats.filter(stat => stat.timestamp >= dayAgo).length / 24
+      hourlyAverage: this.stats.filter(stat => stat.timestamp >= dayAgo).length / 24,
     }
   }
 
@@ -198,21 +207,21 @@ class ErrorStatsCollector {
       logger.warn('高錯誤率警報', {
         metadata: {
           errorsPerMinute: errorsLastMinute,
-          threshold: this.alertThresholds.errorRatePerMinute
-        }
+          threshold: this.alertThresholds.errorRatePerMinute,
+        },
       })
     }
 
     // 檢查致命錯誤
-    const criticalErrorsLastHour = this.stats.filter(stat => 
-      stat.timestamp >= lastHour && stat.statusCode >= 500
+    const criticalErrorsLastHour = this.stats.filter(
+      stat => stat.timestamp >= lastHour && stat.statusCode >= 500
     ).length
     if (criticalErrorsLastHour >= this.alertThresholds.criticalErrorsPerHour) {
       logger.error('致命錯誤過多警報', undefined, {
         metadata: {
           criticalErrorsPerHour: criticalErrorsLastHour,
-          threshold: this.alertThresholds.criticalErrorsPerHour
-        }
+          threshold: this.alertThresholds.criticalErrorsPerHour,
+        },
       })
     }
 
@@ -223,8 +232,8 @@ class ErrorStatsCollector {
           metadata: {
             pattern,
             occurrences: count,
-            threshold: this.alertThresholds.sameErrorPattern
-          }
+            threshold: this.alertThresholds.sameErrorPattern,
+          },
         })
       }
     })
@@ -233,9 +242,13 @@ class ErrorStatsCollector {
   /**
    * 取得活躍警報
    */
-  private getActiveAlerts(): Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }> {
+  private getActiveAlerts(): Array<{
+    type: string
+    message: string
+    severity: 'low' | 'medium' | 'high'
+  }> {
     const alerts: Array<{ type: string; message: string; severity: 'low' | 'medium' | 'high' }> = []
-    
+
     const now = Date.now()
     const lastMinute = now - 60 * 1000
     const lastHour = now - 60 * 60 * 1000
@@ -245,18 +258,18 @@ class ErrorStatsCollector {
       alerts.push({
         type: 'high_error_rate',
         message: `每分鐘錯誤數過高: ${errorsLastMinute}`,
-        severity: errorsLastMinute >= 20 ? 'high' : 'medium'
+        severity: errorsLastMinute >= 20 ? 'high' : 'medium',
       })
     }
 
-    const criticalErrorsLastHour = this.stats.filter(stat => 
-      stat.timestamp >= lastHour && stat.statusCode >= 500
+    const criticalErrorsLastHour = this.stats.filter(
+      stat => stat.timestamp >= lastHour && stat.statusCode >= 500
     ).length
     if (criticalErrorsLastHour >= this.alertThresholds.criticalErrorsPerHour) {
       alerts.push({
         type: 'critical_errors',
         message: `每小時致命錯誤過多: ${criticalErrorsLastHour}`,
-        severity: 'high'
+        severity: 'high',
       })
     }
 
@@ -281,8 +294,8 @@ class ErrorStatsCollector {
       logger.debug('錯誤統計清理完成', {
         metadata: {
           removed: initialLength - this.stats.length,
-          remaining: this.stats.length
-        }
+          remaining: this.stats.length,
+        },
       })
     }
   }
@@ -293,10 +306,12 @@ class ErrorStatsCollector {
   getDetailedStats(): object {
     return {
       totalStats: this.stats.length,
-      oldestEntry: this.stats.length > 0 ? new Date(Math.min(...this.stats.map(s => s.timestamp))) : null,
-      newestEntry: this.stats.length > 0 ? new Date(Math.max(...this.stats.map(s => s.timestamp))) : null,
+      oldestEntry:
+        this.stats.length > 0 ? new Date(Math.min(...this.stats.map(s => s.timestamp))) : null,
+      newestEntry:
+        this.stats.length > 0 ? new Date(Math.max(...this.stats.map(s => s.timestamp))) : null,
       errorPatterns: Array.from(this.errorPatterns.entries()).length,
-      thresholds: this.alertThresholds
+      thresholds: this.alertThresholds,
     }
   }
 }
@@ -306,10 +321,7 @@ class ErrorStatsCollector {
 /**
  * 統一的錯誤處理中間件 - 支持普通路由
  */
-export function withErrorHandler(
-  handler: ApiHandler,
-  options?: ErrorHandlerOptions
-): ApiHandler
+export function withErrorHandler(handler: ApiHandler, options?: ErrorHandlerOptions): ApiHandler
 
 /**
  * 統一的錯誤處理中間件 - 支持動態路由
@@ -355,22 +367,18 @@ export function withErrorHandler<T = Record<string, string>>(
     }
 
     // 記錄 API 請求麵包屑
-    addBreadcrumb(
-      `API 請求: ${request.method} ${new URL(request.url).pathname}`,
-      'http',
-      {
-        method: request.method,
-        url: new URL(request.url).pathname,
-        userAgent: request.headers.get('user-agent')
-      }
-    )
+    addBreadcrumb(`API 請求: ${request.method} ${new URL(request.url).pathname}`, 'http', {
+      method: request.method,
+      url: new URL(request.url).pathname,
+      userAgent: request.headers.get('user-agent'),
+    })
 
     try {
       // 記錄請求開始
       apiLogger.debug(`API 請求開始`, logContext)
 
       // 執行處理器（可能包含重試邏輯）
-      let result: NextResponse
+      let result: Response | NextResponse
 
       if (options.enableRetry) {
         result = await withRetry(
@@ -389,7 +397,10 @@ export function withErrorHandler<T = Record<string, string>>(
       } else {
         // 檢查是否為動態路由處理器
         if (context && typeof context === 'object' && 'params' in context) {
-          result = await (handler as DynamicRouteHandler<T>)(request, context as { params: Promise<T> })
+          result = await (handler as DynamicRouteHandler<T>)(
+            request,
+            context as { params: Promise<T> }
+          )
         } else {
           result = await (handler as ApiHandler)(request, context)
         }
@@ -414,7 +425,17 @@ export function withErrorHandler<T = Record<string, string>>(
       // 完成 Sentry 效能追蹤
       finishTransaction(sentryTransaction)
 
-      return result
+      // 確保返回正確的類型
+      if (result instanceof NextResponse) {
+        return result
+      }
+      // 如果是 Response，轉換為 NextResponse
+      const body = await result.text()
+      return new NextResponse(body, {
+        status: result.status,
+        statusText: result.statusText,
+        headers: result.headers,
+      })
     } catch (error) {
       // 轉換為標準錯誤格式
       let appError: AppError
@@ -616,8 +637,11 @@ export function getHealthStatus(): {
   const collector = ErrorStatsCollector.getInstance()
   const errorSummary = collector.getErrorSummary(300000) // 5 分鐘內的錯誤
 
-  const summary = errorSummary as any // 暫時使用 any 類型以避免建置錯誤
-  
+  const summary = errorSummary as {
+    total: number
+    byStatus?: Record<number, number>
+  }
+
   return {
     status: summary.total > 50 ? 'degraded' : 'healthy',
     timestamp: new Date().toISOString(),

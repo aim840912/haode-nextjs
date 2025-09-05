@@ -37,7 +37,7 @@ function generateTagsFromPath(pathname: string): string[] {
  * 為 API 回應提供自動快取功能
  */
 export function withApiCache(
-  handler: (req: NextRequest) => Promise<NextResponse>,
+  handler: (req: NextRequest) => Promise<Response | NextResponse>,
   options: CacheMiddlewareOptions = {}
 ) {
   const {
@@ -85,7 +85,18 @@ export function withApiCache(
 
     // 檢查是否跳過快取
     if (skipCache(req)) {
-      return await handler(req)
+      const response = await handler(req)
+      // 確保返回 NextResponse
+      if (response instanceof NextResponse) {
+        return response
+      }
+      // 如果是 Response，轉換為 NextResponse
+      const body = await response.text()
+      return new NextResponse(body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      })
     }
 
     // 嘗試從快取取得資料
@@ -131,14 +142,26 @@ export function withApiCache(
       }
     }
 
-    return response
+    // 確保返回 NextResponse
+    if (response instanceof NextResponse) {
+      return response
+    }
+    // 如果是 Response，轉換為 NextResponse
+    const body = await response.text()
+    return new NextResponse(body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    })
   }
 }
 
 /**
  * 產品 API 專用快取設定
  */
-export const withProductsCache = (handler: (req: NextRequest) => Promise<NextResponse>) =>
+export const withProductsCache = (
+  handler: (req: NextRequest) => Promise<Response | NextResponse>
+) =>
   withApiCache(handler, {
     ttl: 600, // 10 分鐘
     cacheKeyGenerator: req => {

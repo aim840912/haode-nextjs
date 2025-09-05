@@ -19,6 +19,7 @@ export type ResourceType =
   // 業務相關操作
   | 'inquiry' // 詢問單
   | 'inquiry_item' // 詢價項目
+  | 'product' // 產品
   | 'customer_data' // 客戶資料
   | 'audit_log' // 審計日誌
   // 系統管理操作
@@ -185,6 +186,7 @@ export const AUDIT_ACTION_COLORS: Record<AuditAction, string> = {
 export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   inquiry: '詢問單',
   inquiry_item: '詢價項目',
+  product: '產品',
   customer_data: '客戶資料',
   audit_log: '審計日誌',
   security_policy: '安全政策',
