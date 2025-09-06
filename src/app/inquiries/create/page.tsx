@@ -23,12 +23,25 @@ function InquiryFormContent() {
     customer_email: user?.email || '',
   });
 
+  // 自動保存恢復提示狀態
+  const [showAutoSaveNotice, setShowAutoSaveNotice] = useState(false);
+
   // 當使用者狀態改變時，更新表單中的 email
   useEffect(() => {
     if (user?.email && inquiryForm.data.customer_email !== user.email) {
       inquiryForm.updateField('customer_email', user.email);
     }
   }, [user?.email, inquiryForm]);
+
+  // 檢測是否有自動保存的資料被恢復
+  useEffect(() => {
+    if (inquiryForm.isDirty && (inquiryForm.data.customer_name || inquiryForm.data.notes || inquiryForm.data.delivery_address)) {
+      setShowAutoSaveNotice(true);
+      // 3秒後自動隱藏提示
+      const timer = setTimeout(() => setShowAutoSaveNotice(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [inquiryForm.isDirty, inquiryForm.data.customer_name, inquiryForm.data.notes, inquiryForm.data.delivery_address]);
 
   // 產品數量狀態
   const [productQuantity, setProductQuantity] = useState(quantity);
@@ -102,6 +115,16 @@ function InquiryFormContent() {
             <h1 className="text-2xl sm:text-3xl font-bold text-amber-900 mb-2">產品詢價</h1>
             <p className="text-gray-600 text-sm sm:text-base px-4 sm:px-0">填寫以下資訊，我們將儘快為您報價</p>
             
+            {/* 自動保存恢復提示 */}
+            {showAutoSaveNotice && (
+              <div className="mt-2 flex items-center justify-center text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg py-2 px-4">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                已恢復之前自動保存的表單內容
+              </div>
+            )}
+            
             {/* 自動儲存指示器 */}
             {inquiryForm.isAutoSaving && (
               <div className="mt-2 flex items-center justify-center text-sm text-blue-600">
@@ -109,7 +132,7 @@ function InquiryFormContent() {
                 正在自動儲存...
               </div>
             )}
-            {inquiryForm.isDirty && !inquiryForm.isAutoSaving && (
+            {inquiryForm.isDirty && !inquiryForm.isAutoSaving && !showAutoSaveNotice && (
               <div className="mt-2 text-sm text-green-600 flex items-center justify-center">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -172,12 +195,15 @@ function InquiryFormContent() {
                       type="text"
                       value={inquiryForm.data.customer_name}
                       onChange={(e) => inquiryForm.updateField('customer_name', e.target.value)}
+                      onBlur={() => inquiryForm.validateOnBlur('customer_name')}
                       className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
                         inquiryForm.validation.customer_name 
                           ? 'border-red-300 bg-red-50' 
                           : 'border-gray-300'
                       }`}
                       placeholder="請輸入您的姓名"
+                      autoComplete="name"
+                      inputMode="text"
                       required
                     />
                     {inquiryForm.validation.customer_name && (
@@ -190,12 +216,15 @@ function InquiryFormContent() {
                       type="email"
                       value={inquiryForm.data.customer_email}
                       onChange={(e) => inquiryForm.updateField('customer_email', e.target.value)}
+                      onBlur={() => inquiryForm.validateOnBlur('customer_email')}
                       className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
                         inquiryForm.validation.customer_email 
                           ? 'border-red-300 bg-red-50' 
                           : 'border-gray-300'
                       }`}
                       placeholder="請輸入您的 Email"
+                      autoComplete="email"
+                      inputMode="email"
                       required
                     />
                     {inquiryForm.validation.customer_email && (
@@ -209,12 +238,15 @@ function InquiryFormContent() {
                     type="tel"
                     value={inquiryForm.data.customer_phone}
                     onChange={(e) => inquiryForm.updateField('customer_phone', e.target.value)}
+                    onBlur={() => inquiryForm.validateOnBlur('customer_phone')}
                     className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
                       inquiryForm.validation.customer_phone 
                         ? 'border-red-300 bg-red-50' 
                         : 'border-gray-300'
                     }`}
                     placeholder="請輸入您的聯絡電話"
+                    autoComplete="tel"
+                    inputMode="tel"
                   />
                   {inquiryForm.validation.customer_phone && (
                     <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.customer_phone}</p>
@@ -238,6 +270,8 @@ function InquiryFormContent() {
                           : 'border-gray-300'
                       }`}
                       placeholder="請輸入配送地址（可選）"
+                      autoComplete="street-address"
+                      inputMode="text"
                     />
                     {inquiryForm.validation.delivery_address && (
                       <p className="mt-1 text-sm text-red-600">{inquiryForm.validation.delivery_address}</p>
@@ -249,6 +283,7 @@ function InquiryFormContent() {
                       type="date"
                       value={inquiryForm.data.preferred_delivery_date}
                       onChange={(e) => inquiryForm.updateField('preferred_delivery_date', e.target.value)}
+                      onBlur={() => inquiryForm.validateOnBlur('preferred_delivery_date')}
                       className={`w-full border rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
                         inquiryForm.validation.preferred_delivery_date 
                           ? 'border-red-300 bg-red-50' 
@@ -269,8 +304,9 @@ function InquiryFormContent() {
                 <textarea
                   value={inquiryForm.data.notes}
                   onChange={(e) => inquiryForm.updateField('notes', e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 sm:px-3 sm:py-2 h-24 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors"
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 sm:px-3 sm:py-2 h-28 sm:h-24 text-gray-900 text-base focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors resize-none"
                   placeholder="如有特殊需求或其他說明，請在此註明"
+                  inputMode="text"
                 />
               </div>
 

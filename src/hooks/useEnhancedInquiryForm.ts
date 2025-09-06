@@ -182,16 +182,63 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
     return errors
   }, [state.data])
 
-  // 更新表單欄位
-  const updateField = useCallback(<K extends keyof InquiryFormData>(
+  // 即時驗證單一欄位
+  const validateField = useCallback(<K extends keyof InquiryFormData>(
     field: K,
     value: InquiryFormData[K]
+  ): string | undefined => {
+    switch (field) {
+      case 'customer_name':
+        if (typeof value === 'string' && !value.trim()) {
+          return '請輸入姓名'
+        }
+        break
+      case 'customer_email':
+        if (typeof value === 'string') {
+          if (!value.trim()) {
+            return '請輸入 Email'
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            return '請輸入有效的 Email 格式'
+          }
+        }
+        break
+      case 'customer_phone':
+        if (typeof value === 'string' && value.trim() && !/^[\d\s\-\+\(\)]+$/.test(value)) {
+          return '請輸入有效的電話號碼'
+        }
+        break
+      case 'preferred_delivery_date':
+        if (typeof value === 'string' && value) {
+          const selectedDate = new Date(value)
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          if (selectedDate < today) {
+            return '配送日期不能早於今天'
+          }
+        }
+        break
+    }
+    return undefined
+  }, [])
+
+  // 更新表單欄位（含即時驗證）
+  const updateField = useCallback(<K extends keyof InquiryFormData>(
+    field: K,
+    value: InquiryFormData[K],
+    validateNow: boolean = true
   ) => {
+    // 即時驗證
+    const error = validateNow ? validateField(field, value) : undefined
+
     setState(prev => ({
       ...prev,
       data: { ...prev.data, [field]: value },
       isDirty: true,
-      validation: { ...prev.validation, [field]: undefined }, // 清除該欄位的錯誤
+      validation: { 
+        ...prev.validation, 
+        [field]: error // 設定或清除該欄位的錯誤
+      },
     }))
 
     // 設定自動儲存延遲
@@ -202,7 +249,7 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
     autosaveTimeoutRef.current = setTimeout(() => {
       autoSave()
     }, AUTOSAVE_DELAY)
-  }, [autoSave])
+  }, [autoSave, validateField])
 
   // 添加詢價項目
   const addItem = useCallback((item: CreateInquiryItemRequest) => {
@@ -423,6 +470,22 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
     }
   }, [])
 
+  // 欄位失焦時的驗證
+  const validateOnBlur = useCallback(<K extends keyof InquiryFormData>(field: K) => {
+    const value = state.data[field]
+    const error = validateField(field, value)
+    
+    if (error) {
+      setState(prev => ({
+        ...prev,
+        validation: {
+          ...prev.validation,
+          [field]: error
+        }
+      }))
+    }
+  }, [state.data, validateField])
+
   return {
     // 狀態
     ...state,
@@ -436,7 +499,9 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
     resetForm,
     clearAutoSave,
     
-    // 工具函數
+    // 驗證函數
     validateForm,
+    validateField,
+    validateOnBlur,
   }
 }

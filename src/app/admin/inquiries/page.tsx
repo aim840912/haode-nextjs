@@ -619,11 +619,31 @@ function AdminInquiriesPage() {
           metadata: { templateId, templateTitle: template.title },
         })
 
-        // TODO: 實作模板使用邏輯，例如填充表單或打開模態
-        // 可以使用 fillTemplate 來填入變數值
+        // 實作模板使用邏輯
+        setSelectedTemplate(template)
+        setShowTemplateSelector(true)
+        
+        // 準備模板變數（根據選中的詢價單填充）
+        if (selectedInquiry) {
+          const defaultVariables: Record<string, string> = {
+            customerName: selectedInquiry.customer_name || '客戶',
+            inquiryId: selectedInquiry.id || '',
+            productName: selectedInquiry.items?.[0]?.product_name || '產品',
+            currentDate: new Date().toLocaleDateString('zh-TW'),
+          }
+          setTemplateVariables(defaultVariables)
+          
+          // 使用 fillTemplate 生成初始回覆內容
+          const filledContent = fillTemplate(template, defaultVariables)
+          setGeneratedReply(filledContent)
+        } else {
+          // 沒有選中詢價單時，使用空變數
+          setTemplateVariables({})
+          setGeneratedReply(template.content)
+        }
       }
     },
-    [templates]
+    [templates, selectedInquiry, fillTemplate]
   )
 
   // 載入詢問單（當用戶、篩選條件改變時）
