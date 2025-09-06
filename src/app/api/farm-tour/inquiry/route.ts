@@ -41,7 +41,7 @@ async function handlePOST(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   // 解析請求資料
   let farmTourData: FarmTourInquiryRequest

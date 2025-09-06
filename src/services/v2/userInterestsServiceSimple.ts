@@ -10,7 +10,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import type { UserInterest } from '../userInterestsService'
@@ -35,15 +35,15 @@ export class UserInterestsServiceV2Simple {
   /**
    * 取得 Supabase 客戶端
    */
-  private getSupabaseClient(): typeof supabaseAdmin {
-    return supabaseAdmin
+  private getSupabaseClient() {
+    return getSupabaseAdmin()
   }
 
   /**
    * 取得管理員客戶端
    */
-  private getAdminClient(): typeof supabaseAdmin {
-    return supabaseAdmin
+  private getAdminClient() {
+    return getSupabaseAdmin()
   }
 
   /**
@@ -101,7 +101,7 @@ export class UserInterestsServiceV2Simple {
     try {
       this.validateInputs(userId)
 
-      const client = this.getSupabaseClient()
+      const client = this.getSupabaseClient()!
       const { data, error } = await client
         .from('user_interests')
         .select('product_id')
@@ -143,8 +143,8 @@ export class UserInterestsServiceV2Simple {
     try {
       this.validateInputs(userId, productId)
 
-      const client = this.getSupabaseClient()
-      const { error } = await client
+      const client = this.getSupabaseClient()!
+      const { error } = await (client)
         .from('user_interests')
         .insert({
           user_id: userId,
@@ -192,7 +192,7 @@ export class UserInterestsServiceV2Simple {
     try {
       this.validateInputs(userId, productId)
 
-      const client = this.getSupabaseClient()
+      const client = this.getSupabaseClient()!
       const { error } = await client
         .from('user_interests')
         .delete()
@@ -250,8 +250,8 @@ export class UserInterestsServiceV2Simple {
         product_id: productId
       } satisfies Database['public']['Tables']['user_interests']['Insert']))
 
-      const client = this.getSupabaseClient()
-      const { error } = await client
+      const client = this.getSupabaseClient()!
+      const { error } = await (client)
         .from('user_interests')
         .upsert(interests, { onConflict: 'user_id,product_id' })
 
@@ -288,7 +288,7 @@ export class UserInterestsServiceV2Simple {
       this.validateInputs(userId, productId)
 
       // 先檢查是否已存在
-      const client = this.getSupabaseClient()
+      const client = this.getSupabaseClient()!
       const { data: existing, error: checkError } = await client
         .from('user_interests')
         .select('id')
@@ -493,7 +493,7 @@ export class UserInterestsServiceV2Simple {
   }> {
     try {
       // 簡單的連線測試
-      const client = this.getSupabaseClient()
+      const client = this.getSupabaseClient()!
       const { error } = await client.from('user_interests').select('id').limit(1)
 
       const isHealthy = !error || error.code === 'PGRST116' // 表格可能為空

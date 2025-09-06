@@ -94,8 +94,8 @@ async function handlePOST(request: NextRequest) {
       for (const [sizeKey, sizeResult] of Object.entries(results)) {
         const imageData = {
           product_id: productId,
-          url: (sizeResult as any).url,
-          path: (sizeResult as any).path,
+          url: sizeResult.url,
+          path: sizeResult.path,
           alt: `${file.name} (${sizeKey})`,
           position: position,
           size: sizeKey as 'thumbnail' | 'medium' | 'large',

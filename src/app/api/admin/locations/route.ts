@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
+import { Database } from '@/types/database'
 import { LocationSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
@@ -37,6 +38,7 @@ async function handleGET(request: NextRequest) {
     metadata: { adminAccess: true, clientInfo: authResult.metadata },
   })
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }
@@ -67,6 +69,7 @@ async function handlePOST(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }
@@ -90,7 +93,7 @@ async function handlePOST(request: NextRequest) {
   })
 
   // 轉換資料格式（camelCase -> snake_case）
-  const dbLocation = {
+  const dbLocation: Database['public']['Tables']['locations']['Insert'] = {
     name: result.data.name,
     title: result.data.title,
     address: result.data.address,
@@ -110,7 +113,7 @@ async function handlePOST(request: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('locations')
-    .insert([dbLocation])
+    .insert(dbLocation)
     .select()
     .single()
 
@@ -135,6 +138,7 @@ async function handlePUT(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }
@@ -222,6 +226,7 @@ async function handleDELETE(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }
@@ -249,7 +254,7 @@ async function handleDELETE(request: NextRequest) {
     },
   })
 
-  const { error } = await supabaseAdmin.from('locations').delete().eq('id', id)
+  const { error } = await supabaseAdmin.from('locations').delete().eq('id', parseInt(id))
 
   if (error) throw error
 

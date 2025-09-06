@@ -1,6 +1,9 @@
 import { ScheduleItem, ScheduleService } from '@/types/schedule'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
+
+// 類型斷言，解決 Supabase 重載問題
+const getAdmin = (): any => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 ScheduleServiceV2Simple 取代
@@ -47,7 +50,7 @@ export class SupabaseScheduleService implements ScheduleService {
       weather_note: scheduleData.weatherNote
     }
 
-    const { data, error } = await supabaseAdmin!
+    const { data, error } = await getAdmin()
       .from('schedule')
       .insert([insertData])
       .select()
@@ -78,7 +81,7 @@ export class SupabaseScheduleService implements ScheduleService {
     if (scheduleData.specialOffer !== undefined) updateData.special_offer = scheduleData.specialOffer
     if (scheduleData.weatherNote !== undefined) updateData.weather_note = scheduleData.weatherNote
 
-    const { data, error } = await supabaseAdmin!
+    const { data, error } = await getAdmin()
       .from('schedule')
       .update(updateData)
       .eq('id', id)
@@ -97,7 +100,7 @@ export class SupabaseScheduleService implements ScheduleService {
   }
 
   async deleteSchedule(id: string): Promise<void> {
-    const { error } = await supabaseAdmin!
+    const { error } = await getAdmin()
       .from('schedule')
       .delete()
       .eq('id', id)
@@ -112,7 +115,7 @@ export class SupabaseScheduleService implements ScheduleService {
   }
 
   async getScheduleById(id: string): Promise<ScheduleItem | null> {
-    const { data, error } = await supabaseAdmin!
+    const { data, error } = await getAdmin()
       .from('schedule')
       .select('*')
       .eq('id', id)

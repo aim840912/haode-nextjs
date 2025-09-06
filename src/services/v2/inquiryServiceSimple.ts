@@ -3,9 +3,12 @@
  * 直接實作業務邏輯，使用統一的錯誤處理和日誌記錄
  */
 
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+
+// 類型斷言，解決 Supabase 重載問題
+const getAdmin = (): any => getSupabaseAdmin();
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 import {
   InquiryService,
@@ -57,7 +60,7 @@ export class InquiryServiceV2Simple implements InquiryService {
    * 取得 Supabase 客戶端
    */
   private getSupabaseClient(): ServiceSupabaseClient {
-    return supabaseAdmin!
+    return getAdmin()!
   }
 
   /**
@@ -84,7 +87,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   /**
    * 解析農場參觀資料
    */
-  private parseFarmTourDataFromNotes(record: SupabaseInquiryRecord): SupabaseInquiryRecord {
+  private parseFarmTourDataFromNotes(record: any): SupabaseInquiryRecord {
     if (!record.notes || !record.notes.startsWith('FARM_TOUR_DATA:')) {
       return record
     }
@@ -117,7 +120,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   /**
    * 轉換資料庫記錄為實體
    */
-  private transformFromDB(record: SupabaseInquiryRecord): InquiryWithItems {
+  private transformFromDB(record: any): InquiryWithItems {
     const parsedRecord = this.parseFarmTourDataFromNotes(record)
 
     return {
@@ -192,7 +195,7 @@ export class InquiryServiceV2Simple implements InquiryService {
 
       // 建立詢問單主記錄
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: inquiry, error: inquiryError } = await (client.from('inquiries') as any)
+      const { data: inquiry, error: inquiryError } = await (client.from('inquiries'))
         .insert([inquiryData])
         .select()
         .single()
@@ -216,7 +219,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         }))
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: items, error: itemsError } = await (client.from('inquiry_items') as any)
+        const { data: items, error: itemsError } = await (client.from('inquiry_items'))
           .insert(itemsData)
           .select()
 
@@ -229,7 +232,7 @@ export class InquiryServiceV2Simple implements InquiryService {
           })
         }
 
-        inquiryItems = items || []
+        inquiryItems = (items as any) || []
       }
 
       const result = this.transformFromDB({
@@ -276,7 +279,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getUserInquiries', { userId, params })
       }
 
-      const result = (data || []).map((record: SupabaseInquiryRecord) =>
+      const result = (data || []).map((record: any) =>
         this.transformFromDB(record)
       )
 
@@ -314,7 +317,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getInquiryById', { userId, inquiryId })
       }
 
-      return data ? this.transformFromDB(data) : null
+      return data ? this.transformFromDB(data as any) : null
     } catch (error) {
       this.handleError(error, 'getInquiryById', { userId, inquiryId })
     }
@@ -339,7 +342,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: updated, error } = await (client.from('inquiries') as any)
+      const { data: updated, error } = await (client.from('inquiries'))
         .update(updateData)
         .eq('id', inquiryId)
         .eq('user_id', userId)
@@ -388,7 +391,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getAllInquiries', { params })
       }
 
-      return (data || []).map((record: SupabaseInquiryRecord) => this.transformFromDB(record))
+      return (data || []).map((record: any) => this.transformFromDB(record))
     } catch (error) {
       this.handleError(error, 'getAllInquiries', { params })
     }
@@ -406,7 +409,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: updated, error } = await (client.from('inquiries') as any)
+      const { data: updated, error } = await (client.from('inquiries'))
         .update(updateData)
         .eq('id', inquiryId)
         .select(
@@ -430,7 +433,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   async getInquiryStats(): Promise<InquiryStats[]> {
     try {
       const client = this.getSupabaseClient()
-      const { data, error } = await client.from('inquiry_stats').select('*')
+      const { data, error } = await (client as any).from('inquiry_stats').select('*')
 
       if (error) {
         this.handleError(error, 'getInquiryStats')
@@ -484,7 +487,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
       }
 
-      return data ? this.transformFromDB(data) : null
+      return data ? this.transformFromDB(data as any) : null
     } catch (error) {
       this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
     }
@@ -512,7 +515,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         }))
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: insertError } = await (client.from('inquiry_items') as any).insert(itemsData)
+        const { error: insertError } = await (client.from('inquiry_items')).insert(itemsData)
 
         if (insertError) {
           this.handleError(insertError, 'updateInquiryItems:insert', {

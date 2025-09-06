@@ -10,9 +10,12 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+
+// 類型斷言，解決 Supabase 重載問題
+const getAdmin = (): any => getSupabaseAdmin();
 import { UpdateDataObject } from '@/types/service.types'
 import { FarmTourActivity } from '@/types/farmTour'
 
@@ -120,7 +123,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       })
 
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('farm_tour')
         .select('*')
         .order('created_at', { ascending: false })
@@ -129,7 +132,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
         this.handleError(error, 'getAll')
       }
 
-      const activities = data?.map(this.transformFromDB.bind(this)) || []
+      const activities = (data as any)?.map(this.transformFromDB.bind(this)) || []
 
       dbLogger.info('農場體驗活動清單查詢成功', {
         module: this.moduleName,
@@ -159,7 +162,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       }
 
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('farm_tour')
         .select('*')
         .eq('id', id)
@@ -216,7 +219,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
 
       const insertData = this.transformToDB(activityData)
 
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await getAdmin()
         .from('farm_tour')
         .insert([insertData])
         .select()
@@ -272,7 +275,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       if (activityData.image !== undefined) updateData.image = activityData.image
       if (activityData.available !== undefined) updateData.available = activityData.available
 
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await getAdmin()
         .from('farm_tour')
         .update(updateData)
         .eq('id', id)
@@ -316,7 +319,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
         throw new ValidationError('活動 ID 不能為空')
       }
 
-      const { error } = await supabaseAdmin!
+      const { error } = await getAdmin()
         .from('farm_tour')
         .delete()
         .eq('id', id)
@@ -347,7 +350,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   }> {
     try {
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('farm_tour')
         .select('count')
         .limit(1)

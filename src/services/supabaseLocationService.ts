@@ -1,6 +1,9 @@
 import { Location } from '@/types/location'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
+
+// 類型斷言，解決 Supabase 重載問題
+const getAdmin = (): any => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 LocationServiceV2Simple 取代
@@ -38,7 +41,11 @@ class SupabaseLocationService implements LocationService {
 
   async addLocation(locationData: Omit<Location, 'id' | 'createdAt' | 'updatedAt'>): Promise<Location> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const supabaseAdmin = getAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { data, error } = await supabaseAdmin
         .from('locations')
         .insert([this.transformToDB(locationData)])
         .select()
@@ -58,7 +65,11 @@ class SupabaseLocationService implements LocationService {
 
   async updateLocation(id: number, locationData: Partial<Omit<Location, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Location> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const supabaseAdmin = getAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { data, error } = await supabaseAdmin
         .from('locations')
         .update(this.transformToDB(locationData))
         .eq('id', id)
@@ -80,7 +91,11 @@ class SupabaseLocationService implements LocationService {
 
   async deleteLocation(id: number): Promise<void> {
     try {
-      const { error } = await supabaseAdmin!
+      const supabaseAdmin = getAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { error } = await supabaseAdmin
         .from('locations')
         .delete()
         .eq('id', id)

@@ -60,7 +60,7 @@ async function handleGET(
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single();
+      .single() as { data: { role: string } | null; error: any };
 
     if (!profile || !['admin', 'auditor'].includes(profile.role)) {
       throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌');
@@ -120,7 +120,7 @@ async function handleDELETE(
       .from('profiles')
       .select('role, name')
       .eq('id', user.id)
-      .single();
+      .single() as { data: { role: string; name: string } | null; error: any };
 
     if (!profile || profile.role !== 'admin') {
       throw new AuthorizationError('權限不足，只有管理員可以刪除審計日誌');
@@ -131,7 +131,7 @@ async function handleDELETE(
       .from('audit_logs')
       .select('*')
       .eq('id', id)
-      .single();
+      .single() as { data: any | null; error: any };
 
     if (fetchError) {
       apiLogger.error('取得待刪除審計日誌失敗', fetchError, {
@@ -165,8 +165,8 @@ async function handleDELETE(
     await auditLogService.log({
       user_id: user.id,
       user_email: user.email || 'unknown@email.com',
-      user_name: profile.name,
-      user_role: profile.role,
+      user_name: profile.name || 'Unknown',
+      user_role: profile.role || 'Unknown',
       action: 'delete',
       resource_type: 'audit_log',
       resource_id: id,

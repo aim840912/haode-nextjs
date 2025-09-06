@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { Product } from '@/types/product'
 import { checkAdminPermission, createAuthErrorResponse } from '@/lib/admin-auth-middleware'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
@@ -96,6 +96,7 @@ async function handleGET(request: NextRequest) {
   }
 
   try {
+    const supabaseAdmin = getSupabaseAdmin()
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 })
     }
@@ -125,6 +126,7 @@ async function handlePOST(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }
@@ -143,7 +145,7 @@ async function handlePOST(request: NextRequest) {
   const productData = result.data
 
   // 轉換資料格式
-  const dbProduct: Record<string, unknown> = {
+  const dbProduct: any = {
     name: productData.name,
     description: productData.description,
     price: productData.price,
@@ -183,6 +185,7 @@ async function handlePUT(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }
@@ -245,6 +248,7 @@ async function handleDELETE(request: NextRequest) {
     return createAuthErrorResponse(authResult)
   }
 
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
     throw new Error('Supabase admin not configured')
   }

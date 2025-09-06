@@ -10,7 +10,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { UpdateDataObject } from '@/types/service.types'
@@ -157,7 +157,11 @@ export class ScheduleServiceV2Simple implements ScheduleService {
 
       const insertData = this.transformToInsertData(scheduleData)
 
-      const { data, error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { data, error } = await supabaseAdmin
         .from('schedule')
         .insert([insertData])
         .select()
@@ -212,7 +216,11 @@ export class ScheduleServiceV2Simple implements ScheduleService {
       if (scheduleData.specialOffer !== undefined) updateData.special_offer = scheduleData.specialOffer || null
       if (scheduleData.weatherNote !== undefined) updateData.weather_note = scheduleData.weatherNote || null
 
-      const { data, error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { data, error } = await supabaseAdmin
         .from('schedule')
         .update(updateData)
         .eq('id', id)
@@ -256,7 +264,11 @@ export class ScheduleServiceV2Simple implements ScheduleService {
         throw new ValidationError('排程 ID 不能為空')
       }
 
-      const { error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { error } = await supabaseAdmin
         .from('schedule')
         .delete()
         .eq('id', id)

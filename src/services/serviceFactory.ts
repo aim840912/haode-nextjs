@@ -90,7 +90,7 @@ export async function getProductService(): Promise<ProductService> {
  */
 async function createJsonService(): Promise<ProductService> {
   const { JsonProductService } = await import('./productService')
-  const service = new (JsonProductService as any)()
+  const service = new JsonProductService()
   dbLogger.info('JSON 服務初始化成功', { 
     module: 'ServiceFactory', 
     action: 'createJsonService' 
@@ -144,7 +144,8 @@ async function createService<T>(
   jsonServiceCreator: () => Promise<T>,
   testConnection?: (service: T) => Promise<any>
 ): Promise<T> {
-  const useSupabase = shouldUseSupabase(serviceType as any)
+  // 對於不支援的服務類型，默認使用 JSON
+  const useSupabase = serviceType !== 'userInterests' ? shouldUseSupabase(serviceType as any) : false
   
   dbLogger.info(`初始化${serviceType}服務`, { 
     module: 'ServiceFactory', 

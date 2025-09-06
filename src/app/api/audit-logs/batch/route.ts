@@ -60,7 +60,7 @@ async function handlePOST(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   if (!profile || profile.role !== 'admin') {
     throw new AuthorizationError('權限不足，只有管理員可以批量操作審計日誌')
@@ -79,16 +79,16 @@ async function handlePOST(request: NextRequest) {
       if (!ids || !Array.isArray(ids)) {
         throw new ValidationError('delete_by_ids 操作需要提供 ids 陣列')
       }
-      return await handleDeleteByIds(supabase, user, profile, ids, request)
+      return await handleDeleteByIds(supabase as any, user, profile as any, ids, request)
 
     case 'delete_by_filters':
       if (!filters) {
         throw new ValidationError('delete_by_filters 操作需要提供 filters 物件')
       }
-      return await handleDeleteByFilters(supabase, user, profile, filters, request)
+      return await handleDeleteByFilters(supabase as any, user, profile as any, filters, request)
 
     case 'cleanup_old':
-      return await handleCleanupOld(supabase, user, profile, filters?.days || 365, request)
+      return await handleCleanupOld(supabase as any, user, profile as any, filters?.days || 365, request)
 
     default:
       throw new ValidationError('不支援的操作類型')
@@ -220,10 +220,10 @@ async function handleDeleteByFilters(
     query = query.ilike('user_email', `%${filters.user_email}%`)
   }
   if (filters.action) {
-    query = query.eq('action', filters.action)
+    query = query.eq('action', filters.action as any)
   }
   if (filters.resource_type) {
-    query = query.eq('resource_type', filters.resource_type)
+    query = query.eq('resource_type', filters.resource_type as any)
   }
 
   const { data, error: deleteError } = await query.select()

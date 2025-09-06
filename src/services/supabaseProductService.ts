@@ -1,6 +1,9 @@
 import { Product, ProductService } from '@/types/product'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
+
+// 類型斷言，解決 Supabase 重載問題
+const getAdmin = (): any => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 ProductServiceV2 (UnifiedProductService) 取代
@@ -38,7 +41,7 @@ class SupabaseProductService implements ProductService {
   async getAllProducts(): Promise<Product[]> {
     try {
       // 使用管理員客戶端來獲取所有產品（包含下架的）
-      const client = supabaseAdmin || supabase
+      const client = getAdmin() || supabase
       const { data, error } = await client
         .from('products')
         .select('*')
@@ -54,7 +57,7 @@ class SupabaseProductService implements ProductService {
 
   async addProduct(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await getAdmin()
         .from('products')
         .insert([this.transformToDB(productData)])
         .select()
@@ -71,7 +74,7 @@ class SupabaseProductService implements ProductService {
 
   async updateProduct(id: string, productData: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product> {
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await getAdmin()
         .from('products')
         .update(this.transformToDB(productData))
         .eq('id', id)
@@ -102,7 +105,7 @@ class SupabaseProductService implements ProductService {
       }
       
       // 然後刪除資料庫記錄
-      const { error } = await supabaseAdmin!
+      const { error } = await getAdmin()
         .from('products')
         .delete()
         .eq('id', id)
@@ -117,7 +120,7 @@ class SupabaseProductService implements ProductService {
   async getProductById(id: string): Promise<Product | null> {
     try {
       // 使用管理員客戶端來獲取產品（支援查詢下架產品）
-      const client = supabaseAdmin || supabase
+      const client = getAdmin() || supabase
       const { data, error } = await client
         .from('products')
         .select('*')

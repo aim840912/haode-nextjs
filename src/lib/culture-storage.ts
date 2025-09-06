@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from './supabase-auth';
+import { supabase, getSupabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { dbLogger } from './logger';
 import { SupabaseStorageBucket, SupabaseStorageFile } from '@/types/supabase.types';
@@ -16,6 +16,7 @@ export const CULTURE_STORAGE_BUCKET = 'culture';
  * 初始化 Culture Storage Bucket
  */
 export async function initializeCultureStorageBucket() {
+  const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
     throw new CultureStorageError('Supabase admin client 未配置');
   }
@@ -42,7 +43,11 @@ export async function initializeCultureStorageBucket() {
         throw new CultureStorageError('建立 culture storage bucket 失敗', error);
       }
 
-      dbLogger.info('Culture Storage bucket 建立成功:', data);
+      dbLogger.info('Culture Storage bucket 建立成功', {
+        module: 'CultureStorage',
+        action: 'createBucket',
+        metadata: { bucketName: data.name }
+      });
     }
 
     return true;
@@ -63,6 +68,7 @@ export async function uploadCultureImageToStorage(
 ): Promise<{ url: string; path: string }> {
   try {
     // 檢查 admin client 是否配置
+    const supabaseAdmin = getSupabaseAdmin();
     if (!supabaseAdmin) {
       throw new CultureStorageError('Supabase admin client 未配置');
     }
@@ -118,6 +124,7 @@ export async function uploadCultureImageToStorage(
  */
 export async function deleteCultureImageFromStorage(filePath: string): Promise<void> {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     if (!supabaseAdmin) {
       throw new CultureStorageError('Supabase admin client 未配置');
     }
@@ -151,10 +158,15 @@ export async function deleteCultureImages(cultureId: string): Promise<{
   error?: string;
 }> {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new CultureStorageError('Supabase admin client 未配置');
+    }
+    
     dbLogger.info(`🗑️ 開始刪除時光典藏 ${cultureId} 的圖片...`);
     
     // 列出該項目的所有圖片
-    const { data: files, error: listError } = await supabaseAdmin!.storage
+    const { data: files, error: listError } = await supabaseAdmin.storage
       .from(CULTURE_STORAGE_BUCKET)
       .list(cultureId);
 
@@ -167,14 +179,21 @@ export async function deleteCultureImages(cultureId: string): Promise<{
       };
     }
 
-    dbLogger.info(`📁 在資料夾 ${cultureId} 發現 ${files.length} 個檔案:`, 
-      files.map((f: SupabaseStorageFile) => f.name));
+    dbLogger.info(`📁 在資料夾 ${cultureId} 發現 ${files.length} 個檔案`, {
+      module: 'CultureStorage',
+      action: 'deleteAllFiles',
+      metadata: { 
+        cultureId,
+        fileCount: files.length,
+        files: files.map((f: SupabaseStorageFile) => f.name)
+      }
+    });
 
     // 建立要刪除的檔案路徑列表
     const filePaths = files.map((file: SupabaseStorageFile) => `${cultureId}/${file.name}`);
 
     // 批量刪除所有圖片
-    const { error: deleteError } = await supabaseAdmin!.storage
+    const { error: deleteError } = await supabaseAdmin.storage
       .from(CULTURE_STORAGE_BUCKET)
       .remove(filePaths);
 
@@ -217,7 +236,12 @@ export async function listCultureImages(cultureId: string): Promise<Array<{
   metadata: Record<string, unknown>;
 }>> {
   try {
-    const { data, error } = await supabaseAdmin!.storage
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new CultureStorageError('Supabase admin client 未配置');
+    }
+    
+    const { data, error } = await supabaseAdmin.storage
       .from(CULTURE_STORAGE_BUCKET)
       .list(cultureId);
 
@@ -226,14 +250,14 @@ export async function listCultureImages(cultureId: string): Promise<Array<{
     }
 
     return (data || []).map((file: SupabaseStorageFile) => {
-      const { data: urlData } = supabaseAdmin!.storage
+      const { data: urlData } = supabaseAdmin.storage
         .from(CULTURE_STORAGE_BUCKET)
         .getPublicUrl(`${cultureId}/${file.name}`);
 
       return {
         name: file.name,
         url: urlData.publicUrl,
-        metadata: file.metadata
+        metadata: file.metadata || {}
       };
     });
   } catch (error) {
@@ -249,13 +273,18 @@ export async function listCultureImages(cultureId: string): Promise<Array<{
  */
 export async function checkCultureImageExists(filePath: string): Promise<boolean> {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      return false;
+    }
+    
     const pathParts = filePath.split('/');
     if (pathParts.length < 2) return false;
     
     const cultureId = pathParts[0];
     const fileName = pathParts[1];
 
-    const { data, error } = await supabaseAdmin!.storage
+    const { data, error } = await supabaseAdmin.storage
       .from(CULTURE_STORAGE_BUCKET)
       .list(cultureId);
 
@@ -273,7 +302,12 @@ export async function checkCultureImageExists(filePath: string): Promise<boolean
  * 取得時光典藏圖片的公開 URL
  */
 export function getCultureImagePublicUrl(filePath: string): string {
-  const { data } = supabaseAdmin!.storage
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    throw new CultureStorageError('Supabase admin client 未配置');
+  }
+  
+  const { data } = supabaseAdmin.storage
     .from(CULTURE_STORAGE_BUCKET)
     .getPublicUrl(filePath);
 
@@ -288,7 +322,12 @@ export async function getCultureImageSignedUrl(
   expiresIn: number = 3600
 ): Promise<string> {
   try {
-    const { data, error } = await supabaseAdmin!.storage
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new CultureStorageError('Supabase admin client 未配置');
+    }
+    
+    const { data, error } = await supabaseAdmin.storage
       .from(CULTURE_STORAGE_BUCKET)
       .createSignedUrl(filePath, expiresIn);
 

@@ -15,14 +15,14 @@ interface ErrorTrackingConfig {
   enablePerformanceMonitoring?: boolean
 }
 
-interface UserAction {
+interface UserAction extends Record<string, unknown> {
   action: string
   path: string
   timestamp: number
   metadata?: Record<string, any>
 }
 
-interface PerformanceMetrics {
+interface PerformanceMetrics extends Record<string, unknown> {
   loadTime: number
   renderTime: number
   navigationTime: number

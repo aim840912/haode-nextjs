@@ -1,5 +1,5 @@
 import { NewsItem, NewsService } from '@/types/news'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 
 export class SupabaseNewsService implements NewsService {
@@ -12,7 +12,10 @@ export class SupabaseNewsService implements NewsService {
         .order('publish_date', { ascending: false })
       
       if (error) {
-        dbLogger.info('Error fetching news:', error)
+        dbLogger.error('Error fetching news', error as Error, {
+          module: 'SupabaseNewsService',
+          action: 'getNews'
+        })
         throw new Error('Failed to fetch news')
       }
       
@@ -62,14 +65,18 @@ export class SupabaseNewsService implements NewsService {
       publish_date: new Date().toISOString()
     }
 
-    const { data, error } = await supabaseAdmin!
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { data, error } = await supabaseAdmin
       .from('news')
       .insert([insertData])
       .select()
       .single()
 
     if (error) {
-      dbLogger.info('Error adding news:', error)
+      dbLogger.error('Error adding news', new Error(error.message || 'Failed to add news'))
       throw new Error('Failed to add news')
     }
 
@@ -90,7 +97,11 @@ export class SupabaseNewsService implements NewsService {
     if (newsData.author !== undefined) dbUpdateData.author = newsData.author
     if (newsData.featured !== undefined) dbUpdateData.featured = newsData.featured
 
-    const { data, error } = await supabaseAdmin!
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { data, error } = await supabaseAdmin
       .from('news')
       .update(dbUpdateData)
       .eq('id', id)
@@ -98,7 +109,7 @@ export class SupabaseNewsService implements NewsService {
       .single()
 
     if (error) {
-      dbLogger.info('Error updating news:', error)
+      dbLogger.error('Error updating news', new Error(error.message || 'Failed to update news'))
       throw new Error('Failed to update news')
     }
     
@@ -121,13 +132,17 @@ export class SupabaseNewsService implements NewsService {
       }
 
       // 然後刪除資料庫記錄
-      const { error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { error } = await supabaseAdmin
         .from('news')
         .delete()
         .eq('id', id)
 
       if (error) {
-        dbLogger.info('Error deleting news:', error)
+        dbLogger.error('Error deleting news', new Error(error.message || 'Failed to delete news'))
         throw new Error('Failed to delete news')
       }
     } catch (error) {

@@ -1,10 +1,16 @@
 import { InquiryStatus, InquiryType } from './inquiry'
 import { AuditAction, ResourceType, UserRole } from './audit'
 
-// 定義 JSONB 類型
-type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[]
+// Supabase 標準 JSON 類型
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       profiles: {
@@ -12,7 +18,7 @@ export type Database = {
           id: string
           name: string
           phone: string | null
-          address: JsonValue // JSONB type
+          address: Json
           role: 'customer' | 'admin'
           created_at: string
           updated_at: string
@@ -21,7 +27,7 @@ export type Database = {
           id: string
           name: string
           phone?: string | null
-          address?: JsonValue
+          address?: Json
           role?: 'customer' | 'admin'
           created_at?: string
           updated_at?: string
@@ -30,11 +36,75 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
-          address?: JsonValue
+          address?: Json
           role?: 'customer' | 'admin'
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      locations: {
+        Row: {
+          id: number
+          name: string
+          title: string
+          address: string
+          landmark: string | null
+          phone: string | null
+          line_id: string | null
+          hours: string | null
+          closed_days: string | null
+          parking: string | null
+          public_transport: string | null
+          features: Json
+          specialties: Json
+          coordinates: Json
+          image: string | null
+          is_main: boolean | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          name: string
+          title: string
+          address: string
+          landmark?: string | null
+          phone?: string | null
+          line_id?: string | null
+          hours?: string | null
+          closed_days?: string | null
+          parking?: string | null
+          public_transport?: string | null
+          features?: Json
+          specialties?: Json
+          coordinates?: Json
+          image?: string | null
+          is_main?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          name?: string
+          title?: string
+          address?: string
+          landmark?: string | null
+          phone?: string | null
+          line_id?: string | null
+          hours?: string | null
+          closed_days?: string | null
+          parking?: string | null
+          public_transport?: string | null
+          features?: Json
+          specialties?: Json
+          coordinates?: Json
+          image?: string | null
+          is_main?: boolean | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       products: {
         Row: {
@@ -73,6 +143,103 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
+      }
+      news: {
+        Row: {
+          id: string
+          title: string
+          summary: string
+          content: string
+          author: string
+          publish_date: string
+          category: string
+          tags: string[]
+          image_url: string | null
+          featured: boolean
+          is_published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          summary: string
+          content: string
+          author: string
+          publish_date: string
+          category: string
+          tags?: string[]
+          image_url?: string | null
+          featured?: boolean
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          summary?: string
+          content?: string
+          author?: string
+          publish_date?: string
+          category?: string
+          tags?: string[]
+          image_url?: string | null
+          featured?: boolean
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      schedule: {
+        Row: {
+          id: string
+          title: string
+          location: string
+          date: string
+          time: string
+          status: 'upcoming' | 'ongoing' | 'completed'
+          products: string[]
+          description: string
+          contact: string
+          special_offer: string | null
+          weather_note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          location: string
+          date: string
+          time: string
+          status?: 'upcoming' | 'ongoing' | 'completed'
+          products?: string[]
+          description: string
+          contact: string
+          special_offer?: string | null
+          weather_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          location?: string
+          date?: string
+          time?: string
+          status?: 'upcoming' | 'ongoing' | 'completed'
+          products?: string[]
+          description?: string
+          contact?: string
+          special_offer?: string | null
+          weather_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       culture: {
         Row: {
@@ -111,62 +278,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-      }
-      audit_logs: {
-        Row: {
-          id: string
-          user_id: string | null
-          user_email: string
-          user_name: string | null
-          user_role: UserRole | null
-          action: AuditAction
-          resource_type: ResourceType
-          resource_id: string
-          resource_details: JsonValue
-          previous_data: JsonValue
-          new_data: JsonValue
-          ip_address: string | null
-          user_agent: string | null
-          session_id: string | null
-          metadata: JsonValue
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id?: string | null
-          user_email: string
-          user_name?: string | null
-          user_role?: UserRole | null
-          action: AuditAction
-          resource_type: ResourceType
-          resource_id: string
-          resource_details?: JsonValue
-          previous_data?: JsonValue
-          new_data?: JsonValue
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          metadata?: JsonValue
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string | null
-          user_email?: string
-          user_name?: string | null
-          user_role?: UserRole | null
-          action?: AuditAction
-          resource_type?: ResourceType
-          resource_id?: string | null
-          resource_details?: JsonValue
-          previous_data?: JsonValue
-          new_data?: JsonValue
-          ip_address?: string | null
-          user_agent?: string | null
-          session_id?: string | null
-          metadata?: JsonValue
-          created_at?: string
-        }
+        Relationships: []
       }
       inquiries: {
         Row: {
@@ -238,6 +350,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       inquiry_items: {
         Row: {
@@ -279,69 +392,7 @@ export type Database = {
           created_at?: string
           updated_at?: string
         }
-      }
-      // 其他表的類型定義...
-      locations: {
-        Row: {
-          id: number
-          name: string
-          title: string
-          address: string
-          landmark: string | null
-          phone: string | null
-          line_id: string | null
-          hours: string | null
-          closed_days: string | null
-          parking: string | null
-          public_transport: string | null
-          features: JsonValue
-          specialties: JsonValue
-          coordinates: JsonValue
-          image: string | null
-          is_main: boolean | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: number
-          name: string
-          title: string
-          address: string
-          landmark?: string | null
-          phone?: string | null
-          line_id?: string | null
-          hours?: string | null
-          closed_days?: string | null
-          parking?: string | null
-          public_transport?: string | null
-          features?: JsonValue
-          specialties?: JsonValue
-          coordinates?: JsonValue
-          image?: string | null
-          is_main?: boolean | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          name?: string
-          title?: string
-          address?: string
-          landmark?: string | null
-          phone?: string | null
-          line_id?: string | null
-          hours?: string | null
-          closed_days?: string | null
-          parking?: string | null
-          public_transport?: string | null
-          features?: JsonValue
-          specialties?: JsonValue
-          coordinates?: JsonValue
-          image?: string | null
-          is_main?: boolean | null
-          created_at?: string
-          updated_at?: string
-        }
+        Relationships: []
       }
       user_interests: {
         Row: {
@@ -362,82 +413,71 @@ export type Database = {
           product_id?: string
           created_at?: string
         }
+        Relationships: []
       }
-    }
-    Views: {
-      audit_stats: {
+      audit_logs: {
         Row: {
-          action: AuditAction
-          resource_type: ResourceType
-          user_role: UserRole | null
-          count: number
-          unique_users: number
-          date: string
-        }
-      }
-      user_activity_stats: {
-        Row: {
+          id: string
           user_id: string | null
           user_email: string
           user_name: string | null
           user_role: UserRole | null
-          total_actions: number
-          view_count: number
-          update_count: number
-          delete_count: number
-          last_activity: string
-          first_activity: string
-        }
-      }
-      resource_access_stats: {
-        Row: {
+          action: AuditAction
           resource_type: ResourceType
           resource_id: string
-          access_count: number
-          unique_users: number
-          actions_performed: AuditAction[]
-          last_accessed: string
-          first_accessed: string
+          resource_details: Json
+          previous_data: Json
+          new_data: Json
+          ip_address: string | null
+          user_agent: string | null
+          session_id: string | null
+          metadata: Json
+          created_at: string
         }
+        Insert: {
+          id?: string
+          user_id?: string | null
+          user_email: string
+          user_name?: string | null
+          user_role?: UserRole | null
+          action: AuditAction
+          resource_type: ResourceType
+          resource_id: string
+          resource_details?: Json
+          previous_data?: Json
+          new_data?: Json
+          ip_address?: string | null
+          user_agent?: string | null
+          session_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string | null
+          user_email?: string
+          user_name?: string | null
+          user_role?: UserRole | null
+          action?: AuditAction
+          resource_type?: ResourceType
+          resource_id?: string | null
+          resource_details?: Json
+          previous_data?: Json
+          new_data?: Json
+          ip_address?: string | null
+          user_agent?: string | null
+          session_id?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: []
       }
     }
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      get_user_audit_history: {
-        Args: {
-          target_user_id: string
-          limit_count?: number
-          offset_count?: number
-        }
-        Returns: Array<{
-          id: string
-          action: AuditAction
-          resource_type: ResourceType
-          resource_id: string
-          resource_details: JsonValue
-          created_at: string
-        }>
-      }
-      get_resource_audit_history: {
-        Args: {
-          target_resource_type: ResourceType
-          target_resource_id: string
-          limit_count?: number
-        }
-        Returns: Array<{
-          id: string
-          user_email: string
-          user_name: string | null
-          user_role: UserRole | null
-          action: AuditAction
-          created_at: string
-          ip_address: string | null
-          metadata: JsonValue
-        }>
-      }
-      cleanup_old_audit_logs: {
-        Args: { days_to_keep?: number }
-        Returns: number
-      }
+      [_ in never]: never  
     }
     Enums: {
       [_ in never]: never

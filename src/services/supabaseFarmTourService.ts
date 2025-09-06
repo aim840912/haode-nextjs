@@ -1,6 +1,9 @@
 import { FarmTourActivity } from '@/types/farmTour'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
+
+// 類型斷言，解決 Supabase 重載問題
+const getAdmin = (): any => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 FarmTourServiceV2Simple 取代
@@ -72,7 +75,11 @@ export class SupabaseFarmTourService {
       available: activityData.available
     }
 
-    const { data, error } = await supabaseAdmin!
+    const supabaseAdmin = getAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { data, error } = await supabaseAdmin
       .from('farm_tour')
       .insert([insertData])
       .select()
@@ -104,7 +111,11 @@ export class SupabaseFarmTourService {
     if (updateData.image !== undefined) dbUpdateData.image = updateData.image
     if (updateData.available !== undefined) dbUpdateData.available = updateData.available
 
-    const { data, error } = await supabaseAdmin!
+    const supabaseAdmin = getAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { data, error } = await supabaseAdmin
       .from('farm_tour')
       .update(dbUpdateData)
       .eq('id', id)
@@ -124,7 +135,11 @@ export class SupabaseFarmTourService {
   }
 
   async delete(id: string): Promise<boolean> {
-    const { error } = await supabaseAdmin!
+    const supabaseAdmin = getAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { error } = await supabaseAdmin
       .from('farm_tour')
       .delete()
       .eq('id', id)

@@ -30,7 +30,7 @@ async function handleGET(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以查看統計資料')
@@ -67,7 +67,7 @@ async function handleGET(request: NextRequest) {
   const { data: basicStats, error: queryError } = await supabase
     .from('inquiries')
     .select('id, status, is_read, is_replied, created_at, replied_at')
-    .gte('created_at', startDateISO)
+    .gte('created_at', startDateISO) as { data: any[] | null; error: any }
 
   if (queryError) {
     apiLogger.error('查詢統計資料錯誤', queryError, {

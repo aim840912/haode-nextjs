@@ -40,7 +40,7 @@ async function checkAdminRole(userId: string): Promise<boolean> {
       .from('profiles')
       .select('role')
       .eq('id', userId)
-      .single()
+      .single() as { data: { role: string } | null; error: any }
 
     return profile?.role === 'admin'
   } catch (error) {

@@ -26,7 +26,7 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string } | null; error: any }
 
   if (profileError) {
     apiLogger.error('查詢使用者資料失敗', profileError, {

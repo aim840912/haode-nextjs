@@ -150,7 +150,7 @@ export abstract class AbstractSupabaseService<
   /**
    * 套用查詢選項到查詢建構器
    */
-  protected applyQueryOptions(query: any, options?: QueryOptions) {
+  protected applyQueryOptions(query: ReturnType<typeof this.createQuery>, options?: QueryOptions) {
     const normalizedOptions = normalizeQueryOptions(options)
 
     try {
@@ -399,7 +399,7 @@ export abstract class AbstractSupabaseService<
 
       if (this.config.softDeleteField) {
         // 軟刪除
-        const { error } = await (query as any)
+        const { error } = await query
           .update({ [this.config.softDeleteField]: new Date().toISOString() })
           .eq('id', id)
           .is(this.config.softDeleteField, null)
@@ -409,7 +409,7 @@ export abstract class AbstractSupabaseService<
         }
       } else {
         // 硬刪除
-        const { error } = await (query as any).delete().eq('id', id)
+        const { error } = await query.delete().eq('id', id)
 
         if (error) {
           this.handleError(error, 'delete', { id })

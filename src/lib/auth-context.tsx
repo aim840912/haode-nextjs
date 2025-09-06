@@ -96,6 +96,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
+  // 同步使用者興趣清單
+  const syncUserInterests = useCallback(async (userId: string) => {
+    try {
+      // 取得本地興趣清單
+      const localInterests = UserInterestsService.getLocalInterests()
+
+      // 同步到雲端並取得合併後的清單
+      const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests)
+
+      // 清除本地儲存，改用雲端資料
+      UserInterestsService.clearLocalInterests()
+
+      logger.debug('User interests synced', {
+        metadata: { count: mergedInterests.length, action: 'sync_interests' },
+      })
+    } catch (error) {
+      logger.error('Error syncing user interests', error as Error, {
+        metadata: { action: 'sync_interests' },
+      })
+    }
+  }, [])
+
   // 處理認證狀態變化
   const handleAuthStateChange = useCallback(
     async (session: Session | null) => {
@@ -221,28 +243,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     return () => subscription.unsubscribe()
   }, [handleAuthStateChange, isRefreshTokenError, handleForceLogout])
-
-  // 同步使用者興趣清單
-  const syncUserInterests = useCallback(async (userId: string) => {
-    try {
-      // 取得本地興趣清單
-      const localInterests = UserInterestsService.getLocalInterests()
-
-      // 同步到雲端並取得合併後的清單
-      const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests)
-
-      // 清除本地儲存，改用雲端資料
-      UserInterestsService.clearLocalInterests()
-
-      logger.debug('User interests synced', {
-        metadata: { count: mergedInterests.length, action: 'sync_interests' },
-      })
-    } catch (error) {
-      logger.error('Error syncing user interests', error as Error, {
-        metadata: { action: 'sync_interests' },
-      })
-    }
-  }, [])
 
   const login = async (credentials: LoginRequest): Promise<void> => {
     setIsLoading(true)

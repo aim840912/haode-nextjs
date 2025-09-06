@@ -155,9 +155,9 @@ export function SearchExample() {
 }
 
 export function SocialShareExample() {
-  const handleShare = (platform: string, contentType: string, contentId?: string) => {
+  const handleShare = (platform: 'facebook' | 'line' | 'email' | 'copy_link', contentType: string, contentId?: string) => {
     // 追蹤分享事件
-    conversionEvents.share(platform as any, contentType, contentId)
+    conversionEvents.share(platform, contentType, contentId)
   }
 
   return (

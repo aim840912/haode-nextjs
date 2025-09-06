@@ -10,7 +10,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { Location, LocationService } from '@/types/location'
@@ -133,7 +133,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'getLocations')
       }
 
-      const locations = data?.map(this.transformFromDB.bind(this)) || []
+      const locations = (data as any)?.map(this.transformFromDB.bind(this)) || []
 
       dbLogger.info('地點清單查詢成功', {
         module: this.moduleName,
@@ -173,7 +173,11 @@ export class LocationServiceV2Simple implements LocationService {
 
       const insertData = this.transformToDB(locationData)
 
-      const { data, error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { data, error } = await supabaseAdmin
         .from('locations')
         .insert([insertData])
         .select()
@@ -183,7 +187,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'addLocation')
       }
 
-      const newLocation = this.transformFromDB(data)
+      const newLocation = this.transformFromDB(data as any)
 
       dbLogger.info('地點新增成功', {
         module: this.moduleName,
@@ -233,7 +237,11 @@ export class LocationServiceV2Simple implements LocationService {
       if (locationData.image !== undefined) updateData.image = locationData.image
       if (locationData.isMain !== undefined) updateData.is_main = locationData.isMain
 
-      const { data, error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { data, error } = await supabaseAdmin
         .from('locations')
         .update(updateData)
         .eq('id', id)
@@ -248,7 +256,7 @@ export class LocationServiceV2Simple implements LocationService {
         throw new NotFoundError(`地點 ${id} 不存在`)
       }
 
-      const updatedLocation = this.transformFromDB(data)
+      const updatedLocation = this.transformFromDB(data as any)
 
       dbLogger.info('地點更新成功', {
         module: this.moduleName,
@@ -277,7 +285,11 @@ export class LocationServiceV2Simple implements LocationService {
         throw new ValidationError('地點 ID 必須為正數')
       }
 
-      const { error } = await supabaseAdmin!
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new Error('Supabase admin client not available')
+      }
+      const { error } = await supabaseAdmin
         .from('locations')
         .delete()
         .eq('id', id)
@@ -331,7 +343,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'getLocationById')
       }
 
-      const location = this.transformFromDB(data)
+      const location = this.transformFromDB(data as any)
 
       dbLogger.info('地點查詢成功', {
         module: this.moduleName,

@@ -563,7 +563,7 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
       
       const filteredData = data.filter(item => {
         return this.searchConfig!.searchableFields.some(field => {
-          const fieldValue = (item as any)[field]
+          const fieldValue = item[field as keyof T]
           if (!fieldValue) return false
           
           const stringValue = this.searchConfig!.caseSensitive 

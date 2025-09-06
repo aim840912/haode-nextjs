@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from './supabase-auth';
+import { supabase, getSupabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { dbLogger } from '@/lib/logger';
 import { SupabaseStorageBucket, SupabaseStorageFile, StorageFileWithUrl } from '@/types/supabase.types';
@@ -16,6 +16,7 @@ export const STORAGE_BUCKET = 'products';
  * 初始化 Storage Bucket（僅在服務端使用）
  */
 export async function initializeStorageBucket() {
+  const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
     throw new SupabaseStorageError('Supabase admin client 未配置');
   }
@@ -296,7 +297,7 @@ export async function listProductImages(productId: string): Promise<Array<{
       return {
         name: file.name,
         url: urlData.publicUrl,
-        metadata: file.metadata
+        metadata: file.metadata || {}
       };
     });
   } catch (error) {

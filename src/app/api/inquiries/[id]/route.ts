@@ -48,7 +48,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   const isAdmin = profile?.role === 'admin'
   const { searchParams } = new URL(request.url)
@@ -81,7 +81,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
   // 管理員查看庫存查詢單時自動標記為已讀
   if (isAdmin && adminMode && !inquiry.is_read) {
     try {
-      await supabase
+      await (supabase as any)
         .from('inquiries')
         .update({
           is_read: true,
@@ -163,7 +163,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   const isAdmin = profile?.role === 'admin'
 
@@ -302,7 +302,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以刪除詢問單')
@@ -379,7 +379,7 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string; name: string } | null; error: any }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以更新庫存查詢單狀態')
@@ -435,7 +435,7 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
   }
 
   // 執行更新
-  const { data: updatedInquiry, error } = await supabase
+  const { data: updatedInquiry, error } = await (supabase as any)
     .from('inquiries')
     .update(updateData)
     .eq('id', inquiryId)

@@ -251,7 +251,7 @@ export class InquiryServiceV2
    */
   protected createQuery(useAdmin: boolean = false): any {
     const query = super.createQuery(useAdmin)
-    return (query as any).select(`
+    return (query).select(`
       *,
       inquiry_items (*)
     `)

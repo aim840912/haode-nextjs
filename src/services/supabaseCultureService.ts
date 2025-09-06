@@ -1,5 +1,5 @@
 import { CultureItem, CultureService } from '@/types/culture'
-import { supabase, supabaseAdmin } from '@/lib/supabase-auth'
+import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import {
   uploadCultureImageToStorage,
@@ -88,14 +88,18 @@ export class SupabaseCultureService implements CultureService {
       images: [], // 先設為空陣列，稍後更新
     }
 
-    const { data, error } = await supabaseAdmin!
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { data, error } = await supabaseAdmin
       .from('culture')
       .insert([insertData])
       .select()
       .single()
 
     if (error) {
-      dbLogger.info('Error adding culture item:', error)
+      dbLogger.error('Error adding culture item', new Error(error.message || 'Failed to add culture item'))
       throw new Error('Failed to add culture item')
     }
 
@@ -134,13 +138,17 @@ export class SupabaseCultureService implements CultureService {
 
       // 更新資料庫中的圖片 URL
       if (images.length > 0) {
-        const { error: updateError } = await supabaseAdmin!
+        const supabaseAdmin = getSupabaseAdmin()
+        if (!supabaseAdmin) {
+          throw new Error('Supabase admin client not available')
+        }
+        const { error: updateError } = await supabaseAdmin
           .from('culture')
           .update({ images })
           .eq('id', cultureId)
 
         if (updateError) {
-          dbLogger.info('Error updating images:', updateError)
+          dbLogger.error('Error updating images', new Error(updateError.message || 'Failed to update images'))
           // 嘗試清理已上傳的檔案
           await deleteCultureImages(cultureId)
           throw new Error('Failed to update culture item with images')
@@ -159,7 +167,10 @@ export class SupabaseCultureService implements CultureService {
         },
       })
       // 如果圖片處理失敗，刪除已建立的資料庫記錄
-      await supabaseAdmin!.from('culture').delete().eq('id', cultureId)
+      const supabaseAdmin = getSupabaseAdmin()
+      if (supabaseAdmin) {
+        await supabaseAdmin.from('culture').delete().eq('id', cultureId)
+      }
 
       throw new Error('Failed to process culture item images')
     }
@@ -228,7 +239,11 @@ export class SupabaseCultureService implements CultureService {
       dbUpdateData.images = images
     }
 
-    const { data, error } = await supabaseAdmin!
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { data, error } = await supabaseAdmin
       .from('culture')
       .update(dbUpdateData)
       .eq('id', id)
@@ -236,7 +251,7 @@ export class SupabaseCultureService implements CultureService {
       .single()
 
     if (error) {
-      dbLogger.info('Error updating culture item:', error)
+      dbLogger.error('Error updating culture item', new Error(error.message || 'Failed to update culture item'))
       throw new Error('Failed to update culture item')
     }
 
@@ -270,11 +285,15 @@ export class SupabaseCultureService implements CultureService {
     }
 
     // 然後刪除資料庫記錄
-    const { error } = await supabaseAdmin!.from('culture').delete().eq('id', id)
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client not available')
+    }
+    const { error } = await supabaseAdmin.from('culture').delete().eq('id', id)
 
     if (error) {
-      dbLogger.info('Error deleting culture item', {
-        metadata: { error: (error as Error).message },
+      dbLogger.error('Error deleting culture item', new Error(error.message || 'Failed to delete culture item'), {
+        metadata: { errorCode: error.code },
       })
       throw new Error('Failed to delete culture item')
     }

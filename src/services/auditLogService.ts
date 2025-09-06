@@ -11,7 +11,7 @@
  * - ❌ 不記錄靜態頁面訪問：page_view
  */
 
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import {
   AuditLogService,
@@ -33,6 +33,12 @@ type JsonValue = Database['public']['Tables']['audit_logs']['Row']['resource_det
 export class SupabaseAuditLogService implements AuditLogService {
   // 記錄審計日誌
   async log(request: CreateAuditLogRequest): Promise<void> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      dbLogger.error('Supabase admin client 未配置')
+      return
+    }
+    
     try {
       // 驗證請求資料
       const validation = AuditLogUtils.validateAuditLogRequest(request)
@@ -73,7 +79,7 @@ export class SupabaseAuditLogService implements AuditLogService {
       }
 
       // 插入審計日誌
-      const { error } = await supabaseAdmin!.from('audit_logs').insert([auditData])
+      const { error } = await supabaseAdmin.from('audit_logs').insert([auditData])
 
       if (error) {
         dbLogger.info('審計日誌記錄失敗', {
@@ -110,6 +116,11 @@ export class SupabaseAuditLogService implements AuditLogService {
 
   // 檢查是否為重複的日誌記錄
   private async isDuplicateLogEntry(request: CreateAuditLogRequest): Promise<boolean> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      return false
+    }
+    
     try {
       // 只對查看操作進行重複檢查，避免影響重要的修改操作
       if (!['view', 'view_list'].includes(request.action)) {
@@ -118,7 +129,7 @@ export class SupabaseAuditLogService implements AuditLogService {
 
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
 
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await supabaseAdmin
         .from('audit_logs')
         .select('id')
         .eq('user_email', request.user_email)
@@ -150,8 +161,13 @@ export class SupabaseAuditLogService implements AuditLogService {
 
   // 查詢審計日誌
   async getAuditLogs(params?: AuditLogQueryParams): Promise<AuditLog[]> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client 未配置')
+    }
+    
     try {
-      let query = supabaseAdmin!.from('audit_logs').select('*')
+      let query = supabaseAdmin.from('audit_logs').select('*')
 
       // 套用篩選條件
       if (params) {
@@ -210,7 +226,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`查詢審計日誌失敗: ${error.message}`)
       }
 
-      return data || []
+      return (data || []) as any
     } catch (error) {
       dbLogger.error(
         '查詢審計日誌異常',
@@ -229,12 +245,17 @@ export class SupabaseAuditLogService implements AuditLogService {
     limit: number = 100,
     offset: number = 0
   ): Promise<AuditLog[]> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client 未配置')
+    }
+    
     try {
-      const { data, error } = await supabaseAdmin!.rpc('get_user_audit_history', {
+      const { data, error } = await (supabaseAdmin as any).rpc('get_user_audit_history', {
         target_user_id: userId,
         limit_count: limit,
         offset_count: offset,
-      } as Database['public']['Functions']['get_user_audit_history']['Args'])
+      })
 
       if (error) {
         dbLogger.error(
@@ -247,7 +268,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得使用者活動歷史失敗: ${error.message}`)
       }
 
-      return data || []
+      return (data || []) as any
     } catch (error) {
       dbLogger.error(
         '取得使用者活動歷史異常',
@@ -266,12 +287,17 @@ export class SupabaseAuditLogService implements AuditLogService {
     resourceId: string,
     limit: number = 100
   ): Promise<AuditLog[]> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client 未配置')
+    }
+    
     try {
-      const { data, error } = await supabaseAdmin!.rpc('get_resource_audit_history', {
+      const { data, error } = await (supabaseAdmin as any).rpc('get_resource_audit_history', {
         target_resource_type: resourceType,
         target_resource_id: resourceId,
         limit_count: limit,
-      } as Database['public']['Functions']['get_resource_audit_history']['Args'])
+      })
 
       if (error) {
         dbLogger.error(
@@ -284,7 +310,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得資源存取歷史失敗: ${error.message}`)
       }
 
-      return data || []
+      return (data || []) as any
     } catch (error) {
       dbLogger.error(
         '取得資源存取歷史異常',
@@ -299,8 +325,13 @@ export class SupabaseAuditLogService implements AuditLogService {
 
   // 取得審計統計
   async getAuditStats(days: number = 30): Promise<AuditStats[]> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client 未配置')
+    }
+    
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await (supabaseAdmin as any)
         .from('audit_stats')
         .select('*')
         .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -313,7 +344,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得審計統計失敗: ${error.message}`)
       }
 
-      return data || []
+      return (data || []) as any
     } catch (error) {
       dbLogger.error(
         '取得審計統計異常',
@@ -328,8 +359,13 @@ export class SupabaseAuditLogService implements AuditLogService {
 
   // 取得使用者活動統計
   async getUserActivityStats(days: number = 30): Promise<UserActivityStats[]> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client 未配置')
+    }
+    
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await (supabaseAdmin as any)
         .from('user_activity_stats')
         .select('*')
         .gte('first_activity', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -346,7 +382,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得使用者活動統計失敗: ${error.message}`)
       }
 
-      return data || []
+      return (data || []) as any
     } catch (error) {
       dbLogger.error(
         '取得使用者活動統計異常',
@@ -361,8 +397,13 @@ export class SupabaseAuditLogService implements AuditLogService {
 
   // 取得資源存取統計
   async getResourceAccessStats(days: number = 30): Promise<ResourceAccessStats[]> {
+    const supabaseAdmin = getSupabaseAdmin()
+    if (!supabaseAdmin) {
+      throw new Error('Supabase admin client 未配置')
+    }
+    
     try {
-      const { data, error } = await supabaseAdmin!
+      const { data, error } = await (supabaseAdmin as any)
         .from('resource_access_stats')
         .select('*')
         .gte('first_accessed', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -379,7 +420,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得資源存取統計失敗: ${error.message}`)
       }
 
-      return data || []
+      return (data || []) as any
     } catch (error) {
       dbLogger.error(
         '取得資源存取統計異常',

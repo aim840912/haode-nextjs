@@ -98,7 +98,7 @@ async function logAuthFailure(
     
     await auditLogService.log({
       action: 'unauthorized_access' as AuditAction,
-      resource_type: 'admin_api' as any,
+      resource_type: 'admin_api',
       resource_id: 'admin-authentication',
       user_id: null,
       user_email: 'anonymous',

@@ -1,5 +1,8 @@
-import { supabaseAdmin } from '@/lib/supabase-auth';
+import { getSupabaseAdmin } from '@/lib/supabase-auth';
 import { logger } from '@/lib/logger';
+
+// 類型斷言，解決 Supabase 類型推斷問題
+const supabase = (): any => getSupabaseAdmin() as any;
 
 export interface ProductImage {
   id: string;
@@ -45,6 +48,7 @@ export class ProductImageService {
    */
   static async getProductImages(productId: string): Promise<ProductImage[]> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -80,6 +84,7 @@ export class ProductImageService {
    */
   static async createProductImage(imageData: CreateProductImageData): Promise<ProductImage> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -129,6 +134,7 @@ export class ProductImageService {
    */
   static async createProductImages(imagesData: CreateProductImageData[]): Promise<ProductImage[]> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -172,6 +178,7 @@ export class ProductImageService {
    */
   static async updateProductImage(imageId: string, updateData: UpdateProductImageData): Promise<ProductImage> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -208,6 +215,7 @@ export class ProductImageService {
    */
   static async deleteProductImage(imageId: string): Promise<void> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -256,6 +264,7 @@ export class ProductImageService {
    */
   static async updateImagesOrder(productId: string, imageOrders: { id: string; position: number }[]): Promise<void> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -297,6 +306,7 @@ export class ProductImageService {
    */
   static async getImageByPosition(productId: string, position: number): Promise<ProductImage | null> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -331,6 +341,7 @@ export class ProductImageService {
    */
   static async shiftImagesPosition(productId: string, fromPosition: number, shift: number): Promise<void> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }
@@ -393,6 +404,7 @@ export class ProductImageService {
    */
   static async clearProductImages(productId: string): Promise<void> {
     try {
+      const supabaseAdmin = supabase();
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client 未配置');
       }

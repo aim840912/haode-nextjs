@@ -10,7 +10,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { NewsItem, NewsService } from '@/types/news'
@@ -50,8 +50,8 @@ export class NewsServiceV2Simple implements NewsService {
   /**
    * 取得管理員客戶端
    */
-  private getAdminClient(): typeof supabaseAdmin {
-    return supabaseAdmin
+  private getAdminClient() {
+    return getSupabaseAdmin()
   }
 
   /**
@@ -213,7 +213,7 @@ export class NewsServiceV2Simple implements NewsService {
 
       const insertData = this.transformToDB(newsData)
 
-      const { data, error } = await client.from('news').insert([insertData]).select().single()
+      const { data, error } = await (client as any).from('news').insert([insertData]).select().single()
 
       if (error) {
         this.handleError(error, 'addNews', { newsData })
@@ -262,7 +262,7 @@ export class NewsServiceV2Simple implements NewsService {
       if (newsData.author !== undefined) updateData.author = newsData.author
       if (newsData.featured !== undefined) updateData.featured = newsData.featured
 
-      const { data, error } = await client
+      const { data, error } = await (client)
         .from('news')
         .update(updateData)
         .eq('id', id)

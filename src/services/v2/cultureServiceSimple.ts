@@ -11,7 +11,7 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { CultureItem, CultureService } from '@/types/culture'
@@ -85,7 +85,7 @@ export class CultureServiceV2Simple implements CultureService {
    * 取得管理員客戶端
    */
   private getAdminClient(): ServiceSupabaseClient {
-    return supabaseAdmin
+    return getSupabaseAdmin() as any
   }
 
   /**
@@ -231,7 +231,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'getCultureItems')
       }
 
-      const result = (data || []).map((item: SupabaseCultureRecord) => this.transformFromDB(item))
+      const result = (data || []).map((item: any) => this.transformFromDB(item))
 
       dbLogger.info('載入文化項目成功', {
         module: this.moduleName,
@@ -269,7 +269,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'getCultureItemById', { id })
       }
 
-      const result = data ? this.transformFromDB(data) : null
+      const result = data ? this.transformFromDB(data as any) : null
 
       dbLogger.debug('取得文化項目詳情', {
         module: this.moduleName,
@@ -339,7 +339,7 @@ export class CultureServiceV2Simple implements CultureService {
       const insertData = this.transformToDB(extendedData)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (client.from('culture') as any)
+      const { data, error } = await (client.from('culture'))
         .insert([insertData])
         .select()
         .single()
@@ -392,7 +392,7 @@ export class CultureServiceV2Simple implements CultureService {
         // 更新資料庫中的圖片 URL
         if (images.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error: updateError } = await (client.from('culture') as any)
+          const { error: updateError } = await (client.from('culture'))
             .update({ images })
             .eq('id', cultureId)
 
@@ -415,7 +415,7 @@ export class CultureServiceV2Simple implements CultureService {
           })
         }
 
-        const result = this.transformFromDB({ ...data, images })
+        const result = this.transformFromDB({ ...data, images } as any)
 
         dbLogger.info('文化項目建立成功', {
           module: this.moduleName,
@@ -546,7 +546,7 @@ export class CultureServiceV2Simple implements CultureService {
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (client.from('culture') as any)
+      const { data, error } = await (client.from('culture'))
         .update(dbUpdateData)
         .eq('id', id)
         .select()
@@ -560,7 +560,7 @@ export class CultureServiceV2Simple implements CultureService {
         throw new NotFoundError('文化項目不存在')
       }
 
-      const result = this.transformFromDB(data)
+      const result = this.transformFromDB(data as any)
 
       dbLogger.info('文化項目更新成功', {
         module: this.moduleName,

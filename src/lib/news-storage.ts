@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from './supabase-auth';
+import { supabase, getSupabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { SupabaseStorageError } from './supabase-storage';
 import { dbLogger } from '@/lib/logger';
@@ -10,12 +10,17 @@ export const NEWS_STORAGE_BUCKET = 'news';
  * 初始化新聞 Storage Bucket
  */
 export async function initializeNewsBucket() {
+  const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
     throw new SupabaseStorageError('Supabase admin client 未配置');
   }
 
   try {
     // 檢查 bucket 是否存在
+    const supabaseAdmin = getSupabaseAdmin();
+    if (!supabaseAdmin) {
+      throw new SupabaseStorageError('Supabase admin client not available');
+    }
     const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
     
     if (listError) {
@@ -118,6 +123,7 @@ export async function uploadNewsImageServer(
   newsId?: string
 ): Promise<{ url: string; path: string }> {
   // 確保有 admin 客戶端
+  const supabaseAdmin = getSupabaseAdmin();
   if (!supabaseAdmin) {
     throw new SupabaseStorageError('Supabase admin client 未配置');
   }
@@ -386,7 +392,7 @@ export async function listNewsImages(newsId: string): Promise<Array<{
       return {
         name: file.name,
         url: urlData.publicUrl,
-        metadata: file.metadata
+        metadata: file.metadata || {}
       };
     });
   } catch (error) {

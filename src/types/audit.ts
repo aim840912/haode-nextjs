@@ -250,17 +250,17 @@ export const AuditTypeGuards = {
   // 安全轉換字串為 UserRole（含預設值）
   toUserRole(value: string | undefined | null): UserRole | undefined {
     if (!value) return undefined
-    return this.isValidUserRole(value) ? value : undefined
+    return this.isValidUserRole(value) ? (value as UserRole) : undefined
   },
 
   // 安全轉換字串為 AuditAction
   toAuditAction(value: string): AuditAction | null {
-    return this.isValidAuditAction(value) ? value : null
+    return this.isValidAuditAction(value) ? (value as AuditAction) : null
   },
 
   // 安全轉換字串為 ResourceType
   toResourceType(value: string): ResourceType | null {
-    return this.isValidResourceType(value) ? value : null
+    return this.isValidResourceType(value) ? (value as ResourceType) : null
   },
 }
 

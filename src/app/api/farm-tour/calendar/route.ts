@@ -242,7 +242,7 @@ async function handlePUT(request: NextRequest) {
   const supabase = await createServerSupabaseClient();
 
   // 更新預約時間
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('inquiries')
     .update({
       visit_date,

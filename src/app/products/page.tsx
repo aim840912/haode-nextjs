@@ -35,6 +35,14 @@ const ProductCardImage = dynamic(() =>
 // 引入類型
 import type { FilterState } from '@/components/ProductFilter';
 
+// 為測試目的擴展 Window 介面
+declare global {
+  interface Window {
+    refreshProducts?: () => void;
+    refreshProductsNormal?: () => void;
+  }
+}
+
 // 用於模擬產品的擴展類型
 interface ExtendedProduct extends Product {
   features?: string[];
@@ -145,13 +153,13 @@ function ProductsPage() {
   // 提供全域方法供測試使用
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).refreshProducts = () => fetchProducts(true);
-      (window as any).refreshProductsNormal = () => fetchProducts(false);
+      window.refreshProducts = () => fetchProducts(true);
+      window.refreshProductsNormal = () => fetchProducts(false);
     }
     return () => {
       if (typeof window !== 'undefined') {
-        delete (window as any).refreshProducts;
-        delete (window as any).refreshProductsNormal;
+        delete window.refreshProducts;
+        delete window.refreshProductsNormal;
       }
     };
   }, [fetchProducts]);

@@ -25,7 +25,7 @@ async function handleGET(request: NextRequest) {
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single()
+    .single() as { data: { role: string } | null; error: any }
 
   if (!profile || !['admin', 'auditor'].includes(profile.role)) {
     throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌')
