@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -12,6 +12,7 @@ import { useFarmTourCalendar } from '@/hooks/useFarmTourCalendar'
 import { INQUIRY_STATUS_LABELS, type InquiryStatus } from '@/types/inquiry'
 import { useAuth } from '@/lib/auth-context'
 import { logger } from '@/lib/logger'
+import QuickAddInquiryModal from './QuickAddInquiryModal'
 
 // 狀態過濾選項
 const statusOptions = [
@@ -39,6 +40,10 @@ export default function FarmTourCalendar({
   onDateClick,
 }: FarmTourCalendarProps) {
   const { user } = useAuth()
+  
+  // 快速新增彈窗狀態
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false)
+  const [selectedDateForQuickAdd, setSelectedDateForQuickAdd] = useState<Date | null>(null)
 
   const {
     events,
@@ -81,18 +86,19 @@ export default function FarmTourCalendar({
   const handleDateClick = useCallback(
     (dateClickInfo: DateClickArg) => {
       const clickedDate = dateClickInfo.date
-      logger.debug('行事曆日期被點擊')
+      logger.debug('行事曆日期被點擊', {
+        module: 'FarmTourCalendar',
+        action: 'dateClick',
+        metadata: { date: clickedDate.toISOString() }
+      })
 
       if (onDateClick) {
         onDateClick(clickedDate)
       } else {
-        // 預設行為：快速新增預約（這裡可以開啟表單等）
+        // 預設行為：開啟快速新增預約彈窗
         if (user?.role === 'admin') {
-          const confirmed = confirm(`要在 ${clickedDate.toLocaleDateString('zh-TW')} 新增預約嗎？`)
-          if (confirmed) {
-            // 這裡可以開啟快速預約表單
-            logger.info('用戶選擇新增預約')
-          }
+          setSelectedDateForQuickAdd(clickedDate)
+          setShowQuickAddModal(true)
         }
       }
     },
@@ -166,6 +172,24 @@ export default function FarmTourCalendar({
     [setStatusFilter]
   )
 
+  // 處理快速新增成功
+  const handleQuickAddSuccess = useCallback(
+    (inquiryId: string) => {
+      logger.info('快速新增預約成功', {
+        module: 'FarmTourCalendar',
+        action: 'quickAddSuccess',
+        metadata: { inquiryId }
+      })
+      
+      // 重新載入行事曆資料
+      refreshData()
+      
+      // 顯示成功訊息
+      alert('預約建立成功！系統將在處理後顯示在行事曆中。')
+    },
+    [refreshData]
+  )
+
   return (
     <div className={`farm-tour-calendar ${className}`}>
       {/* 工具列 */}
@@ -216,7 +240,10 @@ export default function FarmTourCalendar({
 
           {user?.role === 'admin' && (
             <button
-              onClick={() => alert('快速新增預約功能開發中...')}
+              onClick={() => {
+                setSelectedDateForQuickAdd(new Date())
+                setShowQuickAddModal(true)
+              }}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
             >
               新增預約
@@ -346,6 +373,17 @@ export default function FarmTourCalendar({
           )}
         </div>
       </div>
+
+      {/* 快速新增預約彈窗 */}
+      <QuickAddInquiryModal
+        isOpen={showQuickAddModal}
+        onClose={() => {
+          setShowQuickAddModal(false)
+          setSelectedDateForQuickAdd(null)
+        }}
+        selectedDate={selectedDateForQuickAdd}
+        onSuccess={handleQuickAddSuccess}
+      />
     </div>
   )
 }

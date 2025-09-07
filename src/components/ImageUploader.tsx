@@ -198,9 +198,10 @@ export default function ImageUploader({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError, csrfToken, apiEndpoint, idParamName]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError, csrfToken]); // uploadImageToServer 穩定，不需要在依賴中
 
-  const uploadImageToServer = async (
+  const uploadImageToServer = useCallback(async (
     file: File,
     productId: string,
     generateMultipleSizes: boolean,
@@ -231,7 +232,7 @@ export default function ImageUploader({
 
     const result = await response.json();
     return result.data;
-  };
+  }, [idParamName, apiEndpoint]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();

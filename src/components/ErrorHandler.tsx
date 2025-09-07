@@ -49,6 +49,10 @@ export function ErrorHandler({
 }: ErrorHandlerProps) {
   const [errors, setErrors] = useState<AppError[]>([])
 
+  const removeError = useCallback((id: string) => {
+    setErrors(prev => prev.filter(error => error.id !== id))
+  }, [])
+
   const addError = useCallback(
     (errorData: Partial<AppError>): string => {
       const id = errorData.id || `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
@@ -80,12 +84,8 @@ export function ErrorHandler({
 
       return id
     },
-    [maxErrors, autoRemoveTimeout]
+    [maxErrors, autoRemoveTimeout, removeError]
   )
-
-  const removeError = useCallback((id: string) => {
-    setErrors(prev => prev.filter(error => error.id !== id))
-  }, [])
 
   const clearErrors = useCallback(() => {
     setErrors([])
@@ -229,7 +229,8 @@ export function isRetryableError(type: ErrorType): boolean {
 // 便利的錯誤處理 Hook
 export function useAsyncWithError() {
   const { addError } = useErrorHandler()
-  const { executeWithLoading } = useAsyncLoading()
+  const loadingResult = useAsyncLoading()
+  const { executeWithLoading } = loadingResult || { executeWithLoading: async (fn: any) => fn() }
 
   const executeWithErrorHandling = useCallback(
     async <T = unknown,>(

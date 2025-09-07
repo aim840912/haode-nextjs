@@ -7,7 +7,7 @@ import { UserInterestsService } from '@/services/userInterestsService';
 import { Product } from '@/types/product';
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
 import { ProductCardSkeleton } from '@/components/LoadingSkeleton';
-import { LoadingManager, LoadingWrapper } from '@/components/LoadingManager';
+import { LoadingManager } from '@/components/LoadingManager';
 import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler';
 import { ProductStructuredData } from '@/components/StructuredData';
 import Breadcrumbs, { createProductBreadcrumbs } from '@/components/Breadcrumbs';
@@ -79,13 +79,8 @@ function ProductsPage() {
   const { user } = useAuth();
   const { executeWithErrorHandling } = useAsyncWithError();
 
-  useEffect(() => {
-    fetchProducts();
-    loadInterestedProducts();
-  }, []);
-
   // 載入興趣產品清單
-  const loadInterestedProducts = async () => {
+  const loadInterestedProducts = useCallback(async () => {
     if (user) {
       // 已登入：從資料庫載入
       const interests = await UserInterestsService.getUserInterests(user.id);
@@ -94,12 +89,12 @@ function ProductsPage() {
       // 未登入：清空興趣清單
       setInterestedProducts(new Set());
     }
-  };
+  }, [user]);
 
   // 當使用者登入狀態改變時重新載入興趣清單
   useEffect(() => {
     loadInterestedProducts();
-  }, [user]);
+  }, [user, loadInterestedProducts]);
 
   const fetchProducts = useCallback(async (forceRefresh: boolean = false) => {
     setLoading(true);
@@ -149,6 +144,12 @@ function ProductsPage() {
       setLoading(false);
     }
   }, [executeWithErrorHandling]);
+
+  // 初始載入
+  useEffect(() => {
+    fetchProducts();
+    loadInterestedProducts();
+  }, [fetchProducts, loadInterestedProducts]);
 
   // 提供全域方法供測試使用
   useEffect(() => {
@@ -430,15 +431,14 @@ function ProductsPage() {
 
       {/* Products Grid */}
       <div className="max-w-7xl mx-auto px-6 py-16">
-        <LoadingWrapper
-          fallback={
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))}
-            </div>
-          }
-        >
+        {loading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <>
           {/* Product Filter */}
           <ProductFilter
             onFilterChange={handleFilterChange}
@@ -491,6 +491,7 @@ function ProductsPage() {
                       createdAt: new Date().toISOString(),
                       updatedAt: new Date().toISOString()
                     }}
+                    index={index}
                   />
 
                   {/* Product Info */}
@@ -547,7 +548,8 @@ function ProductsPage() {
               ))}
             </div>
           )}
-        </LoadingWrapper>
+          </>
+        )}
       </div>
 
       {/* Product Modal */}

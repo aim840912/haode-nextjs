@@ -491,8 +491,141 @@ const { data: profile } = await supabase
   - 自動填充客戶名稱、詢價ID、產品名稱、當前日期等變數
   - 使用 fillTemplate 函數生成個人化回覆內容
   - 設定模板選擇器和生成回覆的狀態管理
-- [ ] 修復 `src/app/admin/farm-tour/calendar/page.tsx` 快速新增功能
-- [ ] 完成 `src/services/v2/inquiryServiceSimple.ts` Supabase 查詢類型
+- [x] 修復 `src/app/admin/farm-tour/calendar/page.tsx` 快速新增功能 (已完成 - 實作了 QuickAddInquiryModal 組件)
+- [x] 完成 `src/services/v2/inquiryServiceSimple.ts` Supabase 查詢類型 (已完成 - 採用專案一致的類型斷言策略)
+
+### 🎊 **立即修復階段完成** (2025-09-07)
+- ✅ **TypeScript 100% 編譯成功** - 從最後 1 個錯誤 → 0 個錯誤
+- ✅ **修復 InquiryWithItems.items → inquiry_items 屬性問題**
+- ✅ **完成 inquiryServiceSimple.ts TODO** - 添加完整的查詢類型說明和與專案一致的實作方式
+- 🏆 **專案技術債務基本清理完成** - TypeScript、TODO 項目全部處理
+
+### 🚀 **效能優化延續完成** (2025-09-07)
+- ✅ **管理監控頁面動態導入** - 將 1200+ 行監控頁面重構為動態載入
+- ✅ **MonitoringDashboard 組件化** - 創建可重用的監控儀表板組件  
+- ✅ **Heroicons 動態載入** - 25 個 Icon 組件改為按需載入，減少初始 Bundle 大小
+- 📊 **預期效益**: 監控頁面 Bundle 大小減少約 30-40%，首次載入更快
+
+### 🔧 **ESLint 程式碼品質清理 (進行中)** (2025-09-07)
+- ✅ **未使用變數修復第一階段** - 修復農場導覽、位置、產品頁面的未使用變數警告
+- ✅ **錯誤處理改善** - 統一 catch 區塊的錯誤變數命名 (_error)
+- ✅ **Hook 依賴優化第一階段** - 修復 ErrorHandler 組件的不必要依賴
+- ✅ **ImageUploader 組件優化** - 將 uploadImageToServer 函數用 useCallback 包裝，改善效能
+- ✅ **變數命名一致性修復** - 修復農場導覽和位置頁面的變數命名不一致問題
+- ✅ **React Hook 依賴優化第二階段** - 修復 ErrorHandler、ImageUploader、診斷頁面的依賴問題
+  - 修復 ErrorHandler 組件的循環依賴問題，調整函數定義順序
+  - 優化 ImageUploader 組件的依賴處理，使用穩定的函數引用
+  - 修復診斷頁面的 useCallback 包裝，解決函數依賴警告
+- ✅ **未使用變數清理第三階段** - 清理多個文件中的未使用變數和導入
+  - 修復農場日曆頁面的未使用狀態變數（移除 _selectedEvent, _setSelectedEvent）
+  - 清理 InquiryNotificationBadge 組件中的未使用變數（retryCount, iconColorClass）
+  - 簡化 API 路由參數：移除不需要的 _request 參數（categories, data-strategy）
+  - 移除未使用的導入：清理 upload/images 路由中的 created 導入
+- ✅ **React Hook 依賴優化第三階段** - 修復詢價頁面的 useEffect 依賴問題
+  - 將 fetchInquiry 函數包裝在 useCallback 中，添加正確的依賴數組 [user, inquiryId]
+  - 將 fetchInquiries 函數包裝在 useCallback 中，添加依賴數組 [user, statusFilter, typeFilter]
+  - 更新相應 useEffect 的依賴數組，確保函數引用穩定性
+  - 解決了詢價列表和詳情頁面的 Hook 依賴警告
+- ✅ **React Hook 依賴優化第四階段** - 修復產品和個人資料頁面的複雜依賴問題
+  - 將 loadInterestedProducts 函數包裝在 useCallback 中，依賴 [user]
+  - 重新組織產品頁面的 useEffect 結構，確保 fetchProducts 和 loadInterestedProducts 正確依賴
+  - 添加初始載入的 useEffect，依賴 [fetchProducts, loadInterestedProducts]
+  - 處理循環依賴問題，使用 ESLint 註釋和說明處理穩定函數引用
+- ✅ **未使用變數清理第四階段** - 清理組件和服務中的未使用變數和導入
+  - OptimizedImage 組件：移除 buildResponsiveImageSrcSet 導入、isInView 變數、blobUrl 變數
+  - ProductImageGallery 組件：移除 ProductImage、ResponsiveImage、generateProductImageUrls 導入
+  - culture-storage.ts：移除 supabase 導入、未使用的 data 變數、未使用的 error 參數
+  - 使用完全移除而非下劃線前綴，確保 ESLint 合規性
+- 📊 **當前狀態**: TypeScript 100% 編譯通過，組件和服務層的程式碼品質持續改善
+
+### 📋 **下一階段執行計劃：ESLint 品質提升** (2025-09-07 進行中)
+
+#### **當前問題分析** 🔍
+- **總計**: 220個ESLint問題（121錯誤 + 99警告）
+- **專案構建狀態**: ✅ 成功編譯（7.9秒）
+- **TypeScript狀態**: ✅ 100% 類型安全
+- **主要問題類型**:
+  - `@typescript-eslint/no-explicit-any` (121個錯誤) - 主要問題
+  - `@typescript-eslint/no-unused-vars` (約30個警告)
+  - `react-hooks/exhaustive-deps` (約15個警告)
+  - `@next/next/no-img-element` (約10個警告)
+
+#### **執行策略：分階段小步驟清理** 🎯
+
+**階段 5A: @typescript-eslint/no-explicit-any 錯誤修復** (預計2小時) - ✅ **已完成**
+- 🎊 **完成**: 121個錯誤 → 0個錯誤 - **超越目標！**
+- 📝 **方法**: 
+  - 使用適當的類型定義替換any
+  - 保持功能穩定性，不改變業務邏輯
+  - 每修復5-10個問題就更新進度記錄
+
+**📈 最新進度** (2025-09-07 12:15):
+- ✅ **批次 1**: admin-proxy routes (3個檔案，3個錯誤修復)
+- ✅ **批次 2**: audit-logs + farm-tour APIs (5個檔案，11個錯誤修復)
+- ✅ **批次 3**: inquiries API routes (3個檔案，8個錯誤修復)
+- ✅ **批次 4**: 頁面和核心組件 (3個檔案，4個錯誤修復)
+- ✅ **批次 5**: 進階組件和服務層 (3個檔案，7個錯誤修復)
+  - 修復檔案: `QuickAddInquiryModal.tsx`, `useErrorTracking.ts`, `abstract-json-service.ts`
+  - 主要修復: 複雜類型參數優化、泛型預設值改善、Record 類型統一
+- ✅ **批次 6**: API 中間件和快取系統 (3個檔案，4個錯誤修復)
+  - 修復檔案: `api-cache.ts`, `api-middleware.ts`, `api-middleware/auth.ts`
+  - 主要修復: 快取類型約束、Supabase 錯誤類型、泛型陣列參數
+- ✅ **批次 7**: 核心基礎服務層 (2個檔案，12個錯誤修復)
+  - 修復檔案: `base-service.ts`, `supabase-auth.ts`
+  - 主要修復: 服務介面泛型優化、Supabase 類型斷言移除、統一預設類型參數
+- ✅ **批次 8**: 業務服務層 (3個檔案，15個錯誤修復)
+  - 修復檔案: `auditLogService.ts`, `productImageService.ts`, `productServiceAdapter.ts`
+  - 主要修復: RPC 調用類型約束、服務工廠函數優化、動態類型轉換改善
+- ✅ **批次 9**: Supabase 服務層 (3個檔案，7個錯誤修復)
+  - 修復檔案: `supabaseFarmTourService.ts`, `supabaseLocationService.ts`, `supabaseNewsService.ts`
+  - 主要修復: 服務工廠函數類型、數據轉換函數優化、排序函數類型約束
+- ✅ **批次 10**: 延伸服務層 (3個檔案，6個錯誤修復)
+  - 修復檔案: `supabaseProductService.ts`, `supabaseScheduleService.ts`, `userInterestsService.ts`
+  - 主要修復: 產品排序類型約束、使用者興趣數據映射優化、Supabase 客戶端類型清理
+- ✅ **批次 11**: v2 服務層優化 (2個檔案，10個錯誤修復)
+  - 修復檔案: `inquiryServiceSimple.ts`, `farmTourServiceSimple.ts`
+  - 主要修復: Supabase 客戶端類型斷言移除、資料庫記錄類型約束、查詢建構器類型優化
+- ✅ **批次 12**: v2 服務層完善 (3個檔案，25個錯誤修復)
+  - 修復檔案: `locationServiceSimple.ts`, `newsServiceSimple.ts`, `cultureServiceSimple.ts`
+  - 主要修復: 資料庫記錄類型轉換、Supabase 客戶端類型約束、管理員客戶端類型斷言
+- ✅ **批次 13**: 最終清理 (4個檔案，9個錯誤修復)
+  - 修復檔案: `audit-logs/[id]/route.ts`, `useRateLimitStatus.ts`, `serviceFactory.ts`, `web-vitals-test.ts`
+  - 主要修復: API 回應參數類型、泛型預設值、服務工廠類型約束、效能監控型別
+- 🎊 **總計修復**: 121個 no-explicit-any 錯誤 (121 → 0) - **100% 完成率 - 達成目標！**
+
+**階段 5B: 未使用變數清理** (預計30分鐘) - ✅ **大部分完成**
+- 📋 **完成**: 清理嚴重的import和變數警告
+- 📊 **成果**: 移除未使用的函數、修復空介面、改善導入方式
+- **主要修復**:
+  - ✅ 清理 `audit-logs/[id]/route.ts` 中未使用的錯誤處理函數
+  - ✅ 修復 `InquiryStatsContext.tsx` 的空介面類型
+  - ✅ 改善 `GoogleAnalyticsProvider.tsx` 的 require import
+  - ✅ 更新 `productServiceAdapter.ts` 使用 @ts-expect-error
+- **剩餘**: 部分變數使用 `_` 前綴標記為故意未使用（符合慣例）
+- 📝 **方法**: 移除未使用導入、重命名未使用變數
+
+**階段 5C: React Hook 依賴問題** (預計1小時) - ✅ **已完成**
+- 📋 **完成**: 修復useEffect/useCallback依賴問題
+- 📊 **成果**: 解決所有 React Hook exhaustive-deps 警告
+- **主要修復**:
+  - ✅ 修復 `AuthButton.tsx` 的 useEffect 依賴問題 - 使用 useCallback 包裝 updateInterestedCount
+  - ✅ 優化 `ProductImageGallery.tsx` 的 imageUrls 計算 - 使用 useMemo 避免每次重新計算
+  - ✅ 改善 `useInquiryStatusFlow.ts` 的陣列依賴 - 將 allStatuses 移入 useMemo 內部
+- **技術改進**: 正確的依賴管理提升了 React 性能和穩定性
+- 📊 **目標**: 15個警告 → 0個
+- 📝 **方法**: 使用useCallback包裝、添加正確依賴
+
+#### **實施原則** ⚡
+- **小步驟執行**: 每次修復2-5個問題，立即記錄進度
+- **穩定優先**: 確保每次修改不破壞現有功能
+- **增量改善**: 持續降低問題總數，可見進度
+- **文檔追蹤**: 每完成一小步就更新此文檔
+
+#### **預期成果** 🎊
+- **程式碼品質**: ESLint錯誤 121→0，警告 99→20以下
+- **維護性提升**: 類型安全度進一步提高
+- **開發體驗**: 減少IDE警告，提升開發效率
+- **技術債務**: 基本清理完成，進入維護階段
 
 #### **階段舊內容保留** (歷史參考)
 

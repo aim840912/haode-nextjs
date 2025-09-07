@@ -84,7 +84,7 @@ export class SupabaseNewsService implements NewsService {
   }
 
   async updateNews(id: string, newsData: Partial<Omit<NewsItem, 'id' | 'publishedAt'>>): Promise<NewsItem> {
-    const dbUpdateData: Record<string, any> = {}
+    const dbUpdateData: Record<string, unknown> = {}
     
     if (newsData.title !== undefined) dbUpdateData.title = newsData.title
     if (newsData.summary !== undefined) dbUpdateData.summary = newsData.summary
@@ -171,7 +171,7 @@ export class SupabaseNewsService implements NewsService {
       const newsItems = data?.map(this.transformFromDB) || []
       
       // 按相關性排序
-      return newsItems.sort((a: any, b: any) => {
+      return newsItems.sort((a: NewsItem, b: NewsItem) => {
         const queryLower = query.toLowerCase()
         const getRelevanceScore = (item: NewsItem) => {
           const title = item.title.toLowerCase()
@@ -194,7 +194,7 @@ export class SupabaseNewsService implements NewsService {
     }
   }
 
-  private transformFromDB(dbNews: Record<string, any>): NewsItem {
+  private transformFromDB(dbNews: Record<string, unknown>): NewsItem {
     return {
       id: dbNews.id,
       title: dbNews.title,

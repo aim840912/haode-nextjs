@@ -48,7 +48,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   const isAdmin = profile?.role === 'admin'
   const { searchParams } = new URL(request.url)
@@ -163,7 +163,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   const isAdmin = profile?.role === 'admin'
 
@@ -302,7 +302,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以刪除詢問單')
@@ -379,7 +379,7 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以更新庫存查詢單狀態')

@@ -15,7 +15,7 @@ import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = (): any => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin();
 import { UpdateDataObject } from '@/types/service.types'
 import { FarmTourActivity } from '@/types/farmTour'
 
@@ -123,7 +123,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       })
 
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('farm_tour')
         .select('*')
         .order('created_at', { ascending: false })
@@ -132,7 +132,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
         this.handleError(error, 'getAll')
       }
 
-      const activities = (data as any)?.map(this.transformFromDB.bind(this)) || []
+      const activities = data?.map(this.transformFromDB.bind(this)) || []
 
       dbLogger.info('農場體驗活動清單查詢成功', {
         module: this.moduleName,
@@ -162,7 +162,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       }
 
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('farm_tour')
         .select('*')
         .eq('id', id)
@@ -350,7 +350,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   }> {
     try {
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('farm_tour')
         .select('count')
         .limit(1)

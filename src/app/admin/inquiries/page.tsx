@@ -628,7 +628,7 @@ function AdminInquiriesPage() {
           const defaultVariables: Record<string, string> = {
             customerName: selectedInquiry.customer_name || '客戶',
             inquiryId: selectedInquiry.id || '',
-            productName: selectedInquiry.items?.[0]?.product_name || '產品',
+            productName: selectedInquiry.inquiry_items?.[0]?.product_name || '產品',
             currentDate: new Date().toLocaleDateString('zh-TW'),
           }
           setTemplateVariables(defaultVariables)

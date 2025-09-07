@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
@@ -226,9 +227,11 @@ export default function AddCulture() {
               />
               {formData.imageUrl && (
                 <div className="mt-2">
-                  <img 
+                  <Image 
                     src={formData.imageUrl} 
                     alt="圖片預覽" 
+                    width={128}
+                    height={128}
                     className="h-32 w-32 object-cover rounded-lg border border-gray-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none'
@@ -247,9 +250,11 @@ export default function AddCulture() {
                 <div className="space-y-1 text-center">
                   {imagePreview ? (
                     <div className="mb-4">
-                      <img 
+                      <Image 
                         src={imagePreview} 
                         alt="預覽圖片" 
+                        width={128}
+                        height={128}
                         className="mx-auto h-32 w-32 object-cover rounded-lg"
                       />
                       <button
@@ -349,10 +354,11 @@ export default function AddCulture() {
                 {(formData.imageUrl || imagePreview) ? (
                   // 顯示圖片背景
                   <div className="relative w-full h-full">
-                    <img 
+                    <Image 
                       src={imagePreview || formData.imageUrl} 
                       alt="背景圖片" 
-                      className="w-full h-full object-cover rounded-lg"
+                      fill
+                      className="object-cover rounded-lg"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent p-6 flex flex-col justify-end">
                       <div>

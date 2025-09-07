@@ -1,10 +1,9 @@
-import { NextResponse } from 'next/server'
 import { UnifiedCacheManager } from '@/lib/unified-cache-manager'
 import { getProductService } from '@/services/serviceFactory'
 import { cacheLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'
 import { ValidationError } from '@/lib/errors'
-import { success, created } from '@/lib/api-response'
+import { success } from '@/lib/api-response'
 
 async function handleGET(request: Request) {
   const url = new URL(request.url)

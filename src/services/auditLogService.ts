@@ -226,7 +226,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`查詢審計日誌失敗: ${error.message}`)
       }
 
-      return (data || []) as any
+      return (data || []) as AuditLog[]
     } catch (error) {
       dbLogger.error(
         '查詢審計日誌異常',
@@ -251,7 +251,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await (supabaseAdmin as any).rpc('get_user_audit_history', {
+      const { data, error } = await supabaseAdmin.rpc('get_user_audit_history', {
         target_user_id: userId,
         limit_count: limit,
         offset_count: offset,
@@ -268,7 +268,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得使用者活動歷史失敗: ${error.message}`)
       }
 
-      return (data || []) as any
+      return (data || []) as AuditLog[]
     } catch (error) {
       dbLogger.error(
         '取得使用者活動歷史異常',
@@ -293,7 +293,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await (supabaseAdmin as any).rpc('get_resource_audit_history', {
+      const { data, error } = await supabaseAdmin.rpc('get_resource_audit_history', {
         target_resource_type: resourceType,
         target_resource_id: resourceId,
         limit_count: limit,
@@ -310,7 +310,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得資源存取歷史失敗: ${error.message}`)
       }
 
-      return (data || []) as any
+      return (data || []) as AuditLog[]
     } catch (error) {
       dbLogger.error(
         '取得資源存取歷史異常',
@@ -331,7 +331,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await supabaseAdmin
         .from('audit_stats')
         .select('*')
         .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -344,7 +344,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得審計統計失敗: ${error.message}`)
       }
 
-      return (data || []) as any
+      return (data || []) as AuditLog[]
     } catch (error) {
       dbLogger.error(
         '取得審計統計異常',
@@ -365,7 +365,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await supabaseAdmin
         .from('user_activity_stats')
         .select('*')
         .gte('first_activity', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -382,7 +382,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得使用者活動統計失敗: ${error.message}`)
       }
 
-      return (data || []) as any
+      return (data || []) as AuditLog[]
     } catch (error) {
       dbLogger.error(
         '取得使用者活動統計異常',
@@ -403,7 +403,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await supabaseAdmin
         .from('resource_access_stats')
         .select('*')
         .gte('first_accessed', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
@@ -420,7 +420,7 @@ export class SupabaseAuditLogService implements AuditLogService {
         throw new Error(`取得資源存取統計失敗: ${error.message}`)
       }
 
-      return (data || []) as any
+      return (data || []) as AuditLog[]
     } catch (error) {
       dbLogger.error(
         '取得資源存取統計異常',

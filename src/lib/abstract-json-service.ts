@@ -69,7 +69,7 @@ export interface SearchConfig {
  * 提供基於 JSON 檔案的 CRUD 操作實作
  * 支援記憶體快取、備份和搜尋功能
  */
-export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any, UpdateDTO = any> 
+export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> 
   implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T>, SearchableService<T> {
   
   protected readonly config: JsonServiceConfig
@@ -613,7 +613,7 @@ export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = any,
   async getHealthStatus(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy'
     timestamp: string
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   }> {
     try {
       // 檢查檔案是否可讀取

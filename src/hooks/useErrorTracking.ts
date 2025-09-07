@@ -19,7 +19,7 @@ interface UserAction extends Record<string, unknown> {
   action: string
   path: string
   timestamp: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
 interface PerformanceMetrics extends Record<string, unknown> {
@@ -43,7 +43,7 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
   // 追蹤使用者行為
   const trackUserAction = useCallback((
     action: string, 
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     const userAction: UserAction = {
       action,
@@ -82,7 +82,7 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
   const trackError = useCallback((
     error: Error | string,
     context?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     const errorMessage = typeof error === 'string' ? error : error.message
 
@@ -123,7 +123,7 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
     formType: string,
     success: boolean,
     errorMessage?: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ) => {
     logger.info('表單提交追蹤', {
       module: 'ErrorTracking',

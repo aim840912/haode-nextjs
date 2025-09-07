@@ -133,7 +133,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'getLocations')
       }
 
-      const locations = (data as any)?.map(this.transformFromDB.bind(this)) || []
+      const locations = data?.map(this.transformFromDB.bind(this)) || []
 
       dbLogger.info('地點清單查詢成功', {
         module: this.moduleName,
@@ -187,7 +187,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'addLocation')
       }
 
-      const newLocation = this.transformFromDB(data as any)
+      const newLocation = this.transformFromDB(data as SupabaseLocationRecord)
 
       dbLogger.info('地點新增成功', {
         module: this.moduleName,
@@ -256,7 +256,7 @@ export class LocationServiceV2Simple implements LocationService {
         throw new NotFoundError(`地點 ${id} 不存在`)
       }
 
-      const updatedLocation = this.transformFromDB(data as any)
+      const updatedLocation = this.transformFromDB(data as SupabaseLocationRecord)
 
       dbLogger.info('地點更新成功', {
         module: this.moduleName,
@@ -343,7 +343,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'getLocationById')
       }
 
-      const location = this.transformFromDB(data as any)
+      const location = this.transformFromDB(data as SupabaseLocationRecord)
 
       dbLogger.info('地點查詢成功', {
         module: this.moduleName,

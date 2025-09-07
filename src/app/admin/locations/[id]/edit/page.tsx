@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Location } from '@/types/location'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 
@@ -535,9 +536,11 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
                   {imagePreview && (
                     <div className="relative">
-                      <img
+                      <Image
                         src={imagePreview}
                         alt="圖片預覽"
+                        width={128}
+                        height={128}
                         className="w-32 h-32 object-cover rounded-lg border border-gray-300"
                       />
                       <button
@@ -590,15 +593,19 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
                 <div className="mb-3">
                   {imagePreview ? (
-                    <img
+                    <Image
                       src={imagePreview}
                       alt="門市圖片"
+                      width={64}
+                      height={64}
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
                   ) : formData.image && formData.image.startsWith('/') ? (
-                    <img
+                    <Image
                       src={formData.image}
                       alt="門市圖片"
+                      width={64}
+                      height={64}
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
                   ) : (

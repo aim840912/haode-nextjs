@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import LoadingSpinner from './LoadingSpinner'
-import { handleImageError, buildResponsiveImageSrcSet } from '@/lib/image-utils'
+import { handleImageError } from '@/lib/image-utils'
 import { useImageBlob } from '@/hooks/useImageBlob'
 
 interface OptimizedImageProps {
@@ -52,7 +52,7 @@ export default function OptimizedImage({
   enableMultiLevelFallback = false,
   showErrorDetails = false,
 }: OptimizedImageProps) {
-  const [isInView, setIsInView] = useState(priority || !lazy)
+  const [, setIsInView] = useState(priority || !lazy)
   const [shouldLoad, setShouldLoad] = useState(priority || !lazy)
   const [hasError, setHasError] = useState(false)
   const [currentSrc, setCurrentSrc] = useState(src)
@@ -118,7 +118,7 @@ export default function OptimizedImage({
       : BASE64_PLACEHOLDER
 
   // 使用新的圖片 Blob Hook
-  const { processedSrc, isLoading, error, isBase64, blobUrl } = useImageBlob(safeSrc, {
+  const { processedSrc, isLoading, error, isBase64 } = useImageBlob(safeSrc, {
     fallbackSrc,
     onLoad: handleLoadCallback,
     onError: handleErrorCallback,
@@ -139,7 +139,7 @@ export default function OptimizedImage({
       },
       {
         threshold,
-        rootMargin: '100px', // 提前 100px 開始載入
+        rootMargin: '200px', // 提前 200px 開始載入，提供更平滑的體驗
       }
     )
 

@@ -42,7 +42,7 @@ async function handleGET(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   const isAdmin = profile?.role === 'admin'
   const adminMode = result.data.admin === true
@@ -81,7 +81,7 @@ async function handlePOST(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   // 解析並驗證請求資料
   const body = await request.json()

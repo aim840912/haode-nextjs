@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/components/Toast'
 import { UserInterestsService } from '@/services/userInterestsService'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import { shouldShowErrorInDevelopment } from '@/lib/error-utils'
 
@@ -114,7 +114,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     }
   }, [])
 
-  const updateInterestedCount = async () => {
+  const updateInterestedCount = useCallback(async () => {
     if (user) {
       // 已登入：從資料庫取得數量
       try {
@@ -136,7 +136,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
         setInterestedCount(0)
       }
     }
-  }
+  }, [user])
 
   // 載入興趣產品數量
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     return () => {
       window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
     }
-  }, [user]) // 移除 updateInterestedCount 依賴，因為它不會改變
+  }, [user, updateInterestedCount])
 
   const handleLogout = async () => {
     if (isLoggingOut) return

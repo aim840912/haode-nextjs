@@ -3,7 +3,7 @@
  * 處理農場參觀預約詢問的建立
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
 import { inquiryServiceAdapter } from '@/services/inquiryServiceAdapter'
 import { AuditLogger } from '@/services/auditLogService'
@@ -41,7 +41,7 @@ async function handlePOST(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   // 解析請求資料
   let farmTourData: FarmTourInquiryRequest

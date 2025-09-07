@@ -145,7 +145,17 @@ async function handlePOST(request: NextRequest) {
   const productData = result.data
 
   // 轉換資料格式
-  const dbProduct: any = {
+  const dbProduct: {
+    id?: string;
+    name: string;
+    description: string;
+    price: number;
+    category: string;
+    image_url: string | null;
+    images: string;
+    stock: number;
+    is_active: boolean;
+  } = {
     name: productData.name,
     description: productData.description,
     price: productData.price,

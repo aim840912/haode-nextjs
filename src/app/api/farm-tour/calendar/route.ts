@@ -205,7 +205,7 @@ async function handleGET(request: NextRequest) {
   }
 
   // 轉換為行事曆事件
-  const events = inquiries.map((inquiry: any) => convertInquiryToEvent(inquiry as InquiryWithItems));
+  const events = inquiries.map((inquiry) => convertInquiryToEvent(inquiry as InquiryWithItems));
   const statistics = calculateStatistics(inquiries as InquiryWithItems[]);
 
   apiLogger.info('農場導覽行事曆資料取得成功');

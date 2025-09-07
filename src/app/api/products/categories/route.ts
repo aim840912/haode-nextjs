@@ -3,7 +3,7 @@ import { supabaseProductService } from '@/services/supabaseProductService'
 import { withErrorHandler } from '@/lib/error-handler'
 import { success } from '@/lib/api-response'
 
-async function handleGET(request: NextRequest) {
+async function handleGET() {
   const products = await supabaseProductService.getProducts()
 
   // 提取所有唯一的分類

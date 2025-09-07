@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArticleStructuredData } from '@/components/StructuredData'
 import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
 import { logger } from '@/lib/logger'
@@ -164,12 +165,13 @@ export default function NewsDetailPage() {
       <article className="max-w-4xl mx-auto px-6 py-12">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Article Header */}
-          <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
+          <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden relative">
             {newsItem.imageUrl && (
-              <img 
+              <Image 
                 src={newsItem.imageUrl} 
                 alt={newsItem.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
             )}
           </div>
@@ -230,12 +232,13 @@ export default function NewsDetailPage() {
               {relatedNews.map((item) => (
                 <Link key={item.id} href={`/news/${item.id}`}>
                   <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
-                    <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden">
+                    <div className="aspect-video bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center overflow-hidden relative">
                       {item.imageUrl && (
-                        <img 
+                        <Image 
                           src={item.imageUrl} 
                           alt={item.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       )}
                     </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -26,7 +26,7 @@ interface InquiryDetailPageProps {
 
 function InquiryDetailPage({ params }: InquiryDetailPageProps) {
   const { user, isLoading: authLoading } = useAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const [inquiry, setInquiry] = useState<InquiryWithItems | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +42,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
   }, [params]);
 
   // 取得詢問單詳情
-  const fetchInquiry = async () => {
+  const fetchInquiry = useCallback(async () => {
     if (!user || !inquiryId) return;
 
     setIsLoading(true);
@@ -83,7 +83,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, inquiryId]);
 
   // 初始載入
   useEffect(() => {
@@ -92,7 +92,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
     } else if (!authLoading && !inquiryId) {
       setIsLoading(false);
     }
-  }, [user, authLoading, inquiryId]);
+  }, [user, authLoading, inquiryId, fetchInquiry]);
 
   // 載入中狀態
   if (authLoading || isLoading) {

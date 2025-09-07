@@ -23,7 +23,7 @@ export class UserInterestsService {
         return [];
       }
 
-      return data?.map((item: any) => item.product_id) || [];
+      return data?.map((item: { product_id: string }) => item.product_id) || [];
     } catch (error) {
       dbLogger.error('Error in getUserInterests', error instanceof Error ? error : undefined, { userId });
       return [];
@@ -33,7 +33,7 @@ export class UserInterestsService {
   // 新增興趣產品
   static async addInterest(userId: string, productId: string): Promise<boolean> {
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_interests')
         .insert({
           user_id: userId,
@@ -87,7 +87,7 @@ export class UserInterestsService {
         product_id: productId
       }));
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_interests')
         .upsert(interests, { onConflict: 'user_id,product_id' });
 

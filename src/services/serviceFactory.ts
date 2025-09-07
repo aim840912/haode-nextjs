@@ -142,10 +142,10 @@ async function createService<T>(
   serviceType: keyof Omit<typeof serviceInstances, 'product'>,
   supabaseServiceImport: () => Promise<{ [key: string]: T }>,
   jsonServiceCreator: () => Promise<T>,
-  testConnection?: (service: T) => Promise<any>
+  testConnection?: (service: T) => Promise<boolean>
 ): Promise<T> {
   // 對於不支援的服務類型，默認使用 JSON
-  const useSupabase = serviceType !== 'userInterests' ? shouldUseSupabase(serviceType as any) : false
+  const useSupabase = serviceType !== 'userInterests' ? shouldUseSupabase(serviceType as keyof ServiceConfig) : false
   
   dbLogger.info(`初始化${serviceType}服務`, { 
     module: 'ServiceFactory', 

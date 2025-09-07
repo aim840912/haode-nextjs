@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { UserInterestsService } from '@/services/userInterestsService'
 import { useToast } from '@/components/Toast'
@@ -71,7 +71,7 @@ export default function ProfilePage() {
     }
   }, [user])
 
-  const loadInterestedProducts = async () => {
+  const loadInterestedProducts = useCallback(async () => {
     if (!user) return
 
     try {
@@ -89,7 +89,8 @@ export default function ProfilePage() {
       })
       setInterestedProducts([])
     }
-  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]) // fetchInterestedProductsData 穩定，不需要在依賴中
 
   // 載入興趣清單
   useEffect(() => {

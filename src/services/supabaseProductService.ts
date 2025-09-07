@@ -3,7 +3,7 @@ import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = (): any => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 ProductServiceV2 (UnifiedProductService) 取代
@@ -156,7 +156,7 @@ class SupabaseProductService implements ProductService {
       const products = data?.map(this.transformFromDB) || []
       
       // 按相關性排序
-      return products.sort((a: any, b: any) => {
+      return products.sort((a: Product, b: Product) => {
         const queryLower = query.toLowerCase()
         const getRelevanceScore = (product: Product) => {
           const name = product.name.toLowerCase()

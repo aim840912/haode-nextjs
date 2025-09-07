@@ -48,7 +48,7 @@ export default function InquiryNotificationBadge({
   onClick,
 }: InquiryNotificationBadgeProps) {
   const { user } = useAuth()
-  const { stats, loading, error, isRetrying, retryCount } = useInquiryStatsContext()
+  const { stats, loading, error, isRetrying } = useInquiryStatsContext()
   const router = useRouter()
 
   // 只有管理員才顯示
@@ -101,10 +101,6 @@ export default function InquiryNotificationBadge({
 
   // 載入或錯誤狀態顯示
   if ((loading && !hasData) || shouldShowError) {
-    const iconColorClass = shouldShowError
-      ? 'text-red-400 hover:text-red-600'
-      : 'text-gray-400 hover:text-gray-600'
-
     // 移除錯誤訊息從 title 屬性，防止出現在控制台
     const title = shouldShowError
       ? '庫存查詢 (發生錯誤)'

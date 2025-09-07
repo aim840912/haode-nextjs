@@ -60,7 +60,7 @@ async function handlePOST(request: NextRequest) {
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: any }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   if (!profile || profile.role !== 'admin') {
     throw new AuthorizationError('權限不足，只有管理員可以批量操作審計日誌')
@@ -79,16 +79,16 @@ async function handlePOST(request: NextRequest) {
       if (!ids || !Array.isArray(ids)) {
         throw new ValidationError('delete_by_ids 操作需要提供 ids 陣列')
       }
-      return await handleDeleteByIds(supabase as any, user, profile as any, ids, request)
+      return await handleDeleteByIds(supabase as unknown as RealSupabaseClient<Database>, user, profile as PartialProfile, ids, request)
 
     case 'delete_by_filters':
       if (!filters) {
         throw new ValidationError('delete_by_filters 操作需要提供 filters 物件')
       }
-      return await handleDeleteByFilters(supabase as any, user, profile as any, filters, request)
+      return await handleDeleteByFilters(supabase as unknown as RealSupabaseClient<Database>, user, profile as PartialProfile, filters, request)
 
     case 'cleanup_old':
-      return await handleCleanupOld(supabase as any, user, profile as any, filters?.days || 365, request)
+      return await handleCleanupOld(supabase as unknown as RealSupabaseClient<Database>, user, profile as PartialProfile, filters?.days || 365, request)
 
     default:
       throw new ValidationError('不支援的操作類型')

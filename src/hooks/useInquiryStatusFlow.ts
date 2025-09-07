@@ -24,8 +24,7 @@ export function useInquiryStatusFlow({
   showDescriptions = true
 }: UseInquiryStatusFlowOptions) {
   
-  // 所有可能的狀態流程
-  const allStatuses: InquiryStatus[] = ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'];
+  // 移到相關的 useMemo 內部
   
   // 狀態描述對應
   const statusDescriptions = useMemo(() => ({
@@ -55,6 +54,8 @@ export function useInquiryStatusFlow({
 
   // 生成狀態流程步驟
   const statusFlowSteps = useMemo((): StatusFlowStep[] => {
+    // 所有可能的狀態流程
+    const allStatuses: InquiryStatus[] = ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'];
     const currentStatusIndex = allStatuses.indexOf(inquiry.status);
     
     // 如果是已取消狀態，只顯示 pending 和 cancelled
@@ -105,7 +106,7 @@ export function useInquiryStatusFlow({
         estimatedDuration: showEstimatedTimes ? estimatedDurations[status] : undefined
       };
     });
-  }, [inquiry, showDescriptions, showEstimatedTimes, statusDescriptions, estimatedDurations, allStatuses]);
+  }, [inquiry, showDescriptions, showEstimatedTimes, statusDescriptions, estimatedDurations]);
 
   // 計算整體進度百分比
   const progressPercentage = useMemo(() => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -39,11 +39,7 @@ function AddProduct() {
     showInCatalog: true
   })
 
-  useEffect(() => {
-    fetchCategories()
-  }, [])
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/products/categories')
       if (response.ok) {
@@ -54,10 +50,14 @@ function AddProduct() {
           setFormData(prev => ({ ...prev, category: data[0] }))
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // 忽略分類載入錯誤，不影響表單功能
     }
-  }
+  }, [formData.category])
+
+  useEffect(() => {
+    fetchCategories()
+  }, [fetchCategories])
 
   // 載入中狀態
   if (isLoading) {
@@ -116,7 +116,7 @@ function AddProduct() {
 
     try {
       // 根據是否為特價商品設定正確的價格
-      const { salePrice, ...productDataWithoutSalePrice } = formData
+      const { salePrice: _salePrice, ...productDataWithoutSalePrice } = formData
       const productData = {
         ...productDataWithoutSalePrice,
         id: productId, // 指定產品 ID
@@ -166,7 +166,7 @@ function AddProduct() {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         alert(`新增失敗: ${errorData.error || response.status}`)
       }
-    } catch (error) {
+    } catch (_error) {
       alert('新增失敗')
     } finally {
       setLoading(false)

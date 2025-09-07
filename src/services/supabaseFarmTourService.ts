@@ -3,7 +3,7 @@ import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = (): any => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 FarmTourServiceV2Simple 取代
@@ -97,7 +97,7 @@ export class SupabaseFarmTourService {
   }
 
   async update(id: string, updateData: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>): Promise<FarmTourActivity | null> {
-    const dbUpdateData: Record<string, any> = {}
+    const dbUpdateData: Record<string, unknown> = {}
     
     if (updateData.title !== undefined) dbUpdateData.title = updateData.title
     if (updateData.season !== undefined) dbUpdateData.season = updateData.season
@@ -155,7 +155,7 @@ export class SupabaseFarmTourService {
     return true
   }
 
-  private transformFromDB(dbActivity: Record<string, any>): FarmTourActivity {
+  private transformFromDB(dbActivity: Record<string, unknown>): FarmTourActivity {
     return {
       id: dbActivity.id,
       title: dbActivity.title,

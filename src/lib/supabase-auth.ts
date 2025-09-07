@@ -171,7 +171,7 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
 export async function upsertProfile(
   profile: Partial<Profile> & { id: string }
 ): Promise<Profile | null> {
-  const { data, error } = await supabase.from('profiles').upsert(profile as any).select().single()
+  const { data, error } = await supabase.from('profiles').upsert(profile).select().single()
 
   if (error) {
     authLogger.error('Failed to upsert user profile', new Error(error.message), {
@@ -194,7 +194,7 @@ export async function updateProfile(
   userId: string,
   updates: Partial<Profile>
 ): Promise<Profile | null> {
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from('profiles')
     .update(updates)
     .eq('id', userId)
@@ -245,7 +245,7 @@ export async function signUpUser(email: string, password: string, name: string, 
         .from('profiles')
         .select('phone')
         .eq('id', data.user.id)
-        .single() as { data: { phone: string | null } | null; error: any }
+        .single() as { data: { phone: string | null } | null; error: Error | null }
 
       if (profileError) {
         authLogger.warn('無法檢查 profile', {
@@ -260,7 +260,7 @@ export async function signUpUser(email: string, password: string, name: string, 
           action: 'phone_remedy',
           metadata: { userId: data.user.id, phone: phone.substring(0, 3) + '***' },
         })
-        const { error: updateError } = await (supabase as any)
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ phone })
           .eq('id', data.user.id)

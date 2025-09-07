@@ -9,37 +9,8 @@ import { auditLogService } from '@/services/auditLogService';
 import { apiLogger } from '@/lib/logger';
 import { withErrorHandler } from '@/lib/error-handler';
 import { success, error as errorResponse } from '@/lib/api-response';
-import { ValidationError, AuthorizationError, NotFoundError } from '@/lib/errors';
+import { AuthorizationError, NotFoundError } from '@/lib/errors';
 
-// 統一的錯誤回應函數
-function createErrorResponse(message: string, status: number, details?: string) {
-  return NextResponse.json(
-    { 
-      error: message,
-      success: false,
-      details: process.env.NODE_ENV === 'development' ? details : undefined
-    },
-    { 
-      status,
-      headers: { 'Content-Type': 'application/json' }
-    }
-  );
-}
-
-// 統一的成功回應函數
-function createSuccessResponse(data?: any, message?: string, status: number = 200) {
-  return NextResponse.json(
-    { 
-      success: true,
-      data,
-      message
-    },
-    { 
-      status,
-      headers: { 'Content-Type': 'application/json' }
-    }
-  );
-}
 
 // GET /api/audit-logs/[id] - 取得單個審計日誌詳情
 async function handleGET(
@@ -60,7 +31,7 @@ async function handleGET(
       .from('profiles')
       .select('role')
       .eq('id', user.id)
-      .single() as { data: { role: string } | null; error: any };
+      .single() as { data: { role: string } | null; error: Error | null };
 
     if (!profile || !['admin', 'auditor'].includes(profile.role)) {
       throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌');
@@ -120,7 +91,7 @@ async function handleDELETE(
       .from('profiles')
       .select('role, name')
       .eq('id', user.id)
-      .single() as { data: { role: string; name: string } | null; error: any };
+      .single() as { data: { role: string; name: string } | null; error: Error | null };
 
     if (!profile || profile.role !== 'admin') {
       throw new AuthorizationError('權限不足，只有管理員可以刪除審計日誌');
@@ -131,7 +102,7 @@ async function handleDELETE(
       .from('audit_logs')
       .select('*')
       .eq('id', id)
-      .single() as { data: any | null; error: any };
+      .single() as { data: Record<string, unknown> | null; error: Error | null };
 
     if (fetchError) {
       apiLogger.error('取得待刪除審計日誌失敗', fetchError, {

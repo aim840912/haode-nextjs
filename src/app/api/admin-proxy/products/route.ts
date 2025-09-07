@@ -34,7 +34,7 @@ async function validateAdminUser() {
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single() as { data: { role: string } | null; error: any }
+    .single() as { data: { role: string } | null; error: Error | null }
 
   if (profileError || !profile) {
     throw new AuthorizationError('無法獲取用戶資料')

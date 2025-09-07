@@ -3,22 +3,36 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import AdminProtection from '@/components/AdminProtection';
-import FarmTourCalendar from '@/components/calendar/FarmTourCalendar';
 import { logger } from '@/lib/logger';
+
+// 動態導入 FarmTourCalendar 以減少初始 Bundle 大小
+const FarmTourCalendar = dynamic(
+  () => import('@/components/calendar/FarmTourCalendar'),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">載入行事曆中...</p>
+        </div>
+      </div>
+    ),
+    ssr: false
+  }
+);
 
 export default function FarmTourCalendarPage() {
   const router = useRouter();
-  const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
 
   // 處理事件點擊 - 跳轉到詢問單詳情
   const handleEventClick = (eventId: string) => {
     router.push(`/admin/inquiries?highlight=${eventId}`);
   };
 
-  // 處理日期點擊 - 未來可以開啟快速新增表單
+  // 處理日期點擊 - 傳遞給 FarmTourCalendar 組件處理快速新增
   const handleDateClick = (date: Date) => {
-    // TODO: 開啟快速新增農場導覽預約表單
     logger.debug('選擇日期', { 
       module: 'FarmTourCalendarPage', 
       action: 'handleDateClick',
@@ -139,7 +153,7 @@ export default function FarmTourCalendarPage() {
                     <li>• 使用狀態過濾器查看特定狀態的預約</li>
                   </ul>
                   <ul className="space-y-1">
-                    <li>• 點擊空白日期可快速新增預約（開發中）</li>
+                    <li>• 點擊空白日期可快速新增預約</li>
                     <li>• 統計資訊會即時更新顯示當前資料</li>
                     <li>• 所有變更都會自動記錄到系統日誌</li>
                   </ul>

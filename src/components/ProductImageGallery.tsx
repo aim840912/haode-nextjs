@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Product, ProductImage } from '@/types/product';
-import OptimizedImage, { ResponsiveImage } from './OptimizedImage';
-import { generateProductImageUrls, generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/image-utils';
+import { Product } from '@/types/product';
+import OptimizedImage from './OptimizedImage';
+import { generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/image-utils';
 
 interface ProductImageGalleryProps {
   product: Product;
@@ -37,8 +37,11 @@ export default function ProductImageGallery({
     }));
 
   // 主圖片URLs，優先使用galleryImages，其次使用第一張圖片
-  const imageUrls = product.galleryImages || 
-    (images.length > 0 ? images.map(img => img.url) : [product.images[0] || '/images/placeholder.jpg']);
+  const imageUrls = useMemo(() => 
+    product.galleryImages || 
+    (images.length > 0 ? images.map(img => img.url) : [product.images[0] || '/images/placeholder.jpg']),
+    [product.galleryImages, images, product.images]
+  );
 
   useEffect(() => {
     // 預載入所有圖片
@@ -245,11 +248,15 @@ export function SimpleProductImage({
 export function ProductCardImage({ 
   product, 
   className = '',
-  aspectRatio = 'aspect-square' 
+  aspectRatio = 'aspect-square',
+  priority = false,
+  index = 0
 }: { 
   product: Product; 
   className?: string;
   aspectRatio?: string;
+  priority?: boolean;
+  index?: number;
 }) {
   const imageUrl = product.thumbnailUrl || 
     product.primaryImageUrl || 
@@ -266,6 +273,10 @@ export function ProductCardImage({
   };
   
   const paddingBottom = paddingBottomMap[aspectRatio] || '100%';
+  
+  // 智能懶載入：前6個產品（首屏可見）優先載入，其他懶載入
+  const shouldPrioritize = priority || index < 6;
+  const loadingStrategy = shouldPrioritize ? 'eager' : 'lazy';
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
@@ -277,8 +288,8 @@ export function ProductCardImage({
           fill
           className="object-cover hover:scale-105 transition-transform duration-300"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          priority={false}
-          loading="lazy"
+          priority={shouldPrioritize}
+          loading={loadingStrategy}
         />
       </div>
       

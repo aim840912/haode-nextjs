@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface ImageDebuggerProps {
   imageUrl: string;
@@ -78,11 +79,12 @@ export default function ImageDebugger({ imageUrl, className = '' }: ImageDebugge
         </a>
       </div>
 
-      <div className="aspect-square bg-gray-100 border rounded-lg overflow-hidden">
-        <img
+      <div className="aspect-square bg-gray-100 border rounded-lg overflow-hidden relative">
+        <Image
           src={imageUrl}
           alt="測試圖片"
-          className="w-full h-full object-cover"
+          fill
+          className="object-cover"
           onLoad={handleLoad}
           onError={handleError}
         />

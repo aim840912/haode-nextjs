@@ -57,7 +57,7 @@ async function getUserWithAdminCheck(userId: string): Promise<User> {
     .from('profiles')
     .select('role, name, email')
     .eq('id', userId)
-    .single() as { data: { role: string; name: string; email: string } | null; error: any }
+    .single() as { data: { role: string; name: string; email: string } | null; error: Error | null }
 
   if (profileError) {
     apiLogger.warn('無法取得使用者資料', {

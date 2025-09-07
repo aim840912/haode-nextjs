@@ -27,7 +27,10 @@
       "Bash(find:*)",
       "mcp__playwright__browser_console_messages",
       "mcp__playwright__browser_handle_dialog",
-      "mcp__playwright__browser_type"
+      "mcp__playwright__browser_type",
+      "Bash(sed:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx next lint:*)"
     ],
     "deny": []
   },

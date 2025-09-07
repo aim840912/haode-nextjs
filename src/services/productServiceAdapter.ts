@@ -154,8 +154,10 @@ export class ProductServiceAdapter implements ProductService {
     const newUnifiedService = new UnifiedProductService(baseService)
     
     // 更新適配器引用
-    ;(this as any).legacyAdapter = new LegacyProductServiceAdapter(newUnifiedService)
-    ;(this as any).unifiedService = newUnifiedService
+    // @ts-expect-error - Dynamic service switching
+    this.legacyAdapter = new LegacyProductServiceAdapter(newUnifiedService)
+    // @ts-expect-error - Dynamic service switching
+    this.unifiedService = newUnifiedService
 
     dbLogger.info('產品服務切換實作類型', {
       module: 'ProductServiceAdapter',

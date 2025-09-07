@@ -361,7 +361,7 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
 
       if (response.success && response.data) {
         logger.info('詢價單建立成功', {
-          metadata: { inquiryId: (response.data as any)?.id }
+          metadata: { inquiryId: (response.data as { id?: string | number })?.id }
         })
 
         // 追蹤成功提交

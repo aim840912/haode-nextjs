@@ -9,7 +9,7 @@ import { validateImageFile } from '@/lib/image-utils'
 import { withErrorHandler } from '@/lib/error-handler'
 import { ImageUploadSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
-import { success, created } from '@/lib/api-response'
+import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { ProductImageService } from '@/services/productImageService'
 

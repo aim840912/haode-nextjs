@@ -95,8 +95,8 @@ export default function GoogleAnalyticsProvider({ children }: GoogleAnalyticsPro
 // React Hook for using GA4 in components
 export function useGoogleAnalytics() {
   return {
-    trackEvent: (eventName: string, parameters: Record<string, any> = {}) => {
-      const { trackEvent } = require('@/lib/analytics')
+    trackEvent: async (eventName: string, parameters: Record<string, unknown> = {}) => {
+      const { trackEvent } = await import('@/lib/analytics')
       trackEvent(eventName, parameters)
     },
     

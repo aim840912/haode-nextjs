@@ -2,7 +2,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-auth';
 import { logger } from '@/lib/logger';
 
 // 類型斷言，解決 Supabase 類型推斷問題
-const supabase = (): any => getSupabaseAdmin() as any;
+const supabase = () => getSupabaseAdmin();
 
 export interface ProductImage {
   id: string;

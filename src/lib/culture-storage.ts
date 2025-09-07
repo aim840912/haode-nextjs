@@ -1,4 +1,4 @@
-import { supabase, getSupabaseAdmin } from './supabase-auth';
+import { getSupabaseAdmin } from './supabase-auth';
 import { validateImageFile, generateFileName } from './image-utils';
 import { dbLogger } from './logger';
 import { SupabaseStorageBucket, SupabaseStorageFile } from '@/types/supabase.types';
@@ -84,7 +84,7 @@ export async function uploadCultureImageToStorage(
     const filePath = `${cultureId}/${fileName}`;
 
     // 使用 admin 客戶端上傳檔案（繞過 RLS）
-    const { data, error } = await supabaseAdmin.storage
+    const { error } = await supabaseAdmin.storage
       .from(CULTURE_STORAGE_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
@@ -293,7 +293,7 @@ export async function checkCultureImageExists(filePath: string): Promise<boolean
     }
 
     return (data || []).some((file: SupabaseStorageFile) => file.name === fileName);
-  } catch (error) {
+  } catch {
     return false;
   }
 }

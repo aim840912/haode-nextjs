@@ -5,7 +5,7 @@ import { withErrorHandler } from '@/lib/error-handler'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 
-async function handleGET(request: NextRequest) {
+async function handleGET() {
   apiLogger.info('開始查詢資料策略資訊', {
     module: 'DataStrategy',
     action: 'GET',

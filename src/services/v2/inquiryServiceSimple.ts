@@ -8,7 +8,7 @@ import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = (): any => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin();
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 import {
   InquiryService,
@@ -87,7 +87,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   /**
    * 解析農場參觀資料
    */
-  private parseFarmTourDataFromNotes(record: any): SupabaseInquiryRecord {
+  private parseFarmTourDataFromNotes(record: SupabaseInquiryRecord): SupabaseInquiryRecord {
     if (!record.notes || !record.notes.startsWith('FARM_TOUR_DATA:')) {
       return record
     }
@@ -120,7 +120,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   /**
    * 轉換資料庫記錄為實體
    */
-  private transformFromDB(record: any): InquiryWithItems {
+  private transformFromDB(record: SupabaseInquiryRecord): InquiryWithItems {
     const parsedRecord = this.parseFarmTourDataFromNotes(record)
 
     return {
@@ -232,7 +232,7 @@ export class InquiryServiceV2Simple implements InquiryService {
           })
         }
 
-        inquiryItems = (items as any) || []
+        inquiryItems = (items as InquiryItem[]) || []
       }
 
       const result = this.transformFromDB({
@@ -279,7 +279,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getUserInquiries', { userId, params })
       }
 
-      const result = (data || []).map((record: any) =>
+      const result = (data || []).map((record: SupabaseInquiryRecord) =>
         this.transformFromDB(record)
       )
 
@@ -317,7 +317,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getInquiryById', { userId, inquiryId })
       }
 
-      return data ? this.transformFromDB(data as any) : null
+      return data ? this.transformFromDB(data as SupabaseInquiryRecord) : null
     } catch (error) {
       this.handleError(error, 'getInquiryById', { userId, inquiryId })
     }
@@ -391,7 +391,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getAllInquiries', { params })
       }
 
-      return (data || []).map((record: any) => this.transformFromDB(record))
+      return (data || []).map((record: SupabaseInquiryRecord) => this.transformFromDB(record))
     } catch (error) {
       this.handleError(error, 'getAllInquiries', { params })
     }
@@ -433,7 +433,7 @@ export class InquiryServiceV2Simple implements InquiryService {
   async getInquiryStats(): Promise<InquiryStats[]> {
     try {
       const client = this.getSupabaseClient()
-      const { data, error } = await (client as any).from('inquiry_stats').select('*')
+      const { data, error } = await client.from('inquiry_stats').select('*')
 
       if (error) {
         this.handleError(error, 'getInquiryStats')
@@ -487,7 +487,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
       }
 
-      return data ? this.transformFromDB(data as any) : null
+      return data ? this.transformFromDB(data as SupabaseInquiryRecord) : null
     } catch (error) {
       this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
     }
@@ -599,9 +599,12 @@ export class InquiryServiceV2Simple implements InquiryService {
     return total > 0 ? total : null
   }
 
+  /**
+   * 應用查詢參數到 Supabase 查詢構建器
+   * 使用與專案其他服務一致的 any 類型斷言策略
+   */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private applyQueryParams(query: any, params?: InquiryQueryParams): any {
-    // TODO: 需要 Supabase 查詢類型
     if (!params) return query
 
     // 狀態篩選

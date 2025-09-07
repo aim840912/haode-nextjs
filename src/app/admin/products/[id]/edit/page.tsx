@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Product } from '@/types/product'
 import Link from 'next/link'
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
@@ -47,7 +48,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         const data = await response.json()
         setCategories(data)
       }
-    } catch (error) {
+    } catch (_error) {
       // 忽略分類載入錯誤，不影響表單功能
     }
   }, [])
@@ -167,7 +168,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
     try {
       // 根據是否為特價商品設定正確的價格
-      const { salePrice, ...productDataWithoutSalePrice } = formData
+      const { salePrice: _salePrice, ...productDataWithoutSalePrice } = formData
       const productData = {
         ...productDataWithoutSalePrice,
         images: formData.images.filter(img => img.trim() !== ''),
@@ -195,13 +196,13 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
       
       if (response.ok) {
-        const result = await response.json()
+        await response.json()
         router.push('/admin/products')
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         alert(`更新失敗: ${errorData.error || response.status}`)
       }
-    } catch (error) {
+    } catch (_error) {
       alert('更新失敗')
     } finally {
       setLoading(false)
@@ -542,11 +543,12 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                   {image.trim() && (
                     <div className="mt-2">
                       <div className="text-xs text-gray-600 mb-2">圖片預覽：</div>
-                      <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
-                        <img
+                      <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center relative">
+                        <Image
                           src={image}
                           alt={`產品圖片 ${index + 1}`}
-                          className="max-w-full max-h-full object-cover"
+                          fill
+                          className="object-cover"
                           onError={(e) => {
                             (e.target as HTMLImageElement).style.display = 'none';
                             const parent = (e.target as HTMLImageElement).parentElement;

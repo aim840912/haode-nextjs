@@ -8,7 +8,7 @@ interface CacheEntry<T> {
 }
 
 class ApiCache {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   
   set<T>(key: string, data: T, ttl: number = 5 * 60 * 1000): void { // 預設5分鐘
     this.cache.set(key, {
@@ -65,7 +65,7 @@ class ApiCache {
 export const apiCache = new ApiCache();
 
 // 快取裝飾器 - 用於包裝API函數
-export function withCache<T extends any[], R>(
+export function withCache<T extends unknown[], R>(
   fn: (...args: T) => Promise<R>,
   keyGenerator: (...args: T) => string,
   ttl: number = 5 * 60 * 1000

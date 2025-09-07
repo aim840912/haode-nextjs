@@ -3,7 +3,7 @@ import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = (): any => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin();
 
 /**
  * @deprecated 此服務已被 LocationServiceV2Simple 取代

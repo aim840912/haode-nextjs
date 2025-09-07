@@ -9,9 +9,7 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
 import { useInquiryStats, UseInquiryStatsReturn } from '@/hooks/useInquiryStats';
 
-interface InquiryStatsContextType extends UseInquiryStatsReturn {
-  // 額外的 context 特定方法可以在這裡加入
-}
+type InquiryStatsContextType = UseInquiryStatsReturn
 
 const InquiryStatsContext = createContext<InquiryStatsContextType | undefined>(undefined);
 

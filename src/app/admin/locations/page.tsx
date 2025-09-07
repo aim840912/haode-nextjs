@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Location } from '@/types/location'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import AdminProtection from '@/components/AdminProtection'
@@ -113,9 +114,11 @@ export default function LocationsAdmin() {
                 <div className="mb-3">
                   {location.image ? (
                     isValidImageUrl(location.image) ? (
-                      <img 
+                      <Image 
                         src={location.image} 
                         alt={location.title}
+                        width={64}
+                        height={64}
                         className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                       />
                     ) : (

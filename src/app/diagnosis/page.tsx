@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
 interface DiagnosisResult {
@@ -8,7 +8,7 @@ interface DiagnosisResult {
   auth: boolean;
   testInsert: boolean;
   errors: string[];
-  details: Record<string, any>;
+  details: Record<string, unknown>;
 }
 
 export default function DiagnosisPage() {
@@ -17,11 +17,11 @@ export default function DiagnosisPage() {
   const [result, setResult] = useState<DiagnosisResult | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
-  const addLog = (message: string) => {
+  const addLog = useCallback((message: string) => {
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
-  };
+  }, []);
 
-  const runDiagnosis = async () => {
+  const runDiagnosis = useCallback(async () => {
     setIsRunning(true);
     setResult(null);
     setLogs([]);
@@ -192,7 +192,7 @@ export default function DiagnosisPage() {
     addLog('🏁 診斷完成');
     setResult(diagnosisResult);
     setIsRunning(false);
-  };
+  }, [user, addLog]);
 
   // 自動運行診斷（如果使用者已登入）
   useEffect(() => {
@@ -204,7 +204,7 @@ export default function DiagnosisPage() {
       
       return () => clearTimeout(timer);
     }
-  }, [user, authLoading]);
+  }, [user, authLoading, runDiagnosis]);
 
   if (authLoading) {
     return (

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
@@ -251,9 +252,11 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             {formData.imageUrl && uploadedImages.length === 0 && (
               <div className="mb-4">
                 <div className="text-sm text-gray-600 mb-2">目前圖片：</div>
-                <img 
+                <Image 
                   src={formData.imageUrl} 
                   alt="目前圖片" 
+                  width={128}
+                  height={128}
                   className="h-32 w-auto object-cover rounded-lg border"
                 />
               </div>
@@ -350,9 +353,11 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center mb-3">
                 {formData.imageUrl && (
-                  <img 
+                  <Image 
                     src={formData.imageUrl} 
                     alt="預覽" 
+                    width={48}
+                    height={48}
                     className="w-12 h-12 object-cover rounded-lg mr-3"
                   />
                 )}

@@ -117,19 +117,17 @@ export function useLoading() {
 export function useAsyncLoading() {
   const { startLoading, stopLoading } = useLoading()
 
-  const executeWithLoading = useCallback(async (
-    asyncFunction: () => Promise<any>,
-    taskId: string = `task-${Date.now()}`,
-    message: string = '載入中...',
-    timeout?: number
-  ): Promise<any> => {
-    try {
-      startLoading(taskId, message, timeout)
-      const result = await asyncFunction()
-      return result
-    } finally {
-      stopLoading(taskId)
-    }
+  const executeWithLoading = useCallback(
+    (asyncFunction: any, taskId = `task-${Date.now()}`, message = '載入中...', timeout?: number): Promise<any> => {
+    return (async () => {
+      try {
+        startLoading(taskId, message, timeout)
+        const result = await asyncFunction()
+        return result
+      } finally {
+        stopLoading(taskId)
+      }
+    })()
   }, [startLoading, stopLoading])
 
   return { executeWithLoading }

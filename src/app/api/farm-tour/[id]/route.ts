@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { farmTourServiceAdapter } from '@/services/farmTourServiceAdapter'
 import { withErrorHandler } from '@/lib/error-handler'
 import { NotFoundError } from '@/lib/errors'

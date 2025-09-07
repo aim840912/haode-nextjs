@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
@@ -295,9 +296,11 @@ export default function AddNews() {
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center mb-3">
                 {formData.imageUrl && (
-                  <img 
+                  <Image 
                     src={formData.imageUrl} 
                     alt="預覽" 
+                    width={48}
+                    height={48}
                     className="w-12 h-12 object-cover rounded-lg mr-3"
                   />
                 )}

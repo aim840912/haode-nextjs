@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -21,7 +21,7 @@ import {
 
 function InquiriesPage() {
   const { user, isLoading: authLoading } = useAuth()
-  const router = useRouter()
+  const _router = useRouter()
   const [inquiries, setInquiries] = useState<InquiryWithItems[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +29,7 @@ function InquiriesPage() {
   const [typeFilter, setTypeFilter] = useState<InquiryType | 'all'>('all')
 
   // 取得詢問單列表
-  const fetchInquiries = async () => {
+  const fetchInquiries = useCallback(async () => {
     if (!user) return
 
     setIsLoading(true)
@@ -75,7 +75,7 @@ function InquiriesPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, statusFilter, typeFilter])
 
   // 初始載入
   useEffect(() => {
@@ -84,7 +84,7 @@ function InquiriesPage() {
     } else if (!authLoading) {
       setIsLoading(false)
     }
-  }, [user, authLoading, statusFilter, typeFilter])
+  }, [user, authLoading, statusFilter, typeFilter, fetchInquiries])
 
   // 載入中狀態
   if (authLoading || isLoading) {

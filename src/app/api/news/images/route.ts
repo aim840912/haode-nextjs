@@ -1,13 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import {
-  uploadNewsImage,
   uploadNewsImageServer,
   uploadNewsImageWithThumbnail,
   deleteNewsImage,
   listNewsImages,
   initializeNewsBucket,
 } from '@/lib/news-storage'
-import { SupabaseStorageError } from '@/lib/supabase-storage'
 import { validateImageFile } from '@/lib/image-utils'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'

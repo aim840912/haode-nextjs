@@ -85,7 +85,7 @@ export class CultureServiceV2Simple implements CultureService {
    * 取得管理員客戶端
    */
   private getAdminClient(): ServiceSupabaseClient {
-    return getSupabaseAdmin() as any
+    return getSupabaseAdmin()!
   }
 
   /**
@@ -231,7 +231,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'getCultureItems')
       }
 
-      const result = (data || []).map((item: any) => this.transformFromDB(item))
+      const result = (data || []).map((item: SupabaseCultureRecord) => this.transformFromDB(item))
 
       dbLogger.info('載入文化項目成功', {
         module: this.moduleName,
@@ -269,7 +269,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'getCultureItemById', { id })
       }
 
-      const result = data ? this.transformFromDB(data as any) : null
+      const result = data ? this.transformFromDB(data as SupabaseCultureRecord) : null
 
       dbLogger.debug('取得文化項目詳情', {
         module: this.moduleName,
@@ -415,7 +415,7 @@ export class CultureServiceV2Simple implements CultureService {
           })
         }
 
-        const result = this.transformFromDB({ ...data, images } as any)
+        const result = this.transformFromDB({ ...data, images } as SupabaseCultureRecord)
 
         dbLogger.info('文化項目建立成功', {
           module: this.moduleName,
@@ -560,7 +560,7 @@ export class CultureServiceV2Simple implements CultureService {
         throw new NotFoundError('文化項目不存在')
       }
 
-      const result = this.transformFromDB(data as any)
+      const result = this.transformFromDB(data as SupabaseCultureRecord)
 
       dbLogger.info('文化項目更新成功', {
         module: this.moduleName,

@@ -370,7 +370,7 @@ export function useRateLimitDisplay() {
 /**
  * 高階組件 Hook：自動處理 API 調用的 Rate Limiting
  */
-export function useApiWithRateLimit<T = any>() {
+export function useApiWithRateLimit<T = unknown>() {
   const rateLimitStatus = useRateLimitStatus();
 
   const callApi = useCallback(async (

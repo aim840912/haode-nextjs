@@ -4,12 +4,13 @@ import { useState } from 'react'
 import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
 
 export default function AddLocation() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [_imageFile, _setImageFile] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const { user, isLoading } = useAuth()
 
@@ -169,7 +170,7 @@ export default function AddLocation() {
         return
       }
 
-      setImageFile(file)
+      _setImageFile(file)
 
       // 創建預覽
       const reader = new FileReader()
@@ -183,7 +184,7 @@ export default function AddLocation() {
   }
 
   const clearImage = () => {
-    setImageFile(null)
+    _setImageFile(null)
     setImagePreview(null)
     setFormData(prev => ({ ...prev, image: '' }))
   }
@@ -475,9 +476,11 @@ export default function AddLocation() {
                     
                     {imagePreview && (
                       <div className="relative">
-                        <img
+                        <Image
                           src={imagePreview}
                           alt="圖片預覽"
+                          width={128}
+                          height={128}
                           className="w-32 h-32 object-cover rounded-lg border border-gray-300"
                         />
                         <button
@@ -532,15 +535,19 @@ export default function AddLocation() {
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
                 <div className="mb-3">
                   {imagePreview ? (
-                    <img 
+                    <Image 
                       src={imagePreview} 
-                      alt="門市圖片" 
+                      alt="門市圖片"
+                      width={64}
+                      height={64}
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
                   ) : formData.image && formData.image.startsWith('/') ? (
-                    <img 
+                    <Image 
                       src={formData.image} 
-                      alt="門市圖片" 
+                      alt="門市圖片"
+                      width={64}
+                      height={64}
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
                   ) : (

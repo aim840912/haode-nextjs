@@ -30,7 +30,7 @@ export interface QueryOptions {
   /** 排序方向 */
   sortOrder?: 'asc' | 'desc'
   /** 過濾條件 */
-  filters?: Record<string, any>
+  filters?: Record<string, unknown>
   /** 包含的關聯資料 */
   includes?: string[]
 }
@@ -52,7 +52,7 @@ export interface PaginatedQueryOptions extends QueryOptions {
  * @template CreateDTO 建立實體時的 DTO 類型
  * @template UpdateDTO 更新實體時的 DTO 類型
  */
-export interface BaseService<T, CreateDTO = any, UpdateDTO = any> {
+export interface BaseService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> {
   /**
    * 取得所有實體
    * @param options 查詢選項
@@ -139,7 +139,7 @@ export interface SearchableService<T> extends BaseService<T> {
  * 
  * 支援批次操作的服務應實作此介面
  */
-export interface BatchService<T, CreateDTO = any, UpdateDTO = any> extends BaseService<T, CreateDTO, UpdateDTO> {
+export interface BatchService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> extends BaseService<T, CreateDTO, UpdateDTO> {
   /**
    * 批次建立實體
    * @param dataList 建立資料陣列
@@ -197,7 +197,7 @@ export interface ServiceMetadata {
  * 
  * 包含配置和中繼資料支援的完整服務介面
  */
-export interface EnhancedBaseService<T, CreateDTO = any, UpdateDTO = any> 
+export interface EnhancedBaseService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> 
   extends BaseService<T, CreateDTO, UpdateDTO> {
   /** 服務配置 */
   readonly config: ServiceConfig
@@ -212,7 +212,7 @@ export interface EnhancedBaseService<T, CreateDTO = any, UpdateDTO = any>
   getHealthStatus?(): Promise<{
     status: 'healthy' | 'degraded' | 'unhealthy'
     timestamp: string
-    details?: Record<string, any>
+    details?: Record<string, unknown>
   }>
 
   /**

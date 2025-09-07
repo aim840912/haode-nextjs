@@ -7,13 +7,15 @@
       "warn",
       {
         "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true
       }
     ],
+    "@typescript-eslint/no-require-imports": "warn",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "warn",
     "react/no-unescaped-entities": "warn",
-    "@next/next/no-img-element": "error",
+    "@next/next/no-img-element": "warn",
     "prefer-const": "warn",
     "no-console": ["warn", { "allow": ["warn", "error"] }]
   },

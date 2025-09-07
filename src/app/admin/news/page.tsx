@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { NewsItem } from '@/types/news'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import AdminProtection from '@/components/AdminProtection'
@@ -190,9 +191,11 @@ export default function NewsAdmin() {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         {item.imageUrl && (
-                          <img
+                          <Image
                             src={item.imageUrl}
                             alt={item.title}
+                            width={40}
+                            height={40}
                             className="w-10 h-10 object-cover rounded-lg mr-3"
                           />
                         )}
