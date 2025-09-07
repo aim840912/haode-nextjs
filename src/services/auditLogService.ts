@@ -18,9 +18,6 @@ import {
   AuditLog,
   CreateAuditLogRequest,
   AuditLogQueryParams,
-  AuditStats,
-  UserActivityStats,
-  ResourceAccessStats,
   AuditLogUtils,
   ResourceType,
   AuditTypeGuards,
@@ -251,7 +248,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await supabaseAdmin.rpc('get_user_audit_history', {
+      const { data, error } = await (supabaseAdmin as any).rpc('get_user_audit_history', {
         target_user_id: userId,
         limit_count: limit,
         offset_count: offset,
@@ -293,7 +290,7 @@ export class SupabaseAuditLogService implements AuditLogService {
     }
     
     try {
-      const { data, error } = await supabaseAdmin.rpc('get_resource_audit_history', {
+      const { data, error } = await (supabaseAdmin as any).rpc('get_resource_audit_history', {
         target_resource_type: resourceType,
         target_resource_id: resourceId,
         limit_count: limit,
@@ -320,116 +317,6 @@ export class SupabaseAuditLogService implements AuditLogService {
         }
       )
       throw new Error(error instanceof Error ? error.message : '取得資源存取歷史時發生未知錯誤')
-    }
-  }
-
-  // 取得審計統計
-  async getAuditStats(days: number = 30): Promise<AuditStats[]> {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
-      throw new Error('Supabase admin client 未配置')
-    }
-    
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('audit_stats')
-        .select('*')
-        .gte('date', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .order('date', { ascending: false })
-
-      if (error) {
-        dbLogger.error('取得審計統計失敗', new Error(`${error.message} (code: ${error.code})`), {
-          metadata: { context: 'get_audit_stats', days },
-        })
-        throw new Error(`取得審計統計失敗: ${error.message}`)
-      }
-
-      return (data || []) as AuditLog[]
-    } catch (error) {
-      dbLogger.error(
-        '取得審計統計異常',
-        error instanceof Error ? error : new Error('Unknown error'),
-        {
-          metadata: { context: 'get_audit_stats', days },
-        }
-      )
-      throw new Error(error instanceof Error ? error.message : '取得審計統計時發生未知錯誤')
-    }
-  }
-
-  // 取得使用者活動統計
-  async getUserActivityStats(days: number = 30): Promise<UserActivityStats[]> {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
-      throw new Error('Supabase admin client 未配置')
-    }
-    
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('user_activity_stats')
-        .select('*')
-        .gte('first_activity', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .order('total_actions', { ascending: false })
-
-      if (error) {
-        dbLogger.error(
-          '取得使用者活動統計失敗',
-          new Error(`${error.message} (code: ${error.code})`),
-          {
-            metadata: { context: 'get_user_activity_stats', days },
-          }
-        )
-        throw new Error(`取得使用者活動統計失敗: ${error.message}`)
-      }
-
-      return (data || []) as AuditLog[]
-    } catch (error) {
-      dbLogger.error(
-        '取得使用者活動統計異常',
-        error instanceof Error ? error : new Error('Unknown error'),
-        {
-          metadata: { context: 'get_user_activity_stats', days },
-        }
-      )
-      throw new Error(error instanceof Error ? error.message : '取得使用者活動統計時發生未知錯誤')
-    }
-  }
-
-  // 取得資源存取統計
-  async getResourceAccessStats(days: number = 30): Promise<ResourceAccessStats[]> {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
-      throw new Error('Supabase admin client 未配置')
-    }
-    
-    try {
-      const { data, error } = await supabaseAdmin
-        .from('resource_access_stats')
-        .select('*')
-        .gte('first_accessed', new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString())
-        .order('access_count', { ascending: false })
-
-      if (error) {
-        dbLogger.error(
-          '取得資源存取統計失敗',
-          new Error(`${error.message} (code: ${error.code})`),
-          {
-            metadata: { context: 'get_resource_access_stats', days },
-          }
-        )
-        throw new Error(`取得資源存取統計失敗: ${error.message}`)
-      }
-
-      return (data || []) as AuditLog[]
-    } catch (error) {
-      dbLogger.error(
-        '取得資源存取統計異常',
-        error instanceof Error ? error : new Error('Unknown error'),
-        {
-          metadata: { context: 'get_resource_access_stats', days },
-        }
-      )
-      throw new Error(error instanceof Error ? error.message : '取得資源存取統計時發生未知錯誤')
     }
   }
 }

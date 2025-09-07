@@ -231,7 +231,7 @@ export class CultureServiceV2Simple implements CultureService {
         this.handleError(error, 'getCultureItems')
       }
 
-      const result = (data || []).map((item: SupabaseCultureRecord) => this.transformFromDB(item))
+      const result = (data || []).map(item => this.transformFromDB(item as SupabaseCultureRecord))
 
       dbLogger.info('載入文化項目成功', {
         module: this.moduleName,

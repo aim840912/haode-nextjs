@@ -48,7 +48,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         const data = await response.json()
         setCategories(data)
       }
-    } catch (_error) {
+    } catch {
       // 忽略分類載入錯誤，不影響表單功能
     }
   }, [])
@@ -168,7 +168,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
     try {
       // 根據是否為特價商品設定正確的價格
-      const { salePrice: _salePrice, ...productDataWithoutSalePrice } = formData
+      const { salePrice: _unusedSalePrice, ...productDataWithoutSalePrice } = formData
       const productData = {
         ...productDataWithoutSalePrice,
         images: formData.images.filter(img => img.trim() !== ''),
@@ -202,7 +202,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         alert(`更新失敗: ${errorData.error || response.status}`)
       }
-    } catch (_error) {
+    } catch {
       alert('更新失敗')
     } finally {
       setLoading(false)

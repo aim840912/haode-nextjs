@@ -50,7 +50,7 @@ function AddProduct() {
           setFormData(prev => ({ ...prev, category: data[0] }))
         }
       }
-    } catch (_error) {
+    } catch {
       // 忽略分類載入錯誤，不影響表單功能
     }
   }, [formData.category])
@@ -116,7 +116,7 @@ function AddProduct() {
 
     try {
       // 根據是否為特價商品設定正確的價格
-      const { salePrice: _salePrice, ...productDataWithoutSalePrice } = formData
+      const { salePrice: _unusedSalePrice, ...productDataWithoutSalePrice } = formData
       const productData = {
         ...productDataWithoutSalePrice,
         id: productId, // 指定產品 ID
@@ -166,7 +166,7 @@ function AddProduct() {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
         alert(`新增失敗: ${errorData.error || response.status}`)
       }
-    } catch (_error) {
+    } catch {
       alert('新增失敗')
     } finally {
       setLoading(false)

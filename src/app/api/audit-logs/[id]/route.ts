@@ -3,7 +3,7 @@
  * 處理個別審計日誌的刪除操作
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
 import { auditLogService } from '@/services/auditLogService';
 import { apiLogger } from '@/lib/logger';

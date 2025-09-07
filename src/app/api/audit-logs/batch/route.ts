@@ -13,6 +13,7 @@ import { ValidationError, AuthorizationError } from '@/lib/errors'
 import type { Database } from '@/types/database'
 import type { User } from '@supabase/supabase-js'
 import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js'
+import type { AuditAction, ResourceType } from '@/types/audit'
 
 // 型別定義
 type ProfileRow = Database['public']['Tables']['profiles']['Row']
@@ -220,10 +221,10 @@ async function handleDeleteByFilters(
     query = query.ilike('user_email', `%${filters.user_email}%`)
   }
   if (filters.action) {
-    query = query.eq('action', filters.action as any)
+    query = query.eq('action', filters.action as AuditAction)
   }
   if (filters.resource_type) {
-    query = query.eq('resource_type', filters.resource_type as any)
+    query = query.eq('resource_type', filters.resource_type as ResourceType)
   }
 
   const { data, error: deleteError } = await query.select()

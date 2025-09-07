@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { CSRFTokenManager, validateOrigin } from '@/lib/auth-middleware'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'
-import { success } from '@/lib/api-response'
+// import { success } from '@/lib/api-response' // TODO: 未使用
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
 
 /**
@@ -249,7 +249,7 @@ async function handleDELETE(request: NextRequest) {
 }
 
 // 處理不支援的 HTTP 方法
-async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
+async function handleUnsupportedMethod(): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 

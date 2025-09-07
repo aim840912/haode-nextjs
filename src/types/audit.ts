@@ -132,7 +132,7 @@ export interface ResourceAccessStats {
   first_accessed: string
 }
 
-// 審計日誌服務介面
+// 審計日誌服務介面 - 專注於日誌記錄和查詢功能
 export interface AuditLogService {
   // 記錄審計日誌
   log(request: CreateAuditLogRequest): Promise<void>
@@ -150,14 +150,7 @@ export interface AuditLogService {
     limit?: number
   ): Promise<AuditLog[]>
 
-  // 取得審計統計
-  getAuditStats(days?: number): Promise<AuditStats[]>
-
-  // 取得使用者活動統計
-  getUserActivityStats(days?: number): Promise<UserActivityStats[]>
-
-  // 取得資源存取統計
-  getResourceAccessStats(days?: number): Promise<ResourceAccessStats[]>
+  // 注意：統計功能已移至 AuditStatsService，請使用 auditStatsService 取得統計資料
 }
 
 // 審計日誌標籤和顏色常數

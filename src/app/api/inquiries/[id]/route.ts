@@ -17,6 +17,8 @@ import { apiLogger } from '@/lib/logger'
 import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
 import { withErrorHandler } from '@/lib/error-handler'
+import type { Database } from '@/types/database'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter
@@ -81,7 +83,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
   // 管理員查看庫存查詢單時自動標記為已讀
   if (isAdmin && adminMode && !inquiry.is_read) {
     try {
-      await (supabase as any)
+      await (supabase as unknown as SupabaseClient<Database>)
         .from('inquiries')
         .update({
           is_read: true,
@@ -435,7 +437,7 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
   }
 
   // 執行更新
-  const { data: updatedInquiry, error } = await (supabase as any)
+  const { data: updatedInquiry, error } = await (supabase as unknown as SupabaseClient<Database>)
     .from('inquiries')
     .update(updateData)
     .eq('id', inquiryId)

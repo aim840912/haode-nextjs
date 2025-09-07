@@ -41,7 +41,14 @@ class SupabaseProductService implements ProductService {
   async getAllProducts(): Promise<Product[]> {
     try {
       // 使用管理員客戶端來獲取所有產品（包含下架的）
-      const client = getAdmin() || supabase
+      const client = getAdmin()
+      if (!client) {
+        dbLogger.warn('管理員客戶端不可用，使用一般客戶端', {
+          module: 'SupabaseProductService',
+          action: 'getAllProducts'
+        })
+        return this.getProducts()
+      }
       const { data, error } = await client
         .from('products')
         .select('*')
@@ -57,9 +64,13 @@ class SupabaseProductService implements ProductService {
 
   async addProduct(productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
     try {
-      const { data, error } = await getAdmin()
+      const client = getAdmin()
+      if (!client) {
+        throw new Error('管理員客戶端不可用')
+      }
+      const { data, error } = await client
         .from('products')
-        .insert([this.transformToDB(productData)])
+        .insert(this.transformToDB(productData) as any)
         .select()
         .single()
       
@@ -74,7 +85,11 @@ class SupabaseProductService implements ProductService {
 
   async updateProduct(id: string, productData: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product> {
     try {
-      const { data, error } = await getAdmin()
+      const client = getAdmin()
+      if (!client) {
+        throw new Error('管理員客戶端不可用')
+      }
+      const { data, error } = await client
         .from('products')
         .update(this.transformToDB(productData))
         .eq('id', id)
@@ -105,7 +120,11 @@ class SupabaseProductService implements ProductService {
       }
       
       // 然後刪除資料庫記錄
-      const { error } = await getAdmin()
+      const client = getAdmin()
+      if (!client) {
+        throw new Error('管理員客戶端不可用')
+      }
+      const { error } = await client
         .from('products')
         .delete()
         .eq('id', id)
@@ -120,7 +139,25 @@ class SupabaseProductService implements ProductService {
   async getProductById(id: string): Promise<Product | null> {
     try {
       // 使用管理員客戶端來獲取產品（支援查詢下架產品）
-      const client = getAdmin() || supabase
+      const client = getAdmin()
+      if (!client) {
+        dbLogger.warn('管理員客戶端不可用，使用一般客戶端', {
+          module: 'SupabaseProductService',
+          action: 'getProductById'
+        })
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', id)
+          .eq('is_active', true)
+          .single()
+        
+        if (error) {
+          if (error.code === 'PGRST116') return null
+          throw error
+        }
+        return this.transformFromDB(data)
+      }
       const { data, error } = await client
         .from('products')
         .select('*')

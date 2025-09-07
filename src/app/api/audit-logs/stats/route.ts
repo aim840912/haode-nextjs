@@ -5,7 +5,7 @@
 
 import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { auditLogService } from '@/services/auditLogService'
+import { auditStatsService } from '@/services/auditStatsService'
 import { withErrorHandler } from '@/lib/error-handler'
 import { requireAuth } from '@/lib/api-middleware'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
@@ -61,9 +61,9 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
     case 'overview':
       // 綜合統計
       const [auditStats, userStats, resourceStats] = await Promise.all([
-        auditLogService.getAuditStats(days),
-        auditLogService.getUserActivityStats(days),
-        auditLogService.getResourceAccessStats(days),
+        auditStatsService.getAuditStats({ days }),
+        auditStatsService.getUserActivityStats({ days }),
+        auditStatsService.getResourceAccessStats({ days }),
       ])
 
       stats = {
@@ -86,17 +86,17 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
 
     case 'users':
       // 使用者活動統計
-      stats = await auditLogService.getUserActivityStats(days)
+      stats = await auditStatsService.getUserActivityStats({ days })
       break
 
     case 'resources':
       // 資源存取統計
-      stats = await auditLogService.getResourceAccessStats(days)
+      stats = await auditStatsService.getResourceAccessStats({ days })
       break
 
     case 'actions':
       // 動作統計
-      stats = await auditLogService.getAuditStats(days)
+      stats = await auditStatsService.getAuditStats({ days })
       break
 
     default:

@@ -9,7 +9,7 @@
  */
 
 import { promises as fs } from 'fs'
-import path from 'path'
+import * as path from 'path'
 import { 
   BaseService, 
   PaginatedService,
@@ -70,7 +70,7 @@ export interface SearchConfig {
  * 支援記憶體快取、備份和搜尋功能
  */
 export abstract class AbstractJsonService<T extends JsonEntity, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> 
-  implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T>, SearchableService<T> {
+  implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T, CreateDTO, UpdateDTO>, SearchableService<T, CreateDTO, UpdateDTO> {
   
   protected readonly config: JsonServiceConfig
   protected readonly metadata: ServiceMetadata

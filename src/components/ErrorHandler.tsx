@@ -230,7 +230,7 @@ export function isRetryableError(type: ErrorType): boolean {
 export function useAsyncWithError() {
   const { addError } = useErrorHandler()
   const loadingResult = useAsyncLoading()
-  const { executeWithLoading } = loadingResult || { executeWithLoading: async (fn: any) => fn() }
+  const { executeWithLoading } = loadingResult || { executeWithLoading: async (fn: () => Promise<unknown>) => fn() }
 
   const executeWithErrorHandling = useCallback(
     async <T = unknown,>(
@@ -249,7 +249,7 @@ export function useAsyncWithError() {
           options.taskId,
           options.loadingMessage,
           options.timeout
-        )
+        ) as T
       } catch (error) {
         const errorType = classifyError(error)
         const errorMessage = getErrorMessage(errorType, options.errorMessage)

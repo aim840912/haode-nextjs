@@ -133,7 +133,7 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'getLocations')
       }
 
-      const locations = data?.map(this.transformFromDB.bind(this)) || []
+      const locations = data?.map(record => this.transformFromDB(record as SupabaseLocationRecord)) || []
 
       dbLogger.info('地點清單查詢成功', {
         module: this.moduleName,

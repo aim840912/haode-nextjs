@@ -194,7 +194,7 @@ const nextConfig: NextConfig = {
 
   // TypeScript 檢查優化
   typescript: {
-    ignoreBuildErrors: true, // 暫時跳過類型檢查以完成推送
+    ignoreBuildErrors: false, // 恢復嚴格類型檢查
   },
 
   // 輸出配置 - 啟用 standalone 模式以減小部署包大小

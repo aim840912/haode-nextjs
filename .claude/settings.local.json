@@ -30,7 +30,11 @@
       "mcp__playwright__browser_type",
       "Bash(sed:*)",
       "Bash(npx eslint:*)",
-      "Bash(npx next lint:*)"
+      "Bash(npx next lint:*)",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_press_key",
+      "Bash(curl:*)"
     ],
     "deny": []
   },

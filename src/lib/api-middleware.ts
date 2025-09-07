@@ -55,9 +55,9 @@ async function getUserWithAdminCheck(userId: string): Promise<User> {
 
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('role, name, email')
+    .select('role, name')
     .eq('id', userId)
-    .single() as { data: { role: string; name: string; email: string } | null; error: Error | null }
+    .single() as { data: { role: string; name: string } | null; error: Error | null }
 
   if (profileError) {
     apiLogger.warn('無法取得使用者資料', {
@@ -70,7 +70,7 @@ async function getUserWithAdminCheck(userId: string): Promise<User> {
 
   return {
     id: userId,
-    email: profile?.email || '',
+    email: '', // email 來自 auth.users 表，需要在呼叫處處理
     name: profile?.name || '',
     role: profile?.role || 'user',
     isAdmin: profile?.role === 'admin',
@@ -101,6 +101,8 @@ export function requireAuth(handler: AuthenticatedInternalHandler): NextRouteHan
 
       // 取得完整的使用者資訊
       const user = await getUserWithAdminCheck(currentUser.id)
+      // 將 auth 使用者的 email 加入到使用者物件中
+      user.email = currentUser.email || ''
 
       apiLogger.debug('使用者通過認證', {
         metadata: {
@@ -150,6 +152,8 @@ export function requireAdmin(handler: AdminInternalHandler): NextRouteHandler {
 
       // 取得完整的使用者資訊
       const user = await getUserWithAdminCheck(currentUser.id)
+      // 將 auth 使用者的 email 加入到使用者物件中
+      user.email = currentUser.email || ''
 
       if (!user.isAdmin) {
         apiLogger.warn('非管理員嘗試存取管理員 API', {
@@ -202,6 +206,8 @@ export function optionalAuth(handler: OptionalAuthInternalHandler): NextRouteHan
         const currentUser = await getCurrentUser()
         if (currentUser) {
           user = await getUserWithAdminCheck(currentUser.id)
+          // 將 auth 使用者的 email 加入到使用者物件中
+          user.email = currentUser.email || ''
         }
       } catch (err) {
         // 忽略認證錯誤，讓 user 保持為 null

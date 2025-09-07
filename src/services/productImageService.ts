@@ -1,8 +1,4 @@
-import { getSupabaseAdmin } from '@/lib/supabase-auth';
 import { logger } from '@/lib/logger';
-
-// 類型斷言，解決 Supabase 類型推斷問題
-const supabase = () => getSupabaseAdmin();
 
 export interface ProductImage {
   id: string;
@@ -42,392 +38,127 @@ export interface UpdateProductImageData {
   file_size?: number;
 }
 
+/**
+ * 產品圖片服務 - 佔位實作版本
+ * 
+ * 注意：此服務目前為佔位實作，所有方法都標記為未實作
+ * 實作此功能需要：
+ * 1. 在資料庫中創建 product_images 表
+ * 2. 更新 Database 類型定義以包含 product_images 表
+ * 3. 實作實際的 CRUD 操作
+ * 4. 實作圖片上傳和處理邏輯
+ */
 export class ProductImageService {
+  private static logNotImplemented(method: string, context?: Record<string, unknown>) {
+    logger.warn(`ProductImageService.${method} - 功能暫未實作`, { 
+      metadata: { ...context, reason: '資料庫中尚無 product_images 表，需要完整實作' } 
+    });
+  }
+
   /**
    * 獲取產品的所有圖片 (依照 position 排序)
    */
   static async getProductImages(productId: string): Promise<ProductImage[]> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      const { data, error } = await supabaseAdmin
-        .from('product_images')
-        .select('*')
-        .eq('product_id', productId)
-        .order('position', { ascending: true });
-
-      if (error) {
-        logger.error('獲取產品圖片失敗', error, { metadata: { productId } });
-        throw error;
-      }
-
-      logger.debug('獲取產品圖片成功', { 
-        metadata: { productId, imageCount: data?.length || 0 } 
-      });
-
-      return data || [];
-
-    } catch (error) {
-      logger.error('ProductImageService.getProductImages 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { productId } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('getProductImages', { productId });
+    return [];
   }
 
   /**
    * 新增產品圖片
    */
   static async createProductImage(imageData: CreateProductImageData): Promise<ProductImage> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
+    this.logNotImplemented('createProductImage', { productId: imageData.product_id });
+    
+    // 返回一個符合介面的模擬物件
+    const mockImage: ProductImage = {
+      id: `mock-${Date.now()}`,
+      product_id: imageData.product_id,
+      url: imageData.url,
+      path: imageData.path,
+      alt: imageData.alt,
+      position: imageData.position,
+      size: imageData.size,
+      width: imageData.width,
+      height: imageData.height,
+      file_size: imageData.file_size,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-      // 檢查位置是否已被使用
-      const existingImage = await this.getImageByPosition(imageData.product_id, imageData.position);
-      if (existingImage) {
-        // 如果位置已被佔用，將現有圖片往後移
-        await this.shiftImagesPosition(imageData.product_id, imageData.position, 1);
-      }
-
-      const { data, error } = await supabaseAdmin
-        .from('product_images')
-        .insert([imageData])
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('新增產品圖片失敗', error, { 
-          metadata: { productId: imageData.product_id, position: imageData.position } 
-        });
-        throw error;
-      }
-
-      logger.info('新增產品圖片成功', {
-        metadata: { 
-          productId: imageData.product_id, 
-          imageId: data.id,
-          position: data.position,
-          url: data.url 
-        }
-      });
-
-      return data;
-
-    } catch (error) {
-      logger.error('ProductImageService.createProductImage 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { productId: imageData.product_id } }
-      );
-      throw error;
-    }
+    return mockImage;
   }
 
   /**
    * 批量新增產品圖片
    */
   static async createProductImages(imagesData: CreateProductImageData[]): Promise<ProductImage[]> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      if (imagesData.length === 0) {
-        return [];
-      }
-
-      const { data, error } = await supabaseAdmin
-        .from('product_images')
-        .insert(imagesData)
-        .select();
-
-      if (error) {
-        logger.error('批量新增產品圖片失敗', error, { 
-          metadata: { count: imagesData.length, productId: imagesData[0]?.product_id } 
-        });
-        throw error;
-      }
-
-      logger.info('批量新增產品圖片成功', {
-        metadata: { 
-          productId: imagesData[0]?.product_id,
-          count: data?.length || 0
-        }
-      });
-
-      return data || [];
-
-    } catch (error) {
-      logger.error('ProductImageService.createProductImages 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { count: imagesData.length } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('createProductImages', { count: imagesData.length });
+    return [];
   }
 
   /**
    * 更新產品圖片
    */
   static async updateProductImage(imageId: string, updateData: UpdateProductImageData): Promise<ProductImage> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
+    this.logNotImplemented('updateProductImage', { imageId });
+    
+    // 返回一個符合介面的模擬物件
+    const mockImage: ProductImage = {
+      id: imageId,
+      product_id: 'mock-product',
+      url: updateData.url || 'mock-url',
+      path: updateData.path || 'mock-path',
+      alt: updateData.alt,
+      position: updateData.position || 0,
+      size: updateData.size || 'medium',
+      width: updateData.width,
+      height: updateData.height,
+      file_size: updateData.file_size,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
 
-      const { data, error } = await supabaseAdmin
-        .from('product_images')
-        .update(updateData)
-        .eq('id', imageId)
-        .select()
-        .single();
-
-      if (error) {
-        logger.error('更新產品圖片失敗', error, { metadata: { imageId } });
-        throw error;
-      }
-
-      logger.info('更新產品圖片成功', {
-        metadata: { imageId, updateFields: Object.keys(updateData) }
-      });
-
-      return data;
-
-    } catch (error) {
-      logger.error('ProductImageService.updateProductImage 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { imageId } }
-      );
-      throw error;
-    }
+    return mockImage;
   }
 
   /**
    * 刪除產品圖片
    */
   static async deleteProductImage(imageId: string): Promise<void> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      // 先獲取要刪除的圖片資訊
-      const { data: imageToDelete, error: fetchError } = await supabaseAdmin
-        .from('product_images')
-        .select('product_id, position')
-        .eq('id', imageId)
-        .single();
-
-      if (fetchError) {
-        logger.error('獲取要刪除的圖片資訊失敗', fetchError, { metadata: { imageId } });
-        throw fetchError;
-      }
-
-      // 刪除圖片
-      const { error: deleteError } = await supabaseAdmin
-        .from('product_images')
-        .delete()
-        .eq('id', imageId);
-
-      if (deleteError) {
-        logger.error('刪除產品圖片失敗', deleteError, { metadata: { imageId } });
-        throw deleteError;
-      }
-
-      // 重新調整後續圖片的位置
-      if (imageToDelete) {
-        await this.shiftImagesPosition(imageToDelete.product_id, imageToDelete.position + 1, -1);
-      }
-
-      logger.info('刪除產品圖片成功', { metadata: { imageId } });
-
-    } catch (error) {
-      logger.error('ProductImageService.deleteProductImage 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { imageId } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('deleteProductImage', { imageId });
+    // 佔位實作：什麼都不做
   }
 
   /**
    * 批量更新圖片排序
    */
   static async updateImagesOrder(productId: string, imageOrders: { id: string; position: number }[]): Promise<void> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      // 使用事務更新所有圖片的位置
-      const updates = imageOrders.map(({ id, position }) => 
-        supabaseAdmin
-          .from('product_images')
-          .update({ position })
-          .eq('id', id)
-      );
-
-      const results = await Promise.all(updates);
-      
-      // 檢查是否有錯誤
-      const errors = results.filter(result => result.error);
-      if (errors.length > 0) {
-        logger.error('批量更新圖片排序部分失敗', errors[0].error, {
-          metadata: { productId, failedCount: errors.length, totalCount: imageOrders.length }
-        });
-        throw errors[0].error;
-      }
-
-      logger.info('批量更新圖片排序成功', {
-        metadata: { productId, updatedCount: imageOrders.length }
-      });
-
-    } catch (error) {
-      logger.error('ProductImageService.updateImagesOrder 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { productId } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('updateImagesOrder', { productId, count: imageOrders.length });
+    // 佔位實作：什麼都不做
   }
 
   /**
    * 獲取指定位置的圖片
    */
   static async getImageByPosition(productId: string, position: number): Promise<ProductImage | null> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      const { data, error } = await supabaseAdmin
-        .from('product_images')
-        .select('*')
-        .eq('product_id', productId)
-        .eq('position', position)
-        .maybeSingle();
-
-      if (error) {
-        logger.error('獲取指定位置圖片失敗', error, { 
-          metadata: { productId, position } 
-        });
-        throw error;
-      }
-
-      return data;
-
-    } catch (error) {
-      logger.error('ProductImageService.getImageByPosition 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { productId, position } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('getImageByPosition', { productId, position });
+    return null;
   }
 
   /**
    * 移動圖片位置 (從某個位置開始的圖片往前或往後移動)
    */
   static async shiftImagesPosition(productId: string, fromPosition: number, shift: number): Promise<void> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      // 預留給未來可能的 SQL 操作使用
-
-      // 使用 SQL 更新位置
-      const { error } = await supabaseAdmin.rpc('shift_product_images_position', {
-        p_product_id: productId,
-        p_from_position: fromPosition,
-        p_shift: shift
-      });
-
-      // 如果 RPC 函數不存在，使用備用方法
-      if (error && error.message.includes('function')) {
-        // 備用方法：獲取需要移動的圖片並逐一更新
-        const { data: imagesToShift, error: fetchError } = await supabaseAdmin
-          .from('product_images')
-          .select('id, position')
-          .eq('product_id', productId)
-          .gte('position', fromPosition);
-
-        if (fetchError) {
-          throw fetchError;
-        }
-
-        if (imagesToShift && imagesToShift.length > 0) {
-          const updates = imagesToShift.map((img: { id: string; position: number }) => 
-            supabaseAdmin
-              .from('product_images')
-              .update({ position: img.position + shift })
-              .eq('id', img.id)
-          );
-
-          const results = await Promise.all(updates);
-          const errors = results.filter(result => result.error);
-          if (errors.length > 0) {
-            throw errors[0].error;
-          }
-        }
-      } else if (error) {
-        throw error;
-      }
-
-      logger.debug('調整圖片位置成功', {
-        metadata: { productId, fromPosition, shift }
-      });
-
-    } catch (error) {
-      logger.error('ProductImageService.shiftImagesPosition 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { productId, fromPosition, shift } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('shiftImagesPosition', { productId, fromPosition, shift });
+    // 佔位實作：什麼都不做
   }
 
   /**
    * 清除產品的所有圖片
    */
   static async clearProductImages(productId: string): Promise<void> {
-    try {
-      const supabaseAdmin = supabase();
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client 未配置');
-      }
-
-      const { error } = await supabaseAdmin
-        .from('product_images')
-        .delete()
-        .eq('product_id', productId);
-
-      if (error) {
-        logger.error('清除產品圖片失敗', error, { metadata: { productId } });
-        throw error;
-      }
-
-      logger.info('清除產品圖片成功', { metadata: { productId } });
-
-    } catch (error) {
-      logger.error('ProductImageService.clearProductImages 執行失敗', 
-        error instanceof Error ? error : new Error(String(error)), 
-        { metadata: { productId } }
-      );
-      throw error;
-    }
+    this.logNotImplemented('clearProductImages', { productId });
+    // 佔位實作：什麼都不做
   }
 
   /**

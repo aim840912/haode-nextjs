@@ -11,7 +11,8 @@ import { FarmTourActivity } from '@/types/farmTour'
 import { NewsService } from '@/types/news'
 import { CultureService } from '@/types/culture'
 import { LocationService } from '@/types/location'
-import { shouldUseSupabase, shouldFallbackToJson, shouldUseCache, getStrategyInfo } from '@/config/data-strategy'
+import { ServiceConfig } from '@/lib/base-service'
+import { shouldUseSupabase, shouldFallbackToJson, shouldUseCache, getStrategyInfo, DataStrategyConfig } from '@/config/data-strategy'
 import { dbLogger } from '@/lib/logger'
 
 // 定義服務介面類型
@@ -145,7 +146,7 @@ async function createService<T>(
   testConnection?: (service: T) => Promise<boolean>
 ): Promise<T> {
   // 對於不支援的服務類型，默認使用 JSON
-  const useSupabase = serviceType !== 'userInterests' ? shouldUseSupabase(serviceType as keyof ServiceConfig) : false
+  const useSupabase = serviceType !== 'userInterests' ? shouldUseSupabase(serviceType as keyof Omit<DataStrategyConfig, 'useCache' | 'fallbackToJson'>) : false
   
   dbLogger.info(`初始化${serviceType}服務`, { 
     module: 'ServiceFactory', 

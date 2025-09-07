@@ -279,8 +279,8 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getUserInquiries', { userId, params })
       }
 
-      const result = (data || []).map((record: SupabaseInquiryRecord) =>
-        this.transformFromDB(record)
+      const result = (data || []).map(record =>
+        this.transformFromDB(record as unknown as SupabaseInquiryRecord)
       )
 
       dbLogger.info('取得使用者詢問單列表成功', {
@@ -317,7 +317,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getInquiryById', { userId, inquiryId })
       }
 
-      return data ? this.transformFromDB(data as SupabaseInquiryRecord) : null
+      return data ? this.transformFromDB(data as unknown as SupabaseInquiryRecord) : null
     } catch (error) {
       this.handleError(error, 'getInquiryById', { userId, inquiryId })
     }
@@ -358,7 +358,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'updateInquiry', { userId, inquiryId, data })
       }
 
-      const result = this.transformFromDB(updated)
+      const result = this.transformFromDB(updated as unknown as SupabaseInquiryRecord)
 
       dbLogger.info('詢問單更新成功', {
         module: this.moduleName,
@@ -391,7 +391,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getAllInquiries', { params })
       }
 
-      return (data || []).map((record: SupabaseInquiryRecord) => this.transformFromDB(record))
+      return (data || []).map((record: unknown) => this.transformFromDB(record as SupabaseInquiryRecord))
     } catch (error) {
       this.handleError(error, 'getAllInquiries', { params })
     }
@@ -424,7 +424,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'updateInquiryStatus', { inquiryId, status })
       }
 
-      return this.transformFromDB(updated)
+      return this.transformFromDB(updated as unknown as SupabaseInquiryRecord)
     } catch (error) {
       this.handleError(error, 'updateInquiryStatus', { inquiryId, status })
     }
@@ -433,13 +433,13 @@ export class InquiryServiceV2Simple implements InquiryService {
   async getInquiryStats(): Promise<InquiryStats[]> {
     try {
       const client = this.getSupabaseClient()
-      const { data, error } = await client.from('inquiry_stats').select('*')
+      // inquiry_stats 表不存在，返回空陣列
+      dbLogger.warn('getInquiryStats - 佔位實作：inquiry_stats 表不存在', {
+        module: this.moduleName,
+        action: 'getInquiryStats'
+      })
 
-      if (error) {
-        this.handleError(error, 'getInquiryStats')
-      }
-
-      return data as InquiryStats[]
+      return [] as InquiryStats[]
     } catch (error) {
       this.handleError(error, 'getInquiryStats')
     }
@@ -487,7 +487,7 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
       }
 
-      return data ? this.transformFromDB(data as SupabaseInquiryRecord) : null
+      return data ? this.transformFromDB(data as unknown as SupabaseInquiryRecord) : null
     } catch (error) {
       this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
     }

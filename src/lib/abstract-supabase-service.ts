@@ -82,7 +82,7 @@ export abstract class AbstractSupabaseService<
     CreateDTO = Record<string, unknown>,
     UpdateDTO = Record<string, unknown>,
   >
-  implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T>
+  implements BaseService<T, CreateDTO, UpdateDTO>, PaginatedService<T, CreateDTO, UpdateDTO>
 {
   protected readonly client: SupabaseClient
   protected readonly adminClient: SupabaseClient | null

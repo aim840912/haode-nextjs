@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+// import { NextRequest } from 'next/server' // 未使用
 import { supabaseProductService } from '@/services/supabaseProductService'
 import { withErrorHandler } from '@/lib/error-handler'
 import { success } from '@/lib/api-response'

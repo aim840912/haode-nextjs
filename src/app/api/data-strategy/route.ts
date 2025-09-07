@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+// import { NextRequest } from 'next/server' // 未使用
 import { getStrategyInfo } from '@/config/data-strategy'
 import { getCurrentServiceType, healthCheck } from '@/services/serviceFactory'
 import { withErrorHandler } from '@/lib/error-handler'

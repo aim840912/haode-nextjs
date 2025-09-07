@@ -51,9 +51,10 @@ export function measureCLS() {
     try {
       const observer = new PerformanceObserver((list) => {
         const entries = list.getEntries();
-        entries.forEach((entry: PerformanceEntry & { hadRecentInput?: boolean; value: number }) => {
-          if (entry.hadRecentInput) return;
-          cls += entry.value;
+        entries.forEach((entry) => {
+          const clsEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value: number }
+          if (clsEntry.hadRecentInput) return;
+          cls += clsEntry.value;
         });
       });
       

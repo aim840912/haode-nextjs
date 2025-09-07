@@ -196,17 +196,17 @@ export class SupabaseNewsService implements NewsService {
 
   private transformFromDB(dbNews: Record<string, unknown>): NewsItem {
     return {
-      id: dbNews.id,
-      title: dbNews.title,
-      summary: dbNews.summary,
-      content: dbNews.content,
-      author: dbNews.author || '豪德農場', // 使用資料庫的 author
-      publishedAt: dbNews.publish_date,
-      category: dbNews.category,
-      tags: dbNews.tags || [],
+      id: dbNews.id as string,
+      title: dbNews.title as string,
+      summary: dbNews.summary as string,
+      content: dbNews.content as string,
+      author: (dbNews.author as string) || '豪德農場', // 使用資料庫的 author
+      publishedAt: dbNews.publish_date as string,
+      category: dbNews.category as string,
+      tags: (dbNews.tags as string[]) || [],
       image: '', // 不再使用 emoji，保留欄位相容性
-      imageUrl: dbNews.image_url,
-      featured: dbNews.featured || false // 使用資料庫的 featured
+      imageUrl: dbNews.image_url as string,
+      featured: Boolean(dbNews.featured) || false // 使用資料庫的 featured
     }
   }
 }

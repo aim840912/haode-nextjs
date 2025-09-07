@@ -10,7 +10,7 @@ import { useAuth } from '@/lib/auth-context'
 export default function AddFarmTourActivity() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [_imageFile, _setImageFile] = useState<File | null>(null)
+  const [_imageFile, _setImageFile] = useState<File | null>(null) // TODO: 實作圖片上傳功能
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const { user, isLoading } = useAuth()
   

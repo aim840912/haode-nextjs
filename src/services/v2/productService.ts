@@ -163,7 +163,7 @@ export class ProductDataTransformer implements DataTransformer<Product> {
  */
 export class SupabaseProductService
   extends AbstractSupabaseService<Product, CreateProductDTO, UpdateProductDTO>
-  implements SearchableService<Product>
+  implements SearchableService<Product, CreateProductDTO, UpdateProductDTO>
 {
   protected transformer: ProductDataTransformer
 
@@ -263,7 +263,7 @@ interface JsonProduct extends Product, JsonEntity {}
  */
 export class JsonProductService
   extends AbstractJsonService<JsonProduct, CreateProductDTO, UpdateProductDTO>
-  implements SearchableService<Product>
+  implements SearchableService<Product, CreateProductDTO, UpdateProductDTO>
 {
   constructor() {
     const config: JsonServiceConfig = {

@@ -50,7 +50,11 @@ export class SupabaseScheduleService implements ScheduleService {
       weather_note: scheduleData.weatherNote
     }
 
-    const { data, error } = await getAdmin()
+    const client = getAdmin()
+    if (!client) {
+      throw new Error('管理員客戶端不可用')
+    }
+    const { data, error } = await client
       .from('schedule')
       .insert([insertData])
       .select()
@@ -81,7 +85,11 @@ export class SupabaseScheduleService implements ScheduleService {
     if (scheduleData.specialOffer !== undefined) updateData.special_offer = scheduleData.specialOffer
     if (scheduleData.weatherNote !== undefined) updateData.weather_note = scheduleData.weatherNote
 
-    const { data, error } = await getAdmin()
+    const client = getAdmin()
+    if (!client) {
+      throw new Error('管理員客戶端不可用')
+    }
+    const { data, error } = await client
       .from('schedule')
       .update(updateData)
       .eq('id', id)
@@ -100,7 +108,11 @@ export class SupabaseScheduleService implements ScheduleService {
   }
 
   async deleteSchedule(id: string): Promise<void> {
-    const { error } = await getAdmin()
+    const client = getAdmin()
+    if (!client) {
+      throw new Error('管理員客戶端不可用')
+    }
+    const { error } = await client
       .from('schedule')
       .delete()
       .eq('id', id)
@@ -115,7 +127,11 @@ export class SupabaseScheduleService implements ScheduleService {
   }
 
   async getScheduleById(id: string): Promise<ScheduleItem | null> {
-    const { data, error } = await getAdmin()
+    const client = getAdmin()
+    if (!client) {
+      throw new Error('管理員客戶端不可用')
+    }
+    const { data, error } = await client
       .from('schedule')
       .select('*')
       .eq('id', id)

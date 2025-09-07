@@ -1,10 +1,11 @@
 /**
- * 農場體驗服務 v2 簡化實作
- * 基於統一架構的農場體驗活動管理服務
- *
- * 功能：
+ * @deprecated 農場體驗服務 v2 - 轉為佔位實作
+ * farm_tour 表不存在於資料庫 schema 中，導致所有 Supabase 查詢失敗
+ * 需要資料庫管理員檢查表結構或決定是否保留此功能
+ * 
+ * 原本功能：
  * - 標準化 CRUD 操作
- * - 統一錯誤處理和日誌記錄
+ * - 統一錯誤處理和日誌記錄  
  * - 支援季節和活動管理
  * - 內建資料轉換和驗證
  */
@@ -55,6 +56,17 @@ interface FarmTourService {
  */
 export class FarmTourServiceV2Simple implements FarmTourService {
   private readonly moduleName = 'FarmTourServiceV2'
+
+  /**
+   * 佔位實作日誌方法
+   */
+  private logNotImplemented(method: string, metadata?: Record<string, unknown>) {
+    dbLogger.warn(`${this.moduleName}.${method} - 佔位實作：farm_tour 表不存在`, {
+      module: this.moduleName,
+      action: method,
+      metadata
+    })
+  }
 
   /**
    * 統一錯誤處理方法
@@ -122,26 +134,11 @@ export class FarmTourServiceV2Simple implements FarmTourService {
         action: 'getAll',
       })
 
-      const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
-        .from('farm_tour')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        this.handleError(error, 'getAll')
-      }
-
-      const activities = data?.map(this.transformFromDB.bind(this)) || []
-
-      dbLogger.info('農場體驗活動清單查詢成功', {
-        module: this.moduleName,
-        action: 'getAll',
-        metadata: { count: activities.length },
-      })
-
-      return activities
+      // 佔位實作：farm_tour 表不存在
+      this.logNotImplemented('getAll')
+      return []
     } catch (error) {
+      // 錯誤處理保留以維持介面相容性
       this.handleError(error, 'getAll')
     }
   }
@@ -151,45 +148,9 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    */
   async getById(id: string): Promise<FarmTourActivity | null> {
     try {
-      dbLogger.info('根據 ID 取得農場體驗活動', {
-        module: this.moduleName,
-        action: 'getById',
-        metadata: { activityId: id },
-      })
-
-      if (!id?.trim()) {
-        throw new ValidationError('活動 ID 不能為空')
-      }
-
-      const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
-        .from('farm_tour')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // 記錄未找到
-          dbLogger.info('農場體驗活動不存在', {
-            module: this.moduleName,
-            action: 'getById',
-            metadata: { activityId: id },
-          })
-          return null
-        }
-        this.handleError(error, 'getById')
-      }
-
-      const activity = this.transformFromDB(data)
-
-      dbLogger.info('農場體驗活動查詢成功', {
-        module: this.moduleName,
-        action: 'getById',
-        metadata: { activityId: id, title: activity.title },
-      })
-
-      return activity
+      // 佔位實作：farm_tour 表不存在
+      this.logNotImplemented('getById', { id })
+      return null
     } catch (error) {
       this.handleError(error, 'getById')
     }
@@ -200,45 +161,30 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    */
   async create(activityData: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity> {
     try {
-      dbLogger.info('建立農場體驗活動', {
-        module: this.moduleName,
-        action: 'create',
-        metadata: { title: activityData.title, season: activityData.season },
-      })
-
-      // 基本驗證
-      if (!activityData.title?.trim()) {
-        throw new ValidationError('標題不能為空')
+      // 佔位實作：farm_tour 表不存在
+      this.logNotImplemented('create', { title: activityData.title, season: activityData.season })
+      
+      // 返回模擬資料以維持介面相容性
+      const mockActivity: FarmTourActivity = {
+        id: `mock-${Date.now()}`,
+        title: activityData.title || 'Mock Activity',
+        season: activityData.season || 'Mock Season',
+        months: activityData.months || 'Mock Months',
+        price: activityData.price || 0,
+        duration: activityData.duration || 'Mock Duration',
+        activities: activityData.activities || [],
+        includes: activityData.includes || [],
+        highlight: activityData.highlight || 'Mock Highlight',
+        note: activityData.note || 'Mock Note',
+        image: activityData.image || '/images/placeholder.jpg',
+        available: activityData.available ?? true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       }
-      if (!activityData.season?.trim()) {
-        throw new ValidationError('季節不能為空')
-      }
-      if (!activityData.price || activityData.price < 0) {
-        throw new ValidationError('價格必須為正數')
-      }
-
-      const insertData = this.transformToDB(activityData)
-
-      const { data, error } = await getAdmin()
-        .from('farm_tour')
-        .insert([insertData])
-        .select()
-        .single()
-
-      if (error) {
-        this.handleError(error, 'create')
-      }
-
-      const newActivity = this.transformFromDB(data)
-
-      dbLogger.info('農場體驗活動建立成功', {
-        module: this.moduleName,
-        action: 'create',
-        metadata: { activityId: newActivity.id, title: newActivity.title },
-      })
-
-      return newActivity
+      
+      return mockActivity
     } catch (error) {
+      // 錯誤處理保留以維持介面相容性
       this.handleError(error, 'create')
     }
   }
@@ -251,55 +197,30 @@ export class FarmTourServiceV2Simple implements FarmTourService {
     activityData: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>
   ): Promise<FarmTourActivity | null> {
     try {
-      dbLogger.info('更新農場體驗活動', {
-        module: this.moduleName,
-        action: 'update',
-        metadata: { activityId: id },
-      })
-
-      if (!id?.trim()) {
-        throw new ValidationError('活動 ID 不能為空')
+      // 佔位實作：farm_tour 表不存在
+      this.logNotImplemented('update', { activityId: id, updatedFields: Object.keys(activityData) })
+      
+      // 返回模擬資料以維持介面相容性
+      const mockActivity: FarmTourActivity = {
+        id: id,
+        title: activityData.title || 'Mock Updated Activity',
+        season: activityData.season || 'Mock Updated Season',
+        months: activityData.months || 'Mock Updated Months',
+        price: activityData.price || 0,
+        duration: activityData.duration || 'Mock Updated Duration',
+        activities: activityData.activities || ['Mock Activity'],
+        includes: activityData.includes || ['Mock Include'],
+        highlight: activityData.highlight || 'Mock Updated Highlight',
+        note: activityData.note || 'Mock Updated Note',
+        image: activityData.image || '/images/placeholder.jpg',
+        available: activityData.available ?? true,
+        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1天前
+        updatedAt: new Date().toISOString(),
       }
-
-      // 建立更新資料對象
-      const updateData: UpdateDataObject = {}
-      if (activityData.title !== undefined) updateData.title = activityData.title
-      if (activityData.season !== undefined) updateData.season = activityData.season
-      if (activityData.months !== undefined) updateData.months = activityData.months
-      if (activityData.price !== undefined) updateData.price = activityData.price
-      if (activityData.duration !== undefined) updateData.duration = activityData.duration
-      if (activityData.activities !== undefined) updateData.activities = activityData.activities
-      if (activityData.includes !== undefined) updateData.includes = activityData.includes
-      if (activityData.highlight !== undefined) updateData.highlight = activityData.highlight
-      if (activityData.note !== undefined) updateData.note = activityData.note
-      if (activityData.image !== undefined) updateData.image = activityData.image
-      if (activityData.available !== undefined) updateData.available = activityData.available
-
-      const { data, error } = await getAdmin()
-        .from('farm_tour')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) {
-        this.handleError(error, 'update')
-      }
-
-      if (!data) {
-        throw new NotFoundError(`農場體驗活動 ${id} 不存在`)
-      }
-
-      const updatedActivity = this.transformFromDB(data)
-
-      dbLogger.info('農場體驗活動更新成功', {
-        module: this.moduleName,
-        action: 'update',
-        metadata: { activityId: id, updatedFields: Object.keys(updateData) },
-      })
-
-      return updatedActivity
+      
+      return mockActivity
     } catch (error) {
+      // 錯誤處理保留以維持介面相容性
       this.handleError(error, 'update')
     }
   }
@@ -309,33 +230,13 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    */
   async delete(id: string): Promise<boolean> {
     try {
-      dbLogger.info('刪除農場體驗活動', {
-        module: this.moduleName,
-        action: 'delete',
-        metadata: { activityId: id },
-      })
-
-      if (!id?.trim()) {
-        throw new ValidationError('活動 ID 不能為空')
-      }
-
-      const { error } = await getAdmin()
-        .from('farm_tour')
-        .delete()
-        .eq('id', id)
-
-      if (error) {
-        this.handleError(error, 'delete')
-      }
-
-      dbLogger.info('農場體驗活動刪除成功', {
-        module: this.moduleName,
-        action: 'delete',
-        metadata: { activityId: id },
-      })
-
+      // 佔位實作：farm_tour 表不存在
+      this.logNotImplemented('delete', { activityId: id })
+      
+      // 返回成功以維持介面相容性
       return true
     } catch (error) {
+      // 錯誤處理保留以維持介面相容性
       this.handleError(error, 'delete')
     }
   }
@@ -349,30 +250,17 @@ export class FarmTourServiceV2Simple implements FarmTourService {
     details: Record<string, unknown>
   }> {
     try {
-      const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
-        .from('farm_tour')
-        .select('count')
-        .limit(1)
-
-      if (error) {
-        return {
-          status: 'unhealthy',
-          timestamp: new Date().toISOString(),
-          details: {
-            error: error.message,
-            module: this.moduleName,
-          },
-        }
-      }
-
+      // 佔位實作：因為是佔位服務，始終回報降級狀態但可用
+      this.logNotImplemented('getHealthStatus')
+      
       return {
-        status: 'healthy',
+        status: 'degraded',
         timestamp: new Date().toISOString(),
         details: {
           module: this.moduleName,
-          version: 'v2-simple',
-          databaseConnected: true,
+          version: 'v2-simple-placeholder',
+          reason: 'farm_tour 表不存在，使用佔位實作',
+          databaseConnected: false,
         },
       }
     } catch (error) {

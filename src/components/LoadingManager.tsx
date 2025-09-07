@@ -118,7 +118,7 @@ export function useAsyncLoading() {
   const { startLoading, stopLoading } = useLoading()
 
   const executeWithLoading = useCallback(
-    (asyncFunction: any, taskId = `task-${Date.now()}`, message = '載入中...', timeout?: number): Promise<any> => {
+    (asyncFunction: () => Promise<unknown>, taskId = `task-${Date.now()}`, message = '載入中...', timeout?: number): Promise<unknown> => {
     return (async () => {
       try {
         startLoading(taskId, message, timeout)

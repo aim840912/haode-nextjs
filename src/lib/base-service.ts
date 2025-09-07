@@ -102,7 +102,7 @@ export interface BaseService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> 
  * 
  * 支援分頁查詢的服務應實作此介面
  */
-export interface PaginatedService<T> extends BaseService<T> {
+export interface PaginatedService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> extends BaseService<T, CreateDTO, UpdateDTO> {
   /**
    * 分頁查詢實體
    * @param options 分頁查詢選項
@@ -116,7 +116,7 @@ export interface PaginatedService<T> extends BaseService<T> {
  * 
  * 支援全文搜尋的服務應實作此介面
  */
-export interface SearchableService<T> extends BaseService<T> {
+export interface SearchableService<T, CreateDTO = Partial<T>, UpdateDTO = Partial<T>> extends BaseService<T, CreateDTO, UpdateDTO> {
   /**
    * 全文搜尋實體
    * @param query 搜尋關鍵字

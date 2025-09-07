@@ -213,7 +213,7 @@ export class NewsServiceV2Simple implements NewsService {
 
       const insertData = this.transformToDB(newsData)
 
-      const { data, error } = await client.from('news').insert([insertData]).select().single()
+      const { data, error } = await client.from('news').insert(insertData as any).select().single()
 
       if (error) {
         this.handleError(error, 'addNews', { newsData })
