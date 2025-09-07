@@ -1,97 +1,154 @@
 The orignal prompt is from: https://www.dzombak.com/blog/2025/08/getting-good-results-from-claude-code/
 
-# Development Guidelines
+# 開發指南
 
-## Philosophy
+## 🚀 快速參考
 
-### Core Beliefs
+### 5 個核心原則
+1. **使用繁體中文** - 所有溝通均使用繁體中文
+2. **避免不必要地建立檔案** - 優先編輯現有檔案
+3. **使用專案日誌系統** - 永不使用 console.log（使用 apiLogger、dbLogger 等）
+4. **執行開發前檢查清單** - 程式碼重用、依賴檢查、效能影響
+5. **對複雜任務使用 TodoWrite** - 通過狀態更新追蹤進度
 
-- **Incremental progress over big bangs** - Small changes that compile and pass tests
-- **Learning from existing code** - Study and plan before implementing
-- **Pragmatic over dogmatic** - Adapt to project reality
-- **Clear intent over clever code** - Be boring and obvious
+### 10 個必須遵循的規則
+```bash
+# Before any development
+npm run type-check && npm run lint  # ✅ Required
+grep -r "console\." src/             # ❌ Should be empty
+
+# Before adding dependencies
+npm ls | grep similar-package        # Check for duplicates
+npm info package-name                # Check maintenance status
+npx depcheck                         # Find unused dependencies
+
+# Technical debt detection
+🔴 Same logic appears 3+ times       → Extract to shared function
+🔴 Component > 200 lines             → Split into smaller components  
+🔴 Function > 30 lines               → Consider breaking down
+🔴 Build time increased > 30s        → Investigate and optimize
+```
+
+### 常用指令
+```bash
+# Development workflow
+npm run dev                          # Start development (with Turbopack)
+npm run type-check                   # Check TypeScript
+npm run lint                         # Check code quality
+
+# Maintenance checks
+rm -rf .next/cache                   # Clear build cache
+npm audit                            # Security check
+npm run analyze                      # Bundle analysis
+```
+
+### API 開發模式
+```typescript
+import { requireAuth, success, ValidationError } from '@/lib/api-middleware'
+
+export const POST = requireAuth(async (req, { user }) => {
+  const data = await req.json()
+  if (!isValid(data)) throw new ValidationError('驗證失敗')
+  
+  const result = await service.create(data, user.id)
+  return success(result, '建立成功')
+})
+```
+
+---
+
+## 開發理念
+
+### 核心信念
+
+- **漸進式進展優於大爭霸式改變** - 小的變更能編譯並通過測試
+- **從現有程式碼中學習** - 在實作前先研究和規劃
+- **實用主義優於教條主義** - 適應專案現實
+- **清晰意圖優於巧妙程式碼** - 保持無趣和明顯
 - **使用繁體中文** - use this languague
 
-### Simplicity Means
+### 簡潔的含義
 
-- Single responsibility per function/class
-- Avoid premature abstractions
-- No clever tricks - choose the boring solution
-- If you need to explain it, it's too complex
+- 每個函數/類別單一職責
+- 避免過早抽象化
+- 不用巧妙技巧 - 選擇無趣的解決方案
+- 如果需要解釋，就太複雜了
 
-## Process
+## 開發流程
 
-### 1. Planning & Staging
+### 1. 規劃與階段分割
 
-Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
+將複雜工作分解為 3-5 個階段。使用 TodoWrite 工具追蹤進度：
 
-```markdown
-## Stage N: [Name]
-**Goal**: [Specific deliverable]
-**Success Criteria**: [Testable outcomes]
-**Tests**: [Specific test cases]
-**Status**: [Not Started|In Progress|Complete]
+```typescript
+TodoWrite({
+  todos: [
+    { content: "階段 1: [具體目標]", status: "pending", activeForm: "執行階段 1" },
+    { content: "階段 2: [具體目標]", status: "pending", activeForm: "執行階段 2" },
+    // ... 最多 5 個階段
+  ]
+})
 ```
-- Update status as you progress
-- Remove file when all stages are done
+- 隨著進度更新狀態 (pending → in_progress → completed)
+- 每個階段都要有明確的成功標準和可測試的結果
 
-### 2. Implementation Flow
+### 2. 實作流程
 
-1. **Understand** - Study existing patterns in codebase
-2. **Test** - Write test first (red)
-3. **Implement** - Minimal code to pass (green)
-4. **Refactor** - Clean up with tests passing
-5. **Commit** - With clear message linking to plan
+1. **理解** - 研究程式碼庫中的現有模式
+2. **測試** - 先寫測試 (紅燈)
+3. **實作** - 最少程式碼通過 (綠燈)
+4. **重構** - 在測試通過的情況下清理
+5. **提交** - 使用清晰的訊息連結到計劃
 
-### 3. When Stuck (After 3 Attempts)
+### 3. 遇到困難時（嘗試 3 次後）
 
-**CRITICAL**: Maximum 3 attempts per issue, then STOP.
+**重要**：每個問題最多嘗試 3 次，然後停止。
 
-1. **Document what failed**:
-   - What you tried
-   - Specific error messages
-   - Why you think it failed
+1. **記錄失敗原因**：
+   - 你嘗試了什麼
+   - 具體的錯誤訊息
+   - 你認為為什麼失敗
 
-2. **Research alternatives**:
-   - Find 2-3 similar implementations
-   - Note different approaches used
+2. **研究替代方案**：
+   - 找到 2-3 個類似的實作
+   - 記錄使用的不同方法
 
-3. **Question fundamentals**:
-   - Is this the right abstraction level?
-   - Can this be split into smaller problems?
-   - Is there a simpler approach entirely?
+3. **質疑基本原則**：
+   - 這是否正確的抽象層級？
+   - 能否將其分解為更小的問題？
+   - 是否有更簡單的方法？
 
-4. **Try different angle**:
-   - Different library/framework feature?
-   - Different architectural pattern?
-   - Remove abstraction instead of adding?
+4. **嘗試不同角度**：
+   - 不同的函式庫/框架功能？
+   - 不同的架構模式？
+   - 移除抽象而不是添加？
 
-## Technical Standards
+## 技術標準
 
-### Architecture Principles
+### 架構原則
 
-- **Composition over inheritance** - Use dependency injection
-- **Interfaces over singletons** - Enable testing and flexibility
-- **Explicit over implicit** - Clear data flow and dependencies
-- **Test-driven when possible** - Never disable tests, fix them
+- **組合優於繼承** - 使用依賴注入
+- **介面優於單例模式** - 啟用測試和靈活性
+- **明確優於隱含** - 清晰的資料流和依賴關係
+- **盡可能使用測試驅動** - 永不停用測試，修復它們
 
-### Code Quality
+### 程式碼品質
 
-- **Every commit must**:
-  - Compile successfully
-  - Pass all existing tests
-  - Include tests for new functionality
-  - Follow project formatting/linting
-  - Use project logger system (no console.log)
+- **每次提交必須**：
+  - 編譯成功
+  - 通過所有現有測試
+  - 包含新功能的測試
+  - 遵循專案格式化/linting
+  - 使用專案日誌系統 (不用 console.log)
 
-- **Before committing**:
-  - Run formatters/linters
-  - Self-review changes
-  - Ensure commit message explains "why"
+- **提交前**：
+  - 運行格式化工具/linter
+  - 自我審查變更
+  - 確保提交訊息解釋「為什麼」
 
-### Logging Standards
+### 日誌標準
 
-**專案 console.log 替換 100% 完成** - 所有應用程式碼已使用統一 logger 系統 🎊 (2025-09-03 完成)
+**專案 console.log 替換 100% 完成** - 所有應用程式碼已使用統一 logger 系統 🎊 (已完成)
 - ✅ 所有 API 路由 (9個檔案，35處)
 - ✅ 所有核心服務 (1個檔案，1處)
 - ✅ 所有 React 元件 (8個檔案，10處)
@@ -99,28 +156,28 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 - ✅ 所有頁面元件 (9個檔案，16處)
 - 📊 總計：36個檔案，105處 console.* → 結構化 logger
 
-- **NEVER use console.log/warn/error** - Use the project's logger system instead
-- **Import the appropriate logger**:
+- **永不使用 console.log/warn/error** - 使用專案的日誌系統代替
+- **匯入適當的日誌系統**：
   ```typescript
   import { logger, apiLogger, dbLogger, cacheLogger, authLogger } from '@/lib/logger'
   ```
-- **Use appropriate log levels**:
-  - `logger.debug()` - Development debugging info
-  - `logger.info()` - General information and user actions
-  - `logger.warn()` - Warnings that don't break functionality
-  - `logger.error()` - Errors with recovery possible
-  - `logger.fatal()` - Critical system errors
-- **Provide context**: Always include relevant metadata in log context
-- **Use module-specific loggers**:
-  - `apiLogger` for API routes (已廣泛應用)
-  - `dbLogger` for database operations
-  - `cacheLogger` for cache operations
-  - `authLogger` for authentication logic
+- **使用適當的日誌級別**：
+  - `logger.debug()` - 開發除錯資訊
+  - `logger.info()` - 一般資訊和用戶操作
+  - `logger.warn()` - 不會中斷功能的警告
+  - `logger.error()` - 可以復原的錯誤
+  - `logger.fatal()` - 重大系統錯誤
+- **提供上下文**：始終在日誌上下文中包含相關元數據
+- **使用模組特定日誌器**：
+  - `apiLogger` 用於 API 路由 (已廣泛應用)
+  - `dbLogger` 用於資料庫操作
+  - `cacheLogger` 用於快取操作
+  - `authLogger` 用於認證邏輯
 - **錯誤自動記錄**: 使用 `withErrorHandler` 中間件時，錯誤會自動記錄到適當級別
 
-### API Error Handling Standards
+### API 錯誤處理標準
 
-**專案 API 錯誤處理覆蓋率 100% 達成** - 所有 API 路由已使用統一錯誤處理系統 🎯 (2025-09-04 完成)
+**專案 API 錯誤處理覆蓋率 100% 達成** - 所有 API 路由已使用統一錯誤處理系統 🎯 (已完成)
 - ✅ 所有核心 API 路由 (35個檔案)
 - ✅ 所有系統管理 API (5個檔案)
 - ✅ 所有新版本 API (/api/v1/)
@@ -131,175 +188,35 @@ Break complex work into 3-5 stages. Document in `IMPLEMENTATION_PLAN.md`:
 - 所有錯誤都會自動記錄到 apiLogger，無需手動記錄
 - 使用 MethodNotAllowedError 處理不支援的 HTTP 方法
 
-#### Logger 使用範例
+#### 日誌系統使用範例
 
-**API 路由日誌記錄**:
+**核心原則**: 使用對應的 logger (apiLogger, dbLogger, authLogger, logger)，永不使用 console.log
+
+**API 路由範例**:
 ```typescript
 import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/error-handler'
-import { ValidationError } from '@/lib/errors'
 
-// ✅ 正確：使用 apiLogger 記錄 API 操作
-async function handlePOST(req: NextRequest) {
-  apiLogger.info('開始建立新資源', {
-    module: 'ResourceAPI',
-    action: 'create',
-    requestId: req.headers.get('x-request-id')
-  })
-
-  try {
-    const result = await service.create(data)
-    apiLogger.info('資源建立成功', {
-      module: 'ResourceAPI',
-      action: 'create',
-      metadata: { resourceId: result.id }
-    })
-    return success(result, '建立成功')
-  } catch (error) {
-    // 錯誤會被 withErrorHandler 自動記錄
-    throw new ValidationError('建立失敗')
-  }
-}
-
-export const POST = withErrorHandler(handlePOST, {
-  module: 'ResourceAPI'
-})
-
-// ❌ 錯誤：不要使用 console.log
-// console.log('Creating resource...') // 禁止
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  apiLogger.info('開始建立資源', { module: 'ResourceAPI', action: 'create' })
+  const result = await service.create(data)
+  return success(result, '建立成功')
+}, { module: 'ResourceAPI' })
 ```
 
-**認證系統日誌記錄**:
-```typescript
-import { authLogger } from '@/lib/logger'
-
-// ✅ 正確：使用 authLogger 記錄認證事件
-export async function authenticateUser(token: string) {
-  authLogger.info('使用者認證開始', {
-    module: 'Auth',
-    action: 'authenticate'
-  })
-
-  try {
-    const user = await verifyToken(token)
-    authLogger.info('使用者認證成功', {
-      module: 'Auth',
-      action: 'authenticate',
-      metadata: { userId: user.id }
-    })
-    return user
-  } catch (error) {
-    authLogger.error('使用者認證失敗', error as Error, {
-      module: 'Auth',
-      action: 'authenticate',
-      metadata: { tokenPreview: token.substring(0, 10) + '...' }
-    })
-    throw error
-  }
-}
-```
-
-**資料庫操作日誌記錄**:
+**資料庫操作範例**:
 ```typescript
 import { dbLogger } from '@/lib/logger'
 
-// ✅ 正確：使用 dbLogger 記錄資料庫操作
-export class ProductService {
-  async findById(id: string) {
-    const timer = dbLogger.timer('查詢產品')
-
-    try {
-      dbLogger.debug('開始查詢產品', {
-        module: 'ProductService',
-        action: 'findById',
-        metadata: { productId: id }
-      })
-
-      const result = await this.supabase
-        .from('products')
-        .select('*')
-        .eq('id', id)
-        .single()
-
-      if (result.error) {
-        dbLogger.error('產品查詢失敗', result.error as Error, {
-          module: 'ProductService',
-          action: 'findById',
-          metadata: { productId: id }
-        })
-        throw ErrorFactory.fromSupabaseError(result.error)
-      }
-
-      const duration = timer.end({ metadata: { productId: id } })
-      dbLogger.info(`產品查詢完成 (${duration.toFixed(2)}ms)`, {
-        module: 'ProductService',
-        action: 'findById',
-        metadata: { productId: id, found: !!result.data }
-      })
-
-      return result.data
-    } catch (error) {
-      timer.end()
-      throw error
-    }
+async findById(id: string) {
+  const timer = dbLogger.timer('查詢產品')
+  try {
+    const result = await this.supabase.from('products').select('*').eq('id', id).single()
+    timer.end({ metadata: { productId: id } })
+    return result.data
+  } catch (error) {
+    timer.end()
+    throw error
   }
-}
-```
-
-**React 元件錯誤處理**:
-```typescript
-import { logger } from '@/lib/logger'
-import React from 'react'
-
-// ✅ 正確：使用 logger.fatal 記錄嚴重錯誤
-export class ErrorBoundary extends React.Component {
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.fatal('React 元件發生嚴重錯誤', error, {
-      component: 'ErrorBoundary',
-      action: 'componentDidCatch',
-      metadata: {
-        errorMessage: error.message,
-        componentStack: errorInfo.componentStack,
-        errorBoundary: this.constructor.name
-      }
-    })
-  }
-}
-
-// ❌ 錯誤：不要使用 console.error
-// console.error('Component error:', error) // 禁止
-```
-
-**工具函數日誌記錄**:
-```typescript
-import { logger } from '@/lib/logger'
-
-// ✅ 正確：使用適當的日誌級別
-export function processImageUpload(file: File) {
-  logger.info('開始處理圖片上傳', {
-    module: 'ImageUtils',
-    action: 'processUpload',
-    metadata: {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type
-    }
-  })
-
-  if (file.size > MAX_FILE_SIZE) {
-    logger.warn('圖片檔案過大', {
-      module: 'ImageUtils',
-      action: 'processUpload',
-      metadata: {
-        fileName: file.name,
-        fileSize: file.size,
-        maxSize: MAX_FILE_SIZE
-      }
-    })
-    throw new ValidationError('圖片檔案不能超過 10MB')
-  }
-
-  // 處理邏輯...
 }
 ```
 
@@ -375,19 +292,131 @@ try {
 }
 ```
 
-## Decision Framework
+## 技術債防範
 
-When multiple valid approaches exist, choose based on:
+### 開發前檢查清單
 
-1. **Testability** - Can I easily test this?
-2. **Readability** - Will someone understand this in 6 months?
-3. **Consistency** - Does this match project patterns?
-4. **Simplicity** - Is this the simplest solution that works?
-5. **Reversibility** - How hard to change later?
+Before implementing any feature, **ALWAYS** verify:
 
-## Project Integration
+- [ ] **Code Reuse Check**: 搜尋是否有相似功能可以重用
+  - 使用 `grep -r "function|class|const.*=" src/` 檢查現有功能
+  - 檢查 `src/lib/` 和 `src/components/` 是否有相關工具
+  - 優先擴展現有功能而非創建新的
 
-### API Route Development
+- [ ] **Dependency Assessment**: 評估是否需要新依賴
+  - 確認不會引入重複功能的套件
+  - 檢查套件維護狀態：最後更新 < 1年、stars > 1000、active issues
+  - 執行 `npm ls` 確認不會產生依賴衝突
+  - **記錄為什麼需要此依賴** (在 commit message 中)
+
+- [ ] **Architecture Consistency**: 確認遵循現有模式
+  - API 路由使用統一錯誤處理中間件
+  - 服務層使用 BaseService 或 AbstractService
+  - 元件遵循現有的 props 和 state 管理模式
+
+- [ ] **Performance Impact**: 評估效能影響
+  - 新增功能不會增加建置時間 > 30 秒
+  - 不會增加主要 bundle 大小 > 50KB
+  - 避免引入會影響 Runtime 效能的重型套件
+
+### 依賴管理
+
+**新增依賴前必須執行**:
+
+```bash
+# 1. 檢查現有相似功能
+grep -r "import.*from.*package-name" src/
+npm ls | grep similar-functionality
+
+# 2. 評估套件健康度
+npm info package-name
+npm audit package-name
+
+# 3. 檢查 Bundle 影響
+npm run analyze  # 記錄當前大小
+npm install package-name
+npm run analyze  # 比較差異
+
+# 4. 檢查未使用依賴
+npx depcheck
+```
+
+**依賴管理規則**:
+- **禁止** 安裝功能重複的套件（如已有 lodash 不要加 ramda）
+- **禁止** 安裝超過 6 個月未更新的套件（除非是穩定庫）
+- **禁止** 安裝會增加 bundle > 100KB 的套件（除非是核心功能）
+- **必須** 在 commit message 說明為什麼需要新依賴
+
+### 效能指南
+
+**建置效能監控**:
+- `.next/cache` 大小不得超過 **200MB**
+- 完整建置時間不得超過 **5 分鐘**
+- 開發伺服器啟動時間不得超過 **30 秒**
+
+**執行效能標準**:
+- API 回應時間 < **200ms** (使用 `apiLogger.timer()` 監控)
+- 頁面首次載入 < **3 秒**
+- 資料庫查詢時間 < **100ms** (使用 `dbLogger.timer()` 監控)
+
+**Bundle 大小警戒線**:
+- JavaScript: **500KB** (壓縮後)
+- CSS: **100KB** (壓縮後)
+- 圖片: 單張 < **1MB**
+
+### 程式碼品質保證
+
+**重複程式碼檢測**:
+- 相同邏輯出現 **3 次以上** 必須抽取為共用函數
+- 使用命令檢查重複：`grep -r "similar-pattern" src/`
+- 優先使用 `src/lib/` 中的現有工具函數
+
+**元件大小控制**:
+- 單一元件檔案不超過 **200 行**
+- Props 數量不超過 **7 個** (考慮使用 composition)
+- 避免在元件內直接調用 API (使用 custom hooks)
+
+**函數複雜度控制**:
+- 單一函數不超過 **30 行**
+- 巢狀層數不超過 **3 層**
+- 參數數量不超過 **5 個**
+
+### 技術債檢測
+
+**檢測技術債的信號**:
+- 建置時間明顯增加
+- TypeScript 編譯錯誤數量增加
+- ESLint 警告數量持續上升
+- 相似功能在多處重複實作
+- 依賴套件版本過舊或有安全漏洞
+
+**技術債分類**:
+- 🔴 **Critical** - 影響系統穩定性、安全性或核心功能
+- 🟡 **Major** - 影響開發效率、用戶體驗或維護成本
+- 🟢 **Minor** - 程式碼整潔度、文檔或註解問題
+
+**技術債記錄規範**:
+```typescript
+// TODO: [DEBT-YYYY-NNN] 🔴🟡🟢 描述問題 (預估: X小時)
+// 原因: 為什麼產生這個技術債
+// 影響: 對系統的影響
+// 建議: 具體的解決方案
+```
+
+## 決策框架
+
+當存在多種有效方法時，根據以下原則選擇：
+
+1. **可測試性** - 我能輕易測試這個嗎？
+2. **可讀性** - 6 個月後有人能理解這個嗎？
+3. **一致性** - 這是否符合專案模式？
+4. **簡潔性** - 這是否最簡單可行的解決方案？
+5. **可逆性** - 後續更改有多困難？
+6. **技術債影響** - 這會在後續產生技術債嗎？
+
+## 專案整合
+
+### API 路由開發
 
 **統一開發模式** - 所有新的 API 路由都應遵循以下模式:
 
@@ -515,33 +544,33 @@ async function handleGET(
    }
    ```
 
-### Learning the Codebase
+### 學習程式碼庫
 
-- Find 3 similar features/components
-- Identify common patterns and conventions
-- Use same libraries/utilities when possible
-- Follow existing test patterns
+- 找到 3 個類似的功能/元件
+- 識別常見模式和慣例
+- 盡可能使用相同的函式庫/工具
+- 遵循現有的測試模式
 - **參考現有 API 路由**: 查看 `/api/culture` 作為統一錯誤處理的範例
 - **參考統一服務架構**: 查看 `src/services/v2/productService.ts` 作為新服務層的範例
 
-### Tooling
+### 開發工具
 
-- Use project's existing build system
-- Use project's test framework
-- Use project's formatter/linter settings
-- Don't introduce new tools without strong justification
+- 使用專案現有的建置系統
+- 使用專案的測試框架
+- 使用專案的格式化器/linter 設定
+- 不要在沒有強烈理由的情況下引入新工具
 
-## Quality Gates
+## 品質閣門
 
-### Definition of Done
+### 完成定義
 
-- [ ] Tests written and passing
-- [ ] Code follows project conventions
-- [ ] No linter/formatter warnings
-- [ ] **No console.log/warn/error in production code** - Use project logger system
-- [ ] Commit messages are clear
-- [ ] Implementation matches plan
-- [ ] No TODOs without issue numbers
+- [ ] 測試已寫並通過
+- [ ] 程式碼遵循專案慣例
+- [ ] 沒有 linter/格式化器警告
+- [ ] **生產程式碼中無 console.log/warn/error** - 使用專案日誌系統
+- [ ] 提交訊息清晰
+- [ ] 實作符合計劃
+- [ ] 沒有缺乏問題編號的 TODO
 
 ### API 開發完成檢查清單
 
@@ -554,30 +583,232 @@ async function handleGET(
 - [ ] 處理不支援的 HTTP 方法時返回 MethodNotAllowedError
 - [ ] 不要重複包裝權限中間件和 withErrorHandler
 
-### Test Guidelines
+### 測試指南
 
-- Test behavior, not implementation
-- One assertion per test when possible
-- Clear test names describing scenario
-- Use existing test utilities/helpers
-- Tests should be deterministic
+- 測試行為而非實作
+- 盡可能每個測試一個斷言
+- 清晰的測試名稱描述場景
+- 使用現有的測試工具/助手
+- 測試應該是確定性的
 
-## Important Reminders
+## 維護任務
 
-**NEVER**:
-- Use `--no-verify` to bypass commit hooks
-- Disable tests instead of fixing them
-- Commit code that doesn't compile
-- Make assumptions - verify with existing code
-- Use console.log/warn/error - use the project logger system instead
+### 開發前檢查
 
-**ALWAYS**:
-- Commit working code incrementally
-- Update plan documentation as you go
-- Learn from existing implementations
-- Stop after 3 failed attempts and reassess
-- Use appropriate logger (apiLogger, dbLogger, etc.) with proper context
+在開始任何開發工作前，**ALWAYS** 執行：
+
+```bash
+# 1. 檢查 TypeScript 類型安全
+npm run type-check
+
+# 2. 檢查程式碼品質
+npm run lint
+
+# 3. 確認沒有 console.log（在非開發環境）
+grep -r "console\." src/ --exclude-dir=node_modules
+```
+
+**每次 commit 前必須**：
+- [ ] TypeScript 編譯無錯誤
+- [ ] ESLint 檢查無警告
+- [ ] 所有相關測試通過
+- [ ] 沒有新的 console.log 或 debugger
+- [ ] commit message 遵循規範
+
+### 重大變更的維護
+
+**執行重大變更時** 執行以下維護工作：
+
+```bash
+# 1. 清理建置快取
+rm -rf .next/cache
+echo "Cache size after cleanup: $(du -sh .next/ 2>/dev/null || echo "0B")"
+
+# 2. 檢查未使用的依賴
+npx depcheck
+
+# 3. 檢查依賴安全性
+npm audit
+
+# 4. 分析 Bundle 大小
+npm run analyze
+
+# 5. 檢查 TODO 註解
+grep -r "TODO" src/ --include="*.ts" --include="*.tsx"
+```
+
+**重大變更檢查清單**：
+- [ ] 清理建置快取 (目標: < 200MB)
+- [ ] 移除未使用依賴
+- [ ] 修復安全漏洞 (high/critical)
+- [ ] 審查並處理 TODO 項目
+- [ ] 確認 Bundle 大小在標準內
+- [ ] 檢查並更新 PROJECT_IMPROVEMENT_OPPORTUNITIES.md
+
+### 版本發布維護
+
+**版本發布前** 執行深度維護：
+
+```bash
+# 1. 依賴套件健康檢查
+npm outdated
+
+# 2. 檢查重複程式碼
+# 使用工具如 jscpd 或手動檢查常見模式
+grep -r "function.*{" src/ | sort | uniq -c | sort -nr
+
+# 3. 資料庫效能檢查
+# 檢查慢查詢日誌 (如果有的話)
+
+# 4. 效能基準測試
+npm run build
+echo "Build time: $(date)"
+```
+
+**版本發布檢查清單**：
+- [ ] 評估並更新依賴套件 (minor/patch 版本)
+- [ ] 檢查並清理重複程式碼
+- [ ] 審查資料庫查詢效能
+- [ ] 運行完整的測試套件
+- [ ] 檢查系統效能指標
+- [ ] 更新文檔和 README
+
+### 技術債審查流程
+
+**技術債審查流程** (每月執行)：
+
+1. **收集債務清單**：
+   ```bash
+   # 收集所有 TODO 註解
+   grep -r "TODO.*DEBT" src/ > technical_debt_report.txt
+   
+   # 檢查建置警告
+   npm run build 2>&1 | grep -i "warn"
+   
+   # 檢查 ESLint 問題
+   npm run lint | grep -i "warn"
+   ```
+
+2. **優先排序**：
+   - 🔴 Critical: 立即處理 (1 週內)
+   - 🟡 Major: 近期處理 (1 月內)
+   - 🟢 Minor: 計劃處理 (3 月內)
+
+3. **制定處理計劃**：
+   - 估算修復時間
+   - 評估業務影響
+   - 安排到開發週期中
+
+4. **追蹤和報告**：
+   - 更新 PROJECT_IMPROVEMENT_OPPORTUNITIES.md
+   - 在團隊會議中報告進度
+   - 慶祝債務清理成果 🎉
+
+### 自動化健康檢查
+
+**自動化健康檢查腳本** (建議加入 CI/CD)：
+
+```bash
+#!/bin/bash
+# health-check.sh
+
+echo "🔍 Running automated health checks..."
+
+# 1. 建置大小檢查
+BUILD_SIZE=$(du -sh .next 2>/dev/null | cut -f1)
+echo "📦 Build size: $BUILD_SIZE"
+
+# 2. 依賴漏洞檢查
+VULNERABILITIES=$(npm audit --audit-level moderate --format json | jq '.metadata.vulnerabilities.total')
+echo "🔒 Security vulnerabilities: $VULNERABILITIES"
+
+# 3. TypeScript 錯誤檢查
+TS_ERRORS=$(npx tsc --noEmit --incremental false 2>&1 | grep -c "error TS")
+echo "📝 TypeScript errors: $TS_ERRORS"
+
+# 4. ESLint 警告檢查
+LINT_WARNINGS=$(npm run lint 2>&1 | grep -c "warning")
+echo "⚠️  ESLint warnings: $LINT_WARNINGS"
+
+# 5. 設定警戒閾值
+if [ "$TS_ERRORS" -gt 0 ]; then
+  echo "❌ TypeScript errors detected!"
+  exit 1
+fi
+
+if [ "$VULNERABILITIES" -gt 0 ]; then
+  echo "⚠️  Security vulnerabilities detected!"
+fi
+
+echo "✅ Health check completed!"
+```
+
+### 效能監控
+
+**效能監控指標** (每週檢查)：
+
+```bash
+# 1. 建置效能
+time npm run build
+
+# 2. Bundle 分析
+npm run analyze
+
+# 3. 開發伺服器啟動時間
+time npm run dev &
+sleep 10
+kill %1
+
+# 4. 記錄歷史數據
+echo "$(date),$(du -sh .next | cut -f1)" >> performance_history.csv
+```
+
+**效能基準**：
+- 建置時間: < 5 分鐘
+- 開發伺服器啟動: < 30 秒
+- Bundle 大小: JS < 500KB, CSS < 100KB
+
+## 重要提醒
+
+**永不**：
+- 使用 `--no-verify` 繞過提交鉤子
+- 停用測試而不是修復它們
+- 提交不能編譯的程式碼
+- 做假設 - 用現有程式碼驗證
+- 使用 console.log/warn/error - 使用專案日誌系統代替
+- **在沒有理由的情況下安裝依賴** - 始終在提交訊息中解釋原因
+- **建立重複功能** - 先用 grep/搜尋檢查現有程式碼
+- **忽略效能警告** - 解決套件大小和建置時間問題
+- **跳過開發前檢查清單** - 始終驗證程式碼重用和架構一致性
+
+**始終**：
+- 漸進式提交可工作的程式碼
+- 随時更新計劃文件
+- 從現有實作中學習
+- 3 次嘗試失敗後停止並重新評估
+- 使用適當的日誌器 (apiLogger, dbLogger 等) 並提供適當的上下文
 - **檢查 console.* 使用**: 定期執行 `grep -r "console\." src/ --exclude-dir=node_modules` 確保沒有新的 console 使用
+- **執行開發前檢查清單** - 程式碼重用、依賴評估、架構一致性、效能影響
+- **監控技術債信號** - 建置時間增加、TypeScript 錯誤、ESLint 警告、重複程式碼
+- **適當記錄技術債** - 使用帶有 DEBT 標籤、分類和估計工作量的 TODO 註釋
+- **執行每週維護** - 快取清理、依賴檢查、安全稽核、套件分析
+- **追蹤效能指標** - 建置大小 < 200MB 快取、建置時間 < 5分鐘、套件 JS < 500KB
+
+### 技術債警告信號
+
+**遇到以下情況立即停止並重新評估**：
+- 🚨 相同邏輯複製 3 次以上
+- 🚨 函數/元件超過大小限制 (30 行 / 200 行)
+- 🚨 為非核心功能添加超過 100KB 的依賴
+- 🚨 建置時間增加超過 30 秒
+- 🚨 TypeScript 錯誤增加
+- 🚨 建立新模式而不遵循現有模式
+
+**當你看到警告信號時**：
+1. **記錄問題** 使用 TODO 註釋和 DEBT 標籤
+2. **添加到 PROJECT_IMPROVEMENT_OPPORTUNITIES.md**
+3. **考慮重構** 而不是增加問題
+4. **參考現有類似實作** 的模式
 
 ## API 開發準則
 
@@ -679,7 +910,258 @@ export const POST = requireAuth(handlePOST)
 
 查看 `src/app/api/v1/example/route.ts` 了解完整的實作範例。
 
-##
+## 最佳實踐範例
+
+### 避免技術債
+
+#### ✅ 好的做法：程式碼重用與抽象化
+
+```typescript
+// ✅ 好：抽取共用的驗證邏輯
+const validateRequired = (fields: Record<string, any>, requiredFields: string[]) => {
+  const missing = requiredFields.filter(field => !fields[field])
+  if (missing.length > 0) {
+    throw new ValidationError(`必填欄位: ${missing.join(', ')}`)
+  }
+}
+
+// 在多個 API 路由中重用
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const data = await req.json()
+  validateRequired(data, ['name', 'email'])  // 重用驗證邏輯
+  
+  const result = await service.create(data)
+  return created(result, '建立成功')
+}, { module: 'ProductAPI' })
+```
+
+#### ❌ 不好的做法：重複的驗證邏輯
+
+```typescript
+// ❌ 不好：重複的驗證邏輯
+export const POST = withErrorHandler(async (req: NextRequest) => {
+  const data = await req.json()
+  if (!data.name) throw new ValidationError('名稱必填')
+  if (!data.email) throw new ValidationError('Email必填')
+  // ... 在其他地方又重複一遍相同邏輯
+}, { module: 'ProductAPI' })
+```
+
+#### ✅ 好的做法：依賴管理
+
+```typescript
+// ✅ 好：檢查現有功能再決定是否需要新依賴
+// Commit message: "feat: add date formatting using existing date-fns
+// 檢查後發現專案已有 date-fns，無需新增 moment.js"
+
+import { format } from 'date-fns'  // 使用現有依賴
+
+export function formatDate(date: Date): string {
+  return format(date, 'yyyy-MM-dd')
+}
+```
+
+#### ❌ 不好的做法：不必要的依賴
+
+```typescript
+// ❌ 不好：沒檢查就加新依賴
+// npm install moment  // 專案已有 date-fns 卻又加 moment.js
+
+import moment from 'moment'  // 增加 bundle 大小且功能重複
+
+export function formatDate(date: Date): string {
+  return moment(date).format('YYYY-MM-DD')
+}
+```
+
+#### ✅ 好的做法：元件架構
+
+```typescript
+// ✅ 好：模組化元件設計
+interface ProductCardProps {
+  product: Product
+  onSelect: (id: string) => void
+  variant?: 'default' | 'compact'
+}
+
+export function ProductCard({ product, onSelect, variant = 'default' }: ProductCardProps) {
+  return (
+    <div className={cn('card', variant === 'compact' && 'card-compact')}>
+      <ProductImage src={product.image} alt={product.name} />
+      <ProductInfo product={product} />
+      <ProductActions product={product} onSelect={onSelect} />
+    </div>
+  )
+}
+
+// 分離關注點，每個子元件職責單一
+```
+
+#### ❌ 不好的做法：巨型元件
+
+```typescript
+// ❌ 不好：單一巨型元件 (200+ 行)
+export function ProductCard({ product, onSelect }: ProductCardProps) {
+  // 100+ 行的 JSX，包含圖片處理、資訊顯示、操作邏輯等
+  return (
+    <div>
+      {/* 混雜了太多責任的大量 JSX */}
+    </div>
+  )
+}
+```
+
+#### ✅ 好的做法：效能意識程式碼
+
+```typescript
+// ✅ 好：使用 React.memo 避免不必要渲染
+export const ProductList = React.memo(({ products, onSelect }: ProductListProps) => {
+  const [filteredProducts, setFilteredProducts] = useState(products)
+  
+  // 使用 useCallback 避免子元件重渲染
+  const handleSelect = useCallback((id: string) => {
+    onSelect(id)
+  }, [onSelect])
+
+  return (
+    <div>
+      {filteredProducts.map(product => (
+        <ProductCard 
+          key={product.id} 
+          product={product} 
+          onSelect={handleSelect}
+        />
+      ))}
+    </div>
+  )
+})
+```
+
+#### ❌ 不好的做法：效能問題
+
+```typescript
+// ❌ 不好：效能問題
+export function ProductList({ products, onSelect }: ProductListProps) {
+  return (
+    <div>
+      {products.map(product => (
+        <ProductCard 
+          key={product.id} 
+          product={product} 
+          onSelect={(id) => onSelect(id)}  // 每次渲染都創建新函數
+        />
+      ))}
+    </div>
+  )
+}
+```
+
+### 錯誤處理最佳實踐
+
+#### ✅ 好的做法：結構化錯誤處理
+
+```typescript
+// ✅ 好：使用統一錯誤處理系統
+export const POST = requireAuth(async (req, { user }) => {
+  try {
+    const data = await req.json()
+    const validation = ProductSchema.safeParse(data)
+    
+    if (!validation.success) {
+      throw new ValidationError(`驗證失敗: ${validation.error.message}`)
+    }
+    
+    const result = await productService.create(validation.data, user.id)
+    return created(result, '產品建立成功')
+    
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      throw error  // 讓中間件處理
+    }
+    throw ErrorFactory.fromSupabaseError(error, {
+      module: 'ProductAPI',
+      action: 'create'
+    })
+  }
+})
+```
+
+#### ❌ 不好的做法：不一致的錯誤處理
+
+```typescript
+// ❌ 不好：不一致的錯誤處理
+export async function POST(req: NextRequest) {
+  try {
+    const data = await req.json()
+    if (!data.name) {
+      return NextResponse.json({ error: '名稱必填' }, { status: 400 })  // 不一致的回應格式
+    }
+    
+    const result = await productService.create(data)
+    return NextResponse.json({ success: true, data: result })  // 不使用統一格式
+    
+  } catch (error) {
+    console.error(error)  // 不應使用 console.error
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+  }
+}
+```
+
+### 維護與監控
+
+#### ✅ 好的做法：主動的技術債管理
+
+```typescript
+// ✅ 好：主動技術債管理
+// TODO: [DEBT-2025-001] 🟡 ProductService 過於複雜，需要拆分 (預估: 4小時)
+// 原因: 單一服務處理產品 CRUD、搜尋、快取、統計等多個責任
+// 影響: 難以測試、維護成本高、擴展困難
+// 建議: 拆分為 ProductCRUDService、ProductSearchService、ProductStatsService
+export class ProductService {
+  // 當前複雜實作...
+  
+  // 計劃重構：
+  // - ProductCRUDService: 基本 CRUD 操作
+  // - ProductSearchService: 搜尋和篩選
+  // - ProductStatsService: 統計和報表
+}
+```
+
+#### ✅ 好的做法：效能監控
+
+```typescript
+// ✅ 好：效能監控
+export class DatabaseService {
+  async query(sql: string, params: any[]) {
+    const timer = dbLogger.timer('資料庫查詢')
+    
+    try {
+      const result = await this.client.query(sql, params)
+      
+      const duration = timer.end({
+        metadata: { 
+          query: sql.substring(0, 100) + '...',
+          rowCount: result.rows?.length 
+        }
+      })
+      
+      // 效能警告
+      if (duration > 200) {
+        dbLogger.warn('慢查詢檢測', {
+          module: 'DatabaseService',
+          metadata: { duration, query: sql }
+        })
+      }
+      
+      return result
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+}
+```
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
