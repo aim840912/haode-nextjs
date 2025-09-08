@@ -1,50 +1,50 @@
-'use client';
+'use client'
 
-import { useState, useRef, useCallback } from 'react';
-import { logger } from '@/lib/logger';
-import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils';
-import { useCSRFTokenValue } from '@/hooks/useCSRFToken';
-import Image from 'next/image';
-import LoadingSpinner from './LoadingSpinner';
-import SortableImageGallery from './SortableImageGallery';
+import { useState, useRef, useCallback } from 'react'
+import { logger } from '@/lib/logger'
+import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils'
+import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
+import Image from 'next/image'
+import LoadingSpinner from './LoadingSpinner'
+import SortableImageGallery from './SortableImageGallery'
 
 interface UploadedImage {
-  id: string;
-  url?: string;
-  path: string;
-  size: 'thumbnail' | 'medium' | 'large';
-  file?: File;
-  preview?: string;
-  position: number;
-  alt?: string;
+  id: string
+  url?: string
+  path: string
+  size: 'thumbnail' | 'medium' | 'large'
+  file?: File
+  preview?: string
+  position: number
+  alt?: string
 }
 
 interface UploadUrlData {
-  url: string;
-  path: string;
+  url: string
+  path: string
 }
 
 interface UploadResult {
-  multiple?: boolean;
-  urls?: Record<string, UploadUrlData>;
+  multiple?: boolean
+  urls?: Record<string, UploadUrlData>
   // 單一上傳結果
-  url?: string;
-  path?: string;
-  size?: 'thumbnail' | 'medium' | 'large';
+  url?: string
+  path?: string
+  size?: 'thumbnail' | 'medium' | 'large'
 }
 
 interface ImageUploaderProps {
-  productId: string;
-  onUploadSuccess?: (images: UploadedImage[]) => void;
-  onUploadError?: (error: string) => void;
-  maxFiles?: number;
-  allowMultiple?: boolean;
-  generateMultipleSizes?: boolean;
-  enableCompression?: boolean;
-  className?: string;
-  acceptedTypes?: string[];
-  apiEndpoint?: string;
-  idParamName?: string;
+  productId: string
+  onUploadSuccess?: (images: UploadedImage[]) => void
+  onUploadError?: (error: string) => void
+  maxFiles?: number
+  allowMultiple?: boolean
+  generateMultipleSizes?: boolean
+  enableCompression?: boolean
+  className?: string
+  acceptedTypes?: string[]
+  apiEndpoint?: string
+  idParamName?: string
 }
 
 export default function ImageUploader({
@@ -58,215 +58,279 @@ export default function ImageUploader({
   className = '',
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
   apiEndpoint = '/api/upload/images',
-  idParamName = 'productId'
+  idParamName = 'productId',
 }: ImageUploaderProps) {
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [previewImages, setPreviewImages] = useState<UploadedImage[]>([]);
-  const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const csrfToken = useCSRFTokenValue();
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [previewImages, setPreviewImages] = useState<UploadedImage[]>([])
+  const [dragActive, setDragActive] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>(
+    'idle'
+  )
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const csrfToken = useCSRFTokenValue()
 
-  const handleFileSelect = useCallback(async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
+  const handleFileSelect = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return
 
-    const fileArray = Array.from(files);
-    const validFiles: File[] = [];
-    
-    // 驗證檔案
-    for (const file of fileArray) {
-      const validation = validateImageFile(file);
-      if (validation.valid) {
-        validFiles.push(file);
-      } else {
-        onUploadError?.(validation.error || '檔案驗證失敗');
+      const fileArray = Array.from(files)
+      const validFiles: File[] = []
+
+      // 驗證檔案
+      for (const file of fileArray) {
+        const validation = validateImageFile(file)
+        if (validation.valid) {
+          validFiles.push(file)
+        } else {
+          const errorMsg = `檔案「${file.name}」驗證失敗: ${validation.error || '未知錯誤'}`
+          setErrorMessage(errorMsg)
+          setUploadStatus('error')
+          onUploadError?.(errorMsg)
+        }
       }
-    }
 
-    if (validFiles.length === 0) return;
+      if (validFiles.length === 0) return
 
-    // 檢查檔案數量限制
-    if (previewImages.length + validFiles.length > maxFiles) {
-      onUploadError?.(` exceeds maximum allowed files (${maxFiles})`);
-      return;
-    }
+      // 檢查檔案數量限制
+      if (previewImages.length + validFiles.length > maxFiles) {
+        const errorMsg = `檔案數量超過限制：最多只能上傳 ${maxFiles} 個檔案，目前已有 ${previewImages.length} 個，新增 ${validFiles.length} 個`
+        setErrorMessage(errorMsg)
+        setUploadStatus('error')
+        onUploadError?.(errorMsg)
+        return
+      }
 
-    setIsUploading(true);
-    setUploadProgress(0);
+      setIsUploading(true)
+      setUploadProgress(0)
+      setErrorMessage(null)
+      setUploadStatus('uploading')
 
-    try {
-      const newImages: UploadedImage[] = [];
+      try {
+        const newImages: UploadedImage[] = []
 
-      for (let i = 0; i < validFiles.length; i++) {
-        const file = validFiles[i];
-        setUploadProgress(((i + 1) / validFiles.length) * 100);
+        for (let i = 0; i < validFiles.length; i++) {
+          const file = validFiles[i]
+          setUploadProgress(((i + 1) / validFiles.length) * 100)
 
-        // 可選的圖片壓縮
-        let processedFile = file;
-        if (enableCompression) {
+          // 可選的圖片壓縮
+          let processedFile = file
+          if (enableCompression) {
+            try {
+              processedFile = await compressImage(file)
+            } catch (error) {
+              logger.warn('圖片壓縮失敗，使用原檔案', {
+                metadata: {
+                  context: 'compressImage',
+                  error: error instanceof Error ? error.message : 'Unknown compression error',
+                },
+              })
+            }
+          }
+
+          // 生成本地預覽（立即顯示）
+          const preview = await getImagePreviewUrl(processedFile)
+
+          // 先創建本地預覽圖片對象，讓用戶立即看到
+          const tempImage: UploadedImage = {
+            id: `temp-${productId}-${Date.now()}-${i}`,
+            url: '',
+            path: '',
+            size: 'medium',
+            file: processedFile,
+            preview: preview,
+            position: previewImages.length + i,
+            alt: `${processedFile.name} 預覽`,
+          }
+
+          // 立即添加到預覽列表
+          setPreviewImages(prev => [...prev, tempImage])
+
           try {
-            processedFile = await compressImage(file);
-          } catch (error) {
-            logger.warn('圖片壓縮失敗，使用原檔案', {
-              metadata: { context: 'compressImage', error: error instanceof Error ? error.message : 'Unknown compression error' }
-            });
-          }
-        }
+            // 上傳到伺服器
+            const result = (await uploadImageToServer(
+              processedFile,
+              productId,
+              generateMultipleSizes,
+              csrfToken
+            )) as UploadResult
 
-        // 生成本地預覽（立即顯示）
-        const preview = await getImagePreviewUrl(processedFile);
+            if (generateMultipleSizes && result.multiple) {
+              // 多尺寸上傳結果 - 直接替換臨時預覽
+              const uploadedImages: UploadedImage[] = []
+              Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
+                const url = urlData.url
+                uploadedImages.push({
+                  id: `${productId}-${size}-${Date.now()}-${i}`,
+                  url: url,
+                  path: urlData.path,
+                  size: size as 'thumbnail' | 'medium' | 'large',
+                  file: processedFile,
+                  preview: url, // 使用 Supabase URL
+                  position: tempImage.position + index,
+                  alt: `${processedFile.name} (${size})`,
+                })
+              })
 
-        // 先創建本地預覽圖片對象，讓用戶立即看到
-        const tempImage: UploadedImage = {
-          id: `temp-${productId}-${Date.now()}-${i}`,
-          url: '',
-          path: '',
-          size: 'medium',
-          file: processedFile,
-          preview: preview,
-          position: previewImages.length + i,
-          alt: `${processedFile.name} 預覽`
-        };
-
-        // 立即添加到預覽列表
-        setPreviewImages(prev => [...prev, tempImage]);
-
-        try {
-          // 上傳到伺服器
-          const result = await uploadImageToServer(processedFile, productId, generateMultipleSizes, csrfToken) as UploadResult;
-          
-          if (generateMultipleSizes && result.multiple) {
-            // 多尺寸上傳結果 - 直接替換臨時預覽
-            const uploadedImages: UploadedImage[] = [];
-            Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
-              const url = urlData.url;
-              uploadedImages.push({
-                id: `${productId}-${size}-${Date.now()}-${i}`,
-                url: url,
-                path: urlData.path,
-                size: size as 'thumbnail' | 'medium' | 'large',
+              // 用上傳成功的圖片替換臨時預覽
+              setPreviewImages(prev => [
+                ...prev.filter(img => img.id !== tempImage.id),
+                ...uploadedImages,
+              ])
+              newImages.push(...uploadedImages)
+            } else {
+              // 單一尺寸上傳結果
+              const uploadedImage: UploadedImage = {
+                id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
+                url: result.url || '',
+                path: result.path || '',
+                size: result.size || 'medium',
                 file: processedFile,
-                preview: url, // 使用 Supabase URL
-                position: tempImage.position + index,
-                alt: `${processedFile.name} (${size})`
-              });
-            });
-            
-            // 用上傳成功的圖片替換臨時預覽
-            setPreviewImages(prev => [
-              ...prev.filter(img => img.id !== tempImage.id),
-              ...uploadedImages
-            ]);
-            newImages.push(...uploadedImages);
-          } else {
-            // 單一尺寸上傳結果
-            const uploadedImage: UploadedImage = {
-              id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
-              url: result.url || '',
-              path: result.path || '',
-              size: result.size || 'medium',
-              file: processedFile,
-              preview: result.url || '', // 使用 Supabase URL
-              position: tempImage.position,
-              alt: `${processedFile.name} (${result.size || 'medium'})`
-            };
-            
-            // 用上傳成功的圖片替換臨時預覽
-            setPreviewImages(prev => prev.map(img => 
-              img.id === tempImage.id ? uploadedImage : img
-            ));
-            newImages.push(uploadedImage);
+                preview: result.url || '', // 使用 Supabase URL
+                position: tempImage.position,
+                alt: `${processedFile.name} (${result.size || 'medium'})`,
+              }
+
+              // 用上傳成功的圖片替換臨時預覽
+              setPreviewImages(prev =>
+                prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
+              )
+              newImages.push(uploadedImage)
+            }
+          } catch (uploadError) {
+            // 上傳失敗，保留本地預覽並更新 ID
+            logger.error(
+              '上傳失敗，保留本地預覽',
+              uploadError instanceof Error ? uploadError : new Error('Unknown upload error'),
+              {
+                metadata: {
+                  fileName: processedFile.name,
+                  tempImageId: tempImage.id,
+                },
+              }
+            )
+            setPreviewImages(prev =>
+              prev.map(img =>
+                img.id === tempImage.id
+                  ? {
+                      ...img,
+                      id: `local-${productId}-${Date.now()}-${i}`,
+                      alt: `${processedFile.name} (上傳失敗)`,
+                    }
+                  : img
+              )
+            )
+            throw uploadError // 重新拋出錯誤，讓外層 catch 處理
           }
-        } catch (uploadError) {
-          // 上傳失敗，保留本地預覽並更新 ID
-          logger.error('上傳失敗，保留本地預覽', uploadError instanceof Error ? uploadError : new Error('Unknown upload error'));
-          setPreviewImages(prev => prev.map(img => 
-            img.id === tempImage.id 
-              ? { ...img, id: `local-${productId}-${Date.now()}-${i}`, alt: `${processedFile.name} (上傳失敗)` }
-              : img
-          ));
-          throw uploadError; // 重新拋出錯誤，讓外層 catch 處理
         }
+
+        setUploadStatus('success')
+        onUploadSuccess?.(newImages)
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : '未知錯誤'
+        const detailedError = `圖片上傳失敗: ${errorMsg}。請檢查網路連線後再試。`
+
+        logger.error('圖片上傳失敗', error instanceof Error ? error : new Error('Unknown error'), {
+          metadata: {
+            fileCount: validFiles.length,
+            errorMessage: errorMsg,
+          },
+        })
+
+        setErrorMessage(detailedError)
+        setUploadStatus('error')
+        onUploadError?.(detailedError)
+      } finally {
+        setIsUploading(false)
+        setUploadProgress(0)
+      }
+       
+    },
+    [
+      productId,
+      maxFiles,
+      previewImages.length,
+      generateMultipleSizes,
+      enableCompression,
+      onUploadSuccess,
+      onUploadError,
+      csrfToken,
+    ]
+  ) // uploadImageToServer 穩定，不需要在依賴中
+
+  const uploadImageToServer = useCallback(
+    async (
+      file: File,
+      productId: string,
+      generateMultipleSizes: boolean,
+      csrfToken: string | null
+    ) => {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append(idParamName, productId)
+      formData.append('generateMultipleSizes', generateMultipleSizes.toString())
+      formData.append('compress', 'false') // 已在前端壓縮
+
+      const headers: HeadersInit = {}
+      if (csrfToken) {
+        headers['x-csrf-token'] = csrfToken
       }
 
-      onUploadSuccess?.(newImages);
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        body: formData,
+        headers,
+        credentials: 'include',
+      })
 
-    } catch (error) {
-      logger.error('上傳失敗', error instanceof Error ? error : new Error('Unknown error'));
-      onUploadError?.(error instanceof Error ? error.message : '上傳失敗');
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId, maxFiles, previewImages.length, generateMultipleSizes, enableCompression, onUploadSuccess, onUploadError, csrfToken]); // uploadImageToServer 穩定，不需要在依賴中
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || '上傳失敗')
+      }
 
-  const uploadImageToServer = useCallback(async (
-    file: File,
-    productId: string,
-    generateMultipleSizes: boolean,
-    csrfToken: string | null
-  ) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append(idParamName, productId);
-    formData.append('generateMultipleSizes', generateMultipleSizes.toString());
-    formData.append('compress', 'false'); // 已在前端壓縮
-
-    const headers: HeadersInit = {};
-    if (csrfToken) {
-      headers['x-csrf-token'] = csrfToken;
-    }
-
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      body: formData,
-      headers,
-      credentials: 'include'
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || '上傳失敗');
-    }
-
-    const result = await response.json();
-    return result.data;
-  }, [idParamName, apiEndpoint]);
+      const result = await response.json()
+      return result.data
+    },
+    [idParamName, apiEndpoint]
+  )
 
   const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
 
   const handleDragIn = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(true);
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(true)
+  }, [])
 
   const handleDragOut = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-  }, []);
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+  }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    
-    const files = e.dataTransfer.files;
-    handleFileSelect(files);
-  }, [handleFileSelect]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setDragActive(false)
+
+      const files = e.dataTransfer.files
+      handleFileSelect(files)
+    },
+    [handleFileSelect]
+  )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleFileSelect(e.target.files);
-  };
+    handleFileSelect(e.target.files)
+  }
 
   const handleRemoveImage = async (imageId: string) => {
-    const imageToRemove = previewImages.find(img => img.id === imageId);
-    if (!imageToRemove) return;
+    const imageToRemove = previewImages.find(img => img.id === imageId)
+    if (!imageToRemove) return
 
     try {
       // 從伺服器刪除（如果有路径）
@@ -274,48 +338,51 @@ export default function ImageUploader({
         await fetch('/api/upload/images', {
           method: 'DELETE',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ filePath: imageToRemove.path })
-        });
+          body: JSON.stringify({ filePath: imageToRemove.path }),
+        })
       }
 
       // 從預覽中移除並重新計算位置
       setPreviewImages(prev => {
-        const filtered = prev.filter(img => img.id !== imageId);
+        const filtered = prev.filter(img => img.id !== imageId)
         // 重新計算位置索引
         return filtered.map((img, index) => ({
           ...img,
-          position: index
-        }));
-      });
+          position: index,
+        }))
+      })
     } catch (error) {
-      logger.error('刪除圖片失敗', error instanceof Error ? error : new Error('Unknown error'));
-      onUploadError?.('刪除圖片失敗');
+      logger.error('刪除圖片失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: {
+          imageId,
+          imagePath: imageToRemove.path,
+        },
+      })
+      onUploadError?.('刪除圖片失敗')
     }
-  };
+  }
 
   const handleImagesReorder = (reorderedImages: UploadedImage[]) => {
-    setPreviewImages(reorderedImages);
-    
+    setPreviewImages(reorderedImages)
+
     // 通知上層組件排序已更改
     if (onUploadSuccess) {
-      onUploadSuccess(reorderedImages);
+      onUploadSuccess(reorderedImages)
     }
-  };
+  }
 
   const openFileDialog = () => {
-    fileInputRef.current?.click();
-  };
+    fileInputRef.current?.click()
+  }
 
   return (
     <div className={`space-y-4 ${className}`}>
       {/* 上傳區域 */}
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          dragActive
-            ? 'border-amber-500 bg-amber-50'
-            : 'border-gray-300 hover:border-gray-400'
+          dragActive ? 'border-amber-500 bg-amber-50' : 'border-gray-300 hover:border-gray-400'
         } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
@@ -405,7 +472,7 @@ export default function ImageUploader({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // 簡化版的單圖片上傳元件
@@ -415,33 +482,35 @@ export function SingleImageUploader({
   onUploadError,
   initialImage,
   size = 'medium',
-  className = ''
+  className = '',
 }: {
-  productId: string;
-  onUploadSuccess?: (image: UploadedImage) => void;
-  onUploadError?: (error: string) => void;
-  initialImage?: string;
-  size?: 'thumbnail' | 'medium' | 'large';
-  className?: string;
+  productId: string
+  onUploadSuccess?: (image: UploadedImage) => void
+  onUploadError?: (error: string) => void
+  initialImage?: string
+  size?: 'thumbnail' | 'medium' | 'large'
+  className?: string
 }) {
   const [currentImage, setCurrentImage] = useState<UploadedImage | null>(
-    initialImage ? {
-      id: 'initial',
-      url: initialImage,
-      path: '',
-      size,
-      position: 0,
-      alt: '當前圖片'
-    } : null
-  );
+    initialImage
+      ? {
+          id: 'initial',
+          url: initialImage,
+          path: '',
+          size,
+          position: 0,
+          alt: '當前圖片',
+        }
+      : null
+  )
 
   const handleUploadSuccess = (images: UploadedImage[]) => {
     if (images.length > 0) {
-      const newImage = images[0];
-      setCurrentImage(newImage);
-      onUploadSuccess?.(newImage);
+      const newImage = images[0]
+      setCurrentImage(newImage)
+      onUploadSuccess?.(newImage)
     }
-  };
+  }
 
   return (
     <div className={className}>
@@ -457,7 +526,7 @@ export function SingleImageUploader({
           </div>
         </div>
       )}
-      
+
       <ImageUploader
         productId={productId}
         onUploadSuccess={handleUploadSuccess}
@@ -467,5 +536,5 @@ export function SingleImageUploader({
         generateMultipleSizes={false}
       />
     </div>
-  );
+  )
 }
