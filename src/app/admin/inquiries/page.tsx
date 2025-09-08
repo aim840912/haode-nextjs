@@ -622,7 +622,7 @@ function AdminInquiriesPage() {
         // 實作模板使用邏輯
         setSelectedTemplate(template)
         setShowTemplateSelector(true)
-        
+
         // 準備模板變數（根據選中的詢價單填充）
         if (selectedInquiry) {
           const defaultVariables: Record<string, string> = {
@@ -632,7 +632,7 @@ function AdminInquiriesPage() {
             currentDate: new Date().toLocaleDateString('zh-TW'),
           }
           setTemplateVariables(defaultVariables)
-          
+
           // 使用 fillTemplate 生成初始回覆內容
           const filledContent = fillTemplate(template, defaultVariables)
           setGeneratedReply(filledContent)
@@ -1126,12 +1126,12 @@ function AdminInquiriesPage() {
                         金額
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        狀態
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
                         建立時間
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      <th className="sticky right-[180px] z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
+                        狀態
+                      </th>
+                      <th className="sticky right-0 z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px]">
                         操作
                       </th>
                     </tr>
@@ -1219,7 +1219,12 @@ function AdminInquiriesPage() {
                               : '待報價'}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
+                        </td>
+                        <td
+                          className={`sticky right-[180px] z-10 px-6 py-4 whitespace-nowrap border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] ${!inquiry.is_read ? 'bg-orange-50' : selectedInquiries.has(inquiry.id) ? 'bg-amber-50' : 'bg-white'}`}
+                        >
                           <select
                             value={inquiry.status}
                             onChange={e =>
@@ -1239,10 +1244,9 @@ function AdminInquiriesPage() {
                             ))}
                           </select>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td
+                          className={`sticky right-0 z-10 px-6 py-4 whitespace-nowrap text-sm border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px] ${!inquiry.is_read ? 'bg-orange-50' : selectedInquiries.has(inquiry.id) ? 'bg-amber-50' : 'bg-white'}`}
+                        >
                           <div className="flex items-center space-x-3">
                             <button
                               onClick={() => setSelectedInquiry(inquiry)}

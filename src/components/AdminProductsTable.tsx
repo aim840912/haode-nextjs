@@ -515,7 +515,7 @@ export default function AdminProductsTable({
       )}
 
       {/* Products Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
@@ -531,13 +531,13 @@ export default function AdminProductsTable({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 庫存
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="sticky right-[360px] z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
                 上架狀態
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="sticky right-[180px] z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
                 產品頁顯示
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="sticky right-0 z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px]">
                 操作
               </th>
             </tr>
@@ -589,7 +589,7 @@ export default function AdminProductsTable({
                     {product.inventory}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="sticky right-[360px] z-10 px-6 py-4 whitespace-nowrap border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
                   {user?.role === 'admin' ? (
                     <button
                       onClick={() => handleToggleActive(product.id, product.isActive)}
@@ -612,7 +612,7 @@ export default function AdminProductsTable({
                     </span>
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="sticky right-[180px] z-10 px-6 py-4 whitespace-nowrap border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
                   {(() => {
                     const showInCatalog = product.showInCatalog ?? true
                     return user?.role === 'admin' ? (
@@ -638,7 +638,7 @@ export default function AdminProductsTable({
                     )
                   })()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td className="sticky right-0 z-10 px-6 py-4 whitespace-nowrap text-sm font-medium border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px] bg-white hover:bg-gray-50">
                   {user?.role === 'admin' ? (
                     <div className="space-x-2">
                       <Link
