@@ -185,209 +185,213 @@ export function useInquiryStats(
     setLastActivity(Date.now())
   }, [])
 
-  const fetchStats = async (signal?: AbortSignal, isRetryAttempt = false): Promise<void> => {
-    if (!isAdmin) {
-      setStats(null)
-      setError(null)
-      setLastErrorMessage('') // 重置錯誤去重狀態
-      setLoading(false)
-      setRetryCount(0)
-      setConsecutiveErrors(0)
-      return
-    }
-
-    if (!isRetryAttempt) {
-      setLoading(true)
-      setIsRetrying(false)
-    }
-
-    // 宣告在外層以便錯誤處理時使用
-    let cacheKey = ''
-
-    try {
-      // 取得認證 token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('認證失敗')
+  const fetchStats = useCallback(
+    async (signal?: AbortSignal, isRetryAttempt = false): Promise<void> => {
+      if (!isAdmin) {
+        setStats(null)
+        setError(null)
+        setLastErrorMessage('') // 重置錯誤去重狀態
+        setLoading(false)
+        setRetryCount(0)
+        setConsecutiveErrors(0)
+        return
       }
 
-      // 請求去重機制
-      cacheKey = `inquiry-stats-${session.access_token.slice(-10)}`
-      const now = Date.now()
+      if (!isRetryAttempt) {
+        setLoading(true)
+        setIsRetrying(false)
+      }
 
-      // 清理過期的請求
-      for (const [key, request] of globalRequestCache.entries()) {
-        if (now - request.timestamp > CACHE_DURATION) {
-          globalRequestCache.delete(key)
+      // 宣告在外層以便錯誤處理時使用
+      let cacheKey = ''
+
+      try {
+        // 取得認證 token
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (!session?.access_token) {
+          throw new Error('認證失敗')
         }
-      }
 
-      // 檢查是否有正在進行的相同請求
-      const existingRequest = globalRequestCache.get(cacheKey)
-      if (existingRequest) {
-        const result = await existingRequest.promise
-        setStats(result)
+        // 請求去重機制
+        cacheKey = `inquiry-stats-${session.access_token.slice(-10)}`
+        const now = Date.now()
+
+        // 清理過期的請求
+        for (const [key, request] of globalRequestCache.entries()) {
+          if (now - request.timestamp > CACHE_DURATION) {
+            globalRequestCache.delete(key)
+          }
+        }
+
+        // 檢查是否有正在進行的相同請求
+        const existingRequest = globalRequestCache.get(cacheKey)
+        if (existingRequest) {
+          const result = await existingRequest.promise
+          setStats(result)
+          setLastUpdated(new Date())
+          setError(null)
+          setLastErrorMessage('') // 重置錯誤去重狀態
+          setRetryCount(0)
+          setConsecutiveErrors(0)
+          setIsRetrying(false)
+          saveCachedStats(result)
+          if (process.env.NODE_ENV === 'development') {
+            logger.debug('[useInquiryStats] Using deduplicated request result', {
+              metadata: { result },
+            })
+          }
+          return
+        }
+
+        // 建立新的請求 Promise
+        const requestPromise = (async (): Promise<InquiryStatsData> => {
+          const response = await fetch('/api/inquiries/stats?timeframe=30', {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            signal,
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            const errorMessage =
+              errorData.error || `HTTP ${response.status}: ${response.statusText}`
+
+            // 記錄詳細錯誤資訊
+            if (process.env.NODE_ENV === 'development') {
+              logger.error('[useInquiryStats] API Error', undefined, {
+                metadata: {
+                  status: response.status,
+                  statusText: response.statusText,
+                  errorData,
+                  url: response.url,
+                },
+              })
+            }
+
+            throw new Error(errorMessage)
+          }
+
+          const result = await response.json()
+
+          if (result.success && result.data?.summary) {
+            return result.data.summary
+          } else {
+            throw new Error('統計資料格式錯誤')
+          }
+        })()
+
+        // 將請求加入快取
+        globalRequestCache.set(cacheKey, {
+          promise: requestPromise,
+          timestamp: now,
+        })
+
+        // 等待請求完成
+        const newStats = await requestPromise
+
+        // 請求成功後清理快取
+        globalRequestCache.delete(cacheKey)
+
+        setStats(newStats)
         setLastUpdated(new Date())
         setError(null)
         setLastErrorMessage('') // 重置錯誤去重狀態
         setRetryCount(0)
-        setConsecutiveErrors(0)
+        setConsecutiveErrors(0) // 重置錯誤計數
         setIsRetrying(false)
-        saveCachedStats(result)
+
+        // 儲存到快取
+        saveCachedStats(newStats)
+
         if (process.env.NODE_ENV === 'development') {
-          logger.debug('[useInquiryStats] Using deduplicated request result', {
-            metadata: { result },
+          logger.debug('[useInquiryStats] Successfully fetched stats', {
+            metadata: { stats: newStats },
           })
         }
-        return
-      }
+      } catch (err) {
+        // 請求失敗時清理快取（如果 cacheKey 存在）
+        if (cacheKey) {
+          globalRequestCache.delete(cacheKey)
+        }
 
-      // 建立新的請求 Promise
-      const requestPromise = (async (): Promise<InquiryStatsData> => {
-        const response = await fetch('/api/inquiries/stats?timeframe=30', {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          signal,
-        })
+        // 如果是 AbortError，不處理
+        if (err instanceof Error && err.name === 'AbortError') {
+          return
+        }
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
+        const errorMessage = err instanceof Error ? err.message : '未知錯誤'
+        const isRateLimit = isRateLimitError(errorMessage)
+        const isNetwork = isNetworkError(errorMessage)
 
-          // 記錄詳細錯誤資訊
-          if (process.env.NODE_ENV === 'development') {
-            logger.error('[useInquiryStats] API Error', undefined, {
-              metadata: {
-                status: response.status,
-                statusText: response.statusText,
-                errorData,
-                url: response.url,
-              },
-            })
+        logger.error(
+          '[useInquiryStats] Error fetching inquiry stats',
+          err instanceof Error ? err : undefined,
+          {
+            metadata: {
+              retryCount,
+              consecutiveErrors,
+              isRateLimitError: isRateLimit,
+              isNetworkError: isNetwork,
+            },
+          }
+        )
+
+        setConsecutiveErrors(prev => prev + 1)
+
+        // 對於速率限制和網路錯誤，完全靜默處理，不顯示給使用者
+        if (isRateLimit || isNetwork) {
+          // 靜默處理，確保不設定任何錯誤訊息
+          // 如果當前有錯誤狀態且是速率限制錯誤，清除它
+          if (error && isRateLimitError(error)) {
+            setError(null)
+            setLastErrorMessage('')
           }
 
-          throw new Error(errorMessage)
-        }
+          // 實作自動重試邏輯
+          if (retryCount < 3) {
+            const delay = getRetryDelay(retryCount, isRateLimit)
+            setRetryCount(prev => prev + 1)
+            setIsRetrying(true)
 
-        const result = await response.json()
-
-        if (result.success && result.data?.summary) {
-          return result.data.summary
-        } else {
-          throw new Error('統計資料格式錯誤')
-        }
-      })()
-
-      // 將請求加入快取
-      globalRequestCache.set(cacheKey, {
-        promise: requestPromise,
-        timestamp: now,
-      })
-
-      // 等待請求完成
-      const newStats = await requestPromise
-
-      // 請求成功後清理快取
-      globalRequestCache.delete(cacheKey)
-
-      setStats(newStats)
-      setLastUpdated(new Date())
-      setError(null)
-      setLastErrorMessage('') // 重置錯誤去重狀態
-      setRetryCount(0)
-      setConsecutiveErrors(0) // 重置錯誤計數
-      setIsRetrying(false)
-
-      // 儲存到快取
-      saveCachedStats(newStats)
-
-      if (process.env.NODE_ENV === 'development') {
-        logger.debug('[useInquiryStats] Successfully fetched stats', {
-          metadata: { stats: newStats },
-        })
-      }
-    } catch (err) {
-      // 請求失敗時清理快取（如果 cacheKey 存在）
-      if (cacheKey) {
-        globalRequestCache.delete(cacheKey)
-      }
-
-      // 如果是 AbortError，不處理
-      if (err instanceof Error && err.name === 'AbortError') {
-        return
-      }
-
-      const errorMessage = err instanceof Error ? err.message : '未知錯誤'
-      const isRateLimit = isRateLimitError(errorMessage)
-      const isNetwork = isNetworkError(errorMessage)
-
-      logger.error(
-        '[useInquiryStats] Error fetching inquiry stats',
-        err instanceof Error ? err : undefined,
-        {
-          metadata: {
-            retryCount,
-            consecutiveErrors,
-            isRateLimitError: isRateLimit,
-            isNetworkError: isNetwork,
-          },
-        }
-      )
-
-      setConsecutiveErrors(prev => prev + 1)
-
-      // 對於速率限制和網路錯誤，完全靜默處理，不顯示給使用者
-      if (isRateLimit || isNetwork) {
-        // 靜默處理，確保不設定任何錯誤訊息
-        // 如果當前有錯誤狀態且是速率限制錯誤，清除它
-        if (error && isRateLimitError(error)) {
-          setError(null)
-          setLastErrorMessage('')
-        }
-
-        // 實作自動重試邏輯
-        if (retryCount < 3) {
-          const delay = getRetryDelay(retryCount, isRateLimit)
-          setRetryCount(prev => prev + 1)
-          setIsRetrying(true)
-
-          if (process.env.NODE_ENV === 'development') {
-            logger.debug(`[useInquiryStats] Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`)
-          }
-
-          retryTimeoutRef.current = setTimeout(() => {
-            if (!signal?.aborted) {
-              fetchStats(signal, true)
+            if (process.env.NODE_ENV === 'development') {
+              logger.debug(`[useInquiryStats] Retrying in ${delay}ms (attempt ${retryCount + 1}/3)`)
             }
-          }, delay)
+
+            retryTimeoutRef.current = setTimeout(() => {
+              if (!signal?.aborted) {
+                fetchStats(signal, true)
+              }
+            }, delay)
+          } else {
+            // 超過重試次數，靜默處理不顯示錯誤
+            logger.warn('[useInquiryStats] Max retry attempts reached', {
+              metadata: { retryCount, errorMessage },
+            })
+            setIsRetrying(false)
+          }
         } else {
-          // 超過重試次數，靜默處理不顯示錯誤
-          logger.warn('[useInquiryStats] Max retry attempts reached', {
-            metadata: { retryCount, errorMessage },
-          })
+          // 其他錯誤：使用用戶友好的錯誤訊息並實施去重機制
+          const friendlyMessage = getUserFriendlyErrorMessage(errorMessage)
+          if (friendlyMessage && lastErrorMessage !== friendlyMessage) {
+            setError(friendlyMessage)
+            setLastErrorMessage(friendlyMessage)
+          }
           setIsRetrying(false)
         }
-      } else {
-        // 其他錯誤：使用用戶友好的錯誤訊息並實施去重機制
-        const friendlyMessage = getUserFriendlyErrorMessage(errorMessage)
-        if (friendlyMessage && lastErrorMessage !== friendlyMessage) {
-          setError(friendlyMessage)
-          setLastErrorMessage(friendlyMessage)
+      } finally {
+        if (!signal?.aborted && !isRetryAttempt) {
+          setLoading(false)
         }
-        setIsRetrying(false)
       }
-    } finally {
-      if (!signal?.aborted && !isRetryAttempt) {
-        setLoading(false)
-      }
-    }
-  }
+    },
+    [isAdmin, supabase]
+  )
 
   // 手動重新整理函數
-  const refresh = async (): Promise<void> => {
+  const refresh = useCallback(async (): Promise<void> => {
     // 取消之前的請求和重試
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
@@ -405,7 +409,7 @@ export function useInquiryStats(
     // 建立新的 AbortController
     abortControllerRef.current = new AbortController()
     await fetchStats(abortControllerRef.current.signal)
-  }
+  }, [fetchStats])
 
   // 頁面可見性檢測
   useEffect(() => {
@@ -450,7 +454,7 @@ export function useInquiryStats(
       document.removeEventListener('scroll', handleUserActivity)
       document.removeEventListener('touchstart', handleUserActivity)
     }
-  }, [isAdmin, updateActivity, refresh])
+  }, [isAdmin, updateActivity, refresh, fetchStats])
 
   // 初始載入和使用者變更時載入
   useEffect(() => {
@@ -485,7 +489,7 @@ export function useInquiryStats(
         abortControllerRef.current.abort()
       }
     }
-  }, [user, isAdmin, loadCachedStats])
+  }, [user, isAdmin, loadCachedStats, fetchStats])
 
   // 設置智能自動重新整理
   useEffect(() => {
@@ -533,7 +537,7 @@ export function useInquiryStats(
         intervalRef.current = null
       }
     }
-  }, [isAdmin, loading, isVisible, getDynamicInterval])
+  }, [isAdmin, loading, isVisible, getDynamicInterval, fetchStats, stats?.unread_count])
 
   // 元件卸載時清理
   useEffect(() => {

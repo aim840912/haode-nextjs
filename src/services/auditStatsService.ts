@@ -18,7 +18,7 @@ import {
   StatsTransformer,
   // StatsQueryResult, // 未使用
 } from '@/types/audit-stats'
-import { ResourceType, AuditTypeGuards } from '@/types/audit'
+import { ResourceType, AuditAction, AuditTypeGuards } from '@/types/audit'
 
 // 統計資料轉換工具類別
 class StatsTransformerImpl implements StatsTransformer {
@@ -59,7 +59,7 @@ class StatsTransformerImpl implements StatsTransformer {
       unique_users: item.unique_users,
       actions_performed: item.actions_performed
         .map(action => AuditTypeGuards.toAuditAction(action))
-        .filter(action => action !== null) as any[],
+        .filter((action): action is AuditAction => action !== null),
       last_accessed: item.last_accessed,
       first_accessed: item.first_accessed,
     }))
@@ -79,7 +79,8 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
     try {
       const days = params?.days || 30
-      const startDate = params?.start_date || new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      const startDate =
+        params?.start_date || new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
       const endDate = params?.end_date
 
       // 使用 RPC 函數或查詢 audit_logs 資料表來產生統計
@@ -111,11 +112,11 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
       // 基本統計聚合 - 按動作類型分組
       const statsMap = new Map<string, FormattedAuditStats>()
-      
+
       ;(data || []).forEach(log => {
         const key = `${log.action}-${log.resource_type}-${log.user_role || 'unknown'}`
         const date = new Date(log.created_at).toISOString().split('T')[0]
-        
+
         if (!statsMap.has(key)) {
           statsMap.set(key, {
             action: log.action,
@@ -126,7 +127,7 @@ export class SupabaseAuditStatsService implements AuditStatsService {
             date: date,
           })
         }
-        
+
         const stat = statsMap.get(key)!
         stat.count++
       })
@@ -153,7 +154,8 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
     try {
       const days = params?.days || 30
-      const startDate = params?.start_date || new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      const startDate =
+        params?.start_date || new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
       const endDate = params?.end_date
 
       dbLogger.info('查詢使用者活動統計 - 使用簡化實作', {
@@ -187,10 +189,10 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
       // 按使用者聚合統計
       const userStatsMap = new Map<string, FormattedUserActivityStats>()
-      
+
       ;(data || []).forEach(log => {
         const userId = log.user_id || 'anonymous'
-        
+
         if (!userStatsMap.has(userId)) {
           userStatsMap.set(userId, {
             user_id: userId,
@@ -205,10 +207,10 @@ export class SupabaseAuditStatsService implements AuditStatsService {
             first_activity: log.created_at,
           })
         }
-        
+
         const userStat = userStatsMap.get(userId)!
         userStat.total_actions++
-        
+
         // 更新動作計數
         if (log.action === 'view' || log.action === 'view_list') {
           userStat.view_count++
@@ -217,7 +219,7 @@ export class SupabaseAuditStatsService implements AuditStatsService {
         } else if (log.action === 'delete') {
           userStat.delete_count++
         }
-        
+
         // 更新時間
         if (log.created_at > userStat.last_activity) {
           userStat.last_activity = log.created_at
@@ -241,7 +243,9 @@ export class SupabaseAuditStatsService implements AuditStatsService {
   }
 
   // 取得資源存取統計 - 從 audit_logs 資料表直接聚合
-  async getResourceAccessStats(params?: BaseStatsQueryParams): Promise<FormattedResourceAccessStats[]> {
+  async getResourceAccessStats(
+    params?: BaseStatsQueryParams
+  ): Promise<FormattedResourceAccessStats[]> {
     const supabaseAdmin = getSupabaseAdmin()
     if (!supabaseAdmin) {
       throw new Error('Supabase admin client 未配置')
@@ -249,7 +253,8 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
     try {
       const days = params?.days || 30
-      const startDate = params?.start_date || new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      const startDate =
+        params?.start_date || new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
       const endDate = params?.end_date
 
       dbLogger.info('查詢資源存取統計 - 使用簡化實作', {
@@ -283,10 +288,10 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
       // 按資源聚合統計
       const resourceStatsMap = new Map<string, FormattedResourceAccessStats>()
-      
+
       ;(data || []).forEach(log => {
         const resourceKey = `${log.resource_type}-${log.resource_id}`
-        
+
         if (!resourceStatsMap.has(resourceKey)) {
           resourceStatsMap.set(resourceKey, {
             resource_type: log.resource_type,
@@ -298,15 +303,15 @@ export class SupabaseAuditStatsService implements AuditStatsService {
             first_accessed: log.created_at,
           })
         }
-        
+
         const resourceStat = resourceStatsMap.get(resourceKey)!
         resourceStat.access_count++
-        
+
         // 記錄執行的動作（去重）
         if (!resourceStat.actions_performed.includes(log.action)) {
           resourceStat.actions_performed.push(log.action)
         }
-        
+
         // 更新時間
         if (log.created_at > resourceStat.last_accessed) {
           resourceStat.last_accessed = log.created_at

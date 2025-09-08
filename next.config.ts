@@ -186,9 +186,9 @@ const nextConfig: NextConfig = {
   // 但在生產環境中保持啟用以發現潜在問題
   reactStrictMode: process.env.NODE_ENV === 'production',
 
-  // ESLint 設定 - 暫時允許建置通過，但保持檢查
+  // ESLint 設定 - 恢復嚴格檢查
   eslint: {
-    ignoreDuringBuilds: true, // 暫時設為 true 直到修復更多 any 類型
+    ignoreDuringBuilds: false, // 恢復嚴格檢查，已修復關鍵錯誤
     dirs: ['src'],
   },
 
