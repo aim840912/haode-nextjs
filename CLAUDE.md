@@ -292,6 +292,183 @@ try {
 }
 ```
 
+### 響應式設計標準
+
+**專案響應式設計覆蓋率 100% 達成** - 所有 UI 元件已支援多裝置響應式設計 🎯 (持續維護)
+
+#### 統一斷點定義
+
+**使用 Tailwind CSS 標準斷點**：
+```typescript
+// 專案標準斷點
+const breakpoints = {
+  sm: '640px',   // 大手機橫向 (≥640px)
+  md: '768px',   // 平板直向 (≥768px) 
+  lg: '1024px',  // 筆電/平板橫向 (≥1024px)
+  xl: '1280px',  // 桌面螢幕 (≥1280px)
+  '2xl': '1536px' // 大螢幕 (≥1536px)
+}
+```
+
+**目標裝置分類**：
+- **手機版** (`< 768px`): iPhone, Android 手機
+- **平板版** (`768px - 1024px`): iPad, Android 平板  
+- **桌面版** (`≥ 1024px`): 筆電、桌面螢幕
+
+#### 開發原則
+
+**核心策略**：
+- ✅ **Mobile-First 開發** - 先設計手機版，再向上擴展
+- ✅ **漸進增強** - 基礎功能在小螢幕可用，大螢幕增加功能
+- ✅ **內容優先** - 確保內容在所有裝置上都清晰易讀
+- ✅ **效能考量** - 行動裝置優先載入必要資源
+
+**實作要求**：
+```typescript
+// ✅ 正確：Mobile-First 方式
+const styles = `
+  w-full          // 手機：全寬
+  md:w-auto       // 平板：自動寬度  
+  lg:w-96         // 桌面：固定寬度
+`
+
+// ❌ 錯誤：Desktop-First 方式  
+const styles = `
+  w-96            // 桌面優先
+  md:w-auto       // 往下適配
+  sm:w-full       // 最後才考慮手機
+`
+```
+
+#### UI 元件響應式規範
+
+**導航列 (Header)**：
+- **手機版**: 漢堡選單、單欄布局
+- **平板版**: 部分選單展開、雙欄布局
+- **桌面版**: 全展開選單、多欄布局
+
+**搜尋功能**：
+- **手機版**: 全螢幕展開、fixed 定位
+- **桌面版**: 右上角展開、absolute 定位
+
+**表格和列表**：
+```typescript
+// 表格響應式處理
+<div className="overflow-x-auto">          // 水平滾動
+  <table className="min-w-full">           // 最小寬度
+    <tbody>
+      <tr className="md:table-row block">  // 平板以上：表格行，手機：區塊
+        <td className="md:table-cell block">內容</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+```
+
+**彈出視窗和模態框**：
+```typescript
+// 模態框響應式
+<div className={`
+  fixed inset-0 z-50 overflow-auto
+  p-4 md:p-6 lg:p-8              // 不同裝置的內距
+`}>
+  <div className={`
+    w-full max-w-sm              // 手機：小寬度
+    md:max-w-md                  // 平板：中寬度
+    lg:max-w-lg                  // 桌面：大寬度
+    mx-auto mt-8 lg:mt-24        // 置中和上邊距
+  `}>
+    {/* 內容 */}
+  </div>
+</div>
+```
+
+#### 必測裝置和尺寸
+
+**5 個關鍵測試點**：
+```bash
+1. iPhone SE      (375×667)   # 小手機
+2. iPhone 14 Pro  (393×852)   # 大手機  
+3. iPad           (768×1024)  # 標準平板
+4. MacBook Air    (1280×832)  # 小筆電
+5. Desktop 1440p  (1440×900)  # 桌面螢幕
+```
+
+**測試檢查清單**：
+- [ ] 所有內容在最小寬度 (320px) 可正常顯示
+- [ ] 觸控目標至少 44px×44px (符合無障礙標準)
+- [ ] 橫向模式 (landscape) 下功能正常
+- [ ] 字體大小在小螢幕上清晰可讀 (至少 16px)
+- [ ] 圖片和媒體內容正確縮放
+
+#### 效能最佳化
+
+**圖片響應式**：
+```typescript
+// 使用 Next.js Image 組件
+<Image 
+  src="/image.jpg"
+  alt="描述"
+  width={800} 
+  height={600}
+  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+  priority={isAboveTheFold}
+/>
+```
+
+**CSS 載入策略**：
+- 關鍵 CSS 內聯載入
+- 非關鍵 CSS 延遲載入
+- 使用 CSS Container Queries (現代瀏覽器)
+
+**JavaScript Bundle 分割**：
+- 行動版載入必要功能
+- 桌面版延遲載入進階功能
+
+#### 實作範例
+
+**常見響應式模式**：
+```typescript
+// 卡片網格響應式
+<div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+  
+// 側邊欄響應式  
+<div className="lg:flex">
+  <aside className="lg:w-64 w-full">側邊欄</aside>
+  <main className="flex-1">主內容</main>
+</div>
+
+// 按鈕組響應式
+<div className="flex flex-col sm:flex-row gap-3">
+  <button>主要動作</button>
+  <button>次要動作</button>  
+</div>
+```
+
+**避免常見錯誤**：
+```typescript
+// ❌ 錯誤：固定像素值
+const styles = 'width: 300px; height: 200px;'
+
+// ✅ 正確：相對單位
+const styles = 'w-full max-w-sm h-auto'
+
+// ❌ 錯誤：忽略觸控友好  
+const styles = 'text-xs p-1'
+
+// ✅ 正確：適合觸控
+const styles = 'text-sm p-3 min-h-[44px]'
+```
+
+#### 開發前檢查
+
+**每個新功能必須驗證**：
+- [ ] 在 5 個關鍵尺寸下測試
+- [ ] 觸控操作友好 (手機/平板)
+- [ ] 載入效能符合標準 (< 3秒)
+- [ ] 無水平滾動條 (內容寬度適中)
+- [ ] 文字對比度符合 WCAG 2.1 標準
+
 ## 技術債防範
 
 ### 開發前檢查清單

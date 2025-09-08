@@ -2,13 +2,7 @@ import { InquiryStatus, InquiryType } from './inquiry'
 import { AuditAction, ResourceType, UserRole } from './audit'
 
 // Supabase 標準 JSON 類型
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -472,12 +466,63 @@ export interface Database {
         }
         Relationships: []
       }
+      farm_tour: {
+        Row: {
+          id: string
+          title: string
+          season: string
+          months: string
+          price: number
+          duration: string
+          activities: string[]
+          includes: string[]
+          highlight: string
+          note: string
+          image: string
+          available: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          season: string
+          months: string
+          price: number
+          duration: string
+          activities?: string[]
+          includes?: string[]
+          highlight: string
+          note: string
+          image: string
+          available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          season?: string
+          months?: string
+          price?: number
+          duration?: string
+          activities?: string[]
+          includes?: string[]
+          highlight?: string
+          note?: string
+          image?: string
+          available?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never  
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

@@ -59,7 +59,9 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
   } = options
 
   // 狀態管理
-  const [isVisible, setIsVisible] = useState(true)
+  const [isVisible, setIsVisible] = useState(() =>
+    typeof window !== 'undefined' ? !document.hidden : true
+  )
   const [lastActivity, setLastActivity] = useState(Date.now())
   const [currentInterval, setCurrentInterval] = useState<number | null>(null)
   const [isPolling, setIsPolling] = useState(false)
@@ -189,7 +191,7 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
         })
       }
     },
-    [enabled, getPollingInterval, stopPolling, isVisible, onPoll, isDevelopment, lastActivity]
+    [enabled, getPollingInterval, stopPolling, isVisible, onPoll, isDevelopment]
   )
 
   /**
@@ -231,16 +233,14 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
       onVisibilityChange?.(visible)
     }
 
-    // 初始設定
-    setIsVisible(!document.hidden)
-
     // 註冊事件監聽
     document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-  }, [updateActivity, onVisibilityChange, isDevelopment])
+    // 移除 onVisibilityChange 依賴，避免無限循環
+  }, [updateActivity, isDevelopment])
 
   /**
    * 使用者活動檢測
@@ -276,10 +276,14 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
         stopPolling()
       } else {
         // 頁面變為可見時重新開始輪詢
-        resetPolling()
+        // 直接內聯邏輯避免 resetPolling 的函數依賴
+        stopPolling()
+        if (enabled) {
+          setTimeout(() => startPolling(), 0)
+        }
       }
     }
-  }, [isVisible, enabled, isPolling, stopPolling, resetPolling])
+  }, [isVisible, enabled, isPolling, stopPolling, startPolling])
 
   /**
    * 清理資源

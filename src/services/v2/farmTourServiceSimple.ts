@@ -1,11 +1,10 @@
 /**
- * @deprecated 農場體驗服務 v2 - 轉為佔位實作
- * farm_tour 表不存在於資料庫 schema 中，導致所有 Supabase 查詢失敗
- * 需要資料庫管理員檢查表結構或決定是否保留此功能
- * 
- * 原本功能：
+ * 農場體驗服務 v2 - 完整資料庫實作
+ * 支援完整的 farm_tour 表 CRUD 操作
+ *
+ * 功能：
  * - 標準化 CRUD 操作
- * - 統一錯誤處理和日誌記錄  
+ * - 統一錯誤處理和日誌記錄
  * - 支援季節和活動管理
  * - 內建資料轉換和驗證
  */
@@ -16,7 +15,7 @@ import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = () => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin()
 import { UpdateDataObject } from '@/types/service.types'
 import { FarmTourActivity } from '@/types/farmTour'
 
@@ -47,7 +46,10 @@ interface FarmTourService {
   getAll(): Promise<FarmTourActivity[]>
   getById(id: string): Promise<FarmTourActivity | null>
   create(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity>
-  update(id: string, data: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>): Promise<FarmTourActivity | null>
+  update(
+    id: string,
+    data: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>
+  ): Promise<FarmTourActivity | null>
   delete(id: string): Promise<boolean>
 }
 
@@ -58,14 +60,10 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   private readonly moduleName = 'FarmTourServiceV2'
 
   /**
-   * 佔位實作日誌方法
+   * 取得 Supabase 管理客戶端
    */
-  private logNotImplemented(method: string, metadata?: Record<string, unknown>) {
-    dbLogger.warn(`${this.moduleName}.${method} - 佔位實作：farm_tour 表不存在`, {
-      module: this.moduleName,
-      action: method,
-      metadata
-    })
+  private getSupabaseClient() {
+    return getSupabaseAdmin()
   }
 
   /**
@@ -86,7 +84,7 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   /**
    * 轉換資料庫記錄為 FarmTourActivity
    */
-  private transformFromDB(record: SupabaseFarmTourRecord): FarmTourActivity {
+  private transformFromDB(record: any): FarmTourActivity {
     return {
       id: record.id,
       title: record.title,
@@ -128,17 +126,45 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    * 取得所有農場體驗活動
    */
   async getAll(): Promise<FarmTourActivity[]> {
+    const timer = dbLogger.timer('查詢農場體驗活動清單')
+
     try {
       dbLogger.info('取得農場體驗活動清單', {
         module: this.moduleName,
         action: 'getAll',
       })
 
-      // 佔位實作：farm_tour 表不存在
-      this.logNotImplemented('getAll')
-      return []
+      const supabase = this.getSupabaseClient()
+      if (!supabase) {
+        throw new Error('Supabase client 初始化失敗')
+      }
+
+      const { data, error } = await supabase
+        .from('farm_tour')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        throw error
+      }
+
+      const activities = data?.map(record => this.transformFromDB(record)) || []
+
+      timer.end({
+        metadata: {
+          count: activities.length,
+        },
+      })
+
+      dbLogger.info('農場體驗活動清單查詢成功', {
+        module: this.moduleName,
+        action: 'getAll',
+        metadata: { count: activities.length },
+      })
+
+      return activities
     } catch (error) {
-      // 錯誤處理保留以維持介面相容性
+      timer.end()
       this.handleError(error, 'getAll')
     }
   }
@@ -147,11 +173,38 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    * 根據 ID 取得農場體驗活動
    */
   async getById(id: string): Promise<FarmTourActivity | null> {
+    const timer = dbLogger.timer('查詢單一農場體驗活動')
+
     try {
-      // 佔位實作：farm_tour 表不存在
-      this.logNotImplemented('getById', { id })
-      return null
+      dbLogger.info('根據 ID 取得農場體驗活動', {
+        module: this.moduleName,
+        action: 'getById',
+        metadata: { id },
+      })
+
+      const supabase = this.getSupabaseClient()
+      if (!supabase) {
+        throw new Error('Supabase client 初始化失敗')
+      }
+
+      const { data, error } = await supabase.from('farm_tour').select('*').eq('id', id).single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // 找不到資料
+          timer.end({ metadata: { found: false } })
+          return null
+        }
+        throw error
+      }
+
+      const activity = data ? this.transformFromDB(data) : null
+
+      timer.end({ metadata: { found: !!activity } })
+
+      return activity
     } catch (error) {
+      timer.end()
       this.handleError(error, 'getById')
     }
   }
@@ -159,32 +212,53 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   /**
    * 建立新的農場體驗活動
    */
-  async create(activityData: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity> {
+  async create(
+    activityData: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<FarmTourActivity> {
+    const timer = dbLogger.timer('建立農場體驗活動')
+
     try {
-      // 佔位實作：farm_tour 表不存在
-      this.logNotImplemented('create', { title: activityData.title, season: activityData.season })
-      
-      // 返回模擬資料以維持介面相容性
-      const mockActivity: FarmTourActivity = {
-        id: `mock-${Date.now()}`,
-        title: activityData.title || 'Mock Activity',
-        season: activityData.season || 'Mock Season',
-        months: activityData.months || 'Mock Months',
-        price: activityData.price || 0,
-        duration: activityData.duration || 'Mock Duration',
-        activities: activityData.activities || [],
-        includes: activityData.includes || [],
-        highlight: activityData.highlight || 'Mock Highlight',
-        note: activityData.note || 'Mock Note',
-        image: activityData.image || '/images/placeholder.jpg',
-        available: activityData.available ?? true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+      dbLogger.info('建立新的農場體驗活動', {
+        module: this.moduleName,
+        action: 'create',
+        metadata: { title: activityData.title, season: activityData.season },
+      })
+
+      // 驗證必填欄位
+      if (!activityData.title?.trim()) {
+        throw new ValidationError('活動標題不能為空')
       }
-      
-      return mockActivity
+
+      const supabase = this.getSupabaseClient()
+      if (!supabase) {
+        throw new Error('Supabase client 初始化失敗')
+      }
+
+      const insertData = this.transformToDB(activityData)
+
+      const { data, error } = await supabase
+        .from('farm_tour')
+        .insert([insertData])
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      const newActivity = this.transformFromDB(data)
+
+      timer.end({ metadata: { id: newActivity.id } })
+
+      dbLogger.info('農場體驗活動建立成功', {
+        module: this.moduleName,
+        action: 'create',
+        metadata: { id: newActivity.id, title: newActivity.title },
+      })
+
+      return newActivity
     } catch (error) {
-      // 錯誤處理保留以維持介面相容性
+      timer.end()
       this.handleError(error, 'create')
     }
   }
@@ -196,31 +270,58 @@ export class FarmTourServiceV2Simple implements FarmTourService {
     id: string,
     activityData: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>
   ): Promise<FarmTourActivity | null> {
+    const timer = dbLogger.timer('更新農場體驗活動')
+
     try {
-      // 佔位實作：farm_tour 表不存在
-      this.logNotImplemented('update', { activityId: id, updatedFields: Object.keys(activityData) })
-      
-      // 返回模擬資料以維持介面相容性
-      const mockActivity: FarmTourActivity = {
-        id: id,
-        title: activityData.title || 'Mock Updated Activity',
-        season: activityData.season || 'Mock Updated Season',
-        months: activityData.months || 'Mock Updated Months',
-        price: activityData.price || 0,
-        duration: activityData.duration || 'Mock Updated Duration',
-        activities: activityData.activities || ['Mock Activity'],
-        includes: activityData.includes || ['Mock Include'],
-        highlight: activityData.highlight || 'Mock Updated Highlight',
-        note: activityData.note || 'Mock Updated Note',
-        image: activityData.image || '/images/placeholder.jpg',
-        available: activityData.available ?? true,
-        createdAt: new Date(Date.now() - 86400000).toISOString(), // 1天前
-        updatedAt: new Date().toISOString(),
+      dbLogger.info('更新農場體驗活動', {
+        module: this.moduleName,
+        action: 'update',
+        metadata: { activityId: id, updatedFields: Object.keys(activityData) },
+      })
+
+      // 先檢查記錄是否存在
+      const existing = await this.getById(id)
+      if (!existing) {
+        throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
       }
-      
-      return mockActivity
+
+      const supabase = this.getSupabaseClient()
+      if (!supabase) {
+        throw new Error('Supabase client 初始化失敗')
+      }
+
+      // 準備更新資料，移除不應更新的欄位
+      const updateData = { ...activityData }
+      delete (updateData as any).createdAt
+      delete (updateData as any).id
+
+      const { data, error } = await supabase
+        .from('farm_tour')
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      const updatedActivity = this.transformFromDB(data)
+
+      timer.end({ metadata: { id: updatedActivity.id } })
+
+      dbLogger.info('農場體驗活動更新成功', {
+        module: this.moduleName,
+        action: 'update',
+        metadata: { id: updatedActivity.id, title: updatedActivity.title },
+      })
+
+      return updatedActivity
     } catch (error) {
-      // 錯誤處理保留以維持介面相容性
+      timer.end()
       this.handleError(error, 'update')
     }
   }
@@ -229,14 +330,43 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    * 刪除農場體驗活動
    */
   async delete(id: string): Promise<boolean> {
+    const timer = dbLogger.timer('刪除農場體驗活動')
+
     try {
-      // 佔位實作：farm_tour 表不存在
-      this.logNotImplemented('delete', { activityId: id })
-      
-      // 返回成功以維持介面相容性
+      dbLogger.info('刪除農場體驗活動', {
+        module: this.moduleName,
+        action: 'delete',
+        metadata: { activityId: id },
+      })
+
+      // 先檢查記錄是否存在
+      const existing = await this.getById(id)
+      if (!existing) {
+        throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
+      }
+
+      const supabase = this.getSupabaseClient()
+      if (!supabase) {
+        throw new Error('Supabase client 初始化失敗')
+      }
+
+      const { error } = await supabase.from('farm_tour').delete().eq('id', id)
+
+      if (error) {
+        throw error
+      }
+
+      timer.end({ metadata: { deleted: true } })
+
+      dbLogger.info('農場體驗活動刪除成功', {
+        module: this.moduleName,
+        action: 'delete',
+        metadata: { activityId: id, title: existing.title },
+      })
+
       return true
     } catch (error) {
-      // 錯誤處理保留以維持介面相容性
+      timer.end()
       this.handleError(error, 'delete')
     }
   }
@@ -250,26 +380,46 @@ export class FarmTourServiceV2Simple implements FarmTourService {
     details: Record<string, unknown>
   }> {
     try {
-      // 佔位實作：因為是佔位服務，始終回報降級狀態但可用
-      this.logNotImplemented('getHealthStatus')
-      
+      dbLogger.info('檢查服務健康狀態', {
+        module: this.moduleName,
+        action: 'getHealthStatus',
+      })
+
+      // 測試資料庫連接
+      const supabase = this.getSupabaseClient()
+      if (!supabase) {
+        throw new Error('Supabase client 初始化失敗')
+      }
+
+      const { error } = await supabase.from('farm_tour').select('count').limit(1)
+
+      if (error) {
+        throw error
+      }
+
       return {
-        status: 'degraded',
+        status: 'healthy',
         timestamp: new Date().toISOString(),
         details: {
           module: this.moduleName,
-          version: 'v2-simple-placeholder',
-          reason: 'farm_tour 表不存在，使用佔位實作',
-          databaseConnected: false,
+          version: 'v2-database-connected',
+          databaseConnected: true,
+          tableName: 'farm_tour',
         },
       }
     } catch (error) {
+      dbLogger.error('服務健康檢查失敗', error as Error, {
+        module: this.moduleName,
+        action: 'getHealthStatus',
+      })
+
       return {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
         details: {
           error: error instanceof Error ? error.message : 'Unknown error',
           module: this.moduleName,
+          databaseConnected: false,
         },
       }
     }

@@ -79,22 +79,21 @@ function ProductsPage() {
   const { user } = useAuth()
   const { executeWithErrorHandling } = useAsyncWithError()
 
-  // 載入興趣產品清單
-  const loadInterestedProducts = useCallback(async () => {
-    if (user) {
-      // 已登入：從資料庫載入
-      const interests = await UserInterestsService.getUserInterests(user.id)
-      setInterestedProducts(new Set(interests))
-    } else {
-      // 未登入：清空興趣清單
-      setInterestedProducts(new Set())
-    }
-  }, [user])
-
   // 當使用者登入狀態改變時重新載入興趣清單
   useEffect(() => {
+    const loadInterestedProducts = async () => {
+      if (user?.id) {
+        // 已登入：從資料庫載入
+        const interests = await UserInterestsService.getUserInterests(user.id)
+        setInterestedProducts(new Set(interests))
+      } else {
+        // 未登入：清空興趣清單
+        setInterestedProducts(new Set())
+      }
+    }
+
     loadInterestedProducts()
-  }, [user, loadInterestedProducts])
+  }, [user?.id]) // 只依賴穩定的 user.id
 
   const fetchProducts = useCallback(
     async (forceRefresh: boolean = false) => {
@@ -150,11 +149,10 @@ function ProductsPage() {
     [executeWithErrorHandling]
   )
 
-  // 初始載入
+  // 初始載入 - 只在組件掛載時執行一次
   useEffect(() => {
     fetchProducts()
-    loadInterestedProducts()
-  }, [fetchProducts, loadInterestedProducts])
+  }, [fetchProducts]) // 包含 fetchProducts 依賴
 
   // 提供全域方法供測試使用
   useEffect(() => {
@@ -177,6 +175,11 @@ function ProductsPage() {
       (product, index, self) => index === self.findIndex(p => p.id === product.id)
     )
 
+    // 預計算共用資料避免重複建立
+    const defaultFeatures = getDefaultProductFeatures()
+    const defaultSpecs = getDefaultProductSpecifications()
+    const currentTime = new Date().toISOString() // 只建立一次時間戳
+
     return uniqueProducts.map(product => {
       return {
         id: product.id, // 保持字串格式
@@ -187,9 +190,25 @@ function ProductsPage() {
         image: product.images?.[0] || '/images/placeholder.jpg',
         allImages: product.images || [], // 儲存所有圖片URL
         description: product.description,
-        features: getDefaultProductFeatures(),
-        specifications: getDefaultProductSpecifications(),
+        features: defaultFeatures,
+        specifications: defaultSpecs,
         inStock: product.inventory > 0,
+        // 預建構 ProductCardImage 的 props，避免每次渲染重新建立
+        productCardProps: {
+          id: product.id,
+          name: product.name,
+          images: product.images?.[0] ? [product.images[0]] : ['/images/placeholder.jpg'],
+          thumbnailUrl: product.images?.[0] || '/images/placeholder.jpg',
+          primaryImageUrl: product.images?.[0] || '/images/placeholder.jpg',
+          inventory: product.inventory > 0 ? 100 : 0,
+          isOnSale: (product.originalPrice || 0) > product.price,
+          category: product.category,
+          price: product.price,
+          description: product.description,
+          isActive: true,
+          createdAt: currentTime,
+          updatedAt: currentTime,
+        },
       }
     })
   }, [apiProducts])
@@ -279,16 +298,17 @@ function ProductsPage() {
     window.location.href = inquiryUrl
   }
 
-  const toggleInterest = async (productId: string, productName: string, e?: React.MouseEvent) => {
-    if (e) {
-      e.stopPropagation()
-    }
+  const toggleInterest = useCallback(
+    async (productId: string, productName: string, e?: React.MouseEvent) => {
+      if (e) {
+        e.stopPropagation()
+      }
 
-    // 檢查登入狀態
-    if (!user) {
-      // 創建臨時 toast 提示
-      const notification = document.createElement('div')
-      notification.innerHTML = `
+      // 檢查登入狀態
+      if (!user?.id) {
+        // 創建臨時 toast 提示
+        const notification = document.createElement('div')
+        notification.innerHTML = `
         <div class="fixed bottom-4 right-4 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg shadow-lg z-50 max-w-sm">
           <div class="flex items-start space-x-3">
             <div class="text-amber-500 text-xl">⚠</div>
@@ -307,56 +327,58 @@ function ProductsPage() {
           </div>
         </div>
       `
+        document.body.appendChild(notification)
+        setTimeout(() => {
+          if (document.body.contains(notification)) {
+            document.body.removeChild(notification)
+          }
+        }, 5000)
+        return
+      }
+
+      const newInterestedProducts = new Set(interestedProducts)
+      const isRemoving = interestedProducts.has(productId)
+
+      if (isRemoving) {
+        newInterestedProducts.delete(productId)
+      } else {
+        newInterestedProducts.add(productId)
+      }
+
+      // 立即更新 UI
+      setInterestedProducts(newInterestedProducts)
+
+      // 已登入：儲存到資料庫
+      const success = await UserInterestsService.toggleInterest(user.id, productId)
+      if (!success) {
+        // 如果儲存失敗，恢復原狀態
+        setInterestedProducts(interestedProducts)
+        logger.error('Failed to update interests in database', undefined, {
+          metadata: { action: 'update_interests' },
+        })
+        return
+      }
+
+      // 觸發自定義事件通知其他元件更新
+      window.dispatchEvent(new CustomEvent('interestedProductsUpdated'))
+
+      // 顯示提示訊息
+      const message = interestedProducts.has(productId)
+        ? `已從興趣清單移除 ${productName}`
+        : `已將 ${productName} 加入興趣清單！`
+
+      // 簡單的提示，可以考慮後續改為 toast 通知
+      const notification = document.createElement('div')
+      notification.textContent = message
+      notification.className =
+        'fixed bottom-4 right-4 bg-amber-900 text-white px-4 py-2 rounded-lg shadow-lg z-50'
       document.body.appendChild(notification)
       setTimeout(() => {
-        if (document.body.contains(notification)) {
-          document.body.removeChild(notification)
-        }
-      }, 5000)
-      return
-    }
-
-    const newInterestedProducts = new Set(interestedProducts)
-    const isRemoving = interestedProducts.has(productId)
-
-    if (isRemoving) {
-      newInterestedProducts.delete(productId)
-    } else {
-      newInterestedProducts.add(productId)
-    }
-
-    // 立即更新 UI
-    setInterestedProducts(newInterestedProducts)
-
-    // 已登入：儲存到資料庫
-    const success = await UserInterestsService.toggleInterest(user.id, productId)
-    if (!success) {
-      // 如果儲存失敗，恢復原狀態
-      setInterestedProducts(interestedProducts)
-      logger.error('Failed to update interests in database', undefined, {
-        metadata: { action: 'update_interests' },
-      })
-      return
-    }
-
-    // 觸發自定義事件通知其他元件更新
-    window.dispatchEvent(new CustomEvent('interestedProductsUpdated'))
-
-    // 顯示提示訊息
-    const message = interestedProducts.has(productId)
-      ? `已從興趣清單移除 ${productName}`
-      : `已將 ${productName} 加入興趣清單！`
-
-    // 簡單的提示，可以考慮後續改為 toast 通知
-    const notification = document.createElement('div')
-    notification.textContent = message
-    notification.className =
-      'fixed bottom-4 right-4 bg-amber-900 text-white px-4 py-2 rounded-lg shadow-lg z-50'
-    document.body.appendChild(notification)
-    setTimeout(() => {
-      document.body.removeChild(notification)
-    }, 2000)
-  }
+        document.body.removeChild(notification)
+      }, 2000)
+    },
+    [user?.id, interestedProducts]
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -389,12 +411,16 @@ function ProductsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-center md:text-left mb-6 md:mb-0">
-              <h1 className="text-4xl font-light text-amber-900 mb-4">精選農產品</h1>
-              <p className="text-xl text-gray-700">來自台灣各地的優質農產，新鮮直送到你家</p>
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl sm:text-4xl font-light text-amber-900 mb-2 sm:mb-4">
+                精選農產品
+              </h1>
+              <p className="text-lg sm:text-xl text-gray-700">
+                來自台灣各地的優質農產，新鮮直送到你家
+              </p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto max-w-sm sm:max-w-none">
               {/* 重新整理按鈕 - 對所有用戶可見 */}
               <button
                 onClick={() => {
@@ -403,7 +429,7 @@ function ProductsPage() {
                   fetchProducts()
                 }}
                 disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="重新整理產品列表"
               >
                 <span className={loading ? 'animate-spin' : ''}>🔄</span>
@@ -414,14 +440,16 @@ function ProductsPage() {
                 <>
                   <a
                     href="/admin/products"
-                    className="px-4 py-2 bg-gray-600 text-white rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center space-x-2"
+                    className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
                   >
+                    <span>📦</span>
                     <span>產品管理</span>
                   </a>
                   <a
                     href="/admin/products/add"
-                    className="px-4 py-2 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-colors flex items-center space-x-2"
+                    className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                   >
+                    <span>➕</span>
                     <span>新增產品</span>
                   </a>
                 </>
@@ -471,30 +499,12 @@ function ProductsPage() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {filteredAndSortedProducts.map((product, index) => (
                   <div
-                    key={`product-${product.id}-${index}`}
+                    key={`product-${product.id}`} // 移除 index 避免不必要的重新渲染
                     className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105"
                     onClick={() => handleProductClick(product as unknown as ExtendedProduct)}
                   >
                     {/* Product Image */}
-                    <ProductCardImage
-                      product={{
-                        ...product,
-                        id: product.id,
-                        name: product.name,
-                        images: product.image ? [product.image] : ['/images/placeholder.jpg'],
-                        thumbnailUrl: product.image,
-                        primaryImageUrl: product.image,
-                        inventory: product.inStock ? 100 : 0,
-                        isOnSale: (product.originalPrice || 0) > product.price,
-                        category: product.category,
-                        price: product.price,
-                        description: product.description,
-                        isActive: true,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                      }}
-                      index={index}
-                    />
+                    <ProductCardImage product={product.productCardProps} index={index} />
 
                     {/* Product Info */}
                     <div className="p-6">

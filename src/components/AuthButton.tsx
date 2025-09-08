@@ -114,32 +114,32 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     }
   }, [])
 
-  const updateInterestedCount = useCallback(async () => {
-    if (user) {
-      // 已登入：從資料庫取得數量
-      try {
-        const interests = await UserInterestsService.getUserInterests(user.id)
-        setInterestedCount(interests.length)
-      } catch (error) {
-        logger.error('Error fetching interests count', error as Error, {
-          metadata: { userId: user?.id },
-        })
-        setInterestedCount(0)
-      }
-    } else {
-      // 未登入：從 localStorage 取得數量
-      const savedInterests = localStorage.getItem('interestedProducts')
-      if (savedInterests) {
-        const productIds = JSON.parse(savedInterests)
-        setInterestedCount(productIds.length)
-      } else {
-        setInterestedCount(0)
-      }
-    }
-  }, [user])
-
   // 載入興趣產品數量
   useEffect(() => {
+    const updateInterestedCount = async () => {
+      if (user?.id) {
+        // 已登入：從資料庫取得數量
+        try {
+          const interests = await UserInterestsService.getUserInterests(user.id)
+          setInterestedCount(interests.length)
+        } catch (error) {
+          logger.error('Error fetching interests count', error as Error, {
+            metadata: { userId: user?.id },
+          })
+          setInterestedCount(0)
+        }
+      } else {
+        // 未登入：從 localStorage 取得數量
+        const savedInterests = localStorage.getItem('interestedProducts')
+        if (savedInterests) {
+          const productIds = JSON.parse(savedInterests)
+          setInterestedCount(productIds.length)
+        } else {
+          setInterestedCount(0)
+        }
+      }
+    }
+
     updateInterestedCount()
 
     // 監聽自定義事件（同頁面更新）
@@ -152,7 +152,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     return () => {
       window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
     }
-  }, [user, updateInterestedCount])
+  }, [user?.id]) // 只依賴穩定的 user.id
 
   const handleLogout = async () => {
     if (isLoggingOut) return

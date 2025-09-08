@@ -39,7 +39,8 @@
       "Read(//tmp/**)",
       "mcp__playwright__browser_file_upload",
       "mcp__playwright__browser_take_screenshot",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "mcp__playwright__browser_resize"
     ],
     "deny": []
   },

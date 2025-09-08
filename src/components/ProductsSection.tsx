@@ -127,7 +127,7 @@ function ProductsSection() {
 
                 {/* 內容區域 */}
                 <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center group-hover:text-amber-900 transition-colors">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center group-hover:text-amber-900 transition-colors">
                     {product.name}
                   </h3>
 
