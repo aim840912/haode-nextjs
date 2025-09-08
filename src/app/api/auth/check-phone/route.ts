@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { withErrorHandler } from '@/lib/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { getSupabaseServer } from '@/lib/supabase-auth'
+import { createServiceSupabaseClient } from '@/lib/supabase-server'
 
 async function handleGET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -19,8 +19,8 @@ async function handleGET(request: NextRequest) {
     throw new ValidationError('請輸入有效的台灣手機號碼（09開頭，10位數字）')
   }
 
-  const supabase = getSupabaseServer()
-  
+  const supabase = createServiceSupabaseClient()
+
   // 檢查手機號碼是否已被使用
   const { data: existingProfile, error } = await supabase
     .from('profiles')
@@ -35,16 +35,17 @@ async function handleGET(request: NextRequest) {
 
   const isAvailable = !existingProfile
 
-  return success({
-    phone: cleanPhone,
-    available: isAvailable,
-    message: isAvailable 
-      ? '此手機號碼可以使用' 
-      : '此手機號碼已被註冊'
-  }, '手機號碼檢查完成')
+  return success(
+    {
+      phone: cleanPhone,
+      available: isAvailable,
+      message: isAvailable ? '此手機號碼可以使用' : '此手機號碼已被註冊',
+    },
+    '手機號碼檢查完成'
+  )
 }
 
 export const GET = withErrorHandler(handleGET, {
   module: 'CheckPhoneAPI',
-  enableAuditLog: false // 不需要為這種查詢記錄審計日誌
+  enableAuditLog: false, // 不需要為這種查詢記錄審計日誌
 })

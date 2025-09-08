@@ -34,7 +34,8 @@
       "mcp__playwright__browser_click",
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_press_key",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npx depcheck:*)"
     ],
     "deny": []
   },

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
-import { UserInterestsService } from '@/services/userInterestsService'
+import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { useToast } from '@/components/Toast'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner'
@@ -89,7 +89,7 @@ export default function ProfilePage() {
       })
       setInterestedProducts([])
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]) // fetchInterestedProductsData 穩定，不需要在依賴中
 
   // 載入興趣清單

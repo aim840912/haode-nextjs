@@ -233,8 +233,8 @@ export class SupabaseProductService
    */
   async findAll(): Promise<Product[]> {
     try {
-      const { getSupabaseServer } = await import('@/lib/supabase-auth')
-      const client = getSupabaseServer()
+      const { createServiceSupabaseClient } = await import('@/lib/supabase-server')
+      const client = createServiceSupabaseClient()
 
       const { data, error } = await client
         .from('products')

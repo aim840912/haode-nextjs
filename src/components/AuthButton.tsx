@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/components/Toast'
-import { UserInterestsService } from '@/services/userInterestsService'
+import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger'

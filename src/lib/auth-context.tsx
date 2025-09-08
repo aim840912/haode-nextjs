@@ -10,7 +10,7 @@ import {
   signUpUser,
   updateProfile as updateUserProfile,
 } from '@/lib/supabase-auth'
-import { UserInterestsService } from '@/services/userInterestsService'
+import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { Session } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 

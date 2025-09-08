@@ -11,7 +11,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { getSupabaseServer, getSupabaseAdmin } from '@/lib/supabase-auth'
+import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import {
   BaseService,
   PaginatedService,
@@ -102,7 +103,7 @@ export abstract class AbstractSupabaseService<
       ...config,
     }
 
-    this.client = getSupabaseServer()
+    this.client = createServiceSupabaseClient()
     this.adminClient = getSupabaseAdmin()
     this.transformer = transformer
 
@@ -125,7 +126,7 @@ export abstract class AbstractSupabaseService<
         return adminClient
       }
     }
-    return getSupabaseServer()
+    return createServiceSupabaseClient()
   }
 
   /**

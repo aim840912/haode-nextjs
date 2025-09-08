@@ -9,8 +9,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 // 使用 globalThis 確保真正的全域單例
 declare global {
   var __supabase_browser_client__: ReturnType<typeof createBrowserClient<Database>> | undefined
-  var __supabase_server_client__: ReturnType<typeof createClient<Database>> | undefined
   var __supabase_admin_client__: ReturnType<typeof createClient<Database>> | undefined
+  var __supabase_server_client_simple__: ReturnType<typeof createClient<Database>> | undefined
 }
 
 /**
@@ -48,7 +48,7 @@ export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Da
     // 根據環境選擇正確的客戶端
     if (typeof window === 'undefined') {
       // 服務器環境：使用服務端客戶端
-      client = getServerSupabaseClient()
+      client = getSupabaseServer()
     } else {
       // 瀏覽器環境：使用瀏覽器客戶端
       client = getBrowserSupabaseClient()
@@ -65,21 +65,8 @@ export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Da
   },
 })
 
-/**
- * 取得服務端 Supabase 客戶端 (全域 Singleton)
- */
-function getServerSupabaseClient() {
-  if (!globalThis.__supabase_server_client__) {
-    globalThis.__supabase_server_client__ = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
-  }
-
-  return globalThis.__supabase_server_client__
-}
+// 服務端客戶端創建已遷移至 @/lib/supabase-server
+// 這裡保留介面以確保向後相容性
 
 /**
  * 取得管理員 Supabase 客戶端 (全域 Singleton)
@@ -105,9 +92,28 @@ function getAdminSupabaseClient() {
   return globalThis.__supabase_admin_client__
 }
 
-// 服務端 Supabase 客戶端（用於 API routes） - 使用 getter 函數
+// 服務端 Supabase 客戶端（用於 API routes） - 重建為通用客戶端
 export function getSupabaseServer() {
-  return getServerSupabaseClient()
+  // 在客戶端環境中，使用瀏覽器客戶端
+  if (typeof window !== 'undefined') {
+    return getBrowserSupabaseClient()
+  }
+
+  // 在服務端環境中，創建一個不依賴 next/headers 的簡單服務端客戶端
+  if (!globalThis.__supabase_server_client_simple__) {
+    globalThis.__supabase_server_client_simple__ = createClient<Database>(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    )
+  }
+
+  return globalThis.__supabase_server_client_simple__
 }
 
 // 管理員 Supabase 客戶端（具有更高權限） - 使用 getter 函數
@@ -115,10 +121,10 @@ export function getSupabaseAdmin() {
   return getAdminSupabaseClient()
 }
 
-// 使用 Proxy 實現延遲初始化的服務端客戶端
+// 使用 Proxy 實現延遲初始化的服務端客戶端 - 重導向至統一實作
 export const supabaseServer = new Proxy({} as ReturnType<typeof createClient<Database>>, {
   get(target, prop) {
-    const client = getServerSupabaseClient()
+    const client = getSupabaseServer()
     return client[prop as keyof typeof client]
   },
 })
@@ -171,6 +177,7 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
 export async function upsertProfile(
   profile: Partial<Profile> & { id: string }
 ): Promise<Profile | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).from('profiles').upsert(profile).select().single()
 
   if (error) {
@@ -194,6 +201,7 @@ export async function updateProfile(
   userId: string,
   updates: Partial<Profile>
 ): Promise<Profile | null> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('profiles')
     .update(updates)
@@ -241,11 +249,11 @@ export async function signUpUser(email: string, password: string, name: string, 
       await new Promise(resolve => setTimeout(resolve, 1000))
 
       // 檢查 profile 是否已建立且有電話號碼
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile, error: profileError } = (await supabase
         .from('profiles')
         .select('phone')
         .eq('id', data.user.id)
-        .single() as { data: { phone: string | null } | null; error: Error | null }
+        .single()) as { data: { phone: string | null } | null; error: Error | null }
 
       if (profileError) {
         authLogger.warn('無法檢查 profile', {
@@ -260,6 +268,7 @@ export async function signUpUser(email: string, password: string, name: string, 
           action: 'phone_remedy',
           metadata: { userId: data.user.id, phone: phone.substring(0, 3) + '***' },
         })
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error: updateError } = await (supabase as any)
           .from('profiles')
           .update({ phone })

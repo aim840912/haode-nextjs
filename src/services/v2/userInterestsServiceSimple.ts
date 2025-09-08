@@ -9,10 +9,10 @@
  * - 內建重複資料防護
  */
 
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
-import { getSupabaseAdmin } from '@/lib/supabase-auth'
+// 動態匯入服務端客戶端以避免客戶端環境問題
 import { dbLogger } from '@/lib/logger'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { ErrorFactory, ValidationError } from '@/lib/errors'
+import { supabase } from '@/lib/supabase-auth'
 import type { UserInterest } from '../userInterestsService'
 import type { Database } from '@/types/database'
 
@@ -33,17 +33,11 @@ export class UserInterestsServiceV2Simple {
   private readonly moduleName = 'UserInterestsServiceV2'
 
   /**
-   * 取得 Supabase 客戶端
+   * 取得 Supabase 客戶端（使用統一的 Proxy 物件）
    */
   private getSupabaseClient() {
-    return getSupabaseAdmin()
-  }
-
-  /**
-   * 取得管理員客戶端
-   */
-  private getAdminClient() {
-    return getSupabaseAdmin()
+    // 使用已經處理環境檢測的 supabase Proxy 物件
+    return supabase
   }
 
   /**
@@ -144,12 +138,11 @@ export class UserInterestsServiceV2Simple {
       this.validateInputs(userId, productId)
 
       const client = this.getSupabaseClient()!
-      const { error } = await (client)
-        .from('user_interests')
-        .insert({
-          user_id: userId,
-          product_id: productId
-        } satisfies Database['public']['Tables']['user_interests']['Insert'])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (client as any).from('user_interests').insert({
+        user_id: userId,
+        product_id: productId,
+      } satisfies Database['public']['Tables']['user_interests']['Insert'])
 
       if (error) {
         // 如果是重複插入錯誤（unique constraint），視為成功
@@ -245,18 +238,25 @@ export class UserInterestsServiceV2Simple {
         this.validateInputs(userId, productId)
       }
 
-      const interests = productIds.map(productId => ({
-        user_id: userId,
-        product_id: productId
-      } satisfies Database['public']['Tables']['user_interests']['Insert']))
+      const interests = productIds.map(
+        productId =>
+          ({
+            user_id: userId,
+            product_id: productId,
+          }) satisfies Database['public']['Tables']['user_interests']['Insert']
+      )
 
       const client = this.getSupabaseClient()!
-      const { error } = await (client)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (client as any)
         .from('user_interests')
         .upsert(interests, { onConflict: 'user_id,product_id' })
 
       if (error) {
-        this.handleError(error, 'addMultipleInterests', { userId, productIdCount: productIds.length })
+        this.handleError(error, 'addMultipleInterests', {
+          userId,
+          productIdCount: productIds.length,
+        })
       }
 
       dbLogger.info('批量新增興趣產品成功', {
@@ -303,7 +303,7 @@ export class UserInterestsServiceV2Simple {
 
       const exists = !!existing
       const action = exists ? 'remove' : 'add'
-      const success = exists 
+      const success = exists
         ? await this.removeInterest(userId, productId)
         : await this.addInterest(userId, productId)
 
@@ -342,10 +342,10 @@ export class UserInterestsServiceV2Simple {
 
       // 取得雲端興趣清單
       const cloudInterests = await this.getUserInterests(userId)
-      
+
       // 合併本地和雲端興趣清單（去重）
       const mergedInterests = Array.from(new Set([...cloudInterests, ...localInterests]))
-      
+
       // 如果有新的興趣需要同步到雲端
       const newInterests = localInterests.filter(id => !cloudInterests.includes(id))
       if (newInterests.length > 0) {
@@ -371,7 +371,7 @@ export class UserInterestsServiceV2Simple {
           syncedCount: newInterests.length,
         },
       })
-      
+
       return mergedInterests
     } catch (error) {
       dbLogger.error(
