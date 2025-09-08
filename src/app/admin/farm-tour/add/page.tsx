@@ -6,23 +6,24 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
+import ImageUploader from '@/components/ImageUploader'
 
 export default function AddFarmTourActivity() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [_imageFile, _setImageFile] = useState<File | null>(null) // TODO: 實作圖片上傳功能
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
+  const [activityId] = useState(() => `activity-${Date.now()}`)
   const { user, isLoading } = useAuth()
-  
+
   const [formData, setFormData] = useState({
     season: '春季',
     months: '',
     title: '',
     highlight: '',
     activities: [''],
-    image: '',
+    image: uploadedImageUrl,
     available: true,
-    note: ''
+    note: '',
   })
 
   // 載入中狀態
@@ -46,13 +47,13 @@ export default function AddFarmTourActivity() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -68,9 +69,8 @@ export default function AddFarmTourActivity() {
     { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
     { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
     { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
-    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' }
+    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' },
   ]
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -82,8 +82,9 @@ export default function AddFarmTourActivity() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          activities: formData.activities.filter(activity => activity.trim() !== '')
-        })
+          image: uploadedImageUrl || formData.image,
+          activities: formData.activities.filter(activity => activity.trim() !== ''),
+        }),
       })
 
       if (response.ok) {
@@ -92,18 +93,28 @@ export default function AddFarmTourActivity() {
         alert('新增失敗')
       }
     } catch (error) {
-      logger.error('Error adding farm tour activity:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error adding farm tour activity:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('新增失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]:
+        type === 'number'
+          ? Number(value)
+          : type === 'checkbox'
+            ? (e.target as HTMLInputElement).checked
+            : value,
     }))
   }
 
@@ -112,65 +123,42 @@ export default function AddFarmTourActivity() {
     setFormData(prev => ({
       ...prev,
       season,
-      months: selectedSeason?.months || ''
+      months: selectedSeason?.months || '',
     }))
   }
 
   const addActivityField = () => {
     setFormData(prev => ({
       ...prev,
-      activities: [...prev.activities, '']
+      activities: [...prev.activities, ''],
     }))
   }
 
   const removeActivityField = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      activities: prev.activities.filter((_, i) => i !== index)
+      activities: prev.activities.filter((_, i) => i !== index),
     }))
   }
 
   const updateActivityField = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      activities: prev.activities.map((activity, i) => i === index ? value : activity)
+      activities: prev.activities.map((activity, i) => (i === index ? value : activity)),
     }))
   }
 
-
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // 檢查檔案大小 (限制 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('圖片檔案大小不能超過 5MB')
-        return
-      }
-
-      // 檢查檔案類型
-      if (!file.type.startsWith('image/')) {
-        alert('請選擇圖片檔案')
-        return
-      }
-
-      _setImageFile(file)
-
-      // 創建預覽
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result as string
-        setImagePreview(result)
-        setFormData(prev => ({ ...prev, image: result }))
-      }
-      reader.readAsDataURL(file)
+  const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
+    if (images.length > 0 && images[0].url) {
+      setUploadedImageUrl(images[0].url)
+      setFormData(prev => ({ ...prev, image: images[0].url || '' }))
+      logger.info('農場體驗活動圖片上傳成功', { metadata: { url: images[0].url } })
     }
   }
 
-  const clearImage = () => {
-    _setImageFile(null)
-    setImagePreview(null)
-    setFormData(prev => ({ ...prev, image: '' }))
+  const handleImageUploadError = (error: string) => {
+    logger.error('農場體驗活動圖片上傳失敗', new Error(error))
+    alert(`圖片上傳失敗: ${error}`)
   }
 
   return (
@@ -178,10 +166,7 @@ export default function AddFarmTourActivity() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/farm-tour"
-              className="text-green-600 hover:text-green-800"
-            >
+            <Link href="/admin/farm-tour" className="text-green-600 hover:text-green-800">
               ← 回到果園管理
             </Link>
           </div>
@@ -194,16 +179,14 @@ export default function AddFarmTourActivity() {
             {/* 基本資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    季節 *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">季節 *</label>
                   <select
                     name="season"
                     value={formData.season}
-                    onChange={(e) => handleSeasonChange(e.target.value)}
+                    onChange={e => handleSeasonChange(e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                   >
@@ -216,9 +199,7 @@ export default function AddFarmTourActivity() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    月份 *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">月份 *</label>
                   <input
                     type="text"
                     name="months"
@@ -232,9 +213,7 @@ export default function AddFarmTourActivity() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活動標題 *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動標題 *</label>
                 <input
                   type="text"
                   name="title"
@@ -247,9 +226,7 @@ export default function AddFarmTourActivity() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活動亮點 *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動亮點 *</label>
                 <input
                   type="text"
                   name="highlight"
@@ -265,17 +242,15 @@ export default function AddFarmTourActivity() {
             {/* 活動內容 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
-              
+
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  活動項目
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動項目</label>
                 {formData.activities.map((activity, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={activity}
-                      onChange={(e) => updateActivityField(index, e.target.value)}
+                      onChange={e => updateActivityField(index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
                       placeholder="輸入活動項目"
                     />
@@ -300,63 +275,32 @@ export default function AddFarmTourActivity() {
               </div>
             </div>
 
-
             {/* 其他設定 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
-              
+
               {/* 活動圖片 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  活動圖片
-                </label>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">點擊上傳</span> 或拖拽圖片到此處
-                        </p>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF (最大 5MB)</p>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  </div>
-                  
-                  {imagePreview && (
-                    <div className="relative inline-block">
-                      <Image
-                        src={imagePreview}
-                        alt="圖片預覽"
-                        width={128}
-                        height={128}
-                        className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                      />
-                      <button
-                        type="button"
-                        onClick={clearImage}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片</label>
+                <ImageUploader
+                  productId={activityId}
+                  apiEndpoint="/api/upload/farm-tour"
+                  idParamName="activityId"
+                  maxFiles={1}
+                  allowMultiple={false}
+                  generateMultipleSizes={false}
+                  enableCompression={true}
+                  onUploadSuccess={handleImageUploadSuccess}
+                  onUploadError={handleImageUploadError}
+                  className="mb-4"
+                />
+                {uploadedImageUrl && (
+                  <div className="mt-2 text-sm text-green-600">✓ 圖片上傳成功</div>
+                )}
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  注意事項
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">注意事項</label>
                 <textarea
                   name="note"
                   value={formData.note}
@@ -406,27 +350,33 @@ export default function AddFarmTourActivity() {
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
                 <div className="mb-3">
-                {imagePreview ? (
-                  <Image 
-                    src={imagePreview} 
-                    alt="活動圖片"
-                    width={64}
-                    height={64}
-                    className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
-                  />
-                ) : (
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
-                    <span className="text-gray-500 text-xs">無圖片</span>
-                  </div>
-                )}
-              </div>
+                  {uploadedImageUrl ? (
+                    <Image
+                      src={uploadedImageUrl}
+                      alt="活動圖片"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                    />
+                  ) : formData.image ? (
+                    <Image
+                      src={formData.image}
+                      alt="活動圖片"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">無圖片</span>
+                    </div>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">
                   {formData.title || '活動標題預覽'}
                 </h3>
                 <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                  <span className="bg-white px-2 py-1 rounded-full">
-                    {formData.season}
-                  </span>
+                  <span className="bg-white px-2 py-1 rounded-full">{formData.season}</span>
                   <span className="bg-white px-2 py-1 rounded-full">
                     {formData.months || '月份'}
                   </span>
@@ -443,15 +393,16 @@ export default function AddFarmTourActivity() {
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
                   <div className="space-y-1">
-                    {formData.activities.filter(a => a.trim()).map((activity, index) => (
-                      <div key={index} className="flex items-center text-xs text-gray-600">
-                        <span className="mr-2 text-green-500">✓</span>
-                        <span>{activity}</span>
-                      </div>
-                    ))}
+                    {formData.activities
+                      .filter(a => a.trim())
+                      .map((activity, index) => (
+                        <div key={index} className="flex items-center text-xs text-gray-600">
+                          <span className="mr-2 text-green-500">✓</span>
+                          <span>{activity}</span>
+                        </div>
+                      ))}
                   </div>
                 </div>
-
 
                 {formData.note && (
                   <div className="mb-4 p-3 bg-blue-50 rounded-lg">
@@ -459,11 +410,11 @@ export default function AddFarmTourActivity() {
                   </div>
                 )}
 
-                <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                  formData.available 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
+                <div
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}
+                >
                   {formData.available ? '✅ 開放預約' : '❌ 暫停開放'}
                 </div>
               </div>

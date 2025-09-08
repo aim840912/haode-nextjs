@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
+import ImageUploader from '@/components/ImageUploader'
 
 export default function AddLocation() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [_imageFile, _setImageFile] = useState<File | null>(null) // TODO: 實作圖片上傳功能
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
+  const [locationId] = useState(() => `location-${Date.now()}`)
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -29,10 +30,10 @@ export default function AddLocation() {
     specialties: [''],
     coordinates: {
       lat: 23.5519, // 台灣中心點作為預設值
-      lng: 120.5564
+      lng: 120.5564,
     },
-    image: '',
-    isMain: false
+    image: uploadedImageUrl,
+    isMain: false,
   })
 
   // 載入中狀態
@@ -56,13 +57,13 @@ export default function AddLocation() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -84,12 +85,14 @@ export default function AddLocation() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          image: uploadedImageUrl || formData.image,
           features: formData.features.filter(feature => feature.trim() !== ''),
           specialties: formData.specialties.filter(specialty => specialty.trim() !== ''),
-          coordinates: formData.coordinates.lat || formData.coordinates.lng ? 
-            formData.coordinates : 
-            { lat: 23.5519, lng: 120.5564 } // 台灣中心點作為預設值
-        })
+          coordinates:
+            formData.coordinates.lat || formData.coordinates.lng
+              ? formData.coordinates
+              : { lat: 23.5519, lng: 120.5564 }, // 台灣中心點作為預設值
+        }),
       })
 
       if (response.ok) {
@@ -98,95 +101,79 @@ export default function AddLocation() {
         alert('新增失敗')
       }
     } catch (error) {
-      logger.error('Error creating location:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error creating location:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('新增失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }))
   }
 
   const addFeatureField = () => {
     setFormData(prev => ({
       ...prev,
-      features: [...prev.features, '']
+      features: [...prev.features, ''],
     }))
   }
 
   const removeFeatureField = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      features: prev.features.filter((_, i) => i !== index)
+      features: prev.features.filter((_, i) => i !== index),
     }))
   }
 
   const updateFeatureField = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      features: prev.features.map((feature, i) => i === index ? value : feature)
+      features: prev.features.map((feature, i) => (i === index ? value : feature)),
     }))
   }
 
   const addSpecialtyField = () => {
     setFormData(prev => ({
       ...prev,
-      specialties: [...prev.specialties, '']
+      specialties: [...prev.specialties, ''],
     }))
   }
 
   const removeSpecialtyField = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      specialties: prev.specialties.filter((_, i) => i !== index)
+      specialties: prev.specialties.filter((_, i) => i !== index),
     }))
   }
 
   const updateSpecialtyField = (index: number, value: string) => {
     setFormData(prev => ({
       ...prev,
-      specialties: prev.specialties.map((specialty, i) => i === index ? value : specialty)
+      specialties: prev.specialties.map((specialty, i) => (i === index ? value : specialty)),
     }))
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // 檢查檔案大小 (限制 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('圖片檔案大小不能超過 5MB')
-        return
-      }
-
-      // 檢查檔案類型
-      if (!file.type.startsWith('image/')) {
-        alert('請選擇圖片檔案')
-        return
-      }
-
-      _setImageFile(file)
-
-      // 創建預覽
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result as string
-        setImagePreview(result)
-        setFormData(prev => ({ ...prev, image: result }))
-      }
-      reader.readAsDataURL(file)
+  const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
+    if (images.length > 0 && images[0].url) {
+      setUploadedImageUrl(images[0].url)
+      setFormData(prev => ({ ...prev, image: images[0].url || '' }))
+      logger.info('門市圖片上傳成功', { metadata: { url: images[0].url } })
     }
   }
 
-  const clearImage = () => {
-    _setImageFile(null)
-    setImagePreview(null)
-    setFormData(prev => ({ ...prev, image: '' }))
+  const handleImageUploadError = (error: string) => {
+    logger.error('門市圖片上傳失敗', new Error(error))
+    alert(`圖片上傳失敗: ${error}`)
   }
 
   return (
@@ -194,10 +181,7 @@ export default function AddLocation() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/locations"
-              className="text-amber-600 hover:text-amber-800"
-            >
+            <Link href="/admin/locations" className="text-amber-600 hover:text-amber-800">
               ← 回到門市管理
             </Link>
           </div>
@@ -210,7 +194,7 @@ export default function AddLocation() {
             {/* 基本資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -244,9 +228,7 @@ export default function AddLocation() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  門市地址 *
-                </label>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">門市地址 *</label>
                 <input
                   type="text"
                   name="address"
@@ -259,9 +241,7 @@ export default function AddLocation() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  地標說明
-                </label>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">地標說明</label>
                 <input
                   type="text"
                   name="landmark"
@@ -276,7 +256,7 @@ export default function AddLocation() {
             {/* 聯絡資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">聯絡資訊</h3>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-800 mb-2">
@@ -294,9 +274,7 @@ export default function AddLocation() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    LINE ID
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">LINE ID</label>
                   <input
                     type="text"
                     name="lineId"
@@ -325,9 +303,7 @@ export default function AddLocation() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">
-                    公休日
-                  </label>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">公休日</label>
                   <input
                     type="text"
                     name="closedDays"
@@ -343,11 +319,9 @@ export default function AddLocation() {
             {/* 交通資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">交通資訊</h3>
-              
+
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  停車資訊
-                </label>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">停車資訊</label>
                 <input
                   type="text"
                   name="parking"
@@ -359,9 +333,7 @@ export default function AddLocation() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-800 mb-2">
-                  大眾運輸
-                </label>
+                <label className="block text-sm font-semibold text-gray-800 mb-2">大眾運輸</label>
                 <input
                   type="text"
                   name="publicTransport"
@@ -376,14 +348,14 @@ export default function AddLocation() {
             {/* 特色服務 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">特色服務</h3>
-              
+
               <div className="mb-4">
                 {formData.features.map((feature, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={feature}
-                      onChange={(e) => updateFeatureField(index, e.target.value)}
+                      onChange={e => updateFeatureField(index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                       placeholder="輸入特色服務"
                     />
@@ -411,14 +383,14 @@ export default function AddLocation() {
             {/* 主打商品 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">主打商品</h3>
-              
+
               <div className="mb-4">
                 {formData.specialties.map((specialty, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={specialty}
-                      onChange={(e) => updateSpecialtyField(index, e.target.value)}
+                      onChange={e => updateSpecialtyField(index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                       placeholder="輸入主打商品"
                     />
@@ -446,53 +418,27 @@ export default function AddLocation() {
             {/* 其他設定 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
-              
+
               {/* 圖片上傳 */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                   門市圖片 (選填)
                 </label>
-                
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-center w-full">
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <svg className="w-8 h-8 mb-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          <p className="mb-2 text-sm text-gray-500">
-                            <span className="font-semibold">點擊上傳</span> 或拖拽圖片到此處
-                          </p>
-                          <p className="text-xs text-gray-500">PNG, JPG, GIF (最大 5MB)</p>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageUpload}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-                    
-                    {imagePreview && (
-                      <div className="relative">
-                        <Image
-                          src={imagePreview}
-                          alt="圖片預覽"
-                          width={128}
-                          height={128}
-                          className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                        />
-                        <button
-                          type="button"
-                          onClick={clearImage}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                <ImageUploader
+                  productId={locationId}
+                  apiEndpoint="/api/upload/locations"
+                  idParamName="locationId"
+                  maxFiles={1}
+                  allowMultiple={false}
+                  generateMultipleSizes={false}
+                  enableCompression={true}
+                  onUploadSuccess={handleImageUploadSuccess}
+                  onUploadError={handleImageUploadError}
+                  className="mb-4"
+                />
+                {uploadedImageUrl && (
+                  <div className="mt-2 text-sm text-green-600">✓ 圖片上傳成功</div>
+                )}
               </div>
 
               <div className="flex items-center">
@@ -503,9 +449,7 @@ export default function AddLocation() {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
                 />
-                <label className="ml-2 block text-sm font-medium text-gray-800">
-                  設為總店
-                </label>
+                <label className="ml-2 block text-sm font-medium text-gray-800">設為總店</label>
               </div>
             </div>
 
@@ -534,17 +478,17 @@ export default function AddLocation() {
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
                 <div className="mb-3">
-                  {imagePreview ? (
-                    <Image 
-                      src={imagePreview} 
+                  {uploadedImageUrl ? (
+                    <Image
+                      src={uploadedImageUrl}
                       alt="門市圖片"
                       width={64}
                       height={64}
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
-                  ) : formData.image && formData.image.startsWith('/') ? (
-                    <Image 
-                      src={formData.image} 
+                  ) : formData.image ? (
+                    <Image
+                      src={formData.image}
                       alt="門市圖片"
                       width={64}
                       height={64}
@@ -598,23 +542,30 @@ export default function AddLocation() {
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">特色服務</h4>
                   <div className="space-y-1">
-                    {formData.features.filter(f => f.trim()).map((feature, index) => (
-                      <div key={index} className="flex items-center text-xs text-gray-600">
-                        <span className="mr-2 text-green-500">✓</span>
-                        <span>{feature}</span>
-                      </div>
-                    ))}
+                    {formData.features
+                      .filter(f => f.trim())
+                      .map((feature, index) => (
+                        <div key={index} className="flex items-center text-xs text-gray-600">
+                          <span className="mr-2 text-green-500">✓</span>
+                          <span>{feature}</span>
+                        </div>
+                      ))}
                   </div>
                 </div>
 
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">主打商品</h4>
                   <div className="flex flex-wrap gap-1">
-                    {formData.specialties.filter(s => s.trim()).map((specialty, index) => (
-                      <span key={index} className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">
-                        {specialty}
-                      </span>
-                    ))}
+                    {formData.specialties
+                      .filter(s => s.trim())
+                      .map((specialty, index) => (
+                        <span
+                          key={index}
+                          className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs"
+                        >
+                          {specialty}
+                        </span>
+                      ))}
                   </div>
                 </div>
               </div>

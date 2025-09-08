@@ -35,7 +35,11 @@
       "mcp__playwright__browser_snapshot",
       "mcp__playwright__browser_press_key",
       "Bash(curl:*)",
-      "Bash(npx depcheck:*)"
+      "Bash(npx depcheck:*)",
+      "Read(//tmp/**)",
+      "mcp__playwright__browser_file_upload",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(npm run lint:*)"
     ],
     "deny": []
   },
