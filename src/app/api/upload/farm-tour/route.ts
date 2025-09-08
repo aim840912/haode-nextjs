@@ -1,12 +1,11 @@
 import { NextRequest } from 'next/server'
-import { SupabaseStorageError, initializeStorageBucket } from '@/lib/supabase-storage'
-import { validateImageFile, generateFileName } from '@/lib/image-utils'
+import { initializeFarmTourBucket, uploadFarmTourImage } from '@/lib/farm-tour-storage'
+import { validateImageFile } from '@/lib/image-utils'
 import { withErrorHandler } from '@/lib/error-handler'
 import { ValidationError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { z } from 'zod'
-import { supabase } from '@/lib/supabase-auth'
 
 // 初始化 storage bucket
 let bucketInitialized = false
@@ -14,11 +13,11 @@ let bucketInitialized = false
 async function ensureBucketExists() {
   if (!bucketInitialized) {
     try {
-      await initializeStorageBucket()
+      await initializeFarmTourBucket()
       bucketInitialized = true
-      apiLogger.info('Storage bucket 初始化成功', { module: 'FarmTourUpload' })
+      apiLogger.info('農場體驗活動 Storage bucket 初始化成功', { module: 'FarmTourUpload' })
     } catch (error) {
-      apiLogger.warn('無法初始化 storage bucket', {
+      apiLogger.warn('無法初始化農場體驗活動 storage bucket', {
         module: 'FarmTourUpload',
         metadata: { error: (error as Error).message },
       })
@@ -78,29 +77,12 @@ async function handlePOST(request: NextRequest) {
   })
 
   try {
-    // 生成檔案名稱（使用 farm-tour 前綴）
-    const fileName = generateFileName(file.name, `farm-tour-${activityId}`)
-    const filePath = `farm-tour/${activityId}/${fileName}`
+    // 使用專屬的農場體驗活動圖片上傳功能
+    const uploadResult = await uploadFarmTourImage(file, activityId)
 
-    // 上傳檔案到 Supabase Storage
-    const { error } = await supabase.storage
-      .from('products') // 使用同一個 bucket，但不同路徑
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: true,
-      })
-
-    if (error) {
-      throw new SupabaseStorageError('圖片上傳失敗', error)
-    }
-
-    // 取得公開 URL
-    const { data: urlData } = supabase.storage.from('products').getPublicUrl(filePath)
-
-    const uploadResult = {
-      url: urlData.publicUrl,
-      path: filePath,
-      fileName: fileName,
+    // 添加檔案大小到結果中
+    const result = {
+      ...uploadResult,
       size: file.size,
     }
 
@@ -108,19 +90,19 @@ async function handlePOST(request: NextRequest) {
       module: 'FarmTourUpload',
       metadata: {
         activityId,
-        fileName,
-        url: uploadResult.url,
+        fileName: result.fileName,
+        url: result.url,
       },
     })
 
-    return success(uploadResult, '圖片上傳成功')
+    return success(result, '圖片上傳成功')
   } catch (error) {
     apiLogger.error('農場體驗活動圖片上傳失敗', error as Error, {
       module: 'FarmTourUpload',
       metadata: { activityId, fileName: file.name },
     })
 
-    if (error instanceof SupabaseStorageError || error instanceof ValidationError) {
+    if (error instanceof ValidationError) {
       throw error
     }
 
