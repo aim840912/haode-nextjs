@@ -64,10 +64,22 @@
 - **建議**: 完善 TypeScript 介面定義和型別轉換
 - **預估時間**: 3 小時
 
-### **2. Hook 架構重構** 🔧
-- **現狀**: useInquiryStats hook 依賴過於複雜
-- **建議**: 分離關注點，將複雜 Hook 拆分為多個小型 Hook
-- **預估時間**: 4 小時
+### **2. ~~Hook 架構重構~~** ✅ **已完成**
+- **原狀態**: useInquiryStats hook 依賴過於複雜（566 行）
+- **已實施**:
+  - ✅ 階段 1：抽取工具函數到 inquiry-stats-utils.ts（純函數邏輯）
+  - ✅ 階段 2：建立 useInquiryStatsCache hook（localStorage 管理）
+  - ✅ 階段 3：建立 usePollingManager hook（智能輪詢和活動追蹤）
+  - ✅ 階段 4：建立 useInquiryStatsFetcher hook（API 通訊和請求去重）
+  - ✅ 階段 5：建立 useRetryManager hook（智能重試和錯誤處理）
+  - ✅ 階段 6：重構主 Hook 組合新 hooks（V2 版本 + feature flag）
+  - ✅ 階段 7：測試和驗證所有功能（TypeScript + ESLint + Build 通過）
+- **成果**: 
+  - 將 566 行單體 Hook 拆分為 6 個專注模組（平均 ~100 行/模組）
+  - 保持 100% 向後相容性 + feature flag 安全切換
+  - 建置時間無影響（8.1 秒），無新增警告
+  - 提升可測試性、可維護性和可擴展性
+- **實際時間**: 5 小時
 
 ---
 
