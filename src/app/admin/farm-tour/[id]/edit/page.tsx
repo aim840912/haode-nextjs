@@ -110,7 +110,21 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="text-6xl mb-8">🔒</div>
+          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-8">
+            <svg
+              className="w-8 h-8 text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
@@ -381,7 +395,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                         onClick={() => removeActivityField(index)}
                         className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                       >
-                        ✕
+                        ×
                       </button>
                     )}
                   </div>
@@ -452,7 +466,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                         onClick={() => removeIncludeField(index)}
                         className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
                       >
-                        ✕
+                        ×
                       </button>
                     )}
                   </div>
@@ -488,7 +502,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 />
                 {uploadedImages.length > 0 && (
                   <div className="mt-2 text-sm text-green-600">
-                    ✓ 已上傳 {uploadedImages.length} 張圖片
+                    已上傳 {uploadedImages.length} 張圖片
                   </div>
                 )}
               </div>
@@ -583,7 +597,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       .filter(a => a.trim())
                       .map((activity, index) => (
                         <div key={index} className="flex items-center text-xs text-gray-600">
-                          <span className="mr-2 text-green-500">✓</span>
+                          <span className="mr-2 text-green-500">•</span>
                           <span>{activity}</span>
                         </div>
                       ))}
@@ -592,11 +606,11 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
                 <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
                   <div className="flex items-center">
-                    <span className="mr-2">💰</span>
+                    <span className="mr-2 text-amber-600 font-medium">$</span>
                     <span className="font-bold text-amber-900">NT$ {formData.price || 0}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="mr-2">⏱️</span>
+                    <span className="mr-2 text-blue-600">⏲</span>
                     <span>{formData.duration || '時長'}</span>
                   </div>
                 </div>
@@ -619,7 +633,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
                 {formData.note && (
                   <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-blue-700 text-xs">💡 {formData.note}</p>
+                    <p className="text-blue-700 text-xs">{formData.note}</p>
                   </div>
                 )}
 
@@ -628,7 +642,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}
                 >
-                  {formData.available ? '✅ 開放預約' : '❌ 暫停開放'}
+                  {formData.available ? '開放預約' : '暫停開放'}
                 </div>
               </div>
             </div>

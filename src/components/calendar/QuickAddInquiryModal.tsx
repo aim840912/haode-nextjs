@@ -5,7 +5,12 @@ import { useState, useEffect } from 'react'
 // import { X } from 'lucide-react'
 import { logger } from '@/lib/logger'
 import { inquiryApi } from '@/lib/api-client'
-import { CreateInquiryRequest, CreateInquiryItemRequest, InquiryType, InquiryWithItems } from '@/types/inquiry'
+import {
+  CreateInquiryRequest,
+  CreateInquiryItemRequest,
+  InquiryType,
+  InquiryWithItems,
+} from '@/types/inquiry'
 import { ApiResponse } from '@/types/infrastructure.types'
 
 interface QuickAddInquiryModalProps {
@@ -19,13 +24,14 @@ interface FarmTourOption {
   id: string
   title: string
   season: string
+  available?: boolean
 }
 
 export default function QuickAddInquiryModal({
   isOpen,
   onClose,
   selectedDate,
-  onSuccess
+  onSuccess,
 }: QuickAddInquiryModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [farmTours, setFarmTours] = useState<FarmTourOption[]>([])
@@ -35,7 +41,8 @@ export default function QuickAddInquiryModal({
     customer_phone: '',
     visitor_count: 1,
     farm_tour_id: '',
-    notes: ''
+    visit_date: '',
+    notes: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -49,13 +56,15 @@ export default function QuickAddInquiryModal({
   // 重置表單
   useEffect(() => {
     if (isOpen) {
+      const defaultDate = selectedDate ? selectedDate.toISOString().split('T')[0] : ''
       setFormData({
         customer_name: '',
         customer_email: '',
         customer_phone: '',
         visitor_count: 1,
         farm_tour_id: '',
-        notes: selectedDate ? `預約日期：${selectedDate.toLocaleDateString('zh-TW')}` : ''
+        visit_date: defaultDate,
+        notes: selectedDate ? `預設預約日期：${selectedDate.toLocaleDateString('zh-TW')}` : '',
       })
       setErrors({})
     }
@@ -65,11 +74,27 @@ export default function QuickAddInquiryModal({
     try {
       const response = await fetch('/api/farm-tour')
       if (response.ok) {
-        const tours = await response.json()
-        setFarmTours(tours.filter((tour: FarmTourOption & { available: boolean }) => tour.available))
+        const data = await response.json()
+        const tours = data.success ? data.data : data
+
+        // 過濾可用的農場導覽，如果沒有 available 屬性則預設為可用
+        const availableTours = tours.filter(
+          (tour: FarmTourOption) => tour.available !== false // 只排除明確設為 false 的項目
+        )
+
+        setFarmTours(availableTours)
+        logger.info('農場導覽選項載入成功', {
+          metadata: {
+            totalCount: tours.length,
+            availableCount: availableTours.length,
+          },
+        })
+      } else {
+        throw new Error(`API 請求失敗: ${response.status} ${response.statusText}`)
       }
     } catch (error) {
       logger.error('載入農場導覽選項失敗', error as Error)
+      setErrors(prev => ({ ...prev, general: '載入農場導覽選項失敗，請稍後再試' }))
     }
   }
 
@@ -94,6 +119,17 @@ export default function QuickAddInquiryModal({
       newErrors.farm_tour_id = '請選擇農場導覽活動'
     }
 
+    if (!formData.visit_date) {
+      newErrors.visit_date = '請選擇預約日期'
+    } else {
+      const selectedVisitDate = new Date(formData.visit_date)
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      if (selectedVisitDate < today) {
+        newErrors.visit_date = '預約日期不能早於今天'
+      }
+    }
+
     if (formData.visitor_count < 1) {
       newErrors.visitor_count = '參觀人數至少為 1 人'
     }
@@ -103,10 +139,11 @@ export default function QuickAddInquiryModal({
   }
 
   const handleSubmit = async () => {
-    if (!validateForm() || !selectedDate) return
+    if (!validateForm()) return
 
     setIsSubmitting(true)
-    
+    const visitDate = new Date(formData.visit_date)
+
     try {
       // 建立詢價項目
       const selectedTour = farmTours.find(t => t.id === formData.farm_tour_id)
@@ -114,7 +151,7 @@ export default function QuickAddInquiryModal({
         product_id: formData.farm_tour_id,
         product_name: selectedTour?.title || '農場導覽',
         quantity: formData.visitor_count,
-        notes: `農場導覽預約 - ${formData.visitor_count} 人`
+        notes: `農場導覽預約 - ${formData.visitor_count} 人`,
       }
 
       // 建立詢價請求
@@ -125,37 +162,37 @@ export default function QuickAddInquiryModal({
         inquiry_type: 'farm_tour' as InquiryType,
         notes: formData.notes,
         delivery_address: '', // 農場導覽不需要配送地址
-        preferred_delivery_date: selectedDate.toISOString().split('T')[0], // 使用選擇的日期
+        preferred_delivery_date: formData.visit_date, // 使用使用者選擇的日期
         items: [inquiryItem],
         // 農場導覽相關欄位
         activity_title: selectedTour?.title,
-        visit_date: selectedDate.toISOString().split('T')[0],
-        visitor_count: formData.visitor_count.toString()
+        visit_date: formData.visit_date,
+        visitor_count: formData.visitor_count.toString(),
       }
 
       logger.info('提交快速農場導覽預約', {
         module: 'QuickAddInquiryModal',
         action: 'submit',
-        metadata: { 
-          date: selectedDate.toISOString(),
+        metadata: {
+          date: visitDate.toISOString(),
           customerName: formData.customer_name,
-          visitorCount: formData.visitor_count
-        }
+          visitorCount: formData.visitor_count,
+        },
       })
 
-      const result = await inquiryApi.create(inquiryRequest) as ApiResponse<InquiryWithItems>
+      const result = (await inquiryApi.create(inquiryRequest)) as ApiResponse<InquiryWithItems>
 
       if (result.success) {
         logger.info('快速預約建立成功', {
           module: 'QuickAddInquiryModal',
           action: 'success',
-          metadata: { inquiryId: result.data?.id }
+          metadata: { inquiryId: result.data?.id },
         })
-        
+
         if (onSuccess && result.data?.id) {
           onSuccess(result.data.id)
         }
-        
+
         onClose()
       } else {
         throw new Error(result.error || '建立預約失敗')
@@ -165,7 +202,7 @@ export default function QuickAddInquiryModal({
       setErrors({ general: errorMessage })
       logger.error('快速預約建立失敗', error as Error, {
         module: 'QuickAddInquiryModal',
-        action: 'error'
+        action: 'error',
       })
     } finally {
       setIsSubmitting(false)
@@ -175,9 +212,9 @@ export default function QuickAddInquiryModal({
   const handleInputChange = (field: string, value: string | number) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }))
-    
+
     // 清除該欄位的錯誤訊息
     if (errors[field]) {
       setErrors(prev => {
@@ -195,9 +232,7 @@ export default function QuickAddInquiryModal({
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* 標題列 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            快速新增預約
-          </h2>
+          <h2 className="text-xl font-semibold text-gray-900">快速新增預約</h2>
           <button
             onClick={onClose}
             disabled={isSubmitting}
@@ -210,20 +245,21 @@ export default function QuickAddInquiryModal({
 
         {/* 表單內容 */}
         <div className="p-6 space-y-4">
-          {/* 預約日期顯示 */}
-          {selectedDate && (
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-sm font-medium text-blue-900">預約日期</p>
-              <p className="text-blue-700">
-                {selectedDate.toLocaleDateString('zh-TW', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'long'
-                })}
-              </p>
-            </div>
-          )}
+          {/* 預約日期輸入 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">預約日期 *</label>
+            <input
+              type="date"
+              value={formData.visit_date}
+              onChange={e => handleInputChange('visit_date', e.target.value)}
+              min={new Date().toISOString().split('T')[0]} // 最小日期為今天
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.visit_date ? 'border-red-300' : 'border-gray-300'
+              }`}
+              disabled={isSubmitting}
+            />
+            {errors.visit_date && <p className="text-red-600 text-sm mt-1">{errors.visit_date}</p>}
+          </div>
 
           {/* 一般錯誤訊息 */}
           {errors.general && (
@@ -234,13 +270,11 @@ export default function QuickAddInquiryModal({
 
           {/* 客戶姓名 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              客戶姓名 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">客戶姓名 *</label>
             <input
               type="text"
               value={formData.customer_name}
-              onChange={(e) => handleInputChange('customer_name', e.target.value)}
+              onChange={e => handleInputChange('customer_name', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.customer_name ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -254,13 +288,11 @@ export default function QuickAddInquiryModal({
 
           {/* 聯絡信箱 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              聯絡信箱 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">聯絡信箱 *</label>
             <input
               type="email"
               value={formData.customer_email}
-              onChange={(e) => handleInputChange('customer_email', e.target.value)}
+              onChange={e => handleInputChange('customer_email', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.customer_email ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -274,13 +306,11 @@ export default function QuickAddInquiryModal({
 
           {/* 聯絡電話 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              聯絡電話 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">聯絡電話 *</label>
             <input
               type="tel"
               value={formData.customer_phone}
-              onChange={(e) => handleInputChange('customer_phone', e.target.value)}
+              onChange={e => handleInputChange('customer_phone', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.customer_phone ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -294,23 +324,27 @@ export default function QuickAddInquiryModal({
 
           {/* 農場導覽活動 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              農場導覽活動 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">農場導覽活動 *</label>
             <select
               value={formData.farm_tour_id}
-              onChange={(e) => handleInputChange('farm_tour_id', e.target.value)}
+              onChange={e => handleInputChange('farm_tour_id', e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.farm_tour_id ? 'border-red-300' : 'border-gray-300'
               }`}
               disabled={isSubmitting}
             >
               <option value="">請選擇農場導覽活動</option>
-              {farmTours.map(tour => (
-                <option key={tour.id} value={tour.id}>
-                  {tour.title} ({tour.season})
+              {farmTours.length === 0 ? (
+                <option value="" disabled>
+                  目前無可用的農場導覽活動
                 </option>
-              ))}
+              ) : (
+                farmTours.map(tour => (
+                  <option key={tour.id} value={tour.id}>
+                    {tour.title} ({tour.season})
+                  </option>
+                ))
+              )}
             </select>
             {errors.farm_tour_id && (
               <p className="text-red-600 text-sm mt-1">{errors.farm_tour_id}</p>
@@ -319,15 +353,13 @@ export default function QuickAddInquiryModal({
 
           {/* 參觀人數 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              參觀人數 *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">參觀人數 *</label>
             <input
               type="number"
               min="1"
               max="50"
               value={formData.visitor_count}
-              onChange={(e) => handleInputChange('visitor_count', parseInt(e.target.value) || 1)}
+              onChange={e => handleInputChange('visitor_count', parseInt(e.target.value) || 1)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 errors.visitor_count ? 'border-red-300' : 'border-gray-300'
               }`}
@@ -340,12 +372,10 @@ export default function QuickAddInquiryModal({
 
           {/* 備註 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              備註
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">備註</label>
             <textarea
               value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
+              onChange={e => handleInputChange('notes', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="其他特殊需求或說明..."

@@ -173,7 +173,7 @@ export default function FarmTourAdmin() {
                       activity.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}
                   >
-                    {activity.available ? '✅ 開放預約' : '❌ 暫停開放'}
+                    {activity.available ? '開放預約' : '暫停開放'}
                   </div>
                 </div>
 
@@ -253,7 +253,21 @@ export default function FarmTourAdmin() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="text-3xl mr-4">🌱</div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                  />
+                </svg>
+              </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">{activities.length}</div>
                 <div className="text-sm text-gray-500">總體驗活動</div>
@@ -263,7 +277,21 @@ export default function FarmTourAdmin() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="text-3xl mr-4">✅</div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
               <div>
                 <div className="text-2xl font-bold text-green-600">
                   {activities.filter(a => a.available).length}
@@ -275,7 +303,21 @@ export default function FarmTourAdmin() {
 
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="text-3xl mr-4">🗓️</div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
               <div>
                 <div className="text-2xl font-bold text-blue-600">
                   {new Set(activities.map(a => a.season)).size}

@@ -40,7 +40,7 @@ export default function FarmTourCalendar({
   onDateClick,
 }: FarmTourCalendarProps) {
   const { user } = useAuth()
-  
+
   // 快速新增彈窗狀態
   const [showQuickAddModal, setShowQuickAddModal] = useState(false)
   const [selectedDateForQuickAdd, setSelectedDateForQuickAdd] = useState<Date | null>(null)
@@ -89,7 +89,7 @@ export default function FarmTourCalendar({
       logger.debug('行事曆日期被點擊', {
         module: 'FarmTourCalendar',
         action: 'dateClick',
-        metadata: { date: clickedDate.toISOString() }
+        metadata: { date: clickedDate.toISOString() },
       })
 
       if (onDateClick) {
@@ -178,12 +178,12 @@ export default function FarmTourCalendar({
       logger.info('快速新增預約成功', {
         module: 'FarmTourCalendar',
         action: 'quickAddSuccess',
-        metadata: { inquiryId }
+        metadata: { inquiryId },
       })
-      
+
       // 重新載入行事曆資料
       refreshData()
-      
+
       // 顯示成功訊息
       alert('預約建立成功！系統將在處理後顯示在行事曆中。')
     },
@@ -241,7 +241,7 @@ export default function FarmTourCalendar({
           {user?.role === 'admin' && (
             <button
               onClick={() => {
-                setSelectedDateForQuickAdd(new Date())
+                setSelectedDateForQuickAdd(null) // 不預設日期，讓使用者自己選擇
                 setShowQuickAddModal(true)
               }}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"

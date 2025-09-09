@@ -2,6 +2,18 @@
 
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import {
+  ClockIcon,
+  LockClosedIcon,
+  ChartBarIcon,
+  CubeIcon,
+  ArchiveBoxIcon,
+  ChatBubbleLeftRightIcon,
+  TruckIcon,
+  NewspaperIcon,
+  LinkIcon,
+  CircleStackIcon,
+} from '@heroicons/react/24/outline'
 
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth()
@@ -11,7 +23,9 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
+          <div className="flex justify-center mb-4">
+            <ClockIcon className="h-12 w-12 text-gray-400 animate-pulse" />
+          </div>
           <p className="text-gray-600">載入中...</p>
         </div>
       </div>
@@ -23,7 +37,9 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="text-6xl mb-8">🔒</div>
+          <div className="flex justify-center mb-8">
+            <LockClosedIcon className="h-16 w-16 text-gray-400" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
@@ -81,7 +97,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
               <div className="flex items-center">
                 <div className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                  <span className="text-2xl">📊</span>
+                  <ChartBarIcon className="h-8 w-8 text-blue-600" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-gray-900">網站分析</h3>
@@ -96,7 +112,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
               <div className="flex items-center">
                 <div className="p-3 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
-                  <span className="text-2xl">🥝</span>
+                  <CubeIcon className="h-8 w-8 text-green-600" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-gray-900">產品管理</h3>
@@ -111,7 +127,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
               <div className="flex items-center">
                 <div className="p-3 bg-amber-100 rounded-lg group-hover:bg-amber-200 transition-colors">
-                  <span className="text-2xl">📦</span>
+                  <ArchiveBoxIcon className="h-8 w-8 text-amber-600" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-gray-900">訂單管理</h3>
@@ -126,7 +142,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
               <div className="flex items-center">
                 <div className="p-3 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
-                  <span className="text-2xl">💬</span>
+                  <ChatBubbleLeftRightIcon className="h-8 w-8 text-purple-600" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-gray-900">客戶諮詢</h3>
@@ -141,7 +157,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
               <div className="flex items-center">
                 <div className="p-3 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
-                  <span className="text-2xl">🚜</span>
+                  <TruckIcon className="h-8 w-8 text-emerald-600" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-gray-900">農場導覽</h3>
@@ -156,7 +172,7 @@ export default function AdminDashboard() {
             <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
               <div className="flex items-center">
                 <div className="p-3 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
-                  <span className="text-2xl">📰</span>
+                  <NewspaperIcon className="h-8 w-8 text-red-600" />
                 </div>
                 <div className="ml-4">
                   <h3 className="text-lg font-semibold text-gray-900">最新消息</h3>
@@ -194,25 +210,28 @@ export default function AdminDashboard() {
 
         {/* 快速連結 */}
         <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-medium text-blue-900 mb-3">🔗 外部連結</h3>
+          <h3 className="flex items-center space-x-2 text-lg font-medium text-blue-900 mb-3">
+            <LinkIcon className="h-5 w-5" />
+            <span>外部連結</span>
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <a 
-              href="https://analytics.google.com" 
-              target="_blank" 
+            <a
+              href="https://analytics.google.com"
+              target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 text-blue-700 hover:text-blue-800"
             >
-              <span>📊</span>
+              <ChartBarIcon className="h-4 w-4" />
               <span>Google Analytics 控制台</span>
               <span className="text-xs">↗</span>
             </a>
-            <a 
-              href="https://supabase.com/dashboard" 
-              target="_blank" 
+            <a
+              href="https://supabase.com/dashboard"
+              target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center space-x-2 text-blue-700 hover:text-blue-800"
             >
-              <span>🗄️</span>
+              <CircleStackIcon className="h-4 w-4" />
               <span>Supabase 資料庫</span>
               <span className="text-xs">↗</span>
             </a>

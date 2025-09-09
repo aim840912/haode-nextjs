@@ -58,6 +58,12 @@ const AuditIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
+const DashboardIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
+  </svg>
+)
+
 const LogoutIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z" />
@@ -267,6 +273,15 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
                     管理功能
                   </p>
                 </div>
+
+                <Link
+                  href="/admin/dashboard"
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <DashboardIcon className="w-4 h-4 mr-2" />
+                  管理控制台
+                </Link>
 
                 <Link
                   href="/admin/monitoring"
