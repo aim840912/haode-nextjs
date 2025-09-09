@@ -65,7 +65,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.6,
       }))
   } catch (error) {
-    logger.error('Error generating product sitemap', error as Error, { module: 'sitemap', action: 'generateProductSitemap' })
+    logger.error('Error generating product sitemap', error as Error, {
+      module: 'sitemap',
+      action: 'generateProductSitemap',
+    })
   }
 
   // 動態新聞頁面
@@ -73,18 +76,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const response = await fetch(`${baseUrl}/api/news`)
     if (response.ok) {
-      const news = await response.json()
-      newsPages = news
-        .filter((item: NewsItem & { isPublished?: boolean }) => item.isPublished)
-        .map((item: NewsItem) => ({
-          url: `${baseUrl}/news/${item.id}`,
-          lastModified: new Date(item.publishedAt),
-          changeFrequency: 'monthly' as const,
-          priority: 0.5,
-        }))
+      const result = await response.json()
+      // 處理統一 API 回應格式：{ success: boolean, data: any[], message?: string }
+      const newsArray = Array.isArray(result) ? result : result.data || []
+
+      if (Array.isArray(newsArray)) {
+        newsPages = newsArray
+          .filter((item: NewsItem & { isPublished?: boolean }) => item.isPublished !== false)
+          .map((item: NewsItem) => ({
+            url: `${baseUrl}/news/${item.id}`,
+            lastModified: new Date(item.publishedAt || new Date()),
+            changeFrequency: 'monthly' as const,
+            priority: 0.5,
+          }))
+      }
     }
   } catch (error) {
-    logger.error('Error generating news sitemap', error as Error, { module: 'sitemap', action: 'generateNewsSitemap' })
+    logger.error('Error generating news sitemap', error as Error, {
+      module: 'sitemap',
+      action: 'generateNewsSitemap',
+    })
   }
 
   return [...staticPages, ...productPages, ...newsPages]
