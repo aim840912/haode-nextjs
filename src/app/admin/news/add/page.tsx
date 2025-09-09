@@ -106,8 +106,13 @@ export default function AddNews() {
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
 
-      // 使用上傳成功的圖片 URL
-      const imageUrl = uploadedImages.length > 0 ? uploadedImages[0] : formData.imageUrl
+      // 使用上傳成功的圖片 URL（與產品上傳邏輯一致，過濾空字串）
+      const imageUrl =
+        uploadedImages.length > 0
+          ? uploadedImages[0]
+          : formData.imageUrl && formData.imageUrl.trim() !== ''
+            ? formData.imageUrl
+            : undefined
 
       const response = await fetch('/api/news', {
         method: 'POST',

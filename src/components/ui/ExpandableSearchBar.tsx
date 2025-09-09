@@ -195,7 +195,7 @@ export function ExpandableSearchBar({
       <div
         className={`${
           iconOnly && isExpanded
-            ? 'fixed lg:absolute right-4 lg:right-0 top-16 lg:top-0 z-50 lg:w-96 w-[calc(100vw-2rem)]'
+            ? 'fixed lg:absolute right-4 lg:right-0 top-20 lg:top-1/2 lg:-translate-y-1/2 z-50 lg:w-96 w-[calc(100vw-2rem)]'
             : 'relative'
         }`}
       >

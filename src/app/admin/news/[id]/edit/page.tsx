@@ -150,8 +150,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
 
-      // 使用上傳成功的圖片 URL，如果沒有新上傳的圖片則保持原有的 URL
-      const imageUrl = uploadedImages.length > 0 ? uploadedImages[0] : formData.imageUrl
+      // 使用上傳成功的圖片 URL（與產品上傳邏輯一致，過濾空字串）
+      const imageUrl =
+        uploadedImages.length > 0
+          ? uploadedImages[0]
+          : formData.imageUrl && formData.imageUrl.trim() !== ''
+            ? formData.imageUrl
+            : undefined
 
       // 準備提交資料，只包含有效的欄位
       const submitData: Record<string, any> = {

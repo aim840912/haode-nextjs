@@ -10,20 +10,24 @@ export class SupabaseNewsService implements NewsService {
         .select('*')
         .eq('is_published', true)
         .order('publish_date', { ascending: false })
-      
+
       if (error) {
         dbLogger.error('Error fetching news', error as Error, {
           module: 'SupabaseNewsService',
-          action: 'getNews'
+          action: 'getNews',
         })
         throw new Error('Failed to fetch news')
       }
-      
+
       return data?.map(this.transformFromDB) || []
     } catch (error) {
-      dbLogger.error('Error in getNews', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'getNews' }
-      })
+      dbLogger.error(
+        'Error in getNews',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'getNews' },
+        }
+      )
       return []
     }
   }
@@ -36,17 +40,21 @@ export class SupabaseNewsService implements NewsService {
         .eq('id', id)
         .eq('is_published', true)
         .single()
-      
+
       if (error) {
         if (error.code === 'PGRST116') return null // Not found
         throw error
       }
-      
+
       return this.transformFromDB(data)
     } catch (error) {
-      dbLogger.error('Error fetching news by id', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'getNewsById' }
-      })
+      dbLogger.error(
+        'Error fetching news by id',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'getNewsById' },
+        }
+      )
       return null
     }
   }
@@ -61,19 +69,15 @@ export class SupabaseNewsService implements NewsService {
       image_url: newsData.imageUrl,
       author: newsData.author || '豪德農場',
       featured: newsData.featured || false,
-      is_published: true,  // 修正：總是設為 true（已發布）
-      publish_date: new Date().toISOString()
+      is_published: true, // 修正：總是設為 true（已發布）
+      publish_date: new Date().toISOString(),
     }
 
     const supabaseAdmin = getSupabaseAdmin()
     if (!supabaseAdmin) {
       throw new Error('Supabase admin client not available')
     }
-    const { data, error } = await supabaseAdmin
-      .from('news')
-      .insert([insertData])
-      .select()
-      .single()
+    const { data, error } = await supabaseAdmin.from('news').insert([insertData]).select().single()
 
     if (error) {
       dbLogger.error('Error adding news', new Error(error.message || 'Failed to add news'))
@@ -83,9 +87,12 @@ export class SupabaseNewsService implements NewsService {
     return this.transformFromDB(data)
   }
 
-  async updateNews(id: string, newsData: Partial<Omit<NewsItem, 'id' | 'publishedAt'>>): Promise<NewsItem> {
+  async updateNews(
+    id: string,
+    newsData: Partial<Omit<NewsItem, 'id' | 'publishedAt'>>
+  ): Promise<NewsItem> {
     const dbUpdateData: Record<string, unknown> = {}
-    
+
     if (newsData.title !== undefined) dbUpdateData.title = newsData.title
     if (newsData.summary !== undefined) dbUpdateData.summary = newsData.summary
     if (newsData.content !== undefined) dbUpdateData.content = newsData.content
@@ -112,7 +119,7 @@ export class SupabaseNewsService implements NewsService {
       dbLogger.error('Error updating news', new Error(error.message || 'Failed to update news'))
       throw new Error('Failed to update news')
     }
-    
+
     if (!data) throw new Error('News not found')
     return this.transformFromDB(data)
   }
@@ -126,9 +133,13 @@ export class SupabaseNewsService implements NewsService {
         dbLogger.info(`✅ 新聞 ${id} 的圖片已清理`)
       } catch (storageError) {
         // 圖片刪除失敗不應該阻止新聞刪除，但要記錄錯誤
-        dbLogger.error(`⚠️ 新聞 ${id} 圖片清理失敗`, storageError instanceof Error ? storageError : new Error('Unknown storage error'), {
-          metadata: { context: 'deleteNewsImages', newsId: id }
-        })
+        dbLogger.error(
+          `⚠️ 新聞 ${id} 圖片清理失敗`,
+          storageError instanceof Error ? storageError : new Error('Unknown storage error'),
+          {
+            metadata: { context: 'deleteNewsImages', newsId: id },
+          }
+        )
       }
 
       // 然後刪除資料庫記錄
@@ -136,19 +147,20 @@ export class SupabaseNewsService implements NewsService {
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client not available')
       }
-      const { error } = await supabaseAdmin
-        .from('news')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabaseAdmin.from('news').delete().eq('id', id)
 
       if (error) {
         dbLogger.error('Error deleting news', new Error(error.message || 'Failed to delete news'))
         throw new Error('Failed to delete news')
       }
     } catch (error) {
-      dbLogger.error('Error in deleteNews', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'deleteNews' }
-      })
+      dbLogger.error(
+        'Error in deleteNews',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'deleteNews' },
+        }
+      )
       throw error
     }
   }
@@ -158,18 +170,18 @@ export class SupabaseNewsService implements NewsService {
       if (!query.trim()) return []
 
       const searchTerm = `%${query.toLowerCase()}%`
-      
+
       const { data, error } = await supabase
         .from('news')
         .select('*')
         .eq('is_published', true)
         .or(`title.ilike.${searchTerm},summary.ilike.${searchTerm},content.ilike.${searchTerm}`)
         .order('publish_date', { ascending: false })
-      
+
       if (error) throw error
-      
+
       const newsItems = data?.map(this.transformFromDB) || []
-      
+
       // 按相關性排序
       return newsItems.sort((a: NewsItem, b: NewsItem) => {
         const queryLower = query.toLowerCase()
@@ -177,19 +189,23 @@ export class SupabaseNewsService implements NewsService {
           const title = item.title.toLowerCase()
           const summary = item.summary.toLowerCase()
           const content = item.content.toLowerCase()
-          
+
           if (title.includes(queryLower)) return 3
           if (summary.includes(queryLower)) return 2
           if (content.includes(queryLower)) return 1
           return 0
         }
-        
+
         return getRelevanceScore(b) - getRelevanceScore(a)
       })
     } catch (error) {
-      dbLogger.error('Error searching news', error instanceof Error ? error : new Error('Unknown error'), {
-        metadata: { context: 'searchNews' }
-      })
+      dbLogger.error(
+        'Error searching news',
+        error instanceof Error ? error : new Error('Unknown error'),
+        {
+          metadata: { context: 'searchNews' },
+        }
+      )
       return []
     }
   }
@@ -204,9 +220,8 @@ export class SupabaseNewsService implements NewsService {
       publishedAt: dbNews.publish_date as string,
       category: dbNews.category as string,
       tags: (dbNews.tags as string[]) || [],
-      image: '', // 不再使用 emoji，保留欄位相容性
       imageUrl: dbNews.image_url as string,
-      featured: Boolean(dbNews.featured) || false // 使用資料庫的 featured
+      featured: Boolean(dbNews.featured) || false, // 使用資料庫的 featured
     }
   }
 }

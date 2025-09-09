@@ -7,7 +7,6 @@ export interface NewsItem {
   publishedAt: string
   category: string
   tags: string[]
-  image: string
   imageUrl?: string
   featured: boolean
 }

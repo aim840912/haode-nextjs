@@ -65,7 +65,7 @@ async function handleGET(request: NextRequest) {
     type: 'news' as const,
     url: `/news/${item.id}`,
     category: item.category,
-    image: item.image || item.imageUrl,
+    image: item.imageUrl,
     relevanceScore: calculateNewsRelevance(item, query),
   }))
 

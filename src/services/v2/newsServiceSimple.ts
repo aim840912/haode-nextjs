@@ -88,7 +88,6 @@ export class NewsServiceV2Simple implements NewsService {
       publishedAt: dbNews.publish_date,
       category: dbNews.category,
       tags: dbNews.tags || [],
-      image: '', // 保留相容性
       imageUrl: dbNews.image_url || undefined,
       featured: dbNews.featured || false,
     }
@@ -213,7 +212,11 @@ export class NewsServiceV2Simple implements NewsService {
 
       const insertData = this.transformToDB(newsData)
 
-      const { data, error } = await client.from('news').insert(insertData as any).select().single()
+      const { data, error } = await client
+        .from('news')
+        .insert(insertData as any)
+        .select()
+        .single()
 
       if (error) {
         this.handleError(error, 'addNews', { newsData })
@@ -262,7 +265,7 @@ export class NewsServiceV2Simple implements NewsService {
       if (newsData.author !== undefined) updateData.author = newsData.author
       if (newsData.featured !== undefined) updateData.featured = newsData.featured
 
-      const { data, error } = await (client)
+      const { data, error } = await client
         .from('news')
         .update(updateData)
         .eq('id', id)

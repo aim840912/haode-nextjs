@@ -531,13 +531,13 @@ export default function AdminProductsTable({
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 庫存
               </th>
-              <th className="sticky right-[360px] z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
+              <th className="lg:sticky lg:right-[360px] lg:z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
                 上架狀態
               </th>
-              <th className="sticky right-[180px] z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
+              <th className="lg:sticky lg:right-[180px] lg:z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
                 產品頁顯示
               </th>
-              <th className="sticky right-0 z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px]">
+              <th className="sticky right-0 z-10 bg-gray-50 px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[140px]">
                 操作
               </th>
             </tr>
@@ -593,7 +593,7 @@ export default function AdminProductsTable({
                     {product.inventory}
                   </span>
                 </td>
-                <td className="sticky right-[360px] z-10 px-6 py-4 whitespace-nowrap border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
+                <td className="lg:sticky lg:right-[360px] lg:z-10 px-6 py-4 whitespace-nowrap lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
                   {user?.role === 'admin' ? (
                     <button
                       onClick={() => handleToggleActive(product.id, product.isActive)}
@@ -616,7 +616,7 @@ export default function AdminProductsTable({
                     </span>
                   )}
                 </td>
-                <td className="sticky right-[180px] z-10 px-6 py-4 whitespace-nowrap border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
+                <td className="lg:sticky lg:right-[180px] lg:z-10 px-6 py-4 whitespace-nowrap lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
                   {(() => {
                     const showInCatalog = product.showInCatalog ?? true
                     return user?.role === 'admin' ? (
@@ -642,9 +642,9 @@ export default function AdminProductsTable({
                     )
                   })()}
                 </td>
-                <td className="sticky right-0 z-10 px-6 py-4 whitespace-nowrap text-sm font-medium border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px] bg-white hover:bg-gray-50">
+                <td className="sticky right-0 z-10 px-4 py-4 whitespace-nowrap text-sm font-medium border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[140px] bg-white hover:bg-gray-50">
                   {user?.role === 'admin' ? (
-                    <div className="space-x-2">
+                    <div className="flex justify-end space-x-2">
                       <Link
                         href={`/admin/products/${product.id}/edit`}
                         className="text-amber-600 hover:text-amber-900"
@@ -660,7 +660,7 @@ export default function AdminProductsTable({
                       </button>
                     </div>
                   ) : (
-                    <span className="text-gray-400">需要登入</span>
+                    <span className="text-gray-400 block text-right">需要登入</span>
                   )}
                 </td>
               </tr>

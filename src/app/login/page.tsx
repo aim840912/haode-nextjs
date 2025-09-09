@@ -65,9 +65,7 @@ export default function LoginPage() {
             {/* 新用戶提示 */}
             <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <h3 className="text-sm font-medium text-blue-800 mb-2">歡迎加入</h3>
-              <div className="text-xs text-blue-700">
-                首次使用請先註冊帳號，即可享受完整的購物體驗
-              </div>
+              <div className="text-xs text-blue-700">首次使用請先註冊帳號，即可享受完整的體驗</div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">

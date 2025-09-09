@@ -593,7 +593,6 @@ export const NewsSchemas = {
       .array(z.string().max(20, '標籤長度不能超過 20 字元'))
       .max(10, '最多只能有 10 個標籤')
       .default([]),
-    image: StringSchemas.url,
     imageUrl: StringSchemas.url.optional(),
     featured: z.boolean().default(false),
   }),
