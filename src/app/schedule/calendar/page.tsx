@@ -1,5 +1,5 @@
-import { Metadata } from 'next';
-import ScheduleCalendar from '@/components/calendar/ScheduleCalendar';
+import { Metadata } from 'next'
+import ScheduleCalendar from '@/components/calendar/ScheduleCalendar'
 
 export const metadata: Metadata = {
   title: '擺攤行程 - 豪德農場行事曆',
@@ -16,15 +16,15 @@ export const metadata: Metadata = {
         width: 1200,
         height: 630,
         alt: '豪德農場擺攤行程行事曆',
-      }
-    ]
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: '豪德農場擺攤行程行事曆',
     description: '查看豪德農場的擺攤行程安排，了解何時何地可以找到我們的攤位',
-  }
-};
+  },
+}
 
 export default function ScheduleCalendarPage() {
   return (
@@ -34,9 +34,7 @@ export default function ScheduleCalendarPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-center md:text-left mb-6 md:mb-0">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                豪德農場擺攤行程
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">豪德農場擺攤行程</h1>
               <p className="text-lg text-gray-600 max-w-3xl">
                 歡迎查看我們的擺攤行程安排！在這裡您可以找到我們將在何時何地設攤，
                 以及當天提供的新鮮農產品和特別優惠。規劃您的採購行程，把握最佳購買時機。
@@ -45,10 +43,9 @@ export default function ScheduleCalendarPage() {
             <div className="flex space-x-3">
               <a
                 href="/schedule"
-                className="px-4 py-2 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-colors"
               >
-                <span>📋</span>
-                <span>列表檢視</span>
+                列表檢視
               </a>
             </div>
           </div>
@@ -57,19 +54,13 @@ export default function ScheduleCalendarPage() {
 
       {/* 主要內容 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ScheduleCalendar 
-          className="w-full"
-          height="auto"
-        />
-        
+        <ScheduleCalendar className="w-full" height="auto" />
+
         {/* 額外資訊 */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 購買指南 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">🛍️</span>
-              購買指南
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">購買指南</h2>
             <div className="space-y-3 text-gray-700">
               <div className="flex items-start">
                 <span className="text-green-600 text-xl mr-2">•</span>
@@ -100,10 +91,7 @@ export default function ScheduleCalendarPage() {
 
           {/* 聯絡資訊 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-              <span className="text-2xl mr-2">📞</span>
-              聯絡我們
-            </h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">聯絡我們</h2>
             <div className="space-y-4 text-gray-700">
               <div>
                 <strong className="text-gray-900">電話諮詢：</strong>
@@ -119,7 +107,7 @@ export default function ScheduleCalendarPage() {
               </div>
               <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                 <div className="text-sm text-blue-800">
-                  💡 <strong>小提示：</strong>建議出發前致電確認擺攤狀況，避免白跑一趟
+                  <strong>小提示：</strong>建議出發前致電確認擺攤狀況，避免白跑一趟
                 </div>
               </div>
             </div>
@@ -127,5 +115,5 @@ export default function ScheduleCalendarPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

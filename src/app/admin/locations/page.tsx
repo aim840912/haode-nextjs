@@ -104,19 +104,6 @@ export default function LocationsAdmin() {
                     href="/admin/locations/add"
                     className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v16m8-8H4"
-                      />
-                    </svg>
                     新增門市
                   </Link>
                 )}
@@ -124,44 +111,12 @@ export default function LocationsAdmin() {
                   href="/locations"
                   className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
                   查看門市頁面
                 </Link>
                 <Link
                   href="/"
                   className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                    />
-                  </svg>
                   回到首頁
                 </Link>
               </div>
@@ -177,48 +132,17 @@ export default function LocationsAdmin() {
               >
                 {/* Location Header */}
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 text-center relative border-b border-gray-100">
-                  <div className="mb-4">
-                    {location.image ? (
-                      isValidImageUrl(location.image) ? (
-                        <Image
-                          src={location.image}
-                          alt={location.title}
-                          width={64}
-                          height={64}
-                          className="w-16 h-16 object-cover rounded-xl mx-auto border-2 border-white shadow-md"
-                        />
-                      ) : (
-                        // 當圖片是 emoji 或無效 URL 時，顯示 emoji 或佔位符
-                        <div className="w-16 h-16 bg-white rounded-xl mx-auto flex items-center justify-center border-2 border-amber-200 shadow-md">
-                          <span className="text-3xl">
-                            {location.image.includes('🏔️')
-                              ? '🏔️'
-                              : location.image.includes('🏪')
-                                ? '🏪'
-                                : location.image.includes('🏢')
-                                  ? '🏢'
-                                  : '🏪'}
-                          </span>
-                        </div>
-                      )
-                    ) : (
-                      <div className="w-16 h-16 bg-gray-100 rounded-xl mx-auto flex items-center justify-center border-2 border-gray-200 shadow-md">
-                        <svg
-                          className="w-8 h-8 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+                  {location.image && isValidImageUrl(location.image) && (
+                    <div className="mb-4">
+                      <Image
+                        src={location.image}
+                        alt={location.title}
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 object-cover rounded-xl mx-auto border-2 border-white shadow-md"
+                      />
+                    </div>
+                  )}
                   <h3 className="text-xl font-bold text-gray-800 mb-2">{location.title}</h3>
                   <div className="text-sm font-medium text-gray-600 bg-white bg-opacity-60 rounded-full px-3 py-1">
                     {location.name}

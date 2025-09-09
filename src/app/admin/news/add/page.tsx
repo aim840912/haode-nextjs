@@ -11,8 +11,12 @@ import { v4 as uuidv4 } from 'uuid'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
-  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
-  ssr: false
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
 })
 // 圖片上傳現在通過 API 路由處理
 
@@ -29,9 +33,9 @@ export default function AddNews() {
     category: '產品動態',
     tags: '',
     imageUrl: '',
-    featured: false
+    featured: false,
   })
-  
+
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [newsId] = useState(() => uuidv4())
 
@@ -40,7 +44,9 @@ export default function AddNews() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
+          <div className="text-4xl mb-4">
+            <div className="animate-spin h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
+          </div>
           <p className="text-gray-600">載入中...</p>
         </div>
       </div>
@@ -52,17 +58,31 @@ export default function AddNews() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="text-6xl mb-8">🔒</div>
+          <div className="text-6xl mb-8">
+            <svg
+              className="w-16 h-16 mx-auto text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -74,12 +94,7 @@ export default function AddNews() {
     )
   }
 
-  const categories = [
-    '產品動態',
-    '永續農業',
-    '活動資訊'
-  ]
-
+  const categories = ['產品動態', '永續農業', '活動資訊']
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,8 +115,8 @@ export default function AddNews() {
         body: JSON.stringify({
           ...formData,
           imageUrl,
-          tags: tagsArray
-        })
+          tags: tagsArray,
+        }),
       })
 
       if (response.ok) {
@@ -110,24 +125,30 @@ export default function AddNews() {
         alert('發布失敗')
       }
     } catch (error) {
-      logger.error('Error adding news:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error adding news:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('發布失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }))
   }
 
-
   const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
-    const urls = images.map(img => img.url || img.preview).filter((url): url is string => Boolean(url))
+    const urls = images
+      .map(img => img.url || img.preview)
+      .filter((url): url is string => Boolean(url))
     setUploadedImages(prev => [...prev, ...urls])
   }
 
@@ -140,10 +161,7 @@ export default function AddNews() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/news"
-              className="text-blue-600 hover:text-blue-800"
-            >
+            <Link href="/admin/news" className="text-blue-600 hover:text-blue-800">
               ← 回到新聞管理
             </Link>
           </div>
@@ -153,9 +171,7 @@ export default function AddNews() {
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
           {/* 標題 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              新聞標題 *
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">新聞標題 *</label>
             <input
               type="text"
               name="title"
@@ -169,9 +185,7 @@ export default function AddNews() {
 
           {/* 摘要 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              新聞摘要 *
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">新聞摘要 *</label>
             <textarea
               name="summary"
               value={formData.summary}
@@ -185,9 +199,7 @@ export default function AddNews() {
 
           {/* 內容 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              新聞內容 *
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">新聞內容 *</label>
             <textarea
               name="content"
               value={formData.content}
@@ -201,9 +213,7 @@ export default function AddNews() {
 
           {/* 圖片上傳 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
-              新聞圖片
-            </label>
+            <label className="block text-sm font-medium text-gray-900 mb-2">新聞圖片</label>
             <ImageUploader
               productId={newsId}
               onUploadSuccess={handleImageUploadSuccess}
@@ -217,18 +227,14 @@ export default function AddNews() {
               className="mb-4"
             />
             {uploadedImages.length > 0 && (
-              <div className="text-sm text-green-600">
-                已上傳 {uploadedImages.length} 張圖片
-              </div>
+              <div className="text-sm text-green-600">已上傳 {uploadedImages.length} 張圖片</div>
             )}
           </div>
 
           {/* 分類和作者 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                新聞分類 *
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">新聞分類 *</label>
               <select
                 name="category"
                 value={formData.category}
@@ -237,15 +243,15 @@ export default function AddNews() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                作者 *
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">作者 *</label>
               <input
                 type="text"
                 name="author"
@@ -272,7 +278,12 @@ export default function AddNews() {
               placeholder="例如：紅肉李,有機農業,豐收"
             />
             <div className="mt-2 text-sm text-gray-500">
-              標籤預覽：{formData.tags.split(',').filter(tag => tag.trim()).map(tag => `#${tag.trim()}`).join(' ')}
+              標籤預覽：
+              {formData.tags
+                .split(',')
+                .filter(tag => tag.trim())
+                .map(tag => `#${tag.trim()}`)
+                .join(' ')}
             </div>
           </div>
 
@@ -285,9 +296,7 @@ export default function AddNews() {
               onChange={handleInputChange}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label className="ml-2 block text-sm text-gray-900">
-              設為精選新聞 (會在首頁顯示)
-            </label>
+            <label className="ml-2 block text-sm text-gray-900">設為精選新聞 (會在首頁顯示)</label>
           </div>
 
           {/* 預覽區 */}
@@ -296,9 +305,9 @@ export default function AddNews() {
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center mb-3">
                 {formData.imageUrl && (
-                  <Image 
-                    src={formData.imageUrl} 
-                    alt="預覽" 
+                  <Image
+                    src={formData.imageUrl}
+                    alt="預覽"
                     width={48}
                     height={48}
                     className="w-12 h-12 object-cover rounded-lg mr-3"

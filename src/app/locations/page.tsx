@@ -184,7 +184,7 @@ export default function LocationsPage() {
               {/* Address & Contact */}
               <div className="space-y-4 mb-6">
                 <div className="flex items-start">
-                  <span className="mr-3 text-amber-600">●</span>
+                  <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 mt-2 flex-shrink-0"></span>
                   <div>
                     <p className="font-medium text-gray-800">{selectedStore.address}</p>
                     <p className="text-sm text-gray-600 mt-1">{selectedStore.landmark}</p>
@@ -192,7 +192,7 @@ export default function LocationsPage() {
                 </div>
 
                 <div className="flex items-center">
-                  <span className="mr-3 text-amber-600">●</span>
+                  <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
                   <a
                     href={`tel:${selectedStore.phone}`}
                     className="text-amber-900 hover:underline font-medium"
@@ -202,12 +202,12 @@ export default function LocationsPage() {
                 </div>
 
                 <div className="flex items-center">
-                  <span className="mr-3 text-amber-600">●</span>
+                  <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
                   <span className="text-gray-700">LINE ID: {selectedStore.lineId}</span>
                 </div>
 
                 <div className="flex items-center">
-                  <span className="mr-3 text-amber-600">●</span>
+                  <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
                   <div>
                     <span className="text-gray-700">營業時間: {selectedStore.hours}</span>
                     <span className="ml-2 text-sm text-gray-500">({selectedStore.closedDays})</span>
@@ -215,12 +215,12 @@ export default function LocationsPage() {
                 </div>
 
                 <div className="flex items-center">
-                  <span className="mr-3 text-amber-600">●</span>
+                  <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
                   <span className="text-gray-700">{selectedStore.parking}</span>
                 </div>
 
                 <div className="flex items-center">
-                  <span className="mr-3 text-amber-600">●</span>
+                  <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
                   <span className="text-gray-700">{selectedStore.publicTransport}</span>
                 </div>
               </div>
@@ -250,7 +250,17 @@ export default function LocationsPage() {
               <div className="space-y-3">
                 {selectedStore.features.map((feature, index) => (
                   <div key={index} className="flex items-center text-gray-700">
-                    <span className="mr-3 text-green-500">✓</span>
+                    <svg
+                      className="mr-3 w-4 h-4 text-green-500 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                     <span>{feature}</span>
                   </div>
                 ))}
@@ -271,8 +281,8 @@ export default function LocationsPage() {
                   在 Google Maps 中查看
                 </button>
               </div>
-              <div className="aspect-video bg-gradient-to-br from-green-100 to-amber-100 rounded-lg overflow-hidden relative">
-                {isValidImageUrl(selectedStore.image) ? (
+              {isValidImageUrl(selectedStore.image) && (
+                <div className="aspect-video rounded-lg overflow-hidden relative">
                   <SimpleImage
                     src={selectedStore.image}
                     alt={`${selectedStore.name}門市位置`}
@@ -281,14 +291,8 @@ export default function LocationsPage() {
                     sizes="(max-width: 768px) 100vw, 70vw"
                     priority
                   />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center">
-                    <div className="text-6xl mb-4">🏔️</div>
-                    <span className="text-gray-600 text-lg font-medium">{selectedStore.name}</span>
-                    <span className="text-gray-400 text-sm mt-1">門市位置圖片</span>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
               <div className="text-center mt-4">
                 <p className="text-gray-600 text-sm">{selectedStore.landmark}</p>
               </div>
@@ -333,15 +337,15 @@ export default function LocationsPage() {
                 <div className="flex-grow">
                   <div className="space-y-2 text-sm text-gray-600 mb-4">
                     <div className="flex items-center">
-                      <span className="mr-2 text-amber-600">●</span>
+                      <span className="inline-block w-1.5 h-1.5 bg-amber-600 rounded-full mr-2 flex-shrink-0"></span>
                       <span>{store.phone}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="mr-2 text-amber-600">●</span>
+                      <span className="inline-block w-1.5 h-1.5 bg-amber-600 rounded-full mr-2 flex-shrink-0"></span>
                       <span>{store.hours}</span>
                     </div>
                     <div className="flex items-center">
-                      <span className="mr-2 text-amber-600">●</span>
+                      <span className="inline-block w-1.5 h-1.5 bg-amber-600 rounded-full mr-2 flex-shrink-0"></span>
                       <span className="truncate">
                         {store.address.split(' ')[0]} {store.address.split(' ')[1]}
                       </span>
@@ -353,7 +357,17 @@ export default function LocationsPage() {
                     <div className="space-y-1 min-h-[120px]">
                       {store.features?.map((feature, index) => (
                         <div key={index} className="flex items-center text-xs text-gray-600">
-                          <span className="mr-2 text-green-500">✓</span>
+                          <svg
+                            className="mr-2 w-3 h-3 text-green-500 flex-shrink-0"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
                           <span>{feature}</span>
                         </div>
                       )) || (

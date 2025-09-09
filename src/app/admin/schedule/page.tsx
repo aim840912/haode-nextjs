@@ -20,10 +20,10 @@ export default function ScheduleAdmin() {
     try {
       const response = await fetch('/api/schedule')
       const result = await response.json()
-      
+
       // 處理統一 API 回應格式
       const data = result.data || result
-      
+
       // 確保 data 是陣列
       if (Array.isArray(data)) {
         setSchedule(data)
@@ -33,7 +33,10 @@ export default function ScheduleAdmin() {
         setSchedule([])
       }
     } catch (error) {
-      logger.error('Error fetching schedule:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error fetching schedule:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       setSchedule([])
     } finally {
       setLoading(false)
@@ -42,12 +45,15 @@ export default function ScheduleAdmin() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('確定要刪除此行程嗎？')) return
-    
+
     try {
       await fetch(`/api/schedule/${id}`, { method: 'DELETE' })
       setSchedule(schedule.filter(s => s.id !== id))
     } catch (error) {
-      logger.error('Error deleting schedule:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error deleting schedule:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('刪除失敗')
     }
   }
@@ -57,30 +63,41 @@ export default function ScheduleAdmin() {
       await fetch(`/api/schedule/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status }),
       })
       fetchSchedule()
     } catch (error) {
-      logger.error('Error updating status:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error updating status:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('更新失敗')
     }
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'upcoming': return 'bg-green-100 text-green-800'
-      case 'ongoing': return 'bg-blue-100 text-blue-800'
-      case 'completed': return 'bg-gray-100 text-gray-600'
-      default: return 'bg-gray-100 text-gray-600'
+      case 'upcoming':
+        return 'bg-green-100 text-green-800'
+      case 'ongoing':
+        return 'bg-blue-100 text-blue-800'
+      case 'completed':
+        return 'bg-gray-100 text-gray-600'
+      default:
+        return 'bg-gray-100 text-gray-600'
     }
   }
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'upcoming': return '即將到來'
-      case 'ongoing': return '進行中'
-      case 'completed': return '已結束'
-      default: return '未知'
+      case 'upcoming':
+        return '即將到來'
+      case 'ongoing':
+        return '進行中'
+      case 'completed':
+        return '已結束'
+      default:
+        return '未知'
     }
   }
 
@@ -89,13 +106,12 @@ export default function ScheduleAdmin() {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
-      weekday: 'short'
+      weekday: 'short',
     })
   }
 
-  const filteredSchedule = filterStatus === 'all' 
-    ? schedule 
-    : schedule.filter(item => item.status === filterStatus)
+  const filteredSchedule =
+    filterStatus === 'all' ? schedule : schedule.filter(item => item.status === filterStatus)
 
   if (loading) {
     return (
@@ -112,27 +128,26 @@ export default function ScheduleAdmin() {
           <h1 className="text-3xl font-bold text-gray-900">擺攤行程管理</h1>
           <div className="flex flex-wrap gap-3">
             {user?.role === 'admin' && (
-              <Link 
+              <Link
                 href="/admin/schedule/add"
                 className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium whitespace-nowrap"
               >
                 新增行程
               </Link>
             )}
-            <Link 
+            <Link
               href="/schedule/calendar"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm font-medium whitespace-nowrap"
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
             >
-              <span>📅</span>
-              <span>預覽客戶行事曆</span>
+              預覽客戶行事曆
             </Link>
-            <Link 
+            <Link
               href="/schedule"
               className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium whitespace-nowrap"
             >
               查看行程頁面
             </Link>
-            <Link 
+            <Link
               href="/"
               className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium whitespace-nowrap"
             >
@@ -208,34 +223,24 @@ export default function ScheduleAdmin() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredSchedule.map((item) => (
+                {filteredSchedule.map(item => (
                   <tr key={item.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {item.title}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          📍 {item.location}
-                        </div>
-                        <div className="text-sm text-gray-500 mt-1">
-                          {item.description}
-                        </div>
+                        <div className="text-sm font-medium text-gray-900">{item.title}</div>
+                        <div className="text-sm text-gray-500">{item.location}</div>
+                        <div className="text-sm text-gray-500 mt-1">{item.description}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {formatDate(item.date)}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {item.time}
-                      </div>
+                      <div className="text-sm text-gray-900">{formatDate(item.date)}</div>
+                      <div className="text-sm text-gray-500">{item.time}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {user?.role === 'admin' ? (
                         <select
                           value={item.status}
-                          onChange={(e) => updateStatus(item.id, e.target.value)}
+                          onChange={e => updateStatus(item.id, e.target.value)}
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border-0 ${getStatusColor(item.status)}`}
                         >
                           <option value="upcoming">即將到來</option>
@@ -243,7 +248,9 @@ export default function ScheduleAdmin() {
                           <option value="completed">已結束</option>
                         </select>
                       ) : (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(item.status)}`}
+                        >
                           {getStatusText(item.status)}
                         </span>
                       )}
@@ -251,7 +258,10 @@ export default function ScheduleAdmin() {
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1">
                         {item.products.slice(0, 2).map((product, index) => (
-                          <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+                          >
                             {product}
                           </span>
                         ))}
@@ -262,9 +272,7 @@ export default function ScheduleAdmin() {
                         )}
                       </div>
                       {item.specialOffer && (
-                        <div className="text-xs text-orange-600 mt-1">
-                          🎁 {item.specialOffer}
-                        </div>
+                        <div className="text-xs text-orange-600 mt-1">{item.specialOffer}</div>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -292,14 +300,16 @@ export default function ScheduleAdmin() {
               </tbody>
             </table>
           </div>
-          
+
           {filteredSchedule.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 mb-4">
-                {filterStatus === 'all' ? '尚無擺攤行程' : `沒有${getStatusText(filterStatus)}的行程`}
+                {filterStatus === 'all'
+                  ? '尚無擺攤行程'
+                  : `沒有${getStatusText(filterStatus)}的行程`}
               </p>
               {user?.role === 'admin' && (
-                <Link 
+                <Link
                   href="/admin/schedule/add"
                   className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
                 >
@@ -313,48 +323,36 @@ export default function ScheduleAdmin() {
         {/* 統計資訊 */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">📊</div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">{schedule.length}</div>
-                <div className="text-sm text-gray-500">總行程數</div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">🔜</div>
-              <div>
-                <div className="text-2xl font-bold text-green-600">
-                  {schedule.filter(s => s.status === 'upcoming').length}
-                </div>
-                <div className="text-sm text-gray-500">即將到來</div>
-              </div>
+            <div>
+              <div className="text-2xl font-bold text-gray-900">{schedule.length}</div>
+              <div className="text-sm text-gray-500">總行程數</div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">🔄</div>
-              <div>
-                <div className="text-2xl font-bold text-blue-600">
-                  {schedule.filter(s => s.status === 'ongoing').length}
-                </div>
-                <div className="text-sm text-gray-500">進行中</div>
+            <div>
+              <div className="text-2xl font-bold text-green-600">
+                {schedule.filter(s => s.status === 'upcoming').length}
               </div>
+              <div className="text-sm text-gray-500">即將到來</div>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-4">✅</div>
-              <div>
-                <div className="text-2xl font-bold text-gray-600">
-                  {schedule.filter(s => s.status === 'completed').length}
-                </div>
-                <div className="text-sm text-gray-500">已完成</div>
+            <div>
+              <div className="text-2xl font-bold text-blue-600">
+                {schedule.filter(s => s.status === 'ongoing').length}
               </div>
+              <div className="text-sm text-gray-500">進行中</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div>
+              <div className="text-2xl font-bold text-gray-600">
+                {schedule.filter(s => s.status === 'completed').length}
+              </div>
+              <div className="text-sm text-gray-500">已完成</div>
             </div>
           </div>
         </div>
