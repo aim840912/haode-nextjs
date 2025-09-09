@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { useToast } from '@/components/Toast'
@@ -11,7 +11,20 @@ import Link from 'next/link'
 import { logger } from '@/lib/logger'
 import type { Product } from '@/types/product'
 
-export default function ProfilePage() {
+// 載入頁面元件
+function ProfilePageLoading() {
+  return (
+    <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
+      <div className="text-center">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-gray-600">載入中...</p>
+      </div>
+    </div>
+  )
+}
+
+// 個人資料內容元件（使用 useSearchParams）
+function ProfilePageContent() {
   const { user, updateProfile, isLoading: authLoading } = useAuth()
   const { success, error } = useToast()
   const router = useRouter()
@@ -267,14 +280,7 @@ export default function ProfilePage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
-        <div className="text-center">
-          <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">載入中...</p>
-        </div>
-      </div>
-    )
+    return <ProfilePageLoading />
   }
 
   if (!user) {
@@ -648,5 +654,14 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 主要導出函數，使用 Suspense 包裝
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfilePageLoading />}>
+      <ProfilePageContent />
+    </Suspense>
   )
 }

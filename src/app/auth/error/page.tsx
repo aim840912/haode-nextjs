@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { logger } from '@/lib/logger'
@@ -99,7 +99,20 @@ const ERROR_TYPES: Record<string, ErrorInfo> = {
   },
 }
 
-export default function AuthErrorPage() {
+// 載入中元件
+function LoadingPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900 mx-auto"></div>
+        <p className="mt-4 text-gray-600">載入中...</p>
+      </div>
+    </div>
+  )
+}
+
+// 錯誤內容元件（使用 useSearchParams）
+function AuthErrorContent() {
   const searchParams = useSearchParams()
   const [errorInfo, setErrorInfo] = useState<ErrorInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -165,14 +178,7 @@ export default function AuthErrorPage() {
   }, [searchParams])
 
   if (isLoading || !errorInfo) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">載入中...</p>
-        </div>
-      </div>
-    )
+    return <LoadingPage />
   }
 
   return (
@@ -250,5 +256,14 @@ export default function AuthErrorPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 主要導出函數，使用 Suspense 包裝
+export default function AuthErrorPage() {
+  return (
+    <Suspense fallback={<LoadingPage />}>
+      <AuthErrorContent />
+    </Suspense>
   )
 }

@@ -10,7 +10,7 @@ import {
   ProgressiveImage,
 } from '@/components/ProgressiveLoading'
 import { LoadingError } from '@/components/LoadingError'
-import { LoadingIndicator, LoadingWrapper } from '@/components/LoadingManager'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import { Product } from '@/types/product'
 import { logger } from '@/lib/logger'
 
@@ -108,7 +108,7 @@ function ProductsDemo() {
             >
               {isSearching ? (
                 <>
-                  <LoadingIndicator size="sm" showMessage={false} />
+                  <LoadingSpinner size="sm" />
                   <span>搜尋中...</span>
                 </>
               ) : (
@@ -118,9 +118,16 @@ function ProductsDemo() {
           </div>
 
           {/* 搜尋結果區域 */}
-          <LoadingWrapper loading={isSearching} useSmartLoading>
-            <div className="mt-4">{/* 這裡會顯示搜尋結果 */}</div>
-          </LoadingWrapper>
+          <div className="mt-4">
+            {isSearching ? (
+              <div className="flex items-center justify-center py-8">
+                <LoadingSpinner size="md" />
+                <span className="ml-2 text-gray-600">載入搜尋結果...</span>
+              </div>
+            ) : (
+              <div>{/* 這裡會顯示搜尋結果 */}</div>
+            )}
+          </div>
         </div>
 
         {/* 錯誤處理示範 */}
