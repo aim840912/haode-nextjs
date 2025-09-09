@@ -14,6 +14,8 @@ export interface Product {
   description: string
   category: string
   price: number
+  priceUnit?: string // 價格單位（如：斤、包、箱、顆、公斤等）
+  unitQuantity?: number // 單位數量，預設為 1
   originalPrice?: number
   isOnSale?: boolean
   saleEndDate?: string
@@ -33,7 +35,10 @@ export interface ProductService {
   getProducts(): Promise<Product[]>
   getAllProducts?(): Promise<Product[]> // 管理員用：獲取所有產品（包含下架）
   addProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product>
-  updateProduct(id: string, product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product>
+  updateProduct(
+    id: string,
+    product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Product>
   deleteProduct(id: string): Promise<void>
   getProductById(id: string): Promise<Product | null>
   searchProducts(query: string): Promise<Product[]>

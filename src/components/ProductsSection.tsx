@@ -135,6 +135,19 @@ function ProductsSection() {
                     </h3>
                   </div>
 
+                  {/* 價格顯示 */}
+                  <div className="text-center mb-2">
+                    <span className="text-xl font-bold text-amber-900">
+                      NT$ {product.price}
+                      {product.priceUnit ? ` / ${product.priceUnit}` : ''}
+                    </span>
+                    {product.originalPrice && product.originalPrice > product.price && (
+                      <span className="ml-2 text-sm text-gray-500 line-through">
+                        NT$ {product.originalPrice}
+                      </span>
+                    )}
+                  </div>
+
                   {/* 按鈕 - 現在為視覺元素 */}
                   <div className="flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-amber-800 transition-colors pointer-events-none">
                     <span className="mr-1">查看詳情</span>

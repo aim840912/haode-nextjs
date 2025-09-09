@@ -119,6 +119,8 @@ export class ProductDataTransformer implements DataTransformer<Product> {
       description: record.description as string,
       category: record.category as string,
       price: record.price as number,
+      priceUnit: record.price_unit as string | undefined,
+      unitQuantity: record.unit_quantity as number | undefined,
       originalPrice: record.original_price as number | undefined,
       isOnSale: (record.is_on_sale as boolean) || false,
       saleEndDate: record.sale_end_date as string | undefined,
@@ -142,6 +144,8 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     if (entity.description !== undefined) record.description = entity.description
     if (entity.category !== undefined) record.category = entity.category
     if (entity.price !== undefined) record.price = entity.price
+    if (entity.priceUnit !== undefined) record.price_unit = entity.priceUnit
+    if (entity.unitQuantity !== undefined) record.unit_quantity = entity.unitQuantity
     if (entity.originalPrice !== undefined) record.original_price = entity.originalPrice
     if (entity.isOnSale !== undefined) record.is_on_sale = entity.isOnSale
     if (entity.saleEndDate !== undefined) record.sale_end_date = entity.saleEndDate

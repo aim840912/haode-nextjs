@@ -567,13 +567,17 @@ export default function AdminProductsTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   <div className="flex items-center space-x-2">
-                    <span className="font-medium">NT$ {product.price}</span>
+                    <span className="font-medium">
+                      NT$ {product.price}
+                      {product.priceUnit ? ` / ${product.priceUnit}` : ''}
+                    </span>
                     {product.isOnSale &&
                       product.originalPrice &&
                       product.originalPrice > product.price && (
                         <>
                           <span className="text-xs text-gray-500 line-through">
                             NT$ {product.originalPrice}
+                            {product.priceUnit ? ` / ${product.priceUnit}` : ''}
                           </span>
                           <span className="bg-red-100 text-red-800 px-1.5 py-0.5 rounded text-xs font-medium">
                             特價

@@ -11,8 +11,12 @@ import { v4 as uuidv4 } from 'uuid'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
-  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
-  ssr: false
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
 })
 
 function AddProduct() {
@@ -30,13 +34,15 @@ function AddProduct() {
     description: '',
     category: '',
     price: 0,
+    priceUnit: '斤',
+    unitQuantity: 1,
     salePrice: 0,
     isOnSale: false,
     saleEndDate: '',
     inventory: 0,
     images: [''],
     isActive: true,
-    showInCatalog: true
+    showInCatalog: true,
   })
 
   const fetchCategories = useCallback(async () => {
@@ -80,13 +86,13 @@ function AddProduct() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -100,62 +106,64 @@ function AddProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     // 防止在 CSRF token 未準備好時提交
     if (csrfLoading || !csrfToken) {
       alert('請稍候，正在初始化安全驗證...')
       return
     }
-    
+
     if (csrfError) {
       alert('安全驗證初始化失敗，請重新整理頁面')
       return
     }
-    
+
     setLoading(true)
 
     try {
-      // 根據是否為特價商品設定正確的價格
-      const { salePrice: _unusedSalePrice, ...productDataWithoutSalePrice } = formData
+      // 根據是否為特價商品設定正確的價格，但保留 priceUnit 和 unitQuantity
+      const { salePrice: _unusedSalePrice, ...restData } = formData
       const productData = {
-        ...productDataWithoutSalePrice,
+        ...restData,
         id: productId, // 指定產品 ID
-        images: uploadedImages.length > 0 ? uploadedImages : formData.images.filter(img => img.trim() !== ''),
+        images:
+          uploadedImages.length > 0
+            ? uploadedImages
+            : formData.images.filter(img => img.trim() !== ''),
         // 如果是特價商品，設定特價為當前售價，原價為 originalPrice
         // 如果不是特價商品，設定原價為當前售價，originalPrice 為 null
         price: formData.isOnSale ? formData.salePrice : formData.price,
-        originalPrice: formData.isOnSale ? formData.price : null
+        originalPrice: formData.isOnSale ? formData.price : null,
       }
-
 
       const headers: HeadersInit = {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       }
-      
+
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
         if (process.env.NODE_ENV === 'development') {
           logger.info('[DEBUG] CSRF token being sent', {
-            metadata: { token: csrfToken.substring(0, 8) + '...' }
-          });
+            metadata: { token: csrfToken.substring(0, 8) + '...' },
+          })
         }
       } else {
         if (process.env.NODE_ENV === 'development') {
-          logger.error('[DEBUG] No CSRF token available!');
+          logger.error('[DEBUG] No CSRF token available!')
         }
       }
-      
+
       if (process.env.NODE_ENV === 'development') {
         logger.info('[DEBUG] Request headers', {
-          metadata: { headerKeys: Object.keys(headers) }
-        });
+          metadata: { headerKeys: Object.keys(headers) },
+        })
       }
 
       const response = await fetch('/api/admin-proxy/products', {
         method: 'POST',
         headers,
         credentials: 'include',
-        body: JSON.stringify(productData)
+        body: JSON.stringify(productData),
       })
 
       if (response.ok) {
@@ -173,13 +181,18 @@ function AddProduct() {
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? Number(value) : 
-              type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-              value
+      [name]:
+        type === 'number'
+          ? Number(value)
+          : type === 'checkbox'
+            ? (e.target as HTMLInputElement).checked
+            : value,
     }))
   }
 
@@ -197,10 +210,7 @@ function AddProduct() {
       <div className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/products"
-              className="text-amber-600 hover:text-amber-800"
-            >
+            <Link href="/admin/products" className="text-amber-600 hover:text-amber-800">
               ← 回到產品列表
             </Link>
           </div>
@@ -209,9 +219,7 @@ function AddProduct() {
 
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              產品名稱 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">產品名稱 *</label>
             <input
               type="text"
               name="name"
@@ -223,11 +231,8 @@ function AddProduct() {
             />
           </div>
 
-
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              產品描述 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">產品描述 *</label>
             <textarea
               name="description"
               value={formData.description}
@@ -240,9 +245,7 @@ function AddProduct() {
           </div>
 
           <div className="relative">
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              產品分類 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">產品分類 *</label>
             <input
               type="text"
               name="category"
@@ -257,7 +260,7 @@ function AddProduct() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               placeholder="輸入產品分類或選擇現有分類"
             />
-            
+
             {/* 分類建議下拉列表 */}
             {showCategorySuggestions && categories.length > 0 && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
@@ -265,7 +268,7 @@ function AddProduct() {
                   現有分類（點擊選擇）
                 </div>
                 {categories
-                  .filter(category => 
+                  .filter(category =>
                     category.toLowerCase().includes(formData.category.toLowerCase())
                   )
                   .map((category, index) => (
@@ -280,45 +283,88 @@ function AddProduct() {
                     >
                       {category}
                     </button>
-                  ))
-                }
-                {categories.filter(category => 
+                  ))}
+                {categories.filter(category =>
                   category.toLowerCase().includes(formData.category.toLowerCase())
-                ).length === 0 && formData.category && (
-                  <div className="px-3 py-2 text-gray-500 text-sm">
-                    將建立新分類：&ldquo;{formData.category}&rdquo;
-                  </div>
-                )}
+                ).length === 0 &&
+                  formData.category && (
+                    <div className="px-3 py-2 text-gray-500 text-sm">
+                      將建立新分類：&ldquo;{formData.category}&rdquo;
+                    </div>
+                  )}
               </div>
             )}
-            
-            <div className="text-xs text-gray-500 mt-1">
-              可輸入新分類或從現有分類中選擇
-            </div>
+
+            <div className="text-xs text-gray-500 mt-1">可輸入新分類或從現有分類中選擇</div>
           </div>
 
           {/* 價格設定 */}
           <div>
             <h3 className="text-lg font-semibold text-gray-800 mb-4">價格設定</h3>
-            
-            {/* 原價 - 必填 */}
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                原價 (NT$) *
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
-                min="0"
-                step="1"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                placeholder="輸入產品原價"
-              />
-              <div className="text-xs text-gray-500 mt-1">
-                產品的標準售價
+
+            {/* 單位價格設定 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <h4 className="text-md font-medium text-gray-800 mb-3">單位價格</h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                {/* 價格 */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    單位價格 (NT$) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    required
+                    min="0"
+                    step="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    placeholder="輸入單位價格"
+                  />
+                </div>
+
+                {/* 單位 */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    價格單位 *
+                  </label>
+                  <select
+                    name="priceUnit"
+                    value={formData.priceUnit}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  >
+                    <option value="斤">斤</option>
+                    <option value="台斤">台斤</option>
+                    <option value="公斤">公斤</option>
+                    <option value="包">包</option>
+                    <option value="盒">盒</option>
+                    <option value="箱">箱</option>
+                    <option value="顆">顆</option>
+                    <option value="瓶">瓶</option>
+                    <option value="罐">罐</option>
+                    <option value="袋">袋</option>
+                    <option value="束">束</option>
+                    <option value="件">件</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* 價格預覽 */}
+              {formData.price > 0 && (
+                <div className="bg-white border border-blue-200 rounded p-3">
+                  <div className="text-sm text-blue-800">
+                    <span className="font-medium">價格顯示：</span>
+                    NT$ {formData.price} / {formData.priceUnit}
+                  </div>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500 mt-2">
+                設定每個銷售單位的價格，例如：NT$ 150 / 斤
               </div>
             </div>
 
@@ -332,11 +378,9 @@ function AddProduct() {
                   onChange={handleInputChange}
                   className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded mr-2"
                 />
-                <label className="text-sm font-medium text-gray-800">
-                  設為特價商品
-                </label>
+                <label className="text-sm font-medium text-gray-800">設為特價商品</label>
               </div>
-              
+
               {formData.isOnSale && (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -356,7 +400,7 @@ function AddProduct() {
                         placeholder="輸入特價"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         特價結束日期
@@ -370,34 +414,38 @@ function AddProduct() {
                       />
                     </div>
                   </div>
-                  
-                  {formData.price > 0 && formData.salePrice > 0 && formData.price > formData.salePrice && (
-                    <div className="bg-green-50 border border-green-200 rounded p-3">
-                      <div className="text-sm text-green-800">
-                        <span className="font-medium">折扣：</span>
-                        {Math.round((1 - formData.salePrice / formData.price) * 100)}% OFF
-                        <span className="ml-2">（省 NT$ {formData.price - formData.salePrice}）</span>
+
+                  {formData.price > 0 &&
+                    formData.salePrice > 0 &&
+                    formData.price > formData.salePrice && (
+                      <div className="bg-green-50 border border-green-200 rounded p-3">
+                        <div className="text-sm text-green-800">
+                          <span className="font-medium">折扣：</span>
+                          {Math.round((1 - formData.salePrice / formData.price) * 100)}% OFF
+                          <span className="ml-2">
+                            （省 NT$ {formData.price - formData.salePrice}）
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {formData.salePrice >= formData.price && formData.price > 0 && formData.salePrice > 0 && (
-                    <div className="bg-red-50 border border-red-200 rounded p-3">
-                      <div className="text-sm text-red-800">
-                        <span className="font-medium">注意：</span>
-                        特價不能大於或等於原價
+                    )}
+
+                  {formData.salePrice >= formData.price &&
+                    formData.price > 0 &&
+                    formData.salePrice > 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded p-3">
+                        <div className="text-sm text-red-800">
+                          <span className="font-medium">注意：</span>
+                          特價不能大於或等於原價
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              庫存數量 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">庫存數量 *</label>
             <input
               type="number"
               name="inventory"
@@ -412,9 +460,7 @@ function AddProduct() {
 
           {/* 圖片上傳區域 */}
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              產品圖片
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">產品圖片</label>
             <ImageUploader
               productId={productId}
               onUploadSuccess={handleImageUploadSuccess}
@@ -426,9 +472,7 @@ function AddProduct() {
               className="mb-4"
             />
             {uploadedImages.length > 0 && (
-              <div className="text-sm text-green-600">
-                已上傳 {uploadedImages.length} 張圖片
-              </div>
+              <div className="text-sm text-green-600">已上傳 {uploadedImages.length} 張圖片</div>
             )}
           </div>
 
@@ -441,9 +485,7 @@ function AddProduct() {
                 onChange={handleInputChange}
                 className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
               />
-              <label className="ml-2 block text-sm text-gray-900">
-                立即上架販售
-              </label>
+              <label className="ml-2 block text-sm text-gray-900">立即上架販售</label>
             </div>
             <div className="flex items-center">
               <input
@@ -453,9 +495,7 @@ function AddProduct() {
                 onChange={handleInputChange}
                 className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
               />
-              <label className="ml-2 block text-sm text-gray-900">
-                顯示於產品介紹頁面
-              </label>
+              <label className="ml-2 block text-sm text-gray-900">顯示於產品介紹頁面</label>
               <span className="ml-2 text-xs text-gray-500">
                 (取消勾選則此產品不會出現在前台產品頁面)
               </span>
@@ -483,6 +523,6 @@ function AddProduct() {
   )
 }
 
-AddProduct.displayName = 'AddProduct';
+AddProduct.displayName = 'AddProduct'
 
-export default AddProduct;
+export default AddProduct

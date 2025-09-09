@@ -51,6 +51,8 @@ interface ExtendedProduct extends Product {
   image?: string
   allImages?: string[] // 儲存所有圖片URL
   originalPrice?: number
+  priceUnit?: string // 價格單位
+  unitQuantity?: number // 單位數量
 }
 
 // 模擬產品的預設值，用於 fallback
@@ -186,6 +188,8 @@ function ProductsPage() {
         name: product.name,
         category: product.category,
         price: product.price,
+        priceUnit: product.priceUnit, // 新增單位價格欄位
+        unitQuantity: product.unitQuantity, // 新增單位數量欄位
         originalPrice: product.originalPrice || product.price,
         image: product.images?.[0] || '/images/placeholder.jpg',
         allImages: product.images || [], // 儲存所有圖片URL
@@ -585,6 +589,7 @@ function ProductsPage() {
                       <div>
                         <span className="text-2xl font-bold text-amber-900 whitespace-nowrap">
                           NT$ {product.price}
+                          {product.priceUnit ? ` / ${product.priceUnit}` : ''}
                         </span>
                         {product.originalPrice > product.price && (
                           <span className="ml-2 text-sm text-gray-500 line-through whitespace-nowrap">
@@ -688,6 +693,7 @@ function ProductsPage() {
                     <div>
                       <span className="text-3xl font-bold text-amber-900 whitespace-nowrap">
                         NT$ {selectedProduct.price}
+                        {selectedProduct.priceUnit ? ` / ${selectedProduct.priceUnit}` : ''}
                       </span>
                       {selectedProduct.originalPrice &&
                         selectedProduct.originalPrice > selectedProduct.price && (
@@ -769,6 +775,9 @@ function ProductsPage() {
                     ) : (
                       <span className="whitespace-nowrap">
                         立即詢問 - NT$ {selectedProduct.price * quantity}
+                        {selectedProduct.priceUnit
+                          ? ` (${quantity} ${selectedProduct.priceUnit})`
+                          : ''}
                       </span>
                     )}
                   </button>

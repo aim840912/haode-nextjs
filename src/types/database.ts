@@ -106,6 +106,8 @@ export interface Database {
           name: string
           description: string | null
           price: number
+          price_unit: string | null
+          unit_quantity: number | null
           category: string
           image_url: string | null
           stock: number | null
@@ -118,6 +120,8 @@ export interface Database {
           name: string
           description?: string | null
           price: number
+          price_unit?: string | null
+          unit_quantity?: number | null
           category: string
           image_url?: string | null
           stock?: number | null
@@ -130,6 +134,8 @@ export interface Database {
           name?: string
           description?: string | null
           price?: number
+          price_unit?: string | null
+          unit_quantity?: number | null
           category?: string
           image_url?: string | null
           stock?: number | null

@@ -110,32 +110,41 @@ const InquiryItemSchema = z.object({
  */
 export const InquirySchemas = {
   /** 創建詢問單 */
-  create: z.object({
-    customer_name: StringSchemas.nonEmpty.max(50, '客戶姓名不能超過 50 字元'),
-    customer_email: StringSchemas.email,
-    customer_phone: z.union([StringSchemas.phone, StringSchemas.mobile]).optional(),
-    inquiry_type: z.enum(['product', 'farm_tour'], '詢問類型必須是 product 或 farm_tour'),
-    notes: z.string().max(1000, '備註不能超過 1000 字元').optional(),
-    delivery_address: z.string().max(200, '配送地址不能超過 200 字元').optional(),
-    preferred_delivery_date: DateSchemas.dateString.optional(),
-    // 產品詢價相關欄位
-    items: z.array(InquiryItemSchema).min(1, '產品詢價至少需要一個項目').max(20, '最多只能詢價 20 個產品').optional(),
-    // 農場參觀相關欄位
-    activity_title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元').optional(),
-    visit_date: DateSchemas.dateString.optional(),
-    visitor_count: z.string().max(10, '參觀人數不能超過 10 字元').optional(),
-  }).refine(data => {
-    // 根據詢問類型驗證必填欄位
-    if (data.inquiry_type === 'product') {
-      return data.items && data.items.length > 0
-    } else if (data.inquiry_type === 'farm_tour') {
-      return data.activity_title && data.visit_date && data.visitor_count
-    }
-    return true
-  }, {
-    message: '產品詢價需要提供項目清單，農場參觀需要提供活動標題、參觀日期和人數',
-    path: ['inquiry_type']
-  }),
+  create: z
+    .object({
+      customer_name: StringSchemas.nonEmpty.max(50, '客戶姓名不能超過 50 字元'),
+      customer_email: StringSchemas.email,
+      customer_phone: z.union([StringSchemas.phone, StringSchemas.mobile]).optional(),
+      inquiry_type: z.enum(['product', 'farm_tour'], '詢問類型必須是 product 或 farm_tour'),
+      notes: z.string().max(1000, '備註不能超過 1000 字元').optional(),
+      delivery_address: z.string().max(200, '配送地址不能超過 200 字元').optional(),
+      preferred_delivery_date: DateSchemas.dateString.optional(),
+      // 產品詢價相關欄位
+      items: z
+        .array(InquiryItemSchema)
+        .min(1, '產品詢價至少需要一個項目')
+        .max(20, '最多只能詢價 20 個產品')
+        .optional(),
+      // 農場參觀相關欄位
+      activity_title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元').optional(),
+      visit_date: DateSchemas.dateString.optional(),
+      visitor_count: z.string().max(10, '參觀人數不能超過 10 字元').optional(),
+    })
+    .refine(
+      data => {
+        // 根據詢問類型驗證必填欄位
+        if (data.inquiry_type === 'product') {
+          return data.items && data.items.length > 0
+        } else if (data.inquiry_type === 'farm_tour') {
+          return data.activity_title && data.visit_date && data.visitor_count
+        }
+        return true
+      },
+      {
+        message: '產品詢價需要提供項目清單，農場參觀需要提供活動標題、參觀日期和人數',
+        path: ['inquiry_type'],
+      }
+    ),
 
   /** 更新詢問單 */
   update: z.object({
@@ -152,17 +161,24 @@ export const InquirySchemas = {
   }),
 
   /** 快速狀態更新 (PATCH) */
-  statusUpdate: z.object({
-    is_read: z.boolean().optional(),
-    is_replied: z.boolean().optional(),
-    status: z.enum(['pending', 'quoted', 'confirmed', 'completed', 'cancelled']).optional(),
-  }).refine(data => {
-    // 至少要有一個欄位
-    return data.is_read !== undefined || data.is_replied !== undefined || data.status !== undefined
-  }, {
-    message: '至少需要提供一個要更新的欄位',
-    path: []
-  }),
+  statusUpdate: z
+    .object({
+      is_read: z.boolean().optional(),
+      is_replied: z.boolean().optional(),
+      status: z.enum(['pending', 'quoted', 'confirmed', 'completed', 'cancelled']).optional(),
+    })
+    .refine(
+      data => {
+        // 至少要有一個欄位
+        return (
+          data.is_read !== undefined || data.is_replied !== undefined || data.status !== undefined
+        )
+      },
+      {
+        message: '至少需要提供一個要更新的欄位',
+        path: [],
+      }
+    ),
 
   /** 詢問單查詢參數 */
   query: z.object({
@@ -634,7 +650,6 @@ const CoordinatesSchema = z.object({
  * 地點相關 Schema
  */
 export const LocationSchemas = {
-
   /** 創建地點 */
   create: z.object({
     name: StringSchemas.nonEmpty.max(50, '地點名稱不能超過 50 字元'),
@@ -727,7 +742,10 @@ export const ScheduleSchemas = {
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元').optional(),
     location: StringSchemas.nonEmpty.max(100, '地點名稱不能超過 100 字元').optional(),
     date: DateSchemas.dateString.optional(),
-    time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, '時間格式必須為 HH:MM').optional(),
+    time: z
+      .string()
+      .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, '時間格式必須為 HH:MM')
+      .optional(),
     status: z.enum(['upcoming', 'ongoing', 'completed']).optional(),
     products: z
       .array(StringSchemas.nonEmpty.max(50, '產品名稱不能超過 50 字元'))
@@ -826,6 +844,8 @@ export const AdminProductSchemas = {
         return str.replace(/<[^>]*>/g, '').trim()
       }),
     price: NumberSchemas.price,
+    priceUnit: z.string().max(20, '價格單位不能超過 20 字元').optional(), // 新增：價格單位
+    unitQuantity: z.number().min(0.01, '單位數量必須大於 0').optional(), // 新增：單位數量
     category: StringSchemas.nonEmpty.max(50, '分類名稱不能超過 50 字元'),
     inventory: NumberSchemas.stock, // 前端使用 inventory，對應資料庫 stock
     images: z
@@ -848,6 +868,8 @@ export const AdminProductSchemas = {
       })
       .optional(),
     price: NumberSchemas.price.optional(),
+    priceUnit: z.string().max(20, '價格單位不能超過 20 字元').optional(), // 新增：價格單位
+    unitQuantity: z.number().min(0.01, '單位數量必須大於 0').optional(), // 新增：單位數量
     category: StringSchemas.nonEmpty.max(50, '分類名稱不能超過 50 字元').optional(),
     inventory: NumberSchemas.stock.optional(),
     images: z
@@ -930,8 +952,14 @@ export const CultureSchemas = {
     subtitle: z.string().max(200, '副標題不能超過 200 字元').default(''),
     description: StringSchemas.nonEmpty.max(2000, '描述不能超過 2000 字元'),
     height: z.string().regex(/^\d+(\.\d+)?(cm|m)$/, '高度格式不正確，請使用如：180cm 或 1.8m'),
-    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '顏色必須是有效的十六進制格式，如 #FF0000').default('#4A90E2'),
-    textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '文字顏色必須是有效的十六進制格式，如 #FFFFFF').default('#FFFFFF'),
+    color: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '顏色必須是有效的十六進制格式，如 #FF0000')
+      .default('#4A90E2'),
+    textColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '文字顏色必須是有效的十六進制格式，如 #FFFFFF')
+      .default('#FFFFFF'),
     emoji: z.string().min(1, 'Emoji 不能為空').max(4, 'Emoji 不能超過 4 個字符').default('🏺'),
     imageUrl: z.string().url('圖片 URL 格式不正確').optional(),
     imageFile: z.any().optional(), // File 物件會在服務層處理
@@ -942,9 +970,18 @@ export const CultureSchemas = {
     title: StringSchemas.nonEmpty.max(100, '標題不能超過 100 字元').optional(),
     subtitle: z.string().max(200, '副標題不能超過 200 字元').optional(),
     description: StringSchemas.nonEmpty.max(2000, '描述不能超過 2000 字元').optional(),
-    height: z.string().regex(/^\d+(\.\d+)?(cm|m)$/, '高度格式不正確，請使用如：180cm 或 1.8m').optional(),
-    color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '顏色必須是有效的十六進制格式，如 #FF0000').optional(),
-    textColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, '文字顏色必須是有效的十六進制格式，如 #FFFFFF').optional(),
+    height: z
+      .string()
+      .regex(/^\d+(\.\d+)?(cm|m)$/, '高度格式不正確，請使用如：180cm 或 1.8m')
+      .optional(),
+    color: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '顏色必須是有效的十六進制格式，如 #FF0000')
+      .optional(),
+    textColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '文字顏色必須是有效的十六進制格式，如 #FFFFFF')
+      .optional(),
     emoji: z.string().min(1, 'Emoji 不能為空').max(4, 'Emoji 不能超過 4 個字符').optional(),
     imageUrl: z.string().url('圖片 URL 格式不正確').optional(),
   }),
@@ -960,7 +997,9 @@ export const FarmTourActivitySchemas = {
     months: StringSchemas.nonEmpty.max(50, '月份資訊不能超過 50 字元'),
     title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元'),
     highlight: StringSchemas.nonEmpty.max(200, '亮點描述不能超過 200 字元'),
-    activities: z.array(z.string().max(50, '活動項目不能超過 50 字元')).min(1, '至少要有一個活動項目'),
+    activities: z
+      .array(z.string().max(50, '活動項目不能超過 50 字元'))
+      .min(1, '至少要有一個活動項目'),
     price: NumberSchemas.price,
     duration: StringSchemas.nonEmpty.max(50, '活動時長不能超過 50 字元'),
     includes: z.array(z.string().max(100, '包含項目不能超過 100 字元')),
@@ -975,7 +1014,10 @@ export const FarmTourActivitySchemas = {
     months: StringSchemas.nonEmpty.max(50, '月份資訊不能超過 50 字元').optional(),
     title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元').optional(),
     highlight: StringSchemas.nonEmpty.max(200, '亮點描述不能超過 200 字元').optional(),
-    activities: z.array(z.string().max(50, '活動項目不能超過 50 字元')).min(1, '至少要有一個活動項目').optional(),
+    activities: z
+      .array(z.string().max(50, '活動項目不能超過 50 字元'))
+      .min(1, '至少要有一個活動項目')
+      .optional(),
     price: NumberSchemas.price.optional(),
     duration: StringSchemas.nonEmpty.max(50, '活動時長不能超過 50 字元').optional(),
     includes: z.array(z.string().max(100, '包含項目不能超過 100 字元')).optional(),
@@ -992,14 +1034,12 @@ export const SearchSchemas = {
   /** 搜尋查詢 */
   query: z.object({
     q: StringSchemas.nonEmpty.max(100, '搜尋關鍵字不能超過 100 字元'),
-    limit: z.coerce.number()
+    limit: z.coerce
+      .number()
       .int('limit 必須是整數')
       .min(1, 'limit 至少為 1')
       .max(100, 'limit 不能超過 100')
       .default(20),
-    offset: z.coerce.number()
-      .int('offset 必須是整數')
-      .min(0, 'offset 不能小於 0')
-      .default(0),
+    offset: z.coerce.number().int('offset 必須是整數').min(0, 'offset 不能小於 0').default(0),
   }),
 }

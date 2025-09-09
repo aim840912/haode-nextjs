@@ -77,6 +77,8 @@ function transformFromDB(dbProduct: Record<string, unknown>): Product {
     name: (dbProduct.name as string) || '',
     description: (dbProduct.description as string) || '',
     price: Number(dbProduct.price) || 0,
+    priceUnit: (dbProduct.price_unit as string) || undefined, // 新增：價格單位
+    unitQuantity: Number(dbProduct.unit_quantity) || undefined, // 新增：單位數量
     category: (dbProduct.category as string) || '',
     images: images, // 使用完整的圖片陣列
     inventory: Number(dbProduct.stock) || 0,
@@ -146,19 +148,23 @@ async function handlePOST(request: NextRequest) {
 
   // 轉換資料格式
   const dbProduct: {
-    id?: string;
-    name: string;
-    description: string;
-    price: number;
-    category: string;
-    image_url: string | null;
-    images: string;
-    stock: number;
-    is_active: boolean;
+    id?: string
+    name: string
+    description: string
+    price: number
+    price_unit?: string | null
+    unit_quantity?: number | null
+    category: string
+    image_url: string | null
+    images: string
+    stock: number
+    is_active: boolean
   } = {
     name: productData.name,
     description: productData.description,
     price: productData.price,
+    price_unit: productData.priceUnit || null, // 新增：儲存價格單位
+    unit_quantity: productData.unitQuantity || null, // 新增：儲存單位數量
     category: productData.category,
     image_url: productData.images?.[0] || null, // 保持向後相容
     images: JSON.stringify(productData.images || []), // 新增：儲存完整圖片陣列
@@ -219,6 +225,9 @@ async function handlePUT(request: NextRequest) {
   if (productData.name !== undefined) dbProduct.name = productData.name
   if (productData.description !== undefined) dbProduct.description = productData.description
   if (productData.price !== undefined) dbProduct.price = productData.price
+  if (productData.priceUnit !== undefined) dbProduct.price_unit = productData.priceUnit || null // 新增：更新價格單位
+  if (productData.unitQuantity !== undefined)
+    dbProduct.unit_quantity = productData.unitQuantity || null // 新增：更新單位數量
   if (productData.category !== undefined) dbProduct.category = productData.category
   if (productData.images !== undefined) {
     dbProduct.image_url = productData.images.length > 0 ? productData.images[0] : null // 保持向後相容
