@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useErrorTracking } from '@/hooks/useErrorTracking'
+import { logger } from '@/lib/logger'
 
 interface FormStats {
   formType: string
@@ -34,7 +35,7 @@ export function ErrorTrackingDashboard() {
       const formTypes = ['inquiry_form'] // 可以添加更多表單類型
       const stats = formTypes.map(formType => ({
         formType,
-        ...getFormSuccessRate(formType)
+        ...getFormSuccessRate(formType),
       }))
       setFormStats(stats)
     }
@@ -45,11 +46,14 @@ export function ErrorTrackingDashboard() {
         const stored = localStorage.getItem('user_actions') || '[]'
         const actions: UserAction[] = JSON.parse(stored)
         // 只顯示最近 24 小時的行為
-        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000)
+        const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
         const recentActions = actions.filter(action => action.timestamp > oneDayAgo)
         setUserActions(recentActions.slice(-20)) // 最近 20 筆
       } catch (error) {
-        console.warn('載入使用者行為失敗:', error)
+        logger.warn('載入使用者行為失敗', {
+          module: 'ErrorTrackingDashboard',
+          metadata: { error: error instanceof Error ? error.message : String(error) },
+        })
       }
     }
 
@@ -65,7 +69,7 @@ export function ErrorTrackingDashboard() {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     })
   }
 
@@ -149,10 +153,13 @@ export function ErrorTrackingDashboard() {
                     </div>
                     {stat.total > 0 && (
                       <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
-                        <div 
+                        <div
                           className={`h-1 rounded-full ${
-                            stat.rate >= 80 ? 'bg-green-500' : 
-                            stat.rate >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                            stat.rate >= 80
+                              ? 'bg-green-500'
+                              : stat.rate >= 60
+                                ? 'bg-yellow-500'
+                                : 'bg-red-500'
                           }`}
                           style={{ width: `${stat.rate}%` }}
                         />
@@ -173,34 +180,40 @@ export function ErrorTrackingDashboard() {
             </h4>
             {userActions.length > 0 ? (
               <div className="space-y-2 max-h-48 overflow-y-auto">
-                {userActions.slice(-10).reverse().map((action, index) => (
-                  <div key={index} className="bg-gray-50 p-2 rounded text-xs">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-800">
-                          {action.action === 'inquiry_form_submit' ? '📝 提交詢價表單' :
-                           action.action === 'navigation' ? '🔗 頁面導航' :
-                           action.action}
-                        </div>
-                        <div className="text-gray-600 mt-1">
-                          {action.path}
-                        </div>
-                        {action.metadata && Object.keys(action.metadata).length > 0 && (
-                          <div className="text-gray-500 mt-1">
-                            {Object.entries(action.metadata).map(([key, value]) => (
-                              <span key={key} className="mr-2">
-                                {key}: {typeof value === 'object' ? JSON.stringify(value) : String(value)}
-                              </span>
-                            ))}
+                {userActions
+                  .slice(-10)
+                  .reverse()
+                  .map((action, index) => (
+                    <div key={index} className="bg-gray-50 p-2 rounded text-xs">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800">
+                            {action.action === 'inquiry_form_submit'
+                              ? '📝 提交詢價表單'
+                              : action.action === 'navigation'
+                                ? '🔗 頁面導航'
+                                : action.action}
                           </div>
-                        )}
-                      </div>
-                      <div className="text-gray-400 text-xs ml-2">
-                        {formatTime(action.timestamp)}
+                          <div className="text-gray-600 mt-1">{action.path}</div>
+                          {action.metadata && Object.keys(action.metadata).length > 0 && (
+                            <div className="text-gray-500 mt-1">
+                              {Object.entries(action.metadata).map(([key, value]) => (
+                                <span key={key} className="mr-2">
+                                  {key}:{' '}
+                                  {typeof value === 'object'
+                                    ? JSON.stringify(value)
+                                    : String(value)}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-gray-400 text-xs ml-2">
+                          {formatTime(action.timestamp)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             ) : (
               <p className="text-sm text-gray-500">暫無行為記錄</p>
@@ -220,17 +233,19 @@ export function ErrorTrackingDashboard() {
 }
 
 // 只在開發環境或有管理員權限時顯示
-export function ConditionalErrorTrackingDashboard({ showInDevelopment = true }: { 
-  showInDevelopment?: boolean 
+export function ConditionalErrorTrackingDashboard({
+  showInDevelopment = true,
+}: {
+  showInDevelopment?: boolean
 }) {
   const [shouldShow, setShouldShow] = useState(false)
 
   useEffect(() => {
     // 檢查是否應該顯示儀表板
     const isDevelopment = process.env.NODE_ENV === 'development'
-    const hasAdminRole = typeof window !== 'undefined' && 
-      localStorage.getItem('user_role') === 'admin'
-    
+    const hasAdminRole =
+      typeof window !== 'undefined' && localStorage.getItem('user_role') === 'admin'
+
     setShouldShow((isDevelopment && showInDevelopment) || hasAdminRole)
   }, [showInDevelopment])
 

@@ -11,8 +11,12 @@ import { useAuth } from '@/lib/auth-context'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
-  loading: () => <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">載入圖片上傳器...</div>,
-  ssr: false
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
 })
 // 圖片上傳現在通過 API 路由處理
 
@@ -31,47 +35,48 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     category: '產品動態',
     tags: '',
     imageUrl: '',
-    featured: false
+    featured: false,
   })
-  
+
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
 
-  const categories = [
-    '產品動態',
-    '永續農業',
-    '活動資訊'
-  ]
+  const categories = ['產品動態', '永續農業', '活動資訊']
 
-
-  const fetchNews = useCallback(async (id: string) => {
-    try {
-      const response = await fetch(`/api/news/${id}`)
-      if (response.ok) {
-        const news: NewsItem = await response.json()
-        setFormData({
-          title: news.title,
-          summary: news.summary,
-          content: news.content,
-          author: news.author,
-          category: news.category,
-          tags: news.tags.join(', '),
-          imageUrl: news.imageUrl || '',
-          featured: news.featured
-        })
-        if (news.imageUrl) {
-          // setImagePreview(news.imageUrl) // 不再需要，由 ImageUploader 處理
+  const fetchNews = useCallback(
+    async (id: string) => {
+      try {
+        const response = await fetch(`/api/news/${id}`)
+        if (response.ok) {
+          const news: NewsItem = await response.json()
+          setFormData({
+            title: news.title,
+            summary: news.summary,
+            content: news.content,
+            author: news.author,
+            category: news.category,
+            tags: Array.isArray(news.tags) ? news.tags.join(', ') : '',
+            imageUrl: news.imageUrl || '',
+            featured: news.featured,
+          })
+          if (news.imageUrl) {
+            // setImagePreview(news.imageUrl) // 不再需要，由 ImageUploader 處理
+          }
+        } else {
+          alert('新聞不存在')
+          router.push('/admin/news')
         }
-      } else {
-        alert('新聞不存在')
-        router.push('/admin/news')
+      } catch (error) {
+        logger.error(
+          'Error fetching news:',
+          error instanceof Error ? error : new Error('Unknown error')
+        )
+        alert('載入失敗')
+      } finally {
+        setInitialLoading(false)
       }
-    } catch (error) {
-      logger.error('Error fetching news:', error instanceof Error ? error : new Error('Unknown error'))
-      alert('載入失敗')
-    } finally {
-      setInitialLoading(false)
-    }
-  }, [router])
+    },
+    [router]
+  )
 
   useEffect(() => {
     params.then(({ id }) => {
@@ -101,13 +106,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -132,14 +137,26 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
       // 使用上傳成功的圖片 URL，如果沒有新上傳的圖片則保持原有的 URL
       const imageUrl = uploadedImages.length > 0 ? uploadedImages[0] : formData.imageUrl
 
+      // 準備提交資料，只包含有效的欄位
+      const submitData: Record<string, any> = {
+        title: formData.title,
+        summary: formData.summary,
+        content: formData.content,
+        author: formData.author,
+        category: formData.category,
+        tags: tagsArray,
+        featured: formData.featured,
+      }
+
+      // 只有當 imageUrl 有值且不為空字串時才包含
+      if (imageUrl && imageUrl.trim() !== '') {
+        submitData.imageUrl = imageUrl
+      }
+
       const response = await fetch(`/api/news/${newsId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          imageUrl,
-          tags: tagsArray
-        })
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
@@ -148,23 +165,30 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         alert('更新失敗')
       }
     } catch (error) {
-      logger.error('Error updating news:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error updating news:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('更新失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }))
   }
 
   const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
-    const urls = images.map(img => img.url || img.preview).filter((url): url is string => Boolean(url))
+    const urls = images
+      .map(img => img.url || img.preview)
+      .filter((url): url is string => Boolean(url))
     setUploadedImages(prev => [...prev, ...urls])
   }
 
@@ -185,10 +209,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/news"
-              className="text-blue-600 hover:text-blue-800"
-            >
+            <Link href="/admin/news" className="text-blue-600 hover:text-blue-800">
               ← 回到新聞管理
             </Link>
           </div>
@@ -198,9 +219,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
           {/* 標題 */}
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              新聞標題 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">新聞標題 *</label>
             <input
               type="text"
               name="title"
@@ -214,9 +233,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
           {/* 摘要 */}
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              新聞摘要 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">新聞摘要 *</label>
             <textarea
               name="summary"
               value={formData.summary}
@@ -230,9 +247,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
           {/* 內容 */}
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              新聞內容 *
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">新聞內容 *</label>
             <textarea
               name="content"
               value={formData.content}
@@ -246,15 +261,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
           {/* 圖片上傳 */}
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-2">
-              新聞圖片
-            </label>
+            <label className="block text-sm font-semibold text-gray-800 mb-2">新聞圖片</label>
             {formData.imageUrl && uploadedImages.length === 0 && (
               <div className="mb-4">
                 <div className="text-sm text-gray-600 mb-2">目前圖片：</div>
-                <Image 
-                  src={formData.imageUrl} 
-                  alt="目前圖片" 
+                <Image
+                  src={formData.imageUrl}
+                  alt="目前圖片"
                   width={128}
                   height={128}
                   className="h-32 w-auto object-cover rounded-lg border"
@@ -283,9 +296,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           {/* 分類和作者 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                新聞分類 *
-              </label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">新聞分類 *</label>
               <select
                 name="category"
                 value={formData.category}
@@ -294,15 +305,15 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">
-                作者 *
-              </label>
+              <label className="block text-sm font-semibold text-gray-800 mb-2">作者 *</label>
               <input
                 type="text"
                 name="author"
@@ -329,7 +340,12 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
               placeholder="例如：紅肉李,有機農業,豐收"
             />
             <div className="mt-2 text-sm text-gray-600">
-              標籤預覽：{formData.tags.split(',').filter(tag => tag.trim()).map(tag => `#${tag.trim()}`).join(' ')}
+              標籤預覽：
+              {formData.tags
+                .split(',')
+                .filter(tag => tag.trim())
+                .map(tag => `#${tag.trim()}`)
+                .join(' ')}
             </div>
           </div>
 
@@ -353,9 +369,9 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             <div className="bg-gray-50 rounded-lg p-6">
               <div className="flex items-center mb-3">
                 {formData.imageUrl && (
-                  <Image 
-                    src={formData.imageUrl} 
-                    alt="預覽" 
+                  <Image
+                    src={formData.imageUrl}
+                    alt="預覽"
                     width={48}
                     height={48}
                     className="w-12 h-12 object-cover rounded-lg mr-3"

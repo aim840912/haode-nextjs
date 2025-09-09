@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useToast } from '@/components/Toast'
 import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { shouldShowErrorInDevelopment } from '@/lib/error-utils'
 
@@ -13,12 +13,6 @@ import { shouldShowErrorInDevelopment } from '@/lib/error-utils'
 const UserIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-  </svg>
-)
-
-const CartIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M7 18c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-0.16 0.28-0.25 0.61-0.25 0.96 0 1.1 0.9 2 2 2h12v-2H7.42c-0.14 0-0.25-0.11-0.25-0.25l0.03-0.12L8.1 13h7.45c0.75 0 1.41-0.41 1.75-1.03L21.7 4H5.21l-0.94-2H1zm16 16c-1.1 0-2 0.9-2 2s0.9 2 2 2 2-0.9 2-2-0.9-2-2-2z" />
   </svg>
 )
 
@@ -231,21 +225,12 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             </div>
 
             <Link
-              href="/profile"
+              href="/profile?tab=profile"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               <UserIcon className="w-4 h-4 mr-2" />
               個人資料
-            </Link>
-
-            <Link
-              href="/cart"
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
-              onClick={() => setIsDropdownOpen(false)}
-            >
-              <CartIcon className="w-4 h-4 mr-2" />
-              購物車
             </Link>
 
             <Link

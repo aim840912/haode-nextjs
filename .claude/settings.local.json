@@ -40,7 +40,9 @@
       "mcp__playwright__browser_file_upload",
       "mcp__playwright__browser_take_screenshot",
       "Bash(npm run lint:*)",
-      "mcp__playwright__browser_resize"
+      "mcp__playwright__browser_resize",
+      "Bash(npm audit:*)",
+      "mcp__playwright__browser_evaluate"
     ],
     "deny": []
   },

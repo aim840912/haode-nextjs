@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { useToast } from '@/components/Toast'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import LoadingSpinner, { LoadingButton } from '@/components/LoadingSpinner'
 import OptimizedImage from '@/components/OptimizedImage'
 import Link from 'next/link'
@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const { user, updateProfile, isLoading: authLoading } = useAuth()
   const { success, error } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [activeTab, setActiveTab] = useState('profile')
   const [isEditing, setIsEditing] = useState(false)
@@ -70,6 +71,17 @@ export default function ProfilePage() {
       })
     }
   }, [user])
+
+  // 處理 URL 參數中的標籤切換
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && ['profile', 'orders', 'interests'].includes(tab)) {
+      setActiveTab(tab)
+    } else if (!tab) {
+      // 沒有 tab 參數時預設為 profile 標籤
+      setActiveTab('profile')
+    }
+  }, [searchParams.get('tab')])
 
   const loadInterestedProducts = useCallback(async () => {
     if (!user) return
@@ -248,6 +260,12 @@ export default function ProfilePage() {
     }
   }
 
+  // 處理標籤切換並同步 URL
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab)
+    router.push(`/profile?tab=${tab}`, { scroll: false })
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
@@ -278,7 +296,7 @@ export default function ProfilePage() {
             <div className="bg-white rounded-lg shadow-sm p-6">
               <nav className="space-y-2">
                 <button
-                  onClick={() => setActiveTab('profile')}
+                  onClick={() => handleTabChange('profile')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                     activeTab === 'profile'
                       ? 'bg-amber-100 text-amber-900'
@@ -288,7 +306,7 @@ export default function ProfilePage() {
                   👤 個人資料
                 </button>
                 <button
-                  onClick={() => setActiveTab('orders')}
+                  onClick={() => handleTabChange('orders')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                     activeTab === 'orders'
                       ? 'bg-amber-100 text-amber-900'
@@ -298,7 +316,7 @@ export default function ProfilePage() {
                   📦 訂單記錄
                 </button>
                 <button
-                  onClick={() => setActiveTab('interests')}
+                  onClick={() => handleTabChange('interests')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                     activeTab === 'interests'
                       ? 'bg-amber-100 text-amber-900'

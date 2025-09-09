@@ -169,7 +169,7 @@ export function useInquiryStats(
     // 重置重試狀態
     retryManager.reset()
 
-    // 重新開始輪詢
+    // 重新開始輪詢（使用當前狀態而不是依賴）
     pollingManager.resetPolling(stats, retryManager.consecutiveErrors)
 
     // 立即執行一次
@@ -184,7 +184,7 @@ export function useInquiryStats(
         })
       }
     }
-  }, [isAdmin, retryManager, pollingManager, pollingOperation, stats, isDevelopment])
+  }, [isAdmin, isDevelopment]) // 只保留穩定的依賴
 
   /**
    * 初始化效果：載入快取資料和開始輪詢
@@ -213,15 +213,12 @@ export function useInquiryStats(
       }
     }
 
-    // 開始輪詢
+    // 開始輪詢（startPolling 會自動執行第一次請求）
     pollingManager.startPolling(cachedStats, retryManager.consecutiveErrors)
-
-    // 立即執行一次 API 請求
-    pollingOperation()
   }, [isAdmin, user?.id]) // 只在 isAdmin 和 user.id 變化時重新執行
 
   /**
-   * 輪詢間隔變化效果
+   * 輪詢間隔變化效果 - 只在關鍵狀態變化時重新計算
    */
   useEffect(() => {
     if (isAdmin && pollingManager.isPolling) {
@@ -230,10 +227,10 @@ export function useInquiryStats(
     }
   }, [
     isAdmin,
-    pollingManager.isVisible,
-    pollingManager.lastActivity,
     stats?.unread_count,
     retryManager.consecutiveErrors,
+    // 移除 pollingManager.isVisible 和 pollingManager.lastActivity
+    // 這些頻繁變化的值會造成不必要的重設
   ])
 
   /**

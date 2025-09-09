@@ -12,6 +12,7 @@ import { withErrorHandler } from '@/lib/error-handler'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
 import { AuthorizationError, ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
+import { apiLogger } from '@/lib/logger'
 
 // 農場參觀預約詢問的資料介面
 interface FarmTourInquiryRequest {
@@ -37,11 +38,11 @@ async function handlePOST(request: NextRequest) {
 
   // 取得使用者資訊
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   // 解析請求資料
   let farmTourData: FarmTourInquiryRequest
@@ -92,7 +93,10 @@ async function handlePOST(request: NextRequest) {
     request
   ).catch(error => {
     // Note: Audit logging errors are handled silently to not break the main flow
-    console.error('農場參觀詢問審計日誌記錄失敗:', error)
+    apiLogger.error('農場參觀詢問審計日誌記錄失敗', error as Error, {
+      module: 'FarmTourInquiryAPI',
+      metadata: { inquiryId: inquiry.id },
+    })
   })
 
   return created(

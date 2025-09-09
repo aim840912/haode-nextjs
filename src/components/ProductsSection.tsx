@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Product } from '@/types/product'
 import { useAuth } from '@/lib/auth-context'
 import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
@@ -101,13 +102,14 @@ function ProductsSection() {
         {products.length > 0 ? (
           <div className="grid md:grid-cols-3 gap-6">
             {products.map((product, index) => (
-              <div
+              <Link
                 key={product.id}
-                className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+                href={`/products?productId=${product.id}`}
+                className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[400px] block cursor-pointer"
               >
                 {/* 圖片區域 */}
                 <div className="relative overflow-hidden rounded-t-xl">
-                  <div style={{ paddingBottom: '75%' }} className="relative">
+                  <div className="h-[240px] relative overflow-hidden">
                     <SafeImage
                       src={product.images?.[0] || '/images/placeholder.jpg'}
                       alt={product.name || '產品圖片'}
@@ -126,16 +128,15 @@ function ProductsSection() {
                 </div>
 
                 {/* 內容區域 */}
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3 text-center group-hover:text-amber-900 transition-colors">
-                    {product.name}
-                  </h3>
+                <div className="px-4 py-3 flex flex-col justify-between h-[160px]">
+                  <div className="h-[60px] flex items-center justify-center">
+                    <h3 className="text-lg font-semibold text-gray-800 text-center group-hover:text-amber-900 transition-colors line-clamp-2">
+                      {product.name}
+                    </h3>
+                  </div>
 
-                  {/* 按鈕 */}
-                  <a
-                    href="/products"
-                    className="flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-800 transition-colors"
-                  >
+                  {/* 按鈕 - 現在為視覺元素 */}
+                  <div className="flex items-center justify-center bg-amber-900 text-white px-4 py-2 rounded-lg text-sm font-medium group-hover:bg-amber-800 transition-colors pointer-events-none">
                     <span className="mr-1">查看詳情</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -145,9 +146,9 @@ function ProductsSection() {
                         d="M9 5l7 7-7 7"
                       />
                     </svg>
-                  </a>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (

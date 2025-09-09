@@ -146,13 +146,13 @@ function ProductsPage() {
         setLoading(false)
       }
     },
-    [executeWithErrorHandling]
+    [] // 移除 executeWithErrorHandling 依賴以避免無限循環
   )
 
   // 初始載入 - 只在組件掛載時執行一次
   useEffect(() => {
     fetchProducts()
-  }, [fetchProducts]) // 包含 fetchProducts 依賴
+  }, []) // 移除 fetchProducts 依賴，只在組件掛載時執行一次
 
   // 提供全域方法供測試使用
   useEffect(() => {
@@ -166,7 +166,7 @@ function ProductsPage() {
         delete window.refreshProductsNormal
       }
     }
-  }, [fetchProducts])
+  }, []) // 移除 fetchProducts 依賴，避免重複設置
 
   // 只使用 API 產品資料，確保 SSR 和 CSR 一致
   const allProducts = useMemo(() => {
@@ -212,6 +212,24 @@ function ProductsPage() {
       }
     })
   }, [apiProducts])
+
+  // 檢查 URL 參數並自動開啟產品 modal
+  useEffect(() => {
+    if (typeof window === 'undefined' || allProducts.length === 0) return
+
+    const params = new URLSearchParams(window.location.search)
+    const productId = params.get('productId')
+
+    if (productId) {
+      const product = allProducts.find(p => p.id === productId)
+      if (product) {
+        setSelectedProduct(product as unknown as ExtendedProduct)
+        // 移除 URL 參數，保持 URL 乾淨
+        const newUrl = window.location.pathname
+        window.history.replaceState({}, '', newUrl)
+      }
+    }
+  }, [allProducts]) // 依賴 allProducts，確保產品載入後再檢查
 
   // 篩選和排序邏輯
   const filteredAndSortedProducts = useMemo(() => {
@@ -336,23 +354,32 @@ function ProductsPage() {
         return
       }
 
-      const newInterestedProducts = new Set(interestedProducts)
-      const isRemoving = interestedProducts.has(productId)
-
-      if (isRemoving) {
-        newInterestedProducts.delete(productId)
-      } else {
-        newInterestedProducts.add(productId)
-      }
-
-      // 立即更新 UI
-      setInterestedProducts(newInterestedProducts)
+      // 使用函數式更新避免依賴舊狀態
+      let isRemoving = false
+      setInterestedProducts(prev => {
+        isRemoving = prev.has(productId)
+        const newSet = new Set(prev)
+        if (isRemoving) {
+          newSet.delete(productId)
+        } else {
+          newSet.add(productId)
+        }
+        return newSet
+      })
 
       // 已登入：儲存到資料庫
       const success = await UserInterestsService.toggleInterest(user.id, productId)
       if (!success) {
         // 如果儲存失敗，恢復原狀態
-        setInterestedProducts(interestedProducts)
+        setInterestedProducts(prev => {
+          const newSet = new Set(prev)
+          if (isRemoving) {
+            newSet.add(productId) // 恢復
+          } else {
+            newSet.delete(productId) // 恢復
+          }
+          return newSet
+        })
         logger.error('Failed to update interests in database', undefined, {
           metadata: { action: 'update_interests' },
         })
@@ -363,7 +390,7 @@ function ProductsPage() {
       window.dispatchEvent(new CustomEvent('interestedProductsUpdated'))
 
       // 顯示提示訊息
-      const message = interestedProducts.has(productId)
+      const message = isRemoving
         ? `已從興趣清單移除 ${productName}`
         : `已將 ${productName} 加入興趣清單！`
 
@@ -377,7 +404,7 @@ function ProductsPage() {
         document.body.removeChild(notification)
       }, 2000)
     },
-    [user?.id, interestedProducts]
+    [user?.id] // 只依賴 user?.id，避免循環依賴
   )
 
   return (
@@ -432,7 +459,6 @@ function ProductsPage() {
                 className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="重新整理產品列表"
               >
-                <span className={loading ? 'animate-spin' : ''}>🔄</span>
                 <span>{loading ? '更新中...' : '重新整理'}</span>
               </button>
 
@@ -442,14 +468,12 @@ function ProductsPage() {
                     href="/admin/products"
                     className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    <span>📦</span>
                     <span>產品管理</span>
                   </a>
                   <a
                     href="/admin/products/add"
                     className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                   >
-                    <span>➕</span>
                     <span>新增產品</span>
                   </a>
                 </>

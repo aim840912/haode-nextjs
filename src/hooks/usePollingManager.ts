@@ -191,7 +191,8 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
         })
       }
     },
-    [enabled, getPollingInterval, stopPolling, isVisible, onPoll, isDevelopment]
+    [enabled, getPollingInterval, onPoll, isDevelopment]
+    // 移除 stopPolling 和 isVisible，避免循環依賴和頻繁重建
   )
 
   /**
@@ -283,16 +284,24 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
         }
       }
     }
-  }, [isVisible, enabled, isPolling, stopPolling, startPolling])
+  }, [isVisible, enabled, isPolling]) // 移除函數依賴，避免無限循環
 
   /**
    * 清理資源
    */
   useEffect(() => {
     return () => {
-      stopPolling()
+      // 清理時直接操作 refs，避免依賴函數
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+        abortControllerRef.current = null
+      }
     }
-  }, [stopPolling])
+  }, []) // 空依賴陣列，只在組件卸載時執行
 
   return {
     isVisible,

@@ -1,98 +1,99 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
-import { supabase } from '@/lib/supabase-auth';
-import { logger } from '@/lib/logger';
-import { 
-  InquiryWithItems, 
+import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '@/lib/auth-context'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
+import { supabase } from '@/lib/supabase-auth'
+import { logger } from '@/lib/logger'
+import {
+  InquiryWithItems,
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
   INQUIRY_TYPE_LABELS,
   INQUIRY_TYPE_COLORS,
-  InquiryUtils
-} from '@/types/inquiry';
-import { InquiryStatusFlowDetailed } from '@/components/inquiry/InquiryStatusFlow';
+  InquiryUtils,
+} from '@/types/inquiry'
+import { InquiryStatusFlowDetailed } from '@/components/inquiry/InquiryStatusFlow'
 
 interface InquiryDetailPageProps {
   params: Promise<{
-    id: string;
-  }>;
+    id: string
+  }>
 }
 
 function InquiryDetailPage({ params }: InquiryDetailPageProps) {
-  const { user, isLoading: authLoading } = useAuth();
-  const _router = useRouter();
-  const [inquiry, setInquiry] = useState<InquiryWithItems | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [inquiryId, setInquiryId] = useState<string>('');
+  const { user, isLoading: authLoading } = useAuth()
+  const _router = useRouter()
+  const [inquiry, setInquiry] = useState<InquiryWithItems | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [inquiryId, setInquiryId] = useState<string>('')
 
   // 取得參數
   useEffect(() => {
     const getParams = async () => {
-      const { id } = await params;
-      setInquiryId(id);
-    };
-    getParams();
-  }, [params]);
+      const { id } = await params
+      setInquiryId(id)
+    }
+    getParams()
+  }, [params])
 
   // 取得詢問單詳情
   const fetchInquiry = useCallback(async () => {
-    if (!user || !inquiryId) return;
+    if (!user || !inquiryId) return
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
       // 取得認證 token
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (!session?.access_token) {
-        throw new Error('認證失敗');
+        throw new Error('認證失敗')
       }
 
       // 呼叫 API
       const response = await fetch(`/api/inquiries/${inquiryId}`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        }
-      });
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
         if (response.status === 404) {
-          throw new Error('找不到詢問單');
+          throw new Error('找不到詢問單')
         }
-        throw new Error(result.error || '取得詢問單詳情失敗');
+        throw new Error(result.error || '取得詢問單詳情失敗')
       }
 
-      setInquiry(result.data);
-
+      setInquiry(result.data)
     } catch (err) {
-      logger.error('Error fetching inquiry', err as Error, { 
-        module: 'InquiryDetailPage', 
+      logger.error('Error fetching inquiry', err as Error, {
+        module: 'InquiryDetailPage',
         action: 'fetchInquiry',
-        metadata: { inquiryId }
-      });
-      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤');
+        metadata: { inquiryId },
+      })
+      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [user, inquiryId]);
+  }, [user, inquiryId])
 
   // 初始載入
   useEffect(() => {
     if (user && inquiryId) {
-      fetchInquiry();
+      fetchInquiry()
     } else if (!authLoading && !inquiryId) {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [user, authLoading, inquiryId, fetchInquiry]);
+  }, [user, authLoading, inquiryId, fetchInquiry])
 
   // 載入中狀態
   if (authLoading || isLoading) {
@@ -103,7 +104,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
           <p className="mt-4 text-gray-600">載入詢問單詳情...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // 未登入檢查
@@ -115,7 +116,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
             <div className="text-6xl mb-8">🔒</div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢問單</h1>
             <p className="text-gray-600 mb-8">請先登入您的帳戶！</p>
-            <Link 
+            <Link
               href="/login"
               className="bg-amber-900 text-white px-8 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
@@ -124,7 +125,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // 錯誤狀態
@@ -153,7 +154,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (!inquiry) {
@@ -173,7 +174,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // 主要內容
@@ -184,10 +185,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center space-x-4">
-              <Link
-                href="/inquiries"
-                className="text-gray-700 hover:text-gray-900"
-              >
+              <Link href="/inquiries" className="text-gray-700 hover:text-gray-900">
                 ← 返回列表
               </Link>
             </div>
@@ -195,10 +193,14 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               詢問單 #{InquiryUtils.formatInquiryNumber(inquiry)}
             </h1>
             <div className="flex items-center space-x-4 mt-2">
-              <span className={`px-3 py-1 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}>
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}
+              >
                 {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
               </span>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}
+              >
                 {INQUIRY_STATUS_LABELS[inquiry.status]}
               </span>
               <span className="text-gray-700">
@@ -207,7 +209,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   month: 'long',
                   day: 'numeric',
                   hour: '2-digit',
-                  minute: '2-digit'
+                  minute: '2-digit',
                 })}
               </span>
             </div>
@@ -216,10 +218,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
 
         {/* 狀態流程追蹤 */}
         <div className="mb-8">
-          <InquiryStatusFlowDetailed 
-            inquiry={inquiry}
-            className="shadow-md"
-          />
+          <InquiryStatusFlowDetailed inquiry={inquiry} className="shadow-md" />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -261,7 +260,10 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-bold text-gray-900">
-                            NT$ {(item.total_price || (item.unit_price || 0) * item.quantity).toLocaleString()}
+                            NT${' '}
+                            {(
+                              item.total_price || (item.unit_price || 0) * item.quantity
+                            ).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -278,20 +280,24 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 <div className="p-6">
                   <div className="space-y-6">
                     <div className="text-center p-6 bg-gradient-to-r from-green-100 to-amber-100 rounded-lg">
-                      <h3 className="text-2xl font-bold text-green-900 mb-2">{inquiry.activity_title}</h3>
+                      <h3 className="text-2xl font-bold text-green-900 mb-2">
+                        {inquiry.activity_title}
+                      </h3>
                       <p className="text-green-800">體驗山間農情，感受自然之美</p>
                     </div>
-                    
+
                     <div className="grid md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="text-sm font-medium text-gray-800 mb-2">預定參觀日期</h4>
                         <p className="text-lg text-gray-900">
-                          {inquiry.visit_date ? new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            weekday: 'long'
-                          }) : '未指定'}
+                          {inquiry.visit_date
+                            ? new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                                weekday: 'long',
+                              })
+                            : '未指定'}
                         </p>
                       </div>
                       <div>
@@ -360,16 +366,20 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 {inquiry.inquiry_type === 'product' ? '詢價摘要' : '預約摘要'}
               </h2>
-              
+
               {inquiry.inquiry_type === 'product' ? (
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-800">商品總數</span>
-                    <span className="font-semibold text-gray-900">{InquiryUtils.calculateTotalQuantity(inquiry)} 件</span>
+                    <span className="font-semibold text-gray-900">
+                      {InquiryUtils.calculateTotalQuantity(inquiry)} 件
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">商品小計</span>
-                    <span className="font-semibold text-gray-900">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}</span>
+                    <span className="font-semibold text-gray-900">
+                      NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">運費</span>
@@ -378,17 +388,19 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   <hr />
                   <div className="flex justify-between text-lg font-bold">
                     <span>預估總計</span>
-                    <span className="text-amber-900">NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}+</span>
+                    <span className="text-amber-900">
+                      NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}+
+                    </span>
                   </div>
-                  <p className="text-xs text-gray-600">
-                    * 實際價格以回覆為準
-                  </p>
+                  <p className="text-xs text-gray-600">* 實際價格以回覆為準</p>
                 </div>
               ) : (
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between">
                     <span className="text-gray-800">活動名稱</span>
-                    <span className="font-semibold text-right text-sm text-gray-900">{inquiry.activity_title}</span>
+                    <span className="font-semibold text-right text-sm text-gray-900">
+                      {inquiry.activity_title}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-800">預約日期</span>
@@ -403,9 +415,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                     <span>費用</span>
                     <span className="text-green-600">待報價</span>
                   </div>
-                  <p className="text-xs text-gray-600">
-                    * 費用將依活動內容報價
-                  </p>
+                  <p className="text-xs text-gray-600">* 費用將依活動內容報價</p>
                 </div>
               )}
 
@@ -416,34 +426,30 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 </h3>
                 {inquiry.status === 'pending' && (
                   <p className="text-sm text-blue-800">
-                    {inquiry.inquiry_type === 'product' 
+                    {inquiry.inquiry_type === 'product'
                       ? '我們已收到您的詢價，會在24小時內回覆詳細報價。'
-                      : '我們已收到您的預約詢問，會在24小時內回覆並聯繫您確認詳細時間。'
-                    }
+                      : '我們已收到您的預約詢問，會在24小時內回覆並聯繫您確認詳細時間。'}
                   </p>
                 )}
                 {inquiry.status === 'quoted' && (
                   <p className="text-sm text-blue-800">
                     {inquiry.inquiry_type === 'product'
                       ? '我們已回覆報價，請確認後聯絡我們。'
-                      : '我們已回覆預約詳情，請確認後聯絡我們。'
-                    }
+                      : '我們已回覆預約詳情，請確認後聯絡我們。'}
                   </p>
                 )}
                 {inquiry.status === 'confirmed' && (
                   <p className="text-sm text-blue-800">
                     {inquiry.inquiry_type === 'product'
                       ? '訂單已確認，我們正在準備您的商品。'
-                      : '預約已確認，期待您的蒞臨參觀！'
-                    }
+                      : '預約已確認，期待您的蒞臨參觀！'}
                   </p>
                 )}
                 {inquiry.status === 'completed' && (
                   <p className="text-sm text-green-800">
                     {inquiry.inquiry_type === 'product'
                       ? '訂單已完成，感謝您的購買！'
-                      : '參觀已完成，感謝您的蒞臨！'
-                    }
+                      : '參觀已完成，感謝您的蒞臨！'}
                   </p>
                 )}
                 {inquiry.status === 'cancelled' && (
@@ -462,7 +468,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   返回詢價列表
                 </Link>
                 <Link
-                  href="/cart"
+                  href="/products"
                   className="block w-full text-center py-3 bg-amber-900 text-white rounded-lg hover:bg-amber-800 transition-colors"
                 >
                   新增詢價
@@ -483,7 +489,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function InquiryDetailPageWithErrorBoundary({ params }: InquiryDetailPageProps) {
@@ -491,5 +497,5 @@ export default function InquiryDetailPageWithErrorBoundary({ params }: InquiryDe
     <ComponentErrorBoundary>
       <InquiryDetailPage params={params} />
     </ComponentErrorBoundary>
-  );
+  )
 }
