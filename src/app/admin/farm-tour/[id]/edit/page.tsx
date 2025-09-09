@@ -4,14 +4,29 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
+import Image from 'next/image'
+import dynamic from 'next/dynamic'
+import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
+
+// 動態載入圖片上傳器
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
+})
 
 export default function EditFarmTourActivity({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [activityId, setActivityId] = useState<string>('')
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>([])
   const { user } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -23,7 +38,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     price: 0,
     duration: '',
     includes: [''],
-    image: '🌱',
+    image: '',
     available: true,
     note: '',
   })
@@ -33,25 +48,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
     { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
     { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' },
-  ]
-
-  const emojiOptions = [
-    '🌱',
-    '🌸',
-    '🍑',
-    '🍎',
-    '🫖',
-    '🌾',
-    '🌿',
-    '🍃',
-    '🌽',
-    '🥕',
-    '🍓',
-    '🍄',
-    '🌻',
-    '☘️',
-    '🦋',
-    '🐝',
   ]
 
   const fetchActivity = useCallback(
@@ -75,6 +71,15 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             available: activity.available,
             note: activity.note,
           })
+
+          // 設定現有圖片（如果不是 emoji）
+          if (
+            activity.image &&
+            !activity.image.match(/^[\u{1f300}-\u{1f9ff}]$/u) &&
+            activity.image.startsWith('http')
+          ) {
+            setExistingImages([activity.image])
+          }
         } else {
           const errorMessage = result.error || '活動不存在'
           alert(errorMessage)
@@ -132,11 +137,23 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     setLoading(true)
 
     try {
+      // 決定要使用的圖片 URL：優先使用新上傳的圖片，否則使用現有圖片
+      let imageUrl = ''
+      if (uploadedImages.length > 0) {
+        imageUrl = uploadedImages[0] // 使用新上傳的圖片
+        logger.info('使用新上傳的圖片', {
+          metadata: { imageUrl, activityId },
+        })
+      } else if (existingImages.length > 0) {
+        imageUrl = existingImages[0] // 保持現有圖片
+      }
+
       const response = await fetch(`/api/farm-tour/${activityId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          image: imageUrl,
           activities: formData.activities.filter(activity => activity.trim() !== ''),
           includes: formData.includes.filter(include => include.trim() !== ''),
         }),
@@ -224,6 +241,37 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
       ...prev,
       includes: prev.includes.map((include, i) => (i === index ? value : include)),
     }))
+  }
+
+  // 處理圖片上傳成功
+  const handleImageUploadSuccess = (
+    images: {
+      id: string
+      url?: string
+      path: string
+      size: 'thumbnail' | 'medium' | 'large'
+      file?: File
+      preview?: string
+      position: number
+      alt?: string
+    }[]
+  ) => {
+    const urls = images.map(img => img.url || img.path).filter(Boolean)
+    setUploadedImages(urls)
+    if (urls.length > 0) {
+      setFormData(prev => ({ ...prev, image: urls[0] }))
+      logger.info('圖片上傳成功', {
+        metadata: { imageUrl: urls[0], activityId },
+      })
+    }
+  }
+
+  // 處理圖片上傳錯誤
+  const handleImageUploadError = (error: string) => {
+    logger.error('圖片上傳失敗', new Error(error), {
+      metadata: { activityId },
+    })
+    alert(`圖片上傳失敗: ${error}`)
   }
 
   if (initialLoading) {
@@ -423,32 +471,26 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
 
+              {/* 活動圖片 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">選擇圖示</label>
-                <div className="grid grid-cols-8 gap-2 mb-3">
-                  {emojiOptions.map(emoji => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, image: emoji }))}
-                      className={`p-2 text-2xl border rounded-md hover:bg-gray-50 transition-colors ${
-                        formData.image === emoji
-                          ? 'bg-green-100 border-green-500'
-                          : 'border-gray-300'
-                      }`}
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  placeholder="或自定義 emoji"
+                <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片</label>
+                <ImageUploader
+                  productId={activityId || uuidv4()}
+                  idParamName="activityId"
+                  apiEndpoint="/api/upload/images"
+                  onUploadSuccess={handleImageUploadSuccess}
+                  onUploadError={handleImageUploadError}
+                  maxFiles={1}
+                  allowMultiple={false}
+                  generateMultipleSizes={false}
+                  enableCompression={true}
+                  className="mb-4"
                 />
+                {uploadedImages.length > 0 && (
+                  <div className="mt-2 text-sm text-green-600">
+                    ✓ 已上傳 {uploadedImages.length} 張圖片
+                  </div>
+                )}
               </div>
 
               <div className="mb-4">
@@ -501,7 +543,21 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
-                <div className="text-4xl mb-3">{formData.image}</div>
+                <div className="mb-3">
+                  {uploadedImages.length > 0 || existingImages.length > 0 ? (
+                    <Image
+                      src={uploadedImages[0] || existingImages[0] || '/placeholder.jpg'}
+                      alt="活動圖片"
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                      <span className="text-gray-500 text-xs">無圖片</span>
+                    </div>
+                  )}
+                </div>
                 <h3 className="text-lg font-bold text-gray-800 mb-2">
                   {formData.title || '活動標題預覽'}
                 </h3>

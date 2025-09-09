@@ -4,25 +4,35 @@ import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
+import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
+
+// 動態載入圖片上傳器
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
+})
 
 export default function AddCulture() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const { user, isLoading } = useAuth()
-  
+  const [cultureId] = useState(() => uuidv4())
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+
   const [formData, setFormData] = useState({
     title: '',
     subtitle: '',
     description: '',
     height: 'h-64',
-    imageUrl: '',  // URL 圖片
-    image: ''      // 上傳的圖片檔案 (base64)
+    imageUrl: '', // URL 圖片
   })
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string>('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // 載入中狀態
   if (isLoading) {
@@ -45,13 +55,13 @@ export default function AddCulture() {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
-            <Link 
+            <Link
               href="/login"
               className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
               立即登入
             </Link>
-            <Link 
+            <Link
               href="/"
               className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
             >
@@ -63,7 +73,6 @@ export default function AddCulture() {
     )
   }
 
-
   const heightOptions = [
     { name: '小型 (h-48)', value: 'h-48' },
     { name: '緊湊 (h-52)', value: 'h-52' },
@@ -72,22 +81,38 @@ export default function AddCulture() {
     { name: '標準 (h-64)', value: 'h-64' },
     { name: '中大 (h-68)', value: 'h-68' },
     { name: '大型 (h-72)', value: 'h-72' },
-    { name: '特大 (h-76)', value: 'h-76' }
+    { name: '特大 (h-76)', value: 'h-76' },
   ]
 
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setImageFile(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setImagePreview(result)
-        setFormData(prev => ({ ...prev, image: result }))
-      }
-      reader.readAsDataURL(file)
+  // 處理圖片上傳成功
+  const handleImageUploadSuccess = (
+    images: {
+      id: string
+      url?: string
+      path: string
+      size: 'thumbnail' | 'medium' | 'large'
+      file?: File
+      preview?: string
+      position: number
+      alt?: string
+    }[]
+  ) => {
+    const urls = images.map(img => img.url || img.path).filter(Boolean)
+    setUploadedImages(urls)
+    if (urls.length > 0) {
+      setFormData(prev => ({ ...prev, imageUrl: urls[0] }))
+      logger.info('圖片上傳成功', {
+        metadata: { imageUrl: urls[0], cultureId },
+      })
     }
+  }
+
+  // 處理圖片上傳錯誤
+  const handleImageUploadError = (error: string) => {
+    logger.error('圖片上傳失敗', new Error(error), {
+      metadata: { cultureId },
+    })
+    alert(`圖片上傳失敗: ${error}`)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,32 +123,34 @@ export default function AddCulture() {
       logger.info('📤 提交的資料', {
         metadata: {
           ...formData,
-          imageFile: imageFile ? `File: ${imageFile.name} (${(imageFile.size / 1024 / 1024).toFixed(2)}MB)` : null
-        }
+          uploadedImages: uploadedImages.length,
+        },
       })
-      
+
       // 準備 FormData 用於檔案上傳
       const submitData = new FormData()
+      submitData.append('id', cultureId)
       submitData.append('title', formData.title)
       submitData.append('subtitle', formData.subtitle)
       submitData.append('description', formData.description)
       submitData.append('height', formData.height)
-      
-      if (imageFile) {
-        submitData.append('imageFile', imageFile)
-        logger.info('📁 包含圖片檔案', {
-          metadata: { fileName: imageFile.name }
+
+      // 使用上傳後的圖片 URL
+      if (uploadedImages.length > 0) {
+        submitData.append('imageUrl', uploadedImages[0])
+        logger.info('🔗 使用已上傳圖片', {
+          metadata: { imageUrl: uploadedImages[0], cultureId },
         })
       } else if (formData.imageUrl) {
         submitData.append('imageUrl', formData.imageUrl)
         logger.info('🔗 包含圖片 URL', {
-          metadata: { imageUrl: formData.imageUrl }
+          metadata: { imageUrl: formData.imageUrl, cultureId },
         })
       }
-      
+
       const response = await fetch('/api/culture', {
         method: 'POST',
-        body: submitData  // 使用 FormData 而不是 JSON
+        body: submitData, // 使用 FormData 而不是 JSON
       })
 
       if (response.ok) {
@@ -132,18 +159,23 @@ export default function AddCulture() {
         alert('新增失敗')
       }
     } catch (error) {
-      logger.error('Error adding culture item:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error adding culture item:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('新增失敗')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }))
   }
 
@@ -152,10 +184,7 @@ export default function AddCulture() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
-            <Link 
-              href="/admin/culture"
-              className="text-orange-600 hover:text-orange-800"
-            >
+            <Link href="/admin/culture" className="text-orange-600 hover:text-orange-800">
               ← 回到時光典藏管理
             </Link>
           </div>
@@ -167,9 +196,7 @@ export default function AddCulture() {
           <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
             {/* 基本資訊 */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                典藏標題 *
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">典藏標題 *</label>
               <input
                 type="text"
                 name="title"
@@ -182,9 +209,7 @@ export default function AddCulture() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                副標題 *
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">副標題 *</label>
               <input
                 type="text"
                 name="subtitle"
@@ -197,9 +222,7 @@ export default function AddCulture() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                詳細描述 *
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">詳細描述 *</label>
               <textarea
                 name="description"
                 value={formData.description}
@@ -221,20 +244,20 @@ export default function AddCulture() {
                 id="imageUrl"
                 name="imageUrl"
                 value={formData.imageUrl}
-                onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                onChange={e => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900"
                 placeholder="https://example.com/image.jpg (選填，留空則使用色塊背景)"
               />
               {formData.imageUrl && (
                 <div className="mt-2">
-                  <Image 
-                    src={formData.imageUrl} 
-                    alt="圖片預覽" 
+                  <Image
+                    src={formData.imageUrl}
+                    alt="圖片預覽"
                     width={128}
                     height={128}
                     className="h-32 w-32 object-cover rounded-lg border border-gray-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none'
+                    onError={e => {
+                      ;(e.target as HTMLImageElement).style.display = 'none'
                     }}
                   />
                 </div>
@@ -243,75 +266,29 @@ export default function AddCulture() {
 
             {/* 圖片上傳 */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                或上傳圖片檔案
-              </label>
-              <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-orange-400 transition-colors">
-                <div className="space-y-1 text-center">
-                  {imagePreview ? (
-                    <div className="mb-4">
-                      <Image 
-                        src={imagePreview} 
-                        alt="預覽圖片" 
-                        width={128}
-                        height={128}
-                        className="mx-auto h-32 w-32 object-cover rounded-lg"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImagePreview('')
-                          setImageFile(null)
-                          setFormData(prev => ({ ...prev, image: '' }))
-                        }}
-                        className="mt-2 text-sm text-red-600 hover:text-red-800"
-                      >
-                        移除圖片
-                      </button>
-                    </div>
-                  ) : (
-                    <svg
-                      className="mx-auto h-12 w-12 text-gray-400"
-                      stroke="currentColor"
-                      fill="none"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                        strokeWidth={2}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                  <div className="flex text-sm text-gray-600">
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="relative cursor-pointer bg-white rounded-md font-medium text-orange-600 hover:text-orange-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 px-2 py-1"
-                    >
-                      上傳圖片
-                    </button>
-                    <input 
-                      ref={fileInputRef}
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*"
-                      onChange={handleImageChange}
-                    />
-                    <p className="pl-1">或拖拽檔案到此處</p>
-                  </div>
-                  <p className="text-xs text-gray-500">PNG, JPG, GIF 最大 10MB</p>
+              <label className="block text-sm font-medium text-gray-900 mb-2">典藏圖片</label>
+              <ImageUploader
+                productId={cultureId}
+                idParamName="cultureId"
+                apiEndpoint="/api/upload/images"
+                onUploadSuccess={handleImageUploadSuccess}
+                onUploadError={handleImageUploadError}
+                maxFiles={1}
+                allowMultiple={false}
+                generateMultipleSizes={false}
+                enableCompression={true}
+                className="mb-4"
+              />
+              {uploadedImages.length > 0 && (
+                <div className="mt-2 text-sm text-green-600">
+                  ✓ 已上傳 {uploadedImages.length} 張圖片
                 </div>
-              </div>
+              )}
             </div>
-
 
             {/* 卡片高度 */}
             <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                卡片高度
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">卡片高度</label>
               <select
                 name="height"
                 value={formData.height}
@@ -325,8 +302,6 @@ export default function AddCulture() {
                 ))}
               </select>
             </div>
-
-
 
             {/* 提交按鈕 */}
             <div className="flex justify-end space-x-4 pt-6">
@@ -351,12 +326,12 @@ export default function AddCulture() {
             <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
             <div className="bg-white rounded-lg shadow-md p-4">
               <div className={`relative ${formData.height} rounded-lg overflow-hidden`}>
-                {(formData.imageUrl || imagePreview) ? (
+                {formData.imageUrl || uploadedImages.length > 0 ? (
                   // 顯示圖片背景
                   <div className="relative w-full h-full">
-                    <Image 
-                      src={imagePreview || formData.imageUrl} 
-                      alt="背景圖片" 
+                    <Image
+                      src={uploadedImages[0] || formData.imageUrl}
+                      alt="背景圖片"
                       fill
                       className="object-cover rounded-lg"
                     />
@@ -379,7 +354,7 @@ export default function AddCulture() {
                   <div className="bg-gray-100 h-full p-6 rounded-lg relative flex items-center justify-center">
                     <div className="text-center text-gray-500">
                       <div className="text-4xl mb-4">🖼️</div>
-                      <p className="text-sm">請添加圖片以查看預覽</p>
+                      <p className="text-sm">使用上方的上傳器添加圖片</p>
                       <div className="mt-4 text-xs text-gray-400">
                         <p>標題: {formData.title || '未設定'}</p>
                         <p>副標題: {formData.subtitle || '未設定'}</p>

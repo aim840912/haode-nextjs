@@ -5,15 +5,29 @@ import { useRouter } from 'next/navigation'
 import { Location } from '@/types/location'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
+import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
+
+// 動態載入圖片上傳器
+const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
+})
 
 export default function EditLocation({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [locationId, setLocationId] = useState<string>('')
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [currentId, setCurrentId] = useState<string>('') // 用於立即保存 params 中的 ID
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>([])
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -62,6 +76,11 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
             image: location.image || '',
             isMain: location.isMain || false,
           })
+
+          // 設定現有圖片
+          if (location.image) {
+            setExistingImages([location.image])
+          }
         } else {
           const errorMessage = result.error || '門市不存在'
           alert(errorMessage)
@@ -82,6 +101,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     params.then(({ id }) => {
+      setCurrentId(id) // 立即保存 ID
       setLocationId(id)
       fetchLocation(id)
     })
@@ -131,11 +151,23 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
     setLoading(true)
 
     try {
+      // 決定要使用的圖片 URL：優先使用新上傳的圖片，否則使用現有圖片
+      let imageUrl = ''
+      if (uploadedImages.length > 0) {
+        imageUrl = uploadedImages[0] // 使用新上傳的圖片
+        logger.info('使用新上傳的圖片', {
+          metadata: { imageUrl, locationId },
+        })
+      } else if (existingImages.length > 0) {
+        imageUrl = existingImages[0] // 保持現有圖片
+      }
+
       const response = await fetch(`/api/locations/${locationId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          image: imageUrl,
           features: formData.features.filter(feature => feature.trim() !== ''),
           specialties: formData.specialties.filter(specialty => specialty.trim() !== ''),
           coordinates:
@@ -215,35 +247,35 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
     }))
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // 檢查檔案大小 (限制 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('圖片檔案大小不能超過 5MB')
-        return
-      }
-
-      // 檢查檔案類型
-      if (!file.type.startsWith('image/')) {
-        alert('請選擇圖片檔案')
-        return
-      }
-
-      // 創建預覽
-      const reader = new FileReader()
-      reader.onload = event => {
-        const result = event.target?.result as string
-        setImagePreview(result)
-        setFormData(prev => ({ ...prev, image: result }))
-      }
-      reader.readAsDataURL(file)
+  // 處理圖片上傳成功
+  const handleImageUploadSuccess = (
+    images: {
+      id: string
+      url?: string
+      path: string
+      size: 'thumbnail' | 'medium' | 'large'
+      file?: File
+      preview?: string
+      position: number
+      alt?: string
+    }[]
+  ) => {
+    const urls = images.map(img => img.url || img.path).filter(Boolean)
+    setUploadedImages(urls)
+    if (urls.length > 0) {
+      setFormData(prev => ({ ...prev, image: urls[0] }))
+      logger.info('圖片上傳成功', {
+        metadata: { imageUrl: urls[0], locationId },
+      })
     }
   }
 
-  const clearImage = () => {
-    setImagePreview(null)
-    setFormData(prev => ({ ...prev, image: '' }))
+  // 處理圖片上傳錯誤
+  const handleImageUploadError = (error: string) => {
+    logger.error('圖片上傳失敗', new Error(error), {
+      metadata: { locationId },
+    })
+    alert(`圖片上傳失敗: ${error}`)
   }
 
   if (initialLoading) {
@@ -502,57 +534,30 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                   門市圖片 (選填)
                 </label>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg
-                          className="w-8 h-8 mb-2 text-gray-500"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                        <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">點擊上傳</span> 或拖拽圖片到此處
-                        </p>
-                        <p className="text-xs text-gray-500">PNG, JPG, GIF (最大 5MB)</p>
-                      </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                    </label>
+                {currentId && (
+                  <ImageUploader
+                    productId={currentId}
+                    idParamName="locationId"
+                    apiEndpoint="/api/upload/images"
+                    onUploadSuccess={handleImageUploadSuccess}
+                    onUploadError={handleImageUploadError}
+                    maxFiles={1}
+                    allowMultiple={false}
+                    generateMultipleSizes={false}
+                    enableCompression={true}
+                    className="mb-4"
+                  />
+                )}
+                {!currentId && (
+                  <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-500">載入圖片上傳器...</span>
                   </div>
-
-                  {imagePreview && (
-                    <div className="relative">
-                      <Image
-                        src={imagePreview}
-                        alt="圖片預覽"
-                        width={128}
-                        height={128}
-                        className="w-32 h-32 object-cover rounded-lg border border-gray-300"
-                      />
-                      <button
-                        type="button"
-                        onClick={clearImage}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  )}
-                </div>
+                )}
+                {uploadedImages.length > 0 && (
+                  <div className="mt-2 text-sm text-green-600">
+                    ✓ 已上傳 {uploadedImages.length} 張圖片
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center">
@@ -592,17 +597,9 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 p-6 text-center relative">
                 <div className="mb-3">
-                  {imagePreview ? (
+                  {uploadedImages.length > 0 || existingImages.length > 0 ? (
                     <Image
-                      src={imagePreview}
-                      alt="門市圖片"
-                      width={64}
-                      height={64}
-                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
-                    />
-                  ) : formData.image && formData.image.startsWith('/') ? (
-                    <Image
-                      src={formData.image}
+                      src={uploadedImages[0] || existingImages[0] || '/placeholder.jpg'}
                       alt="門市圖片"
                       width={64}
                       height={64}

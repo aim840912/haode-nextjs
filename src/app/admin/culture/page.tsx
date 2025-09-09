@@ -15,14 +15,14 @@ export default function CultureAdmin() {
 
   // 高度類名映射 - 確保所有可能的 Tailwind 類名都被包含
   const heightClassMap = {
-    'h-32': 'h-32',    // 128px
-    'h-40': 'h-40',    // 160px
-    'h-48': 'h-48',    // 192px
-    'h-56': 'h-56',    // 224px
-    'h-64': 'h-64',    // 256px
-    'h-72': 'h-72',    // 288px
-    'h-80': 'h-80',    // 320px
-    'h-96': 'h-96',    // 384px
+    'h-32': 'h-32', // 128px
+    'h-40': 'h-40', // 160px
+    'h-48': 'h-48', // 192px
+    'h-56': 'h-56', // 224px
+    'h-64': 'h-64', // 256px
+    'h-72': 'h-72', // 288px
+    'h-80': 'h-80', // 320px
+    'h-96': 'h-96', // 384px
   } as const
 
   useEffect(() => {
@@ -35,7 +35,10 @@ export default function CultureAdmin() {
       const result = await response.json()
       setCultureItems(result.data || [])
     } catch (error) {
-      logger.error('Error fetching culture items:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error fetching culture items:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
     } finally {
       setLoading(false)
     }
@@ -46,14 +49,17 @@ export default function CultureAdmin() {
       alert('請先登入')
       return
     }
-    
+
     if (!confirm('確定要刪除此文化內容嗎？')) return
-    
+
     try {
       await fetch(`/api/culture/${id}`, { method: 'DELETE' })
       setCultureItems(cultureItems.filter(item => item.id !== id))
     } catch (error) {
-      logger.error('Error deleting culture item:', error instanceof Error ? error : new Error('Unknown error'))
+      logger.error(
+        'Error deleting culture item:',
+        error instanceof Error ? error : new Error('Unknown error')
+      )
       alert('刪除失敗')
     }
   }
@@ -62,7 +68,7 @@ export default function CultureAdmin() {
     return new Date(dateString).toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     })
   }
 
@@ -76,134 +82,147 @@ export default function CultureAdmin() {
 
   return (
     <AdminProtection>
-    <div className="min-h-screen bg-gray-50 pt-24">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">時光典藏管理</h1>
-          <div className="space-x-4">
-            {user?.role === 'admin' && (
-              <Link 
-                href="/admin/culture/add"
-                className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                新增典藏內容
-              </Link>
-            )}
-            <Link 
-              href="/culture"
-              className="bg-orange-600 text-white px-6 py-2 rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              查看典藏頁面
-            </Link>
-            <Link 
-              href="/"
-              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              回到首頁
-            </Link>
-          </div>
-        </div>
+      <div className="min-h-screen bg-gray-50 pt-24">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">時光典藏管理</h1>
 
-        {/* Grid View */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {cultureItems.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-              {/* Preview Card */}
-              <div className={`relative ${heightClassMap[item.height as keyof typeof heightClassMap] || 'h-56'} overflow-hidden`}>
-                {item.imageUrl ? (
-                  // 顯示實際圖片
-                  <div className="relative w-full h-full">
-                    <OptimizedImage
-                      src={item.imageUrl}
-                      alt={item.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      priority={true}
-                      lazy={false}
-                      onError={() => {
-                        logger.error(`❌ 圖片載入失敗 - ${item.title}`, new Error(`Image load failed: ${item.imageUrl?.substring(0, 100)}...`));
-                      }}
-                      onLoad={() => {
-                        logger.info(`✅ 圖片載入成功 - ${item.title}`);
-                      }}
-                    />
-                    {/* 圖片上的文字覆蓋層 - 調整透明度讓圖片更清楚 */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40 p-4 flex flex-col justify-between pointer-events-none">
+              {/* 操作按鈕組 */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                {user?.role === 'admin' && (
+                  <Link
+                    href="/admin/culture/add"
+                    className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    新增典藏內容
+                  </Link>
+                )}
+                <Link
+                  href="/culture"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  查看典藏頁面
+                </Link>
+                <Link
+                  href="/"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  回到首頁
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid View */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {cultureItems.map(item => (
+              <div
+                key={item.id}
+                className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+              >
+                {/* Preview Card */}
+                <div
+                  className={`relative ${heightClassMap[item.height as keyof typeof heightClassMap] || 'h-56'} overflow-hidden`}
+                >
+                  {item.imageUrl ? (
+                    // 顯示實際圖片
+                    <div className="relative w-full h-full">
+                      <OptimizedImage
+                        src={item.imageUrl}
+                        alt={item.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        priority={true}
+                        lazy={false}
+                        onError={() => {
+                          logger.error(
+                            `❌ 圖片載入失敗 - ${item.title}`,
+                            new Error(`Image load failed: ${item.imageUrl?.substring(0, 100)}...`)
+                          )
+                        }}
+                        onLoad={() => {
+                          logger.info(`✅ 圖片載入成功 - ${item.title}`)
+                        }}
+                      />
+                      {/* 圖片上的文字覆蓋層 - 調整透明度讓圖片更清楚 */}
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/20 to-black/40 p-4 flex flex-col justify-between pointer-events-none">
+                        <div>
+                          <div className="text-white text-xs opacity-90 mb-1">{item.subtitle}</div>
+                          <h3 className="text-white text-sm font-bold mb-2 drop-shadow-lg">
+                            {item.title}
+                          </h3>
+                          <p className="text-white text-xs opacity-90 leading-relaxed line-clamp-3 drop-shadow">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    // 沒有圖片時顯示原本的色塊設計
+                    <div className={`${item.color} h-full p-4 flex flex-col justify-between`}>
                       <div>
-                        <div className="text-white text-xs opacity-90 mb-1">{item.subtitle}</div>
-                        <h3 className="text-white text-sm font-bold mb-2 drop-shadow-lg">{item.title}</h3>
-                        <p className="text-white text-xs opacity-90 leading-relaxed line-clamp-3 drop-shadow">
+                        <div className={`${item.textColor} text-xs opacity-80 mb-1`}>
+                          {item.subtitle}
+                        </div>
+                        <h3 className={`${item.textColor} text-sm font-bold mb-2`}>{item.title}</h3>
+                        <p
+                          className={`${item.textColor} text-xs opacity-90 leading-relaxed line-clamp-3`}
+                        >
                           {item.description}
                         </p>
                       </div>
+                      <div className={`${item.textColor} text-xs opacity-60`}>🎨 無圖片</div>
                     </div>
-                  </div>
-                ) : (
-                  // 沒有圖片時顯示原本的色塊設計
-                  <div className={`${item.color} h-full p-4 flex flex-col justify-between`}>
-                    <div>
-                      <div className={`${item.textColor} text-xs opacity-80 mb-1`}>{item.subtitle}</div>
-                      <h3 className={`${item.textColor} text-sm font-bold mb-2`}>{item.title}</h3>
-                      <p className={`${item.textColor} text-xs opacity-90 leading-relaxed line-clamp-3`}>
-                        {item.description}
-                      </p>
-                    </div>
-                    <div className={`${item.textColor} text-xs opacity-60`}>
-                      🎨 無圖片
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Controls */}
-              <div className="p-4 bg-white">
-                <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
-                  <span>建立：{formatDate(item.createdAt)}</span>
-                  <span>高度：{item.height}</span>
+                  )}
                 </div>
-                
-                {user?.role === 'admin' ? (
-                  <div className="flex space-x-2">
-                    <Link
-                      href={`/admin/culture/${item.id}/edit`}
-                      className="flex-1 bg-orange-600 text-white px-3 py-2 rounded text-sm inline-flex items-center justify-center h-10 hover:bg-orange-700 transition-colors"
-                    >
-                      編輯
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm inline-flex items-center justify-center h-10 hover:bg-red-700 transition-colors"
-                    >
-                      刪除
-                    </button>
+
+                {/* Controls */}
+                <div className="p-4 bg-white">
+                  <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+                    <span>建立：{formatDate(item.createdAt)}</span>
+                    <span>高度：{item.height}</span>
                   </div>
-                ) : (
-                  <div className="text-center text-gray-400 text-sm py-2">
-                    需要管理員權限
-                  </div>
-                )}
+
+                  {user?.role === 'admin' ? (
+                    <div className="flex space-x-2">
+                      <Link
+                        href={`/admin/culture/${item.id}/edit`}
+                        className="flex-1 bg-orange-600 text-white px-3 py-2 rounded text-sm inline-flex items-center justify-center h-10 hover:bg-orange-700 transition-colors"
+                      >
+                        編輯
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="flex-1 bg-red-600 text-white px-3 py-2 rounded text-sm inline-flex items-center justify-center h-10 hover:bg-red-700 transition-colors"
+                      >
+                        刪除
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-400 text-sm py-2">需要管理員權限</div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {cultureItems.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 mb-4">尚無典藏內容</p>
-            {user?.role === 'admin' && (
-              <Link 
-                href="/admin/culture/add"
-                className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                新增第一個典藏內容
-              </Link>
-            )}
+            ))}
           </div>
-        )}
 
+          {cultureItems.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-4">尚無典藏內容</p>
+              {user?.role === 'admin' && (
+                <Link
+                  href="/admin/culture/add"
+                  className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  新增第一個典藏內容
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
     </AdminProtection>
   )
 }
