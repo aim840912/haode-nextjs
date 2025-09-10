@@ -670,7 +670,13 @@ export const LocationSchemas = {
       .max(10, '最多只能有 10 個特產')
       .default([]),
     coordinates: CoordinatesSchema,
-    image: StringSchemas.url,
+    image: z
+      .string()
+      .optional()
+      .default('')
+      .refine(value => !value || z.string().url().safeParse(value).success, {
+        message: '請輸入有效的圖片網址',
+      }),
     isMain: z.boolean().default(false),
   }),
 
@@ -695,7 +701,12 @@ export const LocationSchemas = {
       .max(10, '最多只能有 10 個特產')
       .optional(),
     coordinates: CoordinatesSchema.optional(),
-    image: StringSchemas.url.optional(),
+    image: z
+      .string()
+      .optional()
+      .refine(value => !value || z.string().url().safeParse(value).success, {
+        message: '請輸入有效的圖片網址',
+      }),
     isMain: z.boolean().optional(),
   }),
 

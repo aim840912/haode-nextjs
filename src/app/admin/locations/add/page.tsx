@@ -32,7 +32,7 @@ export default function AddLocation() {
       lat: 23.5519, // 台灣中心點作為預設值
       lng: 120.5564,
     },
-    image: uploadedImageUrl,
+    image: '',
     isMain: false,
   })
 
@@ -85,11 +85,11 @@ export default function AddLocation() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          image: uploadedImageUrl || formData.image,
+          image: uploadedImageUrl || formData.image || '',
           features: formData.features.filter(feature => feature.trim() !== ''),
           specialties: formData.specialties.filter(specialty => specialty.trim() !== ''),
           coordinates:
-            formData.coordinates.lat || formData.coordinates.lng
+            formData.coordinates.lat && formData.coordinates.lng
               ? formData.coordinates
               : { lat: 23.5519, lng: 120.5564 }, // 台灣中心點作為預設值
         }),
