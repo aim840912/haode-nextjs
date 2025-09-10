@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-09-10T05:31:23.114Z",
+  "functionsDeployed": 0,
+  "testResults": [
+    {
+      "testName": "產品基本搜尋測試",
+      "query": "農產品",
+      "resultCount": 0,
+      "executionTime": 81,
+      "success": false,
+      "error": "Could not find the function public.full_text_search_products(search_limit, search_query) in the schema cache"
+    },
+    {
+      "testName": "產品中文搜尋測試",
+      "query": "有機蔬菜",
+      "resultCount": 0,
+      "executionTime": 149,
+      "success": false,
+      "error": "Could not find the function public.full_text_search_products(search_limit, search_query) in the schema cache"
+    },
+    {
+      "testName": "新聞搜尋測試",
+      "query": "農業新聞",
+      "resultCount": 0,
+      "executionTime": 104,
+      "success": false,
+      "error": "Could not find the function public.full_text_search_news(search_limit, search_query) in the schema cache"
+    },
+    {
+      "testName": "搜尋建議測試",
+      "query": "農",
+      "resultCount": 0,
+      "executionTime": 88,
+      "success": false,
+      "error": "Could not find the function public.get_search_suggestions(partial_query, suggestion_limit, target_table) in the schema cache"
+    },
+    {
+      "testName": "效能分析測試",
+      "query": "N/A",
+      "resultCount": 0,
+      "executionTime": 79,
+      "success": false,
+      "error": "Could not find the function public.analyze_search_performance(table_name) in the schema cache"
+    }
+  ],
+  "performanceMetrics": {},
+  "recommendations": [
+    "⚠️  發現 5 個測試失敗，建議檢查錯誤並修復",
+    "  • 產品基本搜尋測試: Could not find the function public.full_text_search_products(search_limit, search_query) in the schema cache",
+    "  • 產品中文搜尋測試: Could not find the function public.full_text_search_products(search_limit, search_query) in the schema cache",
+    "  • 新聞搜尋測試: Could not find the function public.full_text_search_news(search_limit, search_query) in the schema cache",
+    "  • 搜尋建議測試: Could not find the function public.get_search_suggestions(partial_query, suggestion_limit, target_table) in the schema cache",
+    "  • 效能分析測試: Could not find the function public.analyze_search_performance(table_name) in the schema cache",
+    "🚀 部署後續步驟建議：",
+    "  • 定期監控搜尋效能和使用統計",
+    "  • 實作搜尋結果快取策略",
+    "  • 考慮使用 Elasticsearch 處理大量資料",
+    "  • 建立搜尋分析儀表板"
+  ]
+}
