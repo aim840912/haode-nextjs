@@ -34,7 +34,9 @@ async function handleGET(request: NextRequest) {
 
   try {
     // 使用搜尋統計 RPC 函數
-    const { data: stats, error } = (await supabase.rpc('get_popular_searches' as any, {
+    // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
+    const supabaseAny = supabase as any
+    const { data: stats, error } = (await supabaseAny.rpc('get_popular_searches', {
       days_back: daysBack,
       result_limit: limit,
     })) as { data: any[] | null; error: any }

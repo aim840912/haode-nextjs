@@ -188,8 +188,10 @@ class SupabaseProductService implements ProductService {
 
       // 首先嘗試使用新的全文搜尋函數
       try {
-        const { data: fullTextResults, error: rpcError } = (await supabase.rpc(
-          'full_text_search_products' as any,
+        // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
+        const supabaseAny = supabase as any
+        const { data: fullTextResults, error: rpcError } = (await supabaseAny.rpc(
+          'full_text_search_products',
           {
             search_query: query,
             search_limit: 50,

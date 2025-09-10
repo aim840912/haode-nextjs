@@ -373,6 +373,42 @@ export class UnifiedCacheManager {
   }
 
   /**
+   * 取得進階快取統計資訊
+   */
+  static getAdvancedStats(): AdvancedCacheMetrics {
+    const total = this.metrics.hits + this.metrics.misses
+    const uptime = Date.now() - this.metrics.startTime
+    const averageResponseTime =
+      this.metrics.responseTimes.length > 0
+        ? this.metrics.responseTimes.reduce((sum, time) => sum + time, 0) /
+          this.metrics.responseTimes.length
+        : 0
+
+    return {
+      hits: this.metrics.hits,
+      misses: this.metrics.misses,
+      errors: this.metrics.errors,
+      hitRate: total > 0 ? ((this.metrics.hits / total) * 100).toFixed(1) + '%' : '0.0%',
+      memoryHits: this.metrics.memoryHits,
+      kvHits: this.metrics.kvHits,
+      sets: this.metrics.sets,
+      deletes: this.metrics.deletes,
+      invalidations: this.metrics.invalidations,
+      warmups: this.metrics.warmups,
+      backgroundRefreshes: this.metrics.backgroundRefreshes,
+      averageResponseTime,
+      peakMemorySize: this.metrics.peakMemorySize,
+      totalOperations: this.metrics.hits + this.metrics.misses + this.metrics.sets,
+      uptime,
+      lastActivity: new Date(this.metrics.lastActivity).toISOString(),
+      layerDistribution: {
+        memory: total > 0 ? (this.metrics.memoryHits / total) * 100 : 0,
+        kv: total > 0 ? (this.metrics.kvHits / total) * 100 : 0,
+      },
+    }
+  }
+
+  /**
    * 重設統計資訊
    */
   static resetMetrics(): void {

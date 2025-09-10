@@ -33,6 +33,11 @@
     "migrate:products": "npx tsx scripts/migrate-to-supabase.ts",
     "generate:keys": "node scripts/generate-keys.js",
     "generate:keys:simple": "node scripts/generate-keys.js --simple",
+    "db:optimize": "npx tsx scripts/deploy-database-optimization.ts",
+    "db:optimize:index": "npx tsx scripts/apply-index-optimization.ts",
+    "db:optimize:search": "npx tsx scripts/apply-full-text-search.ts",
+    "db:monitor": "npx tsx scripts/cache-performance-monitor.ts",
+    "db:analyze": "npx tsx scripts/database-performance-analyzer.ts",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -68,6 +73,7 @@
     "@vercel/kv": "^3.0.0",
     "@vercel/speed-insights": "^1.2.0",
     "browser-image-compression": "^2.0.2",
+    "dotenv": "^17.2.2",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.543.0",
     "next": "^15.5.2",

@@ -110,7 +110,9 @@ export class FullTextSearchService {
       })
 
       // 使用新的全文搜尋 RPC 函數
-      const { data, error } = (await this.client.rpc('full_text_search_products' as any, {
+      // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
+      const clientAny = this.client as any
+      const { data, error } = (await clientAny.rpc('full_text_search_products', {
         search_query: query,
         search_limit: limit,
         search_offset: offset,
@@ -186,7 +188,9 @@ export class FullTextSearchService {
       } = config
 
       // 使用新的新聞全文搜尋 RPC 函數
-      const { data, error } = (await this.client.rpc('full_text_search_news' as any, {
+      // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
+      const clientAny = this.client as any
+      const { data, error } = (await clientAny.rpc('full_text_search_news', {
         search_query: query,
         search_limit: limit,
         search_offset: offset,
@@ -304,7 +308,9 @@ export class FullTextSearchService {
     const startTime = Date.now()
 
     try {
-      const { data, error } = (await this.client.rpc('search_products_advanced' as any, {
+      // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
+      const clientAny = this.client as any
+      const { data, error } = (await clientAny.rpc('search_products_advanced', {
         search_query: query,
         category_filter: category,
         min_price: minPrice,
@@ -362,7 +368,9 @@ export class FullTextSearchService {
 
     try {
       // 使用新的搜尋建議 RPC 函數
-      const { data, error } = (await this.client.rpc('get_search_suggestions' as any, {
+      // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
+      const clientAny = this.client as any
+      const { data, error } = (await clientAny.rpc('get_search_suggestions', {
         partial_query: partialQuery,
         suggestion_limit: limit,
       })) as { data: any[] | null; error: any }
