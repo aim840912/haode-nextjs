@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { scheduleService } from '@/services/scheduleService'
+import { scheduleServiceAdapter as scheduleService } from '@/services/scheduleServiceAdapter'
 import { ScheduleSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'

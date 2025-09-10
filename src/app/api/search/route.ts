@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
-import { productService } from '@/services/productService'
-import { newsService } from '@/services/newsService'
+import { getProductService } from '@/services/serviceFactory'
+import { newsServiceAdapter as newsService } from '@/services/newsServiceAdapter'
 import { SearchResult, SearchResponse } from '@/types/search'
 import { Product } from '@/types/product'
 import { NewsItem } from '@/types/news'
@@ -41,7 +41,7 @@ async function handleGET(request: NextRequest) {
 
   // 並行搜尋所有數據源
   const [products, news] = await Promise.all([
-    productService.searchProducts(query),
+    (await getProductService()).searchProducts(query),
     newsService.searchNews(query),
   ])
 

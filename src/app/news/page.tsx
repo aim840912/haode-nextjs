@@ -53,25 +53,19 @@ export default function NewsPage() {
           setNews([])
         }
       } else {
-        // 如果 API 不存在，使用本地資料
-        const newsData = await import('@/data/news.json')
-        setNews(newsData.default)
+        logger.warn('新聞 API 回應異常，設定空陣列', {
+          module: 'NewsPage',
+          action: 'fetchNews',
+        })
+        setNews([])
       }
     } catch (error) {
       logger.error('Error fetching news', error as Error, {
         module: 'NewsPage',
         action: 'fetchNews',
       })
-      // 載入本地資料作為備案
-      try {
-        const newsData = await import('@/data/news.json')
-        setNews(newsData.default)
-      } catch (importError) {
-        logger.error('Error importing local news data', importError as Error, {
-          module: 'NewsPage',
-          action: 'importLocalNewsData',
-        })
-      }
+      // API 錯誤時設定空陣列
+      setNews([])
     } finally {
       setLoading(false)
     }

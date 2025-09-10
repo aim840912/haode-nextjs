@@ -46,7 +46,8 @@
       "Bash(convert:*)",
       "Bash(python3:*)",
       "mcp__playwright__browser_fill_form",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "Bash(yarn add:*)"
     ],
     "deny": []
   },
