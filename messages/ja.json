@@ -1,7 +1,7 @@
 {
   "navigation": {
     "brand": "豪德茶業",
-    "brandEn": "HAUDE TEA", 
+    "brandEn": "HAUDE TEA",
     "exploration": "農場探索",
     "culture": "農業文化遺産",
     "products": "製品紹介",
@@ -46,7 +46,7 @@
       "title": "プレミアム製品",
       "items": {
         "plum": "赤肉李果樹園",
-        "coffee": "プレミアムコーヒー", 
+        "coffee": "プレミアムコーヒー",
         "fruit": "季節のフルーツ",
         "vegetable": "有機野菜"
       },
@@ -67,7 +67,7 @@
     },
     "contactInfo": {
       "phone": "電話: 05-2561843",
-      "email": "メール: info@dechuantea.com",
+      "email": "メール: aim840912@gmail.com",
       "address": "住所: 嘉義県梅山郷太和村一鄰八号"
     },
     "copyright": "著作権所有"

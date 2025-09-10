@@ -104,7 +104,7 @@ export default function TermsPage() {
                 <p>如有任何疑問，請聯絡我們：</p>
                 <ul className="list-none space-y-1 mt-2">
                   <li>電話：05-2561843</li>
-                  <li>電子郵件：info@dechuantea.com</li>
+                  <li>電子郵件：aim840912@gmail.com</li>
                   <li>地址：嘉義縣梅山鄉太和村一鄰八號</li>
                 </ul>
               </section>

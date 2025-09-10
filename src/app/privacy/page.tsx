@@ -75,7 +75,7 @@ export default function PrivacyPage() {
                 <p>如果您對本隱私權政策有任何疑問或需要行使您的權利，請透過以下方式聯絡我們：</p>
                 <ul className="list-none space-y-1 mt-2">
                   <li>電話：05-2561843</li>
-                  <li>電子郵件：info@dechuantea.com</li>
+                  <li>電子郵件：aim840912@gmail.com</li>
                   <li>地址：嘉義縣梅山鄉太和村一鄰八號</li>
                 </ul>
               </section>

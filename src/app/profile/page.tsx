@@ -10,6 +10,7 @@ import OptimizedImage from '@/components/OptimizedImage'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
 import type { Product } from '@/types/product'
+import type { Order } from '@/types/order'
 
 // 載入頁面元件
 function ProfilePageLoading() {
@@ -36,6 +37,9 @@ function ProfilePageContent() {
   const [interestedProducts, setInterestedProducts] = useState<string[]>([])
   const [interestedProductsData, setInterestedProductsData] = useState<Product[]>([])
   const [loadingInterests, setLoadingInterests] = useState(false)
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loadingOrders, setLoadingOrders] = useState(false)
+  const [ordersError, setOrdersError] = useState<string | null>(null)
 
   // 表單狀態
   const [formData, setFormData] = useState({
@@ -50,23 +54,35 @@ function ProfilePageContent() {
     },
   })
 
-  // 模擬訂單資料
-  const [orders] = useState([
-    {
-      id: 'order-001',
-      date: '2024-01-14',
-      status: 'delivered',
-      total: 680,
-      items: [{ name: '高山紅肉李', quantity: 1, price: 680 }],
-    },
-    {
-      id: 'order-002',
-      date: '2024-01-10',
-      status: 'processing',
-      total: 450,
-      items: [{ name: '精品濾掛咖啡', quantity: 1, price: 450 }],
-    },
-  ])
+  // 載入訂單資料
+  const loadOrders = useCallback(async () => {
+    if (!user) return
+
+    setLoadingOrders(true)
+    setOrdersError(null)
+
+    try {
+      const response = await fetch('/api/orders?limit=10')
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success) {
+          setOrders(result.data.orders || [])
+        } else {
+          throw new Error(result.message || '載入訂單失敗')
+        }
+      } else {
+        throw new Error('載入訂單失敗')
+      }
+    } catch (error) {
+      logger.error('Error loading orders', error as Error, {
+        metadata: { userId: user?.id },
+      })
+      setOrdersError('載入訂單失敗，請稍後再試')
+      setOrders([])
+    } finally {
+      setLoadingOrders(false)
+    }
+  }, [user])
 
   // 初始化表單資料
   useEffect(() => {
@@ -117,12 +133,43 @@ function ProfilePageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]) // fetchInterestedProductsData 穩定，不需要在依賴中
 
-  // 載入興趣清單
+  // 載入興趣清單和訂單
   useEffect(() => {
     if (user) {
       loadInterestedProducts()
+      loadOrders()
     }
-  }, [user, loadInterestedProducts])
+  }, [user, loadInterestedProducts, loadOrders])
+
+  // 取消訂單
+  const cancelOrder = async (orderId: string) => {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'cancel',
+          reason: '使用者主動取消',
+        }),
+      })
+
+      if (response.ok) {
+        success('訂單取消成功', '訂單已成功取消')
+        // 重新載入訂單列表
+        loadOrders()
+      } else {
+        const errorData = await response.json()
+        error('取消失敗', errorData.message || '取消訂單失敗，請稍後再試')
+      }
+    } catch (cancelError) {
+      logger.error('Error canceling order', cancelError as Error, {
+        metadata: { orderId },
+      })
+      error('取消失敗', '取消訂單失敗，請稍後再試')
+    }
+  }
 
   const fetchInterestedProductsData = async (productIds: string[]) => {
     setLoadingInterests(true)
@@ -245,6 +292,10 @@ function ProfilePageContent() {
 
   const getStatusText = (status: string) => {
     switch (status) {
+      case 'pending':
+        return '待確認'
+      case 'confirmed':
+        return '已確認'
       case 'processing':
         return '處理中'
       case 'shipped':
@@ -253,6 +304,8 @@ function ProfilePageContent() {
         return '已送達'
       case 'cancelled':
         return '已取消'
+      case 'refunded':
+        return '已退款'
       default:
         return status
     }
@@ -260,14 +313,20 @@ function ProfilePageContent() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
+      case 'pending':
+        return 'text-orange-600 bg-orange-100'
+      case 'confirmed':
+        return 'text-blue-600 bg-blue-100'
       case 'processing':
         return 'text-yellow-600 bg-yellow-100'
       case 'shipped':
-        return 'text-blue-600 bg-blue-100'
+        return 'text-purple-600 bg-purple-100'
       case 'delivered':
         return 'text-green-600 bg-green-100'
       case 'cancelled':
         return 'text-red-600 bg-red-100'
+      case 'refunded':
+        return 'text-gray-600 bg-gray-100'
       default:
         return 'text-gray-600 bg-gray-100'
     }
@@ -536,16 +595,71 @@ function ProfilePageContent() {
             {/* 訂單記錄 Tab */}
             {activeTab === 'orders' && (
               <div className="bg-white rounded-lg shadow-sm p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">訂單記錄</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">訂單記錄</h2>
+                  <button
+                    onClick={loadOrders}
+                    className="px-4 py-2 text-amber-900 hover:text-amber-700 transition-colors"
+                    disabled={loadingOrders}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                  </button>
+                </div>
 
-                {orders.length > 0 ? (
+                {loadingOrders ? (
+                  <div className="text-center py-12">
+                    <LoadingSpinner size="lg" />
+                    <p className="mt-4 text-gray-600">載入中...</p>
+                  </div>
+                ) : ordersError ? (
+                  <div className="text-center py-12">
+                    <div className="text-red-600 mb-4">
+                      <svg
+                        className="w-16 h-16 mx-auto mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                        />
+                      </svg>
+                    </div>
+                    <p className="text-gray-600 mb-4">{ordersError}</p>
+                    <button
+                      onClick={loadOrders}
+                      className="px-4 py-2 bg-amber-900 text-white rounded-lg hover:bg-amber-800 transition-colors"
+                    >
+                      重新載入
+                    </button>
+                  </div>
+                ) : orders.length > 0 ? (
                   <div className="space-y-4">
                     {orders.map(order => (
                       <div key={order.id} className="border border-gray-200 rounded-lg p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h3 className="font-semibold text-gray-900">訂單 #{order.id}</h3>
-                            <p className="text-gray-600 text-sm">{order.date}</p>
+                            <h3 className="font-semibold text-gray-900">
+                              訂單 {order.orderNumber}
+                            </h3>
+                            <p className="text-gray-600 text-sm">
+                              {new Date(order.createdAt).toLocaleDateString('zh-TW')}
+                            </p>
+                            {order.trackingNumber && (
+                              <p className="text-sm text-blue-600 mt-1">
+                                物流追蹤: {order.trackingNumber}
+                              </p>
+                            )}
                           </div>
                           <span
                             className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}
@@ -556,21 +670,74 @@ function ProfilePageContent() {
 
                         <div className="space-y-2 mb-4">
                           {order.items.map((item, index) => (
-                            <div key={index} className="flex justify-between">
-                              <span>
-                                {item.name} x {item.quantity}
+                            <div key={index} className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                  {item.productImage && (
+                                    <img
+                                      src={item.productImage}
+                                      alt={item.productName}
+                                      className="w-8 h-8 object-cover rounded"
+                                    />
+                                  )}
+                                  <div>
+                                    <span className="font-medium">{item.productName}</span>
+                                    {item.priceUnit && (
+                                      <span className="text-sm text-gray-500 ml-2">
+                                        ({item.priceUnit})
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-sm text-gray-600 ml-10">
+                                  NT$ {item.unitPrice.toLocaleString()} x {item.quantity}
+                                </div>
+                              </div>
+                              <span className="font-medium">
+                                NT$ {item.subtotal.toLocaleString()}
                               </span>
-                              <span>NT$ {item.price.toLocaleString()}</span>
                             </div>
                           ))}
                         </div>
 
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                          <span className="font-semibold">總計</span>
-                          <span className="font-bold text-amber-900">
-                            NT$ {order.total.toLocaleString()}
-                          </span>
+                        <div className="border-t border-gray-200 pt-4 space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span>商品小計</span>
+                            <span>NT$ {order.subtotal.toLocaleString()}</span>
+                          </div>
+                          {order.shippingFee > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>運費</span>
+                              <span>NT$ {order.shippingFee.toLocaleString()}</span>
+                            </div>
+                          )}
+                          {order.tax > 0 && (
+                            <div className="flex justify-between text-sm">
+                              <span>稅費</span>
+                              <span>NT$ {order.tax.toLocaleString()}</span>
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center font-semibold border-t pt-2">
+                            <span>總計</span>
+                            <span className="text-lg text-amber-900">
+                              NT$ {order.totalAmount.toLocaleString()}
+                            </span>
+                          </div>
                         </div>
+
+                        {/* 訂單操作 */}
+                        {order.status === 'pending' || order.status === 'confirmed' ? (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <button
+                              onClick={() => {
+                                if (confirm('確定要取消這個訂單嗎？')) cancelOrder(order.id)
+                              }}
+                              className="px-4 py-2 text-red-600 hover:text-red-700 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+                            >
+                              取消訂單
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     ))}
                   </div>
@@ -589,7 +756,8 @@ function ProfilePageContent() {
                         d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
                       />
                     </svg>
-                    <p className="text-gray-600">尚無訂單記錄</p>
+                    <p className="text-gray-600 mb-4">尚無訂單記錄</p>
+                    <p className="text-gray-500 text-sm">很快就會有您的第一個訂單了</p>
                   </div>
                 )}
               </div>

@@ -3,7 +3,8 @@
 export const siteConfig = {
   name: '豪德農場',
   title: '豪德農場 Haude Farm - 嘉義梅山優質農產',
-  description: '座落梅山群峰之間的豪德農場，以自然農法栽培紅肉李、高山茶葉、季節水果等優質農產品，提供農場導覽與四季體驗活動。新鮮直送、有機栽培、產地直銷',
+  description:
+    '座落梅山群峰之間的豪德農場，以自然農法栽培紅肉李、高山茶葉、季節水果等優質農產品，提供農場導覽與四季體驗活動。新鮮直送、有機栽培、產地直銷',
   url: 'https://haode-nextjs.vercel.app/',
   ogImage: '/images/hero/scene1.jpg',
   keywords: [
@@ -22,7 +23,7 @@ export const siteConfig = {
     '梅山特產',
     '農場導覽',
     '製茶工藝',
-    '茶葉加工'
+    '茶葉加工',
   ],
   author: '豪德農場',
   creator: '豪德農場',
@@ -31,25 +32,25 @@ export const siteConfig = {
 
 export const contactInfo = {
   phone: '+886-5-2561843',
-  email: 'info@dechuantea.com',
+  email: 'aim840912@gmail.com',
   address: {
     street: '梅山鄉太和村一鄰八號',
     city: '梅山鄉',
     state: '嘉義縣',
     postalCode: '603',
-    country: '台灣'
+    country: '台灣',
   },
   coordinates: {
     latitude: '23.5833',
-    longitude: '120.5833'
-  }
+    longitude: '120.5833',
+  },
 }
 
 export const socialLinks = {
   facebook: 'https://www.facebook.com/groups/284358098576086/?locale=zh_TW',
   instagram: 'https://www.instagram.com/haudefarm',
   line: 'https://line.me/haudefarm',
-  youtube: 'https://www.youtube.com/haudefarm'
+  youtube: 'https://www.youtube.com/haudefarm',
 }
 
 export const businessHours = {
@@ -60,7 +61,7 @@ export const businessHours = {
   friday: '08:00-17:00',
   saturday: '08:00-17:00',
   sunday: '08:00-17:00',
-  openingHours: 'Mo-Su 08:00-17:00'
+  openingHours: 'Mo-Su 08:00-17:00',
 }
 
 // 生成頁面專用的 metadata
@@ -69,7 +70,7 @@ export function generatePageMetadata({
   description,
   keywords = [],
   image,
-  path = ''
+  path = '',
 }: {
   title: string
   description: string
@@ -125,31 +126,68 @@ export const pageMetadata = {
 
   products: generatePageMetadata({
     title: '精選農產品',
-    description: '豪德農場精選農產品，包括紅肉李、高山茶葉、季節水果、有機蔬菜等。新鮮直送，品質保證，體驗台灣最優質的農產品。',
-    keywords: ['豪德', '農產品', '紅肉李', '高山茶', '有機蔬菜', '季節水果', '豪德農場產品', '豪德製茶所', '嘉義特產', '製茶工藝', '茶葉加工'],
+    description:
+      '豪德農場精選農產品，包括紅肉李、高山茶葉、季節水果、有機蔬菜等。新鮮直送，品質保證，體驗台灣最優質的農產品。',
+    keywords: [
+      '豪德',
+      '農產品',
+      '紅肉李',
+      '高山茶',
+      '有機蔬菜',
+      '季節水果',
+      '豪德農場產品',
+      '豪德製茶所',
+      '嘉義特產',
+      '製茶工藝',
+      '茶葉加工',
+    ],
     image: '/images/products/red_plum_2.jpg',
     path: '/products',
   }),
 
   news: generatePageMetadata({
     title: '農場新聞',
-    description: '豪德農場最新消息，包括產季資訊、農場活動、種植技術分享等。了解最新的農產品動態和農場故事。',
-    keywords: ['豪德', '農場新聞', '產季資訊', '農場活動', '種植技術', '豪德農場消息', '豪德製茶所', '農業資訊', '製茶新聞'],
+    description:
+      '豪德農場最新消息，包括產季資訊、農場活動、種植技術分享等。了解最新的農產品動態和農場故事。',
+    keywords: [
+      '豪德',
+      '農場新聞',
+      '產季資訊',
+      '農場活動',
+      '種植技術',
+      '豪德農場消息',
+      '豪德製茶所',
+      '農業資訊',
+      '製茶新聞',
+    ],
     image: '/images/news/red_plum_smile.jpg',
     path: '/news',
   }),
 
   culture: generatePageMetadata({
     title: '農場文化',
-    description: '了解豪德農場的農業文化，從傳統農業智慧到現代種植技術，感受農場世代傳承的農業精神與對土地的熱愛。',
-    keywords: ['豪德', '農場文化', '農業傳統', '種植技術', '農業智慧', '土地保育', '豪德農場故事', '豪德製茶所', '製茶文化', '茶藝傳承'],
+    description:
+      '了解豪德農場的農業文化，從傳統農業智慧到現代種植技術，感受農場世代傳承的農業精神與對土地的熱愛。',
+    keywords: [
+      '豪德',
+      '農場文化',
+      '農業傳統',
+      '種植技術',
+      '農業智慧',
+      '土地保育',
+      '豪德農場故事',
+      '豪德製茶所',
+      '製茶文化',
+      '茶藝傳承',
+    ],
     image: '/images/culture/mountain.jpg',
     path: '/culture',
   }),
 
   farmTour: generatePageMetadata({
     title: '農場體驗',
-    description: '豪德農場提供四季不同的農場體驗活動，讓您親身感受農業生活，了解農產品從種植到收穫的完整過程。',
+    description:
+      '豪德農場提供四季不同的農場體驗活動，讓您親身感受農業生活，了解農產品從種植到收穫的完整過程。',
     keywords: ['豪德', '農場體驗', '農業體驗', '農場導覽', '親子活動', '生態教育', '農村旅遊'],
     image: '/images/farm-tour/many_people_1.jpg',
     path: '/farm-tour',

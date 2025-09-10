@@ -55,10 +55,10 @@ export default function ContactPage() {
               <div>
                 <h3 className="font-medium text-gray-900">電子郵件</h3>
                 <a
-                  href="mailto:info@dechuantea.com"
+                  href="mailto:aim840912@gmail.com"
                   className="text-amber-600 hover:text-amber-700"
                 >
-                  info@dechuantea.com
+                  aim840912@gmail.com
                 </a>
               </div>
             </div>
