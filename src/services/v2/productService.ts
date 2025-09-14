@@ -10,7 +10,6 @@
 
 import path from 'path'
 import { Product, ProductImage } from '@/types/product'
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import {
   AbstractSupabaseService,

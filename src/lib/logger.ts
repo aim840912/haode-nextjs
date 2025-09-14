@@ -158,13 +158,16 @@ class Logger {
       const prefix = `${emoji} [${entry.levelName}] ${entry.timestamp}`
       const contextStr = context ? ` | ${JSON.stringify(context)}` : ''
 
+      // eslint-disable-next-line no-console
       console[consoleMethod](`${prefix} | ${message}${contextStr}`)
 
       if (error?.stack && level >= LogLevel.ERROR) {
+        // eslint-disable-next-line no-console
         console.error(error.stack)
       }
     } else {
       // 生產環境：結構化 JSON 輸出
+      // eslint-disable-next-line no-console
       console[consoleMethod](JSON.stringify(entry))
 
       if (error && level >= LogLevel.ERROR) {

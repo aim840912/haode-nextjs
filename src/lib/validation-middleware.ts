@@ -5,8 +5,6 @@
  * 支援 JSON body、查詢參數和路由參數的驗證
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ValidationError } from '@/lib/errors'

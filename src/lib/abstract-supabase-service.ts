@@ -8,8 +8,6 @@
  * - 審計日誌整合
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-
 import { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { getSupabaseAdmin } from '@/lib/supabase-auth'

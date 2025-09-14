@@ -177,7 +177,6 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
 export async function upsertProfile(
   profile: Partial<Profile> & { id: string }
 ): Promise<Profile | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any).from('profiles').upsert(profile).select().single()
 
   if (error) {
@@ -201,7 +200,6 @@ export async function updateProfile(
   userId: string,
   updates: Partial<Profile>
 ): Promise<Profile | null> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from('profiles')
     .update(updates)
@@ -268,7 +266,7 @@ export async function signUpUser(email: string, password: string, name: string, 
           action: 'phone_remedy',
           metadata: { userId: data.user.id, phone: phone.substring(0, 3) + '***' },
         })
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         const { error: updateError } = await (supabase as any)
           .from('profiles')
           .update({ phone })

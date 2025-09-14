@@ -55,7 +55,10 @@
       "Bash(tree:*)",
       "Bash(npm outdated:*)",
       "Bash(npm run test:ci:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(cat:*)",
+      "Bash(npm ls:*)",
+      "Bash(xargs sed:*)"
     ],
     "deny": []
   },
