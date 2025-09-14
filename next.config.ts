@@ -44,8 +44,13 @@ const nextConfig: NextConfig = {
     // optimizeCss: true,
   },
 
-  // 建置優化配置 - 支援 Turbopack
-  ...(process.env.NODE_ENV === 'production' && {
+  // 檢查是否為真正的生產環境（而非 Vercel 預覽部署）
+  // 重要：在模組頂層定義，供下方 headers 函數使用
+  ...((() => {
+    const isRealProduction =
+      process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'
+    return isRealProduction
+  })() && {
     webpack: config => {
       // 修復客戶端變數在伺服器端的問題
       config.resolve.fallback = {
@@ -87,6 +92,10 @@ const nextConfig: NextConfig = {
     // 開發模式允許較寬鬆的政策，生產環境更嚴格
     const isDev = process.env.NODE_ENV === 'development'
 
+    // 檢查是否為真正的生產環境（而非 Vercel 預覽部署）
+    const isRealProduction =
+      process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'
+
     const csp = [
       "default-src 'self'",
       // 優化腳本來源 - 生產環境移除 unsafe 指令
@@ -108,7 +117,7 @@ const nextConfig: NextConfig = {
       "media-src 'self' data: https:", // 媒體來源控制
       "child-src 'self' blob:", // 子框架來源控制
       'upgrade-insecure-requests', // 自動升級 HTTP 到 HTTPS
-      ...(process.env.NODE_ENV === 'production'
+      ...(isRealProduction
         ? [
             'block-all-mixed-content', // 生產環境阻止混合內容
             "require-trusted-types-for 'script'", // 要求可信類型（現代瀏覽器）
@@ -185,7 +194,7 @@ const nextConfig: NextConfig = {
         value: 'same-origin',
       },
       // 支援現代違規報告機制
-      ...(process.env.NODE_ENV === 'production'
+      ...(isRealProduction
         ? [
             {
               key: 'Report-To',
@@ -208,7 +217,7 @@ const nextConfig: NextConfig = {
           ]
         : []),
       // HSTS 只在生產環境啟用
-      ...(process.env.NODE_ENV === 'production'
+      ...(isRealProduction
         ? [
             {
               key: 'Strict-Transport-Security',
@@ -251,8 +260,12 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
   // 嚴格模式 - 在開發模式下禁用以避免 Multiple GoTrueClient 警告
-  // 但在生產環境中保持啟用以發現潜在問題
-  reactStrictMode: process.env.NODE_ENV === 'production',
+  // 但在真正的生產環境中保持啟用以發現潜在問題
+  reactStrictMode: (() => {
+    const isRealProduction =
+      process.env.NODE_ENV === 'production' && process.env.VERCEL_ENV === 'production'
+    return isRealProduction
+  })(),
 
   // ESLint 設定 - 暫時忽略建置錯誤
   eslint: {
