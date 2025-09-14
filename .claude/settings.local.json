@@ -48,7 +48,11 @@
       "mcp__playwright__browser_fill_form",
       "Bash(npx playwright:*)",
       "Bash(yarn add:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(git checkout:*)",
+      "Read(//home/aim840912/projects/doterra/src/**)",
+      "Read(//home/aim840912/projects/doterra/**)",
+      "Bash(tree:*)"
     ],
     "deny": []
   },
