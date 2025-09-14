@@ -44,7 +44,7 @@ type SupabaseInquiryRow = {
 }
 
 // 類型安全的 Supabase 客戶端輔助函數
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 function getTypedSupabaseClient(): any {
   return createServiceSupabaseClient()
 }

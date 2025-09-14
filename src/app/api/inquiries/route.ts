@@ -6,7 +6,7 @@
 
 import { NextRequest } from 'next/server'
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
-import { inquiryServiceAdapter } from '@/services/inquiryServiceAdapter'
+import { inquiryServiceV2Simple as inquiryServiceAdapter } from '@/services/v2/inquiryServiceSimple'
 import { AuditLogger } from '@/services/auditLogService'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
@@ -38,11 +38,11 @@ async function handleGET(request: NextRequest) {
 
   // 檢查是否為管理員
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   const isAdmin = profile?.role === 'admin'
   const adminMode = result.data.admin === true
@@ -77,11 +77,11 @@ async function handlePOST(request: NextRequest) {
   }
   // 取得使用者資訊用於審計日誌
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   // 解析並驗證請求資料
   const body = await request.json()

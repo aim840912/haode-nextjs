@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import AdminProtection from '@/components/AdminProtection'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
-import { useToast } from '@/components/Toast'
+import AdminProtection from '@/components/features/admin/AdminProtection'
+import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { useToast } from '@/components/ui/feedback/Toast'
 import { supabase } from '@/lib/supabase-auth'
 import {
   AuditLog,

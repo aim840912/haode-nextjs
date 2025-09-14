@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import { Location } from '@/types/location'
 import Link from 'next/link'
-import { SimpleImage, AvatarSimpleImage } from '@/components/OptimizedImage'
+import { SimpleImage, AvatarSimpleImage } from '@/components/ui/image/OptimizedImage'
 import { logger } from '@/lib/logger'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { newsServiceAdapter as newsService } from '@/services/newsServiceAdapter'
+import { newsServiceV2Simple as newsService } from '@/services/v2/newsServiceSimple'
 import { NewsSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'

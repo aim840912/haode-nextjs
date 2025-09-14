@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { CultureItem } from '@/types/culture'
-import { SimpleImage } from '@/components/OptimizedImage'
-import Breadcrumbs, { createCultureBreadcrumbs } from '@/components/Breadcrumbs'
+import { SimpleImage } from '@/components/ui/image/OptimizedImage'
+import Breadcrumbs, { createCultureBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 
 export default function CulturePage() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])

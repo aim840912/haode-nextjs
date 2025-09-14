@@ -3,31 +3,31 @@
 // GA4 追蹤使用範例
 // 這個文件展示如何在不同場景下使用 GA4 追蹤功能
 
-import { useGoogleAnalytics } from '@/components/GoogleAnalyticsProvider'
+import { useGoogleAnalytics } from '@/components/features/analytics/GoogleAnalyticsProvider'
 import { productEvents, interactionEvents, conversionEvents } from '@/lib/analytics'
 import { Product } from '@/types/product'
 
 // 類型定義
 interface FormData {
-  name: string;
-  email: string;
-  message: string;
-  [key: string]: unknown;
+  name: string
+  email: string
+  message: string
+  [key: string]: unknown
 }
 
 interface OrderItem {
-  product_id: string;
-  product_name: string;
-  category?: string;
-  quantity: number;
-  price: number;
+  product_id: string
+  product_name: string
+  category?: string
+  quantity: number
+  price: number
 }
 
 interface OrderData {
-  id: string;
-  total: number;
-  currency?: string;
-  items: OrderItem[];
+  id: string
+  total: number
+  currency?: string
+  items: OrderItem[]
 }
 
 export function ProductPageExample() {
@@ -40,7 +40,7 @@ export function ProductPageExample() {
       product_name: product.name,
       category: product.category || '農產品',
       price: product.price,
-      currency: 'TWD'
+      currency: 'TWD',
     })
   }
 
@@ -52,7 +52,7 @@ export function ProductPageExample() {
       category: product.category || '農產品',
       price: product.price,
       quantity: quantity,
-      currency: 'TWD'
+      currency: 'TWD',
     })
   }
 
@@ -73,10 +73,13 @@ export function ContactFormExample() {
 
   const handleFormSubmit = (formData: FormData) => {
     // 追蹤表單提交事件
-    interactionEvents.contactUs('form', JSON.stringify({
-      name: formData.name ? 'provided' : 'not_provided',
-      message_length: formData.message?.length || 0
-    }))
+    interactionEvents.contactUs(
+      'form',
+      JSON.stringify({
+        name: formData.name ? 'provided' : 'not_provided',
+        message_length: formData.message?.length || 0,
+      })
+    )
   }
 
   const handlePhoneClick = () => {
@@ -106,9 +109,9 @@ export function PurchaseExample() {
         item_name: item.product_name,
         category: item.category || '農產品',
         price: item.price,
-        quantity: item.quantity
+        quantity: item.quantity,
       })),
-      currency: 'TWD'
+      currency: 'TWD',
     })
   }
 
@@ -155,7 +158,11 @@ export function SearchExample() {
 }
 
 export function SocialShareExample() {
-  const handleShare = (platform: 'facebook' | 'line' | 'email' | 'copy_link', contentType: string, contentId?: string) => {
+  const handleShare = (
+    platform: 'facebook' | 'line' | 'email' | 'copy_link',
+    contentType: string,
+    contentId?: string
+  ) => {
     // 追蹤分享事件
     conversionEvents.share(platform, contentType, contentId)
   }
@@ -174,10 +181,8 @@ export function SocialShareExample() {
 export default function GA4TrackingExamples() {
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">
-        🔧 GA4 追蹤使用範例
-      </h3>
-      
+      <h3 className="text-lg font-medium text-gray-900 mb-4">🔧 GA4 追蹤使用範例</h3>
+
       <div className="space-y-4">
         <div className="bg-white p-4 rounded border">
           <h4 className="font-medium text-gray-800 mb-2">產品相關追蹤</h4>

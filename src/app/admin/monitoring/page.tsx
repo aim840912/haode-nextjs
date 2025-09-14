@@ -1,23 +1,20 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import AdminProtection from '@/components/AdminProtection'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 // 動態導入監控儀表板組件以減少初始 Bundle 大小
-const MonitoringDashboard = dynamic(
-  () => import('@/components/admin/MonitoringDashboard'),
-  {
-    loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">載入監控儀表板中...</p>
-        </div>
+const MonitoringDashboard = dynamic(() => import('@/components/admin/MonitoringDashboard'), {
+  loading: () => (
+    <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">載入監控儀表板中...</p>
       </div>
-    ),
-    ssr: false
-  }
-)
+    </div>
+  ),
+  ssr: false,
+})
 
 export default function AdminMonitoringPage() {
   return (

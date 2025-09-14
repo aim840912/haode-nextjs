@@ -138,7 +138,7 @@ export class UserInterestsServiceV2Simple {
       this.validateInputs(userId, productId)
 
       const client = this.getSupabaseClient()!
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { error } = await (client as any).from('user_interests').insert({
         user_id: userId,
         product_id: productId,
@@ -247,7 +247,7 @@ export class UserInterestsServiceV2Simple {
       )
 
       const client = this.getSupabaseClient()!
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const { error } = await (client as any)
         .from('user_interests')
         .upsert(interests, { onConflict: 'user_id,product_id' })

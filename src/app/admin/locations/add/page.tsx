@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useAuth } from '@/lib/auth-context'
-import ImageUploader from '@/components/ImageUploader'
+import ImageUploader from '@/components/features/products/ImageUploader'
 
 export default function AddLocation() {
   const router = useRouter()

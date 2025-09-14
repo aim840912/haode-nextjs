@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { farmTourServiceAdapter } from '@/services/farmTourServiceAdapter'
+import { getFarmTourService } from '@/services/serviceFactory'
 import { withErrorHandler } from '@/lib/error-handler'
 import { NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
@@ -7,7 +7,8 @@ import { success } from '@/lib/api-response'
 // GET - 根據ID獲取活動
 async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const activity = await farmTourServiceAdapter.getById(id)
+  const farmTourService = await getFarmTourService()
+  const activity = await farmTourService.getById(id)
 
   if (!activity) {
     throw new NotFoundError('Activity not found')
@@ -25,7 +26,8 @@ export const GET = withErrorHandler(handleGET, {
 async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await request.json()
-  const updatedActivity = await farmTourServiceAdapter.update(id, body)
+  const farmTourService = await getFarmTourService()
+  const updatedActivity = await farmTourService.update(id, body)
 
   if (!updatedActivity) {
     throw new NotFoundError('Activity not found')
@@ -42,7 +44,8 @@ export const PUT = withErrorHandler(handlePUT, {
 // DELETE - 刪除活動
 async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const result = await farmTourServiceAdapter.delete(id)
+  const farmTourService = await getFarmTourService()
+  const result = await farmTourService.delete(id)
 
   if (!result) {
     throw new NotFoundError('Activity not found')

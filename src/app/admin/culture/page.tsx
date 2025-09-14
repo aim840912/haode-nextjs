@@ -5,8 +5,8 @@ import { logger } from '@/lib/logger'
 import { CultureItem } from '@/types/culture'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import OptimizedImage from '@/components/OptimizedImage'
-import AdminProtection from '@/components/AdminProtection'
+import OptimizedImage from '@/components/ui/image/OptimizedImage'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 export default function CultureAdmin() {
   const [cultureItems, setCultureItems] = useState<CultureItem[]>([])

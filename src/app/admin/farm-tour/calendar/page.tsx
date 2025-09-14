@@ -4,7 +4,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import AdminProtection from '@/components/AdminProtection'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 import { logger } from '@/lib/logger'
 
 // 動態導入 FarmTourCalendar 以減少初始 Bundle 大小

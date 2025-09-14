@@ -8,7 +8,7 @@ import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = () => getSupabaseAdmin();
+const getAdmin = () => getSupabaseAdmin()
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 import {
   InquiryService,
@@ -194,8 +194,9 @@ export class InquiryServiceV2Simple implements InquiryService {
       const client = this.getSupabaseClient()
 
       // 建立詢問單主記錄
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: inquiry, error: inquiryError } = await (client.from('inquiries'))
+
+      const { data: inquiry, error: inquiryError } = await client
+        .from('inquiries')
         .insert([inquiryData])
         .select()
         .single()
@@ -218,8 +219,8 @@ export class InquiryServiceV2Simple implements InquiryService {
           notes: item.notes,
         }))
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: items, error: itemsError } = await (client.from('inquiry_items'))
+        const { data: items, error: itemsError } = await client
+          .from('inquiry_items')
           .insert(itemsData)
           .select()
 
@@ -341,8 +342,8 @@ export class InquiryServiceV2Simple implements InquiryService {
         notes: this.serializeFarmTourData(data),
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: updated, error } = await (client.from('inquiries'))
+      const { data: updated, error } = await client
+        .from('inquiries')
         .update(updateData)
         .eq('id', inquiryId)
         .eq('user_id', userId)
@@ -391,7 +392,9 @@ export class InquiryServiceV2Simple implements InquiryService {
         this.handleError(error, 'getAllInquiries', { params })
       }
 
-      return (data || []).map((record: unknown) => this.transformFromDB(record as SupabaseInquiryRecord))
+      return (data || []).map((record: unknown) =>
+        this.transformFromDB(record as SupabaseInquiryRecord)
+      )
     } catch (error) {
       this.handleError(error, 'getAllInquiries', { params })
     }
@@ -408,8 +411,8 @@ export class InquiryServiceV2Simple implements InquiryService {
         updateData.replied_at = new Date().toISOString()
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: updated, error } = await (client.from('inquiries'))
+      const { data: updated, error } = await client
+        .from('inquiries')
         .update(updateData)
         .eq('id', inquiryId)
         .select(
@@ -436,7 +439,7 @@ export class InquiryServiceV2Simple implements InquiryService {
       // inquiry_stats 表不存在，返回空陣列
       dbLogger.warn('getInquiryStats - 佔位實作：inquiry_stats 表不存在', {
         module: this.moduleName,
-        action: 'getInquiryStats'
+        action: 'getInquiryStats',
       })
 
       return [] as InquiryStats[]
@@ -514,8 +517,7 @@ export class InquiryServiceV2Simple implements InquiryService {
           inquiry_id: inquiryId,
         }))
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: insertError } = await (client.from('inquiry_items')).insert(itemsData)
+        const { error: insertError } = await client.from('inquiry_items').insert(itemsData)
 
         if (insertError) {
           this.handleError(insertError, 'updateInquiryItems:insert', {
@@ -603,7 +605,7 @@ export class InquiryServiceV2Simple implements InquiryService {
    * 應用查詢參數到 Supabase 查詢構建器
    * 使用與專案其他服務一致的 any 類型斷言策略
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   private applyQueryParams(query: any, params?: InquiryQueryParams): any {
     if (!params) return query
 

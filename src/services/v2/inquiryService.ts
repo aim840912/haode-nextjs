@@ -9,8 +9,6 @@
  * - 內建資料轉換和驗證
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
-
 import {
   AbstractSupabaseService,
   DataTransformer,
@@ -251,7 +249,7 @@ export class InquiryServiceV2
    */
   protected createQuery(useAdmin: boolean = false): any {
     const query = super.createQuery(useAdmin)
-    return (query).select(`
+    return query.select(`
       *,
       inquiry_items (*)
     `)

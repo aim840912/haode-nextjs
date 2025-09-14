@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { useToast } from '@/components/Toast'
+import { useToast } from '@/components/ui/feedback/Toast'
 import { useRouter } from 'next/navigation'
 import { logger } from '@/lib/logger'
 

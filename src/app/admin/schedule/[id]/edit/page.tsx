@@ -6,7 +6,7 @@ import { ScheduleItem } from '@/types/schedule'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import TimePickerChinese from '@/components/TimePickerChinese'
+import TimePickerChinese from '@/components/ui/form/TimePickerChinese'
 
 export default function EditSchedule({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()

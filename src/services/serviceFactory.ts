@@ -56,7 +56,7 @@ let userInterestsServiceInstance: UserInterestsService | null = null
 
 /**
  * 獲取產品服務實例
- * 使用 v2 架構適配器，提供向後相容性
+ * 使用 v2 統一架構，已內建快取功能
  */
 export async function getProductService(): Promise<ProductService> {
   // 如果已有實例，直接返回
@@ -67,22 +67,22 @@ export async function getProductService(): Promise<ProductService> {
   dbLogger.info('初始化產品服務', {
     module: 'ServiceFactory',
     action: 'getProductService',
-    metadata: { architecture: 'v2' },
+    metadata: { architecture: 'v2-unified' },
   })
 
   try {
-    const { productServiceAdapter } = await import('./productServiceAdapter')
+    const { productService } = await import('./v2/productService')
 
     // 測試連線
-    await productServiceAdapter.getProducts()
+    await productService.getProducts()
 
-    // 包裝快取層
-    productServiceInstance = await createCachedProductService(productServiceAdapter)
+    // v2 服務已內建快取，無需額外包裝
+    productServiceInstance = productService
 
     dbLogger.info('產品服務初始化成功', {
       module: 'ServiceFactory',
       action: 'getProductService',
-      metadata: { architecture: 'v2', cached: true },
+      metadata: { architecture: 'v2-unified', cached: true },
     })
 
     return productServiceInstance
@@ -103,9 +103,9 @@ export async function getProductService(): Promise<ProductService> {
  * 創建 JSON 服務實例
  */
 async function createJsonService(): Promise<ProductService> {
-  // JSON 服務已廢棄，回退到適配器服務
-  const { productServiceAdapter } = await import('./productServiceAdapter')
-  return createCachedProductService(productServiceAdapter)
+  // JSON 服務已廢棄，使用 v2 統一服務
+  const { productService } = await import('./v2/productService')
+  return productService
 }
 
 /**
@@ -264,8 +264,8 @@ export async function getScheduleService(): Promise<ScheduleService> {
   })
 
   try {
-    const { scheduleServiceAdapter } = await import('./scheduleServiceAdapter')
-    scheduleServiceInstance = scheduleServiceAdapter
+    const { scheduleServiceV2Simple } = await import('./v2/scheduleServiceSimple')
+    scheduleServiceInstance = scheduleServiceV2Simple
 
     // 測試連線
     await scheduleServiceInstance.getSchedule()
@@ -273,7 +273,7 @@ export async function getScheduleService(): Promise<ScheduleService> {
     dbLogger.info('排程服務初始化成功', {
       module: 'ServiceFactory',
       action: 'getScheduleService',
-      metadata: { architecture: 'v2' },
+      metadata: { architecture: 'v2-simple' },
     })
 
     return scheduleServiceInstance
@@ -306,8 +306,8 @@ export async function getFarmTourService(): Promise<FarmTourService> {
   })
 
   try {
-    const { farmTourServiceAdapter } = await import('./farmTourServiceAdapter')
-    farmTourServiceInstance = farmTourServiceAdapter
+    const { farmTourServiceV2Simple } = await import('./v2/farmTourServiceSimple')
+    farmTourServiceInstance = farmTourServiceV2Simple
 
     // 測試連線
     await farmTourServiceInstance.getAll()
@@ -315,7 +315,7 @@ export async function getFarmTourService(): Promise<FarmTourService> {
     dbLogger.info('農場體驗服務初始化成功', {
       module: 'ServiceFactory',
       action: 'getFarmTourService',
-      metadata: { architecture: 'v2' },
+      metadata: { architecture: 'v2-simple' },
     })
 
     return farmTourServiceInstance
@@ -348,8 +348,8 @@ export async function getNewsService(): Promise<NewsService> {
   })
 
   try {
-    const { newsServiceAdapter } = await import('./newsServiceAdapter')
-    newsServiceInstance = newsServiceAdapter
+    const { newsServiceV2Simple } = await import('./v2/newsServiceSimple')
+    newsServiceInstance = newsServiceV2Simple
 
     // 測試連線
     await newsServiceInstance.getNews()
@@ -357,7 +357,7 @@ export async function getNewsService(): Promise<NewsService> {
     dbLogger.info('新聞服務初始化成功', {
       module: 'ServiceFactory',
       action: 'getNewsService',
-      metadata: { architecture: 'v2' },
+      metadata: { architecture: 'v2-simple' },
     })
 
     return newsServiceInstance
@@ -386,12 +386,12 @@ export async function getCultureService(): Promise<CultureService> {
   dbLogger.info('初始化文化服務', {
     module: 'ServiceFactory',
     action: 'getCultureService',
-    metadata: { architecture: 'v2' },
+    metadata: { architecture: 'v2-simple' },
   })
 
   try {
-    const { cultureServiceAdapter } = await import('./cultureServiceAdapter')
-    cultureServiceInstance = cultureServiceAdapter
+    const { cultureServiceV2Simple } = await import('./v2/cultureServiceSimple')
+    cultureServiceInstance = cultureServiceV2Simple
 
     // 測試連線
     await cultureServiceInstance.getCultureItems()
@@ -399,7 +399,7 @@ export async function getCultureService(): Promise<CultureService> {
     dbLogger.info('文化服務初始化成功', {
       module: 'ServiceFactory',
       action: 'getCultureService',
-      metadata: { architecture: 'v2' },
+      metadata: { architecture: 'v2-simple' },
     })
 
     return cultureServiceInstance
@@ -432,8 +432,8 @@ export async function getLocationService(): Promise<LocationService> {
   })
 
   try {
-    const { locationServiceAdapter } = await import('./locationServiceAdapter')
-    locationServiceInstance = locationServiceAdapter
+    const { locationServiceV2Simple } = await import('./v2/locationServiceSimple')
+    locationServiceInstance = locationServiceV2Simple
 
     // 測試連線
     await locationServiceInstance.getLocations()
@@ -441,7 +441,7 @@ export async function getLocationService(): Promise<LocationService> {
     dbLogger.info('地點服務初始化成功', {
       module: 'ServiceFactory',
       action: 'getLocationService',
-      metadata: { architecture: 'v2' },
+      metadata: { architecture: 'v2-simple' },
     })
 
     return locationServiceInstance

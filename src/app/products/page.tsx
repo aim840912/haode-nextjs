@@ -5,27 +5,33 @@ import dynamic from 'next/dynamic'
 import { useAuth } from '@/lib/auth-context'
 import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
 import { Product } from '@/types/product'
-import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
-import { ProductCardSkeleton } from '@/components/LoadingSkeleton'
-import { LoadingManager } from '@/components/LoadingManager'
-import { ErrorHandler, useAsyncWithError } from '@/components/ErrorHandler'
-import { ProductStructuredData } from '@/components/StructuredData'
-import Breadcrumbs, { createProductBreadcrumbs } from '@/components/Breadcrumbs'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
+import { LoadingManager } from '@/components/ui/loading/LoadingManager'
+import { ErrorHandler, useAsyncWithError } from '@/components/ui/error/ErrorHandler'
+import { ProductStructuredData } from '@/components/features/seo/StructuredData'
+import Breadcrumbs, { createProductBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { logger } from '@/lib/logger'
 
 // 動態載入大型組件，提升初始載入速度
-const ProductFilter = dynamic(() => import('@/components/ProductFilter'), {
+const ProductFilter = dynamic(() => import('@/components/features/products/ProductFilter'), {
   loading: () => <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>,
   ssr: false,
 })
 
-const ProductImageGallery = dynamic(() => import('@/components/ProductImageGallery'), {
-  loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>,
-  ssr: false,
-})
+const ProductImageGallery = dynamic(
+  () => import('@/components/features/products/ProductImageGallery'),
+  {
+    loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>,
+    ssr: false,
+  }
+)
 
 const ProductCardImage = dynamic(
-  () => import('@/components/ProductImageGallery').then(mod => ({ default: mod.ProductCardImage })),
+  () =>
+    import('@/components/features/products/ProductImageGallery').then(mod => ({
+      default: mod.ProductCardImage,
+    })),
   {
     loading: () => <div className="h-48 bg-gray-100 rounded-lg animate-pulse"></div>,
     ssr: false,
@@ -33,7 +39,7 @@ const ProductCardImage = dynamic(
 )
 
 // 引入類型
-import type { FilterState } from '@/components/ProductFilter'
+import type { FilterState } from '@/components/features/products/ProductFilter'
 
 // 為測試目的擴展 Window 介面
 declare global {

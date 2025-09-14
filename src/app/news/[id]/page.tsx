@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArticleStructuredData } from '@/components/StructuredData'
-import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
+import { ArticleStructuredData } from '@/components/features/seo/StructuredData'
+import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { logger } from '@/lib/logger'
 
 interface NewsItem {

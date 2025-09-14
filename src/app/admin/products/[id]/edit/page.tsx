@@ -11,7 +11,7 @@ import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
-const ImageUploader = dynamic(() => import('@/components/ImageUploader'), {
+const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
   loading: () => (
     <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
       載入圖片上傳器...

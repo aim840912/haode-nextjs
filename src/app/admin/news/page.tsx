@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import AdminProtection from '@/components/AdminProtection'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 export default function NewsAdmin() {
   const [news, setNews] = useState<NewsItem[]>([])

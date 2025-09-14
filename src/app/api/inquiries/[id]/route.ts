@@ -6,10 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
-import {
-  inquiryServiceAdapter,
-  supabaseServerInquiryService,
-} from '@/services/inquiryServiceAdapter'
+import { inquiryServiceV2Simple as inquiryServiceAdapter } from '@/services/v2/inquiryServiceSimple'
 import { AuditLogger } from '@/services/auditLogService'
 import { InquiryUtils } from '@/types/inquiry'
 import { success } from '@/lib/api-response'
@@ -46,11 +43,11 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
 
   // 檢查是否為管理員
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   const isAdmin = profile?.role === 'admin'
   const { searchParams } = new URL(request.url)
@@ -70,7 +67,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
   let inquiry
   if (isAdmin && adminMode) {
     // 管理員可以查看任何庫存查詢單
-    inquiry = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId)
+    inquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
   } else {
     // 一般使用者只能查看自己的庫存查詢單
     inquiry = await inquiryService.getInquiryById(user.id, inquiryId)
@@ -161,11 +158,11 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
 
   // 檢查是否為管理員
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   const isAdmin = profile?.role === 'admin'
 
@@ -192,7 +189,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
   // 如果有狀態更新，驗證狀態轉換
   if (result.data.status && isAdmin) {
     // 先取得當前庫存查詢單
-    const currentInquiry = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId)
+    const currentInquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
     if (!currentInquiry) {
       throw new NotFoundError('找不到庫存查詢單')
     }
@@ -300,11 +297,11 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
 
   // 檢查是否為管理員
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以刪除詢問單')
@@ -320,7 +317,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
   })
 
   // 先取得詢問單資料（用於審計日誌）
-  const inquiryToDelete = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId)
+  const inquiryToDelete = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
   if (!inquiryToDelete) {
     throw new NotFoundError('找不到庫存查詢單')
   }
@@ -377,11 +374,11 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
 
   // 檢查是否為管理員
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role, name')
     .eq('id', user.id)
-    .single() as { data: { role: string; name: string } | null; error: Error | null }
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
   if (profile?.role !== 'admin') {
     throw new AuthorizationError('只有管理員可以更新庫存查詢單狀態')
@@ -431,7 +428,7 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
   }
 
   // 先取得當前詢問單資料
-  const currentInquiry = await supabaseServerInquiryService.getInquiryByIdForAdmin(inquiryId)
+  const currentInquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
   if (!currentInquiry) {
     throw new NotFoundError('找不到庫存查詢單')
   }

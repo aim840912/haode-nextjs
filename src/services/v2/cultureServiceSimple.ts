@@ -338,11 +338,7 @@ export class CultureServiceV2Simple implements CultureService {
       // 先插入資料庫記錄以取得 ID
       const insertData = this.transformToDB(extendedData)
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (client.from('culture'))
-        .insert([insertData])
-        .select()
-        .single()
+      const { data, error } = await client.from('culture').insert([insertData]).select().single()
 
       if (error) {
         this.handleError(error, 'addCultureItem:insertRecord', { itemData: insertData })
@@ -391,8 +387,8 @@ export class CultureServiceV2Simple implements CultureService {
 
         // 更新資料庫中的圖片 URL
         if (images.length > 0) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { error: updateError } = await (client.from('culture'))
+          const { error: updateError } = await client
+            .from('culture')
             .update({ images })
             .eq('id', cultureId)
 
@@ -545,8 +541,8 @@ export class CultureServiceV2Simple implements CultureService {
         dbUpdateData.images = images
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (client.from('culture'))
+      const { data, error } = await client
+        .from('culture')
         .update(dbUpdateData)
         .eq('id', id)
         .select()

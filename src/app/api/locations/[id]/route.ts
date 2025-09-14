@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { locationServiceAdapter } from '@/services/locationServiceAdapter'
+import { locationServiceV2Simple as locationServiceAdapter } from '@/services/v2/locationServiceSimple'
 import { LocationSchemas } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
@@ -75,7 +75,10 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     },
   })
 
-  const updatedLocation = await locationServiceAdapter.updateLocation(paramResult.data.id, result.data)
+  const updatedLocation = await locationServiceAdapter.updateLocation(
+    paramResult.data.id,
+    result.data
+  )
 
   return success(updatedLocation, '地點更新成功')
 }

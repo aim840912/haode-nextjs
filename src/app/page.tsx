@@ -1,31 +1,28 @@
-'use client'
-
 import Link from 'next/link'
-import { FarmStructuredData } from '@/components/StructuredData'
-import ProductsSection from '@/components/ProductsSection'
+import { FarmStructuredData } from '@/components/features/seo/StructuredData'
+import ProductsSection from '@/components/features/products/ProductsSection'
 
 export default function Home() {
   return (
     <>
       <FarmStructuredData />
       <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white -mt-[var(--header-height)]">
-
         <section className="relative min-h-screen flex flex-col justify-center text-center pt-[var(--header-height)]">
-          <h1 className="text-5xl md:text-7xl font-serif-display text-amber-900 mb-6">
-            豪茶德李
-          </h1>
+          <h1 className="text-5xl md:text-7xl font-serif-display text-amber-900 mb-6">豪茶德李</h1>
           <p className="text-lg md:text-xl text-gray-700 mb-8 max-w-2xl mx-auto">
             座落梅山群峰的豪德農場，以自然農法呈現四季最美的農產滋味
           </p>
           <div className="flex justify-center space-x-4">
-            <Link 
+            <Link
               href="/products"
+              prefetch={true}
               className="bg-amber-900 text-white px-6 py-3 rounded-full hover:bg-amber-800 transition-colors"
             >
               探索農產品
             </Link>
-            <Link 
+            <Link
               href="/farm-tour"
+              prefetch={true}
               className="bg-white text-amber-900 border-2 border-amber-900 px-6 py-3 rounded-full hover:bg-amber-50 transition-colors"
             >
               預約參觀
@@ -35,7 +32,9 @@ export default function Home() {
 
         <section className="min-h-screen flex items-center py-16 px-6">
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 mb-16 tracking-wider">農場特色</h2>
+            <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 mb-16 tracking-wider">
+              農場特色
+            </h2>
             <div className="grid md:grid-cols-2 gap-12">
               <div>
                 <h3 className="text-xl font-semibold text-amber-800 mb-4">自然農法</h3>
@@ -72,8 +71,9 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="mt-6 text-center">
-                  <Link 
+                  <Link
                     href="/farm-tour"
+                    prefetch={true}
                     className="inline-block bg-green-600 text-white px-6 py-2 rounded-full text-sm hover:bg-green-700 transition-colors"
                   >
                     預約參觀
@@ -93,8 +93,9 @@ export default function Home() {
               <div className="bg-white rounded-lg p-6 shadow-md">
                 <h3 className="text-lg font-semibold text-amber-900 mb-3">擺攤行程</h3>
                 <p className="text-gray-600 text-sm mb-4">查看我們的市集攤位時間表</p>
-                <Link 
+                <Link
                   href="/schedule"
+                  prefetch={true}
                   className="text-amber-900 hover:underline text-sm"
                 >
                   查看行程 →
@@ -103,8 +104,9 @@ export default function Home() {
               <div className="bg-white rounded-lg p-6 shadow-md">
                 <h3 className="text-lg font-semibold text-amber-900 mb-3">聯絡我們</h3>
                 <p className="text-gray-600 text-sm mb-4">有任何問題歡迎與我們聯繫</p>
-                <Link 
+                <Link
                   href="/contact"
+                  prefetch={true}
                   className="text-amber-900 hover:underline text-sm"
                 >
                   立即聯絡 →
@@ -113,8 +115,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-
       </div>
     </>
-  );
+  )
 }
