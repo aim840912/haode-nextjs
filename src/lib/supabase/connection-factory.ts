@@ -155,14 +155,17 @@ class SupabaseConnectionFactory {
 }
 
 /**
- * 全域連線工廠實例
+ * 懶載入連線工廠實例
  */
-export const connectionFactory = SupabaseConnectionFactory.getInstance()
+function getConnectionFactory(): SupabaseConnectionFactory {
+  return SupabaseConnectionFactory.getInstance()
+}
 
 /**
  * 便利函數：取得連線管理器
  */
 export async function getConnectionManager(): Promise<ConnectionManager> {
+  const connectionFactory = getConnectionFactory()
   const manager = await connectionFactory.getConnectionManager()
 
   if (!manager) {
@@ -193,6 +196,7 @@ export async function withPooledConnection<T>(
       },
     })
 
+    const connectionFactory = getConnectionFactory()
     const fallbackClient = connectionFactory.getFallbackConnection()
     return await queryBuilder(fallbackClient)
   }
@@ -203,6 +207,7 @@ export async function withPooledConnection<T>(
  */
 export async function shouldUseConnectionPool(): Promise<boolean> {
   try {
+    const connectionFactory = getConnectionFactory()
     return await connectionFactory.isPoolEnabled()
   } catch {
     return false
@@ -213,6 +218,7 @@ export async function shouldUseConnectionPool(): Promise<boolean> {
  * 便利函數：取得連線池統計資訊
  */
 export async function getPoolStats() {
+  const connectionFactory = getConnectionFactory()
   const manager = await connectionFactory.getConnectionManager()
   return manager?.getPoolStats() || null
 }
@@ -222,11 +228,13 @@ export async function getPoolStats() {
  */
 if (typeof process !== 'undefined') {
   process.on('SIGINT', async () => {
+    const connectionFactory = getConnectionFactory()
     await connectionFactory.shutdown()
     process.exit(0)
   })
 
   process.on('SIGTERM', async () => {
+    const connectionFactory = getConnectionFactory()
     await connectionFactory.shutdown()
     process.exit(0)
   })
