@@ -52,7 +52,9 @@
       "Bash(git checkout:*)",
       "Read(//home/aim840912/projects/doterra/src/**)",
       "Read(//home/aim840912/projects/doterra/**)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npm outdated:*)",
+      "Bash(npm run test:ci:*)"
     ],
     "deny": []
   },
