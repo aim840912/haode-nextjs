@@ -1,4 +1,3 @@
-import { withPooledConnection, shouldUseConnectionPool } from '@/lib/supabase/connection-factory'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { dbLogger } from '@/lib/logger'
 import { SupabaseClient } from '@supabase/supabase-js'
@@ -27,11 +26,15 @@ export abstract class AbstractPooledService {
     }
   ): Promise<T> {
     const startTime = Date.now()
+
+    // 動態導入避免模組載入時創建全域實例
+    const { shouldUseConnectionPool } = await import('@/lib/supabase/connection-factory')
     const usePool = context?.usePool !== false && (await shouldUseConnectionPool())
 
     try {
       if (usePool) {
         // 使用連線池
+        const { withPooledConnection } = await import('@/lib/supabase/connection-factory')
         return await withPooledConnection(operation, {
           action: context?.action || 'database_operation',
           metadata: {
@@ -106,15 +109,16 @@ export abstract class AbstractPooledService {
       return []
     }
 
+    const { shouldUseConnectionPool } = await import('@/lib/supabase/connection-factory')
     const usePool = await shouldUseConnectionPool()
 
     if (usePool) {
       // 使用連線池的批次操作（共用連線）
       try {
         const { ConnectionManager } = await import('@/lib/pooled-connection')
-        const { connectionFactory } = await import('@/lib/supabase/connection-factory')
+        const { getConnectionManager } = await import('@/lib/supabase/connection-factory')
 
-        const manager = await connectionFactory.getConnectionManager()
+        const manager = await getConnectionManager()
         if (manager) {
           return await manager.withBatch(
             operations.map(op => ({
@@ -182,9 +186,11 @@ export abstract class AbstractPooledService {
     stats?: any
   }> {
     try {
-      const { connectionFactory, getPoolStats } = await import('@/lib/supabase/connection-factory')
+      const { shouldUseConnectionPool, getPoolStats } = await import(
+        '@/lib/supabase/connection-factory'
+      )
 
-      const enabled = await connectionFactory.isPoolEnabled()
+      const enabled = await shouldUseConnectionPool()
       const stats = enabled ? await getPoolStats() : null
 
       return { enabled, stats }

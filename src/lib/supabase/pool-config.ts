@@ -20,8 +20,9 @@ export class PoolConfigManager {
     } else if (forceEnable) {
       enabled = true
     } else {
-      // 預設在生產環境啟用
-      enabled = isProduction
+      // 預設不啟用，需要明確設置 ENABLE_CONNECTION_POOL=true
+      // 這樣可以避免在生產環境意外啟用連線池
+      enabled = false
     }
 
     // 根據環境調整配置
@@ -115,7 +116,7 @@ export class PoolConfigManager {
  * DB_POOL_IDLE_TIMEOUT: 空閒超時時間，毫秒（預設: 30000）
  * DB_POOL_ACQUIRE_TIMEOUT: 取得連線超時時間，毫秒（預設: 10000）
  * DB_POOL_HEALTH_CHECK_INTERVAL: 健康檢查間隔，毫秒（預設: 60000）
- * ENABLE_CONNECTION_POOL: 強制啟用連線池（預設: false，生產環境除外）
+ * ENABLE_CONNECTION_POOL: 強制啟用連線池（預設: false）
  * DISABLE_CONNECTION_POOL: 強制停用連線池（預設: false）
  *
  * 使用範例:

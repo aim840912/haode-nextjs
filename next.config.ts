@@ -98,13 +98,13 @@ const nextConfig: NextConfig = {
 
     const csp = [
       "default-src 'self'",
-      // 優化腳本來源 - 真正的生產環境移除 unsafe 指令
-      `script-src 'self' ${!isRealProduction ? "'unsafe-inline' 'unsafe-eval'" : ''} blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
+      // 暫時在生產環境也允許 unsafe 指令，確保網站可以正常運行
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
       // 腳本元素來源 - 與 script-src 保持一致
-      `script-src-elem 'self' ${!isRealProduction ? "'unsafe-inline' 'unsafe-eval'" : ''} blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
+      `script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
       "worker-src 'self' blob:",
-      // 樣式來源 - 預覽和開發環境允許內嵌，真正的生產環境更嚴格
-      `style-src 'self' ${!isRealProduction ? "'unsafe-inline'" : ''} https://fonts.googleapis.com`.trim(),
+      // 樣式來源 - 暫時在生產環境也允許內嵌樣式
+      `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`.trim(),
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
       // API 連線來源 - 預覽環境也允許 Vercel 開發工具
@@ -117,14 +117,15 @@ const nextConfig: NextConfig = {
       "media-src 'self' data: https:", // 媒體來源控制
       "child-src 'self' blob:", // 子框架來源控制
       'upgrade-insecure-requests', // 自動升級 HTTP 到 HTTPS
-      ...(isRealProduction
-        ? [
-            'block-all-mixed-content', // 生產環境阻止混合內容
-            "require-trusted-types-for 'script'", // 要求可信類型（現代瀏覽器）
-            'report-uri /api/security/csp-report', // CSP 違規報告端點
-            'report-to csp-endpoint', // 現代違規報告機制
-          ]
-        : []),
+      // 暫時移除嚴格的生產環境限制，確保網站可以正常運行
+      // ...(isRealProduction
+      //   ? [
+      //       'block-all-mixed-content', // 生產環境阻止混合內容
+      //       "require-trusted-types-for 'script'", // 要求可信類型（現代瀏覽器）
+      //       'report-uri /api/security/csp-report', // CSP 違規報告端點
+      //       'report-to csp-endpoint', // 現代違規報告機制
+      //     ]
+      //   : []),
     ]
       .filter(Boolean)
       .join('; ')

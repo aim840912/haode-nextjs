@@ -21,6 +21,37 @@ import {
 } from '@/config/data-strategy'
 import { dbLogger } from '@/lib/logger'
 
+/**
+ * 檢查是否應該使用連線池服務
+ */
+async function shouldUsePooledService(): Promise<boolean> {
+  try {
+    // 動態導入連線池配置以避免循環依賴
+    const { PoolConfigManager } = await import('@/lib/supabase/pool-config')
+    const config = PoolConfigManager.getConfig()
+
+    dbLogger.debug('檢查連線池配置', {
+      module: 'ServiceFactory',
+      action: 'shouldUsePooledService',
+      metadata: {
+        enabled: config.enabled,
+        environment: process.env.NODE_ENV,
+        forceEnable: process.env.ENABLE_CONNECTION_POOL,
+        forceDisable: process.env.DISABLE_CONNECTION_POOL,
+      },
+    })
+
+    return config.enabled
+  } catch (error) {
+    dbLogger.warn('檢查連線池配置失敗，默認使用標準服務', {
+      module: 'ServiceFactory',
+      action: 'shouldUsePooledService',
+      metadata: { error: error instanceof Error ? error.message : 'Unknown error' },
+    })
+    return false
+  }
+}
+
 // 定義服務介面類型
 interface FarmTourService {
   getAll(): Promise<FarmTourActivity[]>
@@ -56,7 +87,7 @@ let userInterestsServiceInstance: UserInterestsService | null = null
 
 /**
  * 獲取產品服務實例
- * 使用 v2 統一架構，已內建快取功能
+ * 智能選擇連線池或標準服務實作
  */
 export async function getProductService(): Promise<ProductService> {
   // 如果已有實例，直接返回
@@ -64,26 +95,49 @@ export async function getProductService(): Promise<ProductService> {
     return productServiceInstance
   }
 
+  // 檢查是否應使用連線池
+  const shouldUseConnectionPool = await shouldUsePooledService()
+
   dbLogger.info('初始化產品服務', {
     module: 'ServiceFactory',
     action: 'getProductService',
-    metadata: { architecture: 'v2-unified' },
+    metadata: {
+      architecture: shouldUseConnectionPool ? 'v2-pooled' : 'v2-unified',
+      connectionPool: shouldUseConnectionPool,
+    },
   })
 
   try {
-    const { productService } = await import('./v2/productService')
+    if (shouldUseConnectionPool) {
+      // 使用連線池服務
+      const { pooledProductService } = await import('./v2/pooledProductService')
 
-    // 測試連線
-    await productService.getProducts()
+      // 測試連線
+      await pooledProductService.getProducts()
 
-    // v2 服務已內建快取，無需額外包裝
-    productServiceInstance = productService
+      productServiceInstance = pooledProductService
 
-    dbLogger.info('產品服務初始化成功', {
-      module: 'ServiceFactory',
-      action: 'getProductService',
-      metadata: { architecture: 'v2-unified', cached: true },
-    })
+      dbLogger.info('產品服務初始化成功（連線池模式）', {
+        module: 'ServiceFactory',
+        action: 'getProductService',
+        metadata: { architecture: 'v2-pooled', cached: true },
+      })
+    } else {
+      // 使用標準服務
+      const { productService } = await import('./v2/productService')
+
+      // 測試連線
+      await productService.getProducts()
+
+      // v2 服務已內建快取，無需額外包裝
+      productServiceInstance = productService
+
+      dbLogger.info('產品服務初始化成功（標準模式）', {
+        module: 'ServiceFactory',
+        action: 'getProductService',
+        metadata: { architecture: 'v2-unified', cached: true },
+      })
+    }
 
     return productServiceInstance
   } catch (error) {
@@ -93,8 +147,43 @@ export async function getProductService(): Promise<ProductService> {
       {
         module: 'ServiceFactory',
         action: 'getProductService',
+        metadata: { connectionPool: shouldUseConnectionPool },
       }
     )
+
+    // 如果連線池模式失敗，嘗試降級到標準服務
+    if (shouldUseConnectionPool && productServiceInstance === null) {
+      dbLogger.warn('連線池模式失敗，嘗試降級到標準服務', {
+        module: 'ServiceFactory',
+        action: 'getProductService',
+        metadata: { fallback: true },
+      })
+
+      try {
+        const { productService } = await import('./v2/productService')
+        await productService.getProducts()
+        productServiceInstance = productService
+
+        dbLogger.info('成功降級到標準服務', {
+          module: 'ServiceFactory',
+          action: 'getProductService',
+          metadata: { architecture: 'v2-unified', fallback: true },
+        })
+
+        return productServiceInstance!
+      } catch (fallbackError) {
+        dbLogger.error(
+          '標準服務降級也失敗',
+          fallbackError instanceof Error ? fallbackError : new Error('Unknown fallback error'),
+          {
+            module: 'ServiceFactory',
+            action: 'getProductService',
+          }
+        )
+        throw new Error('所有產品服務初始化方式都失敗')
+      }
+    }
+
     throw new Error('產品服務初始化失敗，請檢查服務配置')
   }
 }
