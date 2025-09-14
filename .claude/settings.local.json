@@ -59,7 +59,12 @@
       "Bash(cat:*)",
       "Bash(npm ls:*)",
       "Bash(xargs sed:*)",
-      "Bash(npm run analyze:*)"
+      "Bash(npm run analyze:*)",
+      "Bash(git push:*)",
+      "Bash(git mv:*)",
+      "Bash(npm run test:playwright:*)",
+      "Bash(npm run:*)",
+      "Bash(timeout 60 npx playwright test:*)"
     ],
     "deny": []
   },

@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { FarmStructuredData } from '@/components/StructuredData'
-import ProductsSection from '@/components/ProductsSection'
+import { FarmStructuredData } from '@/components/features/seo/StructuredData'
+import ProductsSection from '@/components/features/products/ProductsSection'
 
 export default function Home() {
   return (

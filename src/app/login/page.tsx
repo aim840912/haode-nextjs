@@ -4,8 +4,8 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
-import { useToast } from '@/components/Toast'
-import AuthErrorBoundary from '@/components/AuthErrorBoundary'
+import { useToast } from '@/components/ui/feedback/Toast'
+import AuthErrorBoundary from '@/components/ui/error/AuthErrorBoundary'
 import { logger } from '@/lib/logger'
 
 export default function LoginPage() {

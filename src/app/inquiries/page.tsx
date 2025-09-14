@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth-context'
 import Link from 'next/link'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import { ComponentErrorBoundary } from '@/components/ErrorBoundary'
+import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-auth'
 import { logger } from '@/lib/logger'
@@ -70,7 +70,10 @@ function InquiriesPage() {
 
       setInquiries(result.data || [])
     } catch (err) {
-      logger.error('Error fetching inquiries', err as Error, { module: 'InquiriesPage', action: 'fetchInquiries' })
+      logger.error('Error fetching inquiries', err as Error, {
+        module: 'InquiriesPage',
+        action: 'fetchInquiries',
+      })
       setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤')
     } finally {
       setIsLoading(false)

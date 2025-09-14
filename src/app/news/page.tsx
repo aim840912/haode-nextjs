@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
-import { SimpleImage } from '@/components/OptimizedImage'
-import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/Breadcrumbs'
+import { SimpleImage } from '@/components/ui/image/OptimizedImage'
+import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { logger } from '@/lib/logger'
 
 interface NewsItem {

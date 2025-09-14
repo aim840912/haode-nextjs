@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import AdminProtection from '@/components/AdminProtection'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 img 標籤）
 const isValidImageUrl = (url: string | undefined): boolean => {

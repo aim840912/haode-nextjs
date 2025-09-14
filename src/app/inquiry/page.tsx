@@ -1,98 +1,96 @@
-'use client';
+'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { useToast } from '@/components/Toast';
-import Link from 'next/link';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { ComponentErrorBoundary } from '@/components/ErrorBoundary';
-import { inquiryApi } from '@/lib/api-client';
-import { 
-  InquiryWithItems, 
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { useAuth } from '@/lib/auth-context'
+import { useToast } from '@/components/ui/feedback/Toast'
+import Link from 'next/link'
+import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { inquiryApi } from '@/lib/api-client'
+import {
+  InquiryWithItems,
   InquiryStatus,
   INQUIRY_STATUS_LABELS,
   INQUIRY_STATUS_COLORS,
-  InquiryUtils
-} from '@/types/inquiry';
+  InquiryUtils,
+} from '@/types/inquiry'
 
 function InquiryListPage() {
-  const { user, isLoading: authLoading } = useAuth();
-  const { success, error: showError } = useToast();
-  
+  const { user, isLoading: authLoading } = useAuth()
+  const { success, error: showError } = useToast()
+
   // 狀態管理
-  const [inquiries, setInquiries] = useState<InquiryWithItems[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const isInitialized = useRef(false);
+  const [inquiries, setInquiries] = useState<InquiryWithItems[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 10
+  const isInitialized = useRef(false)
 
   // 取得使用者詢問單
   const fetchUserInquiries = useCallback(async () => {
-    if (!user) return;
+    if (!user) return
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
       // 建立查詢參數
-      const params: Record<string, string | number> = {};
+      const params: Record<string, string | number> = {}
       if (statusFilter !== 'all') {
-        params.status = statusFilter;
+        params.status = statusFilter
       }
-      params.sort_by = 'created_at';
-      params.sort_order = 'desc';
-      params.limit = 100; // 先載入較多資料，前端進行分頁
+      params.sort_by = 'created_at'
+      params.sort_order = 'desc'
+      params.limit = 100 // 先載入較多資料，前端進行分頁
 
       // 使用新的 v1 API
-      const response = await inquiryApi.list(params);
+      const response = await inquiryApi.list(params)
 
       if (response.success && response.data) {
-        setInquiries(response.data as InquiryWithItems[]);
+        setInquiries(response.data as InquiryWithItems[])
       } else {
-        throw new Error(response.message || '取得詢問單列表失敗');
+        throw new Error(response.message || '取得詢問單列表失敗')
       }
-
     } catch (error) {
-      setError(error instanceof Error ? error.message : '載入詢問單時發生錯誤');
+      setError(error instanceof Error ? error.message : '載入詢問單時發生錯誤')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [user, statusFilter]);
+  }, [user, statusFilter])
 
   // 清理本地快取功能
   const clearLocalCache = () => {
     if (!confirm('確定要清除所有本地快取嗎？這將清除購物車和暫存的詢價資料。')) {
-      return;
+      return
     }
 
     try {
       // 清理購物車資料
-      localStorage.removeItem('cart');
+      localStorage.removeItem('cart')
       // 複製詢價功能已移除，不再需要清理 duplicate_inquiry_data
       // 清理其他可能的詢價相關資料
-      const inquiryKeys = [];
+      const inquiryKeys = []
       for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
+        const key = localStorage.key(i)
         if (key && (key.includes('inquiry') || key.includes('cart') || key.includes('order'))) {
-          inquiryKeys.push(key);
+          inquiryKeys.push(key)
         }
       }
-      inquiryKeys.forEach(key => localStorage.removeItem(key));
-      
-      success('清理完成', '所有本地快取資料已清除，頁面將重新載入');
-      
+      inquiryKeys.forEach(key => localStorage.removeItem(key))
+
+      success('清理完成', '所有本地快取資料已清除，頁面將重新載入')
+
       // 重新載入頁面以更新狀態
       setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-      
+        window.location.reload()
+      }, 1000)
     } catch (err) {
-      showError('清理失敗', '清除本地快取時發生錯誤');
+      showError('清理失敗', '清除本地快取時發生錯誤')
     }
-  };
+  }
 
   // 重新查詢功能已移除（不再提供複製查詢單功能）
   // const duplicateInquiry = async (inquiry: InquiryWithItems) => {
@@ -101,40 +99,43 @@ function InquiryListPage() {
 
   // 篩選和搜尋功能
   const filteredInquiries = inquiries.filter(inquiry => {
-    const matchesSearch = !searchTerm || 
+    const matchesSearch =
+      !searchTerm ||
       inquiry.customer_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       InquiryUtils.formatInquiryNumber(inquiry).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      inquiry.inquiry_items.some(item => item.product_name.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+      inquiry.inquiry_items.some(item =>
+        item.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+
+    const matchesStatus = statusFilter === 'all' || inquiry.status === statusFilter
+
+    return matchesSearch && matchesStatus
+  })
 
   // 分頁計算
-  const totalPages = Math.ceil(filteredInquiries.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedInquiries = filteredInquiries.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(filteredInquiries.length / itemsPerPage)
+  const startIndex = (currentPage - 1) * itemsPerPage
+  const paginatedInquiries = filteredInquiries.slice(startIndex, startIndex + itemsPerPage)
 
   // 初始載入（只在使用者認證完成時載入一次）
   useEffect(() => {
     if (user && !isInitialized.current) {
-      isInitialized.current = true;
-      fetchUserInquiries();
+      isInitialized.current = true
+      fetchUserInquiries()
     }
-  }, [user, fetchUserInquiries]);
+  }, [user, fetchUserInquiries])
 
   // 當狀態篩選條件改變時重新載入（跳過初始值）
   useEffect(() => {
     if (user && isInitialized.current) {
-      fetchUserInquiries();
+      fetchUserInquiries()
     }
-  }, [statusFilter, user, fetchUserInquiries]);
+  }, [statusFilter, user, fetchUserInquiries])
 
   // 重置分頁當篩選條件改變
   useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, searchTerm]);
+    setCurrentPage(1)
+  }, [statusFilter, searchTerm])
 
   // 認證載入中
   if (authLoading) {
@@ -145,7 +146,7 @@ function InquiryListPage() {
           <p className="mt-4 text-gray-600">載入中...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // 未登入
@@ -174,7 +175,7 @@ function InquiryListPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // 載入中
@@ -186,7 +187,7 @@ function InquiryListPage() {
           <p className="mt-4 text-gray-600">載入詢問單...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // 載入錯誤
@@ -207,7 +208,7 @@ function InquiryListPage() {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -239,19 +240,21 @@ function InquiryListPage() {
             <div className="flex items-center space-x-4">
               <span className="text-gray-700 font-medium">篩選狀態：</span>
               <div className="flex flex-wrap gap-2">
-                {(['all', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      statusFilter === status
-                        ? 'bg-amber-900 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {status === 'all' ? '全部' : INQUIRY_STATUS_LABELS[status]}
-                  </button>
-                ))}
+                {(['all', 'pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map(
+                  status => (
+                    <button
+                      key={status}
+                      onClick={() => setStatusFilter(status)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        statusFilter === status
+                          ? 'bg-amber-900 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {status === 'all' ? '全部' : INQUIRY_STATUS_LABELS[status]}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
@@ -261,12 +264,10 @@ function InquiryListPage() {
                 type="text"
                 placeholder="搜尋詢問單號、商品名稱..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 min-w-[300px] text-gray-900 placeholder-gray-500"
               />
-              <div className="text-sm text-gray-600">
-                共 {filteredInquiries.length} 筆詢價紀錄
-              </div>
+              <div className="text-sm text-gray-600">共 {filteredInquiries.length} 筆詢價紀錄</div>
             </div>
           </div>
         </div>
@@ -276,7 +277,9 @@ function InquiryListPage() {
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <div className="text-6xl mb-8">📋</div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              {statusFilter === 'all' ? '還沒有詢價紀錄' : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢價紀錄`}
+              {statusFilter === 'all'
+                ? '還沒有詢價紀錄'
+                : `沒有${INQUIRY_STATUS_LABELS[statusFilter as InquiryStatus]}的詢價紀錄`}
             </h2>
             <p className="text-gray-600 mb-8">
               {searchTerm ? '請嘗試不同的搜尋條件' : '開始購物並提交詢價吧！'}
@@ -290,8 +293,11 @@ function InquiryListPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {paginatedInquiries.map((inquiry) => (
-              <div key={inquiry.id} className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
+            {paginatedInquiries.map(inquiry => (
+              <div
+                key={inquiry.id}
+                className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow"
+              >
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between">
                   {/* 左側：詢問單資訊 */}
                   <div className="flex-1">
@@ -306,11 +312,13 @@ function InquiryListPage() {
                             month: 'long',
                             day: 'numeric',
                             hour: '2-digit',
-                            minute: '2-digit'
+                            minute: '2-digit',
                           })}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-medium ${INQUIRY_STATUS_COLORS[inquiry.status]}`}
+                      >
                         {INQUIRY_STATUS_LABELS[inquiry.status]}
                       </span>
                     </div>
@@ -321,9 +329,10 @@ function InquiryListPage() {
                         共 {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
                       </p>
                       <p className="text-sm text-gray-600">
-                        {inquiry.inquiry_items.slice(0, 3).map(item => 
-                          `${item.product_name} x${item.quantity}`
-                        ).join('、')}
+                        {inquiry.inquiry_items
+                          .slice(0, 3)
+                          .map(item => `${item.product_name} x${item.quantity}`)
+                          .join('、')}
                         {inquiry.inquiry_items.length > 3 && '...'}
                       </p>
                       <p className="text-lg font-semibold text-amber-900 mt-2">
@@ -340,7 +349,7 @@ function InquiryListPage() {
                     >
                       查看詳情
                     </Link>
-                    
+
                     {inquiry.status === 'quoted' && (
                       <Link
                         href={`/inquiries/${inquiry.id}?action=accept`}
@@ -356,7 +365,8 @@ function InquiryListPage() {
                 {inquiry.notes && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <p className="text-sm text-gray-600">
-                      <span className="font-medium">備註：</span>{inquiry.notes}
+                      <span className="font-medium">備註：</span>
+                      {inquiry.notes}
                     </p>
                   </div>
                 )}
@@ -413,7 +423,7 @@ function InquiryListPage() {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 export default function InquiryListPageWithErrorBoundary() {
@@ -421,5 +431,5 @@ export default function InquiryListPageWithErrorBoundary() {
     <ComponentErrorBoundary>
       <InquiryListPage />
     </ComponentErrorBoundary>
-  );
+  )
 }
