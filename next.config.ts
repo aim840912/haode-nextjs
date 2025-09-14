@@ -98,17 +98,17 @@ const nextConfig: NextConfig = {
 
     const csp = [
       "default-src 'self'",
-      // 優化腳本來源 - 生產環境移除 unsafe 指令
-      `script-src 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : ''} blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${isDev ? ' http://localhost:*' : ''}`.trim(),
+      // 優化腳本來源 - 真正的生產環境移除 unsafe 指令
+      `script-src 'self' ${!isRealProduction ? "'unsafe-inline' 'unsafe-eval'" : ''} blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
       // 腳本元素來源 - 與 script-src 保持一致
-      `script-src-elem 'self' ${isDev ? "'unsafe-inline' 'unsafe-eval'" : ''} blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${isDev ? ' http://localhost:*' : ''}`.trim(),
+      `script-src-elem 'self' ${!isRealProduction ? "'unsafe-inline' 'unsafe-eval'" : ''} blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
       "worker-src 'self' blob:",
-      // 樣式來源 - 開發模式允許內嵌，生產環境更嚴格
-      `style-src 'self' ${isDev ? "'unsafe-inline'" : ''} https://fonts.googleapis.com`.trim(),
+      // 樣式來源 - 預覽和開發環境允許內嵌，真正的生產環境更嚴格
+      `style-src 'self' ${!isRealProduction ? "'unsafe-inline'" : ''} https://fonts.googleapis.com`.trim(),
       "font-src 'self' https://fonts.gstatic.com data:",
       "img-src 'self' data: https: blob:",
-      // API 連線來源
-      `connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://chec.io${isDev ? ' https://vercel.live wss://vercel.live' : ''}`,
+      // API 連線來源 - 預覽環境也允許 Vercel 開發工具
+      `connect-src 'self' https://api.stripe.com https://checkout.stripe.com https://*.supabase.co wss://*.supabase.co https://www.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://chec.io${!isRealProduction ? ' https://vercel.live wss://vercel.live' : ''}`,
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
       "frame-ancestors 'none'", // 防止點擊劫持攻擊
       "object-src 'none'", // 禁止物件嵌入
