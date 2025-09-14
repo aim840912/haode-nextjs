@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { productServiceAdapter as productService } from '@/services/productServiceAdapter'
+import { productService } from '@/services/v2/productService'
 import { AdminProductSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'

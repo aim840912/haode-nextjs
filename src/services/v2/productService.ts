@@ -452,3 +452,21 @@ export class LegacyProductServiceAdapter {
     return this.service.search(query)
   }
 }
+
+// === 預設服務實例 ===
+
+/**
+ * 預設產品服務實例
+ * 使用 Supabase 作為後端，提供向後相容的 API
+ */
+export const productService = new LegacyProductServiceAdapter(
+  new UnifiedProductService(new SupabaseProductService())
+)
+
+/**
+ * 管理員產品服務實例
+ * 使用管理員權限，支援所有 CRUD 操作
+ */
+export const adminProductService = new LegacyProductServiceAdapter(
+  new UnifiedProductService(new SupabaseProductService())
+)

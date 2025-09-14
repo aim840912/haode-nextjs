@@ -25,9 +25,6 @@ interface FarmTourInquiryRequest {
   notes?: string
 }
 
-// 使用統一的詢問服務適配器
-const inquiryService = inquiryServiceAdapter
-
 // POST /api/farm-tour/inquiry - 建立農場參觀預約詢問
 async function handlePOST(request: NextRequest) {
   // 驗證使用者認證
@@ -73,7 +70,7 @@ async function handlePOST(request: NextRequest) {
   }
 
   // 建立詢問單
-  const inquiry = await inquiryService.createInquiry(user.id, inquiryData)
+  const inquiry = await inquiryServiceAdapter.createInquiry(user.id, inquiryData)
 
   // 記錄農場參觀預約詢問建立的審計日誌
   AuditLogger.logInquiryCreate(

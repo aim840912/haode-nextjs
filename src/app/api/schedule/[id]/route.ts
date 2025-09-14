@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { scheduleServiceAdapter as scheduleService } from '@/services/scheduleServiceAdapter'
+import { getScheduleService } from '@/services/serviceFactory'
 import { ScheduleSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
@@ -25,6 +25,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     metadata: { scheduleId: id },
   })
 
+  const scheduleService = await getScheduleService()
   const scheduleItem = await scheduleService.getScheduleById(id)
   if (!scheduleItem) {
     throw new NotFoundError('行程不存在')
@@ -66,6 +67,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     },
   })
 
+  const scheduleService = await getScheduleService()
   const scheduleItem = await scheduleService.updateSchedule(id, result.data)
 
   return success(scheduleItem, '行程更新成功')
@@ -90,6 +92,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     metadata: { scheduleId: id },
   })
 
+  const scheduleService = await getScheduleService()
   await scheduleService.deleteSchedule(id)
 
   return success({ id }, '行程刪除成功')

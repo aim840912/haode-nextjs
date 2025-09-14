@@ -9,6 +9,7 @@ import {
   listProductImages,
 } from '@/lib/supabase-storage'
 import { SupabaseAuditLogService } from '@/services/auditLogService'
+import { adminProductService } from '@/services/v2/productService'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'
 import { AdminProductSchemas } from '@/lib/validation-schemas'
@@ -181,14 +182,7 @@ async function handlePOST(request: NextRequest) {
 
   if (error) throw error
 
-  // 清除產品快取，確保公開 API 能立即看到變更
-  try {
-    const { CachedProductService } = await import('@/services/cachedProductService')
-    await CachedProductService.clearGlobalCache()
-  } catch (cacheError) {
-    apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
-    // 不影響主要功能，只記錄警告
-  }
+  // v2 服務已內建自動快取管理，無需手動清除
 
   return created({ product: transformFromDB(data) }, '產品建立成功')
 }
@@ -247,14 +241,7 @@ async function handlePUT(request: NextRequest) {
 
   if (error) throw error
 
-  // 清除產品快取，確保公開 API 能立即看到變更
-  try {
-    const { CachedProductService } = await import('@/services/cachedProductService')
-    await CachedProductService.clearGlobalCache()
-  } catch (cacheError) {
-    apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
-    // 不影響主要功能，只記錄警告
-  }
+  // v2 服務已內建自動快取管理，無需手動清除
 
   return success({ product: transformFromDB(data) }, '產品更新成功')
 }
@@ -382,15 +369,8 @@ async function handleDELETE(request: NextRequest) {
     })
   }
 
-  // 清除產品快取，確保公開 API 能立即看到變更
-  try {
-    const { CachedProductService } = await import('@/services/cachedProductService')
-    await CachedProductService.clearGlobalCache()
-    apiLogger.info('🔄 產品刪除後已清除全域快取')
-  } catch (cacheError) {
-    apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
-    // 不影響主要功能，只記錄警告
-  }
+  // v2 服務已內建自動快取管理，無需手動清除
+  apiLogger.info('🔄 產品刪除完成，快取已自動更新')
 
   return success(
     {

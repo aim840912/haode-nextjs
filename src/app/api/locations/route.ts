@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { locationServiceAdapter } from '@/services/locationServiceAdapter'
+import { locationServiceV2Simple as locationServiceAdapter } from '@/services/v2/locationServiceSimple'
 import { LocationSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'

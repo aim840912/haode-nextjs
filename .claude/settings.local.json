@@ -58,7 +58,8 @@
       "Bash(echo:*)",
       "Bash(cat:*)",
       "Bash(npm ls:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(npm run analyze:*)"
     ],
     "deny": []
   },
