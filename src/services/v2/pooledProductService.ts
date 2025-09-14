@@ -536,6 +536,83 @@ export class PooledProductService extends AbstractPooledService {
     const poolStatus = await this.checkPoolStatus()
     return poolStatus.enabled
   }
+
+  // === ProductService 介面適配器方法 ===
+
+  /**
+   * 取得產品列表（ProductService 介面）
+   */
+  async getProducts(): Promise<Product[]> {
+    return this.findAll({ isActive: true })
+  }
+
+  /**
+   * 取得所有產品，包含非活躍產品（管理員用）
+   */
+  async getAllProducts(): Promise<Product[]> {
+    return this.findAll()
+  }
+
+  /**
+   * 新增產品（ProductService 介面）
+   */
+  async addProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
+    return this.create(product)
+  }
+
+  /**
+   * 更新產品（ProductService 介面）
+   */
+  async updateProduct(
+    id: string,
+    updates: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Product> {
+    const result = await this.update(id, updates)
+    if (!result) {
+      throw new NotFoundError(`產品 ${id} 不存在`)
+    }
+    return result
+  }
+
+  /**
+   * 刪除產品（ProductService 介面）
+   */
+  async deleteProduct(id: string): Promise<void> {
+    await this.delete(id)
+  }
+
+  /**
+   * 根據 ID 取得產品（ProductService 介面）
+   */
+  async getProductById(id: string): Promise<Product | null> {
+    return this.findById(id)
+  }
+
+  /**
+   * 搜尋產品（ProductService 介面）
+   */
+  async searchProducts(query: string): Promise<Product[]> {
+    return this.executeWithConnection(
+      async client => {
+        const { data, error } = await client
+          .from('products')
+          .select('*')
+          .eq('is_active', true)
+          .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`)
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          throw ErrorFactory.fromSupabaseError(error, {
+            module: this.moduleName,
+            action: 'searchProducts',
+          })
+        }
+
+        return (data || []).map(this.transformFromDB)
+      },
+      { action: 'searchProducts' }
+    )
+  }
 }
 
 // 匯出單例實例
