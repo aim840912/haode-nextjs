@@ -41,3 +41,7 @@ jobs:
       env:
         NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        # 額外的環境變數以確保建置成功
+        NODE_ENV: production
+        JWT_SECRET: ci-test-jwt-secret-32-characters-long
+        ADMIN_API_KEY: ci-test-admin-key-32-characters-long
