@@ -373,3 +373,4 @@ chore: 建置或輔助工具變動
 - 📱 改善行動裝置體驗# CI/CD 驗證
 
 Sun Sep 14 17:53:44 CST 2025 - 觸發 GitHub Actions 驗證環境變數修復
+# CI/CD 簡化測試 - Sun Sep 14 18:14:22 CST 2025

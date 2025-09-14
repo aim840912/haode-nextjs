@@ -54,7 +54,8 @@
       "Read(//home/aim840912/projects/doterra/**)",
       "Bash(tree:*)",
       "Bash(npm outdated:*)",
-      "Bash(npm run test:ci:*)"
+      "Bash(npm run test:ci:*)",
+      "Bash(echo:*)"
     ],
     "deny": []
   },
