@@ -99,9 +99,9 @@ const nextConfig: NextConfig = {
     const csp = [
       "default-src 'self'",
       // 暫時在生產環境也允許 unsafe 指令，確保網站可以正常運行
-      `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
+      `script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io https://cdn.jsdelivr.net${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
       // 腳本元素來源 - 與 script-src 保持一致
-      `script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
+      `script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' blob: https://vercel.live https://*.vercel.live https://*.vercel.com https://js.stripe.com https://checkout.stripe.com https://www.googletagmanager.com https://www.google-analytics.com https://analytics.google.com https://chec.io https://cdn.jsdelivr.net${!isRealProduction ? ' http://localhost:*' : ''}`.trim(),
       "worker-src 'self' blob:",
       // 樣式來源 - 暫時在生產環境也允許內嵌樣式
       `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`.trim(),

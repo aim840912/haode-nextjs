@@ -53,14 +53,28 @@ export class LocationServiceV2Simple implements LocationService {
    * 統一錯誤處理方法
    */
   private handleError(error: unknown, action: string): never {
+    // 加入更詳細的錯誤資訊
+    const errorDetails = {
+      action,
+      timestamp: new Date().toISOString(),
+      originalError: error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorCode: (error as any)?.code,
+      errorDetails: (error as any)?.details,
+      errorHint: (error as any)?.hint,
+      errorName: (error as any)?.name,
+    }
+
     dbLogger.error(`地點服務 ${action} 操作失敗`, error as Error, {
       module: this.moduleName,
       action,
-      metadata: { timestamp: new Date().toISOString() },
+      metadata: errorDetails,
     })
+
     throw ErrorFactory.fromSupabaseError(error, {
       module: this.moduleName,
       action,
+      details: errorDetails,
     })
   }
 
@@ -133,7 +147,8 @@ export class LocationServiceV2Simple implements LocationService {
         this.handleError(error, 'getLocations')
       }
 
-      const locations = data?.map(record => this.transformFromDB(record as SupabaseLocationRecord)) || []
+      const locations =
+        data?.map(record => this.transformFromDB(record as SupabaseLocationRecord)) || []
 
       dbLogger.info('地點清單查詢成功', {
         module: this.moduleName,
@@ -167,16 +182,33 @@ export class LocationServiceV2Simple implements LocationService {
       if (!locationData.address?.trim()) {
         throw new ValidationError('地址不能為空')
       }
-      if (!locationData.coordinates || !locationData.coordinates.lat || !locationData.coordinates.lng) {
+      if (
+        !locationData.coordinates ||
+        !locationData.coordinates.lat ||
+        !locationData.coordinates.lng
+      ) {
         throw new ValidationError('座標資訊不完整')
       }
 
       const insertData = this.transformToDB(locationData)
 
+      dbLogger.debug('準備插入資料', {
+        module: this.moduleName,
+        action: 'addLocation',
+        metadata: { insertData },
+      })
+
       const supabaseAdmin = getSupabaseAdmin()
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client not available')
       }
+
+      dbLogger.debug('使用 Supabase Admin 客戶端', {
+        module: this.moduleName,
+        action: 'addLocation',
+        metadata: { hasAdminClient: !!supabaseAdmin },
+      })
+
       const { data, error } = await supabaseAdmin
         .from('locations')
         .insert([insertData])
@@ -184,6 +216,17 @@ export class LocationServiceV2Simple implements LocationService {
         .single()
 
       if (error) {
+        dbLogger.error('Supabase 插入錯誤詳情', error, {
+          module: this.moduleName,
+          action: 'addLocation',
+          metadata: {
+            errorCode: error.code,
+            errorMessage: error.message,
+            errorDetails: error.details,
+            errorHint: error.hint,
+            insertData,
+          },
+        })
         this.handleError(error, 'addLocation')
       }
 
@@ -230,7 +273,8 @@ export class LocationServiceV2Simple implements LocationService {
       if (locationData.hours !== undefined) updateData.hours = locationData.hours
       if (locationData.closedDays !== undefined) updateData.closed_days = locationData.closedDays
       if (locationData.parking !== undefined) updateData.parking = locationData.parking
-      if (locationData.publicTransport !== undefined) updateData.public_transport = locationData.publicTransport
+      if (locationData.publicTransport !== undefined)
+        updateData.public_transport = locationData.publicTransport
       if (locationData.features !== undefined) updateData.features = locationData.features
       if (locationData.specialties !== undefined) updateData.specialties = locationData.specialties
       if (locationData.coordinates !== undefined) updateData.coordinates = locationData.coordinates
@@ -289,10 +333,7 @@ export class LocationServiceV2Simple implements LocationService {
       if (!supabaseAdmin) {
         throw new Error('Supabase admin client not available')
       }
-      const { error } = await supabaseAdmin
-        .from('locations')
-        .delete()
-        .eq('id', id)
+      const { error } = await supabaseAdmin.from('locations').delete().eq('id', id)
 
       if (error) {
         this.handleError(error, 'deleteLocation')
@@ -324,11 +365,7 @@ export class LocationServiceV2Simple implements LocationService {
       }
 
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await supabase.from('locations').select('*').eq('id', id).single()
 
       if (error) {
         if (error.code === 'PGRST116') {
@@ -367,10 +404,7 @@ export class LocationServiceV2Simple implements LocationService {
   }> {
     try {
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
-        .from('locations')
-        .select('count')
-        .limit(1)
+      const { data, error } = await supabase.from('locations').select('count').limit(1)
 
       if (error) {
         return {

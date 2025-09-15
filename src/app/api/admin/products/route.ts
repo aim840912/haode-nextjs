@@ -114,10 +114,10 @@ async function handleGET(request: NextRequest) {
     // 轉換資料格式
     const transformedProducts = (data || []).map(transformFromDB)
 
-    return NextResponse.json({ products: transformedProducts })
+    return success(transformedProducts, '產品載入成功')
   } catch (error) {
     apiLogger.error('Error fetching all products', error as Error)
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+    throw error // 讓 withErrorHandler 處理統一的錯誤格式
   }
 }
 
