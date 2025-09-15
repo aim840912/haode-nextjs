@@ -63,8 +63,8 @@ export function createServiceSupabaseClient() {
     {
       auth: {
         autoRefreshToken: false,
-        persistSession: false
-      }
+        persistSession: false,
+      },
     }
   )
 
@@ -76,15 +76,18 @@ export function createServiceSupabaseClient() {
  */
 export async function getCurrentUser() {
   const supabase = await createServerSupabaseClient()
-  
+
   try {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
     if (error) {
       authLogger.warn('用戶認證失敗', { metadata: { error: (error as Error).message } })
       return null
     }
-    
+
     return user
   } catch (error) {
     authLogger.error('獲取用戶時發生錯誤', error as Error)
@@ -97,10 +100,35 @@ export async function getCurrentUser() {
  */
 export async function requireAuth() {
   const user = await getCurrentUser()
-  
+
   if (!user) {
     throw new Error('需要用戶認證')
   }
-  
+
   return user
+}
+
+/**
+ * 清除 Supabase 服務客戶端快取
+ * 用於 schema 變更後重新建立連線
+ */
+export function clearServiceClientCache() {
+  authLogger.info('清除 Supabase 服務客戶端快取', {
+    module: 'SupabaseServer',
+    action: 'clearServiceClientCache',
+    metadata: {
+      hadCachedClient: !!globalThis.__supabase_service_client__,
+    },
+  })
+
+  globalThis.__supabase_service_client__ = undefined
+}
+
+/**
+ * 強制重新建立 Supabase 服務客戶端
+ * 用於解決 schema 快取問題
+ */
+export function refreshServiceClient() {
+  clearServiceClientCache()
+  return createServiceSupabaseClient()
 }

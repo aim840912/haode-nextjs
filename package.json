@@ -38,6 +38,11 @@
     "db:optimize:search": "npx tsx scripts/apply-full-text-search.ts",
     "db:monitor": "npx tsx scripts/cache-performance-monitor.ts",
     "db:analyze": "npx tsx scripts/database-performance-analyzer.ts",
+    "mcp:test": "SUPABASE_ACCESS_TOKEN=sbp_5e3868ec81de0cbf77f283a5c52a79d28bb7d2de npx @supabase/mcp-server-supabase --read-only --project-ref=bxlrtcagsuoijjolgdzs --features=database,docs",
+    "mcp:help": "echo 'Supabase MCP Server 使用方法：' && echo 'npm run mcp:test - 測試連接' && echo 'npm run mcp:version - 顯示版本'",
+    "mcp:version": "npx @supabase/mcp-server-supabase --version",
+    "mcp:setup": "echo '請設定 SUPABASE_ACCESS_TOKEN 環境變數後運行 npm run mcp:test'",
+    "mcp:test-connection": "node scripts/test-mcp-connection.mjs",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -85,6 +90,7 @@
     "@eslint/eslintrc": "^3",
     "@next/bundle-analyzer": "^15.4.6",
     "@playwright/test": "^1.55.0",
+    "@supabase/mcp-server-supabase": "^0.5.3",
     "@tailwindcss/postcss": "^4.1.13",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20",

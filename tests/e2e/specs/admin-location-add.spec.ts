@@ -63,7 +63,7 @@ test.describe('管理員門市新增', () => {
 
     // 如果仍然顯示需要登入，跳過此測試
     if (await page.locator('text=需要登入').isVisible()) {
-      test.skip('跳過測試：無法登入管理員帳號')
+      test.skip(true, '跳過測試：無法登入管理員帳號')
     }
   })
 
@@ -288,7 +288,7 @@ test.describe('門市新增 API 直接測試', () => {
 
     // 檢查回應狀態
     if (response.status() === 401) {
-      test.skip('跳過測試：API 需要身份驗證')
+      test.skip(true, '跳過測試：API 需要身份驗證')
       return
     }
 
@@ -329,7 +329,7 @@ test.describe('門市新增 API 直接測試', () => {
 
     // 如果需要身份驗證，跳過測試
     if (response.status() === 401) {
-      test.skip('跳過測試：API 需要身份驗證')
+      test.skip(true, '跳過測試：API 需要身份驗證')
       return
     }
 

@@ -66,6 +66,7 @@ export class SupabaseConnectionPool {
     reject: (error: Error) => void
     timestamp: number
   }> = []
+  private schemaVersion: number = Date.now() // 追蹤 schema 版本
 
   private stats = {
     totalRequests: 0,
@@ -446,6 +447,84 @@ export class SupabaseConnectionPool {
       averageAcquireTime,
       poolUtilization: this.config.max > 0 ? (activeConnections / this.config.max) * 100 : 0,
     }
+  }
+
+  /**
+   * 重置所有連線（用於 schema 變更後）
+   */
+  async resetConnections(): Promise<void> {
+    dbLogger.info('開始重置連線池', {
+      module: 'SupabaseConnectionPool',
+      action: 'resetConnections',
+      metadata: {
+        currentConnections: this.connections.size,
+        oldSchemaVersion: this.schemaVersion,
+      },
+    })
+
+    // 更新 schema 版本
+    this.schemaVersion = Date.now()
+
+    // 標記所有連線為不健康，強制重建
+    for (const [id, connection] of this.connections) {
+      connection.state = ConnectionState.UNHEALTHY
+    }
+
+    // 清理所有現有連線
+    const oldConnections = Array.from(this.connections.keys())
+    this.connections.clear()
+
+    // 重建最小數量的連線
+    try {
+      for (let i = 0; i < this.config.min; i++) {
+        await this.createConnection()
+      }
+
+      dbLogger.info('連線池重置完成', {
+        module: 'SupabaseConnectionPool',
+        action: 'resetConnections',
+        metadata: {
+          oldConnectionsCleared: oldConnections.length,
+          newConnectionsCreated: this.connections.size,
+          newSchemaVersion: this.schemaVersion,
+        },
+      })
+    } catch (error) {
+      dbLogger.error('連線池重置失敗', error as Error, {
+        module: 'SupabaseConnectionPool',
+        action: 'resetConnections',
+      })
+      throw error
+    }
+  }
+
+  /**
+   * 強制重新整理 schema（清除快取）
+   */
+  async refreshSchema(): Promise<void> {
+    dbLogger.info('開始重新整理 schema', {
+      module: 'SupabaseConnectionPool',
+      action: 'refreshSchema',
+    })
+
+    // 如果連線池未啟用，直接返回
+    if (!this.config.enabled) {
+      dbLogger.info('連線池未啟用，跳過 schema 重新整理', {
+        module: 'SupabaseConnectionPool',
+        action: 'refreshSchema',
+      })
+      return
+    }
+
+    // 重置所有連線以獲取新的 schema
+    await this.resetConnections()
+  }
+
+  /**
+   * 取得當前 schema 版本
+   */
+  getSchemaVersion(): number {
+    return this.schemaVersion
   }
 
   /**

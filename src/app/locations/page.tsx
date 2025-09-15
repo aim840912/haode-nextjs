@@ -6,6 +6,7 @@ import { Location } from '@/types/location'
 import Link from 'next/link'
 import { SimpleImage, AvatarSimpleImage } from '@/components/ui/image/OptimizedImage'
 import { logger } from '@/lib/logger'
+import { getFullImageUrl } from '@/lib/image-url-utils'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -156,7 +157,7 @@ export default function LocationsPage() {
                 <div className="flex items-center">
                   {isValidImageUrl(selectedStore.image) && (
                     <AvatarSimpleImage
-                      src={selectedStore.image}
+                      src={getFullImageUrl(selectedStore.image)}
                       alt={selectedStore.title}
                       size="lg"
                       className="mr-4 rounded-lg"
@@ -284,7 +285,7 @@ export default function LocationsPage() {
               {isValidImageUrl(selectedStore.image) && (
                 <div className="aspect-video rounded-lg overflow-hidden relative">
                   <SimpleImage
-                    src={selectedStore.image}
+                    src={getFullImageUrl(selectedStore.image)}
                     alt={`${selectedStore.name}門市位置`}
                     fill
                     className="object-cover"

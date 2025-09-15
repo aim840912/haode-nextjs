@@ -98,3 +98,17 @@ scripts/fix-*.sql
 # Supabase 臨時檔案
 supabase/.temp/
 .env*.local
+
+# 根目錄臨時腳本和除錯檔案
+/*.mjs
+/*.js
+# 保留重要的配置檔案
+!postcss.config.mjs
+!bundle-analyzer.mjs
+
+# MCP (Model Context Protocol) 配置
+.mcp.json
+
+# 臨時修復指南和設定文檔
+MCP_SETUP.md
+SCHEMA_REPAIR_GUIDE.md

@@ -74,7 +74,7 @@ export class LocationServiceV2Simple implements LocationService {
     throw ErrorFactory.fromSupabaseError(error, {
       module: this.moduleName,
       action,
-      details: errorDetails,
+      context: errorDetails,
     })
   }
 
@@ -163,6 +163,39 @@ export class LocationServiceV2Simple implements LocationService {
   }
 
   /**
+   * 驗證電話號碼格式
+   */
+  private validatePhoneNumber(phone: string): void {
+    if (!phone?.trim()) {
+      throw new ValidationError('電話號碼不能為空')
+    }
+
+    const trimmedPhone = phone.trim()
+
+    // 長度檢查（最多 20 字元）
+    if (trimmedPhone.length > 20) {
+      throw new ValidationError('電話號碼過長，最多支援 20 個字元')
+    }
+
+    // 長度檢查（最少 8 字元，台灣最短市話）
+    if (trimmedPhone.length < 8) {
+      throw new ValidationError('電話號碼過短，至少需要 8 個字元')
+    }
+
+    // 格式檢查：只允許數字、連字號、括號、空格、井號、加號
+    const phoneRegex = /^[0-9\-+()# ]+$/
+    if (!phoneRegex.test(trimmedPhone)) {
+      throw new ValidationError('電話號碼格式不正確，只能包含數字、連字號、括號、空格等')
+    }
+
+    // 台灣電話號碼基本格式檢查
+    const taiwanPhoneRegex = /^(0[2-9][\d\-]{6,15}|09[\d\-]{8,10})$/
+    if (!taiwanPhoneRegex.test(trimmedPhone.replace(/[\s\-()]/g, ''))) {
+      throw new ValidationError('請輸入有效的台灣電話號碼格式（如：02-12345678 或 0912-345678）')
+    }
+  }
+
+  /**
    * 新增地點
    */
   async addLocation(
@@ -189,6 +222,9 @@ export class LocationServiceV2Simple implements LocationService {
       ) {
         throw new ValidationError('座標資訊不完整')
       }
+
+      // 電話號碼驗證
+      this.validatePhoneNumber(locationData.phone)
 
       const insertData = this.transformToDB(locationData)
 
@@ -260,6 +296,11 @@ export class LocationServiceV2Simple implements LocationService {
 
       if (!id || id <= 0) {
         throw new ValidationError('地點 ID 必須為正數')
+      }
+
+      // 驗證更新資料
+      if (locationData.phone !== undefined) {
+        this.validatePhoneNumber(locationData.phone)
       }
 
       // 建立更新資料對象

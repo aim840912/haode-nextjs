@@ -120,8 +120,13 @@ export async function uploadLocationImage(
       .from(LOCATIONS_STORAGE_BUCKET)
       .getPublicUrl(filePath)
 
+    // 為了避免 VARCHAR(10) 限制，返回相對路徑
+    // 前端可以使用環境變數重建完整 URL
+    const relativePath = `/storage/v1/object/public/${LOCATIONS_STORAGE_BUCKET}/${filePath}`
+
     const result = {
-      url: urlData.publicUrl,
+      url: relativePath, // 使用相對路徑代替完整 URL
+      fullUrl: urlData.publicUrl, // 保留完整 URL 供參考
       path: filePath,
       fileName: fileName,
     }

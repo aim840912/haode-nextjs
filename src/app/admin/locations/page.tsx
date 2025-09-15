@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import AdminProtection from '@/components/features/admin/AdminProtection'
+import { getFullImageUrl } from '@/lib/image-url-utils'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 img 標籤）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -135,7 +136,7 @@ export default function LocationsAdmin() {
                   {location.image && isValidImageUrl(location.image) && (
                     <div className="mb-4">
                       <Image
-                        src={location.image}
+                        src={getFullImageUrl(location.image)}
                         alt={location.title}
                         width={64}
                         height={64}

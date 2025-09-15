@@ -22,7 +22,12 @@ export const StringSchemas = {
   email: z.string().email('請輸入有效的電子郵件地址'),
 
   /** 電話號碼驗證（台灣） */
-  phone: z.string().regex(/^(\+886|886|0)?[2-9]\d{7,8}$/, '請輸入有效的台灣電話號碼'),
+  phone: z
+    .string()
+    .regex(
+      /^(0[2-9][\d\-]{6,15}|09[\d\-]{8,10})$/,
+      '請輸入有效的台灣電話號碼格式（如：02-12345678 或 0912-345678）'
+    ),
 
   /** 手機號碼驗證（台灣） */
   mobile: z.string().regex(/^(\+886|886|0)?9\d{8}$/, '請輸入有效的台灣手機號碼'),
@@ -674,9 +679,16 @@ export const LocationSchemas = {
       .string()
       .optional()
       .default('')
-      .refine(value => !value || z.string().url().safeParse(value).success, {
-        message: '請輸入有效的圖片網址',
-      }),
+      .refine(
+        value => {
+          if (!value) return true
+          // 允許相對路徑 (以 / 開頭) 或完整 URL
+          return value.startsWith('/') || z.string().url().safeParse(value).success
+        },
+        {
+          message: '請輸入有效的圖片網址或相對路徑',
+        }
+      ),
     isMain: z.boolean().default(false),
   }),
 

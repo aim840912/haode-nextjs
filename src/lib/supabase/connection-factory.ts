@@ -136,6 +136,73 @@ class SupabaseConnectionFactory {
   }
 
   /**
+   * 重新整理 schema（清除連線池快取）
+   */
+  async refreshSchema(): Promise<void> {
+    if (!this.initialized) {
+      await this.initialize()
+    }
+
+    if (this.connectionPool) {
+      await this.connectionPool.refreshSchema()
+
+      dbLogger.info('Schema 重新整理完成', {
+        module: 'SupabaseConnectionFactory',
+        action: 'refreshSchema',
+        metadata: {
+          poolEnabled: true,
+          schemaVersion: this.connectionPool.getSchemaVersion(),
+        },
+      })
+    } else {
+      dbLogger.info('連線池未啟用，schema 重新整理跳過', {
+        module: 'SupabaseConnectionFactory',
+        action: 'refreshSchema',
+        metadata: {
+          poolEnabled: false,
+        },
+      })
+    }
+  }
+
+  /**
+   * 重置所有連線
+   */
+  async resetConnections(): Promise<void> {
+    if (!this.initialized) {
+      await this.initialize()
+    }
+
+    if (this.connectionPool) {
+      await this.connectionPool.resetConnections()
+
+      dbLogger.info('連線重置完成', {
+        module: 'SupabaseConnectionFactory',
+        action: 'resetConnections',
+        metadata: {
+          poolEnabled: true,
+          schemaVersion: this.connectionPool.getSchemaVersion(),
+        },
+      })
+    } else {
+      dbLogger.info('連線池未啟用，連線重置跳過', {
+        module: 'SupabaseConnectionFactory',
+        action: 'resetConnections',
+        metadata: {
+          poolEnabled: false,
+        },
+      })
+    }
+  }
+
+  /**
+   * 取得當前 schema 版本
+   */
+  getSchemaVersion(): number | null {
+    return this.connectionPool?.getSchemaVersion() || null
+  }
+
+  /**
    * 關閉連線工廠
    */
   async shutdown(): Promise<void> {
@@ -221,6 +288,30 @@ export async function getPoolStats() {
   const connectionFactory = getConnectionFactory()
   const manager = await connectionFactory.getConnectionManager()
   return manager?.getPoolStats() || null
+}
+
+/**
+ * 便利函數：重新整理 schema（清除連線池快取）
+ */
+export async function refreshConnectionPoolSchema(): Promise<void> {
+  const connectionFactory = getConnectionFactory()
+  await connectionFactory.refreshSchema()
+}
+
+/**
+ * 便利函數：重置所有連線
+ */
+export async function resetAllConnections(): Promise<void> {
+  const connectionFactory = getConnectionFactory()
+  await connectionFactory.resetConnections()
+}
+
+/**
+ * 便利函數：取得當前 schema 版本
+ */
+export async function getSchemaVersion(): Promise<number | null> {
+  const connectionFactory = getConnectionFactory()
+  return connectionFactory.getSchemaVersion()
 }
 
 /**
