@@ -21,6 +21,8 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
+import { getFullImageUrl } from '@/lib/image-url-utils'
+import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 
 interface SortableImage {
   id: string
@@ -83,8 +85,8 @@ function SortableImageItem({ image, onRemove }: SortableImageProps) {
 
       {/* 圖片 */}
       <div className="aspect-square relative">
-        <Image
-          src={image.preview || image.url || '/images/placeholder.jpg'}
+        <SimpleImage
+          src={getFullImageUrl(image.preview || image.url || '/images/placeholder.jpg')}
           alt={image.alt || `圖片 ${image.position + 1}`}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
