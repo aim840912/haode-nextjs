@@ -26,23 +26,39 @@ async function validateAdminUser() {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
+    console.error('Auth validation failed:', authError)
     throw new AuthorizationError('未登入或認證失效')
   }
 
+  console.log('User authenticated:', user.id, user.email)
+
   // 從 profiles 表獲取用戶角色
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = (await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single() as { data: { role: string } | null; error: Error | null }
+    .single()) as { data: { role: string } | null; error: Error | null }
 
-  if (profileError || !profile) {
-    throw new AuthorizationError('無法獲取用戶資料')
+  console.log('Profile query result:', { profile, profileError })
+
+  if (profileError) {
+    console.error('Profile fetch error:', profileError)
+    throw new AuthorizationError(`無法獲取用戶資料: ${profileError.message}`)
   }
+
+  if (!profile) {
+    console.error('No profile found for user:', user.id)
+    throw new AuthorizationError('找不到用戶資料')
+  }
+
+  console.log('User profile:', profile)
 
   if (profile.role !== 'admin') {
-    throw new AuthorizationError('需要管理員權限')
+    console.error('User role check failed:', profile.role)
+    throw new AuthorizationError(`需要管理員權限，目前角色: ${profile.role}`)
   }
+
+  console.log('Admin validation successful for user:', user.email)
 }
 
 async function forwardToAdminAPI(method: string, body?: unknown, request?: NextRequest) {

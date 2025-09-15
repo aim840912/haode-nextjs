@@ -5,7 +5,22 @@
       "Bash(npm run type-check:*)",
       "Bash(npm run lint)",
       "Bash(git add:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(npm run dev:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_click",
+      "Bash(convert:*)",
+      "Bash(python3:*)",
+      "mcp__playwright__browser_file_upload",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_evaluate",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Read(//home/aim840912/projects/portfolio/**)",
+      "Bash(npm install:*)",
+      "Bash(mkdir:*)",
+      "Bash(timeout 30s npm run dev)"
     ],
     "deny": [],
     "ask": []

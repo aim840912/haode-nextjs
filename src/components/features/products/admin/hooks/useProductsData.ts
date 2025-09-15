@@ -30,9 +30,24 @@ export function useProductsData(
       setLoading(true)
       setError(null)
 
+      logger.info('開始載入產品資料', {
+        module: 'useProductsData',
+        metadata: { hasFilters: !!filters },
+      })
+
       const response = await fetch('/api/admin-proxy/products')
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        // 嘗試獲取錯誤詳情
+        let errorDetails = `HTTP ${response.status}`
+        try {
+          const errorData = await response.json()
+          errorDetails = errorData.message || errorData.error || errorDetails
+        } catch {
+          // 如果不是 JSON，使用狀態文本
+          errorDetails = response.statusText || errorDetails
+        }
+        throw new Error(`API 請求失敗: ${errorDetails}`)
       }
 
       const data = await response.json()
@@ -47,20 +62,28 @@ export function useProductsData(
           },
         })
       } else {
-        throw new Error('API 回應格式錯誤')
+        logger.error('API 回應格式錯誤', new Error('Invalid API response'), {
+          module: 'useProductsData',
+          metadata: { response: data },
+        })
+        throw new Error(`API 回應格式錯誤: ${JSON.stringify(data)}`)
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '載入產品失敗'
       logger.error('產品資料載入失敗', error as Error, {
         module: 'useProductsData',
-        metadata: { filters },
+        metadata: {
+          filters,
+          errorMessage,
+          stack: error instanceof Error ? error.stack : undefined,
+        },
       })
       setError(errorMessage)
       setProducts([])
     } finally {
       setLoading(false)
     }
-  }, [filters])
+  }, []) // 移除 filters 依賴，因為我們只需要在初始化時載入，篩選由前端處理
 
   // 初始載入
   useEffect(() => {

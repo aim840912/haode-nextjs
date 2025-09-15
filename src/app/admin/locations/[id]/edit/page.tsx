@@ -9,16 +9,23 @@ import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
+import { getFullImageUrl } from '@/lib/image-url-utils'
 
 // 動態載入圖片上傳器
-const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
-  loading: () => (
-    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-      載入圖片上傳器...
-    </div>
-  ),
-  ssr: false,
-})
+const SingleImageUploader = dynamic(
+  () =>
+    import('@/components/features/products/ImageUploader').then(mod => ({
+      default: mod.SingleImageUploader,
+    })),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+        載入圖片上傳器...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function EditLocation({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -248,24 +255,22 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
   }
 
   // 處理圖片上傳成功
-  const handleImageUploadSuccess = (
-    images: {
-      id: string
-      url?: string
-      path: string
-      size: 'thumbnail' | 'medium' | 'large'
-      file?: File
-      preview?: string
-      position: number
-      alt?: string
-    }[]
-  ) => {
-    const urls = images.map(img => img.url || img.path).filter(Boolean)
-    setUploadedImages(urls)
-    if (urls.length > 0) {
-      setFormData(prev => ({ ...prev, image: urls[0] }))
+  const handleImageUploadSuccess = (image: {
+    id: string
+    url?: string
+    path: string
+    size: 'thumbnail' | 'medium' | 'large'
+    file?: File
+    preview?: string
+    position: number
+    alt?: string
+  }) => {
+    const imageUrl = image.url || image.path
+    if (imageUrl) {
+      setUploadedImages([imageUrl])
+      setFormData(prev => ({ ...prev, image: imageUrl }))
       logger.info('圖片上傳成功', {
-        metadata: { imageUrl: urls[0], locationId },
+        metadata: { imageUrl, locationId },
       })
     }
   }
@@ -535,27 +540,19 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                   門市圖片 (選填)
                 </label>
                 {currentId && (
-                  <ImageUploader
+                  <SingleImageUploader
                     productId={currentId}
-                    idParamName="locationId"
-                    apiEndpoint="/api/upload/images"
+                    initialImage={getFullImageUrl(formData.image)}
                     onUploadSuccess={handleImageUploadSuccess}
                     onUploadError={handleImageUploadError}
-                    maxFiles={1}
-                    allowMultiple={false}
-                    generateMultipleSizes={false}
-                    enableCompression={true}
+                    apiEndpoint="/api/upload/locations"
+                    idParamName="locationId"
                     className="mb-4"
                   />
                 )}
                 {!currentId && (
                   <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                     <span className="text-gray-500">載入圖片上傳器...</span>
-                  </div>
-                )}
-                {uploadedImages.length > 0 && (
-                  <div className="mt-2 text-sm text-green-600">
-                    ✓ 已上傳 {uploadedImages.length} 張圖片
                   </div>
                 )}
               </div>
@@ -599,7 +596,10 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 <div className="mb-3">
                   {uploadedImages.length > 0 || existingImages.length > 0 ? (
                     <Image
-                      src={uploadedImages[0] || existingImages[0] || '/placeholder.jpg'}
+                      src={
+                        getFullImageUrl(uploadedImages[0] || existingImages[0]) ||
+                        '/placeholder.jpg'
+                      }
                       alt="門市圖片"
                       width={64}
                       height={64}

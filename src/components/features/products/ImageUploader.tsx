@@ -482,6 +482,8 @@ export function SingleImageUploader({
   initialImage,
   size = 'medium',
   className = '',
+  apiEndpoint = '/api/upload/images',
+  idParamName = 'productId',
 }: {
   productId: string
   onUploadSuccess?: (image: UploadedImage) => void
@@ -489,6 +491,8 @@ export function SingleImageUploader({
   initialImage?: string
   size?: 'thumbnail' | 'medium' | 'large'
   className?: string
+  apiEndpoint?: string
+  idParamName?: string
 }) {
   const [currentImage, setCurrentImage] = useState<UploadedImage | null>(
     initialImage
@@ -533,6 +537,8 @@ export function SingleImageUploader({
         maxFiles={1}
         allowMultiple={false}
         generateMultipleSizes={false}
+        apiEndpoint={apiEndpoint}
+        idParamName={idParamName}
       />
     </div>
   )

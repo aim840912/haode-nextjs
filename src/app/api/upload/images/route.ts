@@ -51,7 +51,11 @@ async function handlePOST(request: NextRequest) {
     throw new ValidationError(`上傳參數驗證失敗: ${errorMessage}`)
   }
 
-  const { productId, generateMultipleSizes, compress, size } = result.data
+  const { productId, cultureId, generateMultipleSizes, compress, size } = result.data
+
+  // 取得實際使用的 ID 和類型
+  const entityId = productId || cultureId
+  const entityType = productId ? 'product' : 'culture'
 
   if (!file) {
     throw new ValidationError('請選擇要上傳的圖片檔案')
@@ -81,40 +85,47 @@ async function handlePOST(request: NextRequest) {
   try {
     if (generateMultipleSizes) {
       // 上傳多個尺寸
-      apiLogger.info(`開始多尺寸圖片上傳`, { metadata: { productId, fileName: file.name } })
-      const results = await uploadMultipleSizeImages(processedFile, productId)
-      apiLogger.info('多尺寸圖片上傳完成', { metadata: { productId, sizes: Object.keys(results) } })
+      apiLogger.info(`開始多尺寸圖片上傳`, {
+        metadata: { entityId, entityType, fileName: file.name },
+      })
+      const results = await uploadMultipleSizeImages(processedFile, entityId!)
+      apiLogger.info('多尺寸圖片上傳完成', {
+        metadata: { entityId, entityType, sizes: Object.keys(results) },
+      })
 
-      // 獲取當前產品已有圖片數量來決定位置
-      const existingImages = await ProductImageService.getProductImages(productId)
-      let position = existingImages.length
+      // 保存圖片資訊到資料庫（僅對產品類型）
+      let imageRecords = []
+      if (entityType === 'product') {
+        // 獲取當前產品已有圖片數量來決定位置
+        const existingImages = await ProductImageService.getProductImages(entityId!)
+        let position = existingImages.length
 
-      // 保存圖片資訊到資料庫
-      const imageRecords = []
-      for (const [sizeKey, sizeResult] of Object.entries(results)) {
-        const imageData = {
-          product_id: productId,
-          url: sizeResult.url,
-          path: sizeResult.path,
-          alt: `${file.name} (${sizeKey})`,
-          position: position,
-          size: sizeKey as 'thumbnail' | 'medium' | 'large',
-          file_size: file.size
+        for (const [sizeKey, sizeResult] of Object.entries(results)) {
+          const imageData = {
+            product_id: entityId!,
+            url: sizeResult.url,
+            path: sizeResult.path,
+            alt: `${file.name} (${sizeKey})`,
+            position: position,
+            size: sizeKey as 'thumbnail' | 'medium' | 'large',
+            file_size: file.size,
+          }
+
+          try {
+            const imageRecord = await ProductImageService.createProductImage(imageData)
+            imageRecords.push(imageRecord)
+          } catch (dbError) {
+            apiLogger.warn('保存圖片記錄到資料庫失敗，但檔案已上傳成功', {
+              metadata: {
+                entityId,
+                entityType,
+                url: imageData.url,
+                error: (dbError as Error).message,
+              },
+            })
+          }
+          position++ // 每個尺寸佔用一個位置
         }
-
-        try {
-          const imageRecord = await ProductImageService.createProductImage(imageData)
-          imageRecords.push(imageRecord)
-        } catch (dbError) {
-          apiLogger.warn('保存圖片記錄到資料庫失敗，但檔案已上傳成功', {
-            metadata: { 
-              productId, 
-              url: imageData.url,
-              error: (dbError as Error).message 
-            }
-          })
-        }
-        position++ // 每個尺寸佔用一個位置
       }
 
       return success(
@@ -127,39 +138,46 @@ async function handlePOST(request: NextRequest) {
       )
     } else {
       // 單一尺寸上傳
-      apiLogger.info(`開始單一尺寸圖片上傳`, { metadata: { productId, size, fileName: file.name } })
-      const uploadResult = await uploadImageToStorage(processedFile, productId, size)
-      apiLogger.info('單一尺寸圖片上傳完成', { metadata: { productId, size, url: uploadResult.url } })
+      apiLogger.info(`開始單一尺寸圖片上傳`, {
+        metadata: { entityId, entityType, size, fileName: file.name },
+      })
+      const uploadResult = await uploadImageToStorage(processedFile, entityId!, size)
+      apiLogger.info('單一尺寸圖片上傳完成', {
+        metadata: { entityId, entityType, size, url: uploadResult.url },
+      })
 
-      // 獲取當前產品已有圖片數量來決定位置
-      const existingImages = await ProductImageService.getProductImages(productId)
-      const position = existingImages.length
-
-      // 保存圖片資訊到資料庫
+      // 保存圖片資訊到資料庫（僅對產品類型）
       let imageRecord = null
-      try {
-        const imageData = {
-          product_id: productId,
-          url: uploadResult.url,
-          path: uploadResult.path,
-          alt: `${file.name} (${size})`,
-          position: position,
-          size: size,
-          file_size: file.size
-        }
+      if (entityType === 'product') {
+        // 獲取當前產品已有圖片數量來決定位置
+        const existingImages = await ProductImageService.getProductImages(entityId!)
+        const position = existingImages.length
 
-        imageRecord = await ProductImageService.createProductImage(imageData)
-        apiLogger.info('圖片記錄已保存到資料庫', { 
-          metadata: { imageId: imageRecord.id, productId, position } 
-        })
-      } catch (dbError) {
-        apiLogger.warn('保存圖片記錄到資料庫失敗，但檔案已上傳成功', {
-          metadata: { 
-            productId, 
+        try {
+          const imageData = {
+            product_id: entityId!,
             url: uploadResult.url,
-            error: (dbError as Error).message 
+            path: uploadResult.path,
+            alt: `${file.name} (${size})`,
+            position: position,
+            size: size,
+            file_size: file.size,
           }
-        })
+
+          imageRecord = await ProductImageService.createProductImage(imageData)
+          apiLogger.info('圖片記錄已保存到資料庫', {
+            metadata: { imageId: imageRecord.id, entityId, entityType, position },
+          })
+        } catch (dbError) {
+          apiLogger.warn('保存圖片記錄到資料庫失敗，但檔案已上傳成功', {
+            metadata: {
+              entityId,
+              entityType,
+              url: uploadResult.url,
+              error: (dbError as Error).message,
+            },
+          })
+        }
       }
 
       return success(
@@ -178,7 +196,7 @@ async function handlePOST(request: NextRequest) {
     if (error instanceof SupabaseStorageError) {
       throw error
     }
-    
+
     // 其他錯誤包裝為 Storage 錯誤
     throw new SupabaseStorageError(
       `圖片上傳失敗: ${error instanceof Error ? error.message : String(error)}`,
@@ -229,14 +247,18 @@ async function handleGET(request: NextRequest) {
     throw new ValidationError(`查詢參數驗證失敗: ${errorMessage}`)
   }
 
-  const { productId } = result.data
+  const { productId, cultureId } = result.data
+  const entityId = productId || cultureId
+  const entityType = productId ? 'product' : 'culture'
 
-  apiLogger.debug(`查詢產品圖片`, { metadata: { productId } })
+  apiLogger.debug(`查詢${entityType}圖片`, { metadata: { entityId, entityType } })
 
   const { listProductImages } = await import('@/lib/supabase-storage')
-  const images = await listProductImages(productId)
+  const images = await listProductImages(entityId!)
 
-  apiLogger.info(`產品圖片查詢完成`, { metadata: { productId, imageCount: images.length } })
+  apiLogger.info(`${entityType}圖片查詢完成`, {
+    metadata: { entityId, entityType, imageCount: images.length },
+  })
 
   return success(images, '圖片列表取得成功')
 }
