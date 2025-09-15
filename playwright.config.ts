@@ -32,7 +32,7 @@ export default defineConfig({
   // 全域使用設定
   use: {
     // 基礎 URL
-    baseURL: 'http://localhost:3002',
+    baseURL: 'http://localhost:3001',
 
     // 瀏覽器設定
     trace: 'on-first-retry',
@@ -98,7 +98,7 @@ export default defineConfig({
   // Web Server 設定（如果需要啟動開發伺服器）
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3002',
+    url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000, // 2 分鐘
   },

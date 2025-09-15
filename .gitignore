@@ -74,5 +74,27 @@ next-env.d.ts
 # 測試結果目錄
 test-results/
 
+# Playwright 測試結果和報告
+tests/e2e/reports/
+tests/e2e/results/
+tests/e2e/results.json
+tests/e2e/junit.xml
+
+# 臨時測試腳本
+test-*.js
+*-demo.js
+
+# 測試截圖和臨時圖片
+*-screenshot.png
+*-demo.png
+*-full.png
+
+# 測試固定資料
+tests/fixtures/
+
+# 臨時 SQL 腳本
+scripts/fix-*.sql
+
 # Supabase 臨時檔案
 supabase/.temp/
+.env*.local
