@@ -1,13 +1,10 @@
 export interface FarmTourActivity {
   id: string
-  season: string
-  months: string
+  start_month: number // 開始月份 (1-12)
+  end_month: number // 結束月份 (1-12)
   title: string
-  highlight: string
   activities: string[]
-  price: number
-  duration: string
-  includes: string[]
+  price: number // 選填，預設 0
   image: string
   available: boolean
   note: string

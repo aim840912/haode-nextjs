@@ -10,11 +10,11 @@ import { apiLogger } from '@/lib/logger'
 async function handleGET() {
   const farmTourService = await getFarmTourService()
   const activities = await farmTourService.getAll()
-  
+
   apiLogger.info('農場體驗活動清單查詢成功', {
-    metadata: { count: activities.length }
+    metadata: { count: activities.length },
   })
-  
+
   return success(activities, '農場體驗活動清單取得成功')
 }
 
@@ -34,25 +34,26 @@ async function handlePOST(request: NextRequest) {
   apiLogger.info('建立農場體驗活動', {
     metadata: {
       title: result.data.title,
-      season: result.data.season,
+      start_month: result.data.start_month,
+      end_month: result.data.end_month,
       price: result.data.price,
-      available: result.data.available
-    }
+      available: result.data.available,
+    },
   })
 
   const farmTourService = await getFarmTourService()
   const newActivity = await farmTourService.create(result.data)
-  
+
   return created(newActivity, '農場體驗活動建立成功')
 }
 
 // 導出處理器 - 套用錯誤處理中間件
 export const GET = withErrorHandler(handleGET, {
   module: 'FarmTourAPI',
-  enableAuditLog: false
+  enableAuditLog: false,
 })
 
 export const POST = withErrorHandler(handlePOST, {
   module: 'FarmTourAPI',
-  enableAuditLog: true
+  enableAuditLog: true,
 })

@@ -16,7 +16,10 @@ interface FarmTourService {
   getAll(): Promise<FarmTourActivity[]>
   getById(id: string): Promise<FarmTourActivity | null>
   create(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity>
-  update(id: string, data: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>): Promise<FarmTourActivity | null>
+  update(
+    id: string,
+    data: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>
+  ): Promise<FarmTourActivity | null>
   delete(id: string): Promise<boolean>
 }
 
@@ -46,7 +49,9 @@ export class FarmTourServiceAdapter implements FarmTourService {
     return this.serviceV2.getById(id)
   }
 
-  async create(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity> {
+  async create(
+    data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<FarmTourActivity> {
     return this.serviceV2.create(data)
   }
 
@@ -97,12 +102,12 @@ export class FarmTourServiceAdapter implements FarmTourService {
   }
 
   /**
-   * 根據季節取得農場體驗活動
+   * 根據月份範圍取得農場體驗活動
    */
-  async getBySeason(season: string): Promise<FarmTourActivity[]> {
+  async getByMonthRange(startMonth: number, endMonth: number): Promise<FarmTourActivity[]> {
     const allActivities = await this.serviceV2.getAll()
-    return allActivities.filter(activity => 
-      activity.season.toLowerCase() === season.toLowerCase()
+    return allActivities.filter(
+      activity => activity.start_month <= endMonth && activity.end_month >= startMonth
     )
   }
 
@@ -119,8 +124,8 @@ export class FarmTourServiceAdapter implements FarmTourService {
    */
   async getByPriceRange(minPrice: number, maxPrice: number): Promise<FarmTourActivity[]> {
     const allActivities = await this.serviceV2.getAll()
-    return allActivities.filter(activity => 
-      activity.price >= minPrice && activity.price <= maxPrice
+    return allActivities.filter(
+      activity => activity.price >= minPrice && activity.price <= maxPrice
     )
   }
 }

@@ -309,10 +309,73 @@ export async function signInUser(email: string, password: string) {
 
 // 登出使用者
 export async function signOutUser() {
-  const { error } = await supabase.auth.signOut()
+  try {
+    const { error } = await supabase.auth.signOut()
 
-  if (error) {
-    throw new Error(error.message)
+    // 檢查是否為預期的錯誤（session 已失效等）
+    if (error) {
+      const isExpectedError =
+        error.message?.includes('Invalid Refresh Token') ||
+        error.message?.includes('refresh_token_not_found') ||
+        error.message?.includes('Auth session missing') ||
+        error.status === 403 ||
+        error.status === 401
+
+      if (isExpectedError) {
+        // 這些錯誤表示 session 已經失效，登出目標已達成
+        authLogger.info('Session 已失效，視為成功登出', {
+          module: 'supabase-auth',
+          action: 'signOutUser',
+          metadata: {
+            errorMessage: error.message,
+            errorStatus: error.status,
+          },
+        })
+        return // 成功完成登出
+      }
+
+      // 其他錯誤才需要拋出
+      authLogger.error('登出時發生未預期錯誤', new Error(error.message), {
+        module: 'supabase-auth',
+        action: 'signOutUser',
+        metadata: {
+          errorMessage: error.message,
+          errorStatus: error.status,
+        },
+      })
+      throw new Error(error.message)
+    }
+
+    authLogger.info('登出成功', {
+      module: 'supabase-auth',
+      action: 'signOutUser',
+    })
+  } catch (error) {
+    // 捕獲網路錯誤等其他異常
+    const err = error as { message?: string; status?: number }
+
+    // 檢查是否為預期的錯誤
+    const isExpectedError =
+      err.message?.includes('Invalid Refresh Token') ||
+      err.message?.includes('refresh_token_not_found') ||
+      err.message?.includes('Auth session missing') ||
+      err.status === 403 ||
+      err.status === 401
+
+    if (isExpectedError) {
+      authLogger.info('Session 已失效（捕獲異常），視為成功登出', {
+        module: 'supabase-auth',
+        action: 'signOutUser',
+        metadata: {
+          errorMessage: err.message,
+          errorStatus: err.status,
+        },
+      })
+      return // 成功完成登出
+    }
+
+    // 重新拋出未預期的錯誤
+    throw error
   }
 }
 

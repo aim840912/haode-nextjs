@@ -1,6 +1,14 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+  ReactNode,
+} from 'react'
 import { User, LoginRequest, RegisterRequest } from '@/types/auth'
 import {
   supabase,
@@ -95,6 +103,108 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
     }
   }, [])
+
+  // 追蹤驗證狀態避免重複執行
+  const validationRef = useRef<{ isValidating: boolean; lastValidation: number }>({
+    isValidating: false,
+    lastValidation: 0,
+  })
+
+  // 添加事件處理防抖機制
+  const eventProcessingRef = useRef<{ lastEvent: string; lastTime: number }>({
+    lastEvent: '',
+    lastTime: 0,
+  })
+
+  // 定期驗證 session 有效性
+  const validateSession = useCallback(async () => {
+    // 嚴格檢查：必須有 user 且 user 有 id
+    if (!user || !user.id) {
+      logger.debug('跳過 session 驗證：沒有有效用戶', {
+        metadata: { action: 'skip_validation_no_user', hasUser: !!user },
+      })
+      return false
+    }
+
+    // 防止重複執行
+    const now = Date.now()
+    if (validationRef.current.isValidating) {
+      logger.debug('跳過 session 驗證：正在執行中', {
+        metadata: { action: 'skip_validation_in_progress' },
+      })
+      return false
+    }
+
+    // 防止過於頻繁的驗證（至少間隔 30 秒）
+    if (now - validationRef.current.lastValidation < 30000) {
+      logger.debug('跳過 session 驗證：間隔時間太短', {
+        metadata: {
+          action: 'skip_validation_too_frequent',
+          timeSinceLastValidation: now - validationRef.current.lastValidation,
+        },
+      })
+      return false
+    }
+
+    validationRef.current.isValidating = true
+    validationRef.current.lastValidation = now
+
+    try {
+      // 嘗試刷新 session 來驗證其有效性
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.refreshSession()
+
+      if (error || !session) {
+        logger.warn('Session 驗證失敗，執行登出', {
+          metadata: {
+            action: 'session_validation_failed',
+            error: error?.message,
+            hasSession: !!session,
+            userId: user.id,
+          },
+        })
+
+        // 只有當 user 仍然存在時才執行 force logout
+        if (user && user.id) {
+          handleForceLogout('session_validation_failed')
+        }
+        return false
+      }
+
+      logger.debug('Session 驗證成功', {
+        metadata: { action: 'session_validation_success', userId: user.id },
+      })
+      return true
+    } catch (error) {
+      logger.error('Session 驗證時發生錯誤', error as Error, {
+        metadata: { action: 'session_validation_error', userId: user.id },
+      })
+
+      // 只有當 user 仍然存在時才執行 force logout
+      if (user && user.id) {
+        handleForceLogout('session_validation_error')
+      }
+      return false
+    } finally {
+      validationRef.current.isValidating = false
+    }
+  }, [user, handleForceLogout])
+
+  // 設定定期 session 驗證（每 5 分鐘檢查一次）
+  useEffect(() => {
+    if (!user || !user.id) return
+
+    const interval = setInterval(
+      () => {
+        validateSession()
+      },
+      5 * 60 * 1000
+    ) // 5 分鐘
+
+    return () => clearInterval(interval)
+  }, [user?.id, validateSession])
 
   // 同步使用者興趣清單
   const syncUserInterests = useCallback(async (userId: string) => {
@@ -208,34 +318,150 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // 監聽 Supabase 認證狀態變化
   useEffect(() => {
-    // 取得初始 session，加入錯誤處理
-    supabase.auth
-      .getSession()
-      .then(({ data: { session } }: { data: { session: Session | null } }) => {
-        handleAuthStateChange(session)
-      })
-      .catch((error: unknown) => {
-        logger.error('Failed to get initial session', error as Error, {
-          metadata: { action: 'get_initial_session' },
-        })
-        // 如果是 refresh token 錯誤，強制登出
-        if (isRefreshTokenError(error)) {
-          handleForceLogout('refresh_token_error')
+    // 取得初始 session，加入強化的錯誤處理和驗證
+    const initializeAuth = async () => {
+      try {
+        // 先嘗試取得本地 session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
+
+        if (sessionError) {
+          logger.error('取得初始 session 失敗', sessionError as Error, {
+            metadata: { action: 'get_initial_session_error' },
+          })
+
+          // 如果是 refresh token 錯誤，強制登出
+          if (isRefreshTokenError(sessionError)) {
+            handleForceLogout('initial_session_refresh_error')
+            return
+          }
+
+          setIsLoading(false)
+          return
         }
+
+        // 如果有 session，進一步驗證其有效性
+        if (session) {
+          try {
+            // 嘗試使用 session 取得用戶資訊來驗證有效性
+            const {
+              data: { user },
+              error: userError,
+            } = await supabase.auth.getUser()
+
+            if (userError || !user) {
+              logger.warn('初始 session 無效，清理並重新開始', {
+                metadata: {
+                  action: 'invalid_session_cleanup',
+                  error: userError?.message,
+                  hasUser: !!user,
+                },
+              })
+
+              // 清理無效的 session
+              await supabase.auth.signOut()
+              handleForceLogout('invalid_session_found')
+              return
+            }
+
+            // Session 有效，正常處理
+            logger.info('初始 session 驗證成功', {
+              metadata: { action: 'valid_session_found', userId: user.id },
+            })
+            handleAuthStateChange(session)
+          } catch (validationError) {
+            logger.error('驗證 session 時發生錯誤', validationError as Error, {
+              metadata: { action: 'session_validation_failed' },
+            })
+
+            // 驗證失敗，清理狀態
+            handleForceLogout('session_validation_failed')
+          }
+        } else {
+          // 沒有 session，正常處理
+          logger.debug('沒有初始 session', {
+            metadata: { action: 'no_initial_session' },
+          })
+          handleAuthStateChange(null)
+        }
+      } catch (error) {
+        logger.error('初始化認證時發生未預期錯誤', error as Error, {
+          metadata: { action: 'auth_initialization_error' },
+        })
+
+        // 發生錯誤時，確保狀態被正確設定
         setIsLoading(false)
-      })
+        setUser(null)
+      }
+    }
+
+    initializeAuth()
 
     // 監聽認證狀態變化
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-      // 特殊處理 TOKEN_REFRESHED 和 SIGNED_OUT 事件
+      const now = Date.now()
+      const lastProcessing = eventProcessingRef.current
+
+      // 防抖：相同事件在 1 秒內只處理一次
+      if (lastProcessing.lastEvent === event && now - lastProcessing.lastTime < 1000) {
+        logger.debug('跳過重複的認證事件', {
+          metadata: { event, skipped: true, action: 'duplicate_event_skip' },
+        })
+        return
+      }
+
+      eventProcessingRef.current = { lastEvent: event, lastTime: now }
+
+      logger.debug('Auth state change event', {
+        metadata: { event, hasSession: !!session, action: 'auth_state_change' },
+      })
+
+      // 特殊處理各種認證事件
+      if (event === 'SIGNED_OUT') {
+        logger.info('檢測到登出事件，清理本地狀態', {
+          metadata: { action: 'signed_out_event' },
+        })
+        handleForceLogout('signed_out_event')
+        return
+      }
+
       if (event === 'TOKEN_REFRESHED' && !session) {
         logger.warn('Token refresh failed, forcing logout', {
           metadata: { action: 'token_refresh_failed' },
         })
         handleForceLogout('token_refresh_failed')
         return
+      }
+
+      // 處理 session 失效的情況
+      if (event === 'INITIAL_SESSION' && session) {
+        try {
+          // 驗證 session 是否真的有效
+          const {
+            data: { user },
+            error,
+          } = await supabase.auth.getUser()
+          if (error || !user) {
+            logger.warn('初始 session 無效，清理狀態', {
+              metadata: {
+                action: 'invalid_initial_session',
+                error: error?.message,
+              },
+            })
+            handleForceLogout('invalid_initial_session')
+            return
+          }
+        } catch (error) {
+          logger.error('驗證初始 session 時發生錯誤', error as Error, {
+            metadata: { action: 'session_validation_error' },
+          })
+          handleForceLogout('session_validation_error')
+          return
+        }
       }
 
       handleAuthStateChange(session)
@@ -273,12 +499,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // 立即清除使用者狀態，避免在登出過程中查詢 profile
       setUser(null)
       setIsLoading(false)
+
+      // 清除瀏覽器儲存中的認證資料
+      if (typeof window !== 'undefined') {
+        // 清除所有 Supabase 相關的 localStorage 項目
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
+
+      // 嘗試登出，但不依賴其成功
       await signOutUser()
+
+      logger.info('登出完成', {
+        metadata: { action: 'logout_success' },
+      })
     } catch (error) {
-      logger.error('Logout error', error as Error, { metadata: { action: 'logout_error' } })
-      // 確保狀態已清除
+      // 檢查是否為預期的錯誤（session 已失效等）
+      const err = error as { message?: string; status?: number }
+      const isExpectedError =
+        err.message?.includes('Invalid Refresh Token') ||
+        err.message?.includes('refresh_token_not_found') ||
+        err.message?.includes('Auth session missing') ||
+        err.status === 403 ||
+        err.status === 401
+
+      if (isExpectedError) {
+        logger.info('Session 已失效，登出目標已達成', {
+          metadata: {
+            action: 'logout_session_expired',
+            errorMessage: err.message,
+          },
+        })
+      } else {
+        logger.error('登出時發生未預期錯誤', error as Error, {
+          metadata: { action: 'logout_unexpected_error' },
+        })
+        // 即使有錯誤，也不要重新拋出，因為本地狀態已清除
+      }
+
+      // 確保狀態已清除（防護措施）
       setUser(null)
       setIsLoading(false)
+
+      // 強制清除瀏覽器儲存（防護措施）
+      if (typeof window !== 'undefined') {
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('sb-') || key.includes('supabase')) {
+            localStorage.removeItem(key)
+          }
+        })
+      }
     }
   }
 

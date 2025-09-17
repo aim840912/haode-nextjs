@@ -1042,16 +1042,13 @@ export const CultureSchemas = {
 export const FarmTourActivitySchemas = {
   /** 建立農場體驗活動 */
   create: z.object({
-    season: StringSchemas.nonEmpty.max(20, '季節名稱不能超過 20 字元'),
-    months: StringSchemas.nonEmpty.max(50, '月份資訊不能超過 50 字元'),
+    start_month: z.number().int().min(1, '開始月份必須是 1-12').max(12, '開始月份必須是 1-12'),
+    end_month: z.number().int().min(1, '結束月份必須是 1-12').max(12, '結束月份必須是 1-12'),
     title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元'),
-    highlight: StringSchemas.nonEmpty.max(200, '亮點描述不能超過 200 字元'),
     activities: z
       .array(z.string().max(50, '活動項目不能超過 50 字元'))
       .min(1, '至少要有一個活動項目'),
-    price: NumberSchemas.price,
-    duration: StringSchemas.nonEmpty.max(50, '活動時長不能超過 50 字元'),
-    includes: z.array(z.string().max(100, '包含項目不能超過 100 字元')),
+    price: z.number().min(0, '價格不能為負數').default(0),
     image: z.string().url('圖片 URL 格式不正確'),
     available: z.boolean().default(true),
     note: z.string().max(500, '備註不能超過 500 字元').default(''),
@@ -1059,17 +1056,24 @@ export const FarmTourActivitySchemas = {
 
   /** 更新農場體驗活動 */
   update: z.object({
-    season: StringSchemas.nonEmpty.max(20, '季節名稱不能超過 20 字元').optional(),
-    months: StringSchemas.nonEmpty.max(50, '月份資訊不能超過 50 字元').optional(),
+    start_month: z
+      .number()
+      .int()
+      .min(1, '開始月份必須是 1-12')
+      .max(12, '開始月份必須是 1-12')
+      .optional(),
+    end_month: z
+      .number()
+      .int()
+      .min(1, '結束月份必須是 1-12')
+      .max(12, '結束月份必須是 1-12')
+      .optional(),
     title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元').optional(),
-    highlight: StringSchemas.nonEmpty.max(200, '亮點描述不能超過 200 字元').optional(),
     activities: z
       .array(z.string().max(50, '活動項目不能超過 50 字元'))
       .min(1, '至少要有一個活動項目')
       .optional(),
-    price: NumberSchemas.price.optional(),
-    duration: StringSchemas.nonEmpty.max(50, '活動時長不能超過 50 字元').optional(),
-    includes: z.array(z.string().max(100, '包含項目不能超過 100 字元')).optional(),
+    price: z.number().min(0, '價格不能為負數').optional(),
     image: z.string().url('圖片 URL 格式不正確').optional(),
     available: z.boolean().optional(),
     note: z.string().max(500, '備註不能超過 500 字元').optional(),

@@ -20,7 +20,13 @@
       "Read(//home/aim840912/projects/portfolio/**)",
       "Bash(npm install:*)",
       "Bash(mkdir:*)",
-      "Bash(timeout 30s npm run dev)"
+      "Bash(timeout 30s npm run dev)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(netstat:*)",
+      "Read(//mnt/c/Users/aim84/Downloads/**)",
+      "mcp__playwright__browser_snapshot",
+      "Bash(npx tsx:*)"
     ],
     "deny": [],
     "ask": []

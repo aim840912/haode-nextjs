@@ -163,13 +163,36 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
       await logout()
       // 顯示成功提示
       success('登出成功', '您已成功登出帳號')
-      setIsLoggingOut(false)
     } catch (error) {
-      logger.error('登出失敗', error as Error, { metadata: { userId: user?.id } })
-      const errorMessage = error instanceof Error ? error.message : '登出失敗，請稍後再試'
+      // 檢查是否為預期的錯誤（session 已失效等）
+      const err = error as { message?: string; status?: number }
+      const isExpectedError =
+        err.message?.includes('Invalid Refresh Token') ||
+        err.message?.includes('refresh_token_not_found') ||
+        err.message?.includes('Auth session missing') ||
+        err.status === 403 ||
+        err.status === 401
 
-      // 顯示錯誤提示
-      showError('登出失敗', errorMessage)
+      if (isExpectedError) {
+        // Session 已失效，但登出目標已達成，顯示成功訊息
+        logger.info('Session 已失效但登出成功', {
+          metadata: {
+            userId: user?.id,
+            errorMessage: err.message,
+          },
+        })
+        success('登出成功', '您已成功登出帳號')
+      } else {
+        // 真正的錯誤才顯示錯誤訊息
+        logger.error('登出失敗', error as Error, {
+          metadata: { userId: user?.id },
+        })
+
+        const errorMessage = error instanceof Error ? error.message : '登出失敗，請稍後再試'
+
+        showError('登出失敗', errorMessage)
+      }
+    } finally {
       setIsLoggingOut(false)
     }
   }

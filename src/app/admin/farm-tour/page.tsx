@@ -151,20 +151,44 @@ export default function FarmTourAdmin() {
               className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
             >
               {/* Activity Preview */}
-              <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
-                <div className="text-4xl mb-3">{activity.image}</div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">{activity.title}</h3>
-                <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                  <span className="bg-white px-2 py-1 rounded-full">{activity.season}</span>
-                  <span className="bg-white px-2 py-1 rounded-full">{activity.months}</span>
+              <div className="relative h-48 bg-gradient-to-br from-green-100 to-amber-100">
+                {/* 圖片層 */}
+                {activity.image && (
+                  <img
+                    src={activity.image}
+                    alt={activity.title}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+
+                {/* 漸層遮罩層 - 只在有圖片時顯示 */}
+                {activity.image && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                )}
+
+                {/* 文字內容層 */}
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <h3 className="text-lg font-bold text-white mb-2 drop-shadow-lg">
+                    {activity.title}
+                  </h3>
+                  <div className="flex justify-center items-center gap-2 text-sm">
+                    <span className="bg-white/90 text-gray-800 px-2 py-1 rounded-full backdrop-blur-sm">
+                      {activity.start_month}月 - {activity.end_month}月
+                    </span>
+                    <span className="bg-white/90 text-gray-800 px-2 py-1 rounded-full backdrop-blur-sm">
+                      NT$ {activity.price || 0}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Activity Details */}
               <div className="p-4">
-                <div className="mb-4">
-                  <p className="text-sm text-amber-600 font-medium mb-2">{activity.highlight}</p>
-                </div>
+                {activity.note && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 line-clamp-2">{activity.note}</p>
+                  </div>
+                )}
 
                 {/* Status */}
                 <div className="mb-4">
@@ -320,9 +344,9 @@ export default function FarmTourAdmin() {
               </div>
               <div>
                 <div className="text-2xl font-bold text-blue-600">
-                  {new Set(activities.map(a => a.season)).size}
+                  {activities.filter(a => a.price && a.price > 0).length}
                 </div>
-                <div className="text-sm text-gray-500">季節類別</div>
+                <div className="text-sm text-gray-500">付費活動</div>
               </div>
             </div>
           </div>

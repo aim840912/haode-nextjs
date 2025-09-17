@@ -12,7 +12,7 @@
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 
 // 類型斷言，解決 Supabase 重載問題
 const getAdmin = () => getSupabaseAdmin()
@@ -25,13 +25,10 @@ import { FarmTourActivity } from '@/types/farmTour'
 interface SupabaseFarmTourRecord {
   id: string
   title: string
-  season: string
-  months: string
+  start_month: number
+  end_month: number
   price: number
-  duration: string
   activities: string[]
-  includes: string[]
-  highlight: string
   note: string
   image: string
   available: boolean
@@ -70,11 +67,38 @@ export class FarmTourServiceV2Simple implements FarmTourService {
    * 統一錯誤處理方法
    */
   private handleError(error: unknown, action: string): never {
+    // 詳細錯誤日誌
     dbLogger.error(`農場體驗服務 ${action} 操作失敗`, error as Error, {
       module: this.moduleName,
       action,
-      metadata: { timestamp: new Date().toISOString() },
+      metadata: {
+        timestamp: new Date().toISOString(),
+        errorType: typeof error,
+        errorDetails: error,
+        errorString: String(error),
+        errorJson: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : 'null',
+      },
     })
+
+    // 如果是 Supabase 錯誤物件，提取詳細資訊
+    if (error && typeof error === 'object' && 'message' in error) {
+      const supabaseError = error as any
+      const detailedMessage = [
+        `訊息: ${supabaseError.message}`,
+        supabaseError.code ? `代碼: ${supabaseError.code}` : '',
+        supabaseError.details ? `詳情: ${supabaseError.details}` : '',
+        supabaseError.hint ? `提示: ${supabaseError.hint}` : '',
+      ]
+        .filter(Boolean)
+        .join(' | ')
+
+      throw new DatabaseError(`資料庫操作失敗 (${action}): ${detailedMessage}`, {
+        module: this.moduleName,
+        action,
+        originalError: error instanceof Error ? error : new Error(String(error)),
+      })
+    }
+
     throw ErrorFactory.fromSupabaseError(error, {
       module: this.moduleName,
       action,
@@ -88,14 +112,11 @@ export class FarmTourServiceV2Simple implements FarmTourService {
     return {
       id: record.id,
       title: record.title,
-      season: record.season,
-      months: record.months,
-      price: record.price,
-      duration: record.duration,
-      activities: record.activities,
-      includes: record.includes,
-      highlight: record.highlight,
-      note: record.note,
+      start_month: record.start_month,
+      end_month: record.end_month,
+      price: record.price || 0,
+      activities: record.activities || [],
+      note: record.note || '',
       image: record.image,
       available: record.available,
       createdAt: record.created_at,
@@ -109,14 +130,11 @@ export class FarmTourServiceV2Simple implements FarmTourService {
   private transformToDB(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>) {
     return {
       title: data.title,
-      season: data.season,
-      months: data.months,
-      price: data.price,
-      duration: data.duration,
-      activities: data.activities,
-      includes: data.includes,
-      highlight: data.highlight,
-      note: data.note,
+      start_month: data.start_month,
+      end_month: data.end_month,
+      price: data.price || 0,
+      activities: data.activities || [],
+      note: data.note || '',
       image: data.image,
       available: data.available,
     }
@@ -221,7 +239,11 @@ export class FarmTourServiceV2Simple implements FarmTourService {
       dbLogger.info('建立新的農場體驗活動', {
         module: this.moduleName,
         action: 'create',
-        metadata: { title: activityData.title, season: activityData.season },
+        metadata: {
+          title: activityData.title,
+          start_month: activityData.start_month,
+          end_month: activityData.end_month,
+        },
       })
 
       // 驗證必填欄位

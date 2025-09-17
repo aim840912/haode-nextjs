@@ -16,11 +16,11 @@ export default function AddFarmTourActivity() {
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
-    season: '春季',
-    months: '',
+    start_month: 1,
+    end_month: 12,
     title: '',
-    highlight: '',
     activities: [''],
+    price: 0,
     image: uploadedImageUrl,
     available: true,
     note: '',
@@ -93,39 +93,87 @@ export default function AddFarmTourActivity() {
     )
   }
 
-  const seasonOptions = [
-    { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
-    { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
-    { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
-    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' },
-  ]
+  // 月份選項 (1-12)
+  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1,
+    label: `${i + 1}月`,
+  }))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
+      const submitData = {
+        ...formData,
+        image: uploadedImageUrl || formData.image,
+        activities: formData.activities.filter(activity => activity.trim() !== ''),
+      }
+
+      // 確保使用最新的圖片 URL
+      if (uploadedImageUrl) {
+        submitData.image = uploadedImageUrl
+      }
+
+      // 前端驗證
+      const validationErrors = []
+      if (!submitData.title.trim()) validationErrors.push('活動標題不能為空')
+      if (submitData.start_month < 1 || submitData.start_month > 12)
+        validationErrors.push('開始月份必須是 1-12')
+      if (submitData.end_month < 1 || submitData.end_month > 12)
+        validationErrors.push('結束月份必須是 1-12')
+      if (submitData.price < 0) validationErrors.push('價格不能為負數')
+      if (submitData.activities.length === 0) validationErrors.push('至少需要一個活動項目')
+
+      // 檢查圖片 URL
+      const finalImageUrl = uploadedImageUrl || submitData.image
+      if (!finalImageUrl.trim()) {
+        validationErrors.push('請先上傳活動圖片')
+      } else {
+        // 檢查是否為有效 URL
+        try {
+          new URL(finalImageUrl)
+        } catch {
+          if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
+            validationErrors.push('圖片 URL 格式不正確，必須是完整的 URL（http:// 或 https://）')
+          }
+        }
+      }
+
+      if (validationErrors.length > 0) {
+        alert('請檢查以下欄位：\n' + validationErrors.join('\n'))
+        setLoading(false)
+        return
+      }
+
+      // 除錯：檢查實際提交的資料
+      logger.info('提交農場體驗活動資料', { metadata: { submitData } })
+
       const response = await fetch('/api/farm-tour', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          image: uploadedImageUrl || formData.image,
-          activities: formData.activities.filter(activity => activity.trim() !== ''),
-        }),
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
         router.push('/admin/farm-tour')
       } else {
-        alert('新增失敗')
+        // 取得詳細的錯誤訊息
+        const errorData = await response.json().catch(() => ({ error: '未知錯誤' }))
+        const errorMessage = errorData.error || errorData.message || '新增失敗'
+
+        logger.error('API 回應錯誤', new Error(errorMessage), {
+          metadata: { status: response.status, errorData },
+        })
+
+        alert(`新增失敗: ${errorMessage}`)
       }
     } catch (error) {
       logger.error(
         'Error adding farm tour activity:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      alert('新增失敗')
+      alert('網路錯誤，請稍後再試')
     } finally {
       setLoading(false)
     }
@@ -143,15 +191,6 @@ export default function AddFarmTourActivity() {
           : type === 'checkbox'
             ? (e.target as HTMLInputElement).checked
             : value,
-    }))
-  }
-
-  const handleSeasonChange = (season: string) => {
-    const selectedSeason = seasonOptions.find(s => s.value === season)
-    setFormData(prev => ({
-      ...prev,
-      season,
-      months: selectedSeason?.months || '',
     }))
   }
 
@@ -210,15 +249,15 @@ export default function AddFarmTourActivity() {
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">季節 *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">開始月份 *</label>
                   <select
-                    name="season"
-                    value={formData.season}
-                    onChange={e => handleSeasonChange(e.target.value)}
+                    name="start_month"
+                    value={formData.start_month}
+                    onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   >
-                    {seasonOptions.map(option => (
+                    {monthOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -227,16 +266,20 @@ export default function AddFarmTourActivity() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">月份 *</label>
-                  <input
-                    type="text"
-                    name="months"
-                    value={formData.months}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">結束月份 *</label>
+                  <select
+                    name="end_month"
+                    value={formData.end_month}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
-                    placeholder="例：3-5月"
-                  />
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                  >
+                    {monthOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -254,15 +297,18 @@ export default function AddFarmTourActivity() {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動亮點 *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  活動價格 (元)
+                </label>
                 <input
-                  type="text"
-                  name="highlight"
-                  value={formData.highlight}
+                  type="number"
+                  name="price"
+                  value={formData.price}
                   onChange={handleInputChange}
-                  required
+                  min="0"
+                  step="1"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  placeholder="簡短描述活動特色"
+                  placeholder="免費請填 0 或留空"
                 />
               </div>
             </div>
@@ -403,21 +449,24 @@ export default function AddFarmTourActivity() {
                 <h3 className="text-lg font-bold text-gray-800 mb-2">
                   {formData.title || '活動標題預覽'}
                 </h3>
-                <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                  <span className="bg-white px-2 py-1 rounded-full">{formData.season}</span>
+                <div className="flex justify-center items-center gap-2 text-sm text-gray-600 flex-wrap">
                   <span className="bg-white px-2 py-1 rounded-full">
-                    {formData.months || '月份'}
+                    {formData.start_month}月 - {formData.end_month}月
                   </span>
+                  {formData.price > 0 && (
+                    <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-semibold">
+                      NT${formData.price}
+                    </span>
+                  )}
+                  {formData.price === 0 && (
+                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
+                      免費
+                    </span>
+                  )}
                 </div>
               </div>
 
               <div className="p-4">
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-3 mb-4 rounded-r-lg">
-                  <p className="text-amber-800 font-medium text-sm">
-                    {formData.highlight || '活動亮點預覽'}
-                  </p>
-                </div>
-
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
                   <div className="space-y-1">

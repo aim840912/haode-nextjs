@@ -476,13 +476,10 @@ export interface Database {
         Row: {
           id: string
           title: string
-          season: string
-          months: string
-          price: number
-          duration: string
+          start_month: number
+          end_month: number
+          price: number | null
           activities: string[]
-          includes: string[]
-          highlight: string
           note: string
           image: string
           available: boolean
@@ -492,14 +489,11 @@ export interface Database {
         Insert: {
           id?: string
           title: string
-          season: string
-          months: string
-          price: number
-          duration: string
+          start_month: number
+          end_month: number
+          price?: number | null
           activities?: string[]
-          includes?: string[]
-          highlight: string
-          note: string
+          note?: string
           image: string
           available?: boolean
           created_at?: string
@@ -508,13 +502,10 @@ export interface Database {
         Update: {
           id?: string
           title?: string
-          season?: string
-          months?: string
-          price?: number
-          duration?: string
+          start_month?: number
+          end_month?: number
+          price?: number | null
           activities?: string[]
-          includes?: string[]
-          highlight?: string
           note?: string
           image?: string
           available?: boolean

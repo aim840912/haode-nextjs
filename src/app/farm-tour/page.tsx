@@ -297,21 +297,48 @@ export default function FarmTourPage() {
                     key={activity.id}
                     className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-all flex flex-col h-full ${!activity.available ? 'opacity-75' : ''}`}
                   >
-                    {/* Activity Header */}
-                    <div className="bg-gradient-to-r from-amber-100 to-orange-100 p-8 text-center">
-                      <h3 className="text-2xl font-bold text-amber-900 mb-2">{activity.title}</h3>
-                      <div className="flex justify-center items-center gap-4 text-sm text-gray-600">
-                        <span className="bg-white px-3 py-1 rounded-full">{activity.season}</span>
-                        <span className="bg-white px-3 py-1 rounded-full">{activity.months}</span>
+                    {/* Activity Header with Image */}
+                    <div className="relative h-56 bg-gradient-to-r from-amber-100 to-orange-100">
+                      {/* 圖片層 */}
+                      {activity.image && (
+                        <img
+                          src={activity.image}
+                          alt={activity.title}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+
+                      {/* 漸層遮罩層 - 只在有圖片時顯示，並且只在底部 */}
+                      {activity.image && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                      )}
+
+                      {/* 文字內容層 - 確保在最上層 */}
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <h3 className="text-2xl font-bold text-white mb-3 drop-shadow-lg">
+                          {activity.title}
+                        </h3>
+                        <div className="flex justify-center gap-3">
+                          <span className="bg-white/90 text-gray-800 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                            {activity.start_month}月 - {activity.end_month}月
+                          </span>
+                          {activity.price && activity.price > 0 && (
+                            <span className="bg-white/90 text-gray-800 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                              NT$ {activity.price}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
 
                     <div className="p-6 flex flex-col flex-grow">
                       <div className="flex-grow">
-                        {/* Highlight */}
-                        <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg">
-                          <p className="text-amber-800 font-medium">{activity.highlight}</p>
-                        </div>
+                        {/* Note */}
+                        {activity.note && (
+                          <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg">
+                            <p className="text-amber-800 font-medium">{activity.note}</p>
+                          </div>
+                        )}
 
                         {/* Activities List */}
                         <div className="mb-6">
@@ -326,10 +353,14 @@ export default function FarmTourPage() {
                           </div>
                         </div>
 
-                        {/* Note */}
-                        <div className="mb-6 p-3 bg-blue-50 rounded-lg">
-                          <p className="text-blue-700 text-sm">{activity.note}</p>
-                        </div>
+                        {/* Additional Info */}
+                        {activity.price && activity.price > 0 && (
+                          <div className="mb-6 p-3 bg-green-50 rounded-lg">
+                            <p className="text-green-700 text-sm font-medium">
+                              體驗費用：NT$ {activity.price}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Booking Button */}
@@ -485,7 +516,19 @@ export default function FarmTourPage() {
 
               <div className="space-y-6">
                 <div className="text-center p-6 bg-gradient-to-r from-amber-100 to-orange-100 rounded-lg">
-                  <p className="text-amber-800 font-medium">{selectedActivity.highlight}</p>
+                  <div className="space-y-2">
+                    <p className="text-amber-800 font-medium">
+                      體驗期間：{selectedActivity.start_month}月 - {selectedActivity.end_month}月
+                    </p>
+                    {selectedActivity.price && selectedActivity.price > 0 && (
+                      <p className="text-amber-800 font-medium">
+                        體驗費用：NT$ {selectedActivity.price}
+                      </p>
+                    )}
+                    {selectedActivity.note && (
+                      <p className="text-amber-700 text-sm">{selectedActivity.note}</p>
+                    )}
+                  </div>
                 </div>
 
                 {!user && (

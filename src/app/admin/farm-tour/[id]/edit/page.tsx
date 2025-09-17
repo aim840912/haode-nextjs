@@ -27,28 +27,25 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   const [activityId, setActivityId] = useState<string>('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [existingImages, setExistingImages] = useState<string[]>([])
+  const [imageDeleted, setImageDeleted] = useState(false)
   const { user } = useAuth()
 
   const [formData, setFormData] = useState({
-    season: '春季',
-    months: '',
+    start_month: 1,
+    end_month: 12,
     title: '',
-    highlight: '',
     activities: [''],
     price: 0,
-    duration: '',
-    includes: [''],
     image: '',
     available: true,
     note: '',
   })
 
-  const seasonOptions = [
-    { value: '春季', label: '春季 (3-5月)', months: '3-5月' },
-    { value: '夏季', label: '夏季 (6-8月)', months: '6-8月' },
-    { value: '秋季', label: '秋季 (9-11月)', months: '9-11月' },
-    { value: '冬季', label: '冬季 (12-2月)', months: '12-2月' },
-  ]
+  // 月份選項 (1-12)
+  const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+    value: i + 1,
+    label: `${i + 1}月`,
+  }))
 
   const fetchActivity = useCallback(
     async (id: string) => {
@@ -59,17 +56,14 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
         if (response.ok && (result.success ? result.data : result)) {
           const activity: FarmTourActivity = result.success ? result.data : result
           setFormData({
-            season: activity.season,
-            months: activity.months,
-            title: activity.title,
-            highlight: activity.highlight,
-            activities: activity.activities,
-            price: activity.price,
-            duration: activity.duration,
-            includes: activity.includes,
-            image: activity.image,
-            available: activity.available,
-            note: activity.note,
+            start_month: activity.start_month || 1,
+            end_month: activity.end_month || 12,
+            title: activity.title || '',
+            activities: activity.activities || [''],
+            price: activity.price || 0,
+            image: activity.image || '',
+            available: activity.available ?? true,
+            note: activity.note || '',
           })
 
           // 設定現有圖片（如果不是 emoji）
@@ -151,15 +145,23 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     setLoading(true)
 
     try {
-      // 決定要使用的圖片 URL：優先使用新上傳的圖片，否則使用現有圖片
+      // 決定要使用的圖片 URL：優先使用新上傳的圖片，否則使用現有圖片（除非已刪除）
       let imageUrl = ''
       if (uploadedImages.length > 0) {
         imageUrl = uploadedImages[0] // 使用新上傳的圖片
         logger.info('使用新上傳的圖片', {
           metadata: { imageUrl, activityId },
         })
-      } else if (existingImages.length > 0) {
-        imageUrl = existingImages[0] // 保持現有圖片
+      } else if (existingImages.length > 0 && !imageDeleted) {
+        imageUrl = existingImages[0] // 保持現有圖片（如果沒有被刪除）
+        logger.info('保持現有圖片', {
+          metadata: { imageUrl, activityId },
+        })
+      } else if (imageDeleted) {
+        imageUrl = '' // 圖片已被刪除，設為空字串
+        logger.info('圖片已刪除，將清空資料庫圖片欄位', {
+          metadata: { activityId },
+        })
       }
 
       const response = await fetch(`/api/farm-tour/${activityId}`, {
@@ -169,7 +171,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
           ...formData,
           image: imageUrl,
           activities: formData.activities.filter(activity => activity.trim() !== ''),
-          includes: formData.includes.filter(include => include.trim() !== ''),
         }),
       })
       const result = await response.json()
@@ -206,15 +207,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     }))
   }
 
-  const handleSeasonChange = (season: string) => {
-    const selectedSeason = seasonOptions.find(s => s.value === season)
-    setFormData(prev => ({
-      ...prev,
-      season,
-      months: selectedSeason?.months || prev.months,
-    }))
-  }
-
   const addActivityField = () => {
     setFormData(prev => ({
       ...prev,
@@ -233,27 +225,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     setFormData(prev => ({
       ...prev,
       activities: prev.activities.map((activity, i) => (i === index ? value : activity)),
-    }))
-  }
-
-  const addIncludeField = () => {
-    setFormData(prev => ({
-      ...prev,
-      includes: [...prev.includes, ''],
-    }))
-  }
-
-  const removeIncludeField = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      includes: prev.includes.filter((_, i) => i !== index),
-    }))
-  }
-
-  const updateIncludeField = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      includes: prev.includes.map((include, i) => (i === index ? value : include)),
     }))
   }
 
@@ -288,6 +259,17 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     alert(`圖片上傳失敗: ${error}`)
   }
 
+  // 處理刪除現有圖片
+  const handleDeleteExistingImage = () => {
+    if (confirm('確定要刪除現有圖片嗎？刪除後可以上傳新圖片。')) {
+      setImageDeleted(true)
+      setFormData(prev => ({ ...prev, image: '' }))
+      logger.info('現有圖片已標記為刪除', {
+        metadata: { activityId, previousImage: existingImages[0] },
+      })
+    }
+  }
+
   if (initialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -317,15 +299,15 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">季節 *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">開始月份 *</label>
                   <select
-                    name="season"
-                    value={formData.season}
-                    onChange={e => handleSeasonChange(e.target.value)}
+                    name="start_month"
+                    value={formData.start_month}
+                    onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   >
-                    {seasonOptions.map(option => (
+                    {monthOptions.map(option => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -334,16 +316,20 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">月份 *</label>
-                  <input
-                    type="text"
-                    name="months"
-                    value={formData.months}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">結束月份 *</label>
+                  <select
+                    name="end_month"
+                    value={formData.end_month}
                     onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                    placeholder="例：3-5月"
-                  />
+                  >
+                    {monthOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -357,19 +343,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
                   placeholder="輸入體驗活動標題"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動亮點 *</label>
-                <input
-                  type="text"
-                  name="highlight"
-                  value={formData.highlight}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  placeholder="簡短描述活動特色"
                 />
               </div>
             </div>
@@ -410,74 +383,23 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
               </div>
             </div>
 
-            {/* 費用與時間 */}
+            {/* 費用設定 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">費用與時間</h3>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    價格 (NT$) *
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                    min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">活動時長 *</label>
-                  <input
-                    type="text"
-                    name="duration"
-                    value={formData.duration}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                    placeholder="例：3小時"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 費用包含 */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">費用包含</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">費用設定</h3>
 
               <div className="mb-4">
-                {formData.includes.map((include, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={include}
-                      onChange={e => updateIncludeField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                      placeholder="輸入包含項目"
-                    />
-                    {formData.includes.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeIncludeField(index)}
-                        className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addIncludeField}
-                  className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                >
-                  + 新增項目
-                </button>
+                <label className="block text-sm font-medium text-gray-700 mb-2">價格 (NT$) *</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  required
+                  min="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                  placeholder="0"
+                />
+                <p className="text-sm text-gray-500 mt-1">設為 0 表示免費體驗</p>
               </div>
             </div>
 
@@ -487,22 +409,62 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
               {/* 活動圖片 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片</label>
-                <ImageUploader
-                  productId={activityId || uuidv4()}
-                  idParamName="activityId"
-                  apiEndpoint="/api/upload/images"
-                  onUploadSuccess={handleImageUploadSuccess}
-                  onUploadError={handleImageUploadError}
-                  maxFiles={1}
-                  allowMultiple={false}
-                  generateMultipleSizes={false}
-                  enableCompression={true}
-                  className="mb-4"
-                />
-                {uploadedImages.length > 0 && (
-                  <div className="mt-2 text-sm text-green-600">
-                    已上傳 {uploadedImages.length} 張圖片
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  活動圖片（限一張）
+                </label>
+
+                {existingImages.length > 0 && !imageDeleted ? (
+                  // 顯示現有圖片
+                  <div className="space-y-3">
+                    <div className="relative inline-block">
+                      <img
+                        src={existingImages[0]}
+                        alt="現有活動圖片"
+                        className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleDeleteExistingImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                        title="刪除圖片"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <p className="text-sm text-gray-500">如需更換圖片，請先刪除現有圖片</p>
+                  </div>
+                ) : (
+                  // 顯示上傳區域
+                  <div className="space-y-3">
+                    <ImageUploader
+                      productId={activityId || uuidv4()}
+                      idParamName="activityId"
+                      apiEndpoint="/api/upload/farm-tour"
+                      onUploadSuccess={handleImageUploadSuccess}
+                      onUploadError={handleImageUploadError}
+                      maxFiles={1}
+                      allowMultiple={false}
+                      generateMultipleSizes={false}
+                      enableCompression={true}
+                      className="mb-4"
+                    />
+                    {uploadedImages.length > 0 ? (
+                      <div className="text-sm text-green-600">✓ 已上傳新圖片</div>
+                    ) : (
+                      <p className="text-sm text-gray-500">請上傳一張活動圖片</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -576,20 +538,14 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   {formData.title || '活動標題預覽'}
                 </h3>
                 <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                  <span className="bg-white px-2 py-1 rounded-full">{formData.season}</span>
                   <span className="bg-white px-2 py-1 rounded-full">
-                    {formData.months || '月份'}
+                    {formData.start_month}月 - {formData.end_month}月
                   </span>
+                  <span className="bg-white px-2 py-1 rounded-full">NT$ {formData.price || 0}</span>
                 </div>
               </div>
 
               <div className="p-4">
-                <div className="bg-amber-50 border-l-4 border-amber-400 p-3 mb-4 rounded-r-lg">
-                  <p className="text-amber-800 font-medium text-sm">
-                    {formData.highlight || '活動亮點預覽'}
-                  </p>
-                </div>
-
                 <div className="mb-4">
                   <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
                   <div className="space-y-1">
@@ -604,30 +560,10 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                  <div className="flex items-center">
+                <div className="mb-4 text-sm">
+                  <div className="flex items-center justify-center">
                     <span className="mr-2 text-amber-600 font-medium">$</span>
                     <span className="font-bold text-amber-900">NT$ {formData.price || 0}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2 text-blue-600">⏲</span>
-                    <span>{formData.duration || '時長'}</span>
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <h4 className="font-semibold text-gray-800 mb-2 text-sm">費用包含</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {formData.includes
-                      .filter(i => i.trim())
-                      .map((include, index) => (
-                        <span
-                          key={index}
-                          className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs"
-                        >
-                          {include}
-                        </span>
-                      ))}
                   </div>
                 </div>
 
