@@ -5,6 +5,7 @@ import { AdminFilterState } from './AdminProductFilter'
 import { useProductsData } from './admin/hooks/useProductsData'
 import { useProductActions } from './admin/hooks/useProductActions'
 import { ProductTableHeader } from './admin/ProductTableHeader'
+import { ProductTableHead } from './admin/ProductTableHead'
 import { ProductTableRow } from './admin/ProductTableRow'
 import { ProductFilters } from './admin/utils/productFilters'
 
@@ -25,23 +26,24 @@ export default function AdminProductsTable({
     categories: [],
     availability: 'all',
     status: 'all',
-    catalogVisibility: 'all',
     priceRange: { min: 0, max: 10000 },
     sortBy: 'name',
   })
 
   // 使用自訂 Hook 管理產品資料
-  const { products, loading, error, refetch } = useProductsData(filters, refreshTrigger)
+  const { products, setProducts, loading, error, refetch } = useProductsData(
+    filters,
+    refreshTrigger
+  )
 
   // 使用自訂 Hook 管理產品操作
-  const { handleDelete, handleToggleActive, handleToggleShowInCatalog, isActionDisabled } =
-    useProductActions({
-      products,
-      setProducts: () => {}, // 空函數，因為產品狀態由 useProductsData 管理
-      refetchData: refetch,
-      onDelete,
-      onToggleActive,
-    })
+  const { handleDelete, handleToggleActive, isActionDisabled } = useProductActions({
+    products,
+    setProducts, // 使用實際的 setProducts 函數啟用樂觀更新
+    refetchData: refetch,
+    onDelete,
+    onToggleActive,
+  })
 
   // 篩選處理函數
   const handleFiltersChange = useCallback((newFilters: AdminFilterState) => {
@@ -100,6 +102,7 @@ export default function AdminProductsTable({
       {/* 產品表格 */}
       <div className="bg-white rounded-lg shadow overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
+          <ProductTableHead />
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredAndSortedProducts.map(product => (
               <ProductTableRow
@@ -107,7 +110,6 @@ export default function AdminProductsTable({
                 product={product}
                 onDelete={handleDelete}
                 onToggleActive={handleToggleActive}
-                onToggleShowInCatalog={handleToggleShowInCatalog}
                 isActionDisabled={isActionDisabled}
                 isAdmin={true} // TODO: 從實際的用戶角色判斷
               />

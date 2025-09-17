@@ -84,7 +84,6 @@ function transformFromDB(dbProduct: Record<string, unknown>): Product {
     images: images, // 使用完整的圖片陣列
     inventory: Number(dbProduct.stock) || 0,
     isActive: Boolean(dbProduct.is_active),
-    showInCatalog: dbProduct.show_in_catalog !== false, // 預設為 true
     createdAt: (dbProduct.created_at as string) || new Date().toISOString(),
     updatedAt: (dbProduct.updated_at as string) || new Date().toISOString(),
   }

@@ -42,7 +42,6 @@ function AddProduct() {
     inventory: 0,
     images: [''],
     isActive: true,
-    showInCatalog: true,
   })
 
   const fetchCategories = useCallback(async () => {
@@ -486,19 +485,6 @@ function AddProduct() {
                 className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
               />
               <label className="ml-2 block text-sm text-gray-900">立即上架販售</label>
-            </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="showInCatalog"
-                checked={formData.showInCatalog}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm text-gray-900">顯示於產品介紹頁面</label>
-              <span className="ml-2 text-xs text-gray-500">
-                (取消勾選則此產品不會出現在前台產品頁面)
-              </span>
             </div>
           </div>
 

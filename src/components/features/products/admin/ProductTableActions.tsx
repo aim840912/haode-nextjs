@@ -7,19 +7,17 @@ interface ProductTableActionsProps {
   product: Product
   onDelete: (id: string) => Promise<void>
   onToggleActive: (id: string, isActive: boolean) => Promise<void>
-  onToggleShowInCatalog: (id: string, showInCatalog: boolean) => Promise<void>
   isActionDisabled: boolean
 }
 
 /**
  * 產品表格操作按鈕元件
- * 負責顯示編輯、刪除、啟用/停用等操作按鈕
+ * 負責顯示編輯、刪除、上架/下架等操作按鈕
  */
 export function ProductTableActions({
   product,
   onDelete,
   onToggleActive,
-  onToggleShowInCatalog,
   isActionDisabled,
 }: ProductTableActionsProps) {
   return (
@@ -32,7 +30,7 @@ export function ProductTableActions({
         編輯
       </Link>
 
-      {/* 啟用/停用按鈕 */}
+      {/* 上架/下架按鈕 */}
       <button
         onClick={() => onToggleActive(product.id, product.isActive)}
         disabled={isActionDisabled}
@@ -42,21 +40,7 @@ export function ProductTableActions({
             : 'border-green-300 text-green-700 bg-white hover:bg-green-50 focus:ring-green-500'
         }`}
       >
-        {product.isActive ? '停用' : '啟用'}
-      </button>
-
-      {/* 目錄顯示切換按鈕 */}
-      <button
-        onClick={() => onToggleShowInCatalog(product.id, product.showInCatalog ?? true)}
-        disabled={isActionDisabled}
-        className={`inline-flex items-center px-3 py-1.5 border shadow-sm text-xs font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-          product.showInCatalog !== false
-            ? 'border-yellow-300 text-yellow-700 bg-white hover:bg-yellow-50 focus:ring-yellow-500'
-            : 'border-blue-300 text-blue-700 bg-white hover:bg-blue-50 focus:ring-blue-500'
-        }`}
-        title={product.showInCatalog !== false ? '點擊隱藏' : '點擊顯示'}
-      >
-        {product.showInCatalog !== false ? '隱藏' : '顯示'}
+        {product.isActive ? '下架' : '上架'}
       </button>
 
       {/* 刪除按鈕 */}

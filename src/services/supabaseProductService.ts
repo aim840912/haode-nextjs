@@ -327,8 +327,6 @@ class SupabaseProductService implements ProductService {
       images: images, // 使用完整的圖片陣列
       inventory: stock,
       isActive: Boolean(dbProduct.is_active),
-      showInCatalog:
-        dbProduct.show_in_catalog !== undefined ? Boolean(dbProduct.show_in_catalog) : true,
       createdAt: (dbProduct.created_at as string) || new Date().toISOString(),
       updatedAt: (dbProduct.updated_at as string) || new Date().toISOString(),
     }
@@ -347,7 +345,6 @@ class SupabaseProductService implements ProductService {
     }
     if (product.inventory !== undefined) transformed.stock = product.inventory
     if (product.isActive !== undefined) transformed.is_active = product.isActive
-    if (product.showInCatalog !== undefined) transformed.show_in_catalog = product.showInCatalog
 
     return transformed
   }

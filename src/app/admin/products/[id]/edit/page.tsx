@@ -28,6 +28,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [isDeletingImage, setIsDeletingImage] = useState<string | null>(null)
   const { user, isLoading } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
@@ -44,7 +45,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     inventory: 0,
     images: [''],
     isActive: true,
-    showInCatalog: true,
   })
 
   const fetchCategories = useCallback(async () => {
@@ -94,7 +94,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             inventory: product.inventory,
             images: product.images.length > 0 ? product.images : [''],
             isActive: product.isActive,
-            showInCatalog: product.showInCatalog ?? true,
           })
 
           logger.info('產品資料載入成功', {
@@ -180,6 +179,13 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
     if (csrfError) {
       alert('安全驗證初始化失敗，請重新整理頁面')
+      return
+    }
+
+    // 驗證至少要有一張圖片
+    const validImages = formData.images.filter(img => img.trim() !== '')
+    if (validImages.length === 0) {
+      alert('產品必須至少有一張圖片，請先上傳圖片後再提交')
       return
     }
 
@@ -278,6 +284,71 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       ...prev,
       images: prev.images.map((img, i) => (i === index ? value : img)),
     }))
+  }
+
+  // 刪除現有圖片
+  const handleDeleteExistingImage = async (imageUrl: string, index: number) => {
+    if (!imageUrl || !imageUrl.trim()) {
+      // 如果是空的 URL，直接從陣列中移除
+      removeImageField(index)
+      return
+    }
+
+    const confirmed = confirm('確定要刪除這張圖片嗎？刪除後無法復原。')
+    if (!confirmed) return
+
+    setIsDeletingImage(imageUrl)
+
+    try {
+      // 從 URL 中提取 path
+      // 假設 URL 格式類似：https://domain.com/storage/v1/object/public/bucket/path
+      const urlParts = imageUrl.split('/')
+      const bucketIndex = urlParts.findIndex(part => part === 'public')
+      let filePath = ''
+
+      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 2) {
+        // 跳過 'public' 和 bucket 名稱，取得實際的檔案路径
+        filePath = urlParts.slice(bucketIndex + 2).join('/')
+      } else {
+        // 如果無法解析路径，嘗試使用最後的部分
+        filePath = urlParts[urlParts.length - 1]
+      }
+
+      if (!filePath) {
+        throw new Error('無法解析圖片路径')
+      }
+
+      // 呼叫刪除 API
+      const response = await fetch('/api/upload/images', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({ filePath }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: '未知錯誤' }))
+        throw new Error(errorData.error || `刪除失敗 (${response.status})`)
+      }
+
+      // 成功刪除後，從表單資料中移除
+      removeImageField(index)
+
+      logger.info('圖片刪除成功', {
+        metadata: { imageUrl, filePath, productId },
+      })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '刪除失敗'
+      logger.error('圖片刪除失敗', error instanceof Error ? error : new Error(errorMessage), {
+        metadata: { imageUrl, productId },
+      })
+      alert(`圖片刪除失敗: ${errorMessage}`)
+    } finally {
+      setIsDeletingImage(null)
+    }
   }
 
   if (initialLoading) {
@@ -569,9 +640,17 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
             {/* 現有圖片 URL 編輯 */}
             <div className="mb-4">
-              <h4 className="font-medium text-gray-900 mb-3">現有圖片 URL</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-gray-900">現有圖片 URL</h4>
+                <div className="text-sm text-gray-500">
+                  {formData.images.filter(img => img.trim() !== '').length} 張圖片
+                  {formData.images.filter(img => img.trim() !== '').length === 0 && (
+                    <span className="text-red-500 ml-2">⚠ 至少需要一張圖片</span>
+                  )}
+                </div>
+              </div>
               <p className="text-xs text-gray-500 mb-3">
-                可直接編輯現有的圖片 URL，或透過上方上傳組件新增圖片。
+                可直接編輯現有的圖片 URL，或透過上方上傳組件新增圖片。點擊刪除按鈕可移除圖片。
               </p>
             </div>
             <div className="space-y-4">
@@ -584,17 +663,21 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                       onChange={e => updateImageField(index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
                       placeholder="輸入圖片 URL"
+                      disabled={isDeletingImage === image}
                     />
-                    {formData.images.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeImageField(index)}
-                        className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                        title="刪除此圖片"
-                      >
-                        ✕
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExistingImage(image, index)}
+                      disabled={isDeletingImage === image}
+                      className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] flex items-center justify-center"
+                      title={image.trim() ? '從伺服器刪除此圖片' : '移除此欄位'}
+                    >
+                      {isDeletingImage === image ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      ) : (
+                        '✕'
+                      )}
+                    </button>
                   </div>
                   {image.trim() && (
                     <div className="mt-2">
@@ -640,21 +723,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
               />
               <label className="ml-2 block text-sm font-medium text-gray-800">上架販售</label>
             </div>
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="showInCatalog"
-                checked={formData.showInCatalog}
-                onChange={handleInputChange}
-                className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 block text-sm font-medium text-gray-800">
-                顯示於產品介紹頁面
-              </label>
-              <span className="ml-2 text-xs text-gray-500">
-                (取消勾選則此產品不會出現在前台產品頁面)
-              </span>
-            </div>
           </div>
 
           <div className="flex justify-end space-x-4 pt-6">
@@ -666,10 +734,16 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             </Link>
             <button
               type="submit"
-              disabled={loading || csrfLoading || !csrfToken}
+              disabled={loading || csrfLoading || !csrfToken || isDeletingImage !== null}
               className="px-6 py-2 bg-amber-900 text-white rounded-md hover:bg-amber-800 transition-colors disabled:opacity-50"
             >
-              {loading ? '更新中...' : csrfLoading ? '初始化中...' : '更新產品'}
+              {loading
+                ? '更新中...'
+                : csrfLoading
+                  ? '初始化中...'
+                  : isDeletingImage
+                    ? '圖片處理中...'
+                    : '更新產品'}
             </button>
           </div>
         </form>

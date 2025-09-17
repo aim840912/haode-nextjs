@@ -5,11 +5,11 @@
  * 此適配器確保現有代碼能夠無縫遷移到 v2 架構
  */
 
-import { 
+import {
   LegacyProductServiceAdapter,
   UnifiedProductService,
   SupabaseProductService,
-  JsonProductService
+  JsonProductService,
 } from './v2/productService'
 import { Product, ProductService } from '@/types/product'
 import { dbLogger } from '@/lib/logger'
@@ -25,7 +25,7 @@ export class ProductServiceAdapter implements ProductService {
   constructor() {
     // 建立統一服務實例 (預設使用 Supabase)
     this.unifiedService = new UnifiedProductService(new SupabaseProductService())
-    
+
     // 建立適配器實例
     this.legacyAdapter = new LegacyProductServiceAdapter(this.unifiedService)
 
@@ -108,7 +108,7 @@ export class ProductServiceAdapter implements ProductService {
    */
   async getActiveProducts(): Promise<Product[]> {
     const allProducts = await this.getProducts()
-    return allProducts.filter(product => product.isActive && product.showInCatalog !== false)
+    return allProducts.filter(product => product.isActive)
   }
 
   /**
@@ -116,9 +116,8 @@ export class ProductServiceAdapter implements ProductService {
    */
   async getProductsByCategory(category: string): Promise<Product[]> {
     const allProducts = await this.getProducts()
-    return allProducts.filter(product => 
-      product.category.toLowerCase() === category.toLowerCase() && 
-      product.isActive
+    return allProducts.filter(
+      product => product.category.toLowerCase() === category.toLowerCase() && product.isActive
     )
   }
 
@@ -127,11 +126,11 @@ export class ProductServiceAdapter implements ProductService {
    */
   async getSaleProducts(): Promise<Product[]> {
     const allProducts = await this.getProducts()
-    return allProducts.filter(product => 
-      product.isOnSale && 
-      product.isActive && 
-      product.showInCatalog !== false &&
-      (!product.saleEndDate || new Date(product.saleEndDate) > new Date())
+    return allProducts.filter(
+      product =>
+        product.isOnSale &&
+        product.isActive &&
+        (!product.saleEndDate || new Date(product.saleEndDate) > new Date())
     )
   }
 
@@ -140,9 +139,7 @@ export class ProductServiceAdapter implements ProductService {
    */
   async getLowInventoryProducts(threshold: number = 10): Promise<Product[]> {
     const allProducts = await this.getAllProducts()
-    return allProducts.filter(product => 
-      product.inventory <= threshold && product.isActive
-    )
+    return allProducts.filter(product => product.inventory <= threshold && product.isActive)
   }
 
   /**
@@ -150,9 +147,10 @@ export class ProductServiceAdapter implements ProductService {
    */
   switchServiceType(type: 'supabase' | 'json'): void {
     // 重新建立統一服務實例
-    const baseService = type === 'supabase' ? new SupabaseProductService() : new JsonProductService()
+    const baseService =
+      type === 'supabase' ? new SupabaseProductService() : new JsonProductService()
     const newUnifiedService = new UnifiedProductService(baseService)
-    
+
     // 更新適配器引用
     // @ts-expect-error - Dynamic service switching
     this.legacyAdapter = new LegacyProductServiceAdapter(newUnifiedService)

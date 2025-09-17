@@ -18,13 +18,12 @@ interface UseProductActionsProps {
 interface UseProductActionsReturn {
   handleDelete: (id: string) => Promise<void>
   handleToggleActive: (id: string, isActive: boolean) => Promise<void>
-  handleToggleShowInCatalog: (id: string, showInCatalog: boolean) => Promise<void>
   isActionDisabled: boolean
 }
 
 /**
  * 產品操作 Hook
- * 負責處理產品的刪除、啟用/停用、目錄顯示等操作
+ * 負責處理產品的刪除、上架/下架等操作
  */
 export function useProductActions({
   products,
@@ -71,11 +70,10 @@ export function useProductActions({
           headers['x-csrf-token'] = csrfToken
         }
 
-        const response = await fetch(`/api/admin-proxy/products`, {
+        const response = await fetch(`/api/admin-proxy/products?id=${id}`, {
           method: 'DELETE',
           headers,
           credentials: 'include',
-          body: JSON.stringify({ id }),
         })
 
         if (!response.ok) {
@@ -132,7 +130,7 @@ export function useProductActions({
       const productToUpdate = products.find(p => p.id === id)
       const productName = productToUpdate?.name || '產品'
       const newActiveState = !isActive
-      const actionText = newActiveState ? '啟用' : '停用'
+      const actionText = newActiveState ? '上架' : '下架'
 
       if (isActionDisabled) {
         if (csrfLoading) {
@@ -209,95 +207,9 @@ export function useProductActions({
     ]
   )
 
-  const handleToggleShowInCatalog = useCallback(
-    async (id: string, showInCatalog: boolean) => {
-      if (!user) {
-        warning('請先登入', '您需要登入後才能修改產品目錄狀態')
-        return
-      }
-
-      const productToUpdate = products.find(p => p.id === id)
-      const productName = productToUpdate?.name || '產品'
-      const newShowState = !showInCatalog
-      const actionText = newShowState ? '顯示在目錄' : '從目錄隱藏'
-
-      if (isActionDisabled) {
-        if (csrfLoading) {
-          warning('請稍候', '正在初始化安全驗證...')
-        } else if (csrfError) {
-          errorToast('安全驗證失敗', '請重新整理頁面後再試')
-        }
-        return
-      }
-
-      try {
-        // 樂觀更新
-        setProducts(prevProducts =>
-          prevProducts.map(p => (p.id === id ? { ...p, showInCatalog: newShowState } : p))
-        )
-
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        }
-
-        if (csrfToken) {
-          headers['x-csrf-token'] = csrfToken
-        }
-
-        const response = await fetch(`/api/admin-proxy/products`, {
-          method: 'PUT',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ id, showInCatalog: newShowState }),
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
-      } catch (error) {
-        logger.error('Error updating product catalog visibility', error as Error, {
-          metadata: { productId: id, module: 'useProductActions' },
-        })
-
-        const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
-        errorToast(
-          `${actionText}失敗`,
-          `無法${actionText}產品「${productName}」: ${errorMessage}`,
-          [
-            {
-              label: '重試',
-              onClick: () => handleToggleShowInCatalog(id, showInCatalog),
-              variant: 'primary',
-            },
-          ]
-        )
-
-        // 回滾樂觀更新
-        setProducts(prevProducts =>
-          prevProducts.map(p => (p.id === id ? { ...p, showInCatalog: showInCatalog } : p))
-        )
-      }
-    },
-    [
-      user,
-      products,
-      setProducts,
-      csrfToken,
-      csrfLoading,
-      csrfError,
-      isActionDisabled,
-      success,
-      errorToast,
-      warning,
-    ]
-  )
-
   return {
     handleDelete,
     handleToggleActive,
-    handleToggleShowInCatalog,
     isActionDisabled,
   }
 }

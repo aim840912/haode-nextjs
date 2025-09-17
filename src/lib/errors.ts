@@ -240,7 +240,18 @@ export class ErrorFactory {
       module: context?.module || 'Database',
     }
 
-    const errorMessage = error instanceof Error ? error.message : String(error)
+    // 改善錯誤訊息提取邏輯
+    let errorMessage = ''
+    if (error instanceof Error) {
+      errorMessage = error.message
+    } else if (error && typeof error === 'object') {
+      // 處理 Supabase 錯誤對象
+      const errorObj = error as any
+      errorMessage =
+        errorObj.message || errorObj.error_description || errorObj.error || JSON.stringify(error)
+    } else {
+      errorMessage = String(error)
+    }
 
     // RLS 政策錯誤
     if (errorMessage?.includes('row-level security policy') || errorMessage?.includes('policy')) {

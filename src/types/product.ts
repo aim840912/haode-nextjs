@@ -26,7 +26,6 @@ export interface Product {
   galleryImages?: string[] // 圖片相簿URLs
   inventory: number
   isActive: boolean
-  showInCatalog?: boolean // 是否顯示在前台產品頁面，預設為 true
   createdAt: string
   updatedAt: string
 }

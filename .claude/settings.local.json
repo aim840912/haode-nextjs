@@ -26,7 +26,11 @@
       "Bash(netstat:*)",
       "Read(//mnt/c/Users/aim84/Downloads/**)",
       "mcp__playwright__browser_snapshot",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(xargs -r kill -9)",
+      "Bash(pkill:*)",
+      "Bash(source:*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=https://bxlrtcagsuoijjolgdzs.supabase.co SUPABASE_SERVICE_ROLE_KEY=sb_secret_dcIa080eUatHIVYYwQUFZw_wUovKzgp npx tsx scripts/execute-user-interests-fix.ts)"
     ],
     "deny": [],
     "ask": []

@@ -7,6 +7,7 @@ import { AdminFilterState } from '../../AdminProductFilter'
 
 interface UseProductsDataReturn {
   products: Product[]
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>
   loading: boolean
   error: string | null
   fetchProducts: () => Promise<void>
@@ -101,6 +102,7 @@ export function useProductsData(
 
   return {
     products,
+    setProducts,
     loading,
     error,
     fetchProducts,

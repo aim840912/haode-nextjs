@@ -193,7 +193,7 @@ export default function ProductsTable({
     const productToUpdate = products.find(p => p.id === id)
     const productName = productToUpdate?.name || '產品'
     const newActiveState = !isActive
-    const actionText = newActiveState ? '啟用' : '停用'
+    const actionText = newActiveState ? '上架' : '下架'
 
     // 防止在 CSRF token 未準備好時執行
     if (csrfLoading || !csrfToken) {
@@ -257,74 +257,6 @@ export default function ProductsTable({
     }
   }
 
-  const handleToggleShowInCatalog = async (id: string, showInCatalog: boolean) => {
-    if (!user) {
-      warning('請先登入', '您需要登入後才能修改產品目錄狀態')
-      return
-    }
-
-    const productToUpdate = products.find(p => p.id === id)
-    const productName = productToUpdate?.name || '產品'
-    const newShowState = !showInCatalog
-    const actionText = newShowState ? '顯示在目錄' : '從目錄隐藏'
-
-    // 防止在 CSRF token 未準備好時執行
-    if (csrfLoading || !csrfToken) {
-      warning('請稍候', '正在初始化安全驗證...')
-      return
-    }
-
-    if (csrfError) {
-      errorToast('安全驗證失敗', '請重新整理頁面後再試')
-      return
-    }
-
-    try {
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-
-      if (csrfToken) {
-        headers['x-csrf-token'] = csrfToken
-      }
-
-      const response = await fetch(`/api/admin-proxy/products`, {
-        method: 'PUT',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ id, showInCatalog: newShowState }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      logger.debug('handleToggleShowInCatalog - 更新成功', {
-        metadata: { productId: id, newStatus: !showInCatalog, component: 'ProductsTable' },
-      })
-
-      // 更新成功後重新載入整個產品列表，確保資料同步
-      await fetchProducts()
-
-      // 顯示成功訊息
-      success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
-    } catch (error) {
-      logger.error('Error updating product', error as Error, {
-        metadata: { productId: id, component: 'ProductsTable' },
-      })
-
-      const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
-      errorToast(`${actionText}失敗`, `無法${actionText}產品「${productName}」: ${errorMessage}`, [
-        {
-          label: '重試',
-          onClick: () => handleToggleShowInCatalog(id, showInCatalog),
-          variant: 'primary',
-        },
-      ])
-    }
-  }
-
   if (loading) {
     return (
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -372,9 +304,6 @@ export default function ProductsTable({
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               上架狀態
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              產品頁顯示
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               操作
@@ -444,30 +373,6 @@ export default function ProductsTable({
                     {product.isActive ? '上架中' : '已下架'}
                   </span>
                 )}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {(() => {
-                  const showInCatalog = product.showInCatalog ?? true
-                  return user?.role === 'admin' ? (
-                    <button
-                      onClick={() => handleToggleShowInCatalog(product.id, showInCatalog)}
-                      disabled={csrfLoading || !csrfToken}
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
-                        showInCatalog ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {showInCatalog ? '顯示中' : '已隱藏'}
-                    </button>
-                  ) : (
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        showInCatalog ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {showInCatalog ? '顯示中' : '已隱藏'}
-                    </span>
-                  )
-                })()}
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 {user?.role === 'admin' ? (

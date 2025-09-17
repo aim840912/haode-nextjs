@@ -130,7 +130,7 @@ function ProductsPage() {
               throw new Error('API 回應格式錯誤：data 不是陣列')
             }
 
-            setApiProducts(data.filter((p: Product) => p.isActive && (p.showInCatalog ?? true)))
+            setApiProducts(data.filter((p: Product) => p.isActive))
             return data
           },
           {

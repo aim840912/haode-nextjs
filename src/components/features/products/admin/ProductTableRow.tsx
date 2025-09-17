@@ -8,7 +8,6 @@ interface ProductTableRowProps {
   product: Product
   onDelete: (id: string) => Promise<void>
   onToggleActive: (id: string, isActive: boolean) => Promise<void>
-  onToggleShowInCatalog: (id: string, showInCatalog: boolean) => Promise<void>
   isActionDisabled: boolean
   isAdmin: boolean
 }
@@ -21,7 +20,6 @@ export function ProductTableRow({
   product,
   onDelete,
   onToggleActive,
-  onToggleShowInCatalog,
   isActionDisabled,
   isAdmin,
 }: ProductTableRowProps) {
@@ -88,7 +86,7 @@ export function ProductTableRow({
       </td>
 
       {/* 上架狀態欄 */}
-      <td className="lg:sticky lg:right-[360px] lg:z-10 px-6 py-4 whitespace-nowrap lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
+      <td className="lg:sticky lg:right-[140px] lg:z-10 px-6 py-4 whitespace-nowrap lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
         {isAdmin ? (
           <button
             onClick={() => onToggleActive(product.id, product.isActive)}
@@ -112,33 +110,6 @@ export function ProductTableRow({
         )}
       </td>
 
-      {/* 產品頁顯示欄 */}
-      <td className="lg:sticky lg:right-[180px] lg:z-10 px-6 py-4 whitespace-nowrap lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
-        {isAdmin ? (
-          <button
-            onClick={() => onToggleShowInCatalog(product.id, product.showInCatalog ?? true)}
-            disabled={isActionDisabled}
-            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
-              product.showInCatalog !== false
-                ? 'bg-blue-100 text-blue-800 hover:bg-blue-200 focus:ring-blue-500'
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200 focus:ring-gray-500'
-            }`}
-          >
-            {product.showInCatalog !== false ? '顯示' : '隱藏'}
-          </button>
-        ) : (
-          <span
-            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
-              product.showInCatalog !== false
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-gray-100 text-gray-800'
-            }`}
-          >
-            {product.showInCatalog !== false ? '顯示' : '隱藏'}
-          </span>
-        )}
-      </td>
-
       {/* 操作欄 */}
       <td className="sticky right-0 z-10 bg-white hover:bg-gray-50 px-4 py-4 text-right text-sm font-medium border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[140px]">
         {isAdmin && (
@@ -146,7 +117,6 @@ export function ProductTableRow({
             product={product}
             onDelete={onDelete}
             onToggleActive={onToggleActive}
-            onToggleShowInCatalog={onToggleShowInCatalog}
             isActionDisabled={isActionDisabled}
           />
         )}

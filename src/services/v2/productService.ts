@@ -50,7 +50,6 @@ export interface CreateProductDTO {
   galleryImages?: string[]
   inventory: number
   isActive: boolean
-  showInCatalog?: boolean
 }
 
 /**
@@ -71,7 +70,6 @@ export interface UpdateProductDTO {
   galleryImages?: string[]
   inventory?: number
   isActive?: boolean
-  showInCatalog?: boolean
 }
 
 /**
@@ -130,7 +128,6 @@ export class ProductDataTransformer implements DataTransformer<Product> {
       galleryImages: (record.gallery_images as string[]) || [],
       inventory: (record.stock as number) || 0,
       isActive: (record.is_active as boolean) !== false, // 預設為 true
-      showInCatalog: (record.show_in_catalog as boolean) !== false, // 預設為 true
       createdAt: record.created_at as string,
       updatedAt: record.updated_at as string,
     }
@@ -155,7 +152,6 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     if (entity.galleryImages !== undefined) record.gallery_images = entity.galleryImages
     if (entity.inventory !== undefined) record.stock = entity.inventory
     if (entity.isActive !== undefined) record.is_active = entity.isActive
-    if (entity.showInCatalog !== undefined) record.show_in_catalog = entity.showInCatalog
 
     return record
   }
@@ -296,7 +292,6 @@ export class JsonProductService
     return {
       ...baseProduct,
       isActive: data.isActive !== false, // 預設為 true
-      showInCatalog: data.showInCatalog !== false, // 預設為 true
       inventory: data.inventory || 0,
       images: data.images || [],
       galleryImages: data.galleryImages || [],
@@ -332,7 +327,6 @@ export class JsonProductService
           galleryImages: item.galleryImages,
           inventory: item.inventory,
           isActive: item.isActive,
-          showInCatalog: item.showInCatalog,
           createdAt: item.createdAt,
           updatedAt: item.updatedAt,
         }) as Product

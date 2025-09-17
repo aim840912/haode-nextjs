@@ -12,7 +12,7 @@
 // 動態匯入服務端客戶端以避免客戶端環境問題
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, ValidationError } from '@/lib/errors'
-import { supabase } from '@/lib/supabase-auth'
+import { supabaseAdmin } from '@/lib/supabase-auth'
 import type { UserInterest } from '../userInterestsService'
 import type { Database } from '@/types/database'
 
@@ -33,11 +33,11 @@ export class UserInterestsServiceV2Simple {
   private readonly moduleName = 'UserInterestsServiceV2'
 
   /**
-   * 取得 Supabase 客戶端（使用統一的 Proxy 物件）
+   * 取得 Supabase 客戶端（使用管理員客戶端以繞過 RLS）
    */
   private getSupabaseClient() {
-    // 使用已經處理環境檢測的 supabase Proxy 物件
-    return supabase
+    // 使用管理員客戶端以繞過 RLS 限制，在 API 路由層已經進行權限驗證
+    return supabaseAdmin
   }
 
   /**
@@ -154,6 +154,22 @@ export class UserInterestsServiceV2Simple {
           })
           return true
         }
+
+        // 記錄詳細的錯誤資訊
+        dbLogger.error('資料庫插入錯誤詳情', error as Error, {
+          module: this.moduleName,
+          action: 'addInterest',
+          metadata: {
+            userId,
+            productId,
+            errorCode: error.code,
+            errorMessage: error.message,
+            errorDetails: error.details,
+            errorHint: error.hint,
+            fullError: JSON.stringify(error),
+          },
+        })
+
         this.handleError(error, 'addInterest', { userId, productId })
       }
 

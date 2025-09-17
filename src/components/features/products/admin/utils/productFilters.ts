@@ -44,13 +44,6 @@ export class ProductFilters {
       filtered = filtered.filter(product => !product.isActive)
     }
 
-    // 目錄顯示篩選
-    if (filters.catalogVisibility === 'visible') {
-      filtered = filtered.filter(product => product.showInCatalog ?? true)
-    } else if (filters.catalogVisibility === 'hidden') {
-      filtered = filtered.filter(product => !(product.showInCatalog ?? true))
-    }
-
     // 價格區間篩選
     if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
       filtered = filtered.filter(
@@ -99,8 +92,6 @@ export class ProductFilters {
       inStock: products.filter(p => p.inventory > 0).length,
       outOfStock: products.filter(p => p.inventory <= 0).length,
       lowStock: products.filter(p => p.inventory > 0 && p.inventory <= 10).length,
-      visible: products.filter(p => p.showInCatalog ?? true).length,
-      hidden: products.filter(p => !(p.showInCatalog ?? true)).length,
       onSale: products.filter(p => p.isOnSale).length,
     }
   }

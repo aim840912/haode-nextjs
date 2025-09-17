@@ -7,7 +7,6 @@ export interface AdminFilterState {
   categories: string[]
   availability: 'all' | 'in_stock' | 'out_of_stock'
   status: 'all' | 'active' | 'inactive'
-  catalogVisibility: 'all' | 'visible' | 'hidden'
   priceRange: {
     min: number
     max: number
@@ -42,7 +41,6 @@ export default function AdminProductFilter({
     categories: [],
     availability: 'all',
     status: 'all',
-    catalogVisibility: 'all',
     priceRange: {
       min: 0,
       max: 10000,
@@ -83,7 +81,6 @@ export default function AdminProductFilter({
       categories: [],
       availability: 'all',
       status: 'all',
-      catalogVisibility: 'all',
       priceRange: {
         min: 0,
         max: 10000,
@@ -98,7 +95,6 @@ export default function AdminProductFilter({
     filters.categories.length > 0 ||
     filters.availability !== 'all' ||
     filters.status !== 'all' ||
-    filters.catalogVisibility !== 'all' ||
     showPriceRange
 
   return (
@@ -250,36 +246,6 @@ export default function AdminProductFilter({
                         setFilters(prev => ({
                           ...prev,
                           status: e.target.value as AdminFilterState['status'],
-                        }))
-                      }
-                      className="text-amber-600 focus:ring-amber-500 mr-2"
-                    />
-                    <span className="text-sm text-gray-700">{option.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            {/* Catalog Visibility */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">目錄顯示</label>
-              <div className="space-y-2">
-                {[
-                  { value: 'all', label: '全部' },
-                  { value: 'visible', label: '顯示中' },
-                  { value: 'hidden', label: '已隱藏' },
-                ].map(option => (
-                  <label key={option.value} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="catalogVisibility"
-                      value={option.value}
-                      checked={filters.catalogVisibility === option.value}
-                      onChange={e =>
-                        setFilters(prev => ({
-                          ...prev,
-                          catalogVisibility: e.target
-                            .value as AdminFilterState['catalogVisibility'],
                         }))
                       }
                       className="text-amber-600 focus:ring-amber-500 mr-2"
