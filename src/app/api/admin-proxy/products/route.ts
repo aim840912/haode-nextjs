@@ -27,7 +27,10 @@ async function validateAdminUser() {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    apiLogger.error('認證驗證失敗', { module: 'AdminProxyAPI', metadata: { authError } })
+    apiLogger.error('認證驗證失敗', authError || new Error('User not found'), {
+      module: 'AdminProxyAPI',
+      metadata: { authError },
+    })
     throw new AuthorizationError('未登入或認證失效')
   }
 
@@ -49,19 +52,25 @@ async function validateAdminUser() {
   })
 
   if (profileError) {
-    apiLogger.error('獲取用戶資料失敗', { module: 'AdminProxyAPI', metadata: { profileError } })
+    apiLogger.error('獲取用戶資料失敗', profileError, {
+      module: 'AdminProxyAPI',
+      metadata: { profileError },
+    })
     throw new AuthorizationError(`無法獲取用戶資料: ${profileError.message}`)
   }
 
   if (!profile) {
-    apiLogger.error('找不到用戶資料', { module: 'AdminProxyAPI', metadata: { userId: user.id } })
+    apiLogger.error('找不到用戶資料', new Error('Profile not found'), {
+      module: 'AdminProxyAPI',
+      metadata: { userId: user.id },
+    })
     throw new AuthorizationError('找不到用戶資料')
   }
 
   apiLogger.debug('用戶資料', { module: 'AdminProxyAPI', metadata: { profile } })
 
   if (profile.role !== 'admin') {
-    apiLogger.error('用戶角色檢查失敗', {
+    apiLogger.error('用戶角色檢查失敗', new Error('Insufficient role'), {
       module: 'AdminProxyAPI',
       metadata: { userRole: profile.role },
     })

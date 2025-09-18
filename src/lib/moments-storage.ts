@@ -88,8 +88,8 @@ export async function uploadMomentImageToStorage(
       throw new MomentStorageError(validation.error || '檔案驗證失敗')
     }
 
-    // 生成檔案名稱
-    const fileName = generateFileName(file.name, momentId)
+    // 生成檔案名稱（傳入 MIME type 以正確處理副檔名）
+    const fileName = generateFileName(file.name, momentId, file.type)
     const filePath = `${momentId}/${fileName}`
 
     // 使用 admin 客戶端上傳檔案（繞過 RLS）
@@ -355,13 +355,22 @@ export async function getMomentImageSignedUrl(
 export async function uploadBase64ToMomentStorage(
   base64Data: string,
   momentId: string,
-  filename: string = 'moment-image.jpg'
+  filename: string = 'moment-image'
 ): Promise<{ url: string; path: string }> {
   try {
+    // 從 base64 data URL 中提取 MIME type
+    const mimeMatch = base64Data.match(/data:([^;]+);base64,/)
+    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg'
+
     // 將 base64 轉換為 File 物件
     const response = await fetch(base64Data)
     const blob = await response.blob()
-    const file = new File([blob], filename, { type: blob.type })
+
+    // 如果檔名沒有副檔名，根據 MIME type 添加適當的副檔名
+    const hasExtension = filename.includes('.')
+    const finalFilename = hasExtension ? filename : `${filename}.jpg`
+
+    const file = new File([blob], finalFilename, { type: mimeType })
 
     // 使用現有的上傳函數
     return await uploadMomentImageToStorage(file, momentId)

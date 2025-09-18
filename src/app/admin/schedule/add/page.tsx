@@ -27,8 +27,8 @@ export default function AddSchedule() {
   })
 
   const [timeRange, setTimeRange] = useState({
-    startTime: '',
-    endTime: '',
+    startTime: '18:00', // 預設下午 6 點（夜市通常開始時間）
+    endTime: '22:00', // 預設晚上 10 點（夜市通常結束時間）
   })
 
   // Format start and end times into time range string
@@ -82,6 +82,38 @@ export default function AddSchedule() {
 
     try {
       const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
+
+      // 前端驗證必填欄位
+      if (!formData.title?.trim()) {
+        alert('請輸入市集/夜市名稱')
+        setLoading(false)
+        return
+      }
+
+      if (!formData.location?.trim()) {
+        alert('請輸入詳細地址')
+        setLoading(false)
+        return
+      }
+
+      if (!formData.date) {
+        alert('請選擇日期')
+        setLoading(false)
+        return
+      }
+
+      if (!formattedTime) {
+        alert('請選擇開始時間和結束時間')
+        setLoading(false)
+        return
+      }
+
+      if (!formData.contact?.trim()) {
+        alert('請輸入聯絡電話')
+        setLoading(false)
+        return
+      }
+
       const submitData = {
         ...formData,
         time: formattedTime,
@@ -96,7 +128,9 @@ export default function AddSchedule() {
       if (response.ok) {
         router.push('/admin/schedule')
       } else {
-        alert('新增失敗')
+        const errorData = await response.json()
+        const errorMessage = errorData.error?.message || '未知錯誤'
+        alert(`新增失敗: ${errorMessage}`)
       }
     } catch (error) {
       logger.error(
@@ -279,7 +313,7 @@ export default function AddSchedule() {
 
           {/* 販售商品 */}
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-3">販售商品 *</label>
+            <label className="block text-sm font-medium text-gray-900 mb-3">販售商品</label>
 
             {/* 新增商品輸入框 */}
             <div className="flex gap-2 mb-4">
@@ -337,7 +371,7 @@ export default function AddSchedule() {
 
             <div className="text-sm text-gray-500">
               已新增 {formData.products.length} 項商品{' '}
-              {formData.products.length === 0 && '（至少需要一項商品）'}
+              {formData.products.length === 0 && '（商品為選填項目，可留空）'}
             </div>
           </div>
 
@@ -460,7 +494,7 @@ export default function AddSchedule() {
             </Link>
             <button
               type="submit"
-              disabled={loading || formData.products.length === 0}
+              disabled={loading}
               className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? '新增中...' : '新增行程'}

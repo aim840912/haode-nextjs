@@ -747,13 +747,18 @@ export const ScheduleSchemas = {
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元'),
     location: StringSchemas.nonEmpty.max(100, '地點名稱不能超過 100 字元'),
     date: DateSchemas.dateString,
-    time: z.string().regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, '時間格式必須為 HH:MM'),
+    time: z
+      .string()
+      .regex(
+        /^([01]?[0-9]|2[0-3]):[0-5][0-9](-([01]?[0-9]|2[0-3]):[0-5][0-9])?$/,
+        '時間格式必須為 HH:MM 或 HH:MM-HH:MM'
+      ),
     status: z.enum(['upcoming', 'ongoing', 'completed']).default('upcoming'),
     products: z
       .array(StringSchemas.nonEmpty.max(50, '產品名稱不能超過 50 字元'))
       .max(20, '最多只能有 20 個產品')
       .default([]),
-    description: StringSchemas.nonEmpty.max(500, '描述不能超過 500 字元'),
+    description: z.string().max(500, '描述不能超過 500 字元').optional().default(''),
     contact: StringSchemas.nonEmpty.max(100, '聯絡資訊不能超過 100 字元'),
     specialOffer: z.string().max(200, '特別優惠不能超過 200 字元').optional(),
     weatherNote: z.string().max(200, '天氣備註不能超過 200 字元').optional(),
