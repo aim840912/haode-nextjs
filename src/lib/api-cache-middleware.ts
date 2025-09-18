@@ -19,8 +19,8 @@ function generateTagsFromPath(pathname: string): string[] {
     tags.push('products')
   } else if (pathname.includes('/api/news')) {
     tags.push('news')
-  } else if (pathname.includes('/api/culture')) {
-    tags.push('culture')
+  } else if (pathname.includes('/api/moments')) {
+    tags.push('moments')
   } else if (pathname.includes('/api/farm-tour')) {
     tags.push('farmtour')
   } else if (pathname.includes('/api/locations')) {
@@ -61,8 +61,8 @@ export function withApiCache(
         await UnifiedCacheManager.invalidate([...CacheTags.ALL_PRODUCTS])
       } else if (pathname.includes('/api/news')) {
         await UnifiedCacheManager.invalidate([...CacheTags.ALL_NEWS])
-      } else if (pathname.includes('/api/culture')) {
-        await UnifiedCacheManager.invalidate([...CacheTags.ALL_CULTURE])
+      } else if (pathname.includes('/api/moments')) {
+        await UnifiedCacheManager.invalidate([...CacheTags.ALL_MOMENTS])
       } else if (pathname.includes('/api/farm-tour')) {
         await UnifiedCacheManager.invalidate([...CacheTags.ALL_FARMTOUR])
       } else if (pathname.includes('/api/locations')) {

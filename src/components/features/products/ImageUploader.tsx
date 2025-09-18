@@ -37,6 +37,7 @@ interface ImageUploaderProps {
   productId: string
   onUploadSuccess?: (images: UploadedImage[]) => void
   onUploadError?: (error: string) => void
+  onDeleteSuccess?: (deletedImage: UploadedImage) => void
   maxFiles?: number
   allowMultiple?: boolean
   generateMultipleSizes?: boolean
@@ -51,6 +52,7 @@ export default function ImageUploader({
   productId,
   onUploadSuccess,
   onUploadError,
+  onDeleteSuccess,
   maxFiles = 5,
   allowMultiple = true,
   generateMultipleSizes = false,
@@ -325,6 +327,8 @@ export default function ImageUploader({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleFileSelect(e.target.files)
+    // 清空 input 值，允許重新選擇相同檔案
+    e.target.value = ''
   }
 
   const handleRemoveImage = async (imageId: string) => {
@@ -334,12 +338,20 @@ export default function ImageUploader({
     try {
       // 從伺服器刪除（如果有路径）
       if (imageToRemove.path) {
-        await fetch('/api/upload/images', {
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        }
+        if (csrfToken) {
+          headers['x-csrf-token'] = csrfToken
+        }
+
+        await fetch(apiEndpoint, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ filePath: imageToRemove.path }),
+          headers,
+          body: JSON.stringify({
+            [idParamName]: productId,
+            filePath: imageToRemove.path,
+          }),
         })
       }
 
@@ -352,6 +364,9 @@ export default function ImageUploader({
           position: index,
         }))
       })
+
+      // 通知上層組件圖片已刪除
+      onDeleteSuccess?.(imageToRemove)
     } catch (error) {
       logger.error('刪除圖片失敗', error instanceof Error ? error : new Error('Unknown error'), {
         metadata: {
@@ -479,20 +494,24 @@ export function SingleImageUploader({
   productId,
   onUploadSuccess,
   onUploadError,
+  onDelete,
   initialImage,
   size = 'medium',
   className = '',
   apiEndpoint = '/api/upload/images',
   idParamName = 'productId',
+  enableDelete = false,
 }: {
   productId: string
   onUploadSuccess?: (image: UploadedImage) => void
   onUploadError?: (error: string) => void
+  onDelete?: () => void
   initialImage?: string
   size?: 'thumbnail' | 'medium' | 'large'
   className?: string
   apiEndpoint?: string
   idParamName?: string
+  enableDelete?: boolean
 }) {
   const [currentImage, setCurrentImage] = useState<UploadedImage | null>(
     initialImage
@@ -515,31 +534,59 @@ export function SingleImageUploader({
     }
   }
 
+  const handleDelete = () => {
+    if (currentImage && window.confirm('確定要刪除這張圖片嗎？此操作無法復原。')) {
+      setCurrentImage(null)
+      onDelete?.()
+    }
+  }
+
   return (
     <div className={className}>
       {currentImage && (
         <div className="mb-4">
-          <div className="aspect-square w-32 rounded-lg overflow-hidden border border-gray-200 relative">
+          <div className="aspect-square w-32 rounded-lg overflow-hidden border border-gray-200 relative group">
             <Image
               src={currentImage.url || '/images/placeholder.jpg'}
               alt="當前圖片"
               fill
               className="object-cover"
             />
+            {enableDelete && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                title="刪除圖片"
+              >
+                ×
+              </button>
+            )}
           </div>
+          {enableDelete && (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="mt-2 text-sm text-red-600 hover:text-red-800 transition-colors"
+            >
+              刪除圖片
+            </button>
+          )}
         </div>
       )}
 
-      <ImageUploader
-        productId={productId}
-        onUploadSuccess={handleUploadSuccess}
-        onUploadError={onUploadError}
-        maxFiles={1}
-        allowMultiple={false}
-        generateMultipleSizes={false}
-        apiEndpoint={apiEndpoint}
-        idParamName={idParamName}
-      />
+      {!currentImage && (
+        <ImageUploader
+          productId={productId}
+          onUploadSuccess={handleUploadSuccess}
+          onUploadError={onUploadError}
+          maxFiles={1}
+          allowMultiple={false}
+          generateMultipleSizes={false}
+          apiEndpoint={apiEndpoint}
+          idParamName={idParamName}
+        />
+      )}
     </div>
   )
 }

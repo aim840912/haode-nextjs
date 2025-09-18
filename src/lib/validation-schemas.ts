@@ -915,7 +915,7 @@ export const ImageUploadSchemas = {
   uploadForm: z
     .object({
       productId: StringSchemas.uuid.optional(),
-      cultureId: StringSchemas.uuid.optional(),
+      momentId: StringSchemas.uuid.optional(),
       generateMultipleSizes: z
         .enum(['true', 'false'])
         .optional()
@@ -926,18 +926,18 @@ export const ImageUploadSchemas = {
         .transform(val => val === 'true'),
       size: z.enum(['thumbnail', 'medium', 'large']).optional().default('medium'),
     })
-    .refine(data => data.productId || data.cultureId, {
-      message: '必須提供 productId 或 cultureId',
+    .refine(data => data.productId || data.momentId, {
+      message: '必須提供 productId 或 momentId',
     }),
 
   /** GET 查詢參數驗證 */
   query: z
     .object({
       productId: StringSchemas.uuid.optional(),
-      cultureId: StringSchemas.uuid.optional(),
+      momentId: StringSchemas.uuid.optional(),
     })
-    .refine(data => data.productId || data.cultureId, {
-      message: '必須提供 productId 或 cultureId',
+    .refine(data => data.productId || data.momentId, {
+      message: '必須提供 productId 或 momentId',
     }),
 
   /** DELETE 刪除參數驗證 */
@@ -1033,6 +1033,68 @@ export const CultureSchemas = {
       .optional(),
     emoji: z.string().min(1, 'Emoji 不能為空').max(4, 'Emoji 不能超過 4 個字符').optional(),
     imageUrl: z.string().url('圖片 URL 格式不正確').optional().or(z.literal('')),
+  }),
+}
+
+/**
+ * 精彩時刻相關 Schema
+ */
+export const MomentSchemas = {
+  /** 建立精彩時刻項目 */
+  create: z.object({
+    title: StringSchemas.nonEmpty.max(100, '標題不能超過 100 字元'),
+    subtitle: z.string().max(200, '副標題不能超過 200 字元').optional().default(''),
+    description: StringSchemas.nonEmpty.max(2000, '描述不能超過 2000 字元'),
+    height: z
+      .string()
+      .regex(
+        /^h-(4[8-9]|[5-9]\d|1[0-9]\d)$/,
+        '高度必須是有效的 Tailwind CSS 類別，如 h-48, h-64 等'
+      )
+      .optional()
+      .default('h-56'),
+    color: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '顏色必須是有效的十六進制格式，如 #FF0000')
+      .optional()
+      .default('#3B82F6'),
+    textColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '文字顏色必須是有效的十六進制格式，如 #FFFFFF')
+      .optional()
+      .default('#FFFFFF'),
+    emoji: z
+      .string()
+      .min(1, 'Emoji 不能為空')
+      .max(4, 'Emoji 不能超過 4 個字符')
+      .optional()
+      .default('📸'),
+    imageUrl: z.string().url('圖片 URL 格式不正確').optional().or(z.literal('')),
+    imageFile: z.any().optional(), // File 物件會在服務層處理
+  }),
+  /** 更新精彩時刻項目 */
+  update: z.object({
+    title: StringSchemas.nonEmpty.max(100, '標題不能超過 100 字元').optional(),
+    subtitle: z.string().max(200, '副標題不能超過 200 字元').optional(),
+    description: StringSchemas.nonEmpty.max(2000, '描述不能超過 2000 字元').optional(),
+    height: z
+      .string()
+      .regex(
+        /^h-(4[8-9]|[5-9]\d|1[0-9]\d)$/,
+        '高度必須是有效的 Tailwind CSS 類別，如 h-48, h-64 等'
+      )
+      .optional(),
+    color: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '顏色必須是有效的十六進制格式，如 #FF0000')
+      .optional(),
+    textColor: z
+      .string()
+      .regex(/^#[0-9A-Fa-f]{6}$/, '文字顏色必須是有效的十六進制格式，如 #FFFFFF')
+      .optional(),
+    emoji: z.string().min(1, 'Emoji 不能為空').max(4, 'Emoji 不能超過 4 個字符').optional(),
+    imageUrl: z.string().url('圖片 URL 格式不正確').optional().or(z.literal('')),
+    imageFile: z.any().optional(), // File 物件會在服務層處理
   }),
 }
 

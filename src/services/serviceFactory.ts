@@ -9,7 +9,7 @@ import { ProductService } from '@/types/product'
 import { ScheduleService } from '@/types/schedule'
 import { FarmTourActivity } from '@/types/farmTour'
 import { NewsService } from '@/types/news'
-import { CultureService } from '@/types/culture'
+import { MomentService } from '@/types/moments'
 import { LocationService } from '@/types/location'
 import { ServiceConfig } from '@/lib/base-service'
 import {
@@ -81,7 +81,7 @@ let productServiceInstance: ProductService | null = null
 let scheduleServiceInstance: ScheduleService | null = null
 let farmTourServiceInstance: FarmTourService | null = null
 let newsServiceInstance: NewsService | null = null
-let cultureServiceInstance: CultureService | null = null
+let momentServiceInstance: MomentService | null = null
 let locationServiceInstance: LocationService | null = null
 let userInterestsServiceInstance: UserInterestsService | null = null
 
@@ -332,7 +332,7 @@ const serviceInstances = {
   schedule: scheduleServiceInstance,
   farmTour: farmTourServiceInstance,
   news: newsServiceInstance,
-  culture: cultureServiceInstance,
+  moments: momentServiceInstance,
   locations: locationServiceInstance,
   userInterests: userInterestsServiceInstance,
 }
@@ -464,44 +464,44 @@ export async function getNewsService(): Promise<NewsService> {
 }
 
 /**
- * 獲取文化服務實例
+ * 獲取精彩時刻服務實例
  * 使用 v2 架構適配器，提供向後相容性
  */
-export async function getCultureService(): Promise<CultureService> {
-  if (cultureServiceInstance) {
-    return cultureServiceInstance
+export async function getMomentService(): Promise<MomentService> {
+  if (momentServiceInstance) {
+    return momentServiceInstance
   }
 
-  dbLogger.info('初始化文化服務', {
+  dbLogger.info('初始化精彩時刻服務', {
     module: 'ServiceFactory',
-    action: 'getCultureService',
+    action: 'getMomentService',
     metadata: { architecture: 'v2-simple' },
   })
 
   try {
-    const { cultureServiceV2Simple } = await import('./v2/cultureServiceSimple')
-    cultureServiceInstance = cultureServiceV2Simple
+    const { momentServiceV2Simple } = await import('./v2/momentServiceSimple')
+    momentServiceInstance = momentServiceV2Simple
 
     // 測試連線
-    await cultureServiceInstance.getCultureItems()
+    await momentServiceInstance.getMomentItems()
 
-    dbLogger.info('文化服務初始化成功', {
+    dbLogger.info('精彩時刻服務初始化成功', {
       module: 'ServiceFactory',
-      action: 'getCultureService',
+      action: 'getMomentService',
       metadata: { architecture: 'v2-simple' },
     })
 
-    return cultureServiceInstance
+    return momentServiceInstance
   } catch (error) {
     dbLogger.error(
-      '文化服務初始化失敗',
+      '精彩時刻服務初始化失敗',
       error instanceof Error ? error : new Error('Unknown error'),
       {
         module: 'ServiceFactory',
-        action: 'getCultureService',
+        action: 'getMomentService',
       }
     )
-    throw new Error('文化服務初始化失敗，請檢查服務配置')
+    throw new Error('精彩時刻服務初始化失敗，請檢查服務配置')
   }
 }
 
@@ -555,7 +555,7 @@ export function resetServiceInstances() {
   scheduleServiceInstance = null
   farmTourServiceInstance = null
   newsServiceInstance = null
-  cultureServiceInstance = null
+  momentServiceInstance = null
   locationServiceInstance = null
   userInterestsServiceInstance = null
   dbLogger.info('所有服務實例已重設', {

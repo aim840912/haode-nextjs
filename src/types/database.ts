@@ -241,7 +241,7 @@ export interface Database {
         }
         Relationships: []
       }
-      culture: {
+      moments: {
         Row: {
           id: string
           title: string

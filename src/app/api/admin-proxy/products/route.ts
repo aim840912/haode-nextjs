@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { withErrorHandler } from '@/lib/error-handler'
 import { AuthorizationError, ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
 
 /**
  * Admin Proxy API for Products
@@ -26,11 +27,14 @@ async function validateAdminUser() {
   } = await supabase.auth.getUser()
 
   if (authError || !user) {
-    console.error('Auth validation failed:', authError)
+    apiLogger.error('認證驗證失敗', { module: 'AdminProxyAPI', metadata: { authError } })
     throw new AuthorizationError('未登入或認證失效')
   }
 
-  console.log('User authenticated:', user.id, user.email)
+  apiLogger.info('用戶認證成功', {
+    module: 'AdminProxyAPI',
+    metadata: { userId: user.id, email: user.email },
+  })
 
   // 從 profiles 表獲取用戶角色
   const { data: profile, error: profileError } = (await supabase
@@ -39,26 +43,32 @@ async function validateAdminUser() {
     .eq('id', user.id)
     .single()) as { data: { role: string } | null; error: Error | null }
 
-  console.log('Profile query result:', { profile, profileError })
+  apiLogger.debug('用戶資料查詢結果', {
+    module: 'AdminProxyAPI',
+    metadata: { profile, profileError },
+  })
 
   if (profileError) {
-    console.error('Profile fetch error:', profileError)
+    apiLogger.error('獲取用戶資料失敗', { module: 'AdminProxyAPI', metadata: { profileError } })
     throw new AuthorizationError(`無法獲取用戶資料: ${profileError.message}`)
   }
 
   if (!profile) {
-    console.error('No profile found for user:', user.id)
+    apiLogger.error('找不到用戶資料', { module: 'AdminProxyAPI', metadata: { userId: user.id } })
     throw new AuthorizationError('找不到用戶資料')
   }
 
-  console.log('User profile:', profile)
+  apiLogger.debug('用戶資料', { module: 'AdminProxyAPI', metadata: { profile } })
 
   if (profile.role !== 'admin') {
-    console.error('User role check failed:', profile.role)
+    apiLogger.error('用戶角色檢查失敗', {
+      module: 'AdminProxyAPI',
+      metadata: { userRole: profile.role },
+    })
     throw new AuthorizationError(`需要管理員權限，目前角色: ${profile.role}`)
   }
 
-  console.log('Admin validation successful for user:', user.email)
+  apiLogger.info('管理員驗證成功', { module: 'AdminProxyAPI', metadata: { email: user.email } })
 }
 
 async function forwardToAdminAPI(method: string, body?: unknown, request?: NextRequest) {

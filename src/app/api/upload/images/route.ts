@@ -51,11 +51,11 @@ async function handlePOST(request: NextRequest) {
     throw new ValidationError(`上傳參數驗證失敗: ${errorMessage}`)
   }
 
-  const { productId, cultureId, generateMultipleSizes, compress, size } = result.data
+  const { productId, momentId, generateMultipleSizes, compress, size } = result.data
 
   // 取得實際使用的 ID 和類型
-  const entityId = productId || cultureId
-  const entityType = productId ? 'product' : 'culture'
+  const entityId = productId || momentId
+  const entityType = productId ? 'product' : 'moments'
 
   if (!file) {
     throw new ValidationError('請選擇要上傳的圖片檔案')
@@ -247,9 +247,9 @@ async function handleGET(request: NextRequest) {
     throw new ValidationError(`查詢參數驗證失敗: ${errorMessage}`)
   }
 
-  const { productId, cultureId } = result.data
-  const entityId = productId || cultureId
-  const entityType = productId ? 'product' : 'culture'
+  const { productId, momentId } = result.data
+  const entityId = productId || momentId
+  const entityType = productId ? 'product' : 'moments'
 
   apiLogger.debug(`查詢${entityType}圖片`, { metadata: { entityId, entityType } })
 

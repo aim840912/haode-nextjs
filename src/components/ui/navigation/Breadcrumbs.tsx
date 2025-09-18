@@ -177,7 +177,7 @@ export const generateBreadcrumbs = (
   const defaultNames: Record<string, string> = {
     products: '產品',
     news: '新聞',
-    culture: '茶文化',
+    moments: '精彩時刻',
     locations: '產地介紹',
     'farm-tour': '農場導覽',
     schedule: '活動行程',
@@ -237,11 +237,11 @@ export const createNewsBreadcrumbs = (newsTitle?: string): BreadcrumbItem[] => {
   return items
 }
 
-export const createCultureBreadcrumbs = (cultureTitle?: string): BreadcrumbItem[] => {
-  const items: BreadcrumbItem[] = [{ name: '茶文化', href: '/culture' }]
+export const createMomentsBreadcrumbs = (momentTitle?: string): BreadcrumbItem[] => {
+  const items: BreadcrumbItem[] = [{ name: '精彩時刻', href: '/moments' }]
 
-  if (cultureTitle) {
-    items.push({ name: cultureTitle })
+  if (momentTitle) {
+    items.push({ name: momentTitle })
   }
 
   return items

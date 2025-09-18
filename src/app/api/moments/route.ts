@@ -1,31 +1,31 @@
 import { NextRequest } from 'next/server'
-import { getCultureService } from '@/services/serviceFactory'
+import { getMomentService } from '@/services/serviceFactory'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'
 import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { CultureSchemas } from '@/lib/validation-schemas'
+import { MomentSchemas } from '@/lib/validation-schemas'
 
 async function handleGET() {
-  const cultureService = await getCultureService()
-  const cultureItems = await cultureService.getCultureItems()
+  const momentService = await getMomentService()
+  const momentItems = await momentService.getMomentItems()
 
-  apiLogger.info('文化典藏項目列表取得成功', {
-    action: 'GET /api/culture',
-    module: 'Culture',
-    metadata: { count: cultureItems.length },
+  apiLogger.info('精彩時刻項目列表取得成功', {
+    action: 'GET /api/moments',
+    module: 'Moments',
+    metadata: { count: momentItems.length },
   })
 
-  return success(cultureItems, '文化典藏項目取得成功')
+  return success(momentItems, '精彩時刻項目取得成功')
 }
 
 export const GET = withErrorHandler(handleGET, {
-  module: 'CultureAPI',
+  module: 'MomentsAPI',
   enableAuditLog: false,
 })
 
 async function handlePOST(request: NextRequest) {
-  const cultureService = await getCultureService()
+  const momentService = await getMomentService()
 
   // 檢查是否為 FormData（包含檔案上傳）
   const contentType = request.headers.get('content-type') || ''
@@ -57,10 +57,15 @@ async function handlePOST(request: NextRequest) {
   } else {
     // 處理 JSON（向後相容）
     itemData = await request.json()
+
+    // 轉換 images 陣列為 imageUrl（如果存在）
+    if (itemData.images && Array.isArray(itemData.images) && itemData.images.length > 0) {
+      itemData.imageUrl = itemData.images[0]
+    }
   }
 
   // 使用 Zod 驗證資料
-  const result = CultureSchemas.create.safeParse(itemData)
+  const result = MomentSchemas.create.safeParse(itemData)
   if (!result.success) {
     const errors = result.error.issues
       .map(issue => `${issue.path.join('.')}: ${issue.message}`)
@@ -68,7 +73,7 @@ async function handlePOST(request: NextRequest) {
     throw new ValidationError(`資料驗證失敗: ${errors}`)
   }
 
-  apiLogger.info('建立文化典藏項目', {
+  apiLogger.info('建立精彩時刻項目', {
     metadata: {
       title: result.data.title,
       hasImageFile: !!result.data.imageFile,
@@ -76,12 +81,12 @@ async function handlePOST(request: NextRequest) {
     },
   })
 
-  const cultureItem = await cultureService.addCultureItem(result.data)
+  const momentItem = await momentService.addMomentItem(result.data)
 
-  return created(cultureItem, '文化典藏項目建立成功')
+  return created(momentItem, '精彩時刻項目建立成功')
 }
 
 export const POST = withErrorHandler(handlePOST, {
-  module: 'CultureAPI',
+  module: 'MomentsAPI',
   enableAuditLog: true,
 })

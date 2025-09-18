@@ -93,8 +93,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/culture" className="text-amber-100 hover:text-white transition-colors">
-                  歲月留影
+                <Link href="/moments" className="text-amber-100 hover:text-white transition-colors">
+                  精彩時刻
                 </Link>
               </li>
             </ul>

@@ -1,34 +1,34 @@
-import { CultureItem, CultureService } from '@/types/culture'
+import { MomentItem, MomentService } from '@/types/moments'
 import { supabase, getSupabaseAdmin } from '@/lib/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import {
-  uploadCultureImageToStorage,
-  deleteCultureImages,
-  initializeCultureStorageBucket,
-  uploadBase64ToCultureStorage,
-} from '@/lib/culture-storage'
+  uploadMomentImageToStorage,
+  deleteMomentImages,
+  initializeMomentStorageBucket,
+  uploadBase64ToMomentStorage,
+} from '@/lib/moments-storage'
 
-export class SupabaseCultureService implements CultureService {
-  async getCultureItems(): Promise<CultureItem[]> {
+export class SupabaseMomentService implements MomentService {
+  async getMomentItems(): Promise<MomentItem[]> {
     try {
       const { data, error } = await supabase
-        .from('culture')
+        .from('moments')
         .select('*')
         .order('created_at', { ascending: false })
 
       if (error) {
-        dbLogger.error('文化項目查詢失敗', new Error(error.message))
+        dbLogger.error('精彩時刻項目查詢失敗', new Error(error.message))
         throw new Error(`資料庫查詢失敗: ${error.message}`)
       }
 
       const result = data?.map((item: Record<string, unknown>) => this.transformFromDB(item)) || []
-      dbLogger.info('載入文化項目', {
+      dbLogger.info('載入精彩時刻項目', {
         metadata: { count: result.length },
       })
       return result
     } catch (error) {
       dbLogger.error(
-        '取得文化項目失敗',
+        '取得精彩時刻項目失敗',
         error instanceof Error ? error : new Error('Unknown error')
       )
       // 拋出錯誤而不是返回空陣列，這樣前端可以顯示錯誤訊息
@@ -36,9 +36,9 @@ export class SupabaseCultureService implements CultureService {
     }
   }
 
-  async getCultureItemById(id: string): Promise<CultureItem | null> {
+  async getMomentItemById(id: string): Promise<MomentItem | null> {
     try {
-      const { data, error } = await supabase.from('culture').select('*').eq('id', id).single()
+      const { data, error } = await supabase.from('moments').select('*').eq('id', id).single()
 
       if (error) {
         if (error.code === 'PGRST116') return null // Not found
@@ -48,7 +48,7 @@ export class SupabaseCultureService implements CultureService {
       return this.transformFromDB(data)
     } catch (error) {
       dbLogger.error(
-        '根據ID取得文化項目失敗',
+        '根據ID取得精彩時刻項目失敗',
         error instanceof Error ? error : new Error('Unknown error'),
         { metadata: { id } }
       )
@@ -56,19 +56,21 @@ export class SupabaseCultureService implements CultureService {
     }
   }
 
-  async addCultureItem(
-    itemData: Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }
-  ): Promise<CultureItem> {
-    dbLogger.debug('收到建立文化項目資料', {
+  async addMomentItem(
+    itemData: Omit<MomentItem, 'id' | 'createdAt' | 'updatedAt'> & { imageFile?: File }
+  ): Promise<MomentItem> {
+    dbLogger.debug('收到建立精彩時刻項目資料', {
       metadata: {
         ...itemData,
         imageFile: itemData.imageFile ? `File: ${itemData.imageFile.name}` : undefined,
+        hasImages: Array.isArray(itemData.images),
+        imagesCount: Array.isArray(itemData.images) ? itemData.images.length : 0,
       },
     })
 
     // 確保 Storage bucket 存在
     try {
-      await initializeCultureStorageBucket()
+      await initializeMomentStorageBucket()
     } catch (bucketError) {
       dbLogger.info('⚠️ Storage bucket 初始化警告', {
         metadata: {
@@ -82,7 +84,7 @@ export class SupabaseCultureService implements CultureService {
       title: itemData.title,
       description: itemData.description,
       content: itemData.subtitle, // 使用 subtitle 作為 content
-      category: 'culture',
+      category: 'moments',
       year: new Date().getFullYear(),
       is_featured: true,
       images: [], // 先設為空陣列，稍後更新
@@ -93,18 +95,22 @@ export class SupabaseCultureService implements CultureService {
       throw new Error('Supabase admin client not available')
     }
     const { data, error } = await supabaseAdmin
-      .from('culture')
+      .from('moments')
       .insert([insertData])
       .select()
       .single()
 
     if (error) {
-      dbLogger.error('Error adding culture item', new Error(error.message || 'Failed to add culture item'))
-      throw new Error('Failed to add culture item')
+      dbLogger.error(
+        'Error adding moment item',
+        new Error(error.message || 'Failed to add moment item')
+      )
+      throw new Error('Failed to add moment item')
     }
 
-    const cultureId = data.id
-    const images: string[] = []
+    const momentId = data.id
+    // 如果 itemData 已有 images 陣列，使用它；否則創建空陣列
+    const images: string[] = Array.isArray(itemData.images) ? [...itemData.images] : []
 
     try {
       // 處理圖片上傳
@@ -112,7 +118,7 @@ export class SupabaseCultureService implements CultureService {
         dbLogger.info('📤 上傳檔案到 Storage', {
           metadata: { fileName: itemData.imageFile.name },
         })
-        const { url } = await uploadCultureImageToStorage(itemData.imageFile, cultureId)
+        const { url } = await uploadMomentImageToStorage(itemData.imageFile, momentId)
         images.push(url)
         dbLogger.info('✅ Storage 上傳成功', {
           metadata: { url },
@@ -129,7 +135,7 @@ export class SupabaseCultureService implements CultureService {
       ) {
         // 處理 base64 圖片（向後相容）
         dbLogger.info('📷 轉換 base64 圖片到 Storage')
-        const { url } = await uploadBase64ToCultureStorage(itemData.image as string, cultureId)
+        const { url } = await uploadBase64ToMomentStorage(itemData.image as string, momentId)
         images.push(url)
         dbLogger.info('✅ Base64 轉換上傳成功', {
           metadata: { url },
@@ -137,21 +143,28 @@ export class SupabaseCultureService implements CultureService {
       }
 
       // 更新資料庫中的圖片 URL
+      dbLogger.info('準備更新資料庫 images 欄位', {
+        metadata: { momentId, imagesCount: images.length, images: images.slice(0, 3) },
+      })
+
       if (images.length > 0) {
         const supabaseAdmin = getSupabaseAdmin()
         if (!supabaseAdmin) {
           throw new Error('Supabase admin client not available')
         }
         const { error: updateError } = await supabaseAdmin
-          .from('culture')
+          .from('moments')
           .update({ images })
-          .eq('id', cultureId)
+          .eq('id', momentId)
 
         if (updateError) {
-          dbLogger.error('Error updating images', new Error(updateError.message || 'Failed to update images'))
+          dbLogger.error(
+            'Error updating images',
+            new Error(updateError.message || 'Failed to update images')
+          )
           // 嘗試清理已上傳的檔案
-          await deleteCultureImages(cultureId)
-          throw new Error('Failed to update culture item with images')
+          await deleteMomentImages(momentId)
+          throw new Error('Failed to update moment item with images')
         }
 
         dbLogger.info('💾 資料庫圖片 URL 更新成功', {
@@ -169,18 +182,18 @@ export class SupabaseCultureService implements CultureService {
       // 如果圖片處理失敗，刪除已建立的資料庫記錄
       const supabaseAdmin = getSupabaseAdmin()
       if (supabaseAdmin) {
-        await supabaseAdmin.from('culture').delete().eq('id', cultureId)
+        await supabaseAdmin.from('moments').delete().eq('id', momentId)
       }
 
-      throw new Error('Failed to process culture item images')
+      throw new Error('Failed to process moment item images')
     }
   }
 
-  async updateCultureItem(
+  async updateMomentItem(
     id: string,
-    itemData: Partial<Omit<CultureItem, 'id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }
-  ): Promise<CultureItem> {
-    dbLogger.info('🔄 更新時光典藏', {
+    itemData: Partial<Omit<MomentItem, 'id' | 'createdAt' | 'updatedAt'>> & { imageFile?: File }
+  ): Promise<MomentItem> {
+    dbLogger.info('🔄 更新精彩時刻', {
       metadata: {
         id,
         ...itemData,
@@ -203,9 +216,9 @@ export class SupabaseCultureService implements CultureService {
         metadata: { fileName: itemData.imageFile.name },
       })
       // 先刪除舊圖片
-      await deleteCultureImages(id)
+      await deleteMomentImages(id)
       // 上傳新圖片
-      const { url } = await uploadCultureImageToStorage(itemData.imageFile, id)
+      const { url } = await uploadMomentImageToStorage(itemData.imageFile, id)
       images.push(url)
       shouldUpdateImages = true
       dbLogger.info('✅ 新檔案上傳成功', {
@@ -226,8 +239,8 @@ export class SupabaseCultureService implements CultureService {
     ) {
       // 處理 base64 圖片（向後相容）
       dbLogger.info('📷 轉換新的 base64 圖片到 Storage')
-      await deleteCultureImages(id)
-      const { url } = await uploadBase64ToCultureStorage(itemData.image as string, id)
+      await deleteMomentImages(id)
+      const { url } = await uploadBase64ToMomentStorage(itemData.image as string, id)
       images.push(url)
       shouldUpdateImages = true
       dbLogger.info('✅ Base64 轉換更新成功', {
@@ -244,29 +257,32 @@ export class SupabaseCultureService implements CultureService {
       throw new Error('Supabase admin client not available')
     }
     const { data, error } = await supabaseAdmin
-      .from('culture')
+      .from('moments')
       .update(dbUpdateData)
       .eq('id', id)
       .select()
       .single()
 
     if (error) {
-      dbLogger.error('Error updating culture item', new Error(error.message || 'Failed to update culture item'))
-      throw new Error('Failed to update culture item')
+      dbLogger.error(
+        'Error updating moment item',
+        new Error(error.message || 'Failed to update moment item')
+      )
+      throw new Error('Failed to update moment item')
     }
 
-    if (!data) throw new Error('Culture item not found')
-    dbLogger.info('✅ 時光典藏更新成功')
+    if (!data) throw new Error('Moment item not found')
+    dbLogger.info('✅ 精彩時刻更新成功')
     return this.transformFromDB(data)
   }
 
-  async deleteCultureItem(id: string): Promise<void> {
+  async deleteMomentItem(id: string): Promise<void> {
     try {
       // 先刪除 Storage 中的所有圖片
-      dbLogger.info('🗑️ 刪除時光典藏項目', {
+      dbLogger.info('🗑️ 刪除精彩時刻項目', {
         metadata: { id },
       })
-      const deletionResult = await deleteCultureImages(id)
+      const deletionResult = await deleteMomentImages(id)
 
       if (deletionResult.success) {
         dbLogger.info(`✅ 成功刪除 ${deletionResult.deletedCount} 張圖片`)
@@ -277,7 +293,7 @@ export class SupabaseCultureService implements CultureService {
       }
     } catch (storageError) {
       // 圖片刪除失敗不應該阻止項目刪除，但要記錄錯誤
-      dbLogger.info('⚠️ 刪除時光典藏圖片時發生警告', {
+      dbLogger.info('⚠️ 刪除精彩時刻圖片時發生警告', {
         metadata: {
           error: storageError instanceof Error ? storageError.message : String(storageError),
         },
@@ -289,21 +305,25 @@ export class SupabaseCultureService implements CultureService {
     if (!supabaseAdmin) {
       throw new Error('Supabase admin client not available')
     }
-    const { error } = await supabaseAdmin.from('culture').delete().eq('id', id)
+    const { error } = await supabaseAdmin.from('moments').delete().eq('id', id)
 
     if (error) {
-      dbLogger.error('Error deleting culture item', new Error(error.message || 'Failed to delete culture item'), {
-        metadata: { errorCode: error.code },
-      })
-      throw new Error('Failed to delete culture item')
+      dbLogger.error(
+        'Error deleting moment item',
+        new Error(error.message || 'Failed to delete moment item'),
+        {
+          metadata: { errorCode: error.code },
+        }
+      )
+      throw new Error('Failed to delete moment item')
     }
 
-    dbLogger.info('✅ 時光典藏項目刪除完成', {
+    dbLogger.info('✅ 精彩時刻項目刪除完成', {
       metadata: { id },
     })
   }
 
-  private transformFromDB(dbItem: Record<string, unknown>): CultureItem {
+  private transformFromDB(dbItem: Record<string, unknown>): MomentItem {
     // 根據分類設定顏色和表情符號
     const categoryConfig = this.getCategoryConfig(dbItem.category as string)
 
@@ -346,6 +366,7 @@ export class SupabaseCultureService implements CultureService {
       textColor: categoryConfig.textColor,
       emoji: categoryConfig.emoji,
       imageUrl: processedImageUrl as string | undefined,
+      images: images || [], // 返回完整圖片陣列
       createdAt: dbItem.created_at as string,
       updatedAt: dbItem.updated_at as string,
     }
@@ -359,23 +380,29 @@ export class SupabaseCultureService implements CultureService {
         textColor: 'text-white',
         emoji: '🌾',
       },
-      culture: {
-        color: 'bg-orange-400',
+      moments: {
+        color: 'bg-blue-400',
         height: 'h-56',
         textColor: 'text-white',
-        emoji: '🏮',
+        emoji: '📸',
       },
-      tradition: {
-        color: 'bg-blue-400',
+      daily: {
+        color: 'bg-amber-400',
         height: 'h-52',
         textColor: 'text-white',
-        emoji: '🏡',
+        emoji: '☀️',
+      },
+      events: {
+        color: 'bg-purple-400',
+        height: 'h-60',
+        textColor: 'text-white',
+        emoji: '🎉',
       },
       default: {
-        color: 'bg-amber-400',
+        color: 'bg-gray-400',
         height: 'h-48',
         textColor: 'text-white',
-        emoji: '🎨',
+        emoji: '📷',
       },
     }
 
@@ -383,4 +410,4 @@ export class SupabaseCultureService implements CultureService {
   }
 }
 
-export const supabaseCultureService = new SupabaseCultureService()
+export const supabaseMomentService = new SupabaseMomentService()

@@ -5,10 +5,20 @@ import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { useAuth } from '@/lib/auth-context'
-import ImageUploader from '@/components/features/products/ImageUploader'
 import { getFullImageUrl } from '@/lib/image-url-utils'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
+
+// 動態載入圖片上傳器，減少初始 bundle 大小
+const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
+})
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -25,6 +35,8 @@ export default function AddLocation() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
+  // 新增狀態來儲存圖片路徑對應關係
+  const [imagePaths, setImagePaths] = useState<Map<string, string>>(new Map())
   const [locationId] = useState(() => `location-${Date.now()}`)
   const { user, isLoading } = useAuth()
 
@@ -176,11 +188,23 @@ export default function AddLocation() {
     }))
   }
 
-  const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
+  const handleImageUploadSuccess = (
+    images: Array<{ url?: string; path?: string; preview?: string }>
+  ) => {
     if (images.length > 0 && images[0].url) {
-      setUploadedImageUrl(images[0].url)
-      setFormData(prev => ({ ...prev, image: images[0].url || '' }))
-      logger.info('門市圖片上傳成功', { metadata: { url: images[0].url } })
+      const imageUrl = images[0].url
+      const imagePath = images[0].path
+
+      if (imagePath) {
+        // 儲存 URL 和 path 的對應關係
+        setImagePaths(prev => new Map(prev).set(imageUrl, imagePath))
+      }
+
+      setUploadedImageUrl(imageUrl)
+      setFormData(prev => ({ ...prev, image: imageUrl }))
+      logger.info('門市圖片上傳成功', {
+        metadata: { url: imageUrl, path: imagePath },
+      })
     }
   }
 

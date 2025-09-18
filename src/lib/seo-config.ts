@@ -164,24 +164,24 @@ export const pageMetadata = {
     path: '/news',
   }),
 
-  culture: generatePageMetadata({
-    title: '農場文化',
+  moments: generatePageMetadata({
+    title: '精彩時刻',
     description:
-      '了解豪德農場的農業文化，從傳統農業智慧到現代種植技術，感受農場世代傳承的農業精神與對土地的熱愛。',
+      '分享豪德農場的精彩時刻，記錄農場生活的美好瞬間，從日常農作到節慶活動，感受農場生活的豐富多彩。',
     keywords: [
       '豪德',
-      '農場文化',
-      '農業傳統',
-      '種植技術',
-      '農業智慧',
-      '土地保育',
-      '豪德農場故事',
+      '精彩時刻',
+      '農場生活',
+      '農場活動',
+      '時光典藏',
+      '生活照片',
+      '豪德農場記錄',
       '豪德製茶所',
-      '製茶文化',
-      '茶藝傳承',
+      '農場故事',
+      '美好時光',
     ],
-    image: '/images/culture/mountain.jpg',
-    path: '/culture',
+    image: '/images/moments/farm-life.jpg',
+    path: '/moments',
   }),
 
   farmTour: generatePageMetadata({

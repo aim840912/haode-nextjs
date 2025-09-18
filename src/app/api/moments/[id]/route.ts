@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { getCultureService } from '@/services/serviceFactory'
+import { getMomentService } from '@/services/serviceFactory'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/error-handler'
 import { success } from '@/lib/api-response'
@@ -8,8 +8,8 @@ import { NotFoundError, ValidationError } from '@/lib/errors'
 async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  apiLogger.info('開始查詢文化典藏項目', {
-    module: 'Culture',
+  apiLogger.info('開始查詢精彩時刻項目', {
+    module: 'Moments',
     action: 'GET',
     metadata: { id },
   })
@@ -18,32 +18,32 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     throw new ValidationError('ID 參數為必需')
   }
 
-  const cultureService = await getCultureService()
-  const cultureItem = await cultureService.getCultureItemById(id)
+  const momentService = await getMomentService()
+  const momentItem = await momentService.getMomentItemById(id)
 
-  if (!cultureItem) {
-    apiLogger.warn('文化典藏項目不存在', {
-      module: 'Culture',
+  if (!momentItem) {
+    apiLogger.warn('精彩時刻項目不存在', {
+      module: 'Moments',
       action: 'GET',
       metadata: { id },
     })
-    throw new NotFoundError('文化典藏項目不存在')
+    throw new NotFoundError('精彩時刻項目不存在')
   }
 
-  apiLogger.info('文化典藏項目查詢成功', {
-    module: 'Culture',
+  apiLogger.info('精彩時刻項目查詢成功', {
+    module: 'Moments',
     action: 'GET',
-    metadata: { id, title: cultureItem.title },
+    metadata: { id, title: momentItem.title },
   })
 
-  return success(cultureItem, '查詢成功')
+  return success(momentItem, '查詢成功')
 }
 
 async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  apiLogger.info('開始更新文化典藏項目', {
-    module: 'Culture',
+  apiLogger.info('開始更新精彩時刻項目', {
+    module: 'Moments',
     action: 'PUT',
     metadata: { id },
   })
@@ -52,7 +52,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     throw new ValidationError('ID 參數為必需')
   }
 
-  const cultureService = await getCultureService()
+  const momentService = await getMomentService()
 
   // 檢查是否為 FormData（包含檔案上傳）
   const contentType = request.headers.get('content-type') || ''
@@ -75,8 +75,8 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     if (imageFile && imageFile.size > 0) {
       itemData.imageFile = imageFile
       apiLogger.debug('更新收到圖片檔案', {
-        action: 'PUT /api/culture/[id]',
-        module: 'Culture',
+        action: 'PUT /api/moments/[id]',
+        module: 'Moments',
         metadata: {
           fileName: imageFile.name,
           fileSize: `${(imageFile.size / 1024 / 1024).toFixed(2)}MB`,
@@ -85,8 +85,8 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     }
 
     apiLogger.debug('更新 FormData 解析結果', {
-      action: 'PUT /api/culture/[id]',
-      module: 'Culture',
+      action: 'PUT /api/moments/[id]',
+      module: 'Moments',
       metadata: {
         ...itemData,
         imageFile: itemData.imageFile ? `File: ${(itemData.imageFile as File).name}` : undefined,
@@ -96,28 +96,28 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     // 處理 JSON（向後相容）
     itemData = await request.json()
     apiLogger.debug('更新 JSON 資料', {
-      action: 'PUT /api/culture/[id]',
-      module: 'Culture',
+      action: 'PUT /api/moments/[id]',
+      module: 'Moments',
       metadata: itemData,
     })
   }
 
-  const cultureItem = await cultureService.updateCultureItem(id, itemData)
+  const momentItem = await momentService.updateMomentItem(id, itemData)
 
-  apiLogger.info('文化典藏項目更新成功', {
-    module: 'Culture',
+  apiLogger.info('精彩時刻項目更新成功', {
+    module: 'Moments',
     action: 'PUT',
-    metadata: { id, title: cultureItem.title },
+    metadata: { id, title: momentItem.title },
   })
 
-  return success(cultureItem, '更新成功')
+  return success(momentItem, '更新成功')
 }
 
 async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  apiLogger.info('開始刪除文化典藏項目', {
-    module: 'Culture',
+  apiLogger.info('開始刪除精彩時刻項目', {
+    module: 'Moments',
     action: 'DELETE',
     metadata: { id },
   })
@@ -126,11 +126,11 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     throw new ValidationError('ID 參數為必需')
   }
 
-  const cultureService = await getCultureService()
-  await cultureService.deleteCultureItem(id)
+  const momentService = await getMomentService()
+  await momentService.deleteMomentItem(id)
 
-  apiLogger.info('文化典藏項目刪除成功', {
-    module: 'Culture',
+  apiLogger.info('精彩時刻項目刪除成功', {
+    module: 'Moments',
     action: 'DELETE',
     metadata: { id },
   })
@@ -139,6 +139,6 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
 }
 
 // 導出使用 withErrorHandler 中間件的處理器
-export const GET = withErrorHandler(handleGET, { module: 'Culture' })
-export const PUT = withErrorHandler(handlePUT, { module: 'Culture' })
-export const DELETE = withErrorHandler(handleDELETE, { module: 'Culture' })
+export const GET = withErrorHandler(handleGET, { module: 'Moments' })
+export const PUT = withErrorHandler(handlePUT, { module: 'Moments' })
+export const DELETE = withErrorHandler(handleDELETE, { module: 'Moments' })

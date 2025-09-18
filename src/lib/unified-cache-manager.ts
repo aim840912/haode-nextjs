@@ -445,8 +445,8 @@ export class UnifiedCacheManager {
         case 'news':
           patterns.push('news:*')
           break
-        case 'culture':
-          patterns.push('culture:*')
+        case 'moments':
+          patterns.push('moments:*')
           break
         case 'farmtour':
           patterns.push('farmtour:*')

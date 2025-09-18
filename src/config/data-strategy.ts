@@ -15,7 +15,7 @@ export interface DataStrategyConfig {
   schedule: DataSource
   farmTour: DataSource
   news: DataSource
-  culture: DataSource
+  moments: DataSource
   locations: DataSource
   reviews: DataSource
 
@@ -58,7 +58,7 @@ export function getDataStrategy(): DataStrategyConfig {
       schedule: 'json',
       farmTour: 'json',
       news: 'json',
-      culture: 'json',
+      moments: 'json',
       locations: 'json',
       reviews: 'json',
       orders: 'json',
@@ -75,7 +75,7 @@ export function getDataStrategy(): DataStrategyConfig {
     schedule: 'cache+supabase',
     farmTour: 'cache+supabase',
     news: 'cache+supabase',
-    culture: 'cache+supabase',
+    moments: 'cache+supabase',
     locations: 'cache+supabase',
     reviews: 'cache+supabase',
     orders: 'cache+supabase',
