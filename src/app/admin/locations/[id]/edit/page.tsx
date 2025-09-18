@@ -9,33 +9,30 @@ import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
-import { getFullImageUrl } from '@/lib/image-url-utils'
+import { useCSRFToken } from '@/hooks/useCSRFToken'
+import { getFullImageUrl, extractStoragePathFromUrl } from '@/lib/image-url-utils'
 
 // 動態載入圖片上傳器
-const SingleImageUploader = dynamic(
-  () =>
-    import('@/components/features/products/ImageUploader').then(mod => ({
-      default: mod.SingleImageUploader,
-    })),
-  {
-    loading: () => (
-      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-        載入圖片上傳器...
-      </div>
-    ),
-    ssr: false,
-  }
-)
+const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
+  loading: () => (
+    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      載入圖片上傳器...
+    </div>
+  ),
+  ssr: false,
+})
 
 export default function EditLocation({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [locationId, setLocationId] = useState<string>('')
-  const [currentId, setCurrentId] = useState<string>('') // 用於立即保存 params 中的 ID
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [existingImages, setExistingImages] = useState<string[]>([])
+  // 新增狀態來儲存圖片路徑對應關係
+  const [imagePaths, setImagePaths] = useState<Map<string, string>>(new Map())
   const { user, isLoading } = useAuth()
+  const { token: csrfToken } = useCSRFToken()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -108,7 +105,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     params.then(({ id }) => {
-      setCurrentId(id) // 立即保存 ID
       setLocationId(id)
       fetchLocation(id)
     })
@@ -255,23 +251,30 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
   }
 
   // 處理圖片上傳成功
-  const handleImageUploadSuccess = (image: {
-    id: string
-    url?: string
-    path: string
-    size: 'thumbnail' | 'medium' | 'large'
-    file?: File
-    preview?: string
-    position: number
-    alt?: string
-  }) => {
-    const imageUrl = image.url || image.path
-    if (imageUrl) {
-      setUploadedImages([imageUrl])
-      setFormData(prev => ({ ...prev, image: imageUrl }))
-      logger.info('圖片上傳成功', {
-        metadata: { imageUrl, locationId },
-      })
+  const handleImageUploadSuccess = (
+    images: {
+      id: string
+      url?: string
+      path?: string // 修改為可選，因為 API 現在會提供 path
+      size?: 'thumbnail' | 'medium' | 'large'
+      file?: File
+      preview?: string
+      position?: number
+      alt?: string
+    }[]
+  ) => {
+    if (images.length > 0) {
+      const image = images[0] // 只取第一張圖片
+      const imageUrl = image.url || image.path
+      if (imageUrl && image.path) {
+        // 儲存 URL 和 path 的對應關係
+        setImagePaths(prev => new Map(prev).set(imageUrl, image.path!))
+        setUploadedImages([imageUrl])
+        setFormData(prev => ({ ...prev, image: imageUrl }))
+        logger.info('圖片上傳成功', {
+          metadata: { imageUrl, path: image.path, locationId },
+        })
+      }
     }
   }
 
@@ -281,6 +284,82 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
       metadata: { locationId },
     })
     alert(`圖片上傳失敗: ${error}`)
+  }
+
+  // 處理圖片刪除
+  const handleImageDelete = async () => {
+    if (!locationId || !formData.image) {
+      alert('沒有圖片可以刪除')
+      return
+    }
+
+    // 顯示確認對話框
+    if (!confirm('確定要刪除這張圖片嗎？')) {
+      return
+    }
+
+    // 智能提取檔案路徑：優先使用 imagePaths，否則從 URL 提取
+    let actualPath = imagePaths.get(formData.image)
+
+    if (!actualPath) {
+      // 從 URL 提取 Storage 路徑
+      actualPath = extractStoragePathFromUrl(formData.image)
+    }
+
+    if (!actualPath) {
+      alert('無法確定檔案路徑，刪除失敗')
+      return
+    }
+
+    try {
+      logger.info('開始刪除門市圖片', {
+        metadata: {
+          locationId,
+          imageUrl: formData.image,
+          actualPath,
+          extractedFromUrl: !imagePaths.has(formData.image),
+        },
+      })
+
+      const response = await fetch('/api/upload/locations', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          locationId,
+          filePath: actualPath, // 使用智能提取的路徑
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // 清空所有圖片相關狀態
+        setUploadedImages([])
+        setExistingImages([])
+        setImagePaths(new Map()) // 清空路徑對應關係
+        setFormData(prev => ({ ...prev, image: '' }))
+
+        logger.info('門市圖片刪除成功', {
+          metadata: { locationId, deletedPath: actualPath },
+        })
+
+        // 重新載入門市資料以確保與資料庫同步
+        await fetchLocation(locationId)
+
+        alert('圖片刪除成功')
+      } else {
+        throw new Error(result.error || '刪除失敗')
+      }
+    } catch (error) {
+      logger.error('圖片刪除失敗', error instanceof Error ? error : new Error('Unknown error'), {
+        metadata: { locationId, attemptedPath: actualPath },
+      })
+      alert(`圖片刪除失敗: ${error instanceof Error ? error.message : '未知錯誤'}`)
+    }
   }
 
   if (initialLoading) {
@@ -539,18 +618,52 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                   門市圖片 (選填)
                 </label>
-                {currentId && (
-                  <SingleImageUploader
-                    productId={currentId}
-                    initialImage={getFullImageUrl(formData.image)}
+
+                {/* 現有圖片顯示 */}
+                {formData.image && (
+                  <div className="mb-4">
+                    <div className="aspect-square w-32 rounded-lg overflow-hidden border border-gray-200 relative group">
+                      <Image
+                        src={getFullImageUrl(formData.image)}
+                        alt="門市圖片"
+                        fill
+                        className="object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleImageDelete}
+                        className="absolute top-2 right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                        title="刪除圖片"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleImageDelete}
+                      className="mt-2 text-sm text-red-600 hover:text-red-800 transition-colors"
+                    >
+                      刪除圖片
+                    </button>
+                  </div>
+                )}
+
+                {/* 圖片上傳器（只有在沒有圖片時顯示） */}
+                {!formData.image && locationId && (
+                  <ImageUploader
+                    productId={locationId}
                     onUploadSuccess={handleImageUploadSuccess}
                     onUploadError={handleImageUploadError}
+                    maxFiles={1}
+                    allowMultiple={false}
+                    generateMultipleSizes={false}
                     apiEndpoint="/api/upload/locations"
                     idParamName="locationId"
                     className="mb-4"
                   />
                 )}
-                {!currentId && (
+
+                {!locationId && (
                   <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
                     <span className="text-gray-500">載入圖片上傳器...</span>
                   </div>

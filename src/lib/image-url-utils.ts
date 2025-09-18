@@ -48,6 +48,50 @@ export function getRelativeImagePath(fullUrl: string): string {
 }
 
 /**
+ * 從 Supabase Storage URL 提取檔案路徑
+ * @param url - 完整的 Supabase Storage URL
+ * @returns 檔案路徑 (例: "31/location-31-xxx.jpg")
+ */
+export function extractStoragePathFromUrl(url: string): string {
+  if (!url) return ''
+
+  // 如果已經是檔案路徑，直接返回
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return url
+  }
+
+  try {
+    const urlObj = new URL(url)
+    const pathname = urlObj.pathname
+
+    // Supabase Storage 路徑格式: /storage/v1/object/public/{bucket}/{path}
+    // 我們需要提取 {path} 部分
+    const storagePath = '/storage/v1/object/public/locations/'
+
+    if (pathname.includes(storagePath)) {
+      // 提取 locations/ 之後的路徑
+      return pathname.substring(pathname.indexOf(storagePath) + storagePath.length)
+    }
+
+    // 如果沒有標準的 storage 路徑，嘗試從 pathname 提取
+    // 假設格式是 /storage/v1/object/public/locations/31/xxx.jpg
+    const pathParts = pathname.split('/')
+    const locationsIndex = pathParts.indexOf('locations')
+
+    if (locationsIndex >= 0 && locationsIndex < pathParts.length - 1) {
+      // 取得 locations 之後的所有部分
+      return pathParts.slice(locationsIndex + 1).join('/')
+    }
+
+    // 如果都無法解析，返回空字串
+    return ''
+  } catch (error) {
+    console.warn('無法解析 Storage URL:', url, error)
+    return ''
+  }
+}
+
+/**
  * 檢查是否為有效的圖片 URL
  * @param url - 要檢查的 URL
  * @returns 是否為有效圖片 URL
@@ -102,10 +146,13 @@ export function generateImageSrcSet(baseUrl: string, sizes: number[] = [400, 800
 }
 
 // 預設導出常用函數
-export default {
+const imageUrlUtils = {
   getFullImageUrl,
   getRelativeImagePath,
+  extractStoragePathFromUrl,
   isValidImageUrl,
   addImageUrlParams,
   generateImageSrcSet,
 }
+
+export default imageUrlUtils
