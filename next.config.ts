@@ -164,13 +164,11 @@ const nextConfig: NextConfig = {
           // 多媒體權限控制
           'camera=()',
           'microphone=()',
-          'speaker-selection=()',
           // 感應器權限控制
           'geolocation=()',
           'magnetometer=()',
           'gyroscope=()',
           'accelerometer=()',
-          'ambient-light-sensor=()',
           // 裝置權限控制
           'usb=()',
           'bluetooth=()',
