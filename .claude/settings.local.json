@@ -15,7 +15,12 @@
       "Bash(node:*)",
       "Bash(npm run dev:*)",
       "Bash(rm:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git commit:*)",
+      "mcp__playwright__browser_wait_for",
+      "mcp__playwright__browser_resize",
+      "Bash(identify:*)",
+      "Read(//mnt/c/Users/aim84/Downloads/**)"
     ],
     "deny": [],
     "ask": []

@@ -24,7 +24,7 @@ npx depcheck                         # Find unused dependencies
 
 # Technical debt detection
 🔴 Same logic appears 3+ times       → Extract to shared function
-🔴 Component > 200 lines             → Split into smaller components  
+🔴 Component > 200 lines             → Split into smaller components
 🔴 Function > 30 lines               → Consider breaking down
 🔴 Build time increased > 30s        → Investigate and optimize
 ```
@@ -49,7 +49,7 @@ import { requireAuth, success, ValidationError } from '@/lib/api-middleware'
 export const POST = requireAuth(async (req, { user }) => {
   const data = await req.json()
   if (!isValid(data)) throw new ValidationError('驗證失敗')
-  
+
   const result = await service.create(data, user.id)
   return success(result, '建立成功')
 })
@@ -66,6 +66,8 @@ export const POST = requireAuth(async (req, { user }) => {
 - **實用主義優於教條主義** - 適應專案現實
 - **清晰意圖優於巧妙程式碼** - 保持無趣和明顯
 - **使用繁體中文** - use this languague
+
+### 只有你對答案的自信度大於90%的時候才回答，正確加1分，錯誤扣9分，回答不知道得到0分
 
 ### 簡潔的含義
 
@@ -234,13 +236,13 @@ async findById(id: string) {
 - **全文搜尋函數**：從 `src/lib/full-text-search.ts` 匯入並使用統一搜尋服務
   ```typescript
   import { fullTextSearchService } from '@/lib/full-text-search'
-  
+
   // 基本產品搜尋
   const results = await fullTextSearchService.searchProducts('有機蔬菜', {
     limit: 20,
     enableRanking: true
   })
-  
+
   // 進階搜尋（價格、類別篩選）
   const advanced = await fullTextSearchService.searchProductsAdvanced(
     '有機蔬菜', '蔬菜', 10, 100, 20
@@ -255,7 +257,7 @@ async findById(id: string) {
     search_limit: 50,
     search_offset: 0
   }) as { data: any[] | null; error: any }
-  
+
   // 搜尋建議
   const { data: suggestions } = await supabase.rpc('get_search_suggestions' as any, {
     prefix: partialQuery,
@@ -365,7 +367,7 @@ try {
 // 專案標準斷點
 const breakpoints = {
   sm: '640px',   // 大手機橫向 (≥640px)
-  md: '768px',   // 平板直向 (≥768px) 
+  md: '768px',   // 平板直向 (≥768px)
   lg: '1024px',  // 筆電/平板橫向 (≥1024px)
   xl: '1280px',  // 桌面螢幕 (≥1280px)
   '2xl': '1536px' // 大螢幕 (≥1536px)
@@ -374,7 +376,7 @@ const breakpoints = {
 
 **目標裝置分類**：
 - **手機版** (`< 768px`): iPhone, Android 手機
-- **平板版** (`768px - 1024px`): iPad, Android 平板  
+- **平板版** (`768px - 1024px`): iPad, Android 平板
 - **桌面版** (`≥ 1024px`): 筆電、桌面螢幕
 
 #### 開發原則
@@ -390,11 +392,11 @@ const breakpoints = {
 // ✅ 正確：Mobile-First 方式
 const styles = `
   w-full          // 手機：全寬
-  md:w-auto       // 平板：自動寬度  
+  md:w-auto       // 平板：自動寬度
   lg:w-96         // 桌面：固定寬度
 `
 
-// ❌ 錯誤：Desktop-First 方式  
+// ❌ 錯誤：Desktop-First 方式
 const styles = `
   w-96            // 桌面優先
   md:w-auto       // 往下適配
@@ -450,7 +452,7 @@ const styles = `
 **5 個關鍵測試點**：
 ```bash
 1. iPhone SE      (375×667)   # 小手機
-2. iPhone 14 Pro  (393×852)   # 大手機  
+2. iPhone 14 Pro  (393×852)   # 大手機
 3. iPad           (768×1024)  # 標準平板
 4. MacBook Air    (1280×832)  # 小筆電
 5. Desktop 1440p  (1440×900)  # 桌面螢幕
@@ -468,10 +470,10 @@ const styles = `
 **圖片響應式**：
 ```typescript
 // 使用 Next.js Image 組件
-<Image 
+<Image
   src="/image.jpg"
   alt="描述"
-  width={800} 
+  width={800}
   height={600}
   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
   priority={isAboveTheFold}
@@ -493,8 +495,8 @@ const styles = `
 ```typescript
 // 卡片網格響應式
 <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-  
-// 側邊欄響應式  
+
+// 側邊欄響應式
 <div className="lg:flex">
   <aside className="lg:w-64 w-full">側邊欄</aside>
   <main className="flex-1">主內容</main>
@@ -503,7 +505,7 @@ const styles = `
 // 按鈕組響應式
 <div className="flex flex-col sm:flex-row gap-3">
   <button>主要動作</button>
-  <button>次要動作</button>  
+  <button>次要動作</button>
 </div>
 ```
 
@@ -515,7 +517,7 @@ const styles = 'width: 300px; height: 200px;'
 // ✅ 正確：相對單位
 const styles = 'w-full max-w-sm h-auto'
 
-// ❌ 錯誤：忽略觸控友好  
+// ❌ 錯誤：忽略觸控友好
 const styles = 'text-xs p-1'
 
 // ✅ 正確：適合觸控
@@ -920,10 +922,10 @@ echo "Build time: $(date)"
    ```bash
    # 收集所有 TODO 註解
    grep -r "TODO.*DEBT" src/ > technical_debt_report.txt
-   
+
    # 檢查建置警告
    npm run build 2>&1 | grep -i "warn"
-   
+
    # 檢查 ESLint 問題
    npm run lint | grep -i "warn"
    ```
@@ -1109,10 +1111,10 @@ export const GET = withErrorHandler(handlePublicGET, { module: 'PublicAPI' })
   ```typescript
   // 搜尋建議 API
   GET /api/search/suggestions?q=關鍵字&limit=5
-  
-  // 搜尋統計 API  
+
+  // 搜尋統計 API
   GET /api/search/stats?days=7&limit=10
-  
+
   // 回應格式
   {
     "success": true,
@@ -1137,7 +1139,7 @@ export const GET = withErrorHandler(handlePublicGET, { module: 'PublicAPI' })
     } catch (error) {
       dbLogger.warn('全文搜尋失敗，使用後備搜尋', { error })
     }
-    
+
     // 後備：傳統 ilike 搜尋
     return await this.fallbackSearch(query)
   }
@@ -1147,7 +1149,7 @@ export const GET = withErrorHandler(handlePublicGET, { module: 'PublicAPI' })
   ```typescript
   // React 元件中使用搜尋建議
   const [suggestions, setSuggestions] = useState<string[]>([])
-  
+
   useEffect(() => {
     if (query.length >= 2) {
       fetch(`/api/search/suggestions?q=${query}&limit=5`)
@@ -1224,7 +1226,7 @@ const validateRequired = (fields: Record<string, any>, requiredFields: string[])
 export const POST = withErrorHandler(async (req: NextRequest) => {
   const data = await req.json()
   validateRequired(data, ['name', 'email'])  // 重用驗證邏輯
-  
+
   const result = await service.create(data)
   return created(result, '建立成功')
 }, { module: 'ProductAPI' })
@@ -1312,7 +1314,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
 // ✅ 好：使用 React.memo 避免不必要渲染
 export const ProductList = React.memo(({ products, onSelect }: ProductListProps) => {
   const [filteredProducts, setFilteredProducts] = useState(products)
-  
+
   // 使用 useCallback 避免子元件重渲染
   const handleSelect = useCallback((id: string) => {
     onSelect(id)
@@ -1321,9 +1323,9 @@ export const ProductList = React.memo(({ products, onSelect }: ProductListProps)
   return (
     <div>
       {filteredProducts.map(product => (
-        <ProductCard 
-          key={product.id} 
-          product={product} 
+        <ProductCard
+          key={product.id}
+          product={product}
           onSelect={handleSelect}
         />
       ))}
@@ -1340,9 +1342,9 @@ export function ProductList({ products, onSelect }: ProductListProps) {
   return (
     <div>
       {products.map(product => (
-        <ProductCard 
-          key={product.id} 
-          product={product} 
+        <ProductCard
+          key={product.id}
+          product={product}
           onSelect={(id) => onSelect(id)}  // 每次渲染都創建新函數
         />
       ))}
@@ -1361,14 +1363,14 @@ export const POST = requireAuth(async (req, { user }) => {
   try {
     const data = await req.json()
     const validation = ProductSchema.safeParse(data)
-    
+
     if (!validation.success) {
       throw new ValidationError(`驗證失敗: ${validation.error.message}`)
     }
-    
+
     const result = await productService.create(validation.data, user.id)
     return created(result, '產品建立成功')
-    
+
   } catch (error) {
     if (error instanceof ValidationError) {
       throw error  // 讓中間件處理
@@ -1391,10 +1393,10 @@ export async function POST(req: NextRequest) {
     if (!data.name) {
       return NextResponse.json({ error: '名稱必填' }, { status: 400 })  // 不一致的回應格式
     }
-    
+
     const result = await productService.create(data)
     return NextResponse.json({ success: true, data: result })  // 不使用統一格式
-    
+
   } catch (error) {
     console.error(error)  // 不應使用 console.error
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
@@ -1414,7 +1416,7 @@ export async function POST(req: NextRequest) {
 // 建議: 拆分為 ProductCRUDService、ProductSearchService、ProductStatsService
 export class ProductService {
   // 當前複雜實作...
-  
+
   // 計劃重構：
   // - ProductCRUDService: 基本 CRUD 操作
   // - ProductSearchService: 搜尋和篩選
@@ -1429,17 +1431,17 @@ export class ProductService {
 export class DatabaseService {
   async query(sql: string, params: any[]) {
     const timer = dbLogger.timer('資料庫查詢')
-    
+
     try {
       const result = await this.client.query(sql, params)
-      
+
       const duration = timer.end({
-        metadata: { 
+        metadata: {
           query: sql.substring(0, 100) + '...',
-          rowCount: result.rows?.length 
+          rowCount: result.rows?.length
         }
       })
-      
+
       // 效能警告
       if (duration > 200) {
         dbLogger.warn('慢查詢檢測', {
@@ -1447,7 +1449,7 @@ export class DatabaseService {
           metadata: { duration, query: sql }
         })
       }
-      
+
       return result
     } catch (error) {
       timer.end()
@@ -1464,7 +1466,7 @@ export class DatabaseService {
 export class ProductSearchService {
   async searchProducts(query: string, options: SearchOptions = {}): Promise<Product[]> {
     const timer = dbLogger.timer('產品搜尋')
-    
+
     try {
       // 第一層：高效能全文搜尋
       const fullTextResults = await this.tryFullTextSearch(query, options)
@@ -1472,7 +1474,7 @@ export class ProductSearchService {
         timer.end({ metadata: { method: 'fulltext', resultCount: fullTextResults.length } })
         return fullTextResults
       }
-      
+
       // 第二層：進階搜尋（價格、類別篩選）
       if (options.category || options.priceRange) {
         const advancedResults = await this.tryAdvancedSearch(query, options)
@@ -1481,12 +1483,12 @@ export class ProductSearchService {
           return advancedResults
         }
       }
-      
+
       // 第三層：基本 ilike 搜尋（後備）
       const basicResults = await this.basicSearch(query)
       timer.end({ metadata: { method: 'basic', resultCount: basicResults.length } })
       return basicResults
-      
+
     } catch (error) {
       timer.end()
       throw error
@@ -1500,7 +1502,7 @@ export class ProductSearchService {
         search_limit: options.limit || 20,
         search_offset: options.offset || 0
       })
-      
+
       return data ? data.map(this.transformFromDB) : null
     } catch (error) {
       dbLogger.warn('全文搜尋失敗', {
@@ -1521,38 +1523,38 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   const { searchParams } = new URL(request.url)
   const query = searchParams.get('q')?.trim()
   const limit = Math.min(parseInt(searchParams.get('limit') || '5'), 20) // 限制上限
-  
+
   // 輸入驗證
   if (!query || query.length < 2) {
     throw new ValidationError('搜尋關鍵字至少需要 2 個字元')
   }
-  
+
   // 速率限制檢查
   const rateLimitKey = `search_suggestions:${request.ip}`
   if (await isRateLimited(rateLimitKey, 60, 100)) { // 每分鐘 100 次
     throw new ValidationError('請求過於頻繁，請稍後再試')
   }
-  
+
   // 使用快取提升效能
   const cacheKey = `suggestions:${query}:${limit}`
   const cached = await cache.get(cacheKey)
   if (cached) {
     return success(cached, '搜尋建議成功（快取）')
   }
-  
+
   // 執行搜尋
   const suggestions = await fullTextSearchService.getSearchSuggestions(query, 'products', limit)
-  
+
   const result = {
     suggestions,
     query,
     count: suggestions.length,
     cached: false
   }
-  
+
   // 快取結果 5 分鐘
   await cache.set(cacheKey, result, 300)
-  
+
   return success(result, '搜尋建議成功')
 }, { module: 'SearchAPI' })
 ```

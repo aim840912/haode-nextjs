@@ -7,13 +7,30 @@ import LoadingSpinner from '../loading/LoadingSpinner'
 import { handleImageError } from '@/lib/image-utils'
 import { useImageBlob } from '@/hooks/useImageBlob'
 
+/**
+ * OptimizedImage 元件
+ *
+ * 功能強化的圖片元件，支援懶加載、錯誤處理、響應式圖片等功能
+ *
+ * ⚠️ 已知限制：
+ * - fill 模式在配合 aspect-ratio 使用時可能有填充問題
+ * - 建議關鍵視覺區域（Hero、特色區塊）使用 CSS background-image 替代
+ * - 一般產品圖片使用預設模式（width/height）即可正常運作
+ *
+ * @example
+ * // ✅ 推薦：一般圖片使用
+ * <OptimizedImage src="/image.jpg" alt="描述" width={300} height={200} />
+ *
+ * // ⚠️ 注意：fill 模式可能有問題，建議改用 CSS background-image
+ * <div style={{ backgroundImage: 'url(/image.jpg)', backgroundSize: 'cover' }} />
+ */
 interface OptimizedImageProps {
   src: string
   alt: string
   width?: number
   height?: number
   className?: string
-  fill?: boolean
+  fill?: boolean // ⚠️ 注意：配合 aspect-ratio 使用時可能有填充問題
   sizes?: string
   priority?: boolean
   quality?: number
