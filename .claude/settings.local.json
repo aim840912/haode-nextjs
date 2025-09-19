@@ -20,7 +20,10 @@
       "mcp__playwright__browser_wait_for",
       "mcp__playwright__browser_resize",
       "Bash(identify:*)",
-      "Read(//mnt/c/Users/aim84/Downloads/**)"
+      "Read(//mnt/c/Users/aim84/Downloads/**)",
+      "Bash(/bashes)",
+      "Bash(netstat:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

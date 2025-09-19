@@ -53,24 +53,10 @@ export default function FarmTourCalendarPage() {
             {/* 導航按鈕 */}
             <div className="flex gap-3">
               <Link
-                href="/admin/inquiries"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                詢問單列表
-              </Link>
-
-              <Link
                 href="/admin/farm-tour"
                 className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
               >
                 活動管理
-              </Link>
-
-              <Link
-                href="/admin/dashboard"
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-              >
-                回到儀表板
               </Link>
             </div>
           </div>

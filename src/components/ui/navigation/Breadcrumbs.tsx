@@ -247,6 +247,16 @@ export const createMomentsBreadcrumbs = (momentTitle?: string): BreadcrumbItem[]
   return items
 }
 
+export const createLocationsBreadcrumbs = (locationName?: string): BreadcrumbItem[] => {
+  const items: BreadcrumbItem[] = [{ name: '門市據點', href: '/locations' }]
+
+  if (locationName) {
+    items.push({ name: locationName })
+  }
+
+  return items
+}
+
 export const createAdminBreadcrumbs = (...segments: string[]): BreadcrumbItem[] => {
   const items: BreadcrumbItem[] = [{ name: '管理後台', href: '/admin' }]
 

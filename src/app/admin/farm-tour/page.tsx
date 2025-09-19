@@ -123,12 +123,6 @@ export default function FarmTourAdmin() {
               預約行事曆
             </Link>
             <Link
-              href="/admin/inquiries"
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm"
-            >
-              詢問單管理
-            </Link>
-            <Link
               href="/farm-tour"
               className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm"
             >

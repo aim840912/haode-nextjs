@@ -92,7 +92,7 @@ function ProductsSection() {
   }
 
   return (
-    <section id="products" className="py-20 px-6 bg-gradient-to-b from-white to-amber-50/30">
+    <section id="products" className="py-20 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-light text-amber-900 mb-2">經典產品</h2>
@@ -105,7 +105,7 @@ function ProductsSection() {
               <Link
                 key={product.id}
                 href={`/products?productId=${product.id}`}
-                className="group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[400px] block cursor-pointer"
+                className="group bg-white rounded-xl hover:shadow-sm transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[400px] block cursor-pointer"
               >
                 {/* 圖片區域 */}
                 <div className="relative overflow-hidden rounded-t-xl">

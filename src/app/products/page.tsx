@@ -520,7 +520,22 @@ function ProductsPage() {
               </div>
             ) : apiProducts.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-6xl mb-6">🛒</div>
+                <div className="mb-6 flex justify-center">
+                  <svg
+                    className="w-24 h-24 text-gray-300"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
+                    />
+                  </svg>
+                </div>
                 <div className="text-gray-500 mb-4">目前沒有產品資料</div>
                 <p className="text-sm text-gray-400">請稍後再試，或聯絡我們獲取更多資訊</p>
               </div>
