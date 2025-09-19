@@ -53,7 +53,7 @@ function ProductsSection() {
 
   if (loading) {
     return (
-      <section id="products" className="py-20 px-6">
+      <section id="products" className="py-20 px-6 bg-gradient-to-b from-amber-50/30 to-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
           <div className="grid md:grid-cols-3 gap-8">
@@ -68,7 +68,7 @@ function ProductsSection() {
 
   if (error) {
     return (
-      <section id="products" className="py-20 px-6">
+      <section id="products" className="py-20 px-6 bg-gradient-to-b from-amber-50/30 to-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-light text-center text-amber-900 mb-16">經典產品</h2>
           <div className="text-center">
@@ -92,7 +92,7 @@ function ProductsSection() {
   }
 
   return (
-    <section id="products" className="py-20 px-6">
+    <section id="products" className="py-20 px-6 bg-gradient-to-b from-amber-50/30 to-white">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-light text-amber-900 mb-2">經典產品</h2>
