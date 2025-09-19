@@ -29,12 +29,31 @@ export async function createServerSupabaseClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
+              // 修正 expires 日期格式問題
+              if (options?.expires) {
+                if (typeof options.expires === 'string') {
+                  // ISO 8601 字串轉換為 Date 對象
+                  options.expires = new Date(options.expires)
+                } else if (typeof options.expires === 'number') {
+                  // Unix 時間戳轉換為 Date 對象
+                  options.expires = new Date(options.expires)
+                }
+              }
               cookieStore.set(name, value, options)
             })
           } catch (error) {
             // API routes 中設定 cookies 時忽略錯誤
             // 因為 headers 已發送後無法設定
-            authLogger.warn('無法設定 cookie', { metadata: { error: (error as Error).message } })
+            authLogger.warn('無法設定 cookie', {
+              metadata: {
+                error: (error as Error).message,
+                cookiesToSet: cookiesToSet.map(({ name, options }) => ({
+                  name,
+                  expires: options?.expires,
+                  expiresType: typeof options?.expires,
+                })),
+              },
+            })
           }
         },
       },
