@@ -19,7 +19,17 @@ export function getFullImageUrl(relativePath: string | null | undefined): string
     return relativePath
   }
 
-  // 如果是相對路徑，拼接 Supabase 域名
+  // 如果是 data URL（base64 編碼的圖片），直接返回
+  if (relativePath.startsWith('data:')) {
+    return relativePath
+  }
+
+  // 如果是本地路徑（/images/ 等），直接返回
+  if (relativePath.startsWith('/images/')) {
+    return relativePath
+  }
+
+  // 其他情況，拼接 Supabase 域名
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bxlrtcagsuoijjolgdzs.supabase.co'
 

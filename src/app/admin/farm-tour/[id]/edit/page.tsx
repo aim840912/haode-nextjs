@@ -526,6 +526,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       alt="活動圖片"
                       width={64}
                       height={64}
+                      unoptimized
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
                   ) : (
