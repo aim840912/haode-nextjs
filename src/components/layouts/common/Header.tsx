@@ -153,6 +153,15 @@ export default function Header() {
                         </svg>
                         操作日誌
                       </Link>
+                      <Link
+                        href="/admin/analytics"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                        </svg>
+                        網站分析
+                      </Link>
 
                       {/* 內容管理 */}
                       <div className="border-t border-gray-100 mt-1 pt-1">
@@ -196,6 +205,15 @@ export default function Header() {
                             <path d="M12,3L6,7.58V6H4V9.11L1,11.4L1.58,12.25L2,12L2,21H10C10,19.9 10.9,19 12,19C13.1,19 14,19.9 14,21H22V12L22.42,12.25L23,11.4L12,3M12,8.75A2.25,2.25 0 0,1 14.25,11A2.25,2.25 0 0,1 12,13.25A2.25,2.25 0 0,1 9.75,11A2.25,2.25 0 0,1 12,8.75Z" />
                           </svg>
                           農場導覽管理
+                        </Link>
+                        <Link
+                          href="/admin/schedule"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19,3H18V1H16V3H8V1H6V3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V8H19V19Z" />
+                          </svg>
+                          行程管理
                         </Link>
                         <Link
                           href="/admin/locations"
@@ -311,6 +329,15 @@ export default function Header() {
                         </svg>
                         操作日誌
                       </Link>
+                      <Link
+                        href="/admin/analytics"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                      >
+                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
+                        </svg>
+                        網站分析
+                      </Link>
 
                       {/* 內容管理 */}
                       <div className="border-t border-gray-100 mt-1 pt-1">
@@ -354,6 +381,15 @@ export default function Header() {
                             <path d="M12,3L6,7.58V6H4V9.11L1,11.4L1.58,12.25L2,12L2,21H10C10,19.9 10.9,19 12,19C13.1,19 14,19.9 14,21H22V12L22.42,12.25L23,11.4L12,3M12,8.75A2.25,2.25 0 0,1 14.25,11A2.25,2.25 0 0,1 12,13.25A2.25,2.25 0 0,1 9.75,11A2.25,2.25 0 0,1 12,8.75Z" />
                           </svg>
                           農場導覽管理
+                        </Link>
+                        <Link
+                          href="/admin/schedule"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        >
+                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19,3H18V1H16V3H8V1H6V3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V8H19V19Z" />
+                          </svg>
+                          行程管理
                         </Link>
                         <Link
                           href="/admin/locations"

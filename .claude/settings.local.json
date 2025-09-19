@@ -23,7 +23,8 @@
       "Read(//mnt/c/Users/aim84/Downloads/**)",
       "Bash(/bashes)",
       "Bash(netstat:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "mcp__playwright__browser_click"
     ],
     "deny": [],
     "ask": []
