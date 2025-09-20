@@ -29,7 +29,7 @@ export class UnifiedImageError extends Error {
  */
 export class UnifiedImageService {
   private bucketInitialized = new Set<string>()
-  private readonly MEDIA_BUCKET = 'products' // 暫時使用 products bucket 測試
+  private readonly MEDIA_BUCKET = 'media' // 統一使用 media bucket
 
   /**
    * 確保 bucket 存在並初始化
