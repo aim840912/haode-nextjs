@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils'
+import { imageUrlValidator } from '@/lib/image-url-validator'
 import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
@@ -162,14 +163,14 @@ export default function ImageUploader({
               // 多尺寸上傳結果 - 直接替換臨時預覽
               const uploadedImages: UploadedImage[] = []
               Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
-                const url = urlData.url
+                const url = imageUrlValidator.clean(urlData.url) // 清理和驗證 URL
                 uploadedImages.push({
                   id: `${productId}-${size}-${Date.now()}-${i}`,
                   url: url,
                   path: urlData.path,
                   size: size as 'thumbnail' | 'medium' | 'large',
                   file: processedFile,
-                  preview: url, // 使用 Supabase URL
+                  preview: url, // 使用清理後的 Supabase URL
                   position: tempImage.position + index,
                   alt: `${processedFile.name} (${size})`,
                 })
@@ -183,13 +184,14 @@ export default function ImageUploader({
               newImages.push(...uploadedImages)
             } else {
               // 單一尺寸上傳結果
+              const cleanUrl = imageUrlValidator.clean(result.url || '')
               const uploadedImage: UploadedImage = {
                 id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
-                url: result.url || '',
+                url: cleanUrl,
                 path: result.path || '',
                 size: result.size || 'medium',
                 file: processedFile,
-                preview: result.url || '', // 使用 Supabase URL
+                preview: cleanUrl, // 使用清理後的 Supabase URL
                 position: tempImage.position,
                 alt: `${processedFile.name} (${result.size || 'medium'})`,
               }

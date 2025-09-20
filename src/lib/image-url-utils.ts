@@ -3,25 +3,32 @@
  * 處理相對路徑轉完整 URL，避免資料庫 VARCHAR(10) 限制
  */
 
+import { imageUrlValidator } from '@/lib/image-url-validator'
+
 /**
  * 將相對圖片路徑轉換為完整的 Supabase Storage URL
  * @param relativePath - 相對路徑 (例: "/storage/v1/object/public/locations/...")
  * @returns 完整的 Supabase URL
  */
 export function getFullImageUrl(relativePath: string | null | undefined): string {
+  // 使用新的驗證器處理 URL
+  const cleanedUrl = imageUrlValidator.clean(relativePath)
+
+  // 如果已經是有效的完整 URL，直接返回
+  const validation = imageUrlValidator.validate(cleanedUrl)
+  if (
+    validation.isValid &&
+    (validation.type === 'https' ||
+      validation.type === 'http' ||
+      validation.type === 'data' ||
+      validation.type === 'blob')
+  ) {
+    return validation.processedUrl || cleanedUrl
+  }
+
   // 處理空值情況
   if (!relativePath) {
     return '/images/placeholder.jpg' // 預設佔位圖
-  }
-
-  // 如果已經是完整 URL，直接返回
-  if (relativePath.startsWith('http://') || relativePath.startsWith('https://')) {
-    return relativePath
-  }
-
-  // 如果是 data URL（base64 編碼的圖片），直接返回
-  if (relativePath.startsWith('data:')) {
-    return relativePath
   }
 
   // 如果是本地路徑（/images/ 等），直接返回
@@ -36,7 +43,9 @@ export function getFullImageUrl(relativePath: string | null | undefined): string
   // 確保路徑以 / 開頭
   const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
 
-  return `${supabaseUrl}${cleanPath}`
+  // 根據環境調整 URL
+  const fullUrl = `${supabaseUrl}${cleanPath}`
+  return imageUrlValidator.adaptForEnvironment(fullUrl)
 }
 
 /**
