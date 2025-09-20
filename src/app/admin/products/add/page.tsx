@@ -204,6 +204,13 @@ function AddProduct() {
     alert(`圖片上傳失敗: ${error}`)
   }
 
+  const handleImageDelete = (deletedImage: { url?: string; path?: string }) => {
+    // 從 uploadedImages 中移除已刪除的圖片 URL
+    if (deletedImage.url) {
+      setUploadedImages(prev => prev.filter(url => url !== deletedImage.url))
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -464,6 +471,7 @@ function AddProduct() {
               productId={productId}
               onUploadSuccess={handleImageUploadSuccess}
               onUploadError={handleImageUploadError}
+              onDeleteSuccess={handleImageDelete}
               maxFiles={5}
               allowMultiple={true}
               generateMultipleSizes={false}
