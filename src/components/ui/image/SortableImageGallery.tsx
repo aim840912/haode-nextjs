@@ -86,7 +86,12 @@ function SortableImageItem({ image, onRemove }: SortableImageProps) {
       {/* 圖片 */}
       <div className="aspect-square relative">
         <SimpleImage
-          src={getFullImageUrl(image.preview || image.url || '/images/placeholder.jpg')}
+          src={
+            // 對於預覽圖片（data: URLs）直接使用，其他使用 getFullImageUrl 處理
+            image.preview?.startsWith('data:') || image.preview?.startsWith('blob:')
+              ? image.preview
+              : getFullImageUrl(image.preview || image.url || '/images/placeholder.jpg')
+          }
           alt={image.alt || `圖片 ${image.position + 1}`}
           fill
           sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"

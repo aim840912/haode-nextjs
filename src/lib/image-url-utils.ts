@@ -11,29 +11,29 @@ import { imageUrlValidator } from '@/lib/image-url-validator'
  * @returns 完整的 Supabase URL
  */
 export function getFullImageUrl(relativePath: string | null | undefined): string {
-  // 使用新的驗證器處理 URL
-  const cleanedUrl = imageUrlValidator.clean(relativePath)
-
-  // 如果已經是有效的完整 URL，直接返回
-  const validation = imageUrlValidator.validate(cleanedUrl)
-  if (
-    validation.isValid &&
-    (validation.type === 'https' ||
-      validation.type === 'http' ||
-      validation.type === 'data' ||
-      validation.type === 'blob')
-  ) {
-    return validation.processedUrl || cleanedUrl
-  }
-
   // 處理空值情況
   if (!relativePath) {
     return '/images/placeholder.jpg' // 預設佔位圖
   }
 
+  const trimmed = relativePath.trim()
+  if (!trimmed) {
+    return '/images/placeholder.jpg' // 預設佔位圖
+  }
+
+  // 對於 data: 和 blob: URLs，直接返回，避免重複處理
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    return trimmed
+  }
+
+  // 對於已經是完整的 HTTP/HTTPS URL，直接返回
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed
+  }
+
   // 如果是本地路徑（/images/ 等），直接返回
-  if (relativePath.startsWith('/images/')) {
-    return relativePath
+  if (trimmed.startsWith('/images/')) {
+    return trimmed
   }
 
   // 其他情況，拼接 Supabase 域名
@@ -41,11 +41,9 @@ export function getFullImageUrl(relativePath: string | null | undefined): string
     process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bxlrtcagsuoijjolgdzs.supabase.co'
 
   // 確保路徑以 / 開頭
-  const cleanPath = relativePath.startsWith('/') ? relativePath : `/${relativePath}`
+  const cleanPath = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
 
-  // 根據環境調整 URL
-  const fullUrl = `${supabaseUrl}${cleanPath}`
-  return imageUrlValidator.adaptForEnvironment(fullUrl)
+  return `${supabaseUrl}${cleanPath}`
 }
 
 /**
