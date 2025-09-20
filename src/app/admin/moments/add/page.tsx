@@ -349,13 +349,12 @@ function AddMoment() {
 
             <ImageUploader
               productId={momentId}
+              module="moments"
               onUploadSuccess={handleUploadSuccess}
               onUploadError={handleUploadError}
               onDeleteSuccess={handleDeleteSuccess}
               maxFiles={10}
               allowMultiple={true}
-              apiEndpoint="/api/upload/moments"
-              idParamName="momentId"
               className="border-2 border-dashed border-gray-300 rounded-lg"
             />
 

@@ -652,13 +652,12 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 {!formData.image && locationId && (
                   <ImageUploader
                     productId={locationId}
+                    module="locations"
                     onUploadSuccess={handleImageUploadSuccess}
                     onUploadError={handleImageUploadError}
                     maxFiles={1}
                     allowMultiple={false}
                     generateMultipleSizes={false}
-                    apiEndpoint="/api/upload/locations"
-                    idParamName="locationId"
                     className="mb-4"
                   />
                 )}

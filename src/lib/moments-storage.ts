@@ -1,3 +1,8 @@
+/**
+ * @deprecated 此 Storage 服務已被統一圖片服務取代
+ * 請使用 src/lib/unified-image-service.ts 中的 unifiedImageService
+ * 此檔案保留是為了向後相容，將在未來版本中移除
+ */
 import { getSupabaseAdmin } from './supabase-auth'
 import { validateImageFile, generateFileName } from './image-utils'
 import { dbLogger } from './logger'
@@ -83,7 +88,7 @@ export async function uploadMomentImageToStorage(
     }
 
     // 驗證檔案
-    const validation = validateImageFile(file)
+    const validation = await validateImageFile(file)
     if (!validation.valid) {
       throw new MomentStorageError(validation.error || '檔案驗證失敗')
     }

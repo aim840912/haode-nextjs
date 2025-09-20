@@ -221,14 +221,13 @@ export default function AddNews() {
             <label className="block text-sm font-medium text-gray-900 mb-2">新聞圖片</label>
             <ImageUploader
               productId={newsId}
+              module="news"
               onUploadSuccess={handleImageUploadSuccess}
               onUploadError={handleImageUploadError}
               maxFiles={1}
               allowMultiple={false}
               generateMultipleSizes={false}
               enableCompression={true}
-              apiEndpoint="/api/news/images"
-              idParamName="newsId"
               className="mb-4"
             />
             {uploadedImages.length > 0 && (

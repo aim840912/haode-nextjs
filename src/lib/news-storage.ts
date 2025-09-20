@@ -1,44 +1,51 @@
-import { supabase, getSupabaseAdmin } from './supabase-auth';
-import { validateImageFile, generateFileName } from './image-utils';
-import { SupabaseStorageError } from './supabase-storage';
-import { dbLogger } from '@/lib/logger';
-import { SupabaseStorageBucket, SupabaseStorageFile } from '@/types/supabase.types';
+/**
+ * @deprecated 此 Storage 服務已被統一圖片服務取代
+ * 請使用 src/lib/unified-image-service.ts 中的 unifiedImageService
+ * 此檔案保留是為了向後相容，將在未來版本中移除
+ */
+import { supabase, getSupabaseAdmin } from './supabase-auth'
+import { validateImageFile, generateFileName } from './image-utils'
+import { SupabaseStorageError } from './supabase-storage'
+import { dbLogger } from '@/lib/logger'
+import { SupabaseStorageBucket, SupabaseStorageFile } from '@/types/supabase.types'
 
-export const NEWS_STORAGE_BUCKET = 'news';
+export const NEWS_STORAGE_BUCKET = 'news'
 
 /**
  * 初始化新聞 Storage Bucket
  */
 export async function initializeNewsBucket() {
-  const supabaseAdmin = getSupabaseAdmin();
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
-    throw new SupabaseStorageError('Supabase admin client 未配置');
+    throw new SupabaseStorageError('Supabase admin client 未配置')
   }
 
   try {
     // 檢查 bucket 是否存在
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseAdmin = getSupabaseAdmin()
     if (!supabaseAdmin) {
-      throw new SupabaseStorageError('Supabase admin client not available');
+      throw new SupabaseStorageError('Supabase admin client not available')
     }
-    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets();
-    
+    const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets()
+
     if (listError) {
-      throw new SupabaseStorageError('無法列出 storage buckets', listError);
+      throw new SupabaseStorageError('無法列出 storage buckets', listError)
     }
 
-    const bucketExists = buckets?.some((bucket: SupabaseStorageBucket) => bucket.name === NEWS_STORAGE_BUCKET);
+    const bucketExists = buckets?.some(
+      (bucket: SupabaseStorageBucket) => bucket.name === NEWS_STORAGE_BUCKET
+    )
 
     if (!bucketExists) {
       // 建立新聞專用 bucket
       const { data, error } = await supabaseAdmin.storage.createBucket(NEWS_STORAGE_BUCKET, {
         public: true,
         allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
-        fileSizeLimit: 10 * 1024 * 1024 // 10MB
-      });
+        fileSizeLimit: 10 * 1024 * 1024, // 10MB
+      })
 
       if (error) {
-        throw new SupabaseStorageError('建立新聞 storage bucket 失敗', error);
+        throw new SupabaseStorageError('建立新聞 storage bucket 失敗', error)
       }
 
       dbLogger.info('新聞 Storage bucket 建立成功', {
@@ -46,22 +53,22 @@ export async function initializeNewsBucket() {
         action: 'initializeNewsBucket',
         metadata: {
           bucket: NEWS_STORAGE_BUCKET,
-          bucketData: data
-        }
-      });
+          bucketData: data,
+        },
+      })
     }
 
-    return true;
+    return true
   } catch (error) {
     dbLogger.error('初始化新聞 storage bucket 失敗', error as Error, {
       module: 'news-storage',
       action: 'initializeNewsBucket',
       metadata: {
         bucket: NEWS_STORAGE_BUCKET,
-        error: error instanceof Error ? error.message : String(error)
-      }
-    });
-    throw error;
+        error: error instanceof Error ? error.message : String(error),
+      },
+    })
+    throw error
   }
 }
 
@@ -74,44 +81,42 @@ export async function uploadNewsImage(
 ): Promise<{ url: string; path: string }> {
   try {
     // 驗證檔案
-    const validation = validateImageFile(file);
+    const validation = await validateImageFile(file)
     if (!validation.valid) {
-      throw new SupabaseStorageError(validation.error || '檔案驗證失敗');
+      throw new SupabaseStorageError(validation.error || '檔案驗證失敗')
     }
 
     // 生成新聞 ID（如果沒有提供的話）
-    const id = newsId || `news_${Date.now()}`;
+    const id = newsId || `news_${Date.now()}`
 
     // 生成檔案名稱
-    const fileName = generateNewsFileName(file.name, id);
-    const filePath = `${id}/${fileName}`;
+    const fileName = generateNewsFileName(file.name, id)
+    const filePath = `${id}/${fileName}`
 
     // 上傳檔案
     const { data, error } = await supabase.storage
       .from(NEWS_STORAGE_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true
-      });
+        upsert: true,
+      })
 
     if (error) {
-      throw new SupabaseStorageError('新聞圖片上傳失敗', error);
+      throw new SupabaseStorageError('新聞圖片上傳失敗', error)
     }
 
     // 取得公開 URL
-    const { data: urlData } = supabase.storage
-      .from(NEWS_STORAGE_BUCKET)
-      .getPublicUrl(filePath);
+    const { data: urlData } = supabase.storage.from(NEWS_STORAGE_BUCKET).getPublicUrl(filePath)
 
     return {
       url: urlData.publicUrl,
-      path: filePath
-    };
+      path: filePath,
+    }
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
-      throw error;
+      throw error
     }
-    throw new SupabaseStorageError('新聞圖片上傳過程發生未知錯誤', error);
+    throw new SupabaseStorageError('新聞圖片上傳過程發生未知錯誤', error)
   }
 }
 
@@ -123,51 +128,49 @@ export async function uploadNewsImageServer(
   newsId?: string
 ): Promise<{ url: string; path: string }> {
   // 確保有 admin 客戶端
-  const supabaseAdmin = getSupabaseAdmin();
+  const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
-    throw new SupabaseStorageError('Supabase admin client 未配置');
+    throw new SupabaseStorageError('Supabase admin client 未配置')
   }
-  
+
   try {
     // 驗證檔案
-    const validation = validateImageFile(file);
+    const validation = await validateImageFile(file)
     if (!validation.valid) {
-      throw new SupabaseStorageError(validation.error || '檔案驗證失敗');
+      throw new SupabaseStorageError(validation.error || '檔案驗證失敗')
     }
 
     // 生成新聞 ID（如果沒有提供的話）
-    const id = newsId || `news_${Date.now()}`;
-    
+    const id = newsId || `news_${Date.now()}`
+
     // 生成檔案名稱
-    const fileName = generateNewsFileName(file.name, id);
-    const filePath = `${id}/${fileName}`;
+    const fileName = generateNewsFileName(file.name, id)
+    const filePath = `${id}/${fileName}`
 
     // 使用 admin 客戶端上傳檔案（繞過 RLS）
     const { data, error } = await supabaseAdmin.storage
       .from(NEWS_STORAGE_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
-        upsert: true
-      });
+        upsert: true,
+      })
 
     if (error) {
-      throw new SupabaseStorageError('新聞圖片上傳失敗', error);
+      throw new SupabaseStorageError('新聞圖片上傳失敗', error)
     }
 
     // 取得公開 URL（也使用 admin 客戶端）
-    const { data: urlData } = supabaseAdmin.storage
-      .from(NEWS_STORAGE_BUCKET)
-      .getPublicUrl(filePath);
+    const { data: urlData } = supabaseAdmin.storage.from(NEWS_STORAGE_BUCKET).getPublicUrl(filePath)
 
     return {
       url: urlData.publicUrl,
-      path: filePath
-    };
+      path: filePath,
+    }
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
-      throw error;
+      throw error
     }
-    throw new SupabaseStorageError('新聞圖片上傳過程發生未知錯誤', error);
+    throw new SupabaseStorageError('新聞圖片上傳過程發生未知錯誤', error)
   }
 }
 
@@ -178,69 +181,65 @@ export async function uploadNewsImageWithThumbnail(
   file: File,
   newsId?: string
 ): Promise<{
-  main: { url: string; path: string };
-  thumbnail: { url: string; path: string };
+  main: { url: string; path: string }
+  thumbnail: { url: string; path: string }
 }> {
   try {
-    const id = newsId || `news_${Date.now()}`;
-    
+    const id = newsId || `news_${Date.now()}`
+
     // 主圖片
-    const mainFileName = generateNewsFileName(file.name, id, 'main');
-    const mainFilePath = `${id}/${mainFileName}`;
-    
+    const mainFileName = generateNewsFileName(file.name, id, 'main')
+    const mainFilePath = `${id}/${mainFileName}`
+
     // 縮圖（目前使用相同檔案，未來可實作圖片調整大小）
-    const thumbnailFileName = generateNewsFileName(file.name, id, 'thumbnail');
-    const thumbnailFilePath = `${id}/${thumbnailFileName}`;
+    const thumbnailFileName = generateNewsFileName(file.name, id, 'thumbnail')
+    const thumbnailFilePath = `${id}/${thumbnailFileName}`
 
     // 並行上傳主圖和縮圖
     const [mainResult, thumbnailResult] = await Promise.all([
       // 主圖片上傳
-      supabase.storage
-        .from(NEWS_STORAGE_BUCKET)
-        .upload(mainFilePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        }),
+      supabase.storage.from(NEWS_STORAGE_BUCKET).upload(mainFilePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      }),
       // 縮圖上傳（目前使用相同檔案）
-      supabase.storage
-        .from(NEWS_STORAGE_BUCKET)
-        .upload(thumbnailFilePath, file, {
-          cacheControl: '3600',
-          upsert: true
-        })
-    ]);
+      supabase.storage.from(NEWS_STORAGE_BUCKET).upload(thumbnailFilePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      }),
+    ])
 
     if (mainResult.error) {
-      throw new SupabaseStorageError('主圖片上傳失敗', mainResult.error);
+      throw new SupabaseStorageError('主圖片上傳失敗', mainResult.error)
     }
     if (thumbnailResult.error) {
-      throw new SupabaseStorageError('縮圖上傳失敗', thumbnailResult.error);
+      throw new SupabaseStorageError('縮圖上傳失敗', thumbnailResult.error)
     }
 
     // 取得公開 URLs
     const { data: mainUrlData } = supabase.storage
       .from(NEWS_STORAGE_BUCKET)
-      .getPublicUrl(mainFilePath);
+      .getPublicUrl(mainFilePath)
 
     const { data: thumbnailUrlData } = supabase.storage
       .from(NEWS_STORAGE_BUCKET)
-      .getPublicUrl(thumbnailFilePath);
+      .getPublicUrl(thumbnailFilePath)
 
     return {
       main: {
         url: mainUrlData.publicUrl,
-        path: mainFilePath
+        path: mainFilePath,
       },
       thumbnail: {
         url: thumbnailUrlData.publicUrl,
-        path: thumbnailFilePath
-      }
-    };
+        path: thumbnailFilePath,
+      },
+    }
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
-      throw error;
+      throw error
     }
-    throw new SupabaseStorageError('新聞圖片批量上傳過程發生未知錯誤', error);
+    throw new SupabaseStorageError('新聞圖片批量上傳過程發生未知錯誤', error)
   }
 }
 
@@ -249,18 +248,16 @@ export async function uploadNewsImageWithThumbnail(
  */
 export async function deleteNewsImage(filePath: string): Promise<void> {
   try {
-    const { error } = await supabase.storage
-      .from(NEWS_STORAGE_BUCKET)
-      .remove([filePath]);
+    const { error } = await supabase.storage.from(NEWS_STORAGE_BUCKET).remove([filePath])
 
     if (error) {
-      throw new SupabaseStorageError('刪除新聞圖片失敗', error);
+      throw new SupabaseStorageError('刪除新聞圖片失敗', error)
     }
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
-      throw error;
+      throw error
     }
-    throw new SupabaseStorageError('刪除新聞圖片過程發生未知錯誤', error);
+    throw new SupabaseStorageError('刪除新聞圖片過程發生未知錯誤', error)
   }
 }
 
@@ -274,14 +271,14 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       action: 'deleteAllNewsImages',
       metadata: {
         newsId,
-        bucket: NEWS_STORAGE_BUCKET
-      }
-    });
-    
+        bucket: NEWS_STORAGE_BUCKET,
+      },
+    })
+
     // 列出新聞資料夾下的所有檔案
     const { data: files, error: listError } = await supabase.storage
       .from(NEWS_STORAGE_BUCKET)
-      .list(newsId);
+      .list(newsId)
 
     if (listError) {
       dbLogger.error('列出新聞圖片失敗', new Error(listError.message), {
@@ -290,10 +287,10 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
         metadata: {
           newsId,
           bucket: NEWS_STORAGE_BUCKET,
-          error: listError.message
-        }
-      });
-      throw new SupabaseStorageError('列出新聞圖片失敗', listError);
+          error: listError.message,
+        },
+      })
+      throw new SupabaseStorageError('列出新聞圖片失敗', listError)
     }
 
     if (!files || files.length === 0) {
@@ -302,10 +299,10 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
         action: 'deleteAllNewsImages',
         metadata: {
           newsId,
-          bucket: NEWS_STORAGE_BUCKET
-        }
-      });
-      return;
+          bucket: NEWS_STORAGE_BUCKET,
+        },
+      })
+      return
     }
 
     dbLogger.info('發現檔案需要刪除', {
@@ -315,17 +312,17 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
         newsId,
         bucket: NEWS_STORAGE_BUCKET,
         fileCount: files.length,
-        fileNames: files.map((f: SupabaseStorageFile) => f.name)
-      }
-    });
+        fileNames: files.map((f: SupabaseStorageFile) => f.name),
+      },
+    })
 
     // 建立要刪除的檔案路徑列表
-    const filePaths = files.map((file: SupabaseStorageFile) => `${newsId}/${file.name}`);
+    const filePaths = files.map((file: SupabaseStorageFile) => `${newsId}/${file.name}`)
 
     // 批量刪除所有圖片
     const { error: deleteError } = await supabase.storage
       .from(NEWS_STORAGE_BUCKET)
-      .remove(filePaths);
+      .remove(filePaths)
 
     if (deleteError) {
       dbLogger.error('批量刪除新聞圖片失敗', new Error(deleteError.message), {
@@ -334,10 +331,10 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
         metadata: {
           newsId,
           bucket: NEWS_STORAGE_BUCKET,
-          error: deleteError.message
-        }
-      });
-      throw new SupabaseStorageError('批量刪除新聞圖片失敗', deleteError);
+          error: deleteError.message,
+        },
+      })
+      throw new SupabaseStorageError('批量刪除新聞圖片失敗', deleteError)
     }
 
     dbLogger.info('成功刪除新聞圖片', {
@@ -346,13 +343,12 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       metadata: {
         newsId,
         bucket: NEWS_STORAGE_BUCKET,
-        deletedCount: filePaths.length
-      }
-    });
-    
+        deletedCount: filePaths.length,
+      },
+    })
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
-      throw error;
+      throw error
     }
     dbLogger.error('刪除新聞圖片過程發生未知錯誤', error as Error, {
       module: 'news-storage',
@@ -360,46 +356,46 @@ export async function deleteAllNewsImages(newsId: string): Promise<void> {
       metadata: {
         newsId,
         bucket: NEWS_STORAGE_BUCKET,
-        error: error instanceof Error ? error.message : String(error)
-      }
-    });
-    throw new SupabaseStorageError('刪除新聞圖片過程發生未知錯誤', error);
+        error: error instanceof Error ? error.message : String(error),
+      },
+    })
+    throw new SupabaseStorageError('刪除新聞圖片過程發生未知錯誤', error)
   }
 }
 
 /**
  * 列出新聞的所有圖片
  */
-export async function listNewsImages(newsId: string): Promise<Array<{
-  name: string;
-  url: string;
-  metadata: Record<string, unknown>;
-}>> {
+export async function listNewsImages(newsId: string): Promise<
+  Array<{
+    name: string
+    url: string
+    metadata: Record<string, unknown>
+  }>
+> {
   try {
-    const { data, error } = await supabase.storage
-      .from(NEWS_STORAGE_BUCKET)
-      .list(newsId);
+    const { data, error } = await supabase.storage.from(NEWS_STORAGE_BUCKET).list(newsId)
 
     if (error) {
-      throw new SupabaseStorageError('列出新聞圖片失敗', error);
+      throw new SupabaseStorageError('列出新聞圖片失敗', error)
     }
 
     return (data || []).map((file: SupabaseStorageFile) => {
       const { data: urlData } = supabase.storage
         .from(NEWS_STORAGE_BUCKET)
-        .getPublicUrl(`${newsId}/${file.name}`);
+        .getPublicUrl(`${newsId}/${file.name}`)
 
       return {
         name: file.name,
         url: urlData.publicUrl,
-        metadata: file.metadata || {}
-      };
-    });
+        metadata: file.metadata || {},
+      }
+    })
   } catch (error) {
     if (error instanceof SupabaseStorageError) {
-      throw error;
+      throw error
     }
-    throw new SupabaseStorageError('列出新聞圖片過程發生未知錯誤', error);
+    throw new SupabaseStorageError('列出新聞圖片過程發生未知錯誤', error)
   }
 }
 
@@ -407,25 +403,23 @@ export async function listNewsImages(newsId: string): Promise<Array<{
  * 生成新聞圖片檔案名稱
  */
 function generateNewsFileName(
-  originalName: string, 
-  newsId: string, 
+  originalName: string,
+  newsId: string,
   type: 'main' | 'thumbnail' = 'main'
 ): string {
-  const timestamp = Date.now();
-  const extension = originalName.split('.').pop() || 'jpg';
-  const baseName = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_');
-  return `${type}-${baseName}_${timestamp}.${extension}`;
+  const timestamp = Date.now()
+  const extension = originalName.split('.').pop() || 'jpg'
+  const baseName = originalName.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9]/g, '_')
+  return `${type}-${baseName}_${timestamp}.${extension}`
 }
 
 /**
  * 取得新聞圖片的公開 URL
  */
 export function getNewsImagePublicUrl(filePath: string): string {
-  const { data } = supabase.storage
-    .from(NEWS_STORAGE_BUCKET)
-    .getPublicUrl(filePath);
+  const { data } = supabase.storage.from(NEWS_STORAGE_BUCKET).getPublicUrl(filePath)
 
-  return data.publicUrl;
+  return data.publicUrl
 }
 
 /**
@@ -435,15 +429,15 @@ export async function checkNewsImageExists(filePath: string): Promise<boolean> {
   try {
     const { data, error } = await supabase.storage
       .from(NEWS_STORAGE_BUCKET)
-      .list(filePath.substring(0, filePath.lastIndexOf('/')));
+      .list(filePath.substring(0, filePath.lastIndexOf('/')))
 
     if (error) {
-      return false;
+      return false
     }
 
-    const fileName = filePath.substring(filePath.lastIndexOf('/') + 1);
-    return (data || []).some((file: SupabaseStorageFile) => file.name === fileName);
+    const fileName = filePath.substring(filePath.lastIndexOf('/') + 1)
+    return (data || []).some((file: SupabaseStorageFile) => file.name === fileName)
   } catch (error) {
-    return false;
+    return false
   }
 }

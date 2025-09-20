@@ -463,8 +463,7 @@ export default function AddLocation() {
                 </label>
                 <ImageUploader
                   productId={locationId}
-                  apiEndpoint="/api/upload/locations"
-                  idParamName="locationId"
+                  module="locations"
                   maxFiles={1}
                   allowMultiple={false}
                   generateMultipleSizes={false}

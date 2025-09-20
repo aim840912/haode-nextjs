@@ -28,6 +28,20 @@ interface UploadUrlData {
 interface UploadResult {
   multiple?: boolean
   urls?: Record<string, UploadUrlData>
+  // 統一 API 多圖結果
+  images?: Array<{
+    id: string
+    url: string
+    path: string
+    size: 'thumbnail' | 'medium' | 'large'
+  }>
+  // 統一 API 單圖結果
+  image?: {
+    id: string
+    url: string
+    path: string
+    size: 'thumbnail' | 'medium' | 'large'
+  }
   // 單一上傳結果
   url?: string
   path?: string
@@ -45,6 +59,9 @@ interface ImageUploaderProps {
   enableCompression?: boolean
   className?: string
   acceptedTypes?: string[]
+  // 新增統一 API 支援
+  module?: string
+  // 向後相容的舊 props
   apiEndpoint?: string
   idParamName?: string
 }
@@ -60,7 +77,10 @@ export default function ImageUploader({
   enableCompression = true,
   className = '',
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
-  apiEndpoint = '/api/upload/images',
+  // 統一 API 相關
+  module,
+  // 向後相容 props
+  apiEndpoint,
   idParamName = 'productId',
 }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false)
@@ -74,6 +94,13 @@ export default function ImageUploader({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const csrfToken = useCSRFTokenValue()
 
+  // 決定使用統一 API 還是舊 API
+  const useUnifiedAPI = !!module
+  const finalApiEndpoint = useUnifiedAPI
+    ? '/api/upload/unified'
+    : apiEndpoint || '/api/upload/images'
+  const finalIdParamName = useUnifiedAPI ? 'entityId' : idParamName
+
   const handleFileSelect = useCallback(
     async (files: FileList | null) => {
       if (!files || files.length === 0) return
@@ -83,7 +110,7 @@ export default function ImageUploader({
 
       // 驗證檔案
       for (const file of fileArray) {
-        const validation = validateImageFile(file)
+        const validation = await validateImageFile(file)
         if (validation.valid) {
           validFiles.push(file)
         } else {
@@ -159,48 +186,97 @@ export default function ImageUploader({
               csrfToken
             )) as UploadResult
 
-            if (generateMultipleSizes && result.multiple) {
-              // 多尺寸上傳結果 - 直接替換臨時預覽
-              const uploadedImages: UploadedImage[] = []
-              Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
-                const url = imageUrlValidator.clean(urlData.url) // 清理和驗證 URL
-                uploadedImages.push({
-                  id: `${productId}-${size}-${Date.now()}-${i}`,
-                  url: url,
-                  path: urlData.path,
-                  size: size as 'thumbnail' | 'medium' | 'large',
+            if (useUnifiedAPI) {
+              // 統一 API 回應格式
+              if (result.multiple && result.images) {
+                // 多尺寸上傳結果
+                const uploadedImages: UploadedImage[] = result.images.map(
+                  (img: any, index: number) => {
+                    const url = imageUrlValidator.clean(img.url)
+                    return {
+                      id: img.id,
+                      url: url,
+                      path: img.path,
+                      size: img.size as 'thumbnail' | 'medium' | 'large',
+                      file: processedFile,
+                      preview: url,
+                      position: tempImage.position + index,
+                      alt: `${processedFile.name} (${img.size})`,
+                    }
+                  }
+                )
+
+                // 用上傳成功的圖片替換臨時預覽
+                setPreviewImages(prev => [
+                  ...prev.filter(img => img.id !== tempImage.id),
+                  ...uploadedImages,
+                ])
+                newImages.push(...uploadedImages)
+              } else if (result.image) {
+                // 單一尺寸上傳結果
+                const cleanUrl = imageUrlValidator.clean(result.image.url)
+                const uploadedImage: UploadedImage = {
+                  id: result.image.id,
+                  url: cleanUrl,
+                  path: result.image.path,
+                  size: result.image.size,
                   file: processedFile,
-                  preview: url, // 使用清理後的 Supabase URL
-                  position: tempImage.position + index,
-                  alt: `${processedFile.name} (${size})`,
-                })
-              })
+                  preview: cleanUrl,
+                  position: tempImage.position,
+                  alt: `${processedFile.name} (${result.image.size})`,
+                }
 
-              // 用上傳成功的圖片替換臨時預覽
-              setPreviewImages(prev => [
-                ...prev.filter(img => img.id !== tempImage.id),
-                ...uploadedImages,
-              ])
-              newImages.push(...uploadedImages)
-            } else {
-              // 單一尺寸上傳結果
-              const cleanUrl = imageUrlValidator.clean(result.url || '')
-              const uploadedImage: UploadedImage = {
-                id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
-                url: cleanUrl,
-                path: result.path || '',
-                size: result.size || 'medium',
-                file: processedFile,
-                preview: cleanUrl, // 使用清理後的 Supabase URL
-                position: tempImage.position,
-                alt: `${processedFile.name} (${result.size || 'medium'})`,
+                // 用上傳成功的圖片替換臨時預覽
+                setPreviewImages(prev =>
+                  prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
+                )
+                newImages.push(uploadedImage)
               }
+            } else {
+              // 舊 API 回應格式（向後相容）
+              if (generateMultipleSizes && result.multiple) {
+                // 多尺寸上傳結果 - 直接替換臨時預覽
+                const uploadedImages: UploadedImage[] = []
+                Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
+                  const url = imageUrlValidator.clean(urlData.url) // 清理和驗證 URL
+                  uploadedImages.push({
+                    id: `${productId}-${size}-${Date.now()}-${i}`,
+                    url: url,
+                    path: urlData.path,
+                    size: size as 'thumbnail' | 'medium' | 'large',
+                    file: processedFile,
+                    preview: url, // 使用清理後的 Supabase URL
+                    position: tempImage.position + index,
+                    alt: `${processedFile.name} (${size})`,
+                  })
+                })
 
-              // 用上傳成功的圖片替換臨時預覽
-              setPreviewImages(prev =>
-                prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
-              )
-              newImages.push(uploadedImage)
+                // 用上傳成功的圖片替換臨時預覽
+                setPreviewImages(prev => [
+                  ...prev.filter(img => img.id !== tempImage.id),
+                  ...uploadedImages,
+                ])
+                newImages.push(...uploadedImages)
+              } else {
+                // 單一尺寸上傳結果
+                const cleanUrl = imageUrlValidator.clean(result.url || '')
+                const uploadedImage: UploadedImage = {
+                  id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
+                  url: cleanUrl,
+                  path: result.path || '',
+                  size: result.size || 'medium',
+                  file: processedFile,
+                  preview: cleanUrl, // 使用清理後的 Supabase URL
+                  position: tempImage.position,
+                  alt: `${processedFile.name} (${result.size || 'medium'})`,
+                }
+
+                // 用上傳成功的圖片替換臨時預覽
+                setPreviewImages(prev =>
+                  prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
+                )
+                newImages.push(uploadedImage)
+              }
             }
           } catch (uploadError) {
             // 上傳失敗，保留本地預覽並更新 ID
@@ -271,16 +347,26 @@ export default function ImageUploader({
     ) => {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append(idParamName, productId)
-      formData.append('generateMultipleSizes', generateMultipleSizes.toString())
-      formData.append('compress', 'false') // 已在前端壓縮
+
+      if (useUnifiedAPI) {
+        // 使用統一 API
+        formData.append('module', module!)
+        formData.append('entityId', productId)
+        formData.append('generateMultipleSizes', generateMultipleSizes.toString())
+        formData.append('position', '0')
+      } else {
+        // 使用舊 API (向後相容)
+        formData.append(finalIdParamName, productId)
+        formData.append('generateMultipleSizes', generateMultipleSizes.toString())
+        formData.append('compress', 'false') // 已在前端壓縮
+      }
 
       const headers: HeadersInit = {}
       if (csrfToken) {
         headers['x-csrf-token'] = csrfToken
       }
 
-      const response = await fetch(apiEndpoint, {
+      const response = await fetch(finalApiEndpoint, {
         method: 'POST',
         body: formData,
         headers,
@@ -295,7 +381,7 @@ export default function ImageUploader({
       const result = await response.json()
       return result.data
     },
-    [idParamName, apiEndpoint]
+    [useUnifiedAPI, module, finalIdParamName, finalApiEndpoint]
   )
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -347,14 +433,26 @@ export default function ImageUploader({
           headers['x-csrf-token'] = csrfToken
         }
 
-        await fetch(apiEndpoint, {
-          method: 'DELETE',
-          headers,
-          body: JSON.stringify({
-            [idParamName]: productId,
-            filePath: imageToRemove.path,
-          }),
-        })
+        if (useUnifiedAPI) {
+          // 使用統一 API 刪除
+          await fetch(finalApiEndpoint, {
+            method: 'DELETE',
+            headers,
+            body: JSON.stringify({
+              imageId: imageToRemove.id,
+            }),
+          })
+        } else {
+          // 使用舊 API 刪除（向後相容）
+          await fetch(finalApiEndpoint, {
+            method: 'DELETE',
+            headers,
+            body: JSON.stringify({
+              [finalIdParamName]: productId,
+              filePath: imageToRemove.path,
+            }),
+          })
+        }
       }
 
       // 從預覽中移除並重新計算位置
@@ -500,7 +598,8 @@ export function SingleImageUploader({
   initialImage,
   size = 'medium',
   className = '',
-  apiEndpoint = '/api/upload/images',
+  module,
+  apiEndpoint,
   idParamName = 'productId',
   enableDelete = false,
 }: {
@@ -511,6 +610,7 @@ export function SingleImageUploader({
   initialImage?: string
   size?: 'thumbnail' | 'medium' | 'large'
   className?: string
+  module?: string
   apiEndpoint?: string
   idParamName?: string
   enableDelete?: boolean
@@ -585,6 +685,7 @@ export function SingleImageUploader({
           maxFiles={1}
           allowMultiple={false}
           generateMultipleSizes={false}
+          module={module}
           apiEndpoint={apiEndpoint}
           idParamName={idParamName}
         />

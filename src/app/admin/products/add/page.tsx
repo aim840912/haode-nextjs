@@ -469,6 +469,7 @@ function AddProduct() {
             <label className="block text-sm font-semibold text-gray-800 mb-2">產品圖片</label>
             <ImageUploader
               productId={productId}
+              module="products"
               onUploadSuccess={handleImageUploadSuccess}
               onUploadError={handleImageUploadError}
               onDeleteSuccess={handleImageDelete}

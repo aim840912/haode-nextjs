@@ -629,6 +629,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
               <h4 className="font-medium text-gray-900 mb-3">上傳新圖片</h4>
               <ImageUploader
                 productId={productId}
+                module="products"
                 onUploadSuccess={handleImageUploadSuccess}
                 onUploadError={handleImageUploadError}
                 maxFiles={5}

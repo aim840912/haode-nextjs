@@ -358,8 +358,7 @@ export default function AddFarmTourActivity() {
                 <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片</label>
                 <ImageUploader
                   productId={activityId}
-                  apiEndpoint="/api/upload/farm-tour"
-                  idParamName="activityId"
+                  module="farm-tour"
                   maxFiles={1}
                   allowMultiple={false}
                   generateMultipleSizes={false}

@@ -48,7 +48,7 @@ async function handlePOST(request: NextRequest) {
   }
 
   // 驗證檔案
-  const validation = validateImageFile(file)
+  const validation = await validateImageFile(file)
   if (!validation.valid) {
     throw new ValidationError(validation.error || '圖片檔案驗證失敗')
   }

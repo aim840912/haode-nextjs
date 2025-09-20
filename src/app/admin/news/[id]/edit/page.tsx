@@ -297,14 +297,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             )}
             <ImageUploader
               productId={newsId}
+              module="news"
               onUploadSuccess={handleImageUploadSuccess}
               onUploadError={handleImageUploadError}
               maxFiles={1}
               allowMultiple={false}
               generateMultipleSizes={false}
               enableCompression={true}
-              apiEndpoint="/api/news/images"
-              idParamName="newsId"
               className="mb-4"
             />
             {uploadedImages.length > 0 && (

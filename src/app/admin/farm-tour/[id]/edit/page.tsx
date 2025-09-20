@@ -450,8 +450,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   <div className="space-y-3">
                     <ImageUploader
                       productId={activityId || uuidv4()}
-                      idParamName="activityId"
-                      apiEndpoint="/api/upload/farm-tour"
+                      module="farm-tour"
                       onUploadSuccess={handleImageUploadSuccess}
                       onUploadError={handleImageUploadError}
                       maxFiles={1}

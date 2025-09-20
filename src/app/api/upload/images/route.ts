@@ -1,3 +1,8 @@
+/**
+ * @deprecated 此 API 路由已被統一圖片上傳 API 取代
+ * 請使用 /api/upload/unified 與 module="products" 參數
+ * 此檔案保留是為了向後相容，將在未來版本中移除
+ */
 import { NextRequest } from 'next/server'
 import {
   uploadImageToStorage,
@@ -62,7 +67,7 @@ async function handlePOST(request: NextRequest) {
   }
 
   // 驗證檔案
-  const validation = validateImageFile(file)
+  const validation = await validateImageFile(file)
   if (!validation.valid) {
     throw new ValidationError(validation.error || '圖片檔案驗證失敗')
   }
