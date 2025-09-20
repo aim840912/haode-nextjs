@@ -189,6 +189,9 @@ export default function OptimizedImage({
   // 判斷圖片類型：base64、Blob URL 或普通 URL
   const isBase64OrBlob = finalSrc && (finalSrc.startsWith('data:') || finalSrc.startsWith('blob:'))
 
+  // 額外檢查：確保 Next.js Image 不會處理 data: URLs
+  const shouldUseNativeImg = isBase64OrBlob || !isValidImageSrc(finalSrc)
+
   const containerClassName = fill
     ? `relative overflow-hidden ${className}`
     : `relative overflow-hidden ${className}`
@@ -207,11 +210,12 @@ export default function OptimizedImage({
         )}
         {shouldLoad &&
           finalSrc &&
-          (isBase64OrBlob ? (
-            // 對於 base64 和 Blob URL，使用原生 img 標籤
+          (shouldUseNativeImg ? (
+            // 對於 base64、Blob URL 或無效 URL，使用原生 img 標籤
             <img
               src={finalSrc}
               alt={alt}
+              crossOrigin="anonymous"
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isLoading ? 'opacity-0' : 'opacity-100'
               }`}
@@ -224,6 +228,7 @@ export default function OptimizedImage({
             <img
               src={finalSrc}
               alt={alt}
+              crossOrigin="anonymous"
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isLoading ? 'opacity-0' : 'opacity-100'
               }`}
@@ -260,17 +265,18 @@ export default function OptimizedImage({
       )}
       {shouldLoad &&
         finalSrc &&
-        (isBase64OrBlob ? (
-          // 對於 base64 和 Blob URL，使用原生 img 標籤
+        (shouldUseNativeImg ? (
+          // 對於 base64、Blob URL 或無效 URL，使用原生 img 標籤
           <img
             src={finalSrc}
             alt={alt}
+            crossOrigin="anonymous"
             width={width || 400}
             height={height || 300}
-            className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+            className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
             onLoad={handleLoad}
             onError={handleError}
-            style={{ objectFit: 'cover' }}
+            style={{ objectFit: 'cover', maxWidth: '100%', height: 'auto' }}
           />
         ) : (
           // 對於普通 URL，使用 Next.js Image 組件進行優化

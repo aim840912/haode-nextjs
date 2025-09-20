@@ -9,6 +9,8 @@ import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/lib/auth-context'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
+import { imageUrlValidator } from '@/lib/image-url-validator'
+import OptimizedImage from '@/components/ui/image/OptimizedImage'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -299,6 +301,10 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
 
     setIsDeletingImage(imageUrl)
 
+    // 先從 UI 中移除圖片，避免 CORS 錯誤
+    const originalImages = formData.images
+    removeImageField(index)
+
     try {
       // 從 URL 中提取 path
       // 假設 URL 格式類似：https://domain.com/storage/v1/object/public/bucket/path
@@ -334,13 +340,13 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         throw new Error(errorData.error || `刪除失敗 (${response.status})`)
       }
 
-      // 成功刪除後，從表單資料中移除
-      removeImageField(index)
-
       logger.info('圖片刪除成功', {
         metadata: { imageUrl, filePath, productId },
       })
     } catch (error) {
+      // 如果刪除失敗，恢復原始狀態
+      setFormData(prev => ({ ...prev, images: originalImages }))
+
       const errorMessage = error instanceof Error ? error.message : '刪除失敗'
       logger.error('圖片刪除失敗', error instanceof Error ? error : new Error(errorMessage), {
         metadata: { imageUrl, productId },
@@ -683,18 +689,17 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                     <div className="mt-2">
                       <div className="text-xs text-gray-600 mb-2">圖片預覽：</div>
                       <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center relative">
-                        <Image
-                          src={image}
+                        <OptimizedImage
+                          src={imageUrlValidator.clean(image)}
                           alt={`產品圖片 ${index + 1}`}
                           fill
                           className="object-cover"
-                          onError={e => {
-                            ;(e.target as HTMLImageElement).style.display = 'none'
-                            const parent = (e.target as HTMLImageElement).parentElement
-                            if (parent) {
-                              parent.innerHTML =
-                                '<div class="text-red-500 text-xs text-center p-2">圖片載入失敗<br/>請檢查 URL</div>'
-                            }
+                          showErrorDetails={true}
+                          enableMultiLevelFallback={true}
+                          onError={error => {
+                            logger.warn('圖片預覽載入失敗', {
+                              metadata: { imageUrl: image, error, index },
+                            })
                           }}
                         />
                       </div>
