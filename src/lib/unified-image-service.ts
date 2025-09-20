@@ -29,7 +29,7 @@ export class UnifiedImageError extends Error {
  */
 export class UnifiedImageService {
   private bucketInitialized = new Set<string>()
-  private readonly MEDIA_BUCKET = 'media'
+  private readonly MEDIA_BUCKET = 'products' // 暫時使用 products bucket 測試
 
   /**
    * 確保 bucket 存在並初始化
@@ -50,6 +50,17 @@ export class UnifiedImageService {
       // 檢查 bucket 是否存在
       const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets()
 
+      // 診斷 bucket 列表資訊
+      dbLogger.info('Storage buckets 檢查', {
+        module: 'UnifiedImageService',
+        metadata: {
+          targetBucket: bucket,
+          listError: listError?.message || null,
+          availableBuckets: buckets?.map(b => ({ name: b.name, public: b.public })) || [],
+          bucketsCount: buckets?.length || 0,
+        },
+      })
+
       if (listError) {
         throw new UnifiedImageError('無法列出 storage buckets', listError)
       }
@@ -57,6 +68,15 @@ export class UnifiedImageService {
       const bucketExists = buckets?.some(b => b.name === bucket)
 
       if (!bucketExists) {
+        dbLogger.warn('目標 bucket 不存在，嘗試建立', {
+          module: 'UnifiedImageService',
+          metadata: {
+            targetBucket: bucket,
+            existingBuckets: buckets?.map(b => b.name) || [],
+            adminClientExists: !!supabaseAdmin,
+          },
+        })
+
         // 建立 bucket
         const { error } = await supabaseAdmin.storage.createBucket(bucket, {
           public: true,
@@ -65,6 +85,15 @@ export class UnifiedImageService {
         })
 
         if (error) {
+          dbLogger.error('建立 storage bucket 失敗', error as Error, {
+            module: 'UnifiedImageService',
+            metadata: {
+              bucketName: bucket,
+              errorCode: (error as any).statusCode || 'unknown',
+              errorMessage: error.message,
+              errorDetails: (error as any).details || 'no details',
+            },
+          })
           throw new UnifiedImageError('建立 storage bucket 失敗', error)
         }
 
@@ -72,13 +101,28 @@ export class UnifiedImageService {
           module: 'UnifiedImageService',
           metadata: { bucketName: bucket },
         })
+      } else {
+        dbLogger.debug('目標 bucket 已存在', {
+          module: 'UnifiedImageService',
+          metadata: {
+            bucketName: bucket,
+            bucketFound: true,
+            totalBuckets: buckets?.length || 0,
+          },
+        })
       }
 
       this.bucketInitialized.add(bucket)
     } catch (error) {
       dbLogger.error('初始化 storage bucket 失敗', error as Error, {
         module: 'UnifiedImageService',
-        metadata: { bucketName: bucket },
+        metadata: {
+          bucketName: bucket,
+          errorType: error instanceof Error ? error.constructor.name : typeof error,
+          errorMessage: error instanceof Error ? error.message : String(error),
+          hasAdminClient: !!supabaseAdmin,
+          operation: 'ensureBucketExists',
+        },
       })
       throw error
     }
@@ -113,6 +157,18 @@ export class UnifiedImageService {
 
       const config = getModuleConfig(module)
       const supabaseAdmin = getSupabaseAdmin()
+
+      // 診斷 admin client 狀態
+      dbLogger.info('Admin client 狀態檢查', {
+        module: 'UnifiedImageService',
+        metadata: {
+          hasAdminClient: !!supabaseAdmin,
+          hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...',
+          bucketName: this.MEDIA_BUCKET,
+        },
+      })
+
       if (!supabaseAdmin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
@@ -138,6 +194,22 @@ export class UnifiedImageService {
       const storagePath = getModuleStoragePath(module, entityId)
       const filePath = `${storagePath}/${size}-${fileName}`
 
+      // 診斷上傳前資訊
+      dbLogger.info('開始圖片上傳', {
+        module: 'UnifiedImageService',
+        metadata: {
+          module,
+          entityId,
+          size,
+          fileName,
+          storagePath,
+          filePath,
+          bucketName: this.MEDIA_BUCKET,
+          fileSize: file.size,
+          fileType: file.type,
+        },
+      })
+
       // 上傳到 Storage（使用 admin client）
       const { data, error } = await supabaseAdmin.storage
         .from(this.MEDIA_BUCKET)
@@ -147,7 +219,21 @@ export class UnifiedImageService {
         })
 
       if (error) {
-        throw new UnifiedImageError('圖片上傳失敗', error)
+        // 詳細錯誤診斷日誌
+        dbLogger.error('Storage 上傳錯誤詳情', error as Error, {
+          module: 'UnifiedImageService',
+          metadata: {
+            errorMessage: error.message,
+            errorCode: (error as any).statusCode || 'unknown',
+            errorDetails: (error as any).details || 'no details',
+            filePath,
+            bucketName: this.MEDIA_BUCKET,
+            fileSize: file.size,
+            fileType: file.type,
+            fileName: file.name,
+          },
+        })
+        throw new UnifiedImageError(`圖片上傳失敗: ${error.message}`, error)
       }
 
       // 取得公開 URL（使用 admin client）

@@ -39,7 +39,15 @@
       "Bash(npm run test:e2e:ui:*)",
       "Bash(kill:*)",
       "mcp__playwright__browser_press_key",
-      "Read(//home/**)"
+      "Read(//home/**)",
+      "Bash(git push:*)",
+      "Bash(npm ls:*)",
+      "mcp__playwright__browser_select_option",
+      "mcp__playwright__browser_type",
+      "Bash(git rm:*)",
+      "Bash(npm run build:*)",
+      "Bash(xargs -r kill -9)",
+      "mcp__playwright__browser_console_messages"
     ],
     "deny": [],
     "ask": []
