@@ -18,6 +18,11 @@ import {
 export default function AdminDashboard() {
   const { user, isLoading } = useAuth()
 
+  // 除錯信息（僅在開發環境中顯示）
+  if (process.env.NODE_ENV === 'development') {
+    console.log('AdminDashboard render:', { user: !!user, isLoading })
+  }
+
   // 載入中狀態
   if (isLoading) {
     return (
@@ -27,6 +32,9 @@ export default function AdminDashboard() {
             <ClockIcon className="h-12 w-12 text-gray-400 animate-pulse" />
           </div>
           <p className="text-gray-600">載入中...</p>
+          {process.env.NODE_ENV === 'development' && (
+            <p className="text-xs text-gray-400 mt-2">Debug: Auth loading...</p>
+          )}
         </div>
       </div>
     )
@@ -42,6 +50,11 @@ export default function AdminDashboard() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
+          {process.env.NODE_ENV === 'development' && (
+            <div className="text-xs text-gray-400 mb-4 bg-gray-100 p-2 rounded">
+              Debug: User not authenticated - redirecting to login
+            </div>
+          )}
           <div className="space-x-4">
             <Link
               href="/login"
