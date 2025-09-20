@@ -192,6 +192,13 @@ export default function OptimizedImage({
   // 額外檢查：確保 Next.js Image 不會處理 data: URLs
   const shouldUseNativeImg = isBase64OrBlob || !isValidImageSrc(finalSrc)
 
+  // 判斷是否需要 CORS：只對外部 HTTP/HTTPS URLs 啟用
+  const needsCrossOrigin =
+    finalSrc &&
+    !finalSrc.startsWith('data:') &&
+    !finalSrc.startsWith('blob:') &&
+    (finalSrc.startsWith('http://') || finalSrc.startsWith('https://'))
+
   const containerClassName = fill
     ? `relative overflow-hidden ${className}`
     : `relative overflow-hidden ${className}`
@@ -215,7 +222,7 @@ export default function OptimizedImage({
             <img
               src={finalSrc}
               alt={alt}
-              crossOrigin="anonymous"
+              {...(needsCrossOrigin && { crossOrigin: 'anonymous' })}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isLoading ? 'opacity-0' : 'opacity-100'
               }`}
@@ -228,7 +235,7 @@ export default function OptimizedImage({
             <img
               src={finalSrc}
               alt={alt}
-              crossOrigin="anonymous"
+              {...(needsCrossOrigin && { crossOrigin: 'anonymous' })}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 isLoading ? 'opacity-0' : 'opacity-100'
               }`}
@@ -270,7 +277,7 @@ export default function OptimizedImage({
           <img
             src={finalSrc}
             alt={alt}
-            crossOrigin="anonymous"
+            {...(needsCrossOrigin && { crossOrigin: 'anonymous' })}
             width={width || 400}
             height={height || 300}
             className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
