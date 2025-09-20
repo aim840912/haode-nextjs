@@ -30,7 +30,7 @@ export const IMAGE_MODULE_CONFIGS: Record<string, ImageModuleConfig> = {
   products: {
     maxFiles: 10,
     allowMultiple: true,
-    generateSizes: ['thumbnail', 'medium', 'large'],
+    generateSizes: ['medium'], // 只生成單一尺寸
     enableSorting: true,
     enableDelete: true,
     enableCompression: true,

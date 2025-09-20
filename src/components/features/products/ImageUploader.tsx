@@ -139,169 +139,200 @@ export default function ImageUploader({
 
       try {
         const newImages: UploadedImage[] = []
+        const MAX_CONCURRENT_UPLOADS = 2 // 限制並發上傳數量
+        const UPLOAD_DELAY = 500 // 上傳間隔延遲 (毫秒)
 
-        for (let i = 0; i < validFiles.length; i++) {
-          const file = validFiles[i]
-          setUploadProgress(((i + 1) / validFiles.length) * 100)
+        // 分批上傳以避免 429 錯誤
+        for (let i = 0; i < validFiles.length; i += MAX_CONCURRENT_UPLOADS) {
+          const batch = validFiles.slice(i, i + MAX_CONCURRENT_UPLOADS)
 
-          // 可選的圖片壓縮
-          let processedFile = file
-          if (enableCompression) {
-            try {
-              processedFile = await compressImage(file)
-            } catch (error) {
-              logger.warn('圖片壓縮失敗，使用原檔案', {
-                metadata: {
-                  context: 'compressImage',
-                  error: error instanceof Error ? error.message : 'Unknown compression error',
-                },
-              })
-            }
-          }
+          // 處理當前批次
+          const batchPromises = batch.map(async (file, batchIndex) => {
+            const globalIndex = i + batchIndex
+            setUploadProgress(((globalIndex + 1) / validFiles.length) * 100)
 
-          // 生成本地預覽（立即顯示）
-          const preview = await getImagePreviewUrl(processedFile)
-
-          // 先創建本地預覽圖片對象，讓用戶立即看到
-          const tempImage: UploadedImage = {
-            id: `temp-${productId}-${Date.now()}-${i}`,
-            url: '',
-            path: '',
-            size: 'medium',
-            file: processedFile,
-            preview: preview,
-            position: previewImages.length + i,
-            alt: `${processedFile.name} 預覽`,
-          }
-
-          // 立即添加到預覽列表
-          setPreviewImages(prev => [...prev, tempImage])
-
-          try {
-            // 上傳到伺服器
-            const result = (await uploadImageToServer(
-              processedFile,
-              productId,
-              generateMultipleSizes,
-              csrfToken
-            )) as UploadResult
-
-            if (useUnifiedAPI) {
-              // 統一 API 回應格式
-              if (result.multiple && result.images) {
-                // 多尺寸上傳結果
-                const uploadedImages: UploadedImage[] = result.images.map(
-                  (img: any, index: number) => {
-                    const url = imageUrlValidator.clean(img.url)
-                    return {
-                      id: img.id,
-                      url: url,
-                      path: img.path,
-                      size: img.size as 'thumbnail' | 'medium' | 'large',
-                      file: processedFile,
-                      preview: url,
-                      position: tempImage.position + index,
-                      alt: `${processedFile.name} (${img.size})`,
-                    }
-                  }
-                )
-
-                // 用上傳成功的圖片替換臨時預覽
-                setPreviewImages(prev => [
-                  ...prev.filter(img => img.id !== tempImage.id),
-                  ...uploadedImages,
-                ])
-                newImages.push(...uploadedImages)
-              } else if (result.image) {
-                // 單一尺寸上傳結果
-                const cleanUrl = imageUrlValidator.clean(result.image.url)
-                const uploadedImage: UploadedImage = {
-                  id: result.image.id,
-                  url: cleanUrl,
-                  path: result.image.path,
-                  size: result.image.size,
-                  file: processedFile,
-                  preview: cleanUrl,
-                  position: tempImage.position,
-                  alt: `${processedFile.name} (${result.image.size})`,
-                }
-
-                // 用上傳成功的圖片替換臨時預覽
-                setPreviewImages(prev =>
-                  prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
-                )
-                newImages.push(uploadedImage)
-              }
-            } else {
-              // 舊 API 回應格式（向後相容）
-              if (generateMultipleSizes && result.multiple) {
-                // 多尺寸上傳結果 - 直接替換臨時預覽
-                const uploadedImages: UploadedImage[] = []
-                Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
-                  const url = imageUrlValidator.clean(urlData.url) // 清理和驗證 URL
-                  uploadedImages.push({
-                    id: `${productId}-${size}-${Date.now()}-${i}`,
-                    url: url,
-                    path: urlData.path,
-                    size: size as 'thumbnail' | 'medium' | 'large',
-                    file: processedFile,
-                    preview: url, // 使用清理後的 Supabase URL
-                    position: tempImage.position + index,
-                    alt: `${processedFile.name} (${size})`,
-                  })
+            // 可選的圖片壓縮
+            let processedFile = file
+            if (enableCompression) {
+              try {
+                processedFile = await compressImage(file)
+              } catch (error) {
+                logger.warn('圖片壓縮失敗，使用原檔案', {
+                  metadata: {
+                    context: 'compressImage',
+                    error: error instanceof Error ? error.message : 'Unknown compression error',
+                  },
                 })
-
-                // 用上傳成功的圖片替換臨時預覽
-                setPreviewImages(prev => [
-                  ...prev.filter(img => img.id !== tempImage.id),
-                  ...uploadedImages,
-                ])
-                newImages.push(...uploadedImages)
-              } else {
-                // 單一尺寸上傳結果
-                const cleanUrl = imageUrlValidator.clean(result.url || '')
-                const uploadedImage: UploadedImage = {
-                  id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${i}`,
-                  url: cleanUrl,
-                  path: result.path || '',
-                  size: result.size || 'medium',
-                  file: processedFile,
-                  preview: cleanUrl, // 使用清理後的 Supabase URL
-                  position: tempImage.position,
-                  alt: `${processedFile.name} (${result.size || 'medium'})`,
-                }
-
-                // 用上傳成功的圖片替換臨時預覽
-                setPreviewImages(prev =>
-                  prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
-                )
-                newImages.push(uploadedImage)
               }
             }
-          } catch (uploadError) {
-            // 上傳失敗，保留本地預覽並更新 ID
-            logger.error(
-              '上傳失敗，保留本地預覽',
-              uploadError instanceof Error ? uploadError : new Error('Unknown upload error'),
-              {
-                metadata: {
-                  fileName: processedFile.name,
-                  tempImageId: tempImage.id,
-                },
-              }
-            )
-            setPreviewImages(prev =>
-              prev.map(img =>
-                img.id === tempImage.id
-                  ? {
-                      ...img,
-                      id: `local-${productId}-${Date.now()}-${i}`,
-                      alt: `${processedFile.name} (上傳失敗)`,
+
+            // 生成本地預覽（立即顯示）
+            const preview = await getImagePreviewUrl(processedFile)
+
+            // 先創建本地預覽圖片對象，讓用戶立即看到
+            const tempImage: UploadedImage = {
+              id: `temp-${productId}-${Date.now()}-${globalIndex}`,
+              url: '',
+              path: '',
+              size: 'medium',
+              file: processedFile,
+              preview: preview,
+              position: previewImages.length + globalIndex,
+              alt: `${processedFile.name} 預覽`,
+            }
+
+            // 立即添加到預覽列表
+            setPreviewImages(prev => [...prev, tempImage])
+
+            try {
+              // 上傳到伺服器
+              const result = (await uploadImageToServer(
+                processedFile,
+                productId,
+                generateMultipleSizes,
+                csrfToken
+              )) as UploadResult
+
+              if (useUnifiedAPI) {
+                // 統一 API 回應格式
+                if (result.multiple && result.images) {
+                  // 多尺寸上傳結果
+                  const uploadedImages: UploadedImage[] = result.images.map(
+                    (img: any, index: number) => {
+                      const url = imageUrlValidator.clean(img.url)
+                      return {
+                        id: img.id,
+                        url: url,
+                        path: img.path,
+                        size: img.size as 'thumbnail' | 'medium' | 'large',
+                        file: processedFile,
+                        preview: url,
+                        position: tempImage.position + index,
+                        alt: `${processedFile.name} (${img.size})`,
+                      }
                     }
-                  : img
+                  )
+
+                  // 用上傳成功的圖片替換臨時預覽
+                  setPreviewImages(prev => [
+                    ...prev.filter(img => img.id !== tempImage.id),
+                    ...uploadedImages,
+                  ])
+                  return uploadedImages
+                } else if (result.image) {
+                  // 單一尺寸上傳結果
+                  const cleanUrl = imageUrlValidator.clean(result.image.url)
+                  const uploadedImage: UploadedImage = {
+                    id: result.image.id,
+                    url: cleanUrl,
+                    path: result.image.path,
+                    size: result.image.size,
+                    file: processedFile,
+                    preview: cleanUrl,
+                    position: tempImage.position,
+                    alt: `${processedFile.name} (${result.image.size})`,
+                  }
+
+                  // 用上傳成功的圖片替換臨時預覽
+                  setPreviewImages(prev =>
+                    prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
+                  )
+                  return [uploadedImage]
+                }
+              } else {
+                // 舊 API 回應格式（向後相容）
+                if (generateMultipleSizes && result.multiple) {
+                  // 多尺寸上傳結果 - 直接替換臨時預覽
+                  const uploadedImages: UploadedImage[] = []
+                  Object.entries(result.urls || {}).forEach(([size, urlData], index) => {
+                    const url = imageUrlValidator.clean(urlData.url) // 清理和驗證 URL
+                    uploadedImages.push({
+                      id: `${productId}-${size}-${Date.now()}-${globalIndex}`,
+                      url: url,
+                      path: urlData.path,
+                      size: size as 'thumbnail' | 'medium' | 'large',
+                      file: processedFile,
+                      preview: url, // 使用清理後的 Supabase URL
+                      position: tempImage.position + index,
+                      alt: `${processedFile.name} (${size})`,
+                    })
+                  })
+
+                  // 用上傳成功的圖片替換臨時預覽
+                  setPreviewImages(prev => [
+                    ...prev.filter(img => img.id !== tempImage.id),
+                    ...uploadedImages,
+                  ])
+                  return uploadedImages
+                } else {
+                  // 單一尺寸上傳結果
+                  const cleanUrl = imageUrlValidator.clean(result.url || '')
+                  const uploadedImage: UploadedImage = {
+                    id: `${productId}-${result.size || 'unknown'}-${Date.now()}-${globalIndex}`,
+                    url: cleanUrl,
+                    path: result.path || '',
+                    size: result.size || 'medium',
+                    file: processedFile,
+                    preview: cleanUrl, // 使用清理後的 Supabase URL
+                    position: tempImage.position,
+                    alt: `${processedFile.name} (${result.size || 'medium'})`,
+                  }
+
+                  // 用上傳成功的圖片替換臨時預覽
+                  setPreviewImages(prev =>
+                    prev.map(img => (img.id === tempImage.id ? uploadedImage : img))
+                  )
+                  return [uploadedImage]
+                }
+              }
+            } catch (uploadError) {
+              // 上傳失敗，保留本地預覽並更新 ID
+              logger.error(
+                '上傳失敗，保留本地預覽',
+                uploadError instanceof Error ? uploadError : new Error('Unknown upload error'),
+                {
+                  metadata: {
+                    fileName: processedFile.name,
+                    tempImageId: tempImage.id,
+                  },
+                }
               )
-            )
-            throw uploadError // 重新拋出錯誤，讓外層 catch 處理
+              setPreviewImages(prev =>
+                prev.map(img =>
+                  img.id === tempImage.id
+                    ? {
+                        ...img,
+                        id: `local-${productId}-${Date.now()}-${globalIndex}`,
+                        alt: `${processedFile.name} (上傳失敗)`,
+                      }
+                    : img
+                )
+              )
+              throw uploadError // 重新拋出錯誤，讓外層 catch 處理
+            }
+            return []
+          })
+
+          // 等待當前批次完成
+          const batchResults = await Promise.allSettled(batchPromises)
+
+          // 處理批次結果
+          batchResults.forEach(result => {
+            if (result.status === 'fulfilled' && result.value) {
+              newImages.push(...result.value)
+            }
+          })
+
+          // 如果不是最後一個批次，添加延遲避免速率限制
+          if (i + MAX_CONCURRENT_UPLOADS < validFiles.length) {
+            logger.info('批次上傳延遲', {
+              metadata: {
+                currentBatch: Math.floor(i / MAX_CONCURRENT_UPLOADS) + 1,
+                totalBatches: Math.ceil(validFiles.length / MAX_CONCURRENT_UPLOADS),
+                delay: UPLOAD_DELAY,
+              },
+            })
+            await new Promise(resolve => setTimeout(resolve, UPLOAD_DELAY))
           }
         }
 
@@ -309,12 +340,23 @@ export default function ImageUploader({
         onUploadSuccess?.(newImages)
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : '未知錯誤'
-        const detailedError = `圖片上傳失敗: ${errorMsg}。請檢查網路連線後再試。`
+
+        // 特別處理 429 錯誤
+        let detailedError = `圖片上傳失敗: ${errorMsg}`
+        if (errorMsg.includes('429') || errorMsg.toLowerCase().includes('too many requests')) {
+          detailedError = '上傳請求過於頻繁，請稍候再試。系統已自動限制上傳速度以確保穩定性。'
+        } else if (errorMsg.includes('timeout') || errorMsg.includes('TIMEOUT')) {
+          detailedError = '上傳超時，請檢查網路連線或減少同時上傳的檔案數量。'
+        } else {
+          detailedError += '。請檢查網路連線後再試。'
+        }
 
         logger.error('圖片上傳失敗', error instanceof Error ? error : new Error('Unknown error'), {
           metadata: {
             fileCount: validFiles.length,
             errorMessage: errorMsg,
+            is429Error: errorMsg.includes('429'),
+            maxConcurrentUploads: 2, // 記錄當前限制設定
           },
         })
 
