@@ -113,3 +113,39 @@ export interface PaginatedResult<T> {
   nextOffset?: number
   prevOffset?: number
 }
+
+// 統一圖片管理表 (images table)
+export interface ImageRecord extends BaseEntity {
+  module: string
+  entity_id: string
+  file_path: string
+  storage_url: string
+  size: string
+  display_position: number
+  alt_text?: string
+  metadata?: Record<string, any>
+}
+
+// 圖片上傳結果
+export interface ImageUploadResult {
+  id: string
+  url: string
+  path: string
+  size: string
+  module: string
+  entityId: string
+}
+
+// Database 類型定義 - 模擬 Supabase 生成的類型
+export interface Database {
+  public: {
+    Tables: {
+      images: {
+        Row: ImageRecord
+        Insert: Omit<ImageRecord, 'id' | 'created_at' | 'updated_at'>
+        Update: Partial<Omit<ImageRecord, 'id' | 'created_at' | 'updated_at'>>
+      }
+      // 其他表可以在這裡新增
+    }
+  }
+}

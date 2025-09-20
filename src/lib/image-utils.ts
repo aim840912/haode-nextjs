@@ -166,9 +166,134 @@ export async function compressImage(
 }
 
 /**
- * 驗證圖片檔案
+ * 檔案魔術位元組（Magic Number）檢查
+ * 驗證檔案的實際內容是否符合聲明的 MIME 類型
  */
-export function validateImageFile(file: File): { valid: boolean; error?: string } {
+async function validateFileMagicBytes(file: File): Promise<{ valid: boolean; error?: string }> {
+  const buffer = await file.slice(0, 16).arrayBuffer()
+  const bytes = new Uint8Array(buffer)
+
+  // 常見圖片格式的魔術位元組
+  const magicBytes: { [key: string]: number[] } = {
+    'image/jpeg': [0xff, 0xd8, 0xff],
+    'image/png': [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a],
+    'image/webp': [0x52, 0x49, 0x46, 0x46], // 需要額外檢查 WEBP 標識
+    'image/avif': [0x00, 0x00, 0x00], // AVIF 檢查較複雜，基礎檢查
+  }
+
+  const expectedMagic = magicBytes[file.type]
+  if (!expectedMagic) {
+    return { valid: false, error: '不支援的檔案類型' }
+  }
+
+  // 檢查魔術位元組
+  for (let i = 0; i < expectedMagic.length; i++) {
+    if (bytes[i] !== expectedMagic[i]) {
+      return {
+        valid: false,
+        error: '檔案內容與宣告的格式不符，可能是惡意檔案',
+      }
+    }
+  }
+
+  // WebP 需要額外檢查
+  if (file.type === 'image/webp') {
+    const webpSignature = Array.from(bytes.slice(8, 12))
+    const expectedWebp = [0x57, 0x45, 0x42, 0x50] // "WEBP"
+    if (!webpSignature.every((byte, i) => byte === expectedWebp[i])) {
+      return {
+        valid: false,
+        error: 'WebP 檔案格式驗證失敗',
+      }
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * 驗證圖片檔案
+ * 包含基本驗證和深度安全檢查
+ */
+export async function validateImageFile(file: File): Promise<{ valid: boolean; error?: string }> {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  const minSize = 100 // 100 bytes 最小檔案大小
+
+  // 基本檔案名稱檢查
+  if (!file.name || file.name.trim() === '') {
+    return {
+      valid: false,
+      error: '檔案名稱不能為空',
+    }
+  }
+
+  // 檔案名稱長度檢查
+  if (file.name.length > 255) {
+    return {
+      valid: false,
+      error: '檔案名稱過長（最多 255 字元）',
+    }
+  }
+
+  // 危險檔案名稱檢查
+  const dangerousPatterns = [
+    /\.\./, // 路徑穿越
+    /[<>:"\/\\|?*]/, // 危險字符
+    /^\.|\.$/, // 以點開始或結束
+    /\.(exe|bat|cmd|scr|com|pif|vbs|js|jar|php|asp|jsp)$/i, // 可執行檔案
+  ]
+
+  if (dangerousPatterns.some(pattern => pattern.test(file.name))) {
+    return {
+      valid: false,
+      error: '檔案名稱包含不安全的字元或格式',
+    }
+  }
+
+  // 檔案大小檢查
+  if (file.size < minSize) {
+    return {
+      valid: false,
+      error: '檔案太小，可能不是有效的圖片檔案',
+    }
+  }
+
+  if (file.size > maxSize) {
+    return {
+      valid: false,
+      error: '檔案大小不能超過 10MB',
+    }
+  }
+
+  // MIME 類型檢查
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      valid: false,
+      error: '不支援的檔案格式。請使用 JPEG、PNG、WebP 或 AVIF 格式',
+    }
+  }
+
+  // 深度檔案內容驗證（魔術位元組檢查）
+  try {
+    const magicBytesValidation = await validateFileMagicBytes(file)
+    if (!magicBytesValidation.valid) {
+      return magicBytesValidation
+    }
+  } catch (error) {
+    return {
+      valid: false,
+      error: '檔案內容驗證失敗',
+    }
+  }
+
+  return { valid: true }
+}
+
+/**
+ * 同步版本的基本檔案驗證（向後相容）
+ */
+export function validateImageFileBasic(file: File): { valid: boolean; error?: string } {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
   const maxSize = 10 * 1024 * 1024 // 10MB
 

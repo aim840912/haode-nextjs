@@ -514,6 +514,48 @@ export interface Database {
         }
         Relationships: []
       }
+      images: {
+        Row: {
+          id: string
+          module: string
+          entity_id: string
+          file_path: string
+          storage_url: string
+          size: string
+          display_position: number
+          alt_text: string | null
+          metadata: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          module: string
+          entity_id: string
+          file_path: string
+          storage_url: string
+          size?: string
+          display_position?: number
+          alt_text?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          module?: string
+          entity_id?: string
+          file_path?: string
+          storage_url?: string
+          size?: string
+          display_position?: number
+          alt_text?: string | null
+          metadata?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
