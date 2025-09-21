@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { Product } from '@/types/product'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { logger } from '@/lib/logger'

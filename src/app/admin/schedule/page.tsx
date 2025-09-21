@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { ScheduleItem } from '@/types/schedule'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function ScheduleAdmin() {
   const [schedule, setSchedule] = useState<ScheduleItem[]>([])

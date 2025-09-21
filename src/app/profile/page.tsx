@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
-import { useAuth } from '@/lib/auth-context'
-import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
+import { useAuth } from '@/contexts/AuthContext'
+import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useRouter, useSearchParams } from 'next/navigation'
 import LoadingSpinner, { LoadingButton } from '@/components/ui/loading/LoadingSpinner'

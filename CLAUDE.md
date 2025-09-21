@@ -44,7 +44,7 @@ npm run analyze                      # Bundle analysis
 
 ### API 開發模式
 ```typescript
-import { requireAuth, success, ValidationError } from '@/lib/api-middleware'
+import { requireAuth, success, ValidationError } from '@/lib/middleware/api-middleware'
 
 export const POST = requireAuth(async (req, { user }) => {
   const data = await req.json()
@@ -182,7 +182,6 @@ TodoWrite({
 **專案 API 錯誤處理覆蓋率 100% 達成** - 所有 API 路由已使用統一錯誤處理系統 🎯 (已完成)
 - ✅ 所有核心 API 路由 (35個檔案)
 - ✅ 所有系統管理 API (5個檔案)
-- ✅ 所有新版本 API (/api/v1/)
 - 📊 總計：40個 API 路由檔案，從 58% → 100% 覆蓋率
 
 **重要提醒**：
@@ -1070,7 +1069,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 新的方式（推薦）
-import { requireAuth } from '@/lib/api-middleware'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 
 export const GET = requireAuth(async (req, { user }) => {
   // user 已保證存在，直接使用
@@ -1159,13 +1158,13 @@ export const GET = withErrorHandler(handlePublicGET, { module: 'PublicAPI' })
   }, [query])
   ```
 
-### 新版本 API 結構（/api/v1/）
+### API 開發結構
 
-新的 API 應遵循版本化結構：
+所有 API 應遵循統一的開發結構：
 
 ```typescript
-// 檔案位置：src/app/api/v1/[resource]/route.ts
-import { requireAuth, success, ValidationError } from '@/lib/api-middleware'
+// 檔案位置：src/app/api/[resource]/route.ts
+import { requireAuth, success, ValidationError } from '@/lib/middleware/api-middleware'
 import { z } from 'zod'
 
 // 1. 定義驗證架構
@@ -1205,7 +1204,7 @@ export const POST = requireAuth(handlePOST)
 
 ### 參考範例
 
-查看 `src/app/api/v1/example/route.ts` 了解完整的實作範例。
+查看現有的 API 路由（如 `src/app/api/inquiries/route.ts`）了解完整的實作範例。
 
 ## 最佳實踐範例
 

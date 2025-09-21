@@ -6,10 +6,10 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/api-middleware'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
-import { orderService } from '@/services/orderService'
+import { orderService } from '@/services/core/order/orderService'
 import { OrderStatus } from '@/types/order'
 import { z } from 'zod'
 import { apiLogger } from '@/lib/logger'

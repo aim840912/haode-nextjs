@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { getMomentService } from '@/services/serviceFactory'
+import { getMomentService } from '@/services/factory/serviceFactory'
 import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 

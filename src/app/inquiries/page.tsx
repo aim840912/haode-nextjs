@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import {
   InquiryWithItems,

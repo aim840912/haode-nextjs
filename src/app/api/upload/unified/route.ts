@@ -4,11 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
-import { unifiedImageService } from '@/lib/unified-image-service'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { getModuleConfig, isValidModule } from '@/config/image-modules.config'
 import { z } from 'zod'
 

@@ -1,8 +1,8 @@
-import { SupabaseConnectionPool } from '../db-pool'
-import { ConnectionManager } from '../pooled-connection'
+import { SupabaseConnectionPool } from '@/lib/database/db-pool'
+import { ConnectionManager } from '@/lib/database/pooled-connection'
 import { PoolConfigManager } from './pool-config'
-import { createServiceSupabaseClient } from '../supabase-server'
-import { dbLogger } from '../logger'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import { dbLogger } from '@/lib/logger'
 
 /**
  * 連線工廠單例

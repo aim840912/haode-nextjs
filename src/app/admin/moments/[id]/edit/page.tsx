@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 
 // 動態載入圖片上傳器

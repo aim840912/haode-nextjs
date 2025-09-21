@@ -1,23 +1,27 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { ValidationError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
-import { ProductImageService } from '@/services/productImageService'
+import { ProductImageService } from '@/services/core/product/productImageService'
 import { z } from 'zod'
 
 // 圖片排序請求 schema
 const ReorderImagesSchema = z.object({
-  imageOrders: z.array(z.object({
-    id: z.string().uuid('無效的圖片 ID'),
-    position: z.number().int().min(0, '位置必須大於等於 0')
-  })).min(1, '至少需要一個圖片排序')
+  imageOrders: z
+    .array(
+      z.object({
+        id: z.string().uuid('無效的圖片 ID'),
+        position: z.number().int().min(0, '位置必須大於等於 0'),
+      })
+    )
+    .min(1, '至少需要一個圖片排序'),
 })
 
 async function handlePOST(request: NextRequest, params?: unknown) {
   const context = params as { params: Promise<{ id: string }> } | undefined
   const { id: productId } = await (context?.params || Promise.resolve({ id: '' }))
-  
+
   // 驗證產品 ID
   if (!productId) {
     throw new ValidationError('產品 ID 不能為空')
@@ -35,14 +39,14 @@ async function handlePOST(request: NextRequest, params?: unknown) {
 
   const { imageOrders } = result.data
 
-  apiLogger.info('開始更新產品圖片排序', { 
-    metadata: { productId, ordersCount: imageOrders.length } 
+  apiLogger.info('開始更新產品圖片排序', {
+    metadata: { productId, ordersCount: imageOrders.length },
   })
 
   // 驗證所有圖片都屬於該產品
   const existingImages = await ProductImageService.getProductImages(productId)
   const existingImageIds = existingImages.map(img => img.id)
-  
+
   const invalidImageIds = imageOrders.filter(order => !existingImageIds.includes(order.id))
   if (invalidImageIds.length > 0) {
     throw new ValidationError(`以下圖片不屬於該產品: ${invalidImageIds.map(o => o.id).join(', ')}`)
@@ -71,24 +75,24 @@ async function handlePOST(request: NextRequest, params?: unknown) {
     const updatedImages = await ProductImageService.getProductImages(productId)
 
     apiLogger.info('產品圖片排序更新成功', {
-      metadata: { 
-        productId, 
+      metadata: {
+        productId,
         updatedCount: imageOrders.length,
-        newOrder: updatedImages.map(img => ({ id: img.id, position: img.position }))
-      }
+        newOrder: updatedImages.map(img => ({ id: img.id, position: img.position })),
+      },
     })
 
     return success(
       {
         message: '圖片排序更新成功',
-        images: updatedImages
+        images: updatedImages,
       },
       '圖片排序更新成功'
     )
-
   } catch (error) {
-    apiLogger.error('更新產品圖片排序失敗', 
-      error instanceof Error ? error : new Error(String(error)), 
+    apiLogger.error(
+      '更新產品圖片排序失敗',
+      error instanceof Error ? error : new Error(String(error)),
       { metadata: { productId } }
     )
     throw error

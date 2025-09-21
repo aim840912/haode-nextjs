@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { redirect } from 'next/navigation'
 import { type EmailOtpType } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
 
 export async function GET(request: NextRequest) {

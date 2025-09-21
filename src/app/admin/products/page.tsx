@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 

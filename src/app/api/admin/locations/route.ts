@@ -1,17 +1,17 @@
 import { NextRequest } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { Database } from '@/types/database'
 import { LocationSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
 import { z } from 'zod'
 import {
   checkAdminPermission,
   createAuthErrorResponse,
   checkRateLimit,
-} from '@/lib/admin-auth-middleware'
+} from '@/lib/middleware/admin-auth-middleware'
 
 // 刪除參數 Schema
 const AdminLocationDeleteSchema = z.object({
@@ -111,11 +111,7 @@ async function handlePOST(request: NextRequest) {
     is_main: result.data.isMain || false,
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('locations')
-    .insert(dbLocation)
-    .select()
-    .single()
+  const { data, error } = await supabaseAdmin.from('locations').insert(dbLocation).select().single()
 
   if (error) throw error
 

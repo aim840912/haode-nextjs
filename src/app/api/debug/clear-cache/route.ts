@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { clearServiceClientCache, refreshServiceClient } from '@/lib/supabase-server'
+import { clearServiceClientCache, refreshServiceClient } from '@/lib/database/supabase-server'
 import {
   clearAdminClientCache,
   refreshAdminClient,
   clearAllClientCaches,
-} from '@/lib/supabase-auth'
+} from '@/lib/database/supabase-auth'
 import { refreshConnectionPoolSchema } from '@/lib/supabase/connection-factory'
 import { apiLogger } from '@/lib/logger'
 

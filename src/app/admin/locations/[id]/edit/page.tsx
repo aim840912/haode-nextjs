@@ -8,9 +8,9 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { getFullImageUrl, extractStoragePathFromUrl } from '@/lib/image-url-utils'
+import { getFullImageUrl, extractStoragePathFromUrl } from '@/lib/utils/image-url-utils'
 
 // 動態載入圖片上傳器
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {

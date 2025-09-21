@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { getScheduleService } from '@/services/serviceFactory'
+import { getScheduleService } from '@/services/factory/serviceFactory'
 import { ScheduleSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
 
 /**

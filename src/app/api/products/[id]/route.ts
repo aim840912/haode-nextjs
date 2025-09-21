@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { productService } from '@/services/v2/productService'
+import { productService } from '@/services/core/product/productService'
 import { AdminProductSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
 
 /**
@@ -74,7 +74,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
 
   // 手動清除產品相關的快取
   try {
-    const { CacheManager } = await import('@/lib/cache-server')
+    const { CacheManager } = await import('@/lib/cache/cache-server')
     await CacheManager.deletePattern('products:*')
   } catch (cacheError) {
     apiLogger.warn('清除快取失敗', {
@@ -108,7 +108,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
 
   // 手動清除產品相關的快取
   try {
-    const { CacheManager } = await import('@/lib/cache-server')
+    const { CacheManager } = await import('@/lib/cache/cache-server')
     await CacheManager.deletePattern('products:*')
   } catch (cacheError) {
     apiLogger.warn('清除快取失敗', {

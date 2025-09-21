@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
@@ -15,7 +15,7 @@ import {
   PRIORITY_COLORS,
   InquiryPriority,
 } from '@/hooks/useInquiryWorkflow'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import {
   InquiryWithItems,
   InquiryStatus,
@@ -26,7 +26,7 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { InquiryStatusFlowCompact } from '@/components/inquiry/InquiryStatusFlow'
+import { InquiryStatusFlowCompact } from '@/components/features/inquiry/InquiryStatusFlow'
 
 function AdminInquiriesPage() {
   const { user } = useAuth()
@@ -109,7 +109,7 @@ function AdminInquiriesPage() {
     timeframe_days: number
   } | null>(null)
 
-  // 取得詳細統計資料 - 使用新的 v1 API
+  // 取得詳細統計資料
   const fetchDetailedStats = useCallback(async () => {
     try {
       const {
@@ -119,9 +119,9 @@ function AdminInquiriesPage() {
         throw new Error('認證失敗')
       }
 
-      // 使用新的 v1 統計 API，管理員模式並取得完整詳情
+      // 使用統計 API，管理員模式並取得完整詳情
       const response = await fetch(
-        `/api/v1/inquiries/stats?timeframe=30&detail_level=full&admin_mode=true`,
+        `/api/inquiries/stats?timeframe=30&detail_level=full&admin_mode=true`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,

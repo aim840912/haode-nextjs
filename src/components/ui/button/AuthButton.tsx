@@ -1,13 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
-import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
+import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { useState, useRef, useEffect } from 'react'
 import { logger } from '@/lib/logger'
-import { shouldShowErrorInDevelopment } from '@/lib/error-utils'
+import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
 
 // SVG 圖示元件
 const UserIcon = ({ className }: { className?: string }) => (

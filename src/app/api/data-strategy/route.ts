@@ -1,7 +1,7 @@
 // import { NextRequest } from 'next/server' // 未使用
 import { getStrategyInfo } from '@/config/data-strategy'
-import { getCurrentServiceType, healthCheck } from '@/services/serviceFactory'
-import { withErrorHandler } from '@/lib/error-handler'
+import { getCurrentServiceType, healthCheck } from '@/services/factory/serviceFactory'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 

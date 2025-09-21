@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/api-middleware'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
-import { userInterestsServiceV2Simple } from '@/services/v2/userInterestsServiceSimple'
+import { userInterestsServiceSimple } from '@/services/core/user/userInterestsServiceSimple'
 import { z } from 'zod'
 
 // 請求驗證架構
@@ -28,11 +28,11 @@ async function handlePOST(req: NextRequest, user: any) {
     const { productId } = result.data
 
     // 先檢查當前狀態
-    const currentInterests = await userInterestsServiceV2Simple.getUserInterests(user.id)
+    const currentInterests = await userInterestsServiceSimple.getUserInterests(user.id)
     const isCurrentlyInterested = currentInterests.includes(productId)
 
     // 切換興趣狀態
-    const success_result = await userInterestsServiceV2Simple.toggleInterest(user.id, productId)
+    const success_result = await userInterestsServiceSimple.toggleInterest(user.id, productId)
 
     if (!success_result) {
       throw new Error('切換興趣狀態失敗')

@@ -21,7 +21,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
-import { getFullImageUrl } from '@/lib/image-url-utils'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 
 interface SortableImage {

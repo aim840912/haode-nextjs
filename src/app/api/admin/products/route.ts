@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { Product } from '@/types/product'
-import { checkAdminPermission, createAuthErrorResponse } from '@/lib/admin-auth-middleware'
+import {
+  checkAdminPermission,
+  createAuthErrorResponse,
+} from '@/lib/middleware/admin-auth-middleware'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { unifiedImageService } from '@/lib/unified-image-service'
-import { SupabaseAuditLogService } from '@/services/auditLogService'
-import { adminProductService } from '@/services/v2/productService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
+import { adminProductService } from '@/services/core/product/productService'
 import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AdminProductSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'

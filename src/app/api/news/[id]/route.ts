@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { newsServiceV2Simple as newsService } from '@/services/v2/newsServiceSimple'
+import { newsServiceSimple as newsService } from '@/services/core/content/newsServiceSimple'
 import { NewsSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
 
 /**

@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react'
 import type FullCalendar from '@fullcalendar/react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
 import type {
   CalendarEvent,

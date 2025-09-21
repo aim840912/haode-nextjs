@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { SearchResults } from '@/components/search/SearchResults'
+import { SearchResults } from '@/components/features/search/SearchResults'
 import { SearchBar } from '@/components/ui/SearchBar'
 import { SearchFilters } from '@/types/search'
 
@@ -30,18 +30,14 @@ function SearchContent() {
                 </p>
               )}
             </div>
-            
+
             {/* 搜尋欄 */}
             <div className="w-full lg:w-96">
-              <SearchBar 
+              <SearchBar
                 placeholder="重新搜尋..."
-                onSearch={(newQuery) => {
+                onSearch={newQuery => {
                   setQuery(newQuery)
-                  window.history.pushState(
-                    {}, 
-                    '', 
-                    `/search?q=${encodeURIComponent(newQuery)}`
-                  )
+                  window.history.pushState({}, '', `/search?q=${encodeURIComponent(newQuery)}`)
                 }}
                 showSuggestions={false}
               />
@@ -52,11 +48,7 @@ function SearchContent() {
 
       {/* Search Results */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SearchResults 
-          query={query}
-          filters={filters}
-          onFiltersChange={setFilters}
-        />
+        <SearchResults query={query} filters={filters} onFiltersChange={setFilters} />
       </div>
     </div>
   )
@@ -64,14 +56,16 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">載入搜尋頁面...</p>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">載入搜尋頁面...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <SearchContent />
     </Suspense>
   )

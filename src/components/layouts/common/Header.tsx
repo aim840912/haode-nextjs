@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import AuthButton from '@/components/ui/button/AuthButton'
 import SocialLinks from '@/components/features/social/SocialLinks'
 import { ExpandableSearchBar } from '@/components/ui/ExpandableSearchBar'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 
 export default function Header() {

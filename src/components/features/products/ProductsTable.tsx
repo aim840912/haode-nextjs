@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Product } from '@/types/product'
 import Link from 'next/link'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { SafeImage } from '@/components/ui/image/OptimizedImage'

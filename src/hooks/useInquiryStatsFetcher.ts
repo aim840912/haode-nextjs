@@ -6,7 +6,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import {
   InquiryStatsData,
@@ -14,8 +14,8 @@ import {
   formatUserFriendlyError,
   shouldShowErrorToUser,
   INQUIRY_STATS_CONSTANTS,
-} from '@/lib/inquiry-stats-utils'
-import { isRateLimitError, isNetworkError } from '@/lib/error-utils'
+} from '@/lib/utils/inquiry-stats-utils'
+import { isRateLimitError, isNetworkError } from '@/lib/utils/error-utils'
 
 // 全域請求去重機制
 interface PendingRequest {

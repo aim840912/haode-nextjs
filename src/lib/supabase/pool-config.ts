@@ -1,4 +1,4 @@
-import { PoolConfig } from '../db-pool'
+import { PoolConfig } from '@/lib/database/db-pool'
 
 /**
  * 連線池配置管理

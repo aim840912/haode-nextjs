@@ -4,9 +4,9 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin, User } from '@/lib/api-middleware'
+import { requireAdmin, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { generateKPIReport } from '@/services/kpiMonitoringService'
+import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
 import { apiLogger } from '@/lib/logger'
 
 async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {

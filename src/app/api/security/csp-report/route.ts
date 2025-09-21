@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
 
 /**

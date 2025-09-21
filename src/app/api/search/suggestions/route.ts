@@ -5,7 +5,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { fullTextSearchService } from '@/lib/full-text-search'

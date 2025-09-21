@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { MomentItem } from '@/types/moments'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import Breadcrumbs, { createMomentsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'

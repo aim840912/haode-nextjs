@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Product } from '@/types/product'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { SafeImage } from '@/components/ui/image/OptimizedImage'

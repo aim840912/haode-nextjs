@@ -7,8 +7,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
-import { useAuth } from '@/lib/auth-context'
-import { shouldShowErrorInDevelopment } from '@/lib/error-utils'
+import { useAuth } from '@/contexts/AuthContext'
+import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
 
 interface InquiryNotificationBadgeProps {
   /** 徽章大小 */

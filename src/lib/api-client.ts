@@ -404,88 +404,6 @@ class ApiClient {
 export const apiClient = new ApiClient()
 
 /**
- * V1 API 客戶端 - 使用 v1 端點
- */
-export class V1ApiClient extends ApiClient {
-  private v1BaseUrl: string
-
-  constructor() {
-    super()
-    this.v1BaseUrl = '/api/v1'
-  }
-
-  /**
-   * 執行帶重試的請求 - 覆寫基類方法以使用 v1 端點
-   */
-  private async executeV1WithRetry<T>(
-    endpoint: string,
-    options: ApiRequestOptions
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.v1BaseUrl}${endpoint}`
-    return super['executeWithRetry'](url, options)
-  }
-
-  /**
-   * V1 GET 請求
-   */
-  async get<T = unknown>(
-    endpoint: string,
-    options: ApiRequestOptions = {}
-  ): Promise<ApiResponse<T>> {
-    return this.executeV1WithRetry<T>(endpoint, {
-      ...options,
-      method: 'GET',
-    })
-  }
-
-  /**
-   * V1 POST 請求
-   */
-  async post<T = unknown>(
-    endpoint: string,
-    data?: ApiRequestData,
-    options: ApiRequestOptions = {}
-  ): Promise<ApiResponse<T>> {
-    return this.executeV1WithRetry<T>(endpoint, {
-      ...options,
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  /**
-   * V1 PUT 請求
-   */
-  async put<T = unknown>(
-    endpoint: string,
-    data?: ApiRequestData,
-    options: ApiRequestOptions = {}
-  ): Promise<ApiResponse<T>> {
-    return this.executeV1WithRetry<T>(endpoint, {
-      ...options,
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    })
-  }
-
-  /**
-   * V1 DELETE 請求
-   */
-  async delete<T = unknown>(
-    endpoint: string,
-    options: ApiRequestOptions = {}
-  ): Promise<ApiResponse<T>> {
-    return this.executeV1WithRetry<T>(endpoint, {
-      ...options,
-      method: 'DELETE',
-    })
-  }
-}
-
-// V1 API 客戶端實例
-export const v1ApiClient = new V1ApiClient()
-
-/**
  * 便捷的 API 調用函數
  */
 export const api = {
@@ -581,24 +499,7 @@ export function useApiCall<T = unknown>() {
 }
 
 /**
- * V1 API 便捷調用函數
- */
-export const v1Api = {
-  get: <T = unknown>(endpoint: string, options?: ApiRequestOptions) =>
-    v1ApiClient.get<T>(endpoint, options),
-
-  post: <T = unknown>(endpoint: string, data?: ApiRequestData, options?: ApiRequestOptions) =>
-    v1ApiClient.post<T>(endpoint, data, options),
-
-  put: <T = unknown>(endpoint: string, data?: ApiRequestData, options?: ApiRequestOptions) =>
-    v1ApiClient.put<T>(endpoint, data, options),
-
-  delete: <T = unknown>(endpoint: string, options?: ApiRequestOptions) =>
-    v1ApiClient.delete<T>(endpoint, options),
-}
-
-/**
- * 詢價 API 客戶端 - 使用 v1 端點
+ * 詢價 API 客戶端
  */
 export const inquiryApi = {
   // 列出詢價單
@@ -619,22 +520,23 @@ export const inquiryApi = {
       })
     }
 
-    const endpoint = `/inquiries${searchParams.toString() ? `?${searchParams}` : ''}`
-    return v1ApiClient.get(endpoint)
+    const endpoint = `/api/inquiries${searchParams.toString() ? `?${searchParams}` : ''}`
+    return apiClient.get(endpoint)
   },
 
   // 獲取單一詢價單
-  get: (id: string) => v1ApiClient.get(`/inquiries/${id}`),
+  get: (id: string) => apiClient.get(`/api/inquiries/${id}`),
 
   // 創建詢價單
-  create: (data: CreateInquiryRequest) => v1ApiClient.post('/inquiries', data),
+  create: (data: CreateInquiryRequest) => apiClient.post('/api/inquiries', data),
 
   // 更新詢價單
-  update: (id: string, data: Record<string, unknown>) => v1ApiClient.put(`/inquiries/${id}`, data),
+  update: (id: string, data: Record<string, unknown>) =>
+    apiClient.put(`/api/inquiries/${id}`, data),
 
   // 刪除詢價單
-  delete: (id: string) => v1ApiClient.delete(`/inquiries/${id}`),
+  delete: (id: string) => apiClient.delete(`/api/inquiries/${id}`),
 
   // 獲取統計資料
-  stats: () => v1ApiClient.get('/inquiries/stats'),
+  stats: () => apiClient.get('/api/inquiries/stats'),
 }

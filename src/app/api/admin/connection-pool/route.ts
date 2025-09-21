@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/api-middleware'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import {
@@ -14,7 +14,7 @@ import {
   startSchemaMonitoring,
   stopSchemaMonitoring,
   checkSchemaChanges,
-} from '@/lib/schema-monitor'
+} from '@/lib/database/schema-monitor'
 import { apiLogger } from '@/lib/logger'
 
 interface ConnectionPoolOperation {

@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { FarmTourActivity } from '@/types/farmTour'
 import SocialLinks from '@/components/features/social/SocialLinks'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 
 // 農場設施
 const farmFacilities = [

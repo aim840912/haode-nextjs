@@ -3,9 +3,9 @@ import {
   resetServiceInstances,
   getCurrentServiceType,
   healthCheck,
-} from '@/services/serviceFactory'
+} from '@/services/factory/serviceFactory'
 import { apiLogger } from '@/lib/logger'
-import { requireAdmin } from '@/lib/api-middleware'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 
 async function handlePOST(request: NextRequest, user: { id: string }) {

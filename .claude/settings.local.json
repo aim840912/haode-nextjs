@@ -47,7 +47,10 @@
       "Bash(git rm:*)",
       "Bash(npm run build:*)",
       "Bash(xargs -r kill -9)",
-      "mcp__playwright__browser_console_messages"
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_handle_dialog",
+      "Bash(xargs sed:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
 import { Product } from '@/types/product'
 import OptimizedImage from '@/components/ui/image/OptimizedImage'
-import { generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/image-utils'
+import { generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/utils/image-utils'
 
 interface ProductImageGalleryProps {
   product: Product

@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 
 async function handleGET(request: NextRequest) {
   const { searchParams } = new URL(request.url)

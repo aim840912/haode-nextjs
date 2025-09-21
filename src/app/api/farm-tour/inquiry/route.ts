@@ -4,11 +4,11 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
-import { inquiryServiceAdapter } from '@/services/inquiryServiceAdapter'
-import { AuditLogger } from '@/services/auditLogService'
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceAdapter'
+import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
 import { AuthorizationError, ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { created } from '@/lib/api-response'

@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
 import { NewsItem } from '@/types/news'
-import { supabaseProductService } from '@/services/supabaseProductService'
+import { adminProductService } from '@/services/core/product/productService'
 import { logger } from '@/lib/logger'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 動態產品頁面
   let productPages: MetadataRoute.Sitemap = []
   try {
-    const products = await supabaseProductService.getProducts()
+    const products = await adminProductService.getProducts()
     productPages = products
       .filter(product => product.isActive)
       .map(product => ({

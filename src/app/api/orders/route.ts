@@ -6,10 +6,10 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/api-middleware'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { orderService } from '@/services/orderService'
+import { orderService } from '@/services/core/order/orderService'
 import { CreateOrderRequest } from '@/types/order'
 import { z } from 'zod'
 import { apiLogger } from '@/lib/logger'

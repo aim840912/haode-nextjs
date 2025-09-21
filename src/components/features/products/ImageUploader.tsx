@@ -2,8 +2,8 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/image-utils'
-import { imageUrlValidator } from '@/lib/image-url-validator'
+import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
+import { imageUrlValidator } from '@/lib/utils/image-url-validator'
 import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'

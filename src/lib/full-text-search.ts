@@ -9,7 +9,7 @@
  * - 搜尋統計和分析
  */
 
-import { createServiceSupabaseClient } from './supabase-server'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from './logger'
 import { ErrorFactory } from './errors'
 

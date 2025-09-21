@@ -1,10 +1,10 @@
 // import { NextRequest } from 'next/server' // 未使用
-import { supabaseProductService } from '@/services/supabaseProductService'
-import { withErrorHandler } from '@/lib/error-handler'
+import { adminProductService } from '@/services/core/product/productService'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 
 async function handleGET() {
-  const products = await supabaseProductService.getProducts()
+  const products = await adminProductService.getProducts()
 
   // 提取所有唯一的分類
   const categories = [...new Set(products.map(product => product.category))]

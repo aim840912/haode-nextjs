@@ -4,7 +4,7 @@ import Image from 'next/image'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import LoadingSpinner from '../loading/LoadingSpinner'
-import { handleImageError } from '@/lib/image-utils'
+import { handleImageError } from '@/lib/utils/image-utils'
 import { useImageBlob } from '@/hooks/useImageBlob'
 
 /**

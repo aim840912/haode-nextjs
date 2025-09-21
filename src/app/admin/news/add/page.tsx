@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { v4 as uuidv4 } from 'uuid'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小

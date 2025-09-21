@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
@@ -46,7 +46,7 @@ function InquiryListPage() {
       params.sort_order = 'desc'
       params.limit = 100 // 先載入較多資料，前端進行分頁
 
-      // 使用新的 v1 API
+      // 使用 API
       const response = await inquiryApi.list(params)
 
       if (response.success && response.data) {

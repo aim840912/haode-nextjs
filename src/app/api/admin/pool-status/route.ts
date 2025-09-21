@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/api-middleware'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { getPoolStats } from '@/lib/supabase/connection-factory'
 import { apiLogger } from '@/lib/logger'

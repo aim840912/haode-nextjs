@@ -5,14 +5,14 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
-import { inquiryServiceV2Simple as inquiryServiceAdapter } from '@/services/v2/inquiryServiceSimple'
-import { AuditLogger } from '@/services/auditLogService'
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { inquiryServiceSimple as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceSimple'
+import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas } from '@/lib/validation-schemas'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter

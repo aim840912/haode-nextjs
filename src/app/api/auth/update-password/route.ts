@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/api-middleware'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
 
 async function handlePOST(request: NextRequest, user: any) {

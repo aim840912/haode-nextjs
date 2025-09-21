@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
-import { getFarmTourService } from '@/services/serviceFactory'
-import { withErrorHandler } from '@/lib/error-handler'
+import { getFarmTourService } from '@/services/factory/serviceFactory'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 

@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import {
   InquiryWithItems,
@@ -16,7 +16,7 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { InquiryStatusFlowDetailed } from '@/components/inquiry/InquiryStatusFlow'
+import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
 
 interface InquiryDetailPageProps {
   params: Promise<{

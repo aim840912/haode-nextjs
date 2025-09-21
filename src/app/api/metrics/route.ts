@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { getHealthStatus } from '@/lib/error-handler'
+import { getHealthStatus } from '@/lib/middleware/error-handler'
 import { isErrorTrackingAvailable } from '@/lib/error-tracking'
 
 async function handleGET(request: NextRequest) {
@@ -30,7 +30,7 @@ async function handleGET(request: NextRequest) {
   const businessMetrics = metrics.getMetricsSummary(timeRangeMs)
 
   // 取得實際錯誤統計
-  const { ErrorStatsCollector } = await import('@/lib/error-handler')
+  const { ErrorStatsCollector } = await import('@/lib/middleware/error-handler')
   const errorStatsCollector = ErrorStatsCollector.getInstance()
   const errorSummary = errorStatsCollector.getErrorSummary(300000) as {
     total: number

@@ -1,13 +1,13 @@
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { getScheduleService } from '@/services/serviceFactory'
+import { getScheduleService } from '@/services/factory/serviceFactory'
 import { apiLogger } from '@/lib/logger'
 
 interface ScheduleCalendarEvent {
   id: string
-  title: string        // 市集名稱 + 地點
-  start: string        // 日期時間
-  end?: string         // 結束時間（如果有）
+  title: string // 市集名稱 + 地點
+  start: string // 日期時間
+  end?: string // 結束時間（如果有）
   backgroundColor: string
   borderColor: string
   extendedProps: {
@@ -24,11 +24,11 @@ interface ScheduleCalendarEvent {
 async function handleGET() {
   const scheduleService = await getScheduleService()
   const scheduleItems = await scheduleService.getSchedule()
-  
+
   // 將 ScheduleItem 轉換為 FullCalendar 事件格式
   const events: ScheduleCalendarEvent[] = scheduleItems.map(item => {
     const startDateTime = `${item.date}T${item.time}`
-    
+
     // 根據狀態設定顏色
     const getColorByStatus = (status: string) => {
       switch (status) {
@@ -42,9 +42,9 @@ async function handleGET() {
           return { bg: '#10b981', border: '#059669' } // 預設綠色
       }
     }
-    
+
     const colors = getColorByStatus(item.status)
-    
+
     return {
       id: item.id,
       title: `${item.title} - ${item.location}`,
@@ -58,17 +58,17 @@ async function handleGET() {
         weatherNote: item.weatherNote,
         contact: item.contact,
         status: item.status,
-        description: item.description
-      }
+        description: item.description,
+      },
     }
   })
-  
+
   apiLogger.info(`成功取得擺攤行程行事曆資料: ${events.length} 個事件`)
-  
+
   return success(events, '成功取得擺攤行程行事曆')
 }
 
 export const GET = withErrorHandler(handleGET, {
   module: 'ScheduleCalendar',
-  enableAuditLog: false
+  enableAuditLog: false,
 })

@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { kv } from '@vercel/kv'
-import { auditLogService } from '@/services/auditLogService'
+import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { AuditAction } from '@/types/audit'
 import { logger } from '@/lib/logger'
 

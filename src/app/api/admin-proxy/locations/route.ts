@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, ValidationError } from '@/lib/errors'
 
 /**
@@ -30,11 +30,11 @@ async function validateAdminUser() {
   }
 
   // 從 profiles 表獲取用戶角色
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = (await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single() as { data: { role: string } | null; error: Error | null }
+    .single()) as { data: { role: string } | null; error: Error | null }
 
   if (profileError || !profile) {
     throw new AuthorizationError('無法獲取用戶資料')

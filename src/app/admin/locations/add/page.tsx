@@ -6,8 +6,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { useAuth } from '@/lib/auth-context'
-import { getFullImageUrl } from '@/lib/image-url-utils'
+import { useAuth } from '@/contexts/AuthContext'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小

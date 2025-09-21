@@ -4,10 +4,10 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
-import { auditStatsService } from '@/services/auditStatsService'
-import { withErrorHandler } from '@/lib/error-handler'
-import { requireAuth } from '@/lib/api-middleware'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { auditStatsService } from '@/services/infrastructure/auditStatsService'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
@@ -22,11 +22,11 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
 
   // 檢查權限（只有管理員和稽核人員可以查看審計日誌統計）
   const supabase = await createServerSupabaseClient()
-  const { data: profile, error: profileError } = await supabase
+  const { data: profile, error: profileError } = (await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single() as { data: { role: string } | null; error: Error | null }
+    .single()) as { data: { role: string } | null; error: Error | null }
 
   if (profileError) {
     apiLogger.error('查詢使用者資料失敗', profileError, {

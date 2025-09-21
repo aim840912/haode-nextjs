@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function FarmTourAdmin() {
   const [activities, setActivities] = useState<FarmTourActivity[]>([])

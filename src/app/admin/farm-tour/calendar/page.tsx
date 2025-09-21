@@ -8,7 +8,7 @@ import AdminProtection from '@/components/features/admin/AdminProtection'
 import { logger } from '@/lib/logger'
 
 // 動態導入 FarmTourCalendar 以減少初始 Bundle 大小
-const FarmTourCalendar = dynamic(() => import('@/components/calendar/FarmTourCalendar'), {
+const FarmTourCalendar = dynamic(() => import('@/components/features/calendar/FarmTourCalendar'), {
   loading: () => (
     <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
       <div className="text-center">

@@ -7,9 +7,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { imageUrlValidator } from '@/lib/image-url-validator'
+import { imageUrlValidator } from '@/lib/utils/image-url-validator'
 import OptimizedImage from '@/components/ui/image/OptimizedImage'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
@@ -296,7 +296,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       return
     }
 
-    const confirmed = confirm('確定要刪除這張圖片嗎？刪除後無法復原。')
+    const confirmed = confirm('確定要刪除這張圖片嗎？圖片將在保存產品時被移除。')
     if (!confirmed) return
 
     setIsDeletingImage(imageUrl)
@@ -324,21 +324,11 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         throw new Error('無法解析圖片路径')
       }
 
-      // 呼叫刪除 API
-      const response = await fetch('/api/upload/images', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(csrfToken ? { 'x-csrf-token': csrfToken } : {}),
-        },
-        credentials: 'include',
-        body: JSON.stringify({ filePath }),
+      // 不再調用舊的刪除 API，讓後端在更新產品時自動清理未使用的圖片
+      // 只需在前端移除即可
+      logger.info('圖片從產品中移除（文件清理將在保存時進行）', {
+        metadata: { imageUrl, productId },
       })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: '未知錯誤' }))
-        throw new Error(errorData.error || `刪除失敗 (${response.status})`)
-      }
 
       logger.info('圖片刪除成功', {
         metadata: { imageUrl, filePath, productId },

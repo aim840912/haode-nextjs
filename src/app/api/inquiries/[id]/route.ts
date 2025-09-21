@@ -5,15 +5,15 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
-import { inquiryServiceV2Simple as inquiryServiceAdapter } from '@/services/v2/inquiryServiceSimple'
-import { AuditLogger } from '@/services/auditLogService'
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { inquiryServiceSimple as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceSimple'
+import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { InquiryUtils } from '@/types/inquiry'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import type { Database } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 

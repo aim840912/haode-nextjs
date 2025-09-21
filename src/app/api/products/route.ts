@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { productService } from '@/services/v2/productService'
-import { withProductsCache } from '@/lib/api-cache-middleware'
+import { productService } from '@/services/core/product/productService'
+import { withProductsCache } from '@/lib/middleware/api-cache-middleware'
 import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { PublicProductSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
@@ -35,7 +35,7 @@ async function handleGET(request: NextRequest) {
     apiLogger.debug('繞過快取，直接查詢資料庫', { metadata: { nocache: true } })
 
     // 如果要繞過快取，我們需要直接使用基礎服務
-    const { getProductService } = await import('@/services/serviceFactory')
+    const { getProductService } = await import('@/services/factory/serviceFactory')
     const baseService = await getProductService()
 
     // 如果是 CachedProductService，獲取其基礎服務
@@ -104,7 +104,7 @@ async function handlePOST(request: NextRequest) {
 
   // 清除產品快取，確保變更立即生效
   try {
-    const { CachedProductService } = await import('@/services/cachedProductService')
+    const { CachedProductService } = await import('@/services/core/product/cachedProductService')
     await CachedProductService.clearGlobalCache()
     apiLogger.info('產品新增後已清除全域快取', { metadata: { action: 'product_created' } })
   } catch (cacheError) {

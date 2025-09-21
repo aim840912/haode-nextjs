@@ -3,137 +3,127 @@
  * 處理個別審計日誌的刪除操作
  */
 
-import { NextRequest } from 'next/server';
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server';
-import { auditLogService } from '@/services/auditLogService';
-import { apiLogger } from '@/lib/logger';
-import { withErrorHandler } from '@/lib/error-handler';
-import { success, error as errorResponse } from '@/lib/api-response';
-import { AuthorizationError, NotFoundError } from '@/lib/errors';
-
+import { NextRequest } from 'next/server'
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { auditLogService } from '@/services/infrastructure/auditLogService'
+import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { success, error as errorResponse } from '@/lib/api-response'
+import { AuthorizationError, NotFoundError } from '@/lib/errors'
 
 // GET /api/audit-logs/[id] - 取得單個審計日誌詳情
-async function handleGET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
+async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
 
   // 驗證使用者認證
-  const user = await getCurrentUser();
+  const user = await getCurrentUser()
   if (!user) {
-    throw new AuthorizationError('未認證或會話已過期');
+    throw new AuthorizationError('未認證或會話已過期')
   }
 
-    // 檢查權限（只有管理員和稽核人員可以查看審計日誌詳情）
-    const supabase = await createServerSupabaseClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single() as { data: { role: string } | null; error: Error | null };
+  // 檢查權限（只有管理員和稽核人員可以查看審計日誌詳情）
+  const supabase = await createServerSupabaseClient()
+  const { data: profile } = (await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()) as { data: { role: string } | null; error: Error | null }
 
-    if (!profile || !['admin', 'auditor'].includes(profile.role)) {
-      throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌');
-    }
+  if (!profile || !['admin', 'auditor'].includes(profile.role)) {
+    throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌')
+  }
 
-    // 取得審計日誌
-    const { data: auditLog, error } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .eq('id', id)
-      .single();
+  // 取得審計日誌
+  const { data: auditLog, error } = await supabase
+    .from('audit_logs')
+    .select('*')
+    .eq('id', id)
+    .single()
 
-    if (error) {
-      apiLogger.error('取得審計日誌失敗', error as Error, {
-        module: 'AuditLogDetailAPI',
-        action: 'GET /api/audit-logs/[id]',
-        metadata: { auditLogId: id }
-      });
-      throw new Error('取得審計日誌失敗');
-    }
-
-    if (!auditLog) {
-      throw new NotFoundError('找不到指定的審計日誌');
-    }
-
-    apiLogger.info('取得審計日誌詳情成功', {
+  if (error) {
+    apiLogger.error('取得審計日誌失敗', error as Error, {
       module: 'AuditLogDetailAPI',
       action: 'GET /api/audit-logs/[id]',
-      metadata: { auditLogId: id }
-    });
+      metadata: { auditLogId: id },
+    })
+    throw new Error('取得審計日誌失敗')
+  }
 
-    return success(auditLog);
+  if (!auditLog) {
+    throw new NotFoundError('找不到指定的審計日誌')
+  }
 
+  apiLogger.info('取得審計日誌詳情成功', {
+    module: 'AuditLogDetailAPI',
+    action: 'GET /api/audit-logs/[id]',
+    metadata: { auditLogId: id },
+  })
+
+  return success(auditLog)
 }
 
 export const GET = withErrorHandler(handleGET, {
   module: 'AuditLogDetailAPI',
-  enableAuditLog: false
-});
+  enableAuditLog: false,
+})
 
 // DELETE /api/audit-logs/[id] - 刪除單個審計日誌
-async function handleDELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
+async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
 
   // 驗證使用者認證
-  const user = await getCurrentUser();
+  const user = await getCurrentUser()
   if (!user) {
-    throw new AuthorizationError('未認證或會話已過期');
+    throw new AuthorizationError('未認證或會話已過期')
   }
 
-    // 檢查權限（只有管理員可以刪除審計日誌）
-    const supabase = await createServerSupabaseClient();
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, name')
-      .eq('id', user.id)
-      .single() as { data: { role: string; name: string } | null; error: Error | null };
+  // 檢查權限（只有管理員可以刪除審計日誌）
+  const supabase = await createServerSupabaseClient()
+  const { data: profile } = (await supabase
+    .from('profiles')
+    .select('role, name')
+    .eq('id', user.id)
+    .single()) as { data: { role: string; name: string } | null; error: Error | null }
 
-    if (!profile || profile.role !== 'admin') {
-      throw new AuthorizationError('權限不足，只有管理員可以刪除審計日誌');
-    }
+  if (!profile || profile.role !== 'admin') {
+    throw new AuthorizationError('權限不足，只有管理員可以刪除審計日誌')
+  }
 
-    // 先取得要刪除的日誌資料（用於記錄刪除操作）
-    const { data: auditLogToDelete, error: fetchError } = await supabase
-      .from('audit_logs')
-      .select('*')
-      .eq('id', id)
-      .single() as { data: Record<string, unknown> | null; error: Error | null };
+  // 先取得要刪除的日誌資料（用於記錄刪除操作）
+  const { data: auditLogToDelete, error: fetchError } = (await supabase
+    .from('audit_logs')
+    .select('*')
+    .eq('id', id)
+    .single()) as { data: Record<string, unknown> | null; error: Error | null }
 
-    if (fetchError) {
-      apiLogger.error('取得待刪除審計日誌失敗', fetchError, {
-        module: 'AuditLogDetailAPI',
-        action: 'DELETE /api/audit-logs/[id]',
-        metadata: { auditLogId: id }
-      });
-      throw new NotFoundError('找不到指定的審計日誌');
-    }
+  if (fetchError) {
+    apiLogger.error('取得待刪除審計日誌失敗', fetchError, {
+      module: 'AuditLogDetailAPI',
+      action: 'DELETE /api/audit-logs/[id]',
+      metadata: { auditLogId: id },
+    })
+    throw new NotFoundError('找不到指定的審計日誌')
+  }
 
-    if (!auditLogToDelete) {
-      throw new NotFoundError('找不到指定的審計日誌');
-    }
+  if (!auditLogToDelete) {
+    throw new NotFoundError('找不到指定的審計日誌')
+  }
 
-    // 執行刪除操作
-    const { error: deleteError } = await supabase
-      .from('audit_logs')
-      .delete()
-      .eq('id', id);
+  // 執行刪除操作
+  const { error: deleteError } = await supabase.from('audit_logs').delete().eq('id', id)
 
-    if (deleteError) {
-      apiLogger.error('刪除審計日誌失敗', deleteError, {
-        module: 'AuditLogDetailAPI',
-        action: 'DELETE /api/audit-logs/[id]',
-        metadata: { auditLogId: id }
-      });
-      throw new Error('刪除審計日誌失敗');
-    }
+  if (deleteError) {
+    apiLogger.error('刪除審計日誌失敗', deleteError, {
+      module: 'AuditLogDetailAPI',
+      action: 'DELETE /api/audit-logs/[id]',
+      metadata: { auditLogId: id },
+    })
+    throw new Error('刪除審計日誌失敗')
+  }
 
-    // 記錄刪除操作的審計日誌
-    await auditLogService.log({
+  // 記錄刪除操作的審計日誌
+  await auditLogService
+    .log({
       user_id: user.id,
       user_email: user.email || 'unknown@email.com',
       user_name: profile.name || 'Unknown',
@@ -146,40 +136,42 @@ async function handleDELETE(
         deletion_reason: 'admin_manual_deletion',
         deleted_log_action: auditLogToDelete.action,
         deleted_log_resource: auditLogToDelete.resource_type,
-        deleted_log_date: auditLogToDelete.created_at
+        deleted_log_date: auditLogToDelete.created_at,
       },
-      ip_address: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
-      user_agent: request.headers.get('user-agent') || undefined
-    }).catch(error => {
+      ip_address:
+        request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
+      user_agent: request.headers.get('user-agent') || undefined,
+    })
+    .catch(error => {
       apiLogger.error('記錄刪除審計日誌操作失敗', error as Error, {
         module: 'AuditLogDetailAPI',
-        action: 'DELETE /api/audit-logs/[id]'
-      });
-    }); // 不讓審計日誌記錄失敗影響主要操作
+        action: 'DELETE /api/audit-logs/[id]',
+      })
+    }) // 不讓審計日誌記錄失敗影響主要操作
 
-    apiLogger.info('刪除審計日誌成功', {
-      module: 'AuditLogDetailAPI',
-      action: 'DELETE /api/audit-logs/[id]',
-      metadata: { auditLogId: id }
-    });
+  apiLogger.info('刪除審計日誌成功', {
+    module: 'AuditLogDetailAPI',
+    action: 'DELETE /api/audit-logs/[id]',
+    metadata: { auditLogId: id },
+  })
 
-    return success(null, '審計日誌已成功刪除');
+  return success(null, '審計日誌已成功刪除')
 }
 
 export const DELETE = withErrorHandler(handleDELETE, {
   module: 'AuditLogDetailAPI',
-  enableAuditLog: true
-});
+  enableAuditLog: true,
+})
 
 // 處理其他不支援的 HTTP 方法
 export async function POST() {
-  return errorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405)
 }
 
 export async function PUT() {
-  return errorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405)
 }
 
 export async function PATCH() {
-  return errorResponse('不支援的請求方法', 405);
+  return errorResponse('不支援的請求方法', 405)
 }

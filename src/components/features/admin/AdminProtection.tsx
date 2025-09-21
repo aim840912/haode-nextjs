@@ -2,7 +2,7 @@
 
 import { useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface AdminProtectionProps {
   children: ReactNode

@@ -12,7 +12,7 @@ import {
   calculateDynamicPollingInterval,
   PollingConfig,
   INQUIRY_STATS_CONSTANTS,
-} from '@/lib/inquiry-stats-utils'
+} from '@/lib/utils/inquiry-stats-utils'
 
 export interface UsePollingManagerOptions {
   /** 基礎輪詢間隔（毫秒） */

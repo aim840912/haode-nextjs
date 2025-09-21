@@ -12,7 +12,7 @@ import {
   isCacheValid,
   createCacheKey,
   INQUIRY_STATS_CONSTANTS,
-} from '@/lib/inquiry-stats-utils'
+} from '@/lib/utils/inquiry-stats-utils'
 
 export interface UseInquiryStatsCacheOptions {
   cacheKey?: string

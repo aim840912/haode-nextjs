@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { UserSchemas } from '@/lib/validation-schemas'
-import { supabase } from '@/lib/supabase-auth'
+import { supabase } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
 
 async function handlePOST(request: NextRequest) {

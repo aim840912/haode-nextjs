@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { useAuth } from '@/lib/auth-context'
-import { UserInterestsService } from '@/services/userInterestsServiceAdapter'
+import { useAuth } from '@/contexts/AuthContext'
+import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
 import { Product } from '@/types/product'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'

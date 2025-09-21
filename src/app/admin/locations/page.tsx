@@ -5,9 +5,9 @@ import { Location } from '@/types/location'
 import Link from 'next/link'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
-import { getFullImageUrl } from '@/lib/image-url-utils'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 img 標籤）
 const isValidImageUrl = (url: string | undefined): boolean => {

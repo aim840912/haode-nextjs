@@ -4,9 +4,9 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/supabase-server'
-import { auditLogService } from '@/services/auditLogService'
-import { withErrorHandler } from '@/lib/error-handler'
+import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { auditLogService } from '@/services/infrastructure/auditLogService'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { AuditLogQueryParams, AuditAction, ResourceType, UserRole } from '@/types/audit'
@@ -21,11 +21,11 @@ async function handleGET(request: NextRequest) {
 
   // 檢查權限（只有管理員和稽核人員可以查看審計日誌）
   const supabase = await createServerSupabaseClient()
-  const { data: profile } = await supabase
+  const { data: profile } = (await supabase
     .from('profiles')
     .select('role')
     .eq('id', user.id)
-    .single() as { data: { role: string } | null; error: Error | null }
+    .single()) as { data: { role: string } | null; error: Error | null }
 
   if (!profile || !['admin', 'auditor'].includes(profile.role)) {
     throw new AuthorizationError('權限不足，只有管理員和稽核人員可以查看審計日誌')

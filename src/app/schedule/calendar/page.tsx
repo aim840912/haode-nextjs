@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
-const ScheduleCalendar = dynamic(() => import('@/components/calendar/ScheduleCalendar'), {
+const ScheduleCalendar = dynamic(() => import('@/components/features/calendar/ScheduleCalendar'), {
   loading: () => (
     <div className="flex items-center justify-center py-16">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900"></div>
