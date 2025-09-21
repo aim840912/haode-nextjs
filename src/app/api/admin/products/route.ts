@@ -3,11 +3,7 @@ import { getSupabaseAdmin } from '@/lib/supabase-auth'
 import { Product } from '@/types/product'
 import { checkAdminPermission, createAuthErrorResponse } from '@/lib/admin-auth-middleware'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import {
-  deleteProductImages,
-  ProductImageDeletionResult,
-  listProductImages,
-} from '@/lib/supabase-storage'
+import { unifiedImageService } from '@/lib/unified-image-service'
 import { SupabaseAuditLogService } from '@/services/auditLogService'
 import { adminProductService } from '@/services/v2/productService'
 import { apiLogger } from '@/lib/logger'
@@ -285,60 +281,27 @@ async function handleDELETE(request: NextRequest) {
     apiLogger.error(`Error fetching product ${id} for audit:`, fetchError)
   }
 
-  // 先刪除 Supabase Storage 中的產品圖片
-  let imageDeletionResult: ProductImageDeletionResult
+  // 使用統一圖片服務刪除產品圖片
+  let deletedImageCount = 0
+  let imageCleanupSuccess = false
+  let imageCleanupError: string | undefined
+
   try {
     apiLogger.info(`🗑️ 開始為產品 ${id} 清理圖片...`)
-    imageDeletionResult = await deleteProductImages(id)
-    if (imageDeletionResult.success) {
-      apiLogger.info(
-        `✅ 產品 ${id} 的圖片清理完成 - 刪除了 ${imageDeletionResult.deletedCount} 個檔案`
-      )
-    } else {
-      apiLogger.warn(`⚠️ 產品 ${id} 圖片清理失敗: ${imageDeletionResult.error}`)
-    }
+    deletedImageCount = await unifiedImageService.deleteEntityImages('products', id)
+    imageCleanupSuccess = true
+    apiLogger.info(`✅ 產品 ${id} 的圖片清理完成 - 刪除了 ${deletedImageCount} 個檔案`)
   } catch (storageError) {
-    // 如果函數拋出異常（不應該發生，但作為備用）
+    imageCleanupError = (storageError as Error).message
     apiLogger.warn(`⚠️ 產品 ${id} 圖片清理過程發生異常`, {
-      metadata: { error: (storageError as Error).message },
+      metadata: { error: imageCleanupError },
     })
-    imageDeletionResult = {
-      success: false,
-      productId: id,
-      deletedCount: 0,
-      deletedFiles: [],
-      folderCleanedUp: false,
-      error: '圖片清理過程發生異常',
-    }
   }
 
   // 然後刪除資料庫記錄
   const { error } = await supabaseAdmin.from('products').delete().eq('id', id)
 
   if (error) throw error
-
-  // 驗證圖片是否真的被刪除乾淨
-  const verificationResult = { verified: false, remainingFiles: [] as unknown[] }
-  if (imageDeletionResult.success && imageDeletionResult.deletedCount > 0) {
-    try {
-      apiLogger.info(`🔍 驗證產品 ${id} 的圖片是否完全清理...`)
-      const remainingImages = await listProductImages(id)
-      if (remainingImages.length === 0) {
-        apiLogger.info(`✅ 驗證通過：產品 ${id} 的圖片已完全清理`)
-        verificationResult.verified = true
-      } else {
-        apiLogger.warn(`⚠️ 驗證失敗：產品 ${id} 仍有 ${remainingImages.length} 個圖片殘留`)
-        verificationResult.remainingFiles = remainingImages
-      }
-    } catch (verifyError) {
-      apiLogger.warn(`⚠️ 無法驗證產品 ${id} 的圖片清理狀態`, {
-        metadata: { error: (verifyError as Error).message },
-      })
-    }
-  } else if (imageDeletionResult.deletedCount === 0) {
-    // 如果沒有檔案需要刪除，驗證也算通過
-    verificationResult.verified = true
-  }
 
   // 記錄審計日誌
   try {
@@ -355,8 +318,11 @@ async function handleDELETE(request: NextRequest) {
         ? (transformFromDB(productData) as unknown as Record<string, unknown>)
         : {},
       metadata: {
-        imageCleanup: imageDeletionResult,
-        verification: verificationResult,
+        imageCleanup: {
+          success: imageCleanupSuccess,
+          deletedCount: deletedImageCount,
+          error: imageCleanupError,
+        },
       },
       ip_address:
         request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || undefined,
@@ -375,8 +341,9 @@ async function handleDELETE(request: NextRequest) {
     {
       message: '產品刪除成功',
       imageCleanup: {
-        ...imageDeletionResult,
-        verification: verificationResult,
+        success: imageCleanupSuccess,
+        deletedCount: deletedImageCount,
+        error: imageCleanupError,
       },
     },
     '產品刪除成功'
