@@ -68,6 +68,9 @@ export function useInquiryStats(
   const isAdmin = user?.role === 'admin'
   const isDevelopment = process.env.NODE_ENV === 'development'
 
+  // 初始化標記，避免初始化期間的輪詢重設
+  const initializingRef = useRef(false)
+
   // 使用子 hooks
   const cache = useInquiryStatsCache({
     userToken: user?.id,
@@ -196,8 +199,12 @@ export function useInquiryStats(
       setLastUpdated(null)
       retryManager.reset()
       pollingManager.stopPolling()
+      initializingRef.current = false
       return
     }
+
+    // 設置初始化標記
+    initializingRef.current = true
 
     // 嘗試載入快取資料
     const cachedStats = cache.loadCache()
@@ -215,21 +222,37 @@ export function useInquiryStats(
 
     // 開始輪詢（startPolling 會自動執行第一次請求）
     pollingManager.startPolling(cachedStats, retryManager.consecutiveErrors)
+
+    // 延遲清除初始化標記，讓其他 effect 知道初始化已完成
+    setTimeout(() => {
+      initializingRef.current = false
+    }, 100)
   }, [isAdmin, user?.id]) // 只在 isAdmin 和 user.id 變化時重新執行
 
   /**
    * 輪詢間隔變化效果 - 只在關鍵狀態變化時重新計算
    */
   useEffect(() => {
-    if (isAdmin && pollingManager.isPolling) {
+    // 初始化期間跳過輪詢重設，避免重複啟動
+    if (isAdmin && !initializingRef.current) {
       // 重新計算並應用輪詢間隔
       pollingManager.resetPolling(stats, retryManager.consecutiveErrors)
+
+      if (isDevelopment) {
+        logger.debug('[useInquiryStats] Polling interval recalculated', {
+          module: 'useInquiryStats',
+          metadata: {
+            unreadCount: stats?.unread_count,
+            consecutiveErrors: retryManager.consecutiveErrors,
+          },
+        })
+      }
     }
   }, [
     isAdmin,
     stats?.unread_count,
     retryManager.consecutiveErrors,
-    // 移除 pollingManager.isVisible 和 pollingManager.lastActivity
+    // 移除 pollingManager.isPolling, pollingManager.isVisible 和 pollingManager.lastActivity
     // 這些頻繁變化的值會造成不必要的重設
   ])
 

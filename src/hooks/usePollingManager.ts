@@ -172,16 +172,17 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
           })
         }
 
-        if (isDevelopment) {
-          logger.debug(`[usePollingManager] Polling executed with interval: ${interval}ms`, {
-            module: 'usePollingManager',
-            metadata: {
-              interval,
-              isVisible,
-              timeSinceLastActivity: Date.now() - lastActivity,
-            },
-          })
-        }
+        // 移除高頻率的輪詢執行日誌以減少控制台噪音
+        // if (isDevelopment) {
+        //   logger.debug(`[usePollingManager] Polling executed with interval: ${interval}ms`, {
+        //     module: 'usePollingManager',
+        //     metadata: {
+        //       interval,
+        //       isVisible,
+        //       timeSinceLastActivity: Date.now() - lastActivity,
+        //     },
+        //   })
+        // }
       }, interval)
 
       if (isDevelopment) {
@@ -219,11 +220,12 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
       const visible = !document.hidden
       setIsVisible(visible)
 
-      if (isDevelopment) {
-        logger.debug(`[usePollingManager] Visibility changed: ${visible}`, {
-          module: 'usePollingManager',
-        })
-      }
+      // 移除高頻率的可見性變化日誌以減少控制台噪音
+      // if (isDevelopment) {
+      //   logger.debug(`[usePollingManager] Visibility changed: ${visible}`, {
+      //     module: 'usePollingManager',
+      //   })
+      // }
 
       // 頁面變為可見時更新活動時間
       if (visible) {
@@ -271,20 +273,16 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
    * 可見性變化時重新計算輪詢
    */
   useEffect(() => {
-    if (enabled && isPolling) {
-      // 如果頁面隱藏，停止輪詢
-      if (!isVisible) {
-        stopPolling()
-      } else {
-        // 頁面變為可見時重新開始輪詢
-        // 直接內聯邏輯避免 resetPolling 的函數依賴
-        stopPolling()
-        if (enabled) {
-          setTimeout(() => startPolling(), 0)
-        }
-      }
+    if (!enabled) return
+
+    if (!isVisible) {
+      // 頁面隱藏時停止輪詢
+      stopPolling()
+    } else if (!isPolling) {
+      // 頁面可見且未在輪詢時才啟動
+      setTimeout(() => startPolling(), 0)
     }
-  }, [isVisible, enabled, isPolling]) // 移除函數依賴，避免無限循環
+  }, [isVisible, enabled]) // 移除 isPolling 避免無限循環
 
   /**
    * 清理資源
