@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { logger } from '@/lib/logger'
+import { NewsPageLoader } from '@/components/ui/loading/PageLoader'
 
 interface NewsItem {
   id: string
@@ -86,11 +87,7 @@ export default function NewsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">載入新聞中...</div>
-      </div>
-    )
+    return <NewsPageLoader />
   }
 
   return (

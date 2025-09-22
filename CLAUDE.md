@@ -355,6 +355,80 @@ try {
 }
 ```
 
+### 統一載入狀態標準
+
+**專案載入狀態統一化 100% 達成** - 所有頁面已使用統一載入元件 🎯 (已完成)
+
+#### 核心載入元件
+
+**使用 PageLoader 統一元件**，位於 `src/components/ui/loading/PageLoader.tsx`：
+```typescript
+import { MomentsPageLoader, NewsPageLoader, LocationsPageLoader,
+         FarmTourPageLoader, AdminPageLoader, DetailPageLoader } from '@/components/ui/loading/PageLoader'
+
+// ✅ 推薦：使用特定頁面載入器
+if (loading) {
+  return <MomentsPageLoader />
+}
+
+// ✅ 通用：使用基礎 PageLoader
+if (loading) {
+  return <PageLoader type="skeleton" message="載入資料中..." />
+}
+```
+
+#### 載入類型選擇
+
+- **skeleton**: 骨架屏（推薦，適合大部分頁面）
+- **card**: 卡片骨架屏（適合產品、新聞列表）
+- **list**: 列表骨架屏（適合管理後台）
+- **spinner**: 旋轉載入器（適合簡單操作）
+
+#### Next.js 15 loading.tsx 檔案
+
+**所有主要路由都應有 loading.tsx**：
+```typescript
+// src/app/[route]/loading.tsx
+import { SpecificPageLoader } from '@/components/ui/loading/PageLoader'
+
+export default function Loading() {
+  return <SpecificPageLoader />
+}
+```
+
+#### 載入狀態最佳實踐
+
+```typescript
+// ✅ 正確：統一載入元件
+if (loading) {
+  return <PageLoader type="skeleton" message="載入中..." />
+}
+
+// ❌ 錯誤：自製載入樣式
+if (loading) {
+  return <div>載入中...</div>
+}
+
+// ✅ 正確：適當的載入訊息
+<AdminPageLoader message="載入產品資料中..." />
+
+// ❌ 錯誤：無意義的訊息
+<PageLoader message="請稍候..." />
+```
+
+#### 管理後台載入
+
+**管理後台必須包含 AdminProtection**：
+```typescript
+if (loading) {
+  return (
+    <AdminProtection>
+      <AdminPageLoader message="載入管理資料中..." />
+    </AdminProtection>
+  )
+}
+```
+
 ### 響應式設計標準
 
 **專案響應式設計覆蓋率 100% 達成** - 所有 UI 元件已支援多裝置響應式設計 🎯 (持續維護)

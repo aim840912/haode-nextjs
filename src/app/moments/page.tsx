@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { MomentItem } from '@/types/moments'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import Breadcrumbs, { createMomentsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
+import { MomentsPageLoader } from '@/components/ui/loading/PageLoader'
 
 export default function MomentsPage() {
   const [momentItems, setMomentItems] = useState<MomentItem[]>([])
@@ -44,14 +45,7 @@ export default function MomentsPage() {
 
   // 載入狀態
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
-    )
+    return <MomentsPageLoader />
   }
 
   // 錯誤狀態

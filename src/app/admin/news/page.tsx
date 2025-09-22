@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 
 export default function NewsAdmin() {
   const [news, setNews] = useState<NewsItem[]>([])
@@ -108,9 +109,9 @@ export default function NewsAdmin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">載入中...</div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入新聞資料中..." />
+      </AdminProtection>
     )
   }
 

@@ -8,6 +8,7 @@ import { SimpleImage, AvatarSimpleImage } from '@/components/ui/image/OptimizedI
 import { logger } from '@/lib/logger'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import Breadcrumbs, { createLocationsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
+import { LocationsPageLoader } from '@/components/ui/loading/PageLoader'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -72,11 +73,7 @@ export default function LocationsPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center text-gray-900 font-medium">載入中...</div>
-      </div>
-    )
+    return <LocationsPageLoader />
   }
 
   return (

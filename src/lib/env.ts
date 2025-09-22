@@ -238,6 +238,45 @@ export function getServerEnv(): ServerEnv {
 // ==========================================
 
 /**
+ * 根據環境變數名稱判斷服務類型
+ */
+function getServiceType(envKey: string): string {
+  const serviceCategories = {
+    payment: ['STRIPE_SECRET_KEY'],
+    email: ['RESEND_API_KEY'],
+    maps: ['GOOGLE_MAPS_API_KEY'],
+    cache: [
+      'UPSTASH_REDIS_REST_URL',
+      'UPSTASH_REDIS_REST_TOKEN',
+      'KV_REST_API_URL',
+      'KV_REST_API_TOKEN',
+    ],
+    auth: ['NEXTAUTH_URL', 'JWT_SECRET', 'ADMIN_API_KEY'],
+  }
+
+  for (const [category, keys] of Object.entries(serviceCategories)) {
+    if (keys.includes(envKey)) {
+      switch (category) {
+        case 'payment':
+          return '支付服務'
+        case 'email':
+          return '郵件服務'
+        case 'maps':
+          return '地圖服務'
+        case 'cache':
+          return '快取服務'
+        case 'auth':
+          return '認證服務'
+        default:
+          return '可選服務'
+      }
+    }
+  }
+
+  return '可選配置'
+}
+
+/**
  * 檢查環境變數配置狀態
  */
 export function getEnvStatus() {
@@ -276,7 +315,9 @@ export function getEnvStatus() {
         } else {
           status.server[key] = '❌ 未設定'
           if (serverEnvSchema.shape[key as keyof ServerEnv]?.isOptional?.()) {
-            status.warnings.push(`${key} 未設定（可選）`)
+            // 分類可選服務以提供更好的提示
+            const serviceType = getServiceType(key)
+            status.warnings.push(`${key} 未設定（${serviceType}）`)
           }
         }
       })
@@ -324,12 +365,19 @@ export function validateOnStartup(): void {
       },
     })
 
+    // 根據環境調整警告顯示策略
     if (status.warnings.length > 0) {
+      const isDevelopment = process.env.NODE_ENV === 'development'
+
       status.warnings.forEach(warning => {
-        logger.warn(warning, {
-          module: 'EnvValidation',
-          action: 'validateOnStartup',
-        })
+        if (isDevelopment) {
+          // 開發環境：使用 debug 級別，減少噪音
+          logger.debug(`[可選配置] ${warning}`, {
+            module: 'EnvValidation',
+            action: 'validateOnStartup',
+          })
+        }
+        // 生產環境：不顯示可選服務的警告
       })
     }
   }

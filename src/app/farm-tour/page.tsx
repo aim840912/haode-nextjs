@@ -7,6 +7,7 @@ import SocialLinks from '@/components/features/social/SocialLinks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/database/supabase-auth'
+import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
 
 // 農場設施
 const farmFacilities = [
@@ -191,6 +192,11 @@ export default function FarmTourPage() {
     setActiveTab(tab)
     // 延遲一下確保 DOM 更新
     setTimeout(() => scrollToContent(), 100)
+  }
+
+  // 載入狀態
+  if (loading) {
+    return <FarmTourPageLoader />
   }
 
   return (

@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { ArticleStructuredData } from '@/components/features/seo/StructuredData'
 import Breadcrumbs, { createNewsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { logger } from '@/lib/logger'
+import { DetailPageLoader } from '@/components/ui/loading/PageLoader'
 
 interface NewsItem {
   id: string
@@ -117,11 +118,7 @@ export default function NewsDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">載入新聞內容中...</div>
-      </div>
-    )
+    return <DetailPageLoader message="載入新聞內容中..." />
   }
 
   if (!newsItem) {
