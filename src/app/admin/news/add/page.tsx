@@ -106,22 +106,31 @@ export default function AddNews() {
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
 
-      // 使用上傳成功的圖片 URL（與產品上傳邏輯一致，過濾空字串）
+      // 使用上傳成功的圖片 URL（接受完整 URL 或相對路徑）
       const imageUrl =
-        uploadedImages.length > 0
+        uploadedImages.length > 0 && uploadedImages[0].trim() !== ''
           ? uploadedImages[0]
           : formData.imageUrl && formData.imageUrl.trim() !== ''
             ? formData.imageUrl
             : undefined
 
+      // 構建請求資料，排除空的 imageUrl 欄位
+      const { imageUrl: _, ...formDataWithoutImageUrl } = formData
+      const requestData: any = {
+        id: newsId, // 包含前端生成的 UUID
+        ...formDataWithoutImageUrl,
+        tags: tagsArray,
+      }
+
+      // 只有在有有效的 imageUrl 時才加入
+      if (imageUrl) {
+        requestData.imageUrl = imageUrl
+      }
+
       const response = await fetch('/api/news', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          imageUrl,
-          tags: tagsArray,
-        }),
+        body: JSON.stringify(requestData),
       })
 
       if (response.ok) {
@@ -211,9 +220,21 @@ export default function AddNews() {
               onChange={handleInputChange}
               required
               rows={12}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                formData.content.length < 10
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
               placeholder="輸入新聞完整內容&#10;&#10;支援格式：&#10;• 項目符號列表&#10;→ 箭頭列表&#10;✓ 勾選列表&#10;&#10;段落間用空行分隔"
             />
+            <div className="mt-2 flex justify-between text-sm">
+              <div className={`${formData.content.length < 10 ? 'text-red-600' : 'text-gray-500'}`}>
+                {formData.content.length < 10
+                  ? `還需要 ${10 - formData.content.length} 個字元 (最少 10 字元)`
+                  : `已輸入 ${formData.content.length} 字元`}
+              </div>
+              <div className="text-gray-400">最多 10,000 字元</div>
+            </div>
           </div>
 
           {/* 圖片上傳 */}
@@ -346,8 +367,22 @@ export default function AddNews() {
             </Link>
             <button
               type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+              disabled={
+                loading ||
+                formData.content.length < 10 ||
+                !formData.title.trim() ||
+                !formData.summary.trim()
+              }
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={
+                formData.content.length < 10
+                  ? '內容至少需要 10 個字元'
+                  : !formData.title.trim()
+                    ? '請填寫標題'
+                    : !formData.summary.trim()
+                      ? '請填寫摘要'
+                      : ''
+              }
             >
               {loading ? '發布中...' : '發布新聞'}
             </button>

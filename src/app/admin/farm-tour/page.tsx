@@ -39,14 +39,25 @@ export default function FarmTourAdmin() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('確定要刪除此體驗活動嗎？')) return
+    if (!confirm('確定要刪除此體驗活動嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
     try {
-      const response = await fetch(`/api/farm-tour/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/admin-proxy/farm-tour/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       const result = await response.json()
 
       if (result.success) {
         setActivities(activities.filter(activity => activity.id !== id))
+        // 顯示圖片清理結果
+        if (result.data?.imageCleanup?.deletedCount > 0) {
+          alert(`體驗活動已刪除，同時清理了 ${result.data.imageCleanup.deletedCount} 個相關圖片`)
+        } else {
+          alert('體驗活動已刪除')
+        }
       } else {
         throw new Error(result.error || '刪除失敗')
       }

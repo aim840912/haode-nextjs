@@ -13,6 +13,7 @@ import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { NewsItem, NewsService } from '@/types/news'
 
 /**
@@ -96,8 +97,10 @@ export class NewsServiceSimple implements NewsService {
   /**
    * 轉換實體為資料庫記錄
    */
-  private transformToDB(newsData: Omit<NewsItem, 'id' | 'publishedAt'>): Record<string, unknown> {
-    return {
+  private transformToDB(
+    newsData: Omit<NewsItem, 'id' | 'publishedAt'> & { id?: string }
+  ): Record<string, unknown> {
+    const baseData = {
       title: newsData.title,
       summary: newsData.summary,
       content: newsData.content,
@@ -109,6 +112,13 @@ export class NewsServiceSimple implements NewsService {
       is_published: true,
       publish_date: new Date().toISOString(),
     }
+
+    // 如果前端提供了 ID，則包含在插入資料中
+    if (newsData.id) {
+      return { id: newsData.id, ...baseData }
+    }
+
+    return baseData
   }
 
   // === 公開 API 方法 ===
@@ -200,7 +210,9 @@ export class NewsServiceSimple implements NewsService {
   /**
    * 新增新聞
    */
-  async addNews(newsData: Omit<NewsItem, 'id' | 'publishedAt'>): Promise<NewsItem> {
+  async addNews(
+    newsData: Omit<NewsItem, 'id' | 'publishedAt'> & { id?: string }
+  ): Promise<NewsItem> {
     try {
       // 驗證資料
       this.validateNewsData(newsData)
@@ -303,28 +315,29 @@ export class NewsServiceSimple implements NewsService {
    */
   async deleteNews(id: string): Promise<void> {
     try {
-      // 使用統一圖片服務清理新聞圖片
+      // 刪除相關圖片（使用統一圖片服務）
+      let deletedImagesCount = 0
       try {
-        const { unifiedImageService } = await import(
-          '@/services/infrastructure/unified-image-service'
-        )
-        const deletedCount = await unifiedImageService.deleteEntityImages('news', id)
-        dbLogger.info(`新聞 ${id} 的圖片已清理，刪除了 ${deletedCount} 個檔案`, {
-          module: this.moduleName,
-          action: 'deleteEntityImages',
-          metadata: { newsId: id, deletedCount },
-        })
-      } catch (storageError) {
-        // 圖片刪除失敗不應該阻止新聞刪除，但要記錄錯誤
-        dbLogger.error(
-          `新聞 ${id} 圖片清理失敗`,
-          storageError instanceof Error ? storageError : new Error('Unknown storage error'),
-          {
+        const unifiedImageService = new UnifiedImageService()
+        deletedImagesCount = await unifiedImageService.deleteEntityImages('news', id)
+
+        if (deletedImagesCount > 0) {
+          dbLogger.info('新聞相關圖片刪除成功', {
             module: this.moduleName,
             action: 'deleteEntityImages',
-            metadata: { newsId: id },
-          }
-        )
+            metadata: { newsId: id, deletedImagesCount },
+          })
+        }
+      } catch (imageError) {
+        // 圖片刪除失敗不應阻止新聞刪除，只記錄警告
+        dbLogger.warn('新聞圖片刪除失敗，但繼續進行新聞刪除', {
+          module: this.moduleName,
+          action: 'deleteEntityImages',
+          metadata: {
+            newsId: id,
+            error: imageError instanceof Error ? imageError.message : String(imageError),
+          },
+        })
       }
 
       const client = this.getAdminClient()
@@ -342,7 +355,7 @@ export class NewsServiceSimple implements NewsService {
       dbLogger.info('新聞刪除成功', {
         module: this.moduleName,
         action: 'deleteNews',
-        metadata: { id },
+        metadata: { newsId: id, deletedImagesCount },
       })
     } catch (error) {
       this.handleError(error, 'deleteNews', { id })

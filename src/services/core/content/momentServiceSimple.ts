@@ -17,7 +17,7 @@ import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { MomentItem, MomentService } from '@/types/moments'
 import { ServiceSupabaseClient, ServiceErrorContext } from '@/types/service.types'
 import { Database } from '@/types/database'
-// 移除舊的 moments-storage 導入，改用 UnifiedImageService
+import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 /**
  * 將 base64 字串轉換為 File 物件
@@ -234,9 +234,7 @@ export class MomentServiceSimple implements MomentService {
           dbLogger.info('📤 上傳檔案到 Storage', {
             metadata: { fileName: itemData.imageFile.name },
           })
-          const { unifiedImageService } = await import(
-            '@/services/infrastructure/unified-image-service'
-          )
+          const unifiedImageService = new UnifiedImageService()
           const result = await unifiedImageService.uploadImage(
             itemData.imageFile,
             'moments',
@@ -253,9 +251,7 @@ export class MomentServiceSimple implements MomentService {
           // 處理 base64 圖片（向後相容）
           dbLogger.info('📷 轉換 base64 圖片到 Storage')
           const file = await base64ToFile(itemData.image, `moment-${momentId}`)
-          const { unifiedImageService } = await import(
-            '@/services/infrastructure/unified-image-service'
-          )
+          const unifiedImageService = new UnifiedImageService()
           const result = await unifiedImageService.uploadImage(file, 'moments', momentId)
           images.push(result.url)
         }
@@ -269,9 +265,7 @@ export class MomentServiceSimple implements MomentService {
 
           if (updateError) {
             // 嘗試清理已上傳的檔案
-            const { unifiedImageService } = await import(
-              '@/services/infrastructure/unified-image-service'
-            )
+            const unifiedImageService = new UnifiedImageService()
             await unifiedImageService.deleteEntityImages('moments', momentId)
             this.handleError(updateError, 'addMomentItem', { momentId })
           }
@@ -329,9 +323,7 @@ export class MomentServiceSimple implements MomentService {
 
       if (itemData.imageFile && itemData.imageFile instanceof File) {
         // 先刪除舊圖片
-        const { unifiedImageService } = await import(
-          '@/services/infrastructure/unified-image-service'
-        )
+        const unifiedImageService = new UnifiedImageService()
         await unifiedImageService.deleteEntityImages('moments', id)
         // 上傳新圖片
         const result = await unifiedImageService.uploadImage(itemData.imageFile, 'moments', id)
@@ -348,9 +340,7 @@ export class MomentServiceSimple implements MomentService {
         itemData.image.startsWith('data:image/')
       ) {
         // 處理 base64 圖片（向後相容）
-        const { unifiedImageService } = await import(
-          '@/services/infrastructure/unified-image-service'
-        )
+        const unifiedImageService = new UnifiedImageService()
         await unifiedImageService.deleteEntityImages('moments', id)
         const file = await base64ToFile(itemData.image, `moment-${id}`)
         const result = await unifiedImageService.uploadImage(file, 'moments', id)
@@ -406,18 +396,27 @@ export class MomentServiceSimple implements MomentService {
         throw new NotFoundError('精彩時刻項目不存在')
       }
 
-      // 使用統一圖片服務刪除 Storage 中的所有圖片
+      // 刪除相關圖片（使用統一圖片服務）
+      let deletedImagesCount = 0
       try {
-        const { unifiedImageService } = await import(
-          '@/services/infrastructure/unified-image-service'
-        )
-        const deletedCount = await unifiedImageService.deleteEntityImages('moments', id)
-        dbLogger.info(`✅ 成功刪除 ${deletedCount} 張圖片`)
-      } catch (storageError) {
-        // 圖片刪除失敗不應該阻止項目刪除
-        dbLogger.info('⚠️ 刪除精彩時刻圖片時發生警告', {
+        const unifiedImageService = new UnifiedImageService()
+        deletedImagesCount = await unifiedImageService.deleteEntityImages('moments', id)
+
+        if (deletedImagesCount > 0) {
+          dbLogger.info('精彩時刻相關圖片刪除成功', {
+            module: this.moduleName,
+            action: 'deleteEntityImages',
+            metadata: { momentId: id, deletedImagesCount },
+          })
+        }
+      } catch (imageError) {
+        // 圖片刪除失敗不應阻止精彩時刻刪除，只記錄警告
+        dbLogger.warn('精彩時刻圖片刪除失敗，但繼續進行精彩時刻刪除', {
+          module: this.moduleName,
+          action: 'deleteEntityImages',
           metadata: {
-            error: storageError instanceof Error ? storageError.message : String(storageError),
+            momentId: id,
+            error: imageError instanceof Error ? imageError.message : String(imageError),
           },
         })
       }
@@ -433,7 +432,7 @@ export class MomentServiceSimple implements MomentService {
       dbLogger.info('✅ 精彩時刻項目刪除完成', {
         module: this.moduleName,
         action: 'deleteMomentItem',
-        metadata: { momentId: id },
+        metadata: { momentId: id, deletedImagesCount },
       })
     } catch (error) {
       if (error instanceof ValidationError || error instanceof NotFoundError) {

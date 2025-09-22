@@ -4,6 +4,7 @@ import { NewsSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { apiLogger } from '@/lib/logger'
 
 /**
@@ -31,9 +32,9 @@ async function handleGET(request: NextRequest) {
 }
 
 /**
- * POST /api/news - 創建新聞
+ * POST /api/news - 創建新聞（需要管理員權限）
  */
-async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest, user: any) {
   // 解析並驗證請求資料
   const body = await request.json()
   const result = NewsSchemas.create.safeParse(body)
@@ -68,7 +69,4 @@ export const GET = withErrorHandler(handleGET, {
   enableAuditLog: false,
 })
 
-export const POST = withErrorHandler(handlePOST, {
-  module: 'NewsAPI',
-  enableAuditLog: true,
-})
+export const POST = requireAdmin(handlePOST)

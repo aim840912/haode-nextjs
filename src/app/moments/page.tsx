@@ -162,19 +162,17 @@ export default function MomentsPage() {
                   onClick={() => setSelectedItem(item)}
                 >
                   {/* 圖片區域 */}
-                  <div
-                    className={`relative h-64 ${!item.imageUrl ? 'bg-gradient-to-br from-blue-400 to-purple-400' : ''}`}
-                  >
+                  <div className="relative w-full aspect-square overflow-hidden">
                     {item.imageUrl ? (
                       <SimpleImage
                         src={item.imageUrl}
                         alt={item.title}
                         fill={true}
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                        className="object-cover"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                      <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center">
                         <span className="text-4xl">{item.emoji}</span>
                       </div>
                     )}

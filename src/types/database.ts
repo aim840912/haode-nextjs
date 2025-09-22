@@ -39,7 +39,7 @@ export interface Database {
       }
       locations: {
         Row: {
-          id: number
+          id: string
           name: string
           title: string
           address: string
@@ -59,7 +59,7 @@ export interface Database {
           updated_at: string
         }
         Insert: {
-          id?: number
+          id?: string
           name: string
           title: string
           address: string
@@ -79,7 +79,7 @@ export interface Database {
           updated_at?: string
         }
         Update: {
-          id?: number
+          id?: string
           name?: string
           title?: string
           address?: string

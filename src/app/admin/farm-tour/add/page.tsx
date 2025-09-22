@@ -7,12 +7,13 @@ import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import ImageUploader from '@/components/features/products/ImageUploader'
+import { v4 as uuidv4 } from 'uuid'
 
 export default function AddFarmTourActivity() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
-  const [activityId] = useState(() => `activity-${Date.now()}`)
+  const [activityId] = useState(() => uuidv4())
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -105,6 +106,7 @@ export default function AddFarmTourActivity() {
 
     try {
       const submitData = {
+        id: activityId, // 添加前端生成的 UUID
         ...formData,
         image: uploadedImageUrl || formData.image,
         activities: formData.activities.filter(activity => activity.trim() !== ''),
@@ -190,7 +192,9 @@ export default function AddFarmTourActivity() {
           ? Number(value)
           : type === 'checkbox'
             ? (e.target as HTMLInputElement).checked
-            : value,
+            : name === 'start_month' || name === 'end_month' || name === 'price'
+              ? Number(value)
+              : value,
     }))
   }
 

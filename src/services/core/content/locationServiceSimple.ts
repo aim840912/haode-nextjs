@@ -13,6 +13,7 @@ import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { Location, LocationService } from '@/types/location'
 import { UpdateDataObject } from '@/types/service.types'
 
@@ -20,7 +21,7 @@ import { UpdateDataObject } from '@/types/service.types'
  * 資料庫記錄類型
  */
 interface SupabaseLocationRecord {
-  id: number
+  id: string
   name: string
   title: string
   address: string
@@ -107,8 +108,8 @@ export class LocationServiceSimple implements LocationService {
   /**
    * 轉換 Location 為資料庫插入格式
    */
-  private transformToDB(data: Omit<Location, 'id' | 'createdAt' | 'updatedAt'>) {
-    return {
+  private transformToDB(data: Omit<Location, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }) {
+    const baseData = {
       name: data.name,
       title: data.title,
       address: data.address,
@@ -125,6 +126,13 @@ export class LocationServiceSimple implements LocationService {
       image: data.image,
       is_main: data.isMain,
     }
+
+    // 如果前端提供了 ID，則包含在插入資料中
+    if (data.id) {
+      return { id: data.id, ...baseData }
+    }
+
+    return baseData
   }
 
   /**
@@ -199,7 +207,7 @@ export class LocationServiceSimple implements LocationService {
    * 新增地點
    */
   async addLocation(
-    locationData: Omit<Location, 'id' | 'createdAt' | 'updatedAt'>
+    locationData: Omit<Location, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
   ): Promise<Location> {
     try {
       dbLogger.info('新增地點', {
@@ -284,7 +292,7 @@ export class LocationServiceSimple implements LocationService {
    * 更新地點
    */
   async updateLocation(
-    id: number,
+    id: string,
     locationData: Partial<Omit<Location, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<Location> {
     try {
@@ -294,8 +302,8 @@ export class LocationServiceSimple implements LocationService {
         metadata: { locationId: id },
       })
 
-      if (!id || id <= 0) {
-        throw new ValidationError('地點 ID 必須為正數')
+      if (!id || typeof id !== 'string' || id.trim() === '') {
+        throw new ValidationError('地點 ID 必須為非空字串')
       }
 
       // 驗證更新資料
@@ -358,7 +366,7 @@ export class LocationServiceSimple implements LocationService {
   /**
    * 刪除地點
    */
-  async deleteLocation(id: number): Promise<void> {
+  async deleteLocation(id: string): Promise<void> {
     try {
       dbLogger.info('刪除地點', {
         module: this.moduleName,
@@ -366,8 +374,39 @@ export class LocationServiceSimple implements LocationService {
         metadata: { locationId: id },
       })
 
-      if (!id || id <= 0) {
-        throw new ValidationError('地點 ID 必須為正數')
+      if (!id || typeof id !== 'string' || id.trim() === '') {
+        throw new ValidationError('地點 ID 必須為非空字串')
+      }
+
+      // 先檢查地點是否存在
+      const existing = await this.getLocationById(id)
+      if (!existing) {
+        throw new NotFoundError(`找不到 ID 為 ${id} 的地點`)
+      }
+
+      // 刪除相關圖片（使用統一圖片服務）
+      let deletedImagesCount = 0
+      try {
+        const unifiedImageService = new UnifiedImageService()
+        deletedImagesCount = await unifiedImageService.deleteEntityImages('locations', id)
+
+        if (deletedImagesCount > 0) {
+          dbLogger.info('地點相關圖片刪除成功', {
+            module: this.moduleName,
+            action: 'deleteEntityImages',
+            metadata: { locationId: id, deletedImagesCount },
+          })
+        }
+      } catch (imageError) {
+        // 圖片刪除失敗不應阻止地點刪除，只記錄警告
+        dbLogger.warn('地點圖片刪除失敗，但繼續進行地點刪除', {
+          module: this.moduleName,
+          action: 'deleteEntityImages',
+          metadata: {
+            locationId: id,
+            error: imageError instanceof Error ? imageError.message : String(imageError),
+          },
+        })
       }
 
       const supabaseAdmin = getSupabaseAdmin()
@@ -383,7 +422,7 @@ export class LocationServiceSimple implements LocationService {
       dbLogger.info('地點刪除成功', {
         module: this.moduleName,
         action: 'deleteLocation',
-        metadata: { locationId: id },
+        metadata: { locationId: id, locationName: existing.name, deletedImagesCount },
       })
     } catch (error) {
       this.handleError(error, 'deleteLocation')
@@ -393,7 +432,7 @@ export class LocationServiceSimple implements LocationService {
   /**
    * 根據 ID 取得地點
    */
-  async getLocationById(id: number): Promise<Location | null> {
+  async getLocationById(id: string): Promise<Location | null> {
     try {
       dbLogger.info('根據 ID 取得地點', {
         module: this.moduleName,
@@ -401,8 +440,8 @@ export class LocationServiceSimple implements LocationService {
         metadata: { locationId: id },
       })
 
-      if (!id || id <= 0) {
-        throw new ValidationError('地點 ID 必須為正數')
+      if (!id || typeof id !== 'string' || id.trim() === '') {
+        throw new ValidationError('地點 ID 必須為非空字串')
       }
 
       const supabase = createServiceSupabaseClient()

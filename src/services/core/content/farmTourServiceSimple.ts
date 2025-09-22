@@ -13,6 +13,7 @@ import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
+import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 // 類型斷言，解決 Supabase 重載問題
 const getAdmin = () => getSupabaseAdmin()
@@ -127,8 +128,8 @@ export class FarmTourServiceSimple implements FarmTourService {
   /**
    * 轉換 FarmTourActivity 為資料庫插入格式
    */
-  private transformToDB(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>) {
-    return {
+  private transformToDB(data: Omit<FarmTourActivity, 'createdAt' | 'updatedAt'> & { id?: string }) {
+    const baseData = {
       title: data.title,
       start_month: data.start_month,
       end_month: data.end_month,
@@ -138,6 +139,13 @@ export class FarmTourServiceSimple implements FarmTourService {
       image: data.image,
       available: data.available,
     }
+
+    // 如果前端提供了 ID，則包含在插入資料中
+    if (data.id) {
+      return { id: data.id, ...baseData }
+    }
+
+    return baseData
   }
 
   /**
@@ -231,7 +239,7 @@ export class FarmTourServiceSimple implements FarmTourService {
    * 建立新的農場體驗活動
    */
   async create(
-    activityData: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>
+    activityData: Omit<FarmTourActivity, 'createdAt' | 'updatedAt'> & { id?: string }
   ): Promise<FarmTourActivity> {
     const timer = dbLogger.timer('建立農場體驗活動')
 
@@ -367,6 +375,31 @@ export class FarmTourServiceSimple implements FarmTourService {
         throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
       }
 
+      // 刪除相關圖片（使用統一圖片服務）
+      let deletedImagesCount = 0
+      try {
+        const unifiedImageService = new UnifiedImageService()
+        deletedImagesCount = await unifiedImageService.deleteEntityImages('farm-tour', id)
+
+        if (deletedImagesCount > 0) {
+          dbLogger.info('農場體驗活動相關圖片刪除成功', {
+            module: this.moduleName,
+            action: 'deleteEntityImages',
+            metadata: { activityId: id, deletedImagesCount },
+          })
+        }
+      } catch (imageError) {
+        // 圖片刪除失敗不應阻止活動刪除，只記錄警告
+        dbLogger.warn('農場體驗活動圖片刪除失敗，但繼續進行活動刪除', {
+          module: this.moduleName,
+          action: 'deleteEntityImages',
+          metadata: {
+            activityId: id,
+            error: imageError instanceof Error ? imageError.message : String(imageError),
+          },
+        })
+      }
+
       const supabase = this.getSupabaseClient()
       if (!supabase) {
         throw new Error('Supabase client 初始化失敗')
@@ -378,12 +411,12 @@ export class FarmTourServiceSimple implements FarmTourService {
         throw error
       }
 
-      timer.end({ metadata: { deleted: true } })
+      timer.end({ metadata: { deleted: true, deletedImagesCount } })
 
       dbLogger.info('農場體驗活動刪除成功', {
         module: this.moduleName,
         action: 'delete',
-        metadata: { activityId: id, title: existing.title },
+        metadata: { activityId: id, title: existing.title, deletedImagesCount },
       })
 
       return true

@@ -73,22 +73,34 @@ export default function AdminMomentsTable({ onDelete, refreshTrigger }: AdminMom
 
   const handleDelete = useCallback(
     async (id: string) => {
-      if (!confirm('確定要刪除這個精彩時刻嗎？此操作無法復原。')) {
+      if (!confirm('確定要刪除這個精彩時刻嗎？此操作將同時刪除相關圖片且無法復原。')) {
         return
       }
 
       try {
-        const response = await fetch(`/api/moments/${id}`, {
+        const response = await fetch(`/api/admin-proxy/moments/${id}`, {
           method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         })
 
         if (!response.ok) {
           throw new Error('刪除失敗')
         }
 
+        const result = await response.json()
+
         // 樂觀更新 UI
         setMoments(prev => prev.filter(moment => moment.id !== id))
         onDelete?.(id)
+
+        // 顯示圖片清理結果
+        if (result.data?.imageCleanup?.deletedCount > 0) {
+          alert(`精彩時刻已刪除，同時清理了 ${result.data.imageCleanup.deletedCount} 個相關圖片`)
+        } else {
+          alert('精彩時刻已刪除')
+        }
 
         logger.info('精彩時刻刪除成功', {
           metadata: { momentId: id },

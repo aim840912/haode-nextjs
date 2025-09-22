@@ -7,12 +7,9 @@ import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
 import { z } from 'zod'
 
-// 數字 ID 驗證 Schema
-const NumericIdSchema = z.object({
-  id: z
-    .string()
-    .regex(/^\d+$/, 'ID 必須是有效的數字')
-    .transform(val => parseInt(val)),
+// UUID ID 驗證 Schema
+const UuidIdSchema = z.object({
+  id: z.string().uuid('ID 必須是有效的 UUID 格式'),
 })
 
 /**
@@ -21,8 +18,8 @@ const NumericIdSchema = z.object({
 async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  // 驗證數字 ID 格式
-  const result = NumericIdSchema.safeParse({ id })
+  // 驗證 UUID ID 格式
+  const result = UuidIdSchema.safeParse({ id })
   if (!result.success) {
     const errors = result.error.issues
       .map(issue => `${issue.path.join('.')}: ${issue.message}`)
@@ -48,8 +45,8 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
 async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  // 驗證數字 ID 格式
-  const paramResult = NumericIdSchema.safeParse({ id })
+  // 驗證 UUID ID 格式
+  const paramResult = UuidIdSchema.safeParse({ id })
   if (!paramResult.success) {
     const errors = paramResult.error.issues
       .map(issue => `${issue.path.join('.')}: ${issue.message}`)
@@ -89,8 +86,8 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
 async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  // 驗證數字 ID 格式
-  const result = NumericIdSchema.safeParse({ id })
+  // 驗證 UUID ID 格式
+  const result = UuidIdSchema.safeParse({ id })
   if (!result.success) {
     const errors = result.error.issues
       .map(issue => `${issue.path.join('.')}: ${issue.message}`)

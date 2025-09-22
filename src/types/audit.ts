@@ -22,6 +22,10 @@ export type ResourceType =
   | 'product' // 產品
   | 'customer_data' // 客戶資料
   | 'audit_log' // 審計日誌
+  | 'farm_tour' // 農場體驗活動
+  | 'news' // 新聞
+  | 'moments' // 精彩時刻
+  | 'location' // 地點
   // 系統管理操作
   | 'security_policy' // 安全政策相關操作
   | 'system_config' // 系統設定相關操作
@@ -182,6 +186,10 @@ export const RESOURCE_TYPE_LABELS: Record<ResourceType, string> = {
   product: '產品',
   customer_data: '客戶資料',
   audit_log: '審計日誌',
+  farm_tour: '農場體驗活動',
+  news: '新聞',
+  moments: '精彩時刻',
+  location: '地點',
   security_policy: '安全政策',
   system_config: '系統設定',
   migration: '資料庫遷移',

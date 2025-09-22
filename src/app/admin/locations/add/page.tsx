@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic'
 import { useAuth } from '@/contexts/AuthContext'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
+import { v4 as uuidv4 } from 'uuid'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -37,7 +38,7 @@ export default function AddLocation() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
   // 新增狀態來儲存圖片路徑對應關係
   const [imagePaths, setImagePaths] = useState<Map<string, string>>(new Map())
-  const [locationId] = useState(() => `location-${Date.now()}`)
+  const [locationId] = useState(() => uuidv4())
   const { user, isLoading } = useAuth()
 
   const [formData, setFormData] = useState({
@@ -109,6 +110,7 @@ export default function AddLocation() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: locationId, // 包含前端生成的 UUID
           ...formData,
           image: uploadedImageUrl || formData.image || '',
           features: formData.features.filter(feature => feature.trim() !== ''),

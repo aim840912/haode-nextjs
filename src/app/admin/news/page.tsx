@@ -44,14 +44,25 @@ export default function NewsAdmin() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('確定要刪除此新聞嗎？')) return
+    if (!confirm('確定要刪除此新聞嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
     try {
-      const response = await fetch(`/api/news/${id}`, { method: 'DELETE' })
+      const response = await fetch(`/api/admin-proxy/news/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
       const result = await response.json()
 
       if (result.success) {
         setNews(news.filter(n => n.id !== id))
+        // 顯示圖片清理結果
+        if (result.data?.imageCleanup?.deletedCount > 0) {
+          alert(`新聞已刪除，同時清理了 ${result.data.imageCleanup.deletedCount} 個相關圖片`)
+        } else {
+          alert('新聞已刪除')
+        }
       } else {
         throw new Error(result.error || '刪除失敗')
       }

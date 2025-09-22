@@ -61,23 +61,40 @@ export default function LocationsAdmin() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!user) {
       alert('請先登入')
       return
     }
 
-    if (!confirm('確定要刪除此門市嗎？')) return
+    if (!confirm('確定要刪除此門市嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
     try {
-      await fetch(`/api/locations/${id}`, { method: 'DELETE' })
-      setLocations(locations.filter(l => l.id !== id))
+      const response = await fetch(`/api/admin-proxy/locations?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      const result = await response.json()
+
+      if (result.success) {
+        setLocations(locations.filter(l => l.id !== id))
+        // 顯示圖片清理結果
+        if (result.data?.imageCleanup?.deletedCount > 0) {
+          alert(`門市已刪除，同時清理了 ${result.data.imageCleanup.deletedCount} 個相關圖片`)
+        } else {
+          alert('門市已刪除')
+        }
+      } else {
+        throw new Error(result.error || '刪除失敗')
+      }
     } catch (error) {
       logger.error(
         'Error deleting location:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      alert('刪除失敗')
+      alert(error instanceof Error ? error.message : '刪除失敗')
     }
   }
 

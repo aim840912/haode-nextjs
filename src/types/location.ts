@@ -1,5 +1,5 @@
 export interface Location {
-  id: number
+  id: string
   name: string
   title: string
   address: string
@@ -25,7 +25,10 @@ export interface Location {
 export interface LocationService {
   getLocations(): Promise<Location[]>
   addLocation(location: Omit<Location, 'id' | 'createdAt' | 'updatedAt'>): Promise<Location>
-  updateLocation(id: number, location: Partial<Omit<Location, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Location>
-  deleteLocation(id: number): Promise<void>
-  getLocationById(id: number): Promise<Location | null>
+  updateLocation(
+    id: string,
+    location: Partial<Omit<Location, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<Location>
+  deleteLocation(id: string): Promise<void>
+  getLocationById(id: string): Promise<Location | null>
 }

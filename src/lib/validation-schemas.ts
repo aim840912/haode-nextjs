@@ -583,6 +583,7 @@ export function sanitizeHtml(html: string): string {
 export const NewsSchemas = {
   /** 創建新聞 */
   create: z.object({
+    id: z.string().uuid('ID 必須是有效的 UUID 格式').optional(), // 支援前端提供的 UUID
     title: StringSchemas.nonEmpty.max(100, '標題不能超過 100 字元'),
     summary: StringSchemas.nonEmpty.max(300, '摘要不能超過 300 字元'),
     content: z
@@ -598,7 +599,14 @@ export const NewsSchemas = {
       .array(z.string().max(20, '標籤長度不能超過 20 字元'))
       .max(10, '最多只能有 10 個標籤')
       .default([]),
-    imageUrl: StringSchemas.url.optional(),
+    imageUrl: z
+      .string()
+      .optional()
+      .refine(val => {
+        if (!val) return true // 空值允許
+        // 允許完整 URL 或以 / 開頭的相對路徑
+        return /^https?:\/\//.test(val) || val.startsWith('/')
+      }, '請輸入有效的圖片 URL 或路徑'),
     featured: z.boolean().default(false),
   }),
 
@@ -620,8 +628,22 @@ export const NewsSchemas = {
       .array(z.string().max(20, '標籤長度不能超過 20 字元'))
       .max(10, '最多只能有 10 個標籤')
       .optional(),
-    image: StringSchemas.url.optional(),
-    imageUrl: StringSchemas.url.optional(),
+    image: z
+      .string()
+      .optional()
+      .refine(val => {
+        if (!val) return true // 空值允許
+        // 允許完整 URL 或以 / 開頭的相對路徑
+        return /^https?:\/\//.test(val) || val.startsWith('/')
+      }, '請輸入有效的圖片 URL 或路徑'),
+    imageUrl: z
+      .string()
+      .optional()
+      .refine(val => {
+        if (!val) return true // 空值允許
+        // 允許完整 URL 或以 / 開頭的相對路徑
+        return /^https?:\/\//.test(val) || val.startsWith('/')
+      }, '請輸入有效的圖片 URL 或路徑'),
     featured: z.boolean().optional(),
   }),
 
@@ -656,6 +678,7 @@ const CoordinatesSchema = z.object({
 export const LocationSchemas = {
   /** 創建地點 */
   create: z.object({
+    id: z.string().uuid('ID 必須是有效的 UUID 格式').optional(), // 支援前端提供的 UUID
     name: StringSchemas.nonEmpty.max(50, '地點名稱不能超過 50 字元'),
     title: StringSchemas.nonEmpty.max(100, '地點標題不能超過 100 字元'),
     address: StringSchemas.nonEmpty.max(200, '地址不能超過 200 字元'),
@@ -1047,6 +1070,7 @@ export const CultureSchemas = {
 export const MomentSchemas = {
   /** 建立精彩時刻項目 */
   create: z.object({
+    id: z.string().uuid('ID 必須是有效的 UUID 格式').optional(), // 支援前端提供的 UUID
     title: StringSchemas.nonEmpty.max(100, '標題不能超過 100 字元'),
     subtitle: z.string().max(200, '副標題不能超過 200 字元').optional().default(''),
     description: StringSchemas.nonEmpty.max(2000, '描述不能超過 2000 字元'),
@@ -1109,6 +1133,7 @@ export const MomentSchemas = {
 export const FarmTourActivitySchemas = {
   /** 建立農場體驗活動 */
   create: z.object({
+    id: z.string().uuid('ID 必須是有效的 UUID 格式').optional(), // 支援前端提供的 UUID
     start_month: z.number().int().min(1, '開始月份必須是 1-12').max(12, '開始月份必須是 1-12'),
     end_month: z.number().int().min(1, '結束月份必須是 1-12').max(12, '結束月份必須是 1-12'),
     title: StringSchemas.nonEmpty.max(100, '活動標題不能超過 100 字元'),
