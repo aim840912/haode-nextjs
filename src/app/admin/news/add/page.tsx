@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -38,6 +38,40 @@ export default function AddNews() {
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [newsId] = useState(() => uuidv4())
+
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    title: '',
+    summary: '',
+    content: '',
+    author: '',
+    category: '',
+    tags: '',
+  })
+
+  // 字段驗證函數 - 必須在條件返回之前定義
+  const validateField = useCallback((field: string, value: any) => {
+    switch (field) {
+      case 'title':
+        return !value.trim() ? '請輸入新聞標題' : ''
+      case 'summary':
+        return !value.trim() ? '請輸入新聞摘要' : ''
+      case 'content':
+        if (!value.trim()) return '請輸入新聞內容'
+        return value.length < 10 ? '新聞內容至少需要 10 個字元' : ''
+      case 'author':
+        return !value.trim() ? '請輸入作者名稱' : ''
+      case 'category':
+        return !value ? '請選擇新聞分類' : ''
+      case 'tags':
+        // 標籤是可選的，不需要驗證
+        return ''
+      default:
+        return ''
+    }
+  }, [])
 
   // 載入中狀態
   if (isLoading) {
@@ -98,7 +132,28 @@ export default function AddNews() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError(null)
+    setSubmitSuccess(null)
     setLoading(true)
+
+    // 驗證所有字段
+    const errors = {
+      title: validateField('title', formData.title),
+      summary: validateField('summary', formData.summary),
+      content: validateField('content', formData.content),
+      author: validateField('author', formData.author),
+      category: validateField('category', formData.category),
+      tags: validateField('tags', formData.tags),
+    }
+
+    setFieldErrors(errors)
+
+    // 檢查是否有任何錯誤
+    if (Object.values(errors).some(error => error !== '')) {
+      setSubmitError('請修正表單中的錯誤後再提交')
+      setLoading(false)
+      return
+    }
 
     try {
       const tagsArray = formData.tags
@@ -134,16 +189,20 @@ export default function AddNews() {
       })
 
       if (response.ok) {
-        router.push('/admin/news')
+        setSubmitSuccess('新聞發布成功！正在跳轉...')
+        setTimeout(() => {
+          router.push('/admin/news')
+        }, 1500)
       } else {
-        alert('發布失敗')
+        const errorData = await response.json()
+        setSubmitError(errorData.message || '發布失敗，請稍後再試')
       }
     } catch (error) {
       logger.error(
         'Error adding news:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      alert('發布失敗')
+      setSubmitError('發布失敗，請檢查網路連線後再試')
     } finally {
       setLoading(false)
     }
@@ -157,6 +216,19 @@ export default function AddNews() {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }))
+
+    // 清除提交錯誤
+    if (submitError) {
+      setSubmitError(null)
+    }
+  }
+
+  const handleFieldBlur = (field: string, value: any) => {
+    const error = validateField(field, value)
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: error,
+    }))
   }
 
   const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
@@ -167,7 +239,7 @@ export default function AddNews() {
   }
 
   const handleImageUploadError = (error: string) => {
-    alert(`圖片上傳失敗: ${error}`)
+    setSubmitError(`圖片上傳失敗: ${error}`)
   }
 
   return (
@@ -182,7 +254,45 @@ export default function AddNews() {
           <h1 className="text-3xl font-bold text-gray-900">發布新聞</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="bg-white rounded-lg shadow-md p-8 space-y-6"
+        >
+          {/* 錯誤/成功訊息 */}
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-red-800 font-medium">{submitError}</span>
+              </div>
+            </div>
+          )}
+
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <div className="flex items-center">
+                <svg
+                  className="w-5 h-5 text-green-400 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span className="text-green-800 font-medium">{submitSuccess}</span>
+              </div>
+            </div>
+          )}
           {/* 標題 */}
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">新聞標題 *</label>
@@ -191,10 +301,15 @@ export default function AddNews() {
               name="title"
               value={formData.title}
               onChange={handleInputChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              onBlur={e => handleFieldBlur('title', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.title
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
               placeholder="輸入新聞標題"
             />
+            {fieldErrors.title && <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>}
           </div>
 
           {/* 摘要 */}
@@ -204,11 +319,18 @@ export default function AddNews() {
               name="summary"
               value={formData.summary}
               onChange={handleInputChange}
-              required
+              onBlur={e => handleFieldBlur('summary', e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.summary
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
               placeholder="輸入新聞摘要，用於列表顯示"
             />
+            {fieldErrors.summary && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.summary}</p>
+            )}
           </div>
 
           {/* 內容 */}
@@ -218,15 +340,18 @@ export default function AddNews() {
               name="content"
               value={formData.content}
               onChange={handleInputChange}
-              required
+              onBlur={e => handleFieldBlur('content', e.target.value)}
               rows={12}
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
-                formData.content.length < 10
+                fieldErrors.content || formData.content.length < 10
                   ? 'border-red-300 focus:ring-red-500'
                   : 'border-gray-300 focus:ring-blue-500'
               }`}
               placeholder="輸入新聞完整內容&#10;&#10;支援格式：&#10;• 項目符號列表&#10;→ 箭頭列表&#10;✓ 勾選列表&#10;&#10;段落間用空行分隔"
             />
+            {fieldErrors.content && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.content}</p>
+            )}
             <div className="mt-2 flex justify-between text-sm">
               <div className={`${formData.content.length < 10 ? 'text-red-600' : 'text-gray-500'}`}>
                 {formData.content.length < 10
@@ -264,8 +389,12 @@ export default function AddNews() {
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                onBlur={e => handleFieldBlur('category', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.category
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
               >
                 {categories.map(category => (
                   <option key={category} value={category}>
@@ -273,6 +402,9 @@ export default function AddNews() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.category && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.category}</p>
+              )}
             </div>
 
             <div>
@@ -282,10 +414,17 @@ export default function AddNews() {
                 name="author"
                 value={formData.author}
                 onChange={handleInputChange}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                onBlur={e => handleFieldBlur('author', e.target.value)}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.author
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
                 placeholder="輸入作者名稱"
               />
+              {fieldErrors.author && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.author}</p>
+              )}
             </div>
           </div>
 
@@ -299,9 +438,15 @@ export default function AddNews() {
               name="tags"
               value={formData.tags}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              onBlur={e => handleFieldBlur('tags', e.target.value)}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.tags
+                  ? 'border-red-300 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-blue-500'
+              }`}
               placeholder="例如：紅肉李,有機農業,豐收"
             />
+            {fieldErrors.tags && <p className="mt-1 text-sm text-red-600">{fieldErrors.tags}</p>}
             <div className="mt-2 text-sm text-gray-500">
               標籤預覽：
               {formData.tags

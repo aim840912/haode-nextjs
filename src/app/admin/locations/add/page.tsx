@@ -41,6 +41,17 @@ export default function AddLocation() {
   const [locationId] = useState(() => uuidv4())
   const { user, isLoading } = useAuth()
 
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    name: '',
+    title: '',
+    address: '',
+    phone: '',
+    hours: '',
+  })
+
   const [formData, setFormData] = useState({
     name: '',
     title: '',
@@ -61,6 +72,37 @@ export default function AddLocation() {
     image: '',
     isMain: false,
   })
+
+  // 驗證函數
+  const validateField = (field: string, value: any) => {
+    switch (field) {
+      case 'name':
+        return !value.trim() ? '請輸入門市名稱' : ''
+      case 'title':
+        return !value.trim() ? '請輸入完整標題' : ''
+      case 'address':
+        return !value.trim() ? '請輸入門市地址' : ''
+      case 'phone':
+        if (!value.trim()) return '請輸入電話號碼'
+        // 台灣電話格式簡單驗證 (09xxxxxxxx 或 0x-xxxxxxx)
+        const phoneRegex = /^(09\d{8}|0\d{1,2}-\d{6,8})$/
+        return !phoneRegex.test(value.replace(/\s+/g, '')) ? '電話格式不正確' : ''
+      case 'hours':
+        return !value.trim() ? '請輸入營業時間' : ''
+      default:
+        return ''
+    }
+  }
+
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+
+    // 清除對應欄位錯誤
+    if (fieldErrors[field as keyof typeof fieldErrors]) {
+      const error = validateField(field, value)
+      setFieldErrors(prev => ({ ...prev, [field]: error }))
+    }
+  }
 
   // 載入中狀態
   if (isLoading) {
@@ -104,6 +146,27 @@ export default function AddLocation() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setSubmitError(null)
+    setSubmitSuccess(null)
+
+    // 欄位級驗證
+    const newFieldErrors = {
+      name: validateField('name', formData.name),
+      title: validateField('title', formData.title),
+      address: validateField('address', formData.address),
+      phone: validateField('phone', formData.phone),
+      hours: validateField('hours', formData.hours),
+    }
+
+    setFieldErrors(newFieldErrors)
+
+    // 檢查是否有任何錯誤
+    const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
+    if (hasErrors) {
+      setSubmitError('請修正表單中的錯誤後再提交')
+      setLoading(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/locations', {
@@ -123,16 +186,20 @@ export default function AddLocation() {
       })
 
       if (response.ok) {
-        router.push('/admin/locations')
+        setSubmitSuccess('門市新增成功！正在跳轉...')
+        setTimeout(() => {
+          router.push('/admin/locations')
+        }, 1500)
       } else {
-        alert('新增失敗')
+        const errorData = await response.json().catch(() => ({}))
+        setSubmitError(errorData.message || '新增失敗，請稍後再試')
       }
     } catch (error) {
       logger.error(
         'Error creating location:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      alert('新增失敗')
+      setSubmitError('網路連線錯誤，請檢查網路後再試')
     } finally {
       setLoading(false)
     }
@@ -142,10 +209,18 @@ export default function AddLocation() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target
+    const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      [name]: newValue,
     }))
+
+    // 清除對應欄位錯誤
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      const error = validateField(name, newValue)
+      setFieldErrors(prev => ({ ...prev, [name]: error }))
+    }
   }
 
   const addFeatureField = () => {
@@ -212,7 +287,7 @@ export default function AddLocation() {
 
   const handleImageUploadError = (error: string) => {
     logger.error('門市圖片上傳失敗', new Error(error))
-    alert(`圖片上傳失敗: ${error}`)
+    setSubmitError(`圖片上傳失敗: ${error}`)
   }
 
   return (
@@ -229,7 +304,50 @@ export default function AddLocation() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="bg-white rounded-lg shadow-md p-6 space-y-6"
+          >
+            {/* 錯誤訊息顯示 */}
+            {submitError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-red-800">{submitError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 成功訊息顯示 */}
+            {submitSuccess && (
+              <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-green-800">{submitSuccess}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* 基本資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
@@ -244,10 +362,21 @@ export default function AddLocation() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
+                    onBlur={() => {
+                      const error = validateField('name', formData.name)
+                      setFieldErrors(prev => ({ ...prev, name: error }))
+                    }}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.name
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="例：總店"
                   />
+                  {fieldErrors.name && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>
+                  )}
                 </div>
 
                 <div>
@@ -259,10 +388,21 @@ export default function AddLocation() {
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
+                    onBlur={() => {
+                      const error = validateField('title', formData.title)
+                      setFieldErrors(prev => ({ ...prev, title: error }))
+                    }}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.title
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="例：豪德茶業總店"
                   />
+                  {fieldErrors.title && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>
+                  )}
                 </div>
               </div>
 
@@ -273,10 +413,21 @@ export default function AddLocation() {
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
+                  onBlur={() => {
+                    const error = validateField('address', formData.address)
+                    setFieldErrors(prev => ({ ...prev, address: error }))
+                  }}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                    fieldErrors.address
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-amber-500'
+                  }`}
                   placeholder="完整地址"
                 />
+                {fieldErrors.address && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>
+                )}
               </div>
 
               <div className="mb-4">
@@ -306,10 +457,21 @@ export default function AddLocation() {
                     name="phone"
                     value={formData.phone}
                     onChange={handleInputChange}
+                    onBlur={() => {
+                      const error = validateField('phone', formData.phone)
+                      setFieldErrors(prev => ({ ...prev, phone: error }))
+                    }}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.phone
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="例：049-291-5678"
                   />
+                  {fieldErrors.phone && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.phone}</p>
+                  )}
                 </div>
 
                 <div>
@@ -335,10 +497,21 @@ export default function AddLocation() {
                     name="hours"
                     value={formData.hours}
                     onChange={handleInputChange}
+                    onBlur={() => {
+                      const error = validateField('hours', formData.hours)
+                      setFieldErrors(prev => ({ ...prev, hours: error }))
+                    }}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.hours
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="例：09:00-19:00"
                   />
+                  {fieldErrors.hours && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.hours}</p>
+                  )}
                 </div>
 
                 <div>

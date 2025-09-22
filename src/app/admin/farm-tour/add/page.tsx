@@ -27,6 +27,17 @@ export default function AddFarmTourActivity() {
     note: '',
   })
 
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    title: '',
+    activities: '',
+    price: '',
+    start_month: '',
+    end_month: '',
+  })
+
   // 載入中狀態
   if (isLoading) {
     return (
@@ -100,6 +111,43 @@ export default function AddFarmTourActivity() {
     label: `${i + 1}月`,
   }))
 
+  // 驗證函數
+  const validateField = (field: string, value: any) => {
+    switch (field) {
+      case 'title':
+        return !value.trim() ? '請輸入活動標題' : ''
+      case 'activities':
+        const validActivities = Array.isArray(value)
+          ? value.filter(activity => activity.trim() !== '')
+          : []
+        return validActivities.length === 0 ? '至少需要一個活動項目' : ''
+      case 'price':
+        return value < 0 ? '價格不能為負數' : ''
+      case 'start_month':
+        return value < 1 || value > 12 ? '開始月份必須是 1-12' : ''
+      case 'end_month':
+        return value < 1 || value > 12 ? '結束月份必須是 1-12' : ''
+      default:
+        return ''
+    }
+  }
+
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // 清除該欄位的錯誤訊息
+    if (fieldErrors[field as keyof typeof fieldErrors]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }))
+    }
+    // 清除總體錯誤
+    setSubmitError(null)
+    setSubmitSuccess(null)
+  }
+
+  const handleFieldBlur = (field: string, value: any) => {
+    const error = validateField(field, value)
+    setFieldErrors(prev => ({ ...prev, [field]: error }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -117,18 +165,24 @@ export default function AddFarmTourActivity() {
         submitData.image = uploadedImageUrl
       }
 
-      // 前端驗證
-      const validationErrors = []
-      if (!submitData.title.trim()) validationErrors.push('活動標題不能為空')
-      if (submitData.start_month < 1 || submitData.start_month > 12)
-        validationErrors.push('開始月份必須是 1-12')
-      if (submitData.end_month < 1 || submitData.end_month > 12)
-        validationErrors.push('結束月份必須是 1-12')
-      if (submitData.price < 0) validationErrors.push('價格不能為負數')
-      if (submitData.activities.length === 0) validationErrors.push('至少需要一個活動項目')
+      // 清除之前的錯誤
+      setSubmitError(null)
+      setSubmitSuccess(null)
+
+      // 欄位級驗證
+      const newFieldErrors = {
+        title: validateField('title', submitData.title),
+        activities: validateField('activities', submitData.activities),
+        price: validateField('price', submitData.price),
+        start_month: validateField('start_month', submitData.start_month),
+        end_month: validateField('end_month', submitData.end_month),
+      }
+
+      setFieldErrors(newFieldErrors)
 
       // 檢查圖片 URL
       const finalImageUrl = uploadedImageUrl || submitData.image
+      const validationErrors = []
       if (!finalImageUrl.trim()) {
         validationErrors.push('請先上傳活動圖片')
       } else {
@@ -142,8 +196,14 @@ export default function AddFarmTourActivity() {
         }
       }
 
-      if (validationErrors.length > 0) {
-        alert('請檢查以下欄位：\n' + validationErrors.join('\n'))
+      // 檢查是否有任何錯誤
+      const hasFieldErrors = Object.values(newFieldErrors).some(error => error !== '')
+      if (hasFieldErrors || validationErrors.length > 0) {
+        const allErrors = [
+          ...Object.values(newFieldErrors).filter(error => error !== ''),
+          ...validationErrors,
+        ]
+        setSubmitError(`請修正以下問題：${allErrors.join('、')}`)
         setLoading(false)
         return
       }
@@ -158,7 +218,11 @@ export default function AddFarmTourActivity() {
       })
 
       if (response.ok) {
-        router.push('/admin/farm-tour')
+        setSubmitSuccess('農場活動新增成功！')
+        // 延遲跳轉讓使用者看到成功訊息
+        setTimeout(() => {
+          router.push('/admin/farm-tour')
+        }, 1500)
       } else {
         // 取得詳細的錯誤訊息
         const errorData = await response.json().catch(() => ({ error: '未知錯誤' }))
@@ -168,14 +232,14 @@ export default function AddFarmTourActivity() {
           metadata: { status: response.status, errorData },
         })
 
-        alert(`新增失敗: ${errorMessage}`)
+        setSubmitError(`新增失敗：${errorMessage}`)
       }
     } catch (error) {
       logger.error(
         'Error adding farm tour activity:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      alert('網路錯誤，請稍後再試')
+      setSubmitError('網路錯誤，請檢查網路連線後再試')
     } finally {
       setLoading(false)
     }
@@ -185,17 +249,16 @@ export default function AddFarmTourActivity() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]:
-        type === 'number'
-          ? Number(value)
-          : type === 'checkbox'
-            ? (e.target as HTMLInputElement).checked
-            : name === 'start_month' || name === 'end_month' || name === 'price'
-              ? Number(value)
-              : value,
-    }))
+    const newValue =
+      type === 'number'
+        ? Number(value)
+        : type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : name === 'start_month' || name === 'end_month' || name === 'price'
+            ? Number(value)
+            : value
+
+    handleFieldChange(name, newValue)
   }
 
   const addActivityField = () => {
@@ -213,10 +276,8 @@ export default function AddFarmTourActivity() {
   }
 
   const updateActivityField = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      activities: prev.activities.map((activity, i) => (i === index ? value : activity)),
-    }))
+    const newActivities = formData.activities.map((activity, i) => (i === index ? value : activity))
+    handleFieldChange('activities', newActivities)
   }
 
   const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
@@ -229,7 +290,7 @@ export default function AddFarmTourActivity() {
 
   const handleImageUploadError = (error: string) => {
     logger.error('農場體驗活動圖片上傳失敗', new Error(error))
-    alert(`圖片上傳失敗: ${error}`)
+    setSubmitError(`圖片上傳失敗：${error}`)
   }
 
   return (
@@ -246,7 +307,50 @@ export default function AddFarmTourActivity() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white rounded-lg shadow-md p-6 space-y-6"
+            noValidate
+          >
+            {/* 錯誤和成功訊息 */}
+            {submitError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 text-red-500 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-red-800">{submitError}</p>
+                </div>
+              </div>
+            )}
+
+            {submitSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center">
+                  <svg
+                    className="w-5 h-5 text-green-500 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <p className="text-green-800">{submitSuccess}</p>
+                </div>
+              </div>
+            )}
+
             {/* 基本資訊 */}
             <div>
               <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
@@ -258,8 +362,13 @@ export default function AddFarmTourActivity() {
                     name="start_month"
                     value={formData.start_month}
                     onChange={handleInputChange}
+                    onBlur={e => handleFieldBlur('start_month', Number(e.target.value))}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.start_month
+                        ? 'border-red-500 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-green-200'
+                    }`}
                   >
                     {monthOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -267,6 +376,9 @@ export default function AddFarmTourActivity() {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.start_month && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.start_month}</p>
+                  )}
                 </div>
 
                 <div>
@@ -275,8 +387,13 @@ export default function AddFarmTourActivity() {
                     name="end_month"
                     value={formData.end_month}
                     onChange={handleInputChange}
+                    onBlur={e => handleFieldBlur('end_month', Number(e.target.value))}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.end_month
+                        ? 'border-red-500 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-green-200'
+                    }`}
                   >
                     {monthOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -284,6 +401,9 @@ export default function AddFarmTourActivity() {
                       </option>
                     ))}
                   </select>
+                  {fieldErrors.end_month && (
+                    <p className="text-red-500 text-sm mt-1">{fieldErrors.end_month}</p>
+                  )}
                 </div>
               </div>
 
@@ -294,10 +414,18 @@ export default function AddFarmTourActivity() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
+                  onBlur={e => handleFieldBlur('title', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                    fieldErrors.title
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-green-200'
+                  }`}
                   placeholder="輸入體驗活動標題"
                 />
+                {fieldErrors.title && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>
+                )}
               </div>
 
               <div className="mb-4">
@@ -309,11 +437,19 @@ export default function AddFarmTourActivity() {
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
+                  onBlur={e => handleFieldBlur('price', Number(e.target.value))}
                   min="0"
                   step="1"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                    fieldErrors.price
+                      ? 'border-red-500 focus:ring-red-200'
+                      : 'border-gray-300 focus:ring-green-200'
+                  }`}
                   placeholder="免費請填 0 或留空"
                 />
+                {fieldErrors.price && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.price}</p>
+                )}
               </div>
             </div>
 
@@ -322,15 +458,20 @@ export default function AddFarmTourActivity() {
               <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動項目</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">活動項目 *</label>
                 {formData.activities.map((activity, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
                       type="text"
                       value={activity}
                       onChange={e => updateActivityField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder-gray-400"
-                      placeholder="輸入活動項目"
+                      onBlur={() => handleFieldBlur('activities', formData.activities)}
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                        fieldErrors.activities
+                          ? 'border-red-500 focus:ring-red-200'
+                          : 'border-gray-300 focus:ring-green-200'
+                      }`}
+                      placeholder="輸入活動項目（例如：有機蔬菜採摘）"
                     />
                     {formData.activities.length > 1 && (
                       <button
@@ -343,6 +484,9 @@ export default function AddFarmTourActivity() {
                     )}
                   </div>
                 ))}
+                {fieldErrors.activities && (
+                  <p className="text-red-500 text-sm mt-1">{fieldErrors.activities}</p>
+                )}
                 <button
                   type="button"
                   onClick={addActivityField}

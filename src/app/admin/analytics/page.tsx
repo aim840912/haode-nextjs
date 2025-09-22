@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { checkGAStatus } from '@/lib/analytics'
 import GA4TrackingExamples from '@/components/examples/GA4TrackingExamples'
+import { ChartBarIcon } from '@heroicons/react/24/outline'
 
 interface GAStatus {
   isLoaded: boolean
@@ -73,7 +74,7 @@ export default function AnalyticsPage() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Google Analytics 4</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Google Analytics 4</h1>
               <p className="text-gray-600">專業的網站分析和用戶行為追蹤</p>
             </div>
             <Link
@@ -172,7 +173,7 @@ export default function AnalyticsPage() {
                 className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
               >
                 <div className="flex items-center space-x-3">
-                  <span className="text-2xl">📊</span>
+                  <ChartBarIcon className="w-8 h-8 text-blue-600" />
                   <div>
                     <h3 className="font-medium text-gray-900 group-hover:text-blue-900">
                       Google Analytics

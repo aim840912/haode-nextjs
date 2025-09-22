@@ -27,6 +27,15 @@ import {
   InquiryUtils,
 } from '@/types/inquiry'
 import { InquiryStatusFlowCompact } from '@/components/features/inquiry/InquiryStatusFlow'
+import {
+  ExclamationTriangleIcon,
+  ChartBarIcon,
+  EyeIcon,
+  ChatBubbleLeftIcon,
+  BoltIcon,
+  ClipboardDocumentListIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
 
 function AdminInquiriesPage() {
   const { user } = useAuth()
@@ -679,7 +688,9 @@ function AdminInquiriesPage() {
         <div className="min-h-screen bg-gray-50 pt-36">
           <div className="max-w-4xl mx-auto px-6 py-16">
             <div className="text-center">
-              <div className="text-6xl mb-8">❌</div>
+              <div className="mx-auto w-24 h-24 mb-8 text-red-500">
+                <ExclamationTriangleIcon className="w-full h-full" />
+              </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-4">載入失敗</h1>
               <p className="text-gray-600 mb-8">{error}</p>
               <button
@@ -711,7 +722,7 @@ function AdminInquiriesPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 text-sm font-medium">📊</span>
+                    <ChartBarIcon className="w-5 h-5 text-blue-600" />
                   </div>
                 </div>
                 <div className="ml-4">
@@ -730,7 +741,7 @@ function AdminInquiriesPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <span className="text-orange-600 text-sm font-medium">👀</span>
+                    <EyeIcon className="w-5 h-5 text-orange-600" />
                   </div>
                 </div>
                 <div className="ml-4">
@@ -756,7 +767,7 @@ function AdminInquiriesPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <span className="text-red-600 text-sm font-medium">💬</span>
+                    <ChatBubbleLeftIcon className="w-5 h-5 text-red-600" />
                   </div>
                 </div>
                 <div className="ml-4">
@@ -782,7 +793,7 @@ function AdminInquiriesPage() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <span className="text-green-600 text-sm font-medium">⚡</span>
+                    <BoltIcon className="w-5 h-5 text-green-600" />
                   </div>
                 </div>
                 <div className="ml-4">
@@ -1082,7 +1093,9 @@ function AdminInquiriesPage() {
           {/* 詢問單列表 */}
           {inquiries.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <div className="text-6xl mb-8">📋</div>
+              <div className="mx-auto w-24 h-24 mb-8 text-gray-400">
+                <ClipboardDocumentListIcon className="w-full h-full" />
+              </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">
                 {statusFilter === 'all' && '還沒有詢問單'}
                 {statusFilter === 'unread' && '沒有未讀的詢問單'}
@@ -1319,7 +1332,7 @@ function AdminInquiriesPage() {
                       onClick={() => setSelectedInquiry(null)}
                       className="text-gray-400 hover:text-gray-600"
                     >
-                      ✕
+                      <XMarkIcon className="w-6 h-6" />
                     </button>
                   </div>
                 </div>

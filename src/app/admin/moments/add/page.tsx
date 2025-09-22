@@ -37,20 +37,48 @@ function AddMoment() {
     images: [] as string[],
   })
 
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    title: '',
+    description: '',
+  })
+
+  // 驗證函數
+  const validateField = useCallback((field: string, value: any) => {
+    switch (field) {
+      case 'title':
+        return !value.trim() ? '請輸入標題' : ''
+      case 'description':
+        return !value.trim() ? '請輸入簡短描述' : ''
+      default:
+        return ''
+    }
+  }, [])
+
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value, type } = e.target
+      const newValue =
+        type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : type === 'number'
+            ? parseInt(value) || 0
+            : value
+
       setFormData(prev => ({
         ...prev,
-        [name]:
-          type === 'checkbox'
-            ? (e.target as HTMLInputElement).checked
-            : type === 'number'
-              ? parseInt(value) || 0
-              : value,
+        [name]: newValue,
       }))
+
+      // 清除對應欄位錯誤
+      if (fieldErrors[name as keyof typeof fieldErrors]) {
+        const error = validateField(name, newValue)
+        setFieldErrors(prev => ({ ...prev, [name]: error }))
+      }
     },
-    []
+    [fieldErrors, validateField]
   )
 
   const handleUploadSuccess = useCallback(
@@ -71,7 +99,7 @@ function AddMoment() {
 
   const handleUploadError = useCallback(
     (error: string) => {
-      alert(`圖片上傳失敗: ${error}`)
+      setSubmitError(`圖片上傳失敗: ${error}`)
       logger.error('精彩時刻圖片上傳失敗', new Error(error), {
         metadata: { momentId },
       })
@@ -101,14 +129,21 @@ function AddMoment() {
 
       if (loading || csrfLoading) return
 
-      // 表單驗證
-      if (!formData.title.trim()) {
-        alert('請輸入標題')
-        return
+      setSubmitError(null)
+      setSubmitSuccess(null)
+
+      // 欄位級驗證
+      const newFieldErrors = {
+        title: validateField('title', formData.title),
+        description: validateField('description', formData.description),
       }
 
-      if (!formData.description.trim()) {
-        alert('請輸入描述')
+      setFieldErrors(newFieldErrors)
+
+      // 檢查是否有任何錯誤
+      const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
+      if (hasErrors) {
+        setSubmitError('請修正表單中的錯誤後再提交')
         return
       }
 
@@ -146,11 +181,13 @@ function AddMoment() {
           metadata: { momentId, title: formData.title },
         })
 
-        alert('精彩時刻建立成功！')
-        router.push('/admin/moments')
+        setSubmitSuccess('精彩時刻建立成功！正在跳轉...')
+        setTimeout(() => {
+          router.push('/admin/moments')
+        }, 1500)
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : '建立精彩時刻失敗'
-        alert(errorMessage)
+        setSubmitError(errorMessage)
         logger.error('建立精彩時刻失敗', error as Error, {
           metadata: { momentId, formData },
         })
@@ -158,7 +195,7 @@ function AddMoment() {
         setLoading(false)
       }
     },
-    [loading, csrfLoading, formData, momentId, csrfToken, router]
+    [loading, csrfLoading, formData, momentId, csrfToken, router, validateField]
   )
 
   // 載入中狀態
@@ -232,7 +269,46 @@ function AddMoment() {
           </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form onSubmit={handleSubmit} noValidate className="space-y-8">
+          {/* 錯誤訊息顯示 */}
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-red-800">{submitError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 成功訊息顯示 */}
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">{submitSuccess}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">基本資訊</h2>
 
@@ -248,10 +324,21 @@ function AddMoment() {
                   name="title"
                   value={formData.title}
                   onChange={handleInputChange}
+                  onBlur={() => {
+                    const error = validateField('title', formData.title)
+                    setFieldErrors(prev => ({ ...prev, title: error }))
+                  }}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-amber-500 focus:border-amber-500"
+                  className={`w-full border rounded-lg px-3 py-2 focus:ring-2 ${
+                    fieldErrors.title
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-amber-500 focus:border-amber-500'
+                  }`}
                   placeholder="請輸入精彩時刻的標題"
                 />
+                {fieldErrors.title && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>
+                )}
               </div>
 
               {/* 描述 */}
@@ -268,10 +355,21 @@ function AddMoment() {
                   rows={3}
                   value={formData.description}
                   onChange={handleInputChange}
+                  onBlur={() => {
+                    const error = validateField('description', formData.description)
+                    setFieldErrors(prev => ({ ...prev, description: error }))
+                  }}
                   required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-amber-500 focus:border-amber-500"
+                  className={`w-full border rounded-lg px-3 py-2 focus:ring-2 ${
+                    fieldErrors.description
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                      : 'border-gray-300 focus:ring-amber-500 focus:border-amber-500'
+                  }`}
                   placeholder="請輸入簡短描述（會顯示在卡片上）"
                 />
+                {fieldErrors.description && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>
+                )}
               </div>
 
               {/* 詳細內容 */}

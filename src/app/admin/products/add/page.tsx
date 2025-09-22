@@ -44,6 +44,18 @@ function AddProduct() {
     isActive: true,
   })
 
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    name: '',
+    description: '',
+    category: '',
+    price: '',
+    inventory: '',
+    images: '',
+  })
+
   const fetchCategories = useCallback(async () => {
     try {
       const response = await fetch('/api/products/categories')
@@ -103,17 +115,79 @@ function AddProduct() {
     )
   }
 
+  // 驗證函數
+  const validateField = (field: string, value: any) => {
+    switch (field) {
+      case 'name':
+        return !value.trim() ? '請輸入產品名稱' : ''
+      case 'description':
+        return !value.trim() ? '請輸入產品描述' : ''
+      case 'category':
+        return !value.trim() ? '請選擇產品分類' : ''
+      case 'price':
+        return value < 0 ? '價格不能為負數' : ''
+      case 'inventory':
+        return value < 0 ? '庫存數量不能為負數' : ''
+      case 'images':
+        const validImages = Array.isArray(value) ? value.filter(img => img.trim() !== '') : []
+        const hasUploadedImages = uploadedImages.length > 0
+        return !hasUploadedImages && validImages.length === 0 ? '請至少上傳一張產品圖片' : ''
+      default:
+        return ''
+    }
+  }
+
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // 清除該欄位的錯誤訊息
+    if (fieldErrors[field as keyof typeof fieldErrors]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }))
+    }
+    // 清除總體錯誤
+    setSubmitError(null)
+    setSubmitSuccess(null)
+  }
+
+  const handleFieldBlur = (field: string, value: any) => {
+    const error = validateField(field, value)
+    setFieldErrors(prev => ({ ...prev, [field]: error }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // 清除之前的錯誤
+    setSubmitError(null)
+    setSubmitSuccess(null)
+
     // 防止在 CSRF token 未準備好時提交
     if (csrfLoading || !csrfToken) {
-      alert('請稍候，正在初始化安全驗證...')
+      setSubmitError('請稍候，正在初始化安全驗證...')
       return
     }
 
     if (csrfError) {
-      alert('安全驗證初始化失敗，請重新整理頁面')
+      setSubmitError('安全驗證初始化失敗，請重新整理頁面')
+      return
+    }
+
+    // 欄位級驗證
+    const newFieldErrors = {
+      name: validateField('name', formData.name),
+      description: validateField('description', formData.description),
+      category: validateField('category', formData.category),
+      price: validateField('price', formData.price),
+      inventory: validateField('inventory', formData.inventory),
+      images: validateField('images', formData.images),
+    }
+
+    setFieldErrors(newFieldErrors)
+
+    // 檢查是否有任何錯誤
+    const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
+    if (hasErrors) {
+      const allErrors = Object.values(newFieldErrors).filter(error => error !== '')
+      setSubmitError(`請修正以下問題：${allErrors.join('、')}`)
       return
     }
 
@@ -168,13 +242,17 @@ function AddProduct() {
       if (response.ok) {
         const result = await response.json()
         logger.info(`✅ 產品建立成功: ${result.product?.id || productId}`)
-        router.push('/admin/products')
+        setSubmitSuccess('產品新增成功！')
+        // 延遲跳轉讓使用者看到成功訊息
+        setTimeout(() => {
+          router.push('/admin/products')
+        }, 1500)
       } else {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`新增失敗: ${errorData.error || response.status}`)
+        setSubmitError(`新增失敗：${errorData.error || response.status}`)
       }
     } catch {
-      alert('新增失敗')
+      setSubmitError('網路錯誤，請檢查網路連線後再試')
     } finally {
       setLoading(false)
     }
@@ -201,7 +279,7 @@ function AddProduct() {
   }
 
   const handleImageUploadError = (error: string) => {
-    alert(`圖片上傳失敗: ${error}`)
+    setSubmitError(`圖片上傳失敗: ${error}`)
   }
 
   const handleImageDelete = (deletedImage: { url?: string; path?: string }) => {
@@ -223,7 +301,50 @@ function AddProduct() {
           <h1 className="text-3xl font-bold text-gray-900">新增產品</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="bg-white rounded-lg shadow-md p-6 space-y-6"
+        >
+          {/* 錯誤訊息顯示 */}
+          {submitError && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-red-800">{submitError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 成功訊息顯示 */}
+          {submitSuccess && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">{submitSuccess}</p>
+                </div>
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">產品名稱 *</label>
             <input
@@ -231,10 +352,19 @@ function AddProduct() {
               name="name"
               value={formData.name}
               onChange={handleInputChange}
+              onBlur={() => {
+                const error = validateField('name', formData.name)
+                setFieldErrors(prev => ({ ...prev, name: error }))
+              }}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.name
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-amber-500'
+              }`}
               placeholder="輸入產品名稱"
             />
+            {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
           </div>
 
           <div>
@@ -243,11 +373,22 @@ function AddProduct() {
               name="description"
               value={formData.description}
               onChange={handleInputChange}
+              onBlur={() => {
+                const error = validateField('description', formData.description)
+                setFieldErrors(prev => ({ ...prev, description: error }))
+              }}
               required
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.description
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-amber-500'
+              }`}
               placeholder="輸入產品描述"
             />
+            {fieldErrors.description && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.description}</p>
+            )}
           </div>
 
           <div className="relative">
@@ -260,10 +401,18 @@ function AddProduct() {
               onFocus={() => setShowCategorySuggestions(true)}
               onBlur={() => {
                 // 延遲隱藏建議，讓點擊建議項目有時間執行
-                setTimeout(() => setShowCategorySuggestions(false), 200)
+                setTimeout(() => {
+                  setShowCategorySuggestions(false)
+                  const error = validateField('category', formData.category)
+                  setFieldErrors(prev => ({ ...prev, category: error }))
+                }, 200)
               }}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.category
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-amber-500'
+              }`}
               placeholder="輸入產品分類或選擇現有分類"
             />
 
@@ -301,6 +450,9 @@ function AddProduct() {
               </div>
             )}
 
+            {fieldErrors.category && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.category}</p>
+            )}
             <div className="text-xs text-gray-500 mt-1">可輸入新分類或從現有分類中選擇</div>
           </div>
 
@@ -323,12 +475,23 @@ function AddProduct() {
                     name="price"
                     value={formData.price}
                     onChange={handleInputChange}
+                    onBlur={() => {
+                      const error = validateField('price', formData.price)
+                      setFieldErrors(prev => ({ ...prev, price: error }))
+                    }}
                     required
                     min="0"
                     step="1"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                      fieldErrors.price
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-amber-500'
+                    }`}
                     placeholder="輸入單位價格"
                   />
+                  {fieldErrors.price && (
+                    <p className="mt-1 text-sm text-red-600">{fieldErrors.price}</p>
+                  )}
                 </div>
 
                 {/* 單位 */}

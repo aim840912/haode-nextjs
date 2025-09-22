@@ -31,6 +31,39 @@ export default function AddSchedule() {
     endTime: '22:00', // 預設晚上 10 點（夜市通常結束時間）
   })
 
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState({
+    title: '',
+    location: '',
+    date: '',
+    time: '',
+    contact: '',
+  })
+
+  // 驗證函數
+  const validateField = (field: string, value: any) => {
+    switch (field) {
+      case 'title':
+        return !value.trim() ? '請輸入市集/夜市名稱' : ''
+      case 'location':
+        return !value.trim() ? '請輸入詳細地址' : ''
+      case 'date':
+        return !value ? '請選擇日期' : ''
+      case 'time':
+        const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
+        return !formattedTime ? '請選擇開始時間和結束時間' : ''
+      case 'contact':
+        if (!value.trim()) return '請輸入聯絡電話'
+        // 台灣電話格式簡單驗證
+        const phoneRegex = /^(09\d{8}|0\d{1,2}-\d{6,8})$/
+        return !phoneRegex.test(value.replace(/\s+/g, '')) ? '電話格式不正確' : ''
+      default:
+        return ''
+    }
+  }
+
   // Format start and end times into time range string
   const formatTimeRange = (startTime: string, endTime: string) => {
     if (!startTime || !endTime) return ''
@@ -79,37 +112,27 @@ export default function AddSchedule() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setSubmitError(null)
+    setSubmitSuccess(null)
 
     try {
       const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
 
-      // 前端驗證必填欄位
-      if (!formData.title?.trim()) {
-        alert('請輸入市集/夜市名稱')
-        setLoading(false)
-        return
+      // 欄位級驗證
+      const newFieldErrors = {
+        title: validateField('title', formData.title),
+        location: validateField('location', formData.location),
+        date: validateField('date', formData.date),
+        time: validateField('time', formattedTime),
+        contact: validateField('contact', formData.contact),
       }
 
-      if (!formData.location?.trim()) {
-        alert('請輸入詳細地址')
-        setLoading(false)
-        return
-      }
+      setFieldErrors(newFieldErrors)
 
-      if (!formData.date) {
-        alert('請選擇日期')
-        setLoading(false)
-        return
-      }
-
-      if (!formattedTime) {
-        alert('請選擇開始時間和結束時間')
-        setLoading(false)
-        return
-      }
-
-      if (!formData.contact?.trim()) {
-        alert('請輸入聯絡電話')
+      // 檢查是否有任何錯誤
+      const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
+      if (hasErrors) {
+        setSubmitError('請修正表單中的錯誤後再提交')
         setLoading(false)
         return
       }
@@ -126,18 +149,21 @@ export default function AddSchedule() {
       })
 
       if (response.ok) {
-        router.push('/admin/schedule')
+        setSubmitSuccess('行程新增成功！正在跳轉...')
+        setTimeout(() => {
+          router.push('/admin/schedule')
+        }, 1500)
       } else {
         const errorData = await response.json()
         const errorMessage = errorData.error?.message || '未知錯誤'
-        alert(`新增失敗: ${errorMessage}`)
+        setSubmitError(`新增失敗: ${errorMessage}`)
       }
     } catch (error) {
       logger.error(
         'Error adding schedule:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      alert('新增失敗')
+      setSubmitError('網路連線錯誤，請檢查網路後再試')
     } finally {
       setLoading(false)
     }
@@ -151,13 +177,27 @@ export default function AddSchedule() {
       ...prev,
       [name]: value,
     }))
+
+    // 清除對應欄位錯誤
+    if (fieldErrors[name as keyof typeof fieldErrors]) {
+      const error = validateField(name, value)
+      setFieldErrors(prev => ({ ...prev, [name]: error }))
+    }
   }
 
   const handleTimeChange = (timeType: 'startTime' | 'endTime', value: string) => {
-    setTimeRange(prev => ({
-      ...prev,
-      [timeType]: value,
-    }))
+    setTimeRange(prev => {
+      const newTimeRange = { ...prev, [timeType]: value }
+
+      // 清除時間錯誤
+      if (fieldErrors.time) {
+        const formattedTime = formatTimeRange(newTimeRange.startTime, newTimeRange.endTime)
+        const error = validateField('time', formattedTime)
+        setFieldErrors(prevErrors => ({ ...prevErrors, time: error }))
+      }
+
+      return newTimeRange
+    })
   }
 
   const handleAddProduct = () => {
@@ -205,7 +245,50 @@ export default function AddSchedule() {
           <h1 className="text-3xl font-bold text-gray-900">新增擺攤行程</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="bg-white rounded-lg shadow-md p-8 space-y-6"
+        >
+          {/* 錯誤訊息顯示 */}
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-red-800">{submitError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 成功訊息顯示 */}
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">{submitSuccess}</p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* 基本資訊 */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -217,11 +300,22 @@ export default function AddSchedule() {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
+                onBlur={() => {
+                  const error = validateField('title', formData.title)
+                  setFieldErrors(prev => ({ ...prev, title: error }))
+                }}
                 required
                 list="market-suggestions"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.title
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
                 placeholder="輸入市集或夜市名稱"
               />
+              {fieldErrors.title && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>
+              )}
               <datalist id="market-suggestions">
                 {marketSuggestions.map(market => (
                   <option key={market} value={market} />
@@ -252,10 +346,21 @@ export default function AddSchedule() {
               name="location"
               value={formData.location}
               onChange={handleInputChange}
+              onBlur={() => {
+                const error = validateField('location', formData.location)
+                setFieldErrors(prev => ({ ...prev, location: error }))
+              }}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                fieldErrors.location
+                  ? 'border-red-500 focus:ring-red-500'
+                  : 'border-gray-300 focus:ring-purple-500'
+              }`}
               placeholder="完整地址，包含縣市區域"
             />
+            {fieldErrors.location && (
+              <p className="mt-1 text-sm text-red-600">{fieldErrors.location}</p>
+            )}
           </div>
 
           {/* 日期時間 */}
@@ -267,9 +372,18 @@ export default function AddSchedule() {
                 name="date"
                 value={formData.date}
                 onChange={handleInputChange}
+                onBlur={() => {
+                  const error = validateField('date', formData.date)
+                  setFieldErrors(prev => ({ ...prev, date: error }))
+                }}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.date
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
               />
+              {fieldErrors.date && <p className="mt-1 text-sm text-red-600">{fieldErrors.date}</p>}
             </div>
 
             <div>
@@ -295,6 +409,7 @@ export default function AddSchedule() {
                   時間範圍：{formatTimeRange(timeRange.startTime, timeRange.endTime)}
                 </div>
               )}
+              {fieldErrors.time && <p className="mt-1 text-sm text-red-600">{fieldErrors.time}</p>}
             </div>
           </div>
 
@@ -384,10 +499,21 @@ export default function AddSchedule() {
                 name="contact"
                 value={formData.contact}
                 onChange={handleInputChange}
+                onBlur={() => {
+                  const error = validateField('contact', formData.contact)
+                  setFieldErrors(prev => ({ ...prev, contact: error }))
+                }}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  fieldErrors.contact
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-purple-500'
+                }`}
                 placeholder="聯絡電話"
               />
+              {fieldErrors.contact && (
+                <p className="mt-1 text-sm text-red-600">{fieldErrors.contact}</p>
+              )}
             </div>
 
             <div>
