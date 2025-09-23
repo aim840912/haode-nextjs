@@ -6,6 +6,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useRouter } from 'next/navigation'
 import { logger } from '@/lib/logger'
+import { getSupabaseClient } from '@/lib/database/supabase-auth'
+
+// Force recompile
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -22,6 +25,7 @@ export default function RegisterPage() {
   const { register } = useAuth()
   const { success, error: showError } = useToast()
   const router = useRouter()
+  const supabase = getSupabaseClient()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -198,14 +202,59 @@ export default function RegisterPage() {
         phone: formData.phone,
       })
 
-      // 顯示成功提示
-      success('註冊成功', '歡迎加入豪德茶業！請檢查您的電子郵件進行驗證')
-      setSuccessMessage('註冊成功！請檢查您的電子郵件進行驗證...')
+      // 智慧判斷導向：檢查認證狀態
+      // 稍等一下讓 AuthContext 處理認證狀態變化
+      setTimeout(async () => {
+        try {
+          // 檢查當前認證狀態
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
 
-      // 延遲一下讓用戶看到成功訊息，然後跳轉到登入頁面
-      setTimeout(() => {
-        router.push('/login')
-      }, 2000)
+          if (session?.user) {
+            // 檢查是否需要郵件驗證
+            const needsEmailVerification = !session.user.email_confirmed_at
+
+            if (needsEmailVerification) {
+              // 需要驗證：顯示驗證提示，然後導向驗證頁面
+              success('註冊成功', '請檢查您的電子郵件並點擊驗證連結')
+              setSuccessMessage('註冊成功！請檢查您的電子郵件進行驗證...')
+
+              setTimeout(() => {
+                router.push('/verify-email?email=' + encodeURIComponent(formData.email))
+              }, 1500)
+            } else {
+              // 不需要驗證或已自動驗證：直接導向個人頁面
+              success('註冊成功', '歡迎加入豪德農場！正在為您登入...')
+              setSuccessMessage('註冊成功！正在為您登入...')
+
+              setTimeout(() => {
+                router.push('/profile')
+              }, 1500)
+            }
+          } else {
+            // 沒有 session，可能需要手動登入
+            success('註冊成功', '請使用新帳號登入')
+            setSuccessMessage('註冊成功！請使用新帳號登入...')
+
+            setTimeout(() => {
+              router.push('/login')
+            }, 1500)
+          }
+        } catch (error) {
+          // 錯誤處理：預設導向登入頁面
+          logger.warn('檢查註冊狀態時發生錯誤', {
+            metadata: { error: String(error) },
+          })
+
+          success('註冊成功', '請使用新帳號登入')
+          setSuccessMessage('註冊成功！請使用新帳號登入...')
+
+          setTimeout(() => {
+            router.push('/login')
+          }, 1500)
+        }
+      }, 1000)
     } catch (error) {
       logger.error('Registration failed', error as Error, {
         metadata: { email: formData.email, phone: formData.phone, action: 'registration_failed' },

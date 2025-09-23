@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import SearchInput from '@/components/ui/search/SearchInput'
+import PopularSearches from '@/components/ui/search/PopularSearches'
 
 export interface FilterState {
   categories: string[]
@@ -79,7 +81,10 @@ export default function ProductFilter({
   }
 
   const hasActiveFilters =
-    filters.categories.length > 0 || filters.availability !== 'all' || showPriceRange
+    filters.categories.length > 0 ||
+    filters.availability !== 'all' ||
+    showPriceRange ||
+    (filters.search && filters.search.trim().length > 0)
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
@@ -119,12 +124,12 @@ export default function ProductFilter({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div>
               <h3 className="font-semibold text-gray-800 mb-3">搜尋產品</h3>
-              <input
-                type="text"
+              <SearchInput
+                value={filters.search || ''}
+                onChange={value => setFilters(prev => ({ ...prev, search: value }))}
                 placeholder="搜尋產品名稱、描述或類別..."
-                value={filters.search}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-gray-900 placeholder-gray-500 bg-white"
-                onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                showHistory={true}
+                showSuggestions={true}
               />
             </div>
             <div>
@@ -144,6 +149,17 @@ export default function ProductFilter({
               </select>
             </div>
           </div>
+
+          {/* Popular Searches - 只在沒有搜尋條件時顯示 */}
+          {(!filters.search || filters.search.trim().length === 0) && (
+            <div className="lg:w-1/2">
+              <PopularSearches
+                onSearchSelect={query => setFilters(prev => ({ ...prev, search: query }))}
+                limit={5}
+                showStats={false}
+              />
+            </div>
+          )}
 
           {/* Categories */}
           <div>

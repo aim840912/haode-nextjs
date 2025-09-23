@@ -1,29 +1,81 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
 import AuthErrorBoundary from '@/components/ui/error/AuthErrorBoundary'
 import { logger } from '@/lib/logger'
+import { validateLoginInput, getLoginInputType } from '@/lib/utils/auth-helpers'
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
+  const [loginInput, setLoginInput] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const { login, isLoading } = useAuth()
+  const [inputType, setInputType] = useState<'email' | 'phone' | 'invalid'>('invalid')
+  const { login, isLoading, user } = useAuth()
   const { success, error: showError } = useToast()
   const router = useRouter()
+
+  // 如果用戶已登入，自動導向到個人頁面
+  useEffect(() => {
+    if (user && !isLoading) {
+      logger.info('已登入用戶訪問登入頁，重定向到個人頁面', {
+        metadata: { userId: user.id, action: 'auto_redirect' },
+      })
+      router.push('/profile')
+    }
+  }, [user, isLoading, router])
+
+  // 處理輸入變更並即時驗證
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setLoginInput(value)
+
+    // 即時判斷輸入類型
+    if (value.trim()) {
+      const type = getLoginInputType(value)
+      setInputType(type)
+    } else {
+      setInputType('invalid')
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
+    // 驗證輸入格式
+    const validation = validateLoginInput(loginInput)
+    if (!validation.isValid) {
+      setError(validation.errorMessage || '輸入格式無效')
+      return
+    }
+
     try {
-      logger.debug('開始登入流程', { metadata: { email, action: 'login_start' } })
-      await login({ email, password })
-      logger.info('登入成功', { metadata: { email, action: 'login_success' } })
+      logger.debug('開始登入流程', {
+        metadata: {
+          inputType: validation.type,
+          action: 'login_start',
+        },
+      })
+
+      // 只有當輸入類型有效時才進行登入
+      if (validation.type !== 'invalid') {
+        await login({
+          identifier: validation.normalizedInput,
+          password,
+          inputType: validation.type,
+        })
+      }
+
+      logger.info('登入成功', {
+        metadata: {
+          inputType: validation.type,
+          action: 'login_success',
+        },
+      })
 
       // 顯示成功提示
       success('登入成功', '歡迎回來！')
@@ -31,7 +83,12 @@ export default function LoginPage() {
       // 使用 Next.js router 進行導航，而不是強制重新載入
       router.push('/')
     } catch (err) {
-      logger.error('登入錯誤', err as Error, { metadata: { email, action: 'login_error' } })
+      logger.error('登入錯誤', err as Error, {
+        metadata: {
+          inputType: validation?.type || 'unknown',
+          action: 'login_error',
+        },
+      })
       const errorMessage = err instanceof Error ? err.message : '登入失敗，請稍後再試'
 
       // 顯示錯誤提示和設定錯誤狀態
@@ -69,21 +126,42 @@ export default function LoginPage() {
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
-              {/* Email Input */}
+              {/* Login Input (Email or Phone) */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                  電子郵件
+                <label
+                  htmlFor="loginInput"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  手機號碼或電子郵件
                 </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
-                  placeholder="請輸入您的電子郵件"
-                />
+                <div className="relative">
+                  <input
+                    id="loginInput"
+                    name="loginInput"
+                    type="text"
+                    required
+                    value={loginInput}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500 ${
+                      loginInput && inputType === 'invalid'
+                        ? 'border-red-300 bg-red-50'
+                        : 'border-gray-300'
+                    }`}
+                    placeholder="請輸入手機號碼或電子郵件"
+                  />
+                  {/* 輸入類型指示器 */}
+                  {loginInput && inputType !== 'invalid' && (
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">
+                        {inputType === 'email' ? '📧' : '📱'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {/* 輸入提示 */}
+                <div className="mt-1 text-xs text-gray-500">
+                  支援格式：example@email.com 或 09xx-xxx-xxx
+                </div>
               </div>
 
               {/* Password Input */}

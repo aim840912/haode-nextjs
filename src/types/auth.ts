@@ -15,8 +15,9 @@ export interface User {
 }
 
 export interface LoginRequest {
-  email: string
+  identifier: string // 可以是 email 或手機號碼
   password: string
+  inputType: 'email' | 'phone'
   rememberMe?: boolean
 }
 

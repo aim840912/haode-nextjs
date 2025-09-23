@@ -48,6 +48,14 @@ export default function FarmTourPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // 欄位級錯誤狀態
+  const [fieldErrors, setFieldErrors] = useState({
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
+    visit_date: '',
+  })
+
   useEffect(() => {
     fetchActivities()
   }, [])
@@ -105,10 +113,50 @@ export default function FarmTourPage() {
       notes: '',
     })
     setSubmitError(null)
+    // 重置欄位錯誤狀態
+    setFieldErrors({
+      customer_name: '',
+      customer_email: '',
+      customer_phone: '',
+      visit_date: '',
+    })
+  }
+
+  // 驗證函數
+  const validateField = (field: string, value: string) => {
+    switch (field) {
+      case 'customer_name':
+        return !value.trim() ? '請輸入姓名' : ''
+      case 'customer_email':
+        if (!value.trim()) return '請輸入 Email'
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return '請輸入有效的 Email 格式'
+        return ''
+      case 'customer_phone':
+        if (value && !/^[0-9\-\+\(\)\s]{8,15}$/.test(value)) return '請輸入有效的電話號碼'
+        return ''
+      case 'visit_date':
+        if (!value) return '請選擇參觀日期'
+        const selectedDate = new Date(value)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        if (selectedDate < today) return '參觀日期不能是過去的日期'
+        return ''
+      default:
+        return ''
+    }
   }
 
   const handleFormChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    // 清除該欄位的錯誤訊息（當使用者開始輸入時）
+    if (fieldErrors[field as keyof typeof fieldErrors]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }))
+    }
+  }
+
+  const handleFieldBlur = (field: string, value: string) => {
+    const error = validateField(field, value)
+    setFieldErrors(prev => ({ ...prev, [field]: error }))
   }
 
   const handleSubmitInquiry = async () => {
@@ -122,9 +170,20 @@ export default function FarmTourPage() {
       return
     }
 
-    // 基本驗證
-    if (!formData.customer_name || !formData.customer_email || !formData.visit_date) {
-      setSubmitError('請填寫必要資訊：姓名、Email 和參觀日期')
+    // 欄位級驗證
+    const newFieldErrors = {
+      customer_name: validateField('customer_name', formData.customer_name),
+      customer_email: validateField('customer_email', formData.customer_email),
+      customer_phone: validateField('customer_phone', formData.customer_phone),
+      visit_date: validateField('visit_date', formData.visit_date),
+    }
+
+    setFieldErrors(newFieldErrors)
+
+    // 檢查是否有任何錯誤
+    const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
+    if (hasErrors) {
+      setSubmitError('請修正表單中的錯誤後再提交')
       return
     }
 
@@ -557,9 +616,17 @@ export default function FarmTourPage() {
                         type="date"
                         value={formData.visit_date}
                         onChange={e => handleFormChange('visit_date', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                        onBlur={e => handleFieldBlur('visit_date', e.target.value)}
+                        className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 ${
+                          fieldErrors.visit_date
+                            ? 'border-red-500 focus:ring-red-200'
+                            : 'border-gray-300 focus:ring-amber-200'
+                        }`}
                         required
                       />
+                      {fieldErrors.visit_date && (
+                        <p className="text-red-500 text-sm mt-1">{fieldErrors.visit_date}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-gray-700 mb-1 font-medium">參觀人數</label>
@@ -581,9 +648,18 @@ export default function FarmTourPage() {
                         type="text"
                         value={formData.customer_name}
                         onChange={e => handleFormChange('customer_name', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                        onBlur={e => handleFieldBlur('customer_name', e.target.value)}
+                        className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 ${
+                          fieldErrors.customer_name
+                            ? 'border-red-500 focus:ring-red-200'
+                            : 'border-gray-300 focus:ring-amber-200'
+                        }`}
+                        placeholder="請輸入您的姓名"
                         required
                       />
+                      {fieldErrors.customer_name && (
+                        <p className="text-red-500 text-sm mt-1">{fieldErrors.customer_name}</p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-gray-700 mb-1 font-medium">聯絡電話</label>
@@ -591,8 +667,17 @@ export default function FarmTourPage() {
                         type="tel"
                         value={formData.customer_phone}
                         onChange={e => handleFormChange('customer_phone', e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                        onBlur={e => handleFieldBlur('customer_phone', e.target.value)}
+                        className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 ${
+                          fieldErrors.customer_phone
+                            ? 'border-red-500 focus:ring-red-200'
+                            : 'border-gray-300 focus:ring-amber-200'
+                        }`}
+                        placeholder="選填：如 0912-345-678"
                       />
+                      {fieldErrors.customer_phone && (
+                        <p className="text-red-500 text-sm mt-1">{fieldErrors.customer_phone}</p>
+                      )}
                     </div>
                   </div>
                   <div className="mt-4">
@@ -601,9 +686,18 @@ export default function FarmTourPage() {
                       type="email"
                       value={formData.customer_email}
                       onChange={e => handleFormChange('customer_email', e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
+                      onBlur={e => handleFieldBlur('customer_email', e.target.value)}
+                      className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 ${
+                        fieldErrors.customer_email
+                          ? 'border-red-500 focus:ring-red-200'
+                          : 'border-gray-300 focus:ring-amber-200'
+                      }`}
+                      placeholder="請輸入有效的 Email 地址"
                       required
                     />
+                    {fieldErrors.customer_email && (
+                      <p className="text-red-500 text-sm mt-1">{fieldErrors.customer_email}</p>
+                    )}
                   </div>
                 </div>
 

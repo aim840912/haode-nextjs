@@ -14,6 +14,7 @@ import {
   INQUIRY_STATUS_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
+import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 
 function InquiryListPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -275,7 +276,9 @@ function InquiryListPage() {
         {/* 詢問單列表 */}
         {filteredInquiries.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-            <div className="text-6xl mb-8">📋</div>
+            <div className="mb-8 flex justify-center">
+              <ClipboardDocumentListIcon className="h-16 w-16 text-gray-400" />
+            </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-4">
               {statusFilter === 'all'
                 ? '還沒有詢價紀錄'

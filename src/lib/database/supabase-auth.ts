@@ -307,6 +307,58 @@ export async function signInUser(email: string, password: string) {
   return data
 }
 
+// 支援手機號碼或電子郵件登入
+export async function signInWithPhoneOrEmail(
+  identifier: string,
+  password: string,
+  inputType: 'email' | 'phone'
+) {
+  let email = identifier
+
+  // 如果是手機號碼，需要先查詢對應的 email
+  if (inputType === 'phone') {
+    try {
+      const response = await fetch(
+        `/api/auth/phone-to-email?phone=${encodeURIComponent(identifier)}`
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.message || '查詢手機號碼對應的帳號失敗')
+      }
+
+      const result = await response.json()
+      if (!result.success || !result.data?.email) {
+        throw new Error('找不到對應的帳號')
+      }
+
+      email = result.data.email
+
+      authLogger.info('手機號碼登入：成功取得對應 Email', {
+        module: 'signInWithPhoneOrEmail',
+        action: 'phone_to_email_success',
+        metadata: {
+          phonePrefix: identifier.substring(0, 3) + '***',
+          emailPrefix: email.split('@')[0].substring(0, 3) + '***',
+        },
+      })
+    } catch (error) {
+      authLogger.warn('手機號碼登入：查詢 Email 失敗', {
+        module: 'signInWithPhoneOrEmail',
+        action: 'phone_to_email_failed',
+        metadata: {
+          phonePrefix: identifier.substring(0, 3) + '***',
+          error: error instanceof Error ? error.message : String(error),
+        },
+      })
+      throw error
+    }
+  }
+
+  // 使用 email 進行實際登入
+  return await signInUser(email, password)
+}
+
 // 登出使用者
 export async function signOutUser() {
   try {

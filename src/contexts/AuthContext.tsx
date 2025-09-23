@@ -14,6 +14,7 @@ import {
   supabase,
   getUserProfile,
   signInUser,
+  signInWithPhoneOrEmail,
   signOutUser,
   signUpUser,
   updateProfile as updateUserProfile,
@@ -474,7 +475,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true)
 
     try {
-      await signInUser(credentials.email, credentials.password)
+      // 使用新的雙重輸入登入函數
+      await signInWithPhoneOrEmail(
+        credentials.identifier,
+        credentials.password,
+        credentials.inputType
+      )
       // 認證狀態變化會由 onAuthStateChange 處理
     } catch (error) {
       setIsLoading(false)
