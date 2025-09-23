@@ -445,35 +445,31 @@ function ProductsPage() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
+      {/* Header - 統一簡潔設計 */}
+      <div className="bg-white py-4 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
             <div className="text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl font-light text-amber-900 mb-2 sm:mb-4">
-                精選農產品
-              </h1>
-              <p className="text-lg sm:text-xl text-gray-700">
-                來自台灣各地的優質農產，新鮮直送到你家
-              </p>
+              <h1 className="text-xl sm:text-2xl font-light text-amber-900 mb-1">精選農產品</h1>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto max-w-sm sm:max-w-none">
-              {/* 重新整理按鈕 - 對所有用戶可見 */}
-              <button
-                onClick={() => {
-                  setApiProducts([])
-                  setLoading(true)
-                  fetchProducts()
-                }}
-                disabled={loading}
-                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="重新整理產品列表"
-              >
-                <span>{loading ? '更新中...' : '重新整理'}</span>
-              </button>
 
-              {user && user.role === 'admin' && (
+            {/* 功能按鈕區域 - 根據角色顯示不同內容 */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto max-w-sm sm:max-w-none">
+              {/* 管理員：完整功能按鈕 */}
+              {user?.role === 'admin' && (
                 <>
+                  <button
+                    onClick={() => {
+                      setApiProducts([])
+                      setLoading(true)
+                      fetchProducts()
+                    }}
+                    disabled={loading}
+                    className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="重新整理產品列表"
+                  >
+                    <span>{loading ? '更新中...' : '重新整理'}</span>
+                  </button>
                   <a
                     href="/admin/products"
                     className="w-full sm:w-auto px-4 py-2 bg-gray-600 text-white rounded-lg sm:rounded-full text-sm hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"

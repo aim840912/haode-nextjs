@@ -21,28 +21,36 @@ function ProductsAdmin() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">產品管理</h1>
-            <div className="space-x-4">
-              {user?.role === 'admin' && (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">產品管理</h1>
+                <p className="text-gray-600 mt-2">管理農產品和商品資訊</p>
+              </div>
+              <div className="space-x-4">
+                {user?.role === 'admin' && (
+                  <Link
+                    href="/admin/products/add"
+                    className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+                  >
+                    新增產品
+                  </Link>
+                )}
                 <Link
-                  href="/admin/products/add"
-                  className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+                  href="/"
+                  className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
                 >
-                  新增產品
+                  回到首頁
                 </Link>
-              )}
-              <Link
-                href="/"
-                className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                回到首頁
-              </Link>
+              </div>
             </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-6 py-8">
           <Suspense
             fallback={
               <div className="bg-white rounded-lg shadow overflow-hidden">

@@ -92,16 +92,11 @@ export default function MomentsPage() {
       </div>
 
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
+      <div className="bg-white py-4 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
             <div className="text-center lg:text-left">
-              <h1 className="text-3xl sm:text-4xl font-light text-amber-900 mb-2 sm:mb-4">
-                精彩時刻
-              </h1>
-              <p className="text-lg sm:text-xl text-gray-700">
-                用鏡頭記錄農家生活的美好瞬間，每一張照片都是精彩時光的見證
-              </p>
+              <h1 className="text-xl sm:text-2xl font-light text-amber-900 mb-1">精彩時刻</h1>
             </div>
             {user && user.role === 'admin' && (
               <div className="flex space-x-3">

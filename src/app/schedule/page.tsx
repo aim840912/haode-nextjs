@@ -124,21 +124,23 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
+      {/* Header - 統一簡潔設計 */}
+      <div className="bg-white py-4 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-center md:text-left mb-6 md:mb-0">
-              <h1 className="text-4xl font-light text-amber-900 mb-4">擺攤行程</h1>
-              <p className="text-xl text-gray-700">想要現場選購新鮮農產品？來找我們吧！</p>
+            <div className="text-center md:text-left mb-4 md:mb-0">
+              <h1 className="text-xl sm:text-2xl font-light text-amber-900 mb-1">擺攤行程</h1>
             </div>
             <div className="flex space-x-3">
+              {/* 行事曆檢視按鈕 - 所有用戶都可見 */}
               <a
                 href="/schedule/calendar"
-                className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-amber-900 hover:bg-amber-800 text-white rounded-full text-sm transition-colors flex items-center space-x-2"
               >
                 <span>行事曆檢視</span>
               </a>
+
+              {/* 管理員專用按鈕 */}
               {user && user.role === 'admin' && (
                 <>
                   <a

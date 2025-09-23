@@ -99,13 +99,12 @@ export default function NewsPage() {
         </div>
       </div>
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
+      {/* Header - 統一簡潔設計 */}
+      <div className="bg-white py-4 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="text-center md:text-left mb-6 md:mb-0">
-              <h1 className="text-4xl font-light text-amber-900 mb-4">農產新聞</h1>
-              <p className="text-xl text-gray-700">最新農場動態、產品資訊與活動消息</p>
+            <div className="text-center md:text-left mb-4 md:mb-0">
+              <h1 className="text-xl sm:text-2xl font-light text-amber-900 mb-1">農產新聞</h1>
             </div>
             {user && user.role === 'admin' && (
               <div className="flex space-x-3">

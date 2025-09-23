@@ -145,12 +145,15 @@ export default function NewsAdmin() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* 頁面標題和操作按鈕 */}
-          <div className="mb-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">新聞管理</h1>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">新聞管理</h1>
+                <p className="text-gray-600 mt-2">發布和管理農場最新消息</p>
+              </div>
 
               {/* 操作按鈕組 */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -177,7 +180,9 @@ export default function NewsAdmin() {
               </div>
             </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 新聞列表 */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {/* 桌面版表格 */}

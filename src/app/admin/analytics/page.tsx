@@ -69,13 +69,13 @@ export default function AnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* 頁面標題 */}
-        <div className="mb-8">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Google Analytics 4</h1>
-              <p className="text-gray-600">專業的網站分析和用戶行為追蹤</p>
+              <h1 className="text-3xl font-bold text-gray-900">Google Analytics 4</h1>
+              <p className="text-gray-600 mt-2">專業的網站分析和用戶行為追蹤</p>
             </div>
             <Link
               href="/admin/dashboard"
@@ -85,7 +85,9 @@ export default function AnalyticsPage() {
             </Link>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* GA4 狀態卡片 */}
         <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm border p-6">

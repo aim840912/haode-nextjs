@@ -177,7 +177,7 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body
-        className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen`}
+        className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen bg-gray-50`}
       >
         <ErrorBoundary>
           <GoogleAnalyticsProvider>
@@ -185,7 +185,7 @@ export default function RootLayout({
               <AuthProvider>
                 <InquiryStatsProvider>
                   <Header />
-                  <main className="flex-grow">
+                  <main className="flex-grow overflow-hidden">
                     <HeaderSpacer />
                     {children}
                   </main>

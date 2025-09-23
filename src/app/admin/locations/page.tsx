@@ -108,12 +108,15 @@ export default function LocationsAdmin() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* 頁面標題和操作按鈕 */}
-          <div className="mb-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">門市管理</h1>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">門市管理</h1>
+                <p className="text-gray-600 mt-2">管理農場門市據點和聯絡資訊</p>
+              </div>
 
               {/* 操作按鈕組 */}
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -140,7 +143,9 @@ export default function LocationsAdmin() {
               </div>
             </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 門市列表 */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {locations.map(location => (

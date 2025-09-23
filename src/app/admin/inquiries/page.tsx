@@ -672,7 +672,7 @@ function AdminInquiriesPage() {
   if (isLoading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
           <div className="text-center">
             <LoadingSpinner size="lg" />
             <p className="mt-4 text-gray-600">載入詢問單管理...</p>
@@ -685,7 +685,7 @@ function AdminInquiriesPage() {
   if (error) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 pt-36">
+        <div className="min-h-screen bg-gray-50 pt-24">
           <div className="max-w-4xl mx-auto px-6 py-16">
             <div className="text-center">
               <div className="mx-auto w-24 h-24 mb-8 text-red-500">
@@ -708,14 +708,18 @@ function AdminInquiriesPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-36">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">詢問單問答管理</h1>
-            <p className="text-gray-600 mt-1">管理所有客戶詢問單問答和回覆狀態</p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">詢問單問答管理</h1>
+              <p className="text-gray-600 mt-2">管理所有客戶詢問單問答和回覆狀態</p>
+            </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 統計儀表板 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
             <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">

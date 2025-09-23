@@ -254,7 +254,7 @@ function AuditLogsPage() {
   if (isLoading && auditLogs.length === 0) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
           <div className="text-center">
             <LoadingSpinner size="lg" />
             <p className="mt-4 text-gray-600">載入審計日誌...</p>
@@ -267,7 +267,7 @@ function AuditLogsPage() {
   if (error) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 pt-36">
+        <div className="min-h-screen bg-gray-50 pt-24">
           <div className="max-w-4xl mx-auto px-6 py-16">
             <div className="text-center">
               <div className="text-6xl mb-8">❌</div>
@@ -288,14 +288,18 @@ function AuditLogsPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-36">
-        <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">審計日誌</h1>
-            <p className="text-gray-600 mt-1">追蹤系統操作和使用者活動</p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">審計日誌</h1>
+              <p className="text-gray-600 mt-2">追蹤系統操作和使用者活動</p>
+            </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 篩選條件 */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">

@@ -122,40 +122,48 @@ export default function ScheduleAdmin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">擺攤行程管理</h1>
-          <div className="flex flex-wrap gap-3">
-            {user?.role === 'admin' && (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">擺攤行程管理</h1>
+              <p className="text-gray-600 mt-2">管理農場擺攤活動和行程安排</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {user?.role === 'admin' && (
+                <Link
+                  href="/admin/schedule/add"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium whitespace-nowrap"
+                >
+                  新增行程
+                </Link>
+              )}
               <Link
-                href="/admin/schedule/add"
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium whitespace-nowrap"
+                href="/schedule/calendar"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
               >
-                新增行程
+                預覽客戶行事曆
               </Link>
-            )}
-            <Link
-              href="/schedule/calendar"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
-            >
-              預覽客戶行事曆
-            </Link>
-            <Link
-              href="/schedule"
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium whitespace-nowrap"
-            >
-              查看行程頁面
-            </Link>
-            <Link
-              href="/"
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium whitespace-nowrap"
-            >
-              回到首頁
-            </Link>
+              <Link
+                href="/schedule"
+                className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                查看行程頁面
+              </Link>
+              <Link
+                href="/"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                回到首頁
+              </Link>
+            </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-4 mb-8">
           <button

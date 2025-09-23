@@ -48,7 +48,7 @@ export default function AdminProductFilter({
     sortBy: 'name',
   })
 
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [showPriceRange, setShowPriceRange] = useState(false)
 
   useEffect(() => {
@@ -98,9 +98,9 @@ export default function AdminProductFilter({
     showPriceRange
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div className={`bg-white rounded-lg shadow-lg mb-6 ${isExpanded ? 'p-6' : 'p-4'}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className={`flex items-center justify-between ${isExpanded ? 'mb-6' : ''}`}>
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-semibold text-gray-900">產品篩選</h2>
           <button

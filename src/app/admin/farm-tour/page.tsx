@@ -114,40 +114,48 @@ export default function FarmTourAdmin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">觀光果園管理</h1>
-          <div className="flex flex-wrap gap-3">
-            {user?.role === 'admin' && (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">農場導覽管理</h1>
+              <p className="text-gray-600 mt-2">管理農場導覽活動和體驗預約</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {user?.role === 'admin' && (
+                <Link
+                  href="/admin/farm-tour/add"
+                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                >
+                  新增體驗活動
+                </Link>
+              )}
               <Link
-                href="/admin/farm-tour/add"
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                href="/admin/farm-tour/calendar"
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
-                新增體驗活動
+                預約行事曆
               </Link>
-            )}
-            <Link
-              href="/admin/farm-tour/calendar"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
-            >
-              預約行事曆
-            </Link>
-            <Link
-              href="/farm-tour"
-              className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm"
-            >
-              查看果園頁面
-            </Link>
-            <Link
-              href="/"
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
-            >
-              回到首頁
-            </Link>
+              <Link
+                href="/farm-tour"
+                className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm"
+              >
+                查看果園頁面
+              </Link>
+              <Link
+                href="/"
+                className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+              >
+                回到首頁
+              </Link>
+            </div>
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Activities Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {activities.map(activity => (

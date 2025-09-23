@@ -153,7 +153,7 @@ function InquiryListPage() {
   // 未登入
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-36">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="text-6xl mb-8">🔒</div>
@@ -182,7 +182,7 @@ function InquiryListPage() {
   // 載入中
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
           <p className="mt-4 text-gray-600">載入詢問單...</p>
@@ -194,7 +194,7 @@ function InquiryListPage() {
   // 載入錯誤
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-36">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="text-6xl mb-8">❌</div>
@@ -213,14 +213,14 @@ function InquiryListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-36">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">我的詢問單問答紀錄</h1>
-              <p className="text-gray-600 mt-1">查看和管理您的詢問單問答與預訂紀錄</p>
+              <p className="text-gray-600 mt-2">查看和管理您的詢問單問答與預訂紀錄</p>
             </div>
             {filteredInquiries.length === 0 && inquiries.length === 0 && (
               <button
@@ -233,7 +233,9 @@ function InquiryListPage() {
             )}
           </div>
         </div>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {/* 篩選和搜尋 */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

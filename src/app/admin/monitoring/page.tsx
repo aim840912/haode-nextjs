@@ -22,14 +22,18 @@ const MonitoringDashboard = dynamic(
 export default function AdminMonitoringPage() {
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          {/* 頁面標題 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">系統監控</h1>
-            <p className="mt-2 text-gray-600">監控系統運行狀態、效能指標和錯誤統計</p>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">系統監控</h1>
+              <p className="text-gray-600 mt-2">監控系統運行狀態、效能指標和錯誤統計</p>
+            </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 動態載入的監控儀表板 */}
           <MonitoringDashboard />
         </div>
