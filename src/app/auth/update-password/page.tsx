@@ -149,7 +149,7 @@ export default function UpdatePasswordPage() {
           {/* Header */}
           <div className="text-center">
             <Link href="/" className="inline-block mb-6">
-              <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德茶業</div>
+              <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
               <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
             </Link>
             <div className="text-6xl mb-4">✅</div>
@@ -207,7 +207,7 @@ export default function UpdatePasswordPage() {
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-block mb-6">
-            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德茶業</div>
+            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
             <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
           </Link>
           <div className="text-6xl mb-4">🔐</div>

@@ -287,11 +287,11 @@ export default function RegisterPage() {
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-block mb-6">
-            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德茶業</div>
+            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
             <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
           </Link>
           <h2 className="text-2xl font-semibold text-gray-800 mb-2">建立新帳號</h2>
-          <p className="text-gray-600">加入豪德茶業會員，享受更多優惠</p>
+          <p className="text-gray-600">加入豪德製茶所會員，享受更多優惠</p>
         </div>
 
         {/* Register Form */}

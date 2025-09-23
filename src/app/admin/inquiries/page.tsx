@@ -717,17 +717,19 @@ function AdminInquiriesPage() {
           </div>
 
           {/* 統計儀表板 */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <ChartBarIcon className="w-5 h-5 text-blue-600" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <ChartBarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">總詢問單</p>
-                  <p className="text-2xl font-bold text-gray-900">{inquiryStats.total}</p>
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">總詢問單</p>
+                  <p className="text-xl sm:text-2xl font-bold text-gray-900">
+                    {inquiryStats.total}
+                  </p>
                   {detailedStats?.summary?.completion_rate && (
                     <p className="text-xs text-gray-500">
                       完成率 {detailedStats.summary.completion_rate}%
@@ -737,19 +739,21 @@ function AdminInquiriesPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                    <EyeIcon className="w-5 h-5 text-orange-600" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                    <EyeIcon className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">未讀詢問</p>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-2xl font-bold text-orange-600">{inquiryStats.unread}</p>
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">未讀詢問</p>
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <p className="text-xl sm:text-2xl font-bold text-orange-600">
+                      {inquiryStats.unread}
+                    </p>
                     {inquiryStats.unread > 0 && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                         需關注
                       </span>
                     )}
@@ -763,19 +767,23 @@ function AdminInquiriesPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <ChatBubbleLeftIcon className="w-5 h-5 text-red-600" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <ChatBubbleLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">未回覆詢問</p>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-2xl font-bold text-red-600">{inquiryStats.unreplied}</p>
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">
+                    未回覆詢問
+                  </p>
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <p className="text-xl sm:text-2xl font-bold text-red-600">
+                      {inquiryStats.unreplied}
+                    </p>
                     {inquiryStats.unreplied > 0 && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <span className="inline-flex items-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         待處理
                       </span>
                     )}
@@ -789,17 +797,19 @@ function AdminInquiriesPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <BoltIcon className="w-5 h-5 text-green-600" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <BoltIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-700">平均回覆時間</p>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-2xl font-bold text-green-600">
+                <div className="ml-3 sm:ml-4 min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-700 truncate">
+                    平均回覆時間
+                  </p>
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <p className="text-xl sm:text-2xl font-bold text-green-600">
                       {detailedStats?.summary?.avg_response_time_hours
                         ? `${detailedStats.summary.avg_response_time_hours}h`
                         : '--'}
@@ -961,25 +971,25 @@ function AdminInquiriesPage() {
           {/* 批量操作工具列 */}
           {showBatchActions && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="text-sm font-medium text-amber-800">
                     已選取 {selectedInquiries.size} 筆詢價單
                   </div>
                   <button
                     onClick={clearSelection}
-                    className="text-sm text-amber-600 hover:text-amber-800 underline"
+                    className="text-sm text-amber-600 hover:text-amber-800 underline self-start"
                   >
                     取消選取
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   {/* 批量標記已讀 */}
                   <button
                     onClick={batchMarkAsRead}
                     disabled={isBatchProcessing}
-                    className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isBatchProcessing ? '處理中...' : '標記已讀'}
                   </button>
@@ -991,7 +1001,7 @@ function AdminInquiriesPage() {
                     }
                     value=""
                     disabled={isBatchProcessing}
-                    className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50"
+                    className="px-3 py-1.5 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 bg-white"
                   >
                     <option value="">更改狀態...</option>
                     {(['pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const).map(
@@ -1007,7 +1017,7 @@ function AdminInquiriesPage() {
                   <button
                     onClick={batchDelete}
                     disabled={isBatchProcessing}
-                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isBatchProcessing ? '刪除中...' : '批量刪除'}
                   </button>
@@ -1017,86 +1027,94 @@ function AdminInquiriesPage() {
           )}
 
           {/* 篩選器 */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6 space-y-4">
-            {/* 類型篩選 */}
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700 font-medium">詢問類型：</span>
-              <div className="flex space-x-2">
-                {['all', 'product', 'farm_tour'].map(type => (
-                  <button
-                    key={type}
-                    onClick={() => setTypeFilter(type as InquiryType | 'all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      typeFilter === type
-                        ? 'bg-green-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {type === 'all' ? '全部類型' : INQUIRY_TYPE_LABELS[type as InquiryType]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 狀態篩選 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <span className="text-gray-700 font-medium">處理狀態：</span>
-                <div className="flex space-x-2 flex-wrap">
-                  {(
-                    [
-                      'all',
-                      'unread',
-                      'unreplied',
-                      'pending',
-                      'quoted',
-                      'confirmed',
-                      'completed',
-                      'cancelled',
-                    ] as const
-                  ).map(filter => {
-                    let displayName = ''
-                    let badgeClass = ''
-
-                    if (filter === 'all') {
-                      displayName = '全部'
-                    } else if (filter === 'unread') {
-                      displayName = `未讀 (${inquiryStats.unread})`
-                      badgeClass = inquiryStats.unread > 0 ? 'text-orange-600' : ''
-                    } else if (filter === 'unreplied') {
-                      displayName = `待回覆 (${inquiryStats.unreplied})`
-                      badgeClass = inquiryStats.unreplied > 0 ? 'text-red-600' : ''
-                    } else {
-                      displayName = INQUIRY_STATUS_LABELS[filter as InquiryStatus]
-                    }
-
-                    return (
-                      <button
-                        key={filter}
-                        onClick={() => setStatusFilter(filter)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                          statusFilter === filter
-                            ? 'bg-amber-900 text-white'
-                            : `bg-gray-100 hover:bg-gray-200 ${badgeClass || 'text-gray-700'}`
-                        }`}
-                      >
-                        {displayName}
-                      </button>
-                    )
-                  })}
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6">
+            <div className="space-y-4">
+              {/* 類型篩選 */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <span className="text-gray-700 font-medium text-sm sm:text-base shrink-0">
+                  詢問類型：
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {['all', 'product', 'farm_tour'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => setTypeFilter(type as InquiryType | 'all')}
+                      className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                        typeFilter === type
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type === 'all' ? '全部類型' : INQUIRY_TYPE_LABELS[type as InquiryType]}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <div className="text-sm text-gray-600">共 {inquiries.length} 筆詢問單</div>
+
+              {/* 狀態篩選 */}
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base shrink-0">
+                    處理狀態：
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {(
+                      [
+                        'all',
+                        'unread',
+                        'unreplied',
+                        'pending',
+                        'quoted',
+                        'confirmed',
+                        'completed',
+                        'cancelled',
+                      ] as const
+                    ).map(filter => {
+                      let displayName = ''
+                      let badgeClass = ''
+
+                      if (filter === 'all') {
+                        displayName = '全部'
+                      } else if (filter === 'unread') {
+                        displayName = `未讀 (${inquiryStats.unread})`
+                        badgeClass = inquiryStats.unread > 0 ? 'text-orange-600' : ''
+                      } else if (filter === 'unreplied') {
+                        displayName = `待回覆 (${inquiryStats.unreplied})`
+                        badgeClass = inquiryStats.unreplied > 0 ? 'text-red-600' : ''
+                      } else {
+                        displayName = INQUIRY_STATUS_LABELS[filter as InquiryStatus]
+                      }
+
+                      return (
+                        <button
+                          key={filter}
+                          onClick={() => setStatusFilter(filter)}
+                          className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
+                            statusFilter === filter
+                              ? 'bg-amber-900 text-white'
+                              : `bg-gray-100 hover:bg-gray-200 ${badgeClass || 'text-gray-700'}`
+                          }`}
+                        >
+                          {displayName}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+                <div className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                  共 {inquiries.length} 筆詢問單
+                </div>
+              </div>
             </div>
           </div>
 
           {/* 詢問單列表 */}
           {inquiries.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <div className="mx-auto w-24 h-24 mb-8 text-gray-400">
+            <div className="bg-white rounded-lg shadow-sm p-8 sm:p-12 text-center">
+              <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 mb-6 sm:mb-8 text-gray-400">
                 <ClipboardDocumentListIcon className="w-full h-full" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
                 {statusFilter === 'all' && '還沒有詢問單'}
                 {statusFilter === 'unread' && '沒有未讀的詢問單'}
                 {statusFilter === 'unreplied' && '沒有待回覆的詢問單'}
@@ -1108,235 +1126,437 @@ function AdminInquiriesPage() {
               <p className="text-gray-600">當客戶送出詢問時，會顯示在這裡</p>
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-4 py-3 text-left">
-                        <input
-                          type="checkbox"
-                          checked={
-                            inquiries.length > 0 && selectedInquiries.size === inquiries.length
-                          }
-                          onChange={selectAllInquiries}
-                          className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
-                        />
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        詢問單號
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        客戶
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        類型
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        詢問內容
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        金額
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                        建立時間
-                      </th>
-                      <th className="sticky right-[180px] z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)]">
-                        狀態
-                      </th>
-                      <th className="sticky right-0 z-10 bg-gray-50 px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px]">
-                        操作
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {inquiries.map(inquiry => (
-                      <tr
-                        key={inquiry.id}
-                        className={`hover:bg-gray-50 ${!inquiry.is_read ? 'bg-orange-50' : ''} ${selectedInquiries.has(inquiry.id) ? 'bg-amber-50' : ''}`}
-                      >
-                        <td className="px-4 py-4 whitespace-nowrap">
+            <>
+              {/* 桌面版表格 */}
+              <div className="hidden lg:block bg-white rounded-lg shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left">
+                          <input
+                            type="checkbox"
+                            checked={
+                              inquiries.length > 0 && selectedInquiries.size === inquiries.length
+                            }
+                            onChange={selectAllInquiries}
+                            className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                          />
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          詢問單號
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          客戶
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          類型
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          詢問內容
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          金額
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          建立時間
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                          狀態
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider min-w-[180px]">
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {inquiries.map(inquiry => (
+                        <tr
+                          key={inquiry.id}
+                          className={`hover:bg-gray-50 ${!inquiry.is_read ? 'bg-orange-50' : ''} ${selectedInquiries.has(inquiry.id) ? 'bg-amber-50' : ''}`}
+                        >
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              checked={selectedInquiries.has(inquiry.id)}
+                              onChange={() => toggleInquirySelection(inquiry.id)}
+                              className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-3">
+                              <div className="text-sm font-medium text-gray-900">
+                                #{InquiryUtils.formatInquiryNumber(inquiry)}
+                              </div>
+                              {!inquiry.is_read && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                  NEW
+                                </span>
+                              )}
+                              {inquiry.is_read &&
+                                !inquiry.is_replied &&
+                                inquiry.status !== 'cancelled' && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    待回覆
+                                  </span>
+                                )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {inquiry.customer_name}
+                              </div>
+                              <div className="text-sm text-gray-700">{inquiry.customer_email}</div>
+                              {inquiry.customer_phone && (
+                                <div className="text-sm text-gray-700">
+                                  {inquiry.customer_phone}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}
+                            >
+                              {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {inquiry.inquiry_type === 'product' ? (
+                              <>
+                                <div className="text-sm text-gray-900">
+                                  {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
+                                </div>
+                                <div className="text-sm text-gray-700">
+                                  {inquiry.inquiry_items
+                                    .slice(0, 2)
+                                    .map(item => item.product_name)
+                                    .join(', ')}
+                                  {inquiry.inquiry_items.length > 2 && '...'}
+                                </div>
+                              </>
+                            ) : (
+                              <div>
+                                <div className="text-sm text-gray-900 font-medium">
+                                  {inquiry.activity_title}
+                                </div>
+                                <div className="text-sm text-gray-700">
+                                  {inquiry.visit_date} · {inquiry.visitor_count}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">
+                              {inquiry.inquiry_type === 'product'
+                                ? `NT$ ${InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}`
+                                : '待報價'}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <select
+                              value={inquiry.status}
+                              onChange={e =>
+                                updateInquiryStatus(inquiry.id, e.target.value as InquiryStatus)
+                              }
+                              disabled={isUpdatingStatus}
+                              className={`text-sm font-medium rounded px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                                INQUIRY_STATUS_COLORS[inquiry.status]
+                              } ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            >
+                              {(
+                                [
+                                  'pending',
+                                  'quoted',
+                                  'confirmed',
+                                  'completed',
+                                  'cancelled',
+                                ] as const
+                              ).map(status => (
+                                <option key={status} value={status}>
+                                  {INQUIRY_STATUS_LABELS[status]}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm min-w-[180px]">
+                            <div className="flex items-center space-x-3">
+                              <button
+                                onClick={() => setSelectedInquiry(inquiry)}
+                                className="text-blue-600 hover:text-blue-800 text-sm"
+                              >
+                                查看詳情
+                              </button>
+                              {!inquiry.is_read && (
+                                <button
+                                  onClick={() => markAsRead(inquiry.id)}
+                                  className="text-green-600 hover:text-green-800 text-sm"
+                                >
+                                  標記已讀
+                                </button>
+                              )}
+                              {(() => {
+                                const assignment = getInquiryAssignment(inquiry.id)
+                                return assignment ? (
+                                  <div className="flex items-center space-x-1">
+                                    <span
+                                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        PRIORITY_COLORS[assignment.priority]
+                                      }`}
+                                    >
+                                      {PRIORITY_LABELS[assignment.priority]}
+                                    </span>
+                                    <span className="text-xs text-gray-600">
+                                      → {assignment.assignee_name}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setSelectedInquiry(inquiry)
+                                      setShowAssignmentPanel(true)
+                                    }}
+                                    className="text-purple-600 hover:text-purple-800 text-sm"
+                                  >
+                                    分配
+                                  </button>
+                                )
+                              })()}
+                              <button
+                                onClick={() => deleteInquiry(inquiry.id)}
+                                className="text-red-600 hover:text-red-800 text-sm"
+                              >
+                                刪除
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* 手機和平板版卡片列表 */}
+              <div className="lg:hidden space-y-4">
+                {/* 全選控制 */}
+                <div className="bg-white rounded-lg shadow-sm p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={
+                          inquiries.length > 0 && selectedInquiries.size === inquiries.length
+                        }
+                        onChange={selectAllInquiries}
+                        className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {selectedInquiries.size > 0
+                          ? `已選取 ${selectedInquiries.size} 筆`
+                          : '全選'}
+                      </span>
+                    </label>
+                    <span className="text-sm text-gray-500">共 {inquiries.length} 筆</span>
+                  </div>
+                </div>
+
+                {/* 詢問單卡片 */}
+                {inquiries.map(inquiry => (
+                  <div
+                    key={inquiry.id}
+                    className={`bg-white rounded-lg shadow-sm border-l-4 ${
+                      !inquiry.is_read
+                        ? 'border-orange-400 bg-orange-50'
+                        : selectedInquiries.has(inquiry.id)
+                          ? 'border-amber-400 bg-amber-50'
+                          : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="p-4">
+                      {/* 卡片頭部 */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
                           <input
                             type="checkbox"
                             checked={selectedInquiries.has(inquiry.id)}
                             onChange={() => toggleInquirySelection(inquiry.id)}
                             className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded"
                           />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-3">
+                          <div>
                             <div className="text-sm font-medium text-gray-900">
                               #{InquiryUtils.formatInquiryNumber(inquiry)}
                             </div>
-                            {!inquiry.is_read && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                                NEW
+                            <div className="text-xs text-gray-500">
+                              {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {!inquiry.is_read && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              NEW
+                            </span>
+                          )}
+                          {inquiry.is_read &&
+                            !inquiry.is_replied &&
+                            inquiry.status !== 'cancelled' && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                待回覆
                               </span>
                             )}
-                            {inquiry.is_read &&
-                              !inquiry.is_replied &&
-                              inquiry.status !== 'cancelled' && (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  待回覆
-                                </span>
-                              )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div>
-                            <div className="text-sm font-medium text-gray-900">
-                              {inquiry.customer_name}
-                            </div>
-                            <div className="text-sm text-gray-700">{inquiry.customer_email}</div>
-                            {inquiry.customer_phone && (
-                              <div className="text-sm text-gray-700">{inquiry.customer_phone}</div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${INQUIRY_TYPE_COLORS[inquiry.inquiry_type]}`}
                           >
                             {INQUIRY_TYPE_LABELS[inquiry.inquiry_type]}
                           </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {inquiry.inquiry_type === 'product' ? (
-                            <>
-                              <div className="text-sm text-gray-900">
-                                {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
-                              </div>
-                              <div className="text-sm text-gray-700">
-                                {inquiry.inquiry_items
-                                  .slice(0, 2)
-                                  .map(item => item.product_name)
-                                  .join(', ')}
-                                {inquiry.inquiry_items.length > 2 && '...'}
-                              </div>
-                            </>
-                          ) : (
-                            <div>
-                              <div className="text-sm text-gray-900 font-medium">
-                                {inquiry.activity_title}
-                              </div>
-                              <div className="text-sm text-gray-700">
-                                {inquiry.visit_date} · {inquiry.visitor_count}
-                              </div>
+                        </div>
+                      </div>
+
+                      {/* 客戶資訊 */}
+                      <div className="mb-3">
+                        <div className="text-sm font-medium text-gray-900">
+                          {inquiry.customer_name}
+                        </div>
+                        <div className="text-xs text-gray-600">{inquiry.customer_email}</div>
+                        {inquiry.customer_phone && (
+                          <div className="text-xs text-gray-600">{inquiry.customer_phone}</div>
+                        )}
+                      </div>
+
+                      {/* 詢問內容 */}
+                      <div className="mb-3">
+                        {inquiry.inquiry_type === 'product' ? (
+                          <>
+                            <div className="text-sm text-gray-900 font-medium">
+                              {InquiryUtils.calculateTotalQuantity(inquiry)} 件商品
                             </div>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">
-                            {inquiry.inquiry_type === 'product'
-                              ? `NT$ ${InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}`
-                              : '待報價'}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
-                        </td>
-                        <td
-                          className={`sticky right-[180px] z-10 px-6 py-4 whitespace-nowrap border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] ${!inquiry.is_read ? 'bg-orange-50' : selectedInquiries.has(inquiry.id) ? 'bg-amber-50' : 'bg-white'}`}
+                            <div className="text-sm text-gray-600">
+                              {inquiry.inquiry_items
+                                .slice(0, 2)
+                                .map(item => item.product_name)
+                                .join(', ')}
+                              {inquiry.inquiry_items.length > 2 && '...'}
+                            </div>
+                            <div className="text-sm font-medium text-gray-900 mt-1">
+                              NT$ {InquiryUtils.calculateTotalAmount(inquiry).toLocaleString()}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-sm text-gray-900 font-medium">
+                              {inquiry.activity_title}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {inquiry.visit_date} · {inquiry.visitor_count} 人
+                            </div>
+                            <div className="text-sm text-gray-900 mt-1">待報價</div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* 狀態和操作 */}
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <select
+                          value={inquiry.status}
+                          onChange={e =>
+                            updateInquiryStatus(inquiry.id, e.target.value as InquiryStatus)
+                          }
+                          disabled={isUpdatingStatus}
+                          className={`text-sm font-medium rounded px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                            INQUIRY_STATUS_COLORS[inquiry.status]
+                          } ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                         >
-                          <select
-                            value={inquiry.status}
-                            onChange={e =>
-                              updateInquiryStatus(inquiry.id, e.target.value as InquiryStatus)
-                            }
-                            disabled={isUpdatingStatus}
-                            className={`text-sm font-medium rounded px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-amber-500 ${
-                              INQUIRY_STATUS_COLORS[inquiry.status]
-                            } ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                          {(
+                            ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const
+                          ).map(status => (
+                            <option key={status} value={status}>
+                              {INQUIRY_STATUS_LABELS[status]}
+                            </option>
+                          ))}
+                        </select>
+
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            onClick={() => setSelectedInquiry(inquiry)}
+                            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                           >
-                            {(
-                              ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const
-                            ).map(status => (
-                              <option key={status} value={status}>
-                                {INQUIRY_STATUS_LABELS[status]}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td
-                          className={`sticky right-0 z-10 px-6 py-4 whitespace-nowrap text-sm border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[180px] ${!inquiry.is_read ? 'bg-orange-50' : selectedInquiries.has(inquiry.id) ? 'bg-amber-50' : 'bg-white'}`}
-                        >
-                          <div className="flex items-center space-x-3">
+                            查看詳情
+                          </button>
+                          {!inquiry.is_read && (
                             <button
-                              onClick={() => setSelectedInquiry(inquiry)}
-                              className="text-blue-600 hover:text-blue-800 text-sm"
+                              onClick={() => markAsRead(inquiry.id)}
+                              className="px-3 py-1.5 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
                             >
-                              查看詳情
+                              標記已讀
                             </button>
-                            {!inquiry.is_read && (
-                              <button
-                                onClick={() => markAsRead(inquiry.id)}
-                                className="text-green-600 hover:text-green-800 text-sm"
-                              >
-                                標記已讀
-                              </button>
-                            )}
-                            {(() => {
-                              const assignment = getInquiryAssignment(inquiry.id)
-                              return assignment ? (
-                                <div className="flex items-center space-x-1">
-                                  <span
-                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      PRIORITY_COLORS[assignment.priority]
-                                    }`}
-                                  >
-                                    {PRIORITY_LABELS[assignment.priority]}
-                                  </span>
-                                  <span className="text-xs text-gray-600">
-                                    → {assignment.assignee_name}
-                                  </span>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    setSelectedInquiry(inquiry)
-                                    setShowAssignmentPanel(true)
-                                  }}
-                                  className="text-purple-600 hover:text-purple-800 text-sm"
+                          )}
+                          {(() => {
+                            const assignment = getInquiryAssignment(inquiry.id)
+                            return assignment ? (
+                              <div className="flex items-center space-x-1">
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    PRIORITY_COLORS[assignment.priority]
+                                  }`}
                                 >
-                                  分配
-                                </button>
-                              )
-                            })()}
-                            <button
-                              onClick={() => deleteInquiry(inquiry.id)}
-                              className="text-red-600 hover:text-red-800 text-sm"
-                            >
-                              刪除
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                                  {PRIORITY_LABELS[assignment.priority]}
+                                </span>
+                                <span className="text-xs text-gray-600">
+                                  {assignment.assignee_name}
+                                </span>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  setSelectedInquiry(inquiry)
+                                  setShowAssignmentPanel(true)
+                                }}
+                                className="px-3 py-1.5 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
+                              >
+                                分配
+                              </button>
+                            )
+                          })()}
+                          <button
+                            onClick={() => deleteInquiry(inquiry.id)}
+                            className="px-3 py-1.5 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                          >
+                            刪除
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            </div>
+            </>
           )}
 
           {/* 詢問單詳情 Modal */}
           {selectedInquiry && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-auto">
-                <div className="p-6 border-b border-gray-200">
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center p-0 sm:p-4 z-50">
+              <div className="bg-white sm:rounded-lg shadow-xl w-full sm:max-w-4xl h-full sm:h-auto sm:max-h-[90vh] overflow-auto">
+                <div className="sticky top-0 bg-white p-4 sm:p-6 border-b border-gray-200 z-10">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-bold text-gray-900">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">
                       詢問單詳情 #{InquiryUtils.formatInquiryNumber(selectedInquiry)}
                     </h2>
                     <button
                       onClick={() => setSelectedInquiry(null)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-gray-400 hover:text-gray-600 p-1 ml-2 shrink-0"
                     >
-                      <XMarkIcon className="w-6 h-6" />
+                      <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </button>
                   </div>
                 </div>
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* 狀態流程追蹤 */}
                   <div className="mb-6">
                     <InquiryStatusFlowCompact
@@ -1345,7 +1565,7 @@ function AdminInquiriesPage() {
                     />
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-6 mb-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">客戶資訊</h3>
                       <div className="space-y-2">
@@ -1376,14 +1596,30 @@ function AdminInquiriesPage() {
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-3">詢問資訊</h3>
                       <div className="space-y-2">
-                        <p>
-                          <span className="text-gray-900">狀態：</span>
-                          <span
-                            className={`ml-2 px-2 py-1 rounded-full text-xs ${INQUIRY_STATUS_COLORS[selectedInquiry.status]}`}
+                        <div className="flex items-center">
+                          <span className="text-gray-900 mr-3">狀態：</span>
+                          <select
+                            value={selectedInquiry.status}
+                            onChange={e =>
+                              updateInquiryStatus(
+                                selectedInquiry.id,
+                                e.target.value as InquiryStatus
+                              )
+                            }
+                            disabled={isUpdatingStatus}
+                            className={`text-sm font-medium rounded px-3 py-1.5 border focus:outline-none focus:ring-2 focus:ring-amber-500 ${
+                              INQUIRY_STATUS_COLORS[selectedInquiry.status]
+                            } ${isUpdatingStatus ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
-                            {INQUIRY_STATUS_LABELS[selectedInquiry.status]}
-                          </span>
-                        </p>
+                            {(
+                              ['pending', 'quoted', 'confirmed', 'completed', 'cancelled'] as const
+                            ).map(status => (
+                              <option key={status} value={status}>
+                                {INQUIRY_STATUS_LABELS[status]}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                         <p>
                           <span className="text-gray-900">建立時間：</span>
                           <span className="text-gray-900">
@@ -1530,7 +1766,7 @@ function AdminInquiriesPage() {
                               <p className="text-sm text-gray-600 mt-2">載入模板中...</p>
                             </div>
                           ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {templates.map(template => {
                                 const isRelevant =
                                   (selectedInquiry.inquiry_type === 'product' &&
@@ -1632,7 +1868,7 @@ function AdminInquiriesPage() {
                               <h4 className="font-medium text-gray-900 mb-3">
                                 填寫模板變數 - {selectedTemplate.title}
                               </h4>
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {selectedTemplate.variables.map(variable => (
                                   <div key={variable}>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1835,7 +2071,7 @@ function AdminInquiriesPage() {
 
                     {showAssignmentPanel && (
                       <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {/* 選擇處理人員 */}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">

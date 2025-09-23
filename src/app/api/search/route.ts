@@ -50,7 +50,7 @@ async function handleGET(request: NextRequest) {
     title: product.name,
     description: product.description,
     type: 'product' as const,
-    url: `/products/${product.id}`,
+    url: `/products?productId=${product.id}`,
     category: product.category,
     image: product.images[0],
     price: product.price,

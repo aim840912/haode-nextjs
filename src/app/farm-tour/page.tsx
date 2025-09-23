@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
+import Breadcrumbs, { createFarmTourBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 
 // 農場設施
 const farmFacilities = [
@@ -261,6 +262,13 @@ export default function FarmTourPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <Breadcrumbs items={createFarmTourBreadcrumbs()} enableStructuredData={true} />
+        </div>
+      </div>
+
       {/* Hero Section */}
       <div className="relative flex items-center justify-center bg-gradient-to-br from-green-100 via-amber-50 to-orange-100 pb-20 min-h-[calc(100vh-var(--header-height))]">
         <div className="text-center relative z-10">

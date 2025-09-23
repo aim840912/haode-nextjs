@@ -416,7 +416,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                     onChange={handleInputChange}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                    placeholder="例：豪德茶業總店"
+                    placeholder="例：豪德製茶所總店"
                   />
                 </div>
               </div>

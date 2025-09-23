@@ -43,7 +43,7 @@ export default function Footer() {
           {/* 公司簡介 */}
           <div className="md:col-span-2">
             <div className="flex items-center mb-4">
-              <h3 className="text-xl font-bold">豪德茶業</h3>
+              <h3 className="text-xl font-bold">豪德製茶所</h3>
               <span className="ml-3 text-amber-200 text-sm">HAUDE TEA</span>
             </div>
             <p className="text-amber-100 mb-4 leading-relaxed">
@@ -153,7 +153,7 @@ export default function Footer() {
         {/* 版權資訊 */}
         <div className="border-t border-amber-800 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center text-amber-200 text-sm">
-            <p>© 2024 豪德茶業 Haude Tea Company. 版權所有</p>
+            <p>© 2024 豪德製茶所 Haude Tea Company. 版權所有</p>
             <div className="flex space-x-4 mt-2 md:mt-0">
               <Link href="/privacy" className="hover:text-white transition-colors">
                 隱私政策

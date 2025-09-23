@@ -599,16 +599,66 @@ export class InquiryService
   ): Promise<void> {
     const client = this.getClient(true)
 
-    const itemsData = items.map(item => ({
-      inquiry_id: inquiryId,
-      product_id: item.product_id,
-      product_name: item.product_name,
-      product_category: item.product_category,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
-      total_price: item.unit_price ? item.unit_price * item.quantity : null,
-      notes: item.notes,
-    }))
+    // 處理每個項目的價格資訊
+    const itemsData = await Promise.all(
+      items.map(async item => {
+        let unitPrice = item.unit_price
+
+        // 如果前端沒有傳遞價格，從產品服務查詢當前價格
+        if (!unitPrice) {
+          try {
+            const { productService } = await import('@/services/core/product/productService')
+            const product = await productService.getProductById(item.product_id)
+
+            if (product && product.price) {
+              unitPrice = product.price
+              dbLogger.info('自動填充產品價格', {
+                module: this.metadata.name,
+                action: 'createInquiryItems',
+                metadata: {
+                  productId: item.product_id,
+                  productName: item.product_name,
+                  price: unitPrice,
+                  source: 'product_service',
+                },
+              })
+            } else {
+              dbLogger.warn('無法獲取產品價格', {
+                module: this.metadata.name,
+                action: 'createInquiryItems',
+                metadata: {
+                  productId: item.product_id,
+                  productName: item.product_name,
+                },
+              })
+            }
+          } catch (error) {
+            dbLogger.error(
+              '查詢產品價格失敗',
+              error instanceof Error ? error : new Error(String(error)),
+              {
+                module: this.metadata.name,
+                action: 'createInquiryItems',
+                metadata: {
+                  productId: item.product_id,
+                },
+              }
+            )
+          }
+        }
+
+        return {
+          inquiry_id: inquiryId,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          product_category: item.product_category,
+          quantity: item.quantity,
+          unit_price: unitPrice || null,
+          total_price: unitPrice ? unitPrice * item.quantity : null,
+          notes: item.notes,
+        }
+      })
+    )
 
     const { error } = await client.from('inquiry_items').insert(itemsData)
 

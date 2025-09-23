@@ -8,6 +8,8 @@ import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import { v4 as uuidv4 } from 'uuid'
+import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -76,14 +78,9 @@ export default function AddNews() {
   // 載入中狀態
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">
-            <div className="animate-spin h-8 w-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
-          </div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入新聞管理介面中..." />
+      </AdminProtection>
     )
   }
 

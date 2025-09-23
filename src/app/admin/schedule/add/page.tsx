@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import TimePickerChinese from '@/components/ui/form/TimePickerChinese'
+import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 
 export default function AddSchedule() {
   const router = useRouter()
@@ -73,12 +75,9 @@ export default function AddSchedule() {
   // 載入中狀態
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入擺攤行程管理介面中..." />
+      </AdminProtection>
     )
   }
 

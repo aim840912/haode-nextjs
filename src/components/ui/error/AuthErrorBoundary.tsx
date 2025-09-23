@@ -156,7 +156,9 @@ export class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErr
         <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
           <div className="max-w-md w-full space-y-8">
             <div className="text-center">
-              <div className="text-3xl font-bold text-amber-900 tracking-tight mb-6">豪德茶業</div>
+              <div className="text-3xl font-bold text-amber-900 tracking-tight mb-6">
+                豪德製茶所
+              </div>
               <div className="text-sm text-amber-700/70 font-medium tracking-wider mb-8">
                 HAUDE TEA
               </div>

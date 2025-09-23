@@ -39,7 +39,7 @@ const DEFAULT_TEMPLATES: QuickReplyTemplate[] = [
 
 如有任何問題，歡迎隨時聯繫我們！
 
-豪德茶業 敬上`,
+豪德製茶所 敬上`,
     category: 'product',
     variables: ['customer_name', 'product_name', 'quantity', 'unit_price', 'total_price'],
     usage_count: 0,
@@ -58,7 +58,7 @@ const DEFAULT_TEMPLATES: QuickReplyTemplate[] = [
 • 參訪日期：{visit_date}
 • 參訪人數：{visitor_count} 位
 • 集合時間：當日上午 09:00
-• 集合地點：豪德茶業農場入口
+• 集合地點：豪德製茶所農場入口
 
 注意事項：
 • 請穿著舒適的運動鞋
@@ -67,7 +67,7 @@ const DEFAULT_TEMPLATES: QuickReplyTemplate[] = [
 
 期待您的到來！
 
-豪德茶業 敬上`,
+豪德製茶所 敬上`,
     category: 'farm_tour',
     variables: ['customer_name', 'activity_title', 'visit_date', 'visitor_count'],
     usage_count: 0,
@@ -85,7 +85,7 @@ const DEFAULT_TEMPLATES: QuickReplyTemplate[] = [
 
 如有緊急需求，歡迎直接撥打客服電話與我們聯繫。
 
-豪德茶業 敬上`,
+豪德製茶所 敬上`,
     category: 'general',
     variables: ['customer_name'],
     usage_count: 0,
@@ -107,7 +107,7 @@ const DEFAULT_TEMPLATES: QuickReplyTemplate[] = [
 
 請告知您方便的時間，我們將立即安排！
 
-豪德茶業 敬上`,
+豪德製茶所 敬上`,
     category: 'pricing',
     variables: ['customer_name'],
     usage_count: 0,
@@ -130,7 +130,7 @@ const DEFAULT_TEMPLATES: QuickReplyTemplate[] = [
 
 請告知您的選擇，我們將立即為您安排！
 
-豪德茶業 敬上`,
+豪德製茶所 敬上`,
     category: 'product',
     variables: ['customer_name', 'product_name', 'restock_date'],
     usage_count: 0,

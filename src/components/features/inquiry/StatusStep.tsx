@@ -1,6 +1,13 @@
 'use client'
 
 import { InquiryStatus, INQUIRY_STATUS_LABELS } from '@/types/inquiry'
+import {
+  DocumentTextIcon,
+  ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  CheckBadgeIcon,
+  XCircleIcon,
+} from '@heroicons/react/24/outline'
 
 interface StatusStepProps {
   status: InquiryStatus
@@ -25,11 +32,11 @@ export default function StatusStep({
 }: StatusStepProps) {
   // 狀態圖標對應
   const statusIcons = {
-    pending: '📝',
-    quoted: '💬',
-    confirmed: '✅',
-    completed: '🎉',
-    cancelled: '❌',
+    pending: <DocumentTextIcon className="w-5 h-5" />,
+    quoted: <ChatBubbleLeftRightIcon className="w-5 h-5" />,
+    confirmed: <CheckCircleIcon className="w-5 h-5" />,
+    completed: <CheckBadgeIcon className="w-5 h-5" />,
+    cancelled: <XCircleIcon className="w-5 h-5" />,
   }
 
   // 狀態顏色配置
@@ -71,7 +78,7 @@ export default function StatusStep({
               ${isActive ? 'ring-4 ring-amber-200 scale-105' : ''}
             `}
           >
-            <span className="text-lg">{statusIcons[status]}</span>
+            {statusIcons[status]}
           </div>
           {!isLast && (
             <div className={`w-1 h-16 mt-2 transition-all duration-500 ${getConnectorColor()}`} />
@@ -123,7 +130,7 @@ export default function StatusStep({
             ${isActive ? 'ring-4 ring-amber-200 scale-105 shadow-lg' : ''}
           `}
         >
-          <span className="text-xl">{statusIcons[status]}</span>
+          {statusIcons[status]}
         </div>
 
         {/* 狀態標籤 */}

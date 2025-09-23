@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
+import Breadcrumbs, { createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 
 interface ScheduleItem {
   id: string
@@ -116,6 +117,13 @@ export default function SchedulePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Breadcrumb */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <Breadcrumbs items={createScheduleBreadcrumbs()} enableStructuredData={true} />
+        </div>
+      </div>
+
       {/* Header */}
       <div className="bg-gradient-to-r from-amber-100 to-orange-50 py-16">
         <div className="max-w-7xl mx-auto px-6">

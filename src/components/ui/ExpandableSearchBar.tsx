@@ -48,8 +48,8 @@ export function ExpandableSearchBar({
       try {
         const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=5`)
         const data = await response.json()
-        setSuggestions(data.results || [])
-        setShowDropdown(data.results?.length > 0)
+        setSuggestions(data.data?.results || [])
+        setShowDropdown(data.data?.results?.length > 0)
       } catch (error) {
         logger.error('搜尋建議失敗', error as Error, {
           module: 'ExpandableSearchBar',

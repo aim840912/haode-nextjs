@@ -3,6 +3,13 @@
 import { InquiryWithItems } from '@/types/inquiry'
 import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
 import StatusStep from './StatusStep'
+import {
+  LightBulbIcon,
+  TruckIcon,
+  SparklesIcon,
+  CheckIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
 
 interface InquiryStatusFlowProps {
   inquiry: InquiryWithItems
@@ -88,9 +95,13 @@ export default function InquiryStatusFlow({
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xs font-bold text-gray-600">
-                    {isCompleted ? '✓' : isCancelled ? '✕' : progressPercentage + '%'}
-                  </span>
+                  {isCompleted ? (
+                    <CheckIcon className="w-4 h-4 text-green-600" />
+                  ) : isCancelled ? (
+                    <XMarkIcon className="w-4 h-4 text-red-600" />
+                  ) : (
+                    <span className="text-xs font-bold text-gray-600">{progressPercentage}%</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -191,17 +202,26 @@ export default function InquiryStatusFlow({
       {/* 說明文字 */}
       <div className="px-6 pb-6">
         <div className="text-xs text-gray-500 space-y-1">
-          <p>
-            💡 <strong>提示</strong>：我們會在每個階段主動通知您處理進度
+          <p className="flex items-center gap-2">
+            <LightBulbIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <span>
+              <strong>提示</strong>：我們會在每個階段主動通知您處理進度
+            </span>
           </p>
           {inquiry.inquiry_type === 'product' && (
-            <p>
-              📦 <strong>配送</strong>：確認訂單後，商品將在 3-5 個工作天內配送
+            <p className="flex items-center gap-2">
+              <TruckIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <span>
+                <strong>配送</strong>：確認訂單後，商品將在 3-5 個工作天內配送
+              </span>
             </p>
           )}
           {inquiry.inquiry_type === 'farm_tour' && (
-            <p>
-              🌱 <strong>參觀</strong>：如遇天候不佳，我們會聯繫您調整時間
+            <p className="flex items-center gap-2">
+              <SparklesIcon className="w-4 h-4 text-green-500 flex-shrink-0" />
+              <span>
+                <strong>參觀</strong>：如遇天候不佳，我們會聯繫您調整時間
+              </span>
             </p>
           )}
         </div>

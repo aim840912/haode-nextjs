@@ -8,6 +8,9 @@ import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { v4 as uuidv4 } from 'uuid'
+import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
+import { LockClosedIcon } from '@heroicons/react/24/outline'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -79,12 +82,9 @@ function AddProduct() {
   // 載入中狀態
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入產品管理介面中..." />
+      </AdminProtection>
     )
   }
 
@@ -93,7 +93,9 @@ function AddProduct() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="text-6xl mb-8">🔒</div>
+          <div className="flex justify-center mb-8">
+            <LockClosedIcon className="w-16 h-16 text-gray-400" />
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
           <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">

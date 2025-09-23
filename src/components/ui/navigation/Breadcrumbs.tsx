@@ -284,6 +284,26 @@ export const createAdminBreadcrumbs = (...segments: string[]): BreadcrumbItem[] 
   return items
 }
 
+export const createScheduleBreadcrumbs = (scheduleTitle?: string): BreadcrumbItem[] => {
+  const items: BreadcrumbItem[] = [{ name: '擺攤行程', href: '/schedule' }]
+
+  if (scheduleTitle) {
+    items.push({ name: scheduleTitle })
+  }
+
+  return items
+}
+
+export const createFarmTourBreadcrumbs = (tourTitle?: string): BreadcrumbItem[] => {
+  const items: BreadcrumbItem[] = [{ name: '觀光果園', href: '/farm-tour' }]
+
+  if (tourTitle) {
+    items.push({ name: tourTitle })
+  }
+
+  return items
+}
+
 // ============================================================================
 // 預設樣式變體
 // ============================================================================

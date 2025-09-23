@@ -176,9 +176,10 @@ export const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
 
   // 庫存查詢相關 - 高安全等級（防止濫用）
   '/api/inquiries': createConfig(SecurityLevel.HIGH, {
-    maxRequests: 5,
+    maxRequests: 10,
     windowMs: 10 * 60 * 1000, // 10 分鐘
-    message: '庫存查詢提交過於頻繁，請等待 10 分鐘後重試',
+    strategy: IdentifierStrategy.USER_ID, // 基於用戶 ID 而非 IP
+    message: '庫存查詢提交過於頻繁，請稍後重試',
   }),
 
   // 庫存查詢統計 - 中等安全等級（允許頻繁查詢但有限制）

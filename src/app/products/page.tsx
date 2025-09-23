@@ -321,8 +321,8 @@ function ProductsPage() {
       return
     }
 
-    // 導向詢問單頁面，並預填產品資訊
-    const inquiryUrl = `/inquiries/create?product=${encodeURIComponent(product.name)}&quantity=${quantity}&productId=${product.id}`
+    // 導向詢問單頁面，並預填產品資訊（包含價格）
+    const inquiryUrl = `/inquiries/create?product=${encodeURIComponent(product.name)}&quantity=${quantity}&productId=${product.id}&price=${product.price}`
     window.location.href = inquiryUrl
   }
 

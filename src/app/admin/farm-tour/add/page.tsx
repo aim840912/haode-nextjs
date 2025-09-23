@@ -8,6 +8,8 @@ import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import ImageUploader from '@/components/features/products/ImageUploader'
 import { v4 as uuidv4 } from 'uuid'
+import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 
 export default function AddFarmTourActivity() {
   const router = useRouter()
@@ -41,26 +43,9 @@ export default function AddFarmTourActivity() {
   // 載入中狀態
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-            <svg
-              className="w-6 h-6 text-gray-600 animate-spin"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-          </div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入果園管理介面中..." />
+      </AdminProtection>
     )
   }
 

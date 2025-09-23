@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import { v4 as uuidv4 } from 'uuid'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -107,12 +109,9 @@ export default function AddLocation() {
   // 載入中狀態
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入門市管理介面中..." />
+      </AdminProtection>
     )
   }
 
@@ -398,7 +397,7 @@ export default function AddLocation() {
                         ? 'border-red-500 focus:ring-red-500'
                         : 'border-gray-300 focus:ring-amber-500'
                     }`}
-                    placeholder="例：豪德茶業總店"
+                    placeholder="例：豪德製茶所總店"
                   />
                   {fieldErrors.title && (
                     <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>

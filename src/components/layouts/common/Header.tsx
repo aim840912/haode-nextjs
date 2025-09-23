@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
 import AuthButton from '@/components/ui/button/AuthButton'
 import SocialLinks from '@/components/features/social/SocialLinks'
 import { ExpandableSearchBar } from '@/components/ui/ExpandableSearchBar'
@@ -12,6 +13,49 @@ export default function Header() {
   const pathname = usePathname()
   const { user } = useAuth()
   const { stats } = useInquiryStatsContext()
+
+  // 管理員選單狀態管理
+  const [isDesktopAdminMenuOpen, setIsDesktopAdminMenuOpen] = useState(false)
+  const [isMobileAdminMenuOpen, setIsMobileAdminMenuOpen] = useState(false)
+
+  // ref 引用
+  const desktopAdminMenuRef = useRef<HTMLDivElement>(null)
+  const mobileAdminMenuRef = useRef<HTMLDivElement>(null)
+
+  // 點擊外部關閉選單
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        desktopAdminMenuRef.current &&
+        !desktopAdminMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsDesktopAdminMenuOpen(false)
+      }
+      if (
+        mobileAdminMenuRef.current &&
+        !mobileAdminMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileAdminMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // 點擊處理函數
+  const handleDesktopAdminMenuToggle = () => {
+    setIsDesktopAdminMenuOpen(!isDesktopAdminMenuOpen)
+  }
+
+  const handleMobileAdminMenuToggle = () => {
+    setIsMobileAdminMenuOpen(!isMobileAdminMenuOpen)
+  }
+
+  const handleMenuItemClick = () => {
+    setIsDesktopAdminMenuOpen(false)
+    setIsMobileAdminMenuOpen(false)
+  }
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -38,7 +82,7 @@ export default function Header() {
           {/* 上層：品牌和登入 */}
           <div className="flex items-center justify-between mb-4">
             <Link href="/" className="block">
-              <div className="text-3xl font-display text-amber-900 tracking-tight">豪德茶業</div>
+              <div className="text-3xl font-display text-amber-900 tracking-tight">豪德製茶所</div>
               <div className="text-xs text-amber-700/70 font-inter font-medium tracking-wider">
                 HAUDE TEA
               </div>
@@ -98,10 +142,11 @@ export default function Header() {
 
               {/* 管理員快速連結 */}
               {user?.role === 'admin' && (
-                <div className="relative group">
+                <div className="relative" ref={desktopAdminMenuRef}>
                   <button
-                    className="flex items-center p-2 text-gray-700 hover:text-amber-900 transition-colors duration-200"
+                    className="flex items-center p-2 text-gray-700 hover:text-amber-900 transition-colors duration-200 min-h-[44px] min-w-[44px] justify-center"
                     title="管理功能"
+                    onClick={handleDesktopAdminMenuToggle}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -118,7 +163,11 @@ export default function Header() {
                       />
                     </svg>
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div
+                    className={`absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 transition-all duration-200 z-50 ${
+                      isDesktopAdminMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
+                  >
                     <div className="py-2">
                       {/* 系統管理 */}
                       <div className="px-3 py-1">
@@ -129,6 +178,7 @@ export default function Header() {
                       <Link
                         href="/admin/dashboard"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
@@ -138,6 +188,7 @@ export default function Header() {
                       <Link
                         href="/admin/monitoring"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
@@ -147,6 +198,7 @@ export default function Header() {
                       <Link
                         href="/admin/audit-logs"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11C15.4,11 16,11.4 16,12V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V12C8,11.4 8.4,11 9,11V10.5C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10.5V11H13.8V10.5C13.8,8.7 12.8,8.2 12,8.2Z" />
@@ -156,6 +208,7 @@ export default function Header() {
                       <Link
                         href="/admin/analytics"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
@@ -173,6 +226,7 @@ export default function Header() {
                         <Link
                           href="/admin/products"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
@@ -182,6 +236,7 @@ export default function Header() {
                         <Link
                           href="/admin/moments"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
@@ -191,6 +246,7 @@ export default function Header() {
                         <Link
                           href="/admin/news"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
@@ -200,6 +256,7 @@ export default function Header() {
                         <Link
                           href="/admin/farm-tour"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12,3L6,7.58V6H4V9.11L1,11.4L1.58,12.25L2,12L2,21H10C10,19.9 10.9,19 12,19C13.1,19 14,19.9 14,21H22V12L22.42,12.25L23,11.4L12,3M12,8.75A2.25,2.25 0 0,1 14.25,11A2.25,2.25 0 0,1 12,13.25A2.25,2.25 0 0,1 9.75,11A2.25,2.25 0 0,1 12,8.75Z" />
@@ -209,6 +266,7 @@ export default function Header() {
                         <Link
                           href="/admin/schedule"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19,3H18V1H16V3H8V1H6V3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V8H19V19Z" />
@@ -218,6 +276,7 @@ export default function Header() {
                         <Link
                           href="/admin/locations"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
@@ -230,6 +289,7 @@ export default function Header() {
                           <Link
                             href="/admin/inquiries"
                             className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                            onClick={handleMenuItemClick}
                           >
                             <div className="flex items-center">
                               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -259,7 +319,7 @@ export default function Header() {
           <div className="flex items-center justify-between">
             {/* Brand */}
             <Link href="/" className="block">
-              <div className="text-2xl font-display text-amber-900 tracking-tight">豪德茶業</div>
+              <div className="text-2xl font-display text-amber-900 tracking-tight">豪德製茶所</div>
               <div className="text-xs text-amber-700/70 font-inter font-medium tracking-wider">
                 HAUDE TEA
               </div>
@@ -274,10 +334,11 @@ export default function Header() {
 
               {/* 管理員快速連結 - Mobile */}
               {user?.role === 'admin' && (
-                <div className="relative group">
+                <div className="relative" ref={mobileAdminMenuRef}>
                   <button
-                    className="flex items-center p-2 text-gray-700 hover:text-amber-900 transition-colors duration-200"
+                    className="flex items-center p-2 text-gray-700 hover:text-amber-900 transition-colors duration-200 min-h-[44px] min-w-[44px] justify-center"
                     title="管理功能"
+                    onClick={handleMobileAdminMenuToggle}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -294,7 +355,11 @@ export default function Header() {
                       />
                     </svg>
                   </button>
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <div
+                    className={`absolute right-0 top-full mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 transition-all duration-200 z-50 ${
+                      isMobileAdminMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                    }`}
+                  >
                     <div className="py-2">
                       {/* 系統管理 */}
                       <div className="px-3 py-1">
@@ -305,6 +370,7 @@ export default function Header() {
                       <Link
                         href="/admin/dashboard"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
@@ -314,6 +380,7 @@ export default function Header() {
                       <Link
                         href="/admin/monitoring"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
@@ -323,6 +390,7 @@ export default function Header() {
                       <Link
                         href="/admin/audit-logs"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11C15.4,11 16,11.4 16,12V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V12C8,11.4 8.4,11 9,11V10.5C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10.5V11H13.8V10.5C13.8,8.7 12.8,8.2 12,8.2Z" />
@@ -332,6 +400,7 @@ export default function Header() {
                       <Link
                         href="/admin/analytics"
                         className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
@@ -349,6 +418,7 @@ export default function Header() {
                         <Link
                           href="/admin/products"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
@@ -358,6 +428,7 @@ export default function Header() {
                         <Link
                           href="/admin/moments"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
@@ -367,6 +438,7 @@ export default function Header() {
                         <Link
                           href="/admin/news"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
@@ -376,6 +448,7 @@ export default function Header() {
                         <Link
                           href="/admin/farm-tour"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12,3L6,7.58V6H4V9.11L1,11.4L1.58,12.25L2,12L2,21H10C10,19.9 10.9,19 12,19C13.1,19 14,19.9 14,21H22V12L22.42,12.25L23,11.4L12,3M12,8.75A2.25,2.25 0 0,1 14.25,11A2.25,2.25 0 0,1 12,13.25A2.25,2.25 0 0,1 9.75,11A2.25,2.25 0 0,1 12,8.75Z" />
@@ -385,6 +458,7 @@ export default function Header() {
                         <Link
                           href="/admin/schedule"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M19,3H18V1H16V3H8V1H6V3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V8H19V19Z" />
@@ -394,6 +468,7 @@ export default function Header() {
                         <Link
                           href="/admin/locations"
                           className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
@@ -406,6 +481,7 @@ export default function Header() {
                           <Link
                             href="/admin/inquiries"
                             className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                            onClick={handleMenuItemClick}
                           >
                             <div className="flex items-center">
                               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">

@@ -17,6 +17,7 @@ function InquiryFormContent() {
   const productName = searchParams.get('product') || ''
   const quantity = parseInt(searchParams.get('quantity') || '1')
   const productId = searchParams.get('productId') || ''
+  const productPrice = parseFloat(searchParams.get('price') || '0')
 
   // 使用增強的詢價表單 Hook
   const inquiryForm = useEnhancedInquiryForm({
@@ -69,16 +70,22 @@ function InquiryFormContent() {
         product_id: productId,
         product_name: productName,
         quantity: productQuantity,
+        unit_price: productPrice > 0 ? productPrice : undefined,
         notes: `產品詢價 - ${productName}`,
       }
 
       inquiryForm.addItem(inquiryItem)
 
       logger.info('自動添加產品到詢價表單', {
-        metadata: { productId, productName, quantity: productQuantity },
+        metadata: {
+          productId,
+          productName,
+          quantity: productQuantity,
+          unitPrice: productPrice > 0 ? productPrice : undefined,
+        },
       })
     }
-  }, [productName, productId, productQuantity, inquiryForm, router])
+  }, [productName, productId, productQuantity, productPrice, inquiryForm, router])
 
   const handleQuantityChange = (newQuantity: number) => {
     const validQuantity = Math.max(1, newQuantity)
