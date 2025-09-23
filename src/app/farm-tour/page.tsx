@@ -6,7 +6,7 @@ import { FarmTourActivity } from '@/types/farmTour'
 import SocialLinks from '@/components/features/social/SocialLinks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/database/supabase-auth'
+import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
 
 // 農場設施
@@ -192,6 +192,7 @@ export default function FarmTourPage() {
 
     try {
       // 取得認證 token
+      const supabase = getSupabaseClient()
       const {
         data: { session },
       } = await supabase.auth.getSession()

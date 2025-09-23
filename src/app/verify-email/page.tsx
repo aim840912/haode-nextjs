@@ -15,7 +15,6 @@ export default function VerifyEmailPage() {
   const [resendSuccess, setResendSuccess] = useState(false)
   const { success, error: showError } = useToast()
   const { user } = useAuth()
-  const supabase = getSupabaseClient()
 
   const handleResendEmail = async () => {
     if (!email) {
@@ -27,6 +26,7 @@ export default function VerifyEmailPage() {
     setResendSuccess(false)
 
     try {
+      const supabase = getSupabaseClient()
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,

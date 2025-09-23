@@ -25,7 +25,6 @@ export default function RegisterPage() {
   const { register } = useAuth()
   const { success, error: showError } = useToast()
   const router = useRouter()
-  const supabase = getSupabaseClient()
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -207,6 +206,7 @@ export default function RegisterPage() {
       setTimeout(async () => {
         try {
           // 檢查當前認證狀態
+          const supabase = getSupabaseClient()
           const {
             data: { session },
           } = await supabase.auth.getSession()
