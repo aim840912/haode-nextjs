@@ -1,14 +1,40 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 
-export default function VerifyEmailPage() {
+// 載入頁面組件
+function VerifyEmailLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
+      <div className="max-w-md w-full text-center">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block mb-6">
+            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德農場</div>
+            <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE FARM</div>
+          </Link>
+        </div>
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full">
+              <span className="text-3xl">📧</span>
+            </div>
+          </div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">載入中...</h2>
+          <p className="text-gray-600">正在載入郵件驗證頁面</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 郵件驗證內容組件（使用 useSearchParams）
+function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
   const [resending, setResending] = useState(false)
@@ -156,5 +182,14 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 主要導出組件，使用 Suspense 包裝
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<VerifyEmailLoading />}>
+      <VerifyEmailContent />
+    </Suspense>
   )
 }
