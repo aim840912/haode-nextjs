@@ -30,14 +30,19 @@ function ProductsAdmin() {
                 <h1 className="text-3xl font-bold text-gray-900">產品管理</h1>
                 <p className="text-gray-600 mt-2">管理農產品和商品資訊</p>
               </div>
-              <div className="space-x-4">
+              <div className="flex items-center space-x-4">
                 {user?.role === 'admin' && (
-                  <Link
-                    href="/admin/products/add"
-                    className="bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
-                  >
-                    新增產品
-                  </Link>
+                  <>
+                    <Link
+                      href="/admin/products/add"
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center space-x-1"
+                    >
+                      <span>新增產品</span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        智慧上傳
+                      </span>
+                    </Link>
+                  </>
                 )}
                 <Link
                   href="/"
