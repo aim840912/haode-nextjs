@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
 import { imageUrlValidator } from '@/lib/utils/image-url-validator'
@@ -64,6 +64,9 @@ interface ImageUploaderProps {
   // 向後相容的舊 props
   apiEndpoint?: string
   idParamName?: string
+  // 新增：初始圖片支援
+  initialImages?: string[]
+  onDeleteInitialImage?: (imageUrl: string) => void
 }
 
 export default function ImageUploader({
@@ -82,6 +85,9 @@ export default function ImageUploader({
   // 向後相容 props
   apiEndpoint,
   idParamName = 'productId',
+  // 初始圖片相關
+  initialImages = [],
+  onDeleteInitialImage,
 }: ImageUploaderProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -100,6 +106,30 @@ export default function ImageUploader({
     ? '/api/upload/unified'
     : apiEndpoint || '/api/upload/images'
   const finalIdParamName = useUnifiedAPI ? 'entityId' : idParamName
+
+  // 載入初始圖片
+  useEffect(() => {
+    if (initialImages && initialImages.length > 0) {
+      const initialPreviewImages: UploadedImage[] = initialImages.map((url, index) => ({
+        id: `initial-${productId}-${index}`,
+        url: imageUrlValidator.clean(url),
+        path: url, // 使用 URL 作為 path，讓 handleRemoveImage 知道要刪除
+        size: 'medium' as const,
+        position: index,
+        alt: `初始圖片 ${index + 1}`,
+        preview: imageUrlValidator.clean(url),
+      }))
+
+      setPreviewImages(initialPreviewImages)
+      logger.info('載入初始圖片成功', {
+        metadata: {
+          context: 'ImageUploader',
+          productId,
+          initialImageCount: initialImages.length,
+        },
+      })
+    }
+  }, [initialImages, productId])
 
   const handleFileSelect = useCallback(
     async (files: FileList | null) => {
@@ -185,13 +215,43 @@ export default function ImageUploader({
             setPreviewImages(prev => [...prev, tempImage])
 
             try {
+              // 準備上傳數據
+              const formData = new FormData()
+              formData.append('file', processedFile)
+
+              if (useUnifiedAPI) {
+                // 使用統一 API
+                formData.append('module', module!)
+                formData.append('entityId', productId)
+                formData.append('generateMultipleSizes', generateMultipleSizes.toString())
+                formData.append('position', '0')
+              } else {
+                // 使用舊 API (向後相容)
+                formData.append(finalIdParamName, productId)
+                formData.append('generateMultipleSizes', generateMultipleSizes.toString())
+                formData.append('compress', 'false') // 已在前端壓縮
+              }
+
+              const headers: HeadersInit = {}
+              if (csrfToken) {
+                headers['x-csrf-token'] = csrfToken
+              }
+
               // 上傳到伺服器
-              const result = (await uploadImageToServer(
-                processedFile,
-                productId,
-                generateMultipleSizes,
-                csrfToken
-              )) as UploadResult
+              const response = await fetch(finalApiEndpoint, {
+                method: 'POST',
+                body: formData,
+                headers,
+                credentials: 'include',
+              })
+
+              if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || '上傳失敗')
+              }
+
+              const responseData = await response.json()
+              const result = responseData.data as UploadResult
 
               if (useUnifiedAPI) {
                 // 統一 API 回應格式
@@ -377,53 +437,11 @@ export default function ImageUploader({
       onUploadSuccess,
       onUploadError,
       csrfToken,
+      useUnifiedAPI,
+      finalApiEndpoint,
+      finalIdParamName,
+      module,
     ]
-  ) // uploadImageToServer 穩定，不需要在依賴中
-
-  const uploadImageToServer = useCallback(
-    async (
-      file: File,
-      productId: string,
-      generateMultipleSizes: boolean,
-      csrfToken: string | null
-    ) => {
-      const formData = new FormData()
-      formData.append('file', file)
-
-      if (useUnifiedAPI) {
-        // 使用統一 API
-        formData.append('module', module!)
-        formData.append('entityId', productId)
-        formData.append('generateMultipleSizes', generateMultipleSizes.toString())
-        formData.append('position', '0')
-      } else {
-        // 使用舊 API (向後相容)
-        formData.append(finalIdParamName, productId)
-        formData.append('generateMultipleSizes', generateMultipleSizes.toString())
-        formData.append('compress', 'false') // 已在前端壓縮
-      }
-
-      const headers: HeadersInit = {}
-      if (csrfToken) {
-        headers['x-csrf-token'] = csrfToken
-      }
-
-      const response = await fetch(finalApiEndpoint, {
-        method: 'POST',
-        body: formData,
-        headers,
-        credentials: 'include',
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || '上傳失敗')
-      }
-
-      const result = await response.json()
-      return result.data
-    },
-    [useUnifiedAPI, module, finalIdParamName, finalApiEndpoint]
   )
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -466,33 +484,55 @@ export default function ImageUploader({
     if (!imageToRemove) return
 
     try {
-      // 從伺服器刪除（如果有路径）
-      if (imageToRemove.path) {
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        }
-        if (csrfToken) {
-          headers['x-csrf-token'] = csrfToken
-        }
+      // 判斷是否為初始圖片
+      if (imageId.startsWith('initial-')) {
+        // 通知父元件刪除初始圖片
+        onDeleteInitialImage?.(imageToRemove.url || imageToRemove.path)
 
-        if (useUnifiedAPI) {
-          // 使用統一 API 刪除
-          await fetch(finalApiEndpoint, {
-            method: 'DELETE',
-            headers,
-            body: JSON.stringify({
-              imageId: imageToRemove.id,
-            }),
-          })
-        } else {
-          // 使用舊 API 刪除（向後相容）
-          await fetch(finalApiEndpoint, {
-            method: 'DELETE',
-            headers,
-            body: JSON.stringify({
-              [finalIdParamName]: productId,
-              filePath: imageToRemove.path,
-            }),
+        logger.info('刪除初始圖片', {
+          metadata: {
+            context: 'ImageUploader',
+            imageId,
+            imageUrl: imageToRemove.url || imageToRemove.path,
+          },
+        })
+      } else {
+        // 刪除已上傳的新圖片（如果有路径）
+        if (imageToRemove.path) {
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          }
+          if (csrfToken) {
+            headers['x-csrf-token'] = csrfToken
+          }
+
+          if (useUnifiedAPI) {
+            // 使用統一 API 刪除
+            await fetch(finalApiEndpoint, {
+              method: 'DELETE',
+              headers,
+              body: JSON.stringify({
+                imageId: imageToRemove.id,
+              }),
+            })
+          } else {
+            // 使用舊 API 刪除（向後相容）
+            await fetch(finalApiEndpoint, {
+              method: 'DELETE',
+              headers,
+              body: JSON.stringify({
+                [finalIdParamName]: productId,
+                filePath: imageToRemove.path,
+              }),
+            })
+          }
+
+          logger.info('刪除上傳圖片', {
+            metadata: {
+              context: 'ImageUploader',
+              imageId,
+              imagePath: imageToRemove.path,
+            },
           })
         }
       }
@@ -514,6 +554,7 @@ export default function ImageUploader({
         metadata: {
           imageId,
           imagePath: imageToRemove.path,
+          isInitialImage: imageId.startsWith('initial-'),
         },
       })
       onUploadError?.('刪除圖片失敗')

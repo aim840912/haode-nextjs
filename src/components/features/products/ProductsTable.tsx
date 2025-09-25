@@ -405,8 +405,8 @@ export default function ProductsTable({
           <p className="text-gray-500">尚無產品資料</p>
           {user?.role === 'admin' && (
             <Link
-              href="/admin/products/add"
-              className="inline-block mt-4 bg-amber-900 text-white px-6 py-2 rounded-lg hover:bg-amber-800 transition-colors"
+              href="/admin/products/add-v2"
+              className="inline-block mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
             >
               新增第一個產品
             </Link>

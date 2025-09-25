@@ -1,0 +1,49 @@
+# 依賴和建置產物
+node_modules/
+.next/
+out/
+dist/
+build/
+
+# PWA 生成檔案
+public/sw.js
+public/workbox-*.js
+
+# 快取和臨時檔案
+.cache/
+*.tsbuildinfo
+.turbo/
+
+# 環境和配置
+.env*
+!.env.example
+
+# 日誌檔案
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Service Worker 生成檔案
+**/sw.js
+**/workbox-*.js
+
+# 測試覆蓋率
+coverage/
+.nyc_output/
+
+# IDE 和編輯器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 作業系統生成檔案
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAuth, requireAdmin } from '@/lib/middleware/api-middleware'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
@@ -55,9 +56,9 @@ const UpdateSchema = z.object({
 })
 
 /**
- * POST - 上傳圖片
+ * POST - 上傳圖片 (需要認證)
  */
-async function handlePOST(request: NextRequest) {
+async function handlePOST(request: NextRequest, user: any) {
   const formData = await request.formData()
   const file = formData.get('file') as File
 
@@ -98,6 +99,7 @@ async function handlePOST(request: NextRequest) {
       fileName: file.name,
       fileSize: file.size,
       generateMultipleSizes,
+      userId: user?.id,
     },
   })
 
@@ -331,9 +333,9 @@ async function handlePATCH(request: NextRequest) {
 }
 
 /**
- * DELETE - 刪除圖片
+ * DELETE - 刪除圖片 (需要認證)
  */
-async function handleDELETE(request: NextRequest) {
+async function handleDELETE(request: NextRequest, user: any) {
   const body = await request.json()
   const result = DeleteSchema.safeParse(body)
 
@@ -348,7 +350,7 @@ async function handleDELETE(request: NextRequest) {
 
   apiLogger.info('開始刪除圖片', {
     module: 'UnifiedImageAPI',
-    metadata: { imageId },
+    metadata: { imageId, userId: user?.id },
   })
 
   try {
@@ -375,11 +377,8 @@ async function handleDELETE(request: NextRequest) {
   }
 }
 
-// 整合錯誤處理中間件
-const handlePOSTWithError = withErrorHandler(handlePOST, {
-  module: 'UnifiedImageAPI',
-  enableAuditLog: true, // 圖片上傳需要審計日誌
-})
+// 整合認證和錯誤處理中間件
+const handlePOSTWithAuth = requireAuth(handlePOST)
 
 const handleGETWithError = withErrorHandler(handleGET, {
   module: 'UnifiedImageAPI',
@@ -391,10 +390,8 @@ const handlePATCHWithError = withErrorHandler(handlePATCH, {
   enableAuditLog: true, // 更新操作需要審計日誌
 })
 
-const handleDELETEWithError = withErrorHandler(handleDELETE, {
-  module: 'UnifiedImageAPI',
-  enableAuditLog: true, // 刪除操作需要審計日誌
-})
+// 整合認證和錯誤處理中間件
+const handleDELETEWithAuth = requireAuth(handleDELETE)
 
 /**
  * OPTIONS - CORS 預檢請求處理
@@ -412,7 +409,7 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 // 導出 API 處理器
-export const POST = handlePOSTWithError
+export const POST = handlePOSTWithAuth
 export const GET = handleGETWithError
 export const PATCH = handlePATCHWithError
-export const DELETE = handleDELETEWithError
+export const DELETE = handleDELETEWithAuth

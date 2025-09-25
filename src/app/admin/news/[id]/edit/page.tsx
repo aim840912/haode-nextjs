@@ -47,7 +47,18 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
       try {
         const response = await fetch(`/api/news/${id}`)
         if (response.ok) {
-          const news: NewsItem = await response.json()
+          const result = await response.json()
+
+          // 處理統一 API 格式
+          if (!result.success || !result.data) {
+            logger.error('新聞資料格式錯誤', undefined, { metadata: { result } })
+            alert('資料格式錯誤')
+            router.push('/admin/news')
+            return
+          }
+
+          const news: NewsItem = result.data // 從 data 屬性取得新聞資料
+
           setFormData({
             title: news.title,
             summary: news.summary,
@@ -58,19 +69,25 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             imageUrl: news.imageUrl || '',
             featured: news.featured,
           })
-          if (news.imageUrl) {
-            // setImagePreview(news.imageUrl) // 不再需要，由 ImageUploader 處理
-          }
+
+          logger.info('新聞資料載入成功', {
+            metadata: { newsId: id, newsTitle: news.title },
+          })
         } else {
-          alert('新聞不存在')
+          const errorText = await response.text().catch(() => 'Unknown error')
+          logger.error('新聞載入失敗', undefined, {
+            metadata: { newsId: id, status: response.status, error: errorText },
+          })
+          alert(`新聞不存在 (${response.status})`)
           router.push('/admin/news')
         }
       } catch (error) {
         logger.error(
-          'Error fetching news:',
-          error instanceof Error ? error : new Error('Unknown error')
+          '新聞載入發生錯誤',
+          error instanceof Error ? error : new Error(String(error)),
+          { metadata: { newsId: id } }
         )
-        alert('載入失敗')
+        alert(`載入失敗: ${error instanceof Error ? error.message : '未知錯誤'}`)
       } finally {
         setInitialLoading(false)
       }
@@ -210,7 +227,16 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     const urls = images
       .map(img => img.url || img.preview)
       .filter((url): url is string => Boolean(url))
+
     setUploadedImages(prev => [...prev, ...urls])
+
+    // 如果是單圖上傳（新聞只允許一張圖），更新 formData.imageUrl
+    if (urls.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        imageUrl: urls[0], // 新聞只使用第一張圖片
+      }))
+    }
   }
 
   const handleImageUploadError = (error: string) => {
@@ -280,26 +306,25 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             />
           </div>
 
-          {/* 圖片上傳 */}
+          {/* 圖片管理 */}
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">新聞圖片</label>
-            {formData.imageUrl && uploadedImages.length === 0 && (
-              <div className="mb-4">
-                <div className="text-sm text-gray-600 mb-2">目前圖片：</div>
-                <Image
-                  src={formData.imageUrl}
-                  alt="目前圖片"
-                  width={128}
-                  height={128}
-                  className="h-32 w-auto object-cover rounded-lg border"
-                />
-              </div>
-            )}
             <ImageUploader
               productId={newsId}
               module="news"
+              initialImages={formData.imageUrl ? [formData.imageUrl] : []}
               onUploadSuccess={handleImageUploadSuccess}
               onUploadError={handleImageUploadError}
+              onDeleteInitialImage={() => {
+                // 刪除初始圖片時，清空 formData.imageUrl
+                setFormData(prev => ({ ...prev, imageUrl: '' }))
+              }}
+              onDeleteSuccess={deletedImage => {
+                // 如果刪除的是當前圖片，清空 formData.imageUrl
+                if (deletedImage.url === formData.imageUrl) {
+                  setFormData(prev => ({ ...prev, imageUrl: '' }))
+                }
+              }}
               maxFiles={1}
               allowMultiple={false}
               generateMultipleSizes={false}
@@ -308,7 +333,8 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             />
             {uploadedImages.length > 0 && (
               <div className="text-sm text-green-600">
-                已上傳 {uploadedImages.length} 張新圖片（將替換原有圖片）
+                已上傳 {uploadedImages.length} 張新圖片
+                {formData.imageUrl && ' （將替換原有圖片）'}
               </div>
             )}
           </div>

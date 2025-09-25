@@ -11,6 +11,13 @@ build/
 # Generated files
 .turbo/
 .vercel/
+*.tsbuildinfo
+
+# PWA 生成檔案
+public/sw.js
+public/workbox-*.js
+**/sw.js
+**/workbox-*.js
 
 # Data files
 src/data/*.json

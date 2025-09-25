@@ -50,7 +50,8 @@
       "mcp__playwright__browser_console_messages",
       "mcp__playwright__browser_handle_dialog",
       "Bash(xargs sed:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

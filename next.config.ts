@@ -6,6 +6,40 @@ const withBundleAnalyzer = bundleAnalyzer({
   enabled: process.env.ANALYZE === 'true',
 })
 
+// PWA 配置
+import withPWA from 'next-pwa'
+const withPWAConfig = withPWA({
+  dest: 'public',
+  register: true,
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  runtimeCaching: [
+    {
+      urlPattern: /^https:\/\/.*\.(?:png|jpg|jpeg|gif|webp|avif)$/,
+      handler: 'CacheFirst',
+      options: {
+        cacheName: 'images',
+        expiration: {
+          maxEntries: 1000,
+          maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+        },
+      },
+    },
+    {
+      urlPattern: /api\/upload\/.*$/,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'upload-api',
+        networkTimeoutSeconds: 10,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 5 * 60, // 5 minutes
+        },
+      },
+    },
+  ],
+})
+
 const nextConfig: NextConfig = {
   // ESLint 和 TypeScript 配置在後面統一設定
 
@@ -290,4 +324,4 @@ const nextConfig: NextConfig = {
   compress: true,
 }
 
-export default withBundleAnalyzer(nextConfig)
+export default withBundleAnalyzer(withPWAConfig(nextConfig))

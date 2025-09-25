@@ -134,6 +134,7 @@ export interface ImageUploadResult {
   size: string
   module: string
   entityId: string
+  checksum?: string
 }
 
 // Database 類型定義 - 模擬 Supabase 生成的類型
