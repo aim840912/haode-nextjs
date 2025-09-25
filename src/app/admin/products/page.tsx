@@ -25,28 +25,25 @@ function ProductsAdmin() {
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">產品管理</h1>
                 <p className="text-gray-600 mt-2">管理農產品和商品資訊</p>
               </div>
-              <div className="flex items-center space-x-4">
+
+              {/* 操作按鈕組 */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {user?.role === 'admin' && (
-                  <>
-                    <Link
-                      href="/admin/products/add"
-                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center space-x-1"
-                    >
-                      <span>新增產品</span>
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                        智慧上傳
-                      </span>
-                    </Link>
-                  </>
+                  <Link
+                    href="/admin/products/add"
+                    className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    新增產品
+                  </Link>
                 )}
                 <Link
                   href="/"
-                  className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   回到首頁
                 </Link>

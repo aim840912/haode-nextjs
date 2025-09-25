@@ -456,23 +456,7 @@ function AddProductV2() {
                   返回產品列表
                 </Link>
                 <div className="h-6 w-px bg-gray-300" />
-                <div className="flex items-center space-x-2">
-                  <BeakerIcon className="w-5 h-5 text-green-600" />
-                  <h1 className="text-xl font-semibold text-gray-900">新增產品</h1>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    智慧上傳
-                  </span>
-                </div>
-              </div>
-
-              {/* 版本切換 */}
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/admin/products/add-v1"
-                  className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-                >
-                  切換到傳統版本
-                </Link>
+                <h1 className="text-xl font-semibold text-gray-900">新增產品</h1>
               </div>
             </div>
           </div>

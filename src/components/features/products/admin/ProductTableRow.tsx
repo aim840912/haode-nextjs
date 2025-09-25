@@ -6,8 +6,8 @@ import ProductTableActions from './ProductTableActions'
 
 interface ProductTableRowProps {
   product: Product
-  onDelete: (id: string) => Promise<void>
-  onToggleActive: (id: string, isActive: boolean) => Promise<void>
+  onDelete?: (id: string) => Promise<void>
+  onToggleActive?: (id: string, isActive: boolean) => Promise<void>
   isActionDisabled: boolean
   isAdmin: boolean
 }
@@ -86,32 +86,32 @@ export function ProductTableRow({
       </td>
 
       {/* 上架狀態欄 */}
-      <td className="lg:sticky lg:right-[140px] lg:z-10 px-6 py-4 whitespace-nowrap lg:border-l lg:border-gray-200 lg:shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] bg-white hover:bg-gray-50">
-        {isAdmin ? (
+      <td className="px-3 py-4 whitespace-nowrap text-center">
+        {isAdmin && onToggleActive ? (
           <button
             onClick={() => onToggleActive(product.id, product.isActive)}
             disabled={isActionDisabled}
-            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
               product.isActive
                 ? 'bg-green-100 text-green-800 hover:bg-green-200 focus:ring-green-500'
                 : 'bg-red-100 text-red-800 hover:bg-red-200 focus:ring-red-500'
             }`}
           >
-            {product.isActive ? '已上架' : '未上架'}
+            {product.isActive ? '上架' : '下架'}
           </button>
         ) : (
           <span
-            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
+            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
               product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
             }`}
           >
-            {product.isActive ? '已上架' : '未上架'}
+            {product.isActive ? '上架' : '下架'}
           </span>
         )}
       </td>
 
       {/* 操作欄 */}
-      <td className="sticky right-0 z-10 bg-white hover:bg-gray-50 px-4 py-4 text-right text-sm font-medium border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[140px]">
+      <td className="sticky right-0 z-10 bg-white hover:bg-gray-50 px-4 py-4 text-center text-sm font-medium border-l border-gray-200 shadow-[-4px_0_8px_-2px_rgba(0,0,0,0.1)] min-w-[140px]">
         {isAdmin && (
           <ProductTableActions
             product={product}

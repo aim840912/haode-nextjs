@@ -11,6 +11,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { imageUrlValidator } from '@/lib/utils/image-url-validator'
 import OptimizedImage from '@/components/ui/image/OptimizedImage'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 // 動態載入圖片上傳器，減少初始 bundle 大小
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -134,12 +136,9 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   // 載入中狀態
   if (isLoading || initialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl mb-4">⏳</div>
-          <p className="text-gray-600">載入中...</p>
-        </div>
-      </div>
+      <AdminProtection>
+        <AdminPageLoader message="載入產品編輯資料中..." />
+      </AdminProtection>
     )
   }
 
@@ -345,14 +344,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     } finally {
       setIsDeletingImage(null)
     }
-  }
-
-  if (initialLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center text-gray-900 font-medium">載入中...</div>
-      </div>
-    )
   }
 
   return (
