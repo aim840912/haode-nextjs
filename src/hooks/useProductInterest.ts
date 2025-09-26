@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
-import { useToast } from '@/providers/ToastProvider'
+import { useToast } from '@/components/ui/feedback/Toast'
 import { logger } from '@/lib/logger'
 
 export interface UseProductInterestReturn {
@@ -22,7 +22,7 @@ export interface UseProductInterestReturn {
 export function useProductInterest(): UseProductInterestReturn {
   const [interestedProducts, setInterestedProducts] = useState<Set<string>>(new Set())
   const { user } = useAuth()
-  const { addToast } = useToast()
+  const { success: showSuccess, error: showError, warning: showWarning } = useToast()
 
   // 載入使用者興趣清單
   useEffect(() => {
@@ -54,7 +54,7 @@ export function useProductInterest(): UseProductInterestReturn {
 
       // 檢查登入狀態
       if (!user?.id) {
-        addToast('請先登入以儲存您感興趣的產品', 'warning', 5000)
+        showWarning('請先登入', '請先登入以儲存您感興趣的產品')
         // 可以選擇導向登入頁面
         // setTimeout(() => {
         //   window.location.href = '/login'
@@ -90,7 +90,7 @@ export function useProductInterest(): UseProductInterestReturn {
             return newSet
           })
 
-          addToast('操作失敗，請稍後再試', 'error')
+          showError('操作失敗', '請稍後再試')
           logger.error('更新興趣清單失敗', undefined, {
             metadata: { action: 'toggle_interest', productId, userId: user.id },
           })
@@ -98,11 +98,11 @@ export function useProductInterest(): UseProductInterestReturn {
         }
 
         // 成功提示
-        const message = wasInterested
-          ? `已從興趣清單移除 ${productName}`
-          : `已將 ${productName} 加入興趣清單！`
-
-        addToast(message, 'success', 2000)
+        if (wasInterested) {
+          showSuccess('已移除', `已從興趣清單移除 ${productName}`)
+        } else {
+          showSuccess('已加入', `已將 ${productName} 加入興趣清單！`)
+        }
 
         // 觸發自定義事件通知其他元件更新
         window.dispatchEvent(new CustomEvent('interestedProductsUpdated'))
@@ -118,13 +118,13 @@ export function useProductInterest(): UseProductInterestReturn {
           return newSet
         })
 
-        addToast('操作失敗，請稍後再試', 'error')
+        showError('操作失敗', '請稍後再試')
         logger.error('切換興趣狀態時發生錯誤', error as Error, {
           metadata: { action: 'toggle_interest', productId, userId: user.id },
         })
       }
     },
-    [user?.id, interestedProducts, addToast]
+    [user?.id, interestedProducts, showSuccess, showError, showWarning]
   )
 
   // 檢查產品是否已被加入興趣

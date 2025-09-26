@@ -98,7 +98,15 @@ function ToastComponent({ toast, onRemove }: { toast: Toast; onRemove: (id: stri
 }
 
 function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
-  if (typeof window === 'undefined') return null
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted) {
+    return <div className="fixed bottom-4 right-4 z-50 space-y-3"></div>
+  }
 
   return createPortal(
     <div className="fixed bottom-4 right-4 z-50 space-y-3">

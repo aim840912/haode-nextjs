@@ -42,10 +42,10 @@ function ProductsAdmin() {
                   </Link>
                 )}
                 <Link
-                  href="/"
+                  href="/products"
                   className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
-                  回到首頁
+                  查看產品頁面
                 </Link>
               </div>
             </div>

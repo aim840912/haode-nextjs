@@ -98,7 +98,13 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [interestedCount, setInterestedCount] = useState(0)
+  const [hasMounted, setHasMounted] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // 客戶端掛載狀態
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   // 點擊外部關閉下拉選單
   useEffect(() => {
@@ -116,6 +122,9 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
   // 載入興趣產品數量
   useEffect(() => {
+    // 只在客戶端掛載後執行
+    if (!hasMounted) return
+
     const updateInterestedCount = async () => {
       if (user?.id) {
         // 已登入：從資料庫取得數量
@@ -123,19 +132,35 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
           const interests = await UserInterestsService.getUserInterests(user.id)
           setInterestedCount(interests.length)
         } catch (error) {
+          // 如果是 401 錯誤，可能用戶未授權，不顯示錯誤
+          if (error instanceof Error && error.message.includes('401')) {
+            logger.info('User not authorized for interests API', {
+              metadata: { userId: user?.id },
+            })
+            setInterestedCount(0)
+            return
+          }
+
           logger.error('Error fetching interests count', error as Error, {
             metadata: { userId: user?.id },
           })
           setInterestedCount(0)
         }
       } else {
-        // 未登入：從 localStorage 取得數量
-        const savedInterests = localStorage.getItem('interestedProducts')
-        if (savedInterests) {
-          const productIds = JSON.parse(savedInterests)
-          setInterestedCount(productIds.length)
-        } else {
-          setInterestedCount(0)
+        // 未登入：從 localStorage 取得數量（只在客戶端）
+        if (typeof window !== 'undefined') {
+          const savedInterests = localStorage.getItem('interestedProducts')
+          if (savedInterests) {
+            try {
+              const productIds = JSON.parse(savedInterests)
+              setInterestedCount(productIds.length)
+            } catch (error) {
+              logger.error('Error parsing localStorage interests', error as Error)
+              setInterestedCount(0)
+            }
+          } else {
+            setInterestedCount(0)
+          }
         }
       }
     }
@@ -147,12 +172,14 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
       updateInterestedCount()
     }
 
-    window.addEventListener('interestedProductsUpdated', handleCustomUpdate)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('interestedProductsUpdated', handleCustomUpdate)
 
-    return () => {
-      window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
+      return () => {
+        window.removeEventListener('interestedProductsUpdated', handleCustomUpdate)
+      }
     }
-  }, [user?.id]) // 只依賴穩定的 user.id
+  }, [user?.id, hasMounted]) // 依賴 hasMounted 確保只在客戶端執行
 
   const handleLogout = async () => {
     if (isLoggingOut) return
@@ -200,10 +227,30 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
   // 共用樣式
   const baseClasses = isMobile
     ? 'px-2 py-1 text-xs font-medium rounded-full transition-all duration-200 border border-amber-200'
-    : 'px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 flex items-center space-x-1 border border-amber-200'
+    : 'px-3 py-2 text-xs font-medium rounded-full transition-all duration-200 flex items-center space-x-1 border border-amber-200 h-8'
 
   const loginClasses = 'text-amber-900 bg-amber-50 hover:bg-amber-100'
 
+  // 在客戶端掛載前，顯示統一的初始狀態以避免 hydration 錯誤
+  if (!hasMounted) {
+    return (
+      <div className={`${baseClasses} ${loginClasses}`} suppressHydrationWarning>
+        {isMobile ? (
+          <>
+            <UserIcon className="w-4 h-4 inline mr-1" />
+            登入
+          </>
+        ) : (
+          <>
+            <UserIcon className="w-4 h-4" />
+            <span>登入</span>
+          </>
+        )}
+      </div>
+    )
+  }
+
+  // 客戶端已掛載但正在載入時，顯示載入狀態
   if (isLoading) {
     return (
       <div className={`${baseClasses} ${loginClasses}`}>
@@ -222,8 +269,8 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     )
   }
 
+  // 客戶端已掛載且有用戶資料時，顯示用戶下拉選單
   if (user) {
-    // 所有裝置都使用下拉選單
     return (
       <div className="relative" ref={dropdownRef}>
         <button
@@ -303,19 +350,22 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     )
   }
 
+  // 客戶端已掛載且無用戶資料時，顯示登入連結
   return (
-    <Link href="/login" className={`${baseClasses} ${loginClasses}`}>
-      {isMobile ? (
-        <>
-          <UserIcon className="w-4 h-4 inline mr-1" />
-          登入
-        </>
-      ) : (
-        <>
-          <UserIcon className="w-4 h-4" />
-          <span>登入</span>
-        </>
-      )}
-    </Link>
+    <div className="relative">
+      <Link href="/login" className={`${baseClasses} ${loginClasses} block`}>
+        {isMobile ? (
+          <>
+            <UserIcon className="w-4 h-4 inline mr-1" />
+            登入
+          </>
+        ) : (
+          <>
+            <UserIcon className="w-4 h-4" />
+            <span>登入</span>
+          </>
+        )}
+      </Link>
+    </div>
   )
 }

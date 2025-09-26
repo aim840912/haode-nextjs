@@ -16,9 +16,7 @@ const ProductImageGallery = dynamic(
 interface ExtendedProduct extends Product {
   features?: string[]
   specifications?: { label: string; value: string }[]
-  inStock?: boolean
   image?: string
-  allImages?: string[]
   originalPrice?: number
   priceUnit?: string
   unitQuantity?: number
@@ -69,14 +67,20 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       id: product.id.toString(),
       name: product.name,
       images:
-        product.allImages && product.allImages.length > 0
-          ? product.allImages
-          : ['/images/placeholder.jpg'],
+        product.galleryImages && product.galleryImages.length > 0
+          ? product.galleryImages
+          : product.images && product.images.length > 0
+            ? product.images
+            : ['/images/placeholder.jpg'],
       galleryImages:
-        product.allImages && product.allImages.length > 0 ? product.allImages : undefined,
-      thumbnailUrl: product.image,
-      primaryImageUrl: product.image,
-      inventory: product.inStock ? 100 : 0,
+        product.galleryImages && product.galleryImages.length > 0
+          ? product.galleryImages
+          : product.images && product.images.length > 0
+            ? product.images
+            : undefined,
+      thumbnailUrl: product.image || product.thumbnailUrl || product.primaryImageUrl,
+      primaryImageUrl: product.image || product.primaryImageUrl || product.thumbnailUrl,
+      inventory: product.inventory,
       isOnSale: (product.originalPrice || 0) > product.price,
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -201,15 +205,15 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                 <button
                   onClick={handleRequestQuote}
                   className={`w-full py-4 rounded-lg font-semibold text-lg transition-colors ${
-                    !product.inStock
+                    product.inventory <= 0
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : !user
                         ? 'bg-gray-600 text-white hover:bg-gray-700'
                         : 'bg-amber-900 text-white hover:bg-amber-800'
                   }`}
-                  disabled={!product.inStock}
+                  disabled={product.inventory <= 0}
                 >
-                  {!product.inStock ? (
+                  {product.inventory <= 0 ? (
                     '暫時缺貨'
                   ) : !user ? (
                     '請先登入'

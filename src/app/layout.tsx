@@ -185,7 +185,7 @@ export default function RootLayout({
               <AuthProvider>
                 <InquiryStatsProvider>
                   <Header />
-                  <main className="flex-grow overflow-hidden">
+                  <main className="flex-grow">
                     <HeaderSpacer />
                     {children}
                   </main>

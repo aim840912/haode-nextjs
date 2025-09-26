@@ -15,41 +15,15 @@ const ProductCardImage = dynamic(
   }
 )
 
-interface ExtendedProduct extends Product {
-  features?: string[]
-  specifications?: { label: string; value: string }[]
-  inStock?: boolean
-  image?: string
-  allImages?: string[]
-  originalPrice?: number
-  priceUnit?: string
-  unitQuantity?: number
-  productCardProps?: {
-    id: string
-    name: string
-    images: string[]
-    thumbnailUrl: string
-    primaryImageUrl: string
-    inventory: number
-    isOnSale: boolean
-    category: string
-    price: number
-    description: string
-    isActive: boolean
-    createdAt: string
-    updatedAt: string
-  }
-}
-
 interface ProductCardProps {
   /** 產品資料 */
-  product: ExtendedProduct
+  product: Product
   /** 產品索引 */
   index: number
   /** 是否為感興趣的產品 */
   isInterested: boolean
   /** 產品點擊事件 */
-  onProductClick: (product: ExtendedProduct) => void
+  onProductClick: (product: Product) => void
   /** 興趣切換事件 */
   onToggleInterest: (productId: string, productName: string, e?: React.MouseEvent) => void
 }
@@ -72,7 +46,7 @@ export const ProductCard = React.memo<ProductCardProps>(
 
     const handleViewDetails = (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (product.inStock) {
+      if (product.inventory > 0) {
         onProductClick(product)
       }
     }
@@ -83,9 +57,7 @@ export const ProductCard = React.memo<ProductCardProps>(
         onClick={handleCardClick}
       >
         {/* 產品圖片 */}
-        {product.productCardProps && (
-          <ProductCardImage product={product.productCardProps} index={index} />
-        )}
+        <ProductCardImage product={product} index={index} />
 
         {/* 產品資訊 */}
         <div className="p-6">
@@ -110,14 +82,14 @@ export const ProductCard = React.memo<ProductCardProps>(
             {/* 查看詳情按鈕 */}
             <button
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                product.inStock
+                product.inventory > 0
                   ? 'bg-amber-900 text-white hover:bg-amber-800'
                   : 'bg-gray-300 text-gray-500 cursor-not-allowed'
               }`}
-              disabled={!product.inStock}
+              disabled={product.inventory <= 0}
               onClick={handleViewDetails}
             >
-              {product.inStock ? '查看詳情' : '暫時缺貨'}
+              {product.inventory > 0 ? '查看詳情' : '暫時缺貨'}
             </button>
           </div>
 
@@ -141,10 +113,10 @@ export const ProductCard = React.memo<ProductCardProps>(
             {/* 庫存狀態指示器 */}
             <div
               className={`text-xs px-2 py-1 rounded-full ${
-                product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                product.inventory > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
               }`}
             >
-              {product.inStock ? '有庫存' : '缺貨'}
+              {product.inventory > 0 ? '有庫存' : '缺貨'}
             </div>
           </div>
 
