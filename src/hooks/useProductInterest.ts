@@ -54,11 +54,7 @@ export function useProductInterest(): UseProductInterestReturn {
 
       // 檢查登入狀態
       if (!user?.id) {
-        showWarning('請先登入', '請先登入以儲存您感興趣的產品')
-        // 可以選擇導向登入頁面
-        // setTimeout(() => {
-        //   window.location.href = '/login'
-        // }, 2000)
+        showWarning('需要登入', `請先登入以收藏「${productName}」到您的興趣清單`)
         return
       }
 

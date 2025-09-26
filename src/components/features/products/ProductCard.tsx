@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
 import { cn } from '@/lib/utils'
-import { Star, ShoppingCart, Eye, Heart, Share2 } from 'lucide-react'
+import { Star, ShoppingCart, Eye, Share2 } from 'lucide-react'
 
 // 動態載入圖片元件以提升效能
 const ProductCardImage = dynamic(
@@ -95,25 +95,25 @@ export const ProductCard = React.memo<ProductCardProps>(
         <div className="absolute top-0 left-1/4 right-1/4 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent rounded-b-full" />
 
         {/* 產品標籤系統 */}
-        <div className="absolute top-4 left-4 z-20 space-y-2">
+        <div className="absolute top-4 left-4 z-20 space-y-2 max-w-[calc(100%-120px)] sm:max-w-[calc(100%-100px)]">
           {/* 促銷標籤 */}
           {product.originalPrice && product.originalPrice > product.price && (
-            <div className="inline-flex items-center bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
-              <Star className="w-3 h-3 mr-1 fill-current" />
-              特價
+            <div className="inline-flex items-center bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg max-w-full">
+              <Star className="w-3 h-3 mr-1 fill-current flex-shrink-0" />
+              <span className="truncate">特價</span>
             </div>
           )}
 
           {/* 類別標籤 */}
-          <div className="inline-block bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md">
-            {product.category}
+          <div className="inline-block bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md max-w-full">
+            <span className="truncate">{product.category}</span>
           </div>
         </div>
 
         {/* 快速操作工具列 */}
         <div
           className={cn(
-            'absolute top-4 right-4 z-20 flex flex-col gap-2',
+            'absolute top-4 right-4 z-30 flex flex-col gap-2 sm:top-3 sm:right-3',
             'transform transition-all duration-300',
             showQuickActions ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-70'
           )}

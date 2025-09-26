@@ -1,4 +1,5 @@
 import React from 'react'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface InterestButtonProps {
   /** 產品 ID */
@@ -39,10 +40,16 @@ export const InterestButton = React.memo<InterestButtonProps>(
     disabled = false,
     className = '',
   }) => {
+    const { user } = useAuth()
+
     const handleClick = (e: React.MouseEvent) => {
       if (disabled) return
       onToggle(productId, productName, e)
     }
+
+    // 檢查是否為未登入狀態
+    const isLoggedOut = !user?.id
+    const isDisabledDueToAuth = disabled || isLoggedOut
 
     // 取得圖標大小
     const getIconSize = () => {
@@ -62,11 +69,19 @@ export const InterestButton = React.memo<InterestButtonProps>(
       const baseStyles =
         'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50'
 
-      if (disabled) {
-        return `${baseStyles} opacity-50 cursor-not-allowed`
+      if (isDisabledDueToAuth) {
+        return `${baseStyles} opacity-60 cursor-not-allowed`
       }
 
       return `${baseStyles} cursor-pointer hover:scale-110 active:scale-95`
+    }
+
+    // 取得提示文字
+    const getTooltipText = () => {
+      if (isLoggedOut) {
+        return '請先登入以收藏產品'
+      }
+      return isInterested ? '移除收藏' : '加入收藏'
     }
 
     // 圖標變體
@@ -76,10 +91,10 @@ export const InterestButton = React.memo<InterestButtonProps>(
       return (
         <button
           onClick={handleClick}
-          disabled={disabled}
-          className={`${getBaseStyles()} ${iconStyles} rounded-full hover:bg-red-50 ${className}`}
-          title={isInterested ? '移除興趣' : '我有興趣'}
-          aria-label={isInterested ? '移除興趣' : '我有興趣'}
+          disabled={isDisabledDueToAuth}
+          className={`${getBaseStyles()} ${iconStyles} rounded-full hover:bg-red-50 ${className} ${isLoggedOut ? 'bg-gray-100' : ''}`}
+          title={getTooltipText()}
+          aria-label={getTooltipText()}
         >
           {isInterested ? (
             <svg className={`${getIconSize()} text-red-500 fill-current`} viewBox="0 0 24 24">
@@ -87,7 +102,7 @@ export const InterestButton = React.memo<InterestButtonProps>(
             </svg>
           ) : (
             <svg
-              className={`${getIconSize()} text-gray-400 hover:text-red-500 transition-colors`}
+              className={`${getIconSize()} ${isLoggedOut ? 'text-gray-300' : 'text-gray-400 hover:text-red-500'} transition-colors`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -117,20 +132,23 @@ export const InterestButton = React.memo<InterestButtonProps>(
       }
     }
 
-    const buttonStyles = isInterested
-      ? 'bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100'
-      : 'bg-gray-50 text-gray-700 border-2 border-gray-200 hover:bg-gray-100 hover:border-red-200 hover:text-red-600'
+    const buttonStyles = isLoggedOut
+      ? 'bg-gray-100 text-gray-400 border-2 border-gray-200 cursor-not-allowed'
+      : isInterested
+        ? 'bg-red-50 text-red-600 border-2 border-red-200 hover:bg-red-100'
+        : 'bg-gray-50 text-gray-700 border-2 border-gray-200 hover:bg-gray-100 hover:border-red-200 hover:text-red-600'
 
     return (
       <button
         onClick={handleClick}
-        disabled={disabled}
+        disabled={isDisabledDueToAuth}
         className={`${getBaseStyles()} ${getButtonSize()} ${buttonStyles} rounded-lg font-medium flex items-center justify-center gap-2 ${className}`}
-        aria-label={isInterested ? '移除興趣' : '我有興趣'}
+        aria-label={getTooltipText()}
+        title={getTooltipText()}
       >
         {isInterested ? (
           <>
-            <svg className={`${getIconSize()} fill-current`} viewBox="0 0 24 24">
+            <svg className={`${getIconSize()} text-red-500 fill-current`} viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
             已收藏
@@ -138,7 +156,7 @@ export const InterestButton = React.memo<InterestButtonProps>(
         ) : (
           <>
             <svg
-              className={`${getIconSize()}`}
+              className={`${getIconSize()} ${isLoggedOut ? 'text-gray-300' : ''}`}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -150,7 +168,7 @@ export const InterestButton = React.memo<InterestButtonProps>(
                 d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
               />
             </svg>
-            我有興趣
+            {isLoggedOut ? '請先登入' : '我有興趣'}
           </>
         )}
       </button>

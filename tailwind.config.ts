@@ -19,6 +19,18 @@ export default {
         display: ['var(--font-noto-sans-tc)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
         body: ['var(--font-noto-sans-tc)', 'var(--font-inter)', 'system-ui', 'sans-serif'],
       },
+      animation: {
+        'spin-reverse': 'spin-reverse 1s linear infinite',
+      },
+      keyframes: {
+        'spin-reverse': {
+          from: { transform: 'rotate(360deg)' },
+          to: { transform: 'rotate(0deg)' },
+        },
+      },
+      borderWidth: {
+        '3': '3px',
+      },
     },
   },
   plugins: [require('@tailwindcss/line-clamp')],
