@@ -87,7 +87,7 @@ export default function ProductFilter({
     (filters.search && filters.search.trim().length > 0)
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg ${isExpanded ? 'p-6' : 'p-4'} mb-8`}>
+    <div className={`bg-white rounded-lg shadow-lg ${isExpanded ? 'p-6' : 'p-4'} mb-6`}>
       {/* Toggle Button - 所有裝置都可使用 */}
       <div className={isExpanded ? 'mb-4' : ''}>
         <button
@@ -185,7 +185,6 @@ export default function ProductFilter({
                 <option value="name">名稱 A-Z</option>
                 <option value="price_low">價格由低到高</option>
                 <option value="price_high">價格由高到低</option>
-                <option value="rating">評分最高</option>
                 <option value="newest">最新上架</option>
               </select>
             </div>

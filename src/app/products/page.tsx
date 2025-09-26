@@ -99,7 +99,7 @@ function ProductsPage() {
       </div>
 
       {/* Products Grid */}
-      <div className="max-w-7xl mx-auto px-6 py-16">
+      <div className="max-w-7xl mx-auto px-6 pt-8 pb-16">
         {loading ? (
           <ProductsLoadingState />
         ) : (
@@ -112,23 +112,31 @@ function ProductsPage() {
               totalCount={products.length}
             />
 
-            {/* Products Display */}
+            {/* Products Display - 電商精品風格 */}
             {products.length === 0 ? (
               <ProductsEmptyState type="no_data" />
             ) : filteredProducts.length === 0 ? (
               <ProductsEmptyState type="no_results" />
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {filteredProducts.map((product, index) => (
-                  <ProductCard
-                    key={`product-${product.id}`}
-                    product={product}
-                    index={index}
-                    isInterested={isInterested(product.id)}
-                    onProductClick={openModal}
-                    onToggleInterest={toggleInterest}
-                  />
-                ))}
+              <div className="mt-8">
+                <div className="relative bg-gradient-to-br from-amber-50/50 to-orange-50/30 rounded-xl p-8">
+                  {/* 精品風格網格布局 */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {filteredProducts.map((product, index) => (
+                      <ProductCard
+                        key={`product-${product.id}`}
+                        product={product}
+                        index={index}
+                        isInterested={isInterested(product.id)}
+                        onProductClick={openModal}
+                        onToggleInterest={toggleInterest}
+                      />
+                    ))}
+                  </div>
+
+                  {/* 裝飾性漸變背景 */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-amber-100/10 via-transparent to-orange-100/10 rounded-xl pointer-events-none" />
+                </div>
               </div>
             )}
           </>

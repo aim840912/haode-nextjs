@@ -30,7 +30,7 @@ export default function Header() {
   const mobileMenuRef = useRef<HTMLDivElement>(null)
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null)
 
-  // 滾動偵測效果
+  // 滾動偵測效果 - 使用更平滑的漸進式切換點
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
 
@@ -39,7 +39,7 @@ export default function Header() {
       clearTimeout(timeoutId)
       timeoutId = setTimeout(() => {
         const scrollPosition = window.scrollY
-        const threshold = 50 // 滾動超過 50px 時觸發縮小效果
+        const threshold = 30 // 降低切換點到 30px，讓轉換更早但更平滑
 
         setIsScrolled(scrollPosition > threshold)
 
@@ -47,18 +47,18 @@ export default function Header() {
         if (isMobileMenuOpen) {
           setIsMobileMenuOpen(false)
         }
-      }, 10) // 10ms 的 throttle 延遲
+      }, 8) // 降低延遲到 8ms，讓回應更即時
     }
 
     // 初始檢查
     handleScroll()
 
-    window.addEventListener('scroll', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true }) // 加入 passive 優化
     return () => {
       clearTimeout(timeoutId)
       window.removeEventListener('scroll', handleScroll)
     }
-  }, [])
+  }, [isMobileMenuOpen])
 
   // 點擊外部關閉選單
   useEffect(() => {
@@ -139,12 +139,12 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 w-full backdrop-blur-lg z-50 transition-all duration-300 min-h-[60px] ${
+      className={`fixed top-0 w-full backdrop-blur-lg z-50 transition-all duration-500 ease-out min-h-[60px] ${
         isScrolled ? 'bg-amber-50/98 shadow-md' : 'bg-white/95'
       }`}
     >
       <nav
-        className={`max-w-7xl mx-auto px-8 transition-all duration-300 ${
+        className={`max-w-7xl mx-auto px-8 transition-all duration-500 ease-out ${
           isScrolled ? 'py-1' : 'py-4 lg:py-5'
         }`}
       >
@@ -158,10 +158,10 @@ export default function Header() {
                 {/* 品牌標誌（縮小版）*/}
                 <Link href="/" className="flex items-center">
                   <div className="flex items-center gap-2 h-8">
-                    <div className="font-display text-amber-900 tracking-tight text-xl transition-all duration-300">
+                    <div className="font-display text-amber-900 tracking-tight text-xl transition-all duration-500 ease-out">
                       豪德製茶所
                     </div>
-                    <div className="text-amber-700/70 font-inter font-medium tracking-wider text-[8px] transition-all duration-300">
+                    <div className="text-amber-700/70 font-inter font-medium tracking-wider text-[8px] transition-all duration-500 ease-out">
                       HAUDE TEA
                     </div>
                   </div>
@@ -395,10 +395,10 @@ export default function Header() {
               <div className="flex items-center justify-between mb-4">
                 <Link href="/" className="flex items-center">
                   <div>
-                    <div className="font-display text-amber-900 tracking-tight text-3xl transition-all duration-300">
+                    <div className="font-display text-amber-900 tracking-tight text-3xl transition-all duration-500 ease-out">
                       豪德製茶所
                     </div>
-                    <div className="text-amber-700/70 font-inter font-medium tracking-wider text-xs transition-all duration-300">
+                    <div className="text-amber-700/70 font-inter font-medium tracking-wider text-xs transition-all duration-500 ease-out">
                       HAUDE TEA
                     </div>
                   </div>
@@ -632,14 +632,14 @@ export default function Header() {
             <Link href="/" className="flex items-center flex-shrink-0">
               <div>
                 <div
-                  className={`font-display text-amber-900 tracking-tight transition-all duration-300 ${
+                  className={`font-display text-amber-900 tracking-tight transition-all duration-500 ease-out ${
                     isScrolled ? 'text-lg' : 'text-2xl'
                   }`}
                 >
                   豪德製茶所
                 </div>
                 <div
-                  className={`text-amber-700/70 font-inter font-medium tracking-wider transition-all duration-300 ${
+                  className={`text-amber-700/70 font-inter font-medium tracking-wider transition-all duration-500 ease-out ${
                     isScrolled ? 'text-[8px]' : 'text-xs'
                   }`}
                 >
