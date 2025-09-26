@@ -133,7 +133,6 @@ export default function Header() {
     { href: '/farm-tour', label: '觀光果園', isExternal: false },
     { href: '/products', label: '產品介紹', isExternal: false },
     { href: '/locations', label: '門市據點', isExternal: false },
-    { href: '/moments', label: '精彩時刻', isExternal: false },
     { href: '/schedule', label: '擺攤行程', isExternal: false },
     { href: '/news', label: '農產新聞', isExternal: false },
   ]
@@ -314,16 +313,6 @@ export default function Header() {
                               <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
                             </svg>
                             產品管理
-                          </Link>
-                          <Link
-                            href="/admin/moments"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
-                            onClick={handleMenuItemClick}
-                          >
-                            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                            </svg>
-                            精彩時刻管理
                           </Link>
                           <Link
                             href="/admin/news"
@@ -561,16 +550,6 @@ export default function Header() {
                               產品管理
                             </Link>
                             <Link
-                              href="/admin/moments"
-                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
-                              onClick={handleMenuItemClick}
-                            >
-                              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                              </svg>
-                              精彩時刻管理
-                            </Link>
-                            <Link
                               href="/admin/news"
                               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
                               onClick={handleMenuItemClick}
@@ -774,16 +753,6 @@ export default function Header() {
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
                           </svg>
                           產品管理
-                        </Link>
-                        <Link
-                          href="/admin/moments"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
-                          onClick={handleMenuItemClick}
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                          </svg>
-                          精彩時刻管理
                         </Link>
                         <Link
                           href="/admin/news"

@@ -92,11 +92,6 @@ export default function Footer() {
                   門市據點
                 </Link>
               </li>
-              <li>
-                <Link href="/moments" className="text-amber-100 hover:text-white transition-colors">
-                  精彩時刻
-                </Link>
-              </li>
             </ul>
           </div>
 
