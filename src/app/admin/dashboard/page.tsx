@@ -11,6 +11,7 @@ import {
   NewspaperIcon,
   LinkIcon,
   CircleStackIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/24/outline'
 
 export default function AdminDashboard() {
@@ -131,6 +132,21 @@ export default function AdminDashboard() {
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900">最新消息</h3>
                     <p className="text-sm text-gray-600">發佈和管理農場消息</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* 網站設定卡片 */}
+            <Link href="/admin/site-settings" className="group">
+              <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
+                <div className="flex items-center">
+                  <div className="p-3 bg-indigo-100 rounded-lg group-hover:bg-indigo-200 transition-colors">
+                    <Cog6ToothIcon className="h-8 w-8 text-indigo-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-900">網站設定</h3>
+                    <p className="text-sm text-gray-600">管理首頁和頁面圖片</p>
                   </div>
                 </div>
               </div>

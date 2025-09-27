@@ -5,18 +5,53 @@ import Link from 'next/link'
 import { FarmStructuredData } from '@/components/features/seo/StructuredData'
 import ProductsSection from '@/components/features/products/ProductsSection'
 import OptimizedImage from '@/components/ui/image/OptimizedImage'
+import {
+  Sprout,
+  ShieldCheck,
+  Users,
+  Recycle,
+  Flower2,
+  Apple,
+  Wheat,
+  Coffee,
+  Calendar,
+  CalendarDays,
+  Phone,
+  PartyPopper,
+} from 'lucide-react'
+import { useSiteSetting } from '@/hooks/useSiteSettings'
+import { SETTING_KEYS } from '@/types/siteSettings'
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
   const [currentSlide, setCurrentSlide] = useState(0)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
+  const [activeFeature, setActiveFeature] = useState(0)
+  const [activeSeason, setActiveSeason] = useState(0)
 
-  // Hero 背景圖輪播
-  const heroImages = [
+  const { setting: heroImagesSetting, loading: heroImagesLoading } = useSiteSetting(
+    SETTING_KEYS.HOME_HERO_IMAGES
+  )
+
+  const defaultHeroImages = [
     '/images/hero/scene1.jpg',
     '/images/locations/mountain.jpg',
     '/images/farm-tour/many_people_1.jpg',
   ]
+
+  const heroImages = (() => {
+    if (heroImagesLoading || !heroImagesSetting) {
+      return defaultHeroImages
+    }
+    try {
+      const parsedImages = JSON.parse(heroImagesSetting.value)
+      return Array.isArray(parsedImages) && parsedImages.length > 0
+        ? parsedImages
+        : defaultHeroImages
+    } catch {
+      return defaultHeroImages
+    }
+  })()
 
   // 視差滾動效果
   useEffect(() => {
@@ -31,9 +66,9 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide(prev => (prev + 1) % heroImages.length)
-    }, 5000) // 每 5 秒切換
+    }, 5000)
     return () => clearInterval(interval)
-  }, [])
+  }, [heroImages.length])
 
   // 滾動觸發動畫
   useEffect(() => {
@@ -130,165 +165,298 @@ export default function Home() {
         <section
           id="features"
           data-animate
-          className="min-h-screen flex items-center py-16 px-6 bg-gradient-to-b from-white to-amber-50"
+          className="min-h-screen flex items-center py-20 px-6 bg-gradient-to-b from-white via-amber-50/50 to-white relative overflow-hidden"
         >
-          <div className="max-w-6xl mx-auto">
+          {/* 背景裝飾元素 */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-20 left-10 w-64 h-64 bg-amber-200/20 rounded-full blur-3xl animate-float"></div>
+            <div
+              className="absolute bottom-20 right-10 w-96 h-96 bg-green-200/20 rounded-full blur-3xl animate-float"
+              style={{ animationDelay: '1s' }}
+            ></div>
+          </div>
+
+          <div className="max-w-7xl mx-auto relative z-10">
             <h2
-              className={`text-5xl md:text-6xl font-bold text-center text-amber-900 mb-16 tracking-wider ${
+              className={`text-5xl md:text-6xl font-bold text-center text-amber-900 mb-6 tracking-wider ${
                 visibleSections.has('features') ? 'animate-fade-in' : 'opacity-0'
               }`}
             >
               農場特色
             </h2>
+            <p
+              className={`text-center text-gray-600 text-lg mb-16 max-w-2xl mx-auto ${
+                visibleSections.has('features')
+                  ? 'animate-fade-in animation-delay-150'
+                  : 'opacity-0'
+              }`}
+            >
+              以自然農法為本，結合現代技術與傳統智慧，打造永續經營的生態農場
+            </p>
 
-            {/* 自然農法區塊 */}
+            {/* 核心特色卡片 */}
             <div
-              className={`grid lg:grid-cols-2 gap-12 mb-20 ${
+              className={`grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20 ${
                 visibleSections.has('features')
                   ? 'animate-slide-up animation-delay-300'
                   : 'opacity-0'
               }`}
             >
-              <div className="order-2 lg:order-1">
-                <h3 className="text-2xl font-semibold text-amber-800 mb-6">自然農法</h3>
-                <p className="text-gray-700 mb-6 text-lg leading-relaxed">
-                  傳承百年農業技術，以有機無毒的方式種植優質紅肉李、四季水果及精品茶葉。
-                </p>
-                <ul className="space-y-3 text-gray-600">
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                    不使用化學農藥及化學肥料
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                    采用天然堆肥及生物防治
-                  </li>
-                  <li className="flex items-center">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
-                    嚴格品質監控與檢驗
-                  </li>
-                </ul>
-              </div>
-              <div className="order-1 lg:order-2 relative">
+              {[
+                {
+                  Icon: Sprout,
+                  title: '自然農法',
+                  desc: '有機無毒栽培',
+                  color: 'from-green-400 to-emerald-500',
+                  bgColor: 'bg-green-50',
+                  iconColor: 'text-green-600',
+                },
+                {
+                  Icon: ShieldCheck,
+                  title: '品質認證',
+                  desc: '嚴格品質把關',
+                  color: 'from-blue-400 to-cyan-500',
+                  bgColor: 'bg-blue-50',
+                  iconColor: 'text-blue-600',
+                },
+                {
+                  Icon: Users,
+                  title: '農場體驗',
+                  desc: '四季活動豐富',
+                  color: 'from-amber-400 to-orange-500',
+                  bgColor: 'bg-amber-50',
+                  iconColor: 'text-amber-600',
+                },
+                {
+                  Icon: Recycle,
+                  title: '永續經營',
+                  desc: '生態平衡共生',
+                  color: 'from-purple-400 to-pink-500',
+                  bgColor: 'bg-purple-50',
+                  iconColor: 'text-purple-600',
+                },
+              ].map((feature, index) => (
                 <div
-                  className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl hover:scale-105 transition-transform duration-500"
-                  style={{
-                    backgroundImage: 'url(/images/locations/mountain.jpg)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
+                  key={index}
+                  className={`flip-card cursor-pointer ${activeFeature === index ? 'flipped' : ''}`}
+                  onClick={() => setActiveFeature(activeFeature === index ? -1 : index)}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                  <div className="flip-card-inner">
+                    {/* 正面 */}
+                    <div
+                      className={`flip-card-front ${feature.bgColor} rounded-2xl p-6 shadow-xl flex flex-col items-center justify-center text-center gradient-glow`}
+                    >
+                      <div
+                        className="mb-4 animate-float"
+                        style={{ animationDelay: `${index * 0.5}s` }}
+                      >
+                        <feature.Icon
+                          className={`w-16 h-16 ${feature.iconColor}`}
+                          strokeWidth={1.5}
+                        />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-800 mb-2">{feature.title}</h3>
+                      <p className="text-gray-600">{feature.desc}</p>
+                    </div>
+                    {/* 背面 */}
+                    <div
+                      className={`flip-card-back glass-card rounded-2xl p-6 shadow-xl flex flex-col justify-center text-center bg-gradient-to-br ${feature.color}`}
+                    >
+                      <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
+                      <p className="text-white/90 text-sm leading-relaxed">
+                        {index === 0 &&
+                          '傳承百年農業技術，不使用化學肥料與農藥，採用天然堆肥與生物防治'}
+                        {index === 1 && '通過有機認證標準，每批產品都經過嚴格檢驗，確保安全無虞'}
+                        {index === 2 && '春賞花、夏採果、秋收成、冬品茶，全年都有精彩活動等您參與'}
+                        {index === 3 && '注重生態平衡，與自然和諧共存，為下一代保留美好環境'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
 
-            {/* 觀光體驗區塊 */}
+            {/* 互動式季節體驗展示 */}
             <div
-              className={`grid lg:grid-cols-2 gap-12 ${
+              className={`${
                 visibleSections.has('features')
                   ? 'animate-slide-up animation-delay-450'
                   : 'opacity-0'
               }`}
             >
-              <div className="relative">
-                <div
-                  className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl hover:scale-105 transition-transform duration-500"
-                  style={{
-                    backgroundImage: 'url(/images/farm-tour/many_people_1.jpg)',
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-2xl font-semibold text-amber-800 mb-6">觀光體驗</h3>
-                <p className="text-gray-700 mb-6 text-lg leading-relaxed">
-                  提供四季不同的農場體驗活動，讓您親身感受農業之美。
-                </p>
-                <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-                  {/* 春季賞花 */}
-                  <div className="relative overflow-hidden rounded-xl border border-green-200 hover:shadow-lg transition-all duration-300 group">
-                    <div className="absolute inset-0">
-                      <OptimizedImage
-                        src="/images/icons/spring-bg.svg"
-                        alt="春季賞花背景"
-                        fill
-                        lazy
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover opacity-20 group-hover:opacity-30 transition-opacity"
-                      />
-                    </div>
-                    <div className="relative z-10 text-center p-4 bg-gradient-to-br from-green-50/80 to-green-100/80 backdrop-blur-sm">
-                      <div className="text-3xl mb-2">🌸</div>
-                      <div className="font-medium text-gray-800">春季賞花</div>
-                    </div>
-                  </div>
+              <h3 className="text-3xl font-bold text-center text-amber-900 mb-8">四季體驗</h3>
 
-                  {/* 夏日採果 */}
-                  <div className="relative overflow-hidden rounded-xl border border-red-200 hover:shadow-lg transition-all duration-300 group">
-                    <div className="absolute inset-0">
-                      <OptimizedImage
-                        src="/images/icons/summer-bg.svg"
-                        alt="夏日採果背景"
-                        fill
-                        lazy
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover opacity-20 group-hover:opacity-30 transition-opacity"
-                      />
-                    </div>
-                    <div className="relative z-10 text-center p-4 bg-gradient-to-br from-red-50/80 to-red-100/80 backdrop-blur-sm">
-                      <div className="text-3xl mb-2">🍑</div>
-                      <div className="font-medium text-gray-800">夏日採果</div>
-                    </div>
-                  </div>
-
-                  {/* 秋收體驗 */}
-                  <div className="relative overflow-hidden rounded-xl border border-orange-200 hover:shadow-lg transition-all duration-300 group">
-                    <div className="absolute inset-0">
-                      <OptimizedImage
-                        src="/images/icons/autumn-bg.svg"
-                        alt="秋收體驗背景"
-                        fill
-                        lazy
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover opacity-20 group-hover:opacity-30 transition-opacity"
-                      />
-                    </div>
-                    <div className="relative z-10 text-center p-4 bg-gradient-to-br from-orange-50/80 to-orange-100/80 backdrop-blur-sm">
-                      <div className="text-3xl mb-2">🍎</div>
-                      <div className="font-medium text-gray-800">秋收體驗</div>
-                    </div>
-                  </div>
-
-                  {/* 冬日品茶 */}
-                  <div className="relative overflow-hidden rounded-xl border border-amber-200 hover:shadow-lg transition-all duration-300 group">
-                    <div className="absolute inset-0">
-                      <OptimizedImage
-                        src="/images/icons/winter-bg.svg"
-                        alt="冬日品茶背景"
-                        fill
-                        lazy
-                        sizes="(max-width: 768px) 50vw, 25vw"
-                        className="object-cover opacity-20 group-hover:opacity-30 transition-opacity"
-                      />
-                    </div>
-                    <div className="relative z-10 text-center p-4 bg-gradient-to-br from-amber-50/80 to-amber-100/80 backdrop-blur-sm">
-                      <div className="text-3xl mb-2">🍵</div>
-                      <div className="font-medium text-gray-800">冬日品茶</div>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <Link
-                    href="/farm-tour"
-                    prefetch={true}
-                    className="inline-block bg-gradient-to-r from-green-600 to-green-700 text-white px-8 py-3 rounded-full text-base font-medium hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-xl"
+              {/* 季節切換按鈕 */}
+              <div className="flex justify-center gap-4 mb-10 flex-wrap">
+                {[
+                  { name: '春季賞花', Icon: Flower2, color: 'green' },
+                  { name: '夏日採果', Icon: Apple, color: 'red' },
+                  { name: '秋收體驗', Icon: Wheat, color: 'orange' },
+                  { name: '冬日品茶', Icon: Coffee, color: 'amber' },
+                ].map((season, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveSeason(index)}
+                    className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                      activeSeason === index
+                        ? `bg-${season.color}-600 text-white shadow-lg scale-110 animate-pulse-glow`
+                        : `bg-white text-gray-700 hover:bg-${season.color}-50 border border-${season.color}-200`
+                    }`}
                   >
-                    預約參觀
-                  </Link>
+                    <season.Icon className="w-5 h-5" strokeWidth={2} />
+                    {season.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* 季節內容展示 */}
+              <div className="grid lg:grid-cols-2 gap-12 items-center">
+                <div className="relative">
+                  <div
+                    className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl"
+                    style={{
+                      backgroundImage: `url(${
+                        activeSeason === 0
+                          ? '/images/locations/mountain.jpg'
+                          : activeSeason === 1
+                            ? '/images/farm-tour/many_people_1.jpg'
+                            : activeSeason === 2
+                              ? '/images/locations/mountain.jpg'
+                              : '/images/farm-tour/many_people_1.jpg'
+                      })`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+                    <div className="absolute bottom-6 left-6">
+                      <div className="bg-white/20 backdrop-blur-md rounded-xl p-3 inline-block">
+                        {activeSeason === 0 && (
+                          <Flower2 className="w-12 h-12 text-white" strokeWidth={1.5} />
+                        )}
+                        {activeSeason === 1 && (
+                          <Apple className="w-12 h-12 text-white" strokeWidth={1.5} />
+                        )}
+                        {activeSeason === 2 && (
+                          <Wheat className="w-12 h-12 text-white" strokeWidth={1.5} />
+                        )}
+                        {activeSeason === 3 && (
+                          <Coffee className="w-12 h-12 text-white" strokeWidth={1.5} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="glass-card rounded-2xl p-8">
+                    <h4 className="text-2xl font-bold text-amber-900 mb-4">
+                      {activeSeason === 0 && '春季賞花'}
+                      {activeSeason === 1 && '夏日採果'}
+                      {activeSeason === 2 && '秋收體驗'}
+                      {activeSeason === 3 && '冬日品茶'}
+                    </h4>
+                    <p className="text-gray-700 mb-6 leading-relaxed">
+                      {activeSeason === 0 &&
+                        '春暖花開時節，農場百花齊放。漫步在花海之中，感受大自然的生命力。最佳賞花期：3-4月'}
+                      {activeSeason === 1 &&
+                        '盛夏時分，紅肉李、水蜜桃進入採收期。親手採摘新鮮水果，體驗豐收的喜悅。採果期：6-8月'}
+                      {activeSeason === 2 &&
+                        '秋高氣爽，是收穫的季節。參與採收活動，了解農作物從種植到收成的完整過程。體驗期：9-11月'}
+                      {activeSeason === 3 &&
+                        '冬季是品茶的最佳時節。在溫暖的茶室中，品味自家種植的高山茶，感受農場的寧靜之美。品茶期：12-2月'}
+                    </p>
+                    <ul className="space-y-3">
+                      {activeSeason === 0 && (
+                        <>
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span className="text-gray-600">賞花導覽解說</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span className="text-gray-600">攝影景點推薦</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-green-500 mr-2">✓</span>
+                            <span className="text-gray-600">花卉知識介紹</span>
+                          </li>
+                        </>
+                      )}
+                      {activeSeason === 1 && (
+                        <>
+                          <li className="flex items-start">
+                            <span className="text-red-500 mr-2">✓</span>
+                            <span className="text-gray-600">專人採果教學</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-red-500 mr-2">✓</span>
+                            <span className="text-gray-600">現場試吃品嚐</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-red-500 mr-2">✓</span>
+                            <span className="text-gray-600">採果籃免費提供</span>
+                          </li>
+                        </>
+                      )}
+                      {activeSeason === 2 && (
+                        <>
+                          <li className="flex items-start">
+                            <span className="text-orange-500 mr-2">✓</span>
+                            <span className="text-gray-600">收成體驗活動</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-orange-500 mr-2">✓</span>
+                            <span className="text-gray-600">農業知識講座</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-orange-500 mr-2">✓</span>
+                            <span className="text-gray-600">農產品 DIY 製作</span>
+                          </li>
+                        </>
+                      )}
+                      {activeSeason === 3 && (
+                        <>
+                          <li className="flex items-start">
+                            <span className="text-amber-500 mr-2">✓</span>
+                            <span className="text-gray-600">茶道文化體驗</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-amber-500 mr-2">✓</span>
+                            <span className="text-gray-600">品茶技巧教學</span>
+                          </li>
+                          <li className="flex items-start">
+                            <span className="text-amber-500 mr-2">✓</span>
+                            <span className="text-gray-600">茶葉製程介紹</span>
+                          </li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+
+                  <div className="text-center">
+                    <Link
+                      href="/farm-tour"
+                      prefetch={true}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-green-600 to-green-700 text-white px-10 py-4 rounded-full text-lg font-medium hover:from-green-700 hover:to-green-800 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                    >
+                      <span>預約參觀</span>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 5l7 7-7 7"
+                        />
+                      </svg>
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
@@ -322,14 +490,14 @@ export default function Home() {
             </div>
 
             <div
-              className={`grid md:grid-cols-2 gap-8 mb-12 ${
+              className={`grid md:grid-cols-2 gap-8 ${
                 visibleSections.has('news') ? 'animate-slide-up animation-delay-300' : 'opacity-0'
               }`}
             >
               {/* 當季推薦 */}
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <span className="text-3xl mr-3">🌱</span>
+                  <Sprout className="w-10 h-10 mr-3 text-green-600" strokeWidth={2} />
                   <h3 className="text-2xl font-bold text-green-900">當季推薦</h3>
                 </div>
                 <p className="text-green-800 mb-6 text-lg">
@@ -346,7 +514,7 @@ export default function Home() {
               {/* 農場活動 */}
               <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <span className="text-3xl mr-3">🎉</span>
+                  <PartyPopper className="w-10 h-10 mr-3 text-amber-600" strokeWidth={2} />
                   <h3 className="text-2xl font-bold text-amber-900">農場活動</h3>
                 </div>
                 <p className="text-amber-800 mb-6 text-lg">
@@ -359,52 +527,36 @@ export default function Home() {
                   立即預約 →
                 </Link>
               </div>
-            </div>
 
-            {/* 擺攤行程預告 */}
-            <div
-              className={`bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white text-center ${
-                visibleSections.has('news') ? 'animate-scale-in animation-delay-450' : 'opacity-0'
-              }`}
-            >
-              <div className="text-4xl mb-4">📅</div>
-              <h3 className="text-2xl font-bold mb-4">下次市集擺攤</h3>
-              <div className="text-3xl font-bold mb-2">本週六 08:00-12:00</div>
-              <p className="text-white/90 mb-6">台中勤美誠品綠園道</p>
-              <Link
-                href="/schedule"
-                className="inline-block bg-white text-purple-600 px-8 py-3 rounded-full font-semibold hover:bg-purple-50 transition-colors"
-              >
-                查看完整行程
-              </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* 快速連結區 */}
-        <section className="py-12 px-6 bg-amber-50">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-6 text-center">
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <h3 className="text-lg font-semibold text-amber-900 mb-3">擺攤行程</h3>
-                <p className="text-gray-600 text-sm mb-4">查看我們的市集攤位時間表</p>
+              {/* 擺攤行程預告 */}
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white text-center hover:shadow-xl transition-all duration-300">
+                <div className="flex justify-center mb-4">
+                  <CalendarDays className="w-12 h-12 text-white" strokeWidth={2} />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">下次市集擺攤</h3>
+                <div className="text-3xl font-bold mb-2">本週六 08:00-12:00</div>
+                <p className="text-white/90 mb-6">台中勤美誠品綠園道</p>
                 <Link
                   href="/schedule"
-                  prefetch={true}
-                  className="text-amber-900 hover:underline text-sm"
+                  className="inline-block bg-white text-purple-600 px-8 py-3 rounded-full font-semibold hover:bg-purple-50 transition-colors"
                 >
-                  查看行程 →
+                  查看完整行程
                 </Link>
               </div>
-              <div className="bg-white rounded-lg p-6 shadow-md">
-                <h3 className="text-lg font-semibold text-amber-900 mb-3">聯絡我們</h3>
-                <p className="text-gray-600 text-sm mb-4">有任何問題歡迎與我們聯繫</p>
+
+              {/* 聯絡我們 */}
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-100 rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300">
+                <div className="flex justify-center mb-4">
+                  <Phone className="w-12 h-12 text-blue-600" strokeWidth={2} />
+                </div>
+                <h3 className="text-2xl font-bold text-blue-900 mb-4">聯絡我們</h3>
+                <p className="text-blue-800 mb-6 text-lg">有任何問題或需求，歡迎隨時與我們聯繫</p>
                 <Link
                   href="/contact"
                   prefetch={true}
-                  className="text-amber-900 hover:underline text-sm"
+                  className="inline-block bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-3 rounded-full font-semibold hover:from-blue-700 hover:to-cyan-700 transition-colors shadow-md hover:shadow-lg"
                 >
-                  立即聯絡 →
+                  立即聯絡
                 </Link>
               </div>
             </div>
