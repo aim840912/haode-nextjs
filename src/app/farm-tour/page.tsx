@@ -393,7 +393,7 @@ export default function FarmTourPage() {
                           <span className="bg-white/90 text-gray-800 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
                             {activity.start_month}月 - {activity.end_month}月
                           </span>
-                          {activity.price && activity.price > 0 && (
+                          {Number(activity.price) > 0 && (
                             <span className="bg-white/90 text-gray-800 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
                               NT$ {activity.price}
                             </span>
@@ -425,7 +425,7 @@ export default function FarmTourPage() {
                         </div>
 
                         {/* Additional Info */}
-                        {activity.price && activity.price > 0 && (
+                        {Number(activity.price) > 0 && (
                           <div className="mb-6 p-3 bg-green-50 rounded-lg">
                             <p className="text-green-700 text-sm font-medium">
                               體驗費用：NT$ {activity.price}
@@ -591,7 +591,7 @@ export default function FarmTourPage() {
                     <p className="text-amber-800 font-medium">
                       體驗期間：{selectedActivity.start_month}月 - {selectedActivity.end_month}月
                     </p>
-                    {selectedActivity.price && selectedActivity.price > 0 && (
+                    {Number(selectedActivity.price) > 0 && (
                       <p className="text-amber-800 font-medium">
                         體驗費用：NT$ {selectedActivity.price}
                       </p>

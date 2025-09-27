@@ -378,13 +378,6 @@ export function ProductCardImage({
           特價
         </div>
       )}
-
-      {/* 缺貨標籤 */}
-      {product.inventory === 0 && (
-        <div className="absolute top-2 right-2 bg-gray-500 text-white px-2 py-1 rounded-full text-xs font-medium z-10">
-          缺貨
-        </div>
-      )}
     </div>
   )
 }

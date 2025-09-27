@@ -151,22 +151,6 @@ export const ProductCard = React.memo<ProductCardProps>(
               isHovered ? 'opacity-100' : 'opacity-0'
             )}
           />
-
-          {/* 庫存狀態指示 */}
-          <div
-            className={cn(
-              'absolute bottom-4 left-4 flex items-center text-xs font-medium px-3 py-1.5 rounded-full shadow-lg backdrop-blur-sm',
-              product.inventory > 0 ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white'
-            )}
-          >
-            <div
-              className={cn(
-                'w-2 h-2 rounded-full mr-2',
-                product.inventory > 0 ? 'bg-green-300' : 'bg-red-300'
-              )}
-            />
-            {product.inventory > 0 ? '現貨供應' : '暫時缺貨'}
-          </div>
         </div>
 
         {/* 產品資訊區域 */}
@@ -214,7 +198,7 @@ export const ProductCard = React.memo<ProductCardProps>(
             {/* 主要操作按鈕 */}
             <button
               className={cn(
-                'flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-medium transition-all duration-300',
+                'flex-1 flex items-center justify-center py-3 rounded-lg text-sm font-medium transition-all duration-300',
                 'shadow-md hover:shadow-lg transform hover:scale-[1.02]',
                 product.inventory > 0
                   ? cn(
@@ -226,7 +210,6 @@ export const ProductCard = React.memo<ProductCardProps>(
               disabled={product.inventory <= 0}
               onClick={handleViewDetails}
             >
-              <Eye className="w-4 h-4" />
               {product.inventory > 0 ? '查看詳情' : '暫時缺貨'}
             </button>
 
