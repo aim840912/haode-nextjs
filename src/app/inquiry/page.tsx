@@ -62,37 +62,6 @@ function InquiryListPage() {
     }
   }, [user, statusFilter])
 
-  // 清理本地快取功能
-  const clearLocalCache = () => {
-    if (!confirm('確定要清除所有本地快取嗎？這將清除購物車和暫存的詢價資料。')) {
-      return
-    }
-
-    try {
-      // 清理購物車資料
-      localStorage.removeItem('cart')
-      // 複製詢價功能已移除，不再需要清理 duplicate_inquiry_data
-      // 清理其他可能的詢價相關資料
-      const inquiryKeys = []
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (key && (key.includes('inquiry') || key.includes('cart') || key.includes('order'))) {
-          inquiryKeys.push(key)
-        }
-      }
-      inquiryKeys.forEach(key => localStorage.removeItem(key))
-
-      success('清理完成', '所有本地快取資料已清除，頁面將重新載入')
-
-      // 重新載入頁面以更新狀態
-      setTimeout(() => {
-        window.location.reload()
-      }, 1000)
-    } catch (err) {
-      showError('清理失敗', '清除本地快取時發生錯誤')
-    }
-  }
-
   // 重新查詢功能已移除（不再提供複製查詢單功能）
   // const duplicateInquiry = async (inquiry: InquiryWithItems) => {
   //   ...功能已移除...
@@ -217,20 +186,9 @@ function InquiryListPage() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">我的詢問單問答紀錄</h1>
-              <p className="text-gray-600 mt-2">查看和管理您的詢問單問答與預訂紀錄</p>
-            </div>
-            {filteredInquiries.length === 0 && inquiries.length === 0 && (
-              <button
-                onClick={clearLocalCache}
-                className="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors text-sm border border-red-300"
-                title="清除本地快取資料"
-              >
-                🗑️ 清理快取
-              </button>
-            )}
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">我的詢問單問答紀錄</h1>
+            <p className="text-gray-600 mt-2">查看和管理您的詢問單問答與預訂紀錄</p>
           </div>
         </div>
       </div>
