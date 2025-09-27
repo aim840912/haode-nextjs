@@ -28,22 +28,6 @@ export default function Home() {
             <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto drop-shadow-md">
               座落梅山群峰的豪德農場，以自然農法呈現四季最美的農產滋味
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
-              <Link
-                href="/farm-tour"
-                prefetch={true}
-                className="bg-white/90 backdrop-blur-sm text-amber-900 border-2 border-white/50 px-8 py-4 rounded-full hover:bg-white/95 transition-all duration-300 font-medium shadow-lg hover:shadow-xl order-1"
-              >
-                預約參觀
-              </Link>
-              <Link
-                href="/products"
-                prefetch={true}
-                className="bg-amber-900/90 backdrop-blur-sm text-white px-8 py-4 rounded-full hover:bg-amber-800/90 transition-all duration-300 font-medium shadow-lg hover:shadow-xl order-2"
-              >
-                探索農產品
-              </Link>
-            </div>
           </div>
         </section>
 

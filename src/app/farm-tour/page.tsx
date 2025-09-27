@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
-import Breadcrumbs, { createFarmTourBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 
 // 農場設施
 const farmFacilities = [
@@ -262,19 +261,26 @@ export default function FarmTourPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <Breadcrumbs items={createFarmTourBreadcrumbs()} enableStructuredData={true} />
-        </div>
-      </div>
-
       {/* Hero Section */}
-      <div className="relative flex items-center justify-center bg-gradient-to-br from-green-100 via-amber-50 to-orange-100 pb-20 min-h-[calc(100vh-var(--header-height))]">
-        <div className="text-center relative z-10">
-          <div className="text-center max-w-7xl mx-auto px-6 mb-8">
-            <h1 className="text-6xl md:text-8xl font-light text-amber-900 mb-6">豪德觀光果園</h1>
-            <p className="text-xl md:text-2xl text-gray-700 max-w-3xl mx-auto">
+      <section
+        className="relative min-h-screen flex flex-col justify-center text-center pt-[var(--header-height)] overflow-hidden"
+        style={{
+          backgroundImage: 'url(/images/hero/farm-tour.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: '#1f2937',
+        }}
+      >
+        {/* 漸層遮罩確保文字可讀性 */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60 z-10"></div>
+
+        {/* Hero 內容 */}
+        <div className="relative z-20 px-6">
+          <div className="text-center max-w-7xl mx-auto mb-8">
+            <h1 className="text-6xl md:text-8xl font-light text-white mb-6 drop-shadow-lg">
+              豪德觀光果園
+            </h1>
+            <p className="text-xl md:text-2xl text-white/95 max-w-3xl mx-auto drop-shadow-md">
               走進山間果園，體驗四季農情，品味自然恩賜
             </p>
           </div>
@@ -282,15 +288,9 @@ export default function FarmTourPage() {
             <div className="flex flex-col md:flex-row gap-4 justify-center">
               <button
                 onClick={() => handleTabClick('activities')}
-                className="bg-amber-900 text-white px-8 py-4 rounded-full hover:bg-amber-800 transition-colors text-lg"
+                className="bg-white/90 backdrop-blur-sm text-amber-900 border-2 border-white/50 px-8 py-4 rounded-full hover:bg-white/95 transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
               >
                 季節體驗活動
-              </button>
-              <button
-                onClick={() => handleTabClick('facilities')}
-                className="border-2 border-amber-900 text-amber-900 px-8 py-4 rounded-full hover:bg-amber-900 hover:text-white transition-colors text-lg"
-              >
-                農場設施導覽
               </button>
             </div>
 
@@ -299,13 +299,13 @@ export default function FarmTourPage() {
               <div className="flex flex-col md:flex-row gap-3">
                 <a
                   href="/admin/farm-tour"
-                  className="px-6 py-3 bg-green-600 text-white rounded-full text-sm hover:bg-green-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-3 bg-white/90 backdrop-blur-sm text-green-700 border-2 border-white/50 rounded-full text-sm hover:bg-white/95 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
                 >
                   果園管理
                 </a>
                 <a
                   href="/admin/farm-tour/add"
-                  className="px-6 py-3 bg-amber-600 text-white rounded-full text-sm hover:bg-amber-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="px-6 py-3 bg-white/90 backdrop-blur-sm text-amber-700 border-2 border-white/50 rounded-full text-sm hover:bg-white/95 transition-all duration-300 shadow-lg hover:shadow-xl font-medium"
                 >
                   新增體驗
                 </a>
@@ -313,10 +313,7 @@ export default function FarmTourPage() {
             )}
           </div>
         </div>
-        <div className="absolute inset-0 opacity-20">
-          <div className="w-full h-full bg-gradient-to-br from-green-200 via-amber-200 to-orange-200"></div>
-        </div>
-      </div>
+      </section>
 
       <div id="content-section" className="max-w-7xl mx-auto px-6 py-16">
         {/* Navigation Tabs */}
