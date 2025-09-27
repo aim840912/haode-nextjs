@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { ValidationError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
@@ -69,7 +69,7 @@ async function handlePOST(request: NextRequest, params?: unknown) {
 
   try {
     // 更新圖片排序
-    await ProductImageService.updateImagesOrder(productId, imageOrders)
+    await ProductImageService.reorderImages(productId, imageOrders)
 
     // 獲取更新後的圖片列表
     const updatedImages = await ProductImageService.getProductImages(productId)
@@ -99,8 +99,7 @@ async function handlePOST(request: NextRequest, params?: unknown) {
   }
 }
 
-// 整合錯誤處理中間件
-export const POST = withErrorHandler(handlePOST, {
-  module: 'ProductImageReorderAPI',
-  enableAuditLog: true,
+// POST 需要管理員權限
+export const POST = requireAdmin(async (req, context) => {
+  return await handlePOST(req, context)
 })
