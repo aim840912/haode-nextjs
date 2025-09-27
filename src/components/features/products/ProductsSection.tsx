@@ -105,7 +105,7 @@ function ProductsSection() {
               <Link
                 key={product.id}
                 href={`/products?productId=${product.id}`}
-                className="group bg-white rounded-xl hover:shadow-sm transition-all duration-300 transform hover:-translate-y-1 flex flex-col h-[400px] cursor-pointer"
+                className="group bg-white rounded-xl hover:shadow-2xl transition-all duration-500 card-3d flex flex-col h-[400px] cursor-pointer"
               >
                 {/* 圖片區域 */}
                 <div className="relative overflow-hidden rounded-t-xl">

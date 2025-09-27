@@ -1,44 +1,154 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FarmStructuredData } from '@/components/features/seo/StructuredData'
 import ProductsSection from '@/components/features/products/ProductsSection'
 import OptimizedImage from '@/components/ui/image/OptimizedImage'
 
 export default function Home() {
+  const [scrollY, setScrollY] = useState(0)
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
+
+  // Hero 背景圖輪播
+  const heroImages = [
+    '/images/hero/scene1.jpg',
+    '/images/locations/mountain.jpg',
+    '/images/farm-tour/many_people_1.jpg',
+  ]
+
+  // 視差滾動效果
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // 背景圖輪播
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % heroImages.length)
+    }, 5000) // 每 5 秒切換
+    return () => clearInterval(interval)
+  }, [])
+
+  // 滾動觸發動畫
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            setVisibleSections(prev => new Set(prev).add(entry.target.id))
+          }
+        })
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -100px 0px' }
+    )
+
+    const sections = document.querySelectorAll('[data-animate]')
+    sections.forEach(section => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <>
       <FarmStructuredData />
       <div className="min-h-screen -mt-[var(--header-height)]">
-        <section
-          className="relative min-h-screen flex flex-col justify-center text-center pt-[var(--header-height)] overflow-hidden"
-          style={{
-            backgroundImage: 'url(/images/hero/scene1.jpg)',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundColor: '#1f2937',
-          }}
-        >
+        {/* Hero Section with Parallax */}
+        <section className="relative min-h-screen flex flex-col justify-center text-center pt-[var(--header-height)] overflow-hidden">
+          {/* 背景圖輪播 */}
+          {heroImages.map((image, index) => (
+            <div
+              key={image}
+              className="absolute inset-0 transition-opacity duration-1000"
+              style={{
+                backgroundImage: `url(${image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundColor: '#1f2937',
+                opacity: currentSlide === index ? 1 : 0,
+                transform: `translateY(${scrollY * 0.5}px)`, // 視差效果
+              }}
+            />
+          ))}
+
           {/* 漸層遮罩確保文字可讀性 */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60 z-10"></div>
 
           {/* Hero 內容 */}
-          <div className="relative z-20 px-6">
-            <h1 className="text-5xl md:text-7xl font-serif-display text-white mb-6 drop-shadow-lg">
+          <div
+            className="relative z-20 px-6"
+            style={{
+              transform: `translateY(${scrollY * 0.3}px)`, // 文字視差效果較慢
+              opacity: Math.max(0, 1 - scrollY / 500), // 滾動時淡出
+            }}
+          >
+            <h1 className="text-5xl md:text-7xl font-serif-display text-white mb-6 drop-shadow-lg animate-fade-in">
               豪茶德李
             </h1>
-            <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto drop-shadow-md">
+            <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto drop-shadow-md animate-fade-in animation-delay-300">
               座落梅山群峰的豪德農場，以自然農法呈現四季最美的農產滋味
             </p>
+
+            {/* 滾動提示 */}
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
+              <svg
+                className="w-6 h-6 text-white/80"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* 輪播指示器 */}
+          <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+            {heroImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  currentSlide === index ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/80'
+                }`}
+                aria-label={`切換到第 ${index + 1} 張圖片`}
+              />
+            ))}
           </div>
         </section>
 
-        <section className="min-h-screen flex items-center py-16 px-6 bg-gradient-to-b from-white to-amber-50">
+        <section
+          id="features"
+          data-animate
+          className="min-h-screen flex items-center py-16 px-6 bg-gradient-to-b from-white to-amber-50"
+        >
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 mb-16 tracking-wider">
+            <h2
+              className={`text-5xl md:text-6xl font-bold text-center text-amber-900 mb-16 tracking-wider ${
+                visibleSections.has('features') ? 'animate-fade-in' : 'opacity-0'
+              }`}
+            >
               農場特色
             </h2>
 
             {/* 自然農法區塊 */}
-            <div className="grid lg:grid-cols-2 gap-12 mb-20">
+            <div
+              className={`grid lg:grid-cols-2 gap-12 mb-20 ${
+                visibleSections.has('features')
+                  ? 'animate-slide-up animation-delay-300'
+                  : 'opacity-0'
+              }`}
+            >
               <div className="order-2 lg:order-1">
                 <h3 className="text-2xl font-semibold text-amber-800 mb-6">自然農法</h3>
                 <p className="text-gray-700 mb-6 text-lg leading-relaxed">
@@ -74,7 +184,13 @@ export default function Home() {
             </div>
 
             {/* 觀光體驗區塊 */}
-            <div className="grid lg:grid-cols-2 gap-12">
+            <div
+              className={`grid lg:grid-cols-2 gap-12 ${
+                visibleSections.has('features')
+                  ? 'animate-slide-up animation-delay-450'
+                  : 'opacity-0'
+              }`}
+            >
               <div className="relative">
                 <div
                   className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl hover:scale-105 transition-transform duration-500"
@@ -179,7 +295,182 @@ export default function Home() {
           </div>
         </section>
 
+        {/* 信任建立區塊 - 成就數據展示 */}
+        <section
+          id="trust"
+          data-animate
+          className="py-20 px-6 bg-gradient-to-br from-amber-900 to-amber-800 text-white"
+        >
+          <div className="max-w-7xl mx-auto">
+            <h2
+              className={`text-4xl md:text-5xl font-bold text-center mb-16 ${
+                visibleSections.has('trust') ? 'animate-fade-in' : 'opacity-0'
+              }`}
+            >
+              數字背後的堅持
+            </h2>
+            <div
+              className={`grid md:grid-cols-4 gap-8 ${
+                visibleSections.has('trust') ? 'animate-slide-up animation-delay-300' : 'opacity-0'
+              }`}
+            >
+              {/* 成就數據卡片 */}
+              <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/20 transition-all duration-300">
+                <div className="text-5xl font-bold mb-4">30+</div>
+                <div className="text-xl font-medium mb-2">年份</div>
+                <div className="text-sm text-white/80">傳承三代的農業技術</div>
+              </div>
+              <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/20 transition-all duration-300">
+                <div className="text-5xl font-bold mb-4">1000+</div>
+                <div className="text-xl font-medium mb-2">位顧客</div>
+                <div className="text-sm text-white/80">滿意回購的客戶見證</div>
+              </div>
+              <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/20 transition-all duration-300">
+                <div className="text-5xl font-bold mb-4">100%</div>
+                <div className="text-xl font-medium mb-2">有機認證</div>
+                <div className="text-sm text-white/80">通過國家有機驗證</div>
+              </div>
+              <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/20 transition-all duration-300">
+                <div className="text-5xl font-bold mb-4">50+</div>
+                <div className="text-xl font-medium mb-2">種農產品</div>
+                <div className="text-sm text-white/80">四季不同的新鮮滋味</div>
+              </div>
+            </div>
+
+            {/* 顧客見證 */}
+            <div
+              className={`mt-16 grid md:grid-cols-3 gap-6 ${
+                visibleSections.has('trust') ? 'animate-scale-in animation-delay-450' : 'opacity-0'
+              }`}
+            >
+              <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="flex text-yellow-400">
+                    {'★★★★★'.split('').map((star, i) => (
+                      <span key={i}>{star}</span>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-white/90 mb-4">
+                  「紅肉李真的很甜！第一次吃到這麼新鮮的水果，果肉飽滿多汁，完全沒有農藥味。」
+                </p>
+                <div className="text-sm text-white/70">— 陳小姐 / 台北</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="flex text-yellow-400">
+                    {'★★★★★'.split('').map((star, i) => (
+                      <span key={i}>{star}</span>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-white/90 mb-4">
+                  「帶家人來農場體驗採果，孩子們玩得超開心！老闆很親切，講解詳細。」
+                </p>
+                <div className="text-sm text-white/70">— 林先生 / 台中</div>
+              </div>
+              <div className="bg-white/10 backdrop-blur-sm p-6 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="flex text-yellow-400">
+                    {'★★★★★'.split('').map((star, i) => (
+                      <span key={i}>{star}</span>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-white/90 mb-4">
+                  「茶葉品質很好，回甘明顯。包裝精美，送禮自用兩相宜，會繼續回購！」
+                </p>
+                <div className="text-sm text-white/70">— 王小姐 / 高雄</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <ProductsSection />
+
+        {/* 最新消息與季節活動 */}
+        <section
+          id="news"
+          data-animate
+          className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white"
+        >
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <h2
+                className={`text-4xl md:text-5xl font-bold text-amber-900 mb-4 ${
+                  visibleSections.has('news') ? 'animate-fade-in' : 'opacity-0'
+                }`}
+              >
+                最新消息
+              </h2>
+              <p
+                className={`text-gray-600 text-lg ${
+                  visibleSections.has('news') ? 'animate-fade-in animation-delay-150' : 'opacity-0'
+                }`}
+              >
+                掌握農場最新動態與季節限定活動
+              </p>
+            </div>
+
+            <div
+              className={`grid md:grid-cols-2 gap-8 mb-12 ${
+                visibleSections.has('news') ? 'animate-slide-up animation-delay-300' : 'opacity-0'
+              }`}
+            >
+              {/* 當季推薦 */}
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <span className="text-3xl mr-3">🌱</span>
+                  <h3 className="text-2xl font-bold text-green-900">當季推薦</h3>
+                </div>
+                <p className="text-green-800 mb-6 text-lg">
+                  春季特選紅肉李正在盛產中！果肉飽滿、甜度高，限量供應中
+                </p>
+                <Link
+                  href="/products"
+                  className="inline-flex items-center text-green-700 hover:text-green-900 font-medium"
+                >
+                  查看產品 →
+                </Link>
+              </div>
+
+              {/* 農場活動 */}
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <span className="text-3xl mr-3">🎉</span>
+                  <h3 className="text-2xl font-bold text-amber-900">農場活動</h3>
+                </div>
+                <p className="text-amber-800 mb-6 text-lg">
+                  週末採果體驗活動熱烈報名中！帶孩子來體驗親手採摘的樂趣
+                </p>
+                <Link
+                  href="/farm-tour"
+                  className="inline-flex items-center text-amber-700 hover:text-amber-900 font-medium"
+                >
+                  立即預約 →
+                </Link>
+              </div>
+            </div>
+
+            {/* 擺攤行程預告 */}
+            <div
+              className={`bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-white text-center ${
+                visibleSections.has('news') ? 'animate-scale-in animation-delay-450' : 'opacity-0'
+              }`}
+            >
+              <div className="text-4xl mb-4">📅</div>
+              <h3 className="text-2xl font-bold mb-4">下次市集擺攤</h3>
+              <div className="text-3xl font-bold mb-2">本週六 08:00-12:00</div>
+              <p className="text-white/90 mb-6">台中勤美誠品綠園道</p>
+              <Link
+                href="/schedule"
+                className="inline-block bg-white text-purple-600 px-8 py-3 rounded-full font-semibold hover:bg-purple-50 transition-colors"
+              >
+                查看完整行程
+              </Link>
+            </div>
+          </div>
+        </section>
 
         {/* 快速連結區 */}
         <section className="py-12 px-6 bg-amber-50">
