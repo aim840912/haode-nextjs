@@ -145,6 +145,59 @@ export interface Database {
         }
         Relationships: []
       }
+      product_images: {
+        Row: {
+          id: string
+          product_id: string
+          url: string
+          path: string
+          alt: string | null
+          position: number
+          size: 'thumbnail' | 'medium' | 'large'
+          width: number | null
+          height: number | null
+          file_size: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          url: string
+          path: string
+          alt?: string | null
+          position?: number
+          size?: 'thumbnail' | 'medium' | 'large'
+          width?: number | null
+          height?: number | null
+          file_size?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          url?: string
+          path?: string
+          alt?: string | null
+          position?: number
+          size?: 'thumbnail' | 'medium' | 'large'
+          width?: number | null
+          height?: number | null
+          file_size?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'fk_product_images_product_id'
+            columns: ['product_id']
+            isOneToOne: false
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       news: {
         Row: {
           id: string

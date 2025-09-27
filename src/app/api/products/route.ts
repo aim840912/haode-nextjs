@@ -3,6 +3,7 @@ import { productService } from '@/services/core/product/productService'
 import { withProductsCache } from '@/lib/middleware/api-cache-middleware'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAdmin } from '@/lib/middleware/api-middleware'
 import { PublicProductSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
@@ -94,15 +95,6 @@ async function handlePOST(request: NextRequest) {
   const { recordBusinessAction } = await import('@/lib/metrics')
   recordBusinessAction('product_created', { productId: product.id, category: product.category })
 
-  // 清除產品快取，確保變更立即生效
-  try {
-    const { CachedProductService } = await import('@/services/core/product/cachedProductService')
-    await CachedProductService.clearGlobalCache()
-    apiLogger.info('產品新增後已清除全域快取', { metadata: { action: 'product_created' } })
-  } catch (cacheError) {
-    apiLogger.warn('清除產品快取失敗', { metadata: { error: (cacheError as Error).message } })
-  }
-
   return created(product, '產品建立成功')
 }
 
@@ -112,11 +104,15 @@ const handleGETWithError = withErrorHandler(handleGET, {
   enableAuditLog: false, // 公開 GET 請求通常不需要審計日誌
 })
 
-const handlePOSTWithError = withErrorHandler(handlePOST, {
-  module: 'PublicProductsAPI',
-  enableAuditLog: true, // POST 請求需要審計日誌
-})
-
-// 導出 API 處理器（保留快取中間件）
+// 導出 API 處理器
 export const GET = handleGETWithError
-export const POST = withProductsCache(handlePOSTWithError)
+// POST 需要管理員權限（requireAdmin 已內建 withErrorHandler）
+export const POST = requireAdmin(async req => {
+  const result = await handlePOST(req)
+  // 清除產品快取
+  try {
+    const { CachedProductService } = await import('@/services/core/product/cachedProductService')
+    await CachedProductService.clearGlobalCache()
+  } catch {}
+  return result
+})
