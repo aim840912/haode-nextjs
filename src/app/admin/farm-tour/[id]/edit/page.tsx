@@ -8,7 +8,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/contexts/AuthContext'
+import AdminProtection from '@/components/features/admin/AdminProtection'
 
 // 動態載入圖片上傳器
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -28,7 +28,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [existingImages, setExistingImages] = useState<string[]>([])
   const [imageDeleted, setImageDeleted] = useState(false)
-  const { user } = useAuth()
 
   const [formData, setFormData] = useState({
     start_month: 1,
@@ -98,47 +97,6 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
       fetchActivity(id)
     })
   }, [params, fetchActivity])
-
-  // 未登入檢查
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-6">
-          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-8">
-            <svg
-              className="w-8 h-8 text-gray-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-              />
-            </svg>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
-          <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
-          <div className="space-x-4">
-            <Link
-              href="/login"
-              className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
-            >
-              立即登入
-            </Link>
-            <Link
-              href="/"
-              className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              回到首頁
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -272,319 +230,331 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">載入中...</div>
-      </div>
+      <AdminProtection>
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">載入中...</div>
+        </div>
+      </AdminProtection>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
-            <Link href="/admin/farm-tour" className="text-green-600 hover:text-green-800">
-              ← 回到果園管理
-            </Link>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900">編輯體驗活動</h1>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
-            {/* 基本資訊 */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">開始月份 *</label>
-                  <select
-                    name="start_month"
-                    value={formData.start_month}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  >
-                    {monthOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">結束月份 *</label>
-                  <select
-                    name="end_month"
-                    value={formData.end_month}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  >
-                    {monthOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動標題 *</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  placeholder="輸入體驗活動標題"
-                />
-              </div>
-            </div>
-
-            {/* 活動內容 */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動項目</label>
-                {formData.activities.map((activity, index) => (
-                  <div key={index} className="flex gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={activity}
-                      onChange={e => updateActivityField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                      placeholder="輸入活動項目"
-                    />
-                    {formData.activities.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeActivityField(index)}
-                        className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addActivityField}
-                  className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
-                >
-                  + 新增項目
-                </button>
-              </div>
-            </div>
-
-            {/* 費用設定 */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">費用設定</h3>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">價格 (NT$) *</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  required
-                  min="0"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  placeholder="0"
-                />
-                <p className="text-sm text-gray-500 mt-1">設為 0 表示免費體驗</p>
-              </div>
-            </div>
-
-            {/* 其他設定 */}
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
-
-              {/* 活動圖片 */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  活動圖片（限一張）
-                </label>
-
-                {existingImages.length > 0 && !imageDeleted ? (
-                  // 顯示現有圖片
-                  <div className="space-y-3">
-                    <div className="relative inline-block">
-                      <img
-                        src={existingImages[0]}
-                        alt="現有活動圖片"
-                        className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleDeleteExistingImage}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
-                        title="刪除圖片"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                    <p className="text-sm text-gray-500">如需更換圖片，請先刪除現有圖片</p>
-                  </div>
-                ) : (
-                  // 顯示上傳區域
-                  <div className="space-y-3">
-                    <ImageUploader
-                      productId={activityId || uuidv4()}
-                      module="farm-tour"
-                      onUploadSuccess={handleImageUploadSuccess}
-                      onUploadError={handleImageUploadError}
-                      maxFiles={1}
-                      allowMultiple={false}
-                      generateMultipleSizes={false}
-                      enableCompression={true}
-                      className="mb-4"
-                    />
-                    {uploadedImages.length > 0 ? (
-                      <div className="text-sm text-green-600">✓ 已上傳新圖片</div>
-                    ) : (
-                      <p className="text-sm text-gray-500">請上傳一張活動圖片</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">注意事項</label>
-                <textarea
-                  name="note"
-                  value={formData.note}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
-                  placeholder="輸入參加注意事項"
-                />
-              </div>
-
-              <div>
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="available"
-                    checked={formData.available}
-                    onChange={handleInputChange}
-                    className="mr-2"
-                  />
-                  開放預約
-                </label>
-              </div>
-            </div>
-
-            {/* 提交按鈕 */}
-            <div className="flex justify-end space-x-4 pt-6">
-              <Link
-                href="/admin/farm-tour"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                取消
+    <AdminProtection>
+      <div className="min-h-screen bg-gray-50 pt-24">
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <div className="flex items-center space-x-4 mb-4">
+              <Link href="/admin/farm-tour" className="text-green-600 hover:text-green-800">
+                ← 回到果園管理
               </Link>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-              >
-                {loading ? '更新中...' : '更新活動'}
-              </button>
             </div>
-          </form>
+            <h1 className="text-3xl font-bold text-gray-900">編輯體驗活動</h1>
+          </div>
 
-          {/* Preview */}
-          <div className="lg:sticky lg:top-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              {/* Preview Card */}
-              <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
-                <div className="mb-3">
-                  {uploadedImages.length > 0 || existingImages.length > 0 ? (
-                    <Image
-                      src={uploadedImages[0] || existingImages[0] || '/placeholder.jpg'}
-                      alt="活動圖片"
-                      width={64}
-                      height={64}
-                      unoptimized
-                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
-                    />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+              {/* 基本資訊 */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
+
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      開始月份 *
+                    </label>
+                    <select
+                      name="start_month"
+                      value={formData.start_month}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    >
+                      {monthOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      結束月份 *
+                    </label>
+                    <select
+                      name="end_month"
+                      value={formData.end_month}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    >
+                      {monthOptions.map(option => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">活動標題 *</label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    placeholder="輸入體驗活動標題"
+                  />
+                </div>
+              </div>
+
+              {/* 活動內容 */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">活動項目</label>
+                  {formData.activities.map((activity, index) => (
+                    <div key={index} className="flex gap-2 mb-2">
+                      <input
+                        type="text"
+                        value={activity}
+                        onChange={e => updateActivityField(index, e.target.value)}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                        placeholder="輸入活動項目"
+                      />
+                      {formData.activities.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeActivityField(index)}
+                          className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addActivityField}
+                    className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                  >
+                    + 新增項目
+                  </button>
+                </div>
+              </div>
+
+              {/* 費用設定 */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">費用設定</h3>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    價格 (NT$) *
+                  </label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={formData.price}
+                    onChange={handleInputChange}
+                    required
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    placeholder="0"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">設為 0 表示免費體驗</p>
+                </div>
+              </div>
+
+              {/* 其他設定 */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
+
+                {/* 活動圖片 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    活動圖片（限一張）
+                  </label>
+
+                  {existingImages.length > 0 && !imageDeleted ? (
+                    // 顯示現有圖片
+                    <div className="space-y-3">
+                      <div className="relative inline-block">
+                        <img
+                          src={existingImages[0]}
+                          alt="現有活動圖片"
+                          className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleDeleteExistingImage}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          title="刪除圖片"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-sm text-gray-500">如需更換圖片，請先刪除現有圖片</p>
+                    </div>
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
-                      <span className="text-gray-500 text-xs">無圖片</span>
+                    // 顯示上傳區域
+                    <div className="space-y-3">
+                      <ImageUploader
+                        productId={activityId || uuidv4()}
+                        module="farm-tour"
+                        onUploadSuccess={handleImageUploadSuccess}
+                        onUploadError={handleImageUploadError}
+                        maxFiles={1}
+                        allowMultiple={false}
+                        generateMultipleSizes={false}
+                        enableCompression={true}
+                        className="mb-4"
+                      />
+                      {uploadedImages.length > 0 ? (
+                        <div className="text-sm text-green-600">✓ 已上傳新圖片</div>
+                      ) : (
+                        <p className="text-sm text-gray-500">請上傳一張活動圖片</p>
+                      )}
                     </div>
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">
-                  {formData.title || '活動標題預覽'}
-                </h3>
-                <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                  <span className="bg-white px-2 py-1 rounded-full">
-                    {formData.start_month}月 - {formData.end_month}月
-                  </span>
-                  <span className="bg-white px-2 py-1 rounded-full">NT$ {formData.price || 0}</span>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">注意事項</label>
+                  <textarea
+                    name="note"
+                    value={formData.note}
+                    onChange={handleInputChange}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    placeholder="輸入參加注意事項"
+                  />
+                </div>
+
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="available"
+                      checked={formData.available}
+                      onChange={handleInputChange}
+                      className="mr-2"
+                    />
+                    開放預約
+                  </label>
                 </div>
               </div>
 
-              <div className="p-4">
-                <div className="mb-4">
-                  <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
-                  <div className="space-y-1">
-                    {formData.activities
-                      .filter(a => a.trim())
-                      .map((activity, index) => (
-                        <div key={index} className="flex items-center text-xs text-gray-600">
-                          <span className="mr-2 text-green-500">•</span>
-                          <span>{activity}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-
-                <div className="mb-4 text-sm">
-                  <div className="flex items-center justify-center">
-                    <span className="mr-2 text-amber-600 font-medium">$</span>
-                    <span className="font-bold text-amber-900">NT$ {formData.price || 0}</span>
-                  </div>
-                </div>
-
-                {formData.note && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-blue-700 text-xs">{formData.note}</p>
-                  </div>
-                )}
-
-                <div
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}
+              {/* 提交按鈕 */}
+              <div className="flex justify-end space-x-4 pt-6">
+                <Link
+                  href="/admin/farm-tour"
+                  className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  {formData.available ? '開放預約' : '暫停開放'}
+                  取消
+                </Link>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {loading ? '更新中...' : '更新活動'}
+                </button>
+              </div>
+            </form>
+
+            {/* Preview */}
+            <div className="lg:sticky lg:top-8">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                {/* Preview Card */}
+                <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
+                  <div className="mb-3">
+                    {uploadedImages.length > 0 || existingImages.length > 0 ? (
+                      <Image
+                        src={uploadedImages[0] || existingImages[0] || '/placeholder.jpg'}
+                        alt="活動圖片"
+                        width={64}
+                        height={64}
+                        unoptimized
+                        className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
+                        <span className="text-gray-500 text-xs">無圖片</span>
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                    {formData.title || '活動標題預覽'}
+                  </h3>
+                  <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
+                    <span className="bg-white px-2 py-1 rounded-full">
+                      {formData.start_month}月 - {formData.end_month}月
+                    </span>
+                    <span className="bg-white px-2 py-1 rounded-full">
+                      NT$ {formData.price || 0}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="mb-4">
+                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
+                    <div className="space-y-1">
+                      {formData.activities
+                        .filter(a => a.trim())
+                        .map((activity, index) => (
+                          <div key={index} className="flex items-center text-xs text-gray-600">
+                            <span className="mr-2 text-green-500">•</span>
+                            <span>{activity}</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-4 text-sm">
+                    <div className="flex items-center justify-center">
+                      <span className="mr-2 text-amber-600 font-medium">$</span>
+                      <span className="font-bold text-amber-900">NT$ {formData.price || 0}</span>
+                    </div>
+                  </div>
+
+                  {formData.note && (
+                    <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-blue-700 text-xs">{formData.note}</p>
+                    </div>
+                  )}
+
+                  <div
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                      formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {formData.available ? '開放預約' : '暫停開放'}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </AdminProtection>
   )
 }
