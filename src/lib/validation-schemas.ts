@@ -837,10 +837,8 @@ export const ScheduleSchemas = {
 export const PublicProductSchemas = {
   /** GET 查詢參數驗證 */
   query: z.object({
-    admin: z
-      .enum(['true', 'false'])
-      .optional()
-      .transform(val => val === 'true'),
+    // 安全修復：移除 admin 參數，公開 API 不應該允許獲取所有產品
+    // 管理員應使用 /api/admin/products
     nocache: z
       .enum(['true', 'false'])
       .optional()

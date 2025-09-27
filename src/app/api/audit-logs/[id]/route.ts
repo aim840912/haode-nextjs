@@ -4,22 +4,17 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { success, error as errorResponse } from '@/lib/api-response'
 import { AuthorizationError, NotFoundError } from '@/lib/errors'
 
 // GET /api/audit-logs/[id] - 取得單個審計日誌詳情
-async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleGET(request: NextRequest, user: any, context?: any) {
+  const { params } = context || {}
   const { id } = await params
-
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
 
   // 檢查權限（只有管理員和稽核人員可以查看審計日誌詳情）
   const supabase = await createServerSupabaseClient()
@@ -62,20 +57,12 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
   return success(auditLog)
 }
 
-export const GET = withErrorHandler(handleGET, {
-  module: 'AuditLogDetailAPI',
-  enableAuditLog: false,
-})
+export const GET = requireAuth(handleGET)
 
 // DELETE /api/audit-logs/[id] - 刪除單個審計日誌
-async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleDELETE(request: NextRequest, user: any, context?: any) {
+  const { params } = context || {}
   const { id } = await params
-
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
 
   // 檢查權限（只有管理員可以刪除審計日誌）
   const supabase = await createServerSupabaseClient()
@@ -158,10 +145,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
   return success(null, '審計日誌已成功刪除')
 }
 
-export const DELETE = withErrorHandler(handleDELETE, {
-  module: 'AuditLogDetailAPI',
-  enableAuditLog: true,
-})
+export const DELETE = requireAuth(handleDELETE)
 
 // 處理其他不支援的 HTTP 方法
 export async function POST() {

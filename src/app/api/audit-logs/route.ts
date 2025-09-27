@@ -4,21 +4,15 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { AuditLogQueryParams, AuditAction, ResourceType, UserRole } from '@/types/audit'
 
 // GET /api/audit-logs - 取得審計日誌清單
-async function handleGET(request: NextRequest) {
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
-
+async function handleGET(request: NextRequest, user: any) {
   // 檢查權限（只有管理員和稽核人員可以查看審計日誌）
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase
@@ -56,32 +50,15 @@ async function handleGET(request: NextRequest) {
   return success(auditLogs, '審計日誌查詢成功')
 }
 
-export const GET = withErrorHandler(handleGET, {
-  module: 'AuditLogs',
-  enableAuditLog: true,
-})
+// 導出 API 處理器 - 使用統一的權限中間件
+export const GET = requireAuth(handleGET)
 
 // 處理其他不支援的 HTTP 方法
 async function handleUnsupportedMethods(): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 
-export const POST = withErrorHandler(handleUnsupportedMethods, {
-  module: 'AuditLogs',
-  enableAuditLog: false,
-})
-
-export const PUT = withErrorHandler(handleUnsupportedMethods, {
-  module: 'AuditLogs',
-  enableAuditLog: false,
-})
-
-export const DELETE = withErrorHandler(handleUnsupportedMethods, {
-  module: 'AuditLogs',
-  enableAuditLog: false,
-})
-
-export const PATCH = withErrorHandler(handleUnsupportedMethods, {
-  module: 'AuditLogs',
-  enableAuditLog: false,
-})
+export const POST = requireAuth(handleUnsupportedMethods)
+export const PUT = requireAuth(handleUnsupportedMethods)
+export const DELETE = requireAuth(handleUnsupportedMethods)
+export const PATCH = requireAuth(handleUnsupportedMethods)

@@ -4,10 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { success, error as errorResponse } from '@/lib/api-response'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
 import type { Database } from '@/types/database'
@@ -48,13 +48,7 @@ function createErrorResponse(message: string, status: number, details?: string) 
 }
 
 // POST /api/audit-logs/batch - 批量操作審計日誌
-async function handlePOST(request: NextRequest) {
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
-
+async function handlePOST(request: NextRequest, user: any) {
   // 檢查權限（只有管理員可以批量操作審計日誌）
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase
@@ -120,10 +114,7 @@ async function handlePOST(request: NextRequest) {
   })
 }
 
-export const POST = withErrorHandler(handlePOST, {
-  module: 'AuditLogBatchAPI',
-  enableAuditLog: true,
-})
+export const POST = requireAuth(handlePOST)
 
 // 按 ID 批量刪除
 async function handleDeleteByIds(

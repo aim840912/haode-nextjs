@@ -4,13 +4,13 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceAdapter'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
-import { AuthorizationError, ValidationError, MethodNotAllowedError } from '@/lib/errors'
+import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 
@@ -26,13 +26,7 @@ interface FarmTourInquiryRequest {
 }
 
 // POST /api/farm-tour/inquiry - 建立農場參觀預約詢問
-async function handlePOST(request: NextRequest) {
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
-
+async function handlePOST(request: NextRequest, user: any) {
   // 取得使用者資訊
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase
@@ -102,13 +96,10 @@ async function handlePOST(request: NextRequest) {
   )
 }
 
-// 套用錯誤處理與 Rate Limiting 並導出 API 處理器
-const wrappedPOST = withErrorHandler(handlePOST, {
-  module: 'FarmTourInquiry',
-  enableAuditLog: true,
-})
+// 套用認證中間件與 Rate Limiting 並導出 API 處理器
+const authenticatedPOST = requireAuth(handlePOST)
 
-export const POST = withRateLimit(wrappedPOST, {
+export const POST = withRateLimit(authenticatedPOST, {
   maxRequests: 5,
   windowMs: 15 * 60 * 1000, // 15 分鐘
   strategy: IdentifierStrategy.COMBINED,
@@ -118,27 +109,11 @@ export const POST = withRateLimit(wrappedPOST, {
 })
 
 // 處理其他不支援的 HTTP 方法
-
 async function handleUnsupportedMethods(): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 
-export const GET = withErrorHandler(handleUnsupportedMethods, {
-  module: 'FarmTourInquiry',
-  enableAuditLog: false,
-})
-
-export const PUT = withErrorHandler(handleUnsupportedMethods, {
-  module: 'FarmTourInquiry',
-  enableAuditLog: false,
-})
-
-export const DELETE = withErrorHandler(handleUnsupportedMethods, {
-  module: 'FarmTourInquiry',
-  enableAuditLog: false,
-})
-
-export const PATCH = withErrorHandler(handleUnsupportedMethods, {
-  module: 'FarmTourInquiry',
-  enableAuditLog: false,
-})
+export const GET = requireAuth(handleUnsupportedMethods)
+export const PUT = requireAuth(handleUnsupportedMethods)
+export const DELETE = requireAuth(handleUnsupportedMethods)
+export const PATCH = requireAuth(handleUnsupportedMethods)

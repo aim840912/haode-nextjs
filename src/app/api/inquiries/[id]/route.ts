@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { inquiryServiceSimple as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceSimple'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { InquiryUtils } from '@/types/inquiry'
@@ -13,6 +13,7 @@ import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import type { Database } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -23,14 +24,9 @@ const inquiryService = inquiryServiceAdapter
 /**
  * GET /api/inquiries/[id] - 取得特定庫存查詢單
  */
-async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleGET(request: NextRequest, user: any, context?: any) {
+  const { params } = context || {}
   const { id: inquiryId } = await params
-
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -127,14 +123,9 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
 /**
  * PUT /api/inquiries/[id] - 更新庫存查詢單
  */
-async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handlePUT(request: NextRequest, user: any, context?: any) {
+  const { params } = context || {}
   const { id: inquiryId } = await params
-
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -277,14 +268,9 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
 /**
  * DELETE /api/inquiries/[id] - 刪除詢問單（僅管理員）
  */
-async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleDELETE(request: NextRequest, user: any, context?: any) {
+  const { params } = context || {}
   const { id: inquiryId } = await params
-
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -354,14 +340,9 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
 /**
  * PATCH /api/inquiries/[id] - 快速更新詢問單讀取/回覆狀態（僅管理員）
  */
-async function handlePATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handlePATCH(request: NextRequest, user: any, context?: any) {
+  const { params } = context || {}
   const { id: inquiryId } = await params
-
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -492,23 +473,8 @@ async function handlePATCH(request: NextRequest, { params }: { params: Promise<{
   return success(updatedInquiry, '詢問單更新成功')
 }
 
-// 導出處理器 - 使用統一的錯誤處理系統
-export const GET = withErrorHandler(handleGET, {
-  module: 'InquiryDetailAPI',
-  enableAuditLog: false,
-})
-
-export const PUT = withErrorHandler(handlePUT, {
-  module: 'InquiryDetailAPI',
-  enableAuditLog: true,
-})
-
-export const DELETE = withErrorHandler(handleDELETE, {
-  module: 'InquiryDetailAPI',
-  enableAuditLog: true,
-})
-
-export const PATCH = withErrorHandler(handlePATCH, {
-  module: 'InquiryDetailAPI',
-  enableAuditLog: true,
-})
+// 導出處理器 - 使用統一的權限中間件
+export const GET = requireAuth(handleGET)
+export const PUT = requireAuth(handlePUT)
+export const DELETE = requireAuth(handleDELETE)
+export const PATCH = requireAuth(handlePATCH)

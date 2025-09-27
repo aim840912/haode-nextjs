@@ -26,8 +26,10 @@ async function handleGET(request: NextRequest) {
     throw new ValidationError(`查詢參數驗證失敗: ${errorMessage}`)
   }
 
-  const { admin: isAdmin, nocache } = result.data
+  const { nocache } = result.data
 
+  // 安全修復：公開 API 只返回已啟用的產品
+  // 管理員應使用 /api/admin/products 獲取所有產品
   let products: unknown[]
 
   if (nocache) {
@@ -42,27 +44,17 @@ async function handleGET(request: NextRequest) {
     if ('baseService' in baseService && (baseService as { baseService?: unknown }).baseService) {
       const cachedService = baseService as {
         baseService: {
-          getAllProducts?: () => Promise<unknown[]>
           getProducts: () => Promise<unknown[]>
         }
       }
-      products =
-        isAdmin && cachedService.baseService.getAllProducts
-          ? await cachedService.baseService.getAllProducts()
-          : await cachedService.baseService.getProducts()
+      products = await cachedService.baseService.getProducts()
     } else {
       // 直接是基礎服務
-      products =
-        isAdmin && baseService.getAllProducts
-          ? await baseService.getAllProducts()
-          : await baseService.getProducts()
+      products = await baseService.getProducts()
     }
   } else {
-    // 正常使用快取
-    products =
-      isAdmin && productService.getAllProducts
-        ? await productService.getAllProducts()
-        : await productService.getProducts()
+    // 正常使用快取 - 只獲取已啟用的產品
+    products = await productService.getProducts()
   }
 
   const response = success(products, '產品清單取得成功')

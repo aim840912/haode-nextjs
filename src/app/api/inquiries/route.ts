@@ -5,25 +5,20 @@
  */
 
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient, getCurrentUser } from '@/lib/database/supabase-server'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { inquiryServiceSimple as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceSimple'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas } from '@/lib/validation-schemas'
-import { ValidationError, AuthorizationError } from '@/lib/errors'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { ValidationError } from '@/lib/errors'
+import { requireAuth } from '@/lib/middleware/api-middleware'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter
 
 // GET /api/inquiries - 取得庫存查詢單清單
-async function handleGET(request: NextRequest) {
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
+async function handleGET(request: NextRequest, user: any) {
   // 解析並驗證查詢參數
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
@@ -69,12 +64,7 @@ async function handleGET(request: NextRequest) {
 }
 
 // POST /api/inquiries - 建立新庫存查詢單
-async function handlePOST(request: NextRequest) {
-  // 驗證使用者認證
-  const user = await getCurrentUser()
-  if (!user) {
-    throw new AuthorizationError('未認證或會話已過期')
-  }
+async function handlePOST(request: NextRequest, user: any) {
   // 取得使用者資訊用於審計日誌
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase
@@ -136,13 +126,7 @@ async function handlePOST(request: NextRequest) {
   return created(inquiry, '詢問單建立成功')
 }
 
-// 導出 API 處理器 - 使用統一的錯誤處理系統
-export const GET = withErrorHandler(handleGET, {
-  module: 'InquiryAPI',
-  enableAuditLog: false,
-})
-
-export const POST = withErrorHandler(handlePOST, {
-  module: 'InquiryAPI',
-  enableAuditLog: true,
-})
+// 導出 API 處理器 - 使用統一的權限中間件
+// requireAuth 已內建 withErrorHandler，無需重複包裝
+export const GET = requireAuth(handleGET)
+export const POST = requireAuth(handlePOST)
