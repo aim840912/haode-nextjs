@@ -30,7 +30,7 @@ export function ProductTableRow({
         <div className="flex items-center">
           <div className="relative mr-3" style={{ width: '48px', height: '48px' }}>
             <SafeImage
-              src={product.images?.[0] || '/images/placeholder.jpg'}
+              src={product.productImages?.[0]?.url || '/images/placeholder.jpg'}
               alt={product.name || '產品圖片'}
               fill
               className="object-cover rounded"

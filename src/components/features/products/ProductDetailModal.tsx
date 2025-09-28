@@ -98,20 +98,23 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       ...product,
       id: product.id.toString(),
       name: product.name,
-      images:
-        product.galleryImages && product.galleryImages.length > 0
-          ? product.galleryImages
-          : product.images && product.images.length > 0
-            ? product.images
-            : ['/images/placeholder.jpg'],
-      galleryImages:
-        product.galleryImages && product.galleryImages.length > 0
-          ? product.galleryImages
-          : product.images && product.images.length > 0
-            ? product.images
-            : undefined,
-      thumbnailUrl: product.image || product.thumbnailUrl || product.primaryImageUrl,
-      primaryImageUrl: product.image || product.primaryImageUrl || product.thumbnailUrl,
+      productImages:
+        product.productImages && product.productImages.length > 0
+          ? product.productImages
+          : product.image
+            ? [
+                {
+                  id: 'temp',
+                  product_id: product.id.toString(),
+                  url: product.image,
+                  path: product.image,
+                  position: 0,
+                  size: 'medium' as const,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                },
+              ]
+            : [],
       inventory: product.inventory,
       isOnSale: (product.originalPrice || 0) > product.price,
       isActive: true,

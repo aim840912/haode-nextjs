@@ -295,7 +295,7 @@ export class UploadWorker {
 
       const uploadResult: UploadResult = {
         taskId: this.task.id,
-        id: result.id,
+        id: undefined, // 上傳完成後由外部系統分配 ID
         url: result.url,
         path: result.path || result.url,
         fileSize: this.task.file.size,
@@ -341,7 +341,7 @@ export class UploadWorker {
 
       const uploadResult: UploadResult = {
         taskId: this.task.id,
-        id: result.id,
+        id: undefined, // 上傳完成後由外部系統分配 ID
         url: result.url,
         path: result.path || result.url,
         fileSize: this.task.file.size,

@@ -790,7 +790,7 @@ function ProfilePageContent() {
                       >
                         <div className="aspect-w-16 aspect-h-9">
                           <OptimizedImage
-                            src={product.images?.[0] || '/images/placeholder.jpg'}
+                            src={product.productImages?.[0]?.url || '/images/placeholder.jpg'}
                             alt={product.name}
                             width={400}
                             height={225}

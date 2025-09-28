@@ -4,25 +4,25 @@ export interface ProductImage {
   product_id: string
   url: string
   path: string
-  alt?: string
+  alt?: string | null
   position: number
   size: 'thumbnail' | 'medium' | 'large'
-  width?: number
-  height?: number
-  file_size?: number
+  width?: number | null
+  height?: number | null
+  file_size?: number | null
   created_at: string
   updated_at: string
 }
 
-// 產品主介面 - 簡化版，只保留核心欄位
+// 產品主介面 - 使用 product_images 表
 export interface Product {
   id: string
   name: string
   description: string
   category: string
   price: number
-  priceUnit?: string // 價格單位（如：斤、包、箱、顆、公斤等）
-  unitQuantity?: number // 單位數量，預設為 1
+  priceUnit?: string
+  unitQuantity?: number
   originalPrice?: number
   isOnSale?: boolean
   saleEndDate?: string
@@ -30,9 +30,37 @@ export interface Product {
   isActive: boolean
   createdAt: string
   updatedAt: string
+  productImages: ProductImage[]
+}
 
-  // 圖片關聯（查詢時動態載入）
-  images?: ProductImage[]
+// 產品建立資料
+export interface CreateProductData {
+  name: string
+  description: string
+  category: string
+  price: number
+  priceUnit?: string
+  unitQuantity?: number
+  originalPrice?: number
+  isOnSale?: boolean
+  saleEndDate?: string
+  inventory: number
+  isActive: boolean
+}
+
+// 產品更新資料
+export interface UpdateProductData {
+  name?: string
+  description?: string
+  category?: string
+  price?: number
+  priceUnit?: string
+  unitQuantity?: number
+  originalPrice?: number
+  isOnSale?: boolean
+  saleEndDate?: string
+  inventory?: number
+  isActive?: boolean
 }
 
 export interface ProductService {

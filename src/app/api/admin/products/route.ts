@@ -17,70 +17,18 @@ import { success, created } from '@/lib/api-response'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {
-  // 預設圖片對應表
-  const defaultImages: { [key: string]: string } = {
-    有機紅肉李: '/images/products/red-plum.jpg',
-    高山烏龍茶: '/images/products/oolong-tea.jpg',
-    季節蔬菜箱: '/images/products/vegetable-box.jpg',
-    精選茶包: '/images/products/tea_bag_1.jpg',
-  }
-
-  // 安全地獲取產品名稱
-  const productName = (dbProduct.name as string) || ''
-
-  // 取得圖片陣列，優先使用新的 images 欄位
-  let images: string[] = []
-
-  try {
-    // 嘗試解析 images JSONB 欄位
-    if (dbProduct.images && typeof dbProduct.images === 'string') {
-      images = JSON.parse(dbProduct.images as string)
-    } else if (Array.isArray(dbProduct.images)) {
-      images = dbProduct.images
-    }
-  } catch {
-    // JSON 解析失敗，使用空陣列
-    images = []
-  }
-
-  // 如果沒有新格式圖片，回退到舊的 image_url
-  if (images.length === 0) {
-    const imageUrl =
-      (dbProduct.image_url as string) || defaultImages[productName] || '/images/placeholder.jpg'
-
-    // 驗證圖片 URL
-    if (imageUrl && typeof imageUrl === 'string') {
-      // 修正錯誤的 Imgur 連結
-      if (
-        imageUrl.includes('imgur.com') &&
-        !imageUrl.includes('.jpg') &&
-        !imageUrl.includes('.png') &&
-        !imageUrl.includes('.jpeg') &&
-        !imageUrl.includes('.webp')
-      ) {
-        images = [defaultImages[productName] || '/images/placeholder.jpg']
-      } else {
-        images = [imageUrl]
-      }
-    } else {
-      images = ['/images/placeholder.jpg']
-    }
-  }
-
-  // 確保至少有一張圖片
-  if (images.length === 0) {
-    images = ['/images/placeholder.jpg']
-  }
+  // 注意：這個函數應該被棄用，建議直接使用 adminProductService
+  // 這裡僅作為臨時相容方案，productImages 應由 adminProductService.loadProductImages 提供
 
   return {
     id: String(dbProduct.id || ''),
     name: (dbProduct.name as string) || '',
     description: (dbProduct.description as string) || '',
     price: Number(dbProduct.price) || 0,
-    priceUnit: (dbProduct.price_unit as string) || undefined, // 新增：價格單位
-    unitQuantity: Number(dbProduct.unit_quantity) || undefined, // 新增：單位數量
+    priceUnit: (dbProduct.price_unit as string) || undefined,
+    unitQuantity: Number(dbProduct.unit_quantity) || undefined,
     category: (dbProduct.category as string) || '',
-    images: images, // 使用完整的圖片陣列
+    productImages: [], // 應由 adminProductService.loadProductImages 提供
     inventory: Number(dbProduct.stock) || 0,
     isActive: Boolean(dbProduct.is_active),
     createdAt: (dbProduct.created_at as string) || new Date().toISOString(),
@@ -97,22 +45,10 @@ async function handleGET(request: NextRequest) {
   }
 
   try {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: 'Supabase admin not configured' }, { status: 500 })
-    }
+    // 使用 adminProductService 直接取得產品（包含圖片資料）
+    const products = await adminProductService.getAllProducts()
 
-    const { data, error } = await supabaseAdmin
-      .from('products')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-
-    // 轉換資料格式
-    const transformedProducts = (data || []).map(transformFromDB)
-
-    return success(transformedProducts, '產品載入成功')
+    return success(products, '產品載入成功')
   } catch (error) {
     apiLogger.error('Error fetching all products', error as Error)
     throw error // 讓 withErrorHandler 處理統一的錯誤格式

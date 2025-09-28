@@ -85,6 +85,14 @@ function getAdminSupabaseClient() {
           autoRefreshToken: false,
           persistSession: false,
         },
+        db: {
+          schema: 'public',
+        },
+        global: {
+          headers: {
+            'x-supabase-role': 'service_role',
+          },
+        },
       }
     )
   }

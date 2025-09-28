@@ -242,7 +242,19 @@ export class ProductImageService {
 
       const { data, error } = await supabase.from(this.TABLE_NAME).insert(insertData).select()
 
-      if (error) throw error
+      if (error) {
+        dbLogger.error('Supabase 原始錯誤', new Error(JSON.stringify(error, null, 2)), {
+          module: this.MODULE_NAME,
+          action: 'createProductImages',
+          metadata: {
+            errorCode: error.code,
+            errorMessage: error.message,
+            errorDetails: error.details,
+            errorHint: error.hint,
+          },
+        })
+        throw error
+      }
 
       const images = (data || []).map(this.transformFromDB)
       timer.end({ metadata: { count: images.length } })

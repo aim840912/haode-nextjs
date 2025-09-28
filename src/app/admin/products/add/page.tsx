@@ -12,15 +12,15 @@ import AdminProtection from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { LockClosedIcon, BeakerIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
 
-// 動態載入智慧圖片上傳器，減少初始 bundle 大小
-const SmartImageUploader = dynamic(
-  () => import('@/components/features/products/SmartImageUploader'),
+// 動態載入產品圖片管理器，減少初始 bundle 大小
+const ProductImageManager = dynamic(
+  () => import('@/components/features/products/ProductImageManager'),
   {
     loading: () => (
       <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center animate-pulse">
         <div className="flex items-center space-x-2 text-gray-500">
           <BeakerIcon className="w-5 h-5 animate-spin" />
-          <span>載入智慧上傳器...</span>
+          <span>載入圖片管理器...</span>
         </div>
       </div>
     ),
@@ -34,9 +34,8 @@ function AddProductV2() {
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
-  const [totalImages, setTotalImages] = useState<number>(0) // 包含本地圖片的總數
   const [productId] = useState(() => uuidv4()) // 使用 UUID 作為產品 ID
+  const [tempImages, setTempImages] = useState<any[]>([]) // 記憶體暫存圖片
   const { user, isLoading } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
@@ -51,13 +50,8 @@ function AddProductV2() {
     price: 0,
     priceUnit: '斤',
     unitQuantity: 1,
-    salePrice: 0,
-    isOnSale: false,
-    saleEndDate: '',
     inventory: 0,
-    images: [''],
     isActive: true,
-    sku: '', // 新增 SKU 欄位
   })
 
   // 錯誤狀態管理
@@ -70,15 +64,7 @@ function AddProductV2() {
     price: '',
     inventory: '',
     images: '',
-    sku: '', // 新增 SKU 錯誤狀態
   })
-
-  // SKU 驗證狀態
-  const [skuValidation, setSkuValidation] = useState<{
-    isChecking: boolean
-    isValid: boolean | null
-    message: string
-  }>({ isChecking: false, isValid: null, message: '' })
 
   // 智慧上傳統計
   const [uploadStats, setUploadStats] = useState({
@@ -146,7 +132,6 @@ function AddProductV2() {
       price: '',
       inventory: '',
       images: '',
-      sku: '',
     }
 
     let hasErrors = false
@@ -171,30 +156,8 @@ function AddProductV2() {
       hasErrors = true
     }
 
-    // 特價驗證
-    if (formData.isOnSale) {
-      if (formData.salePrice <= 0) {
-        errors.price = '特價必須大於 0'
-        hasErrors = true
-      } else if (formData.salePrice >= formData.price) {
-        errors.price = '特價必須小於原價'
-        hasErrors = true
-      }
-    }
-
     if (formData.inventory < 0) {
       errors.inventory = '庫存不能為負數'
-      hasErrors = true
-    }
-
-    if (totalImages === 0) {
-      errors.images = '請至少上傳一張產品圖片'
-      hasErrors = true
-    }
-
-    // SKU 驗證 - 如果有輸入 SKU 但驗證失敗
-    if (formData.sku.trim() && skuValidation.isValid === false) {
-      errors.sku = skuValidation.message || 'SKU 驗證失敗'
       hasErrors = true
     }
 
@@ -202,12 +165,29 @@ function AddProductV2() {
     return !hasErrors
   }
 
-  // 處理表單提交
+  // 處理圖片變更（記憶體暫存）
+  const handleImageChange = useCallback(
+    (images: any[]) => {
+      setTempImages(images)
+      logger.debug('圖片列表更新（記憶體暫存）', {
+        metadata: { imageCount: images.length, productId },
+      })
+    },
+    [productId]
+  )
+
+  // 處理表單提交（使用事務式 API）
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!validateForm()) {
       setSubmitError('請修正表單中的錯誤')
+      return
+    }
+
+    if (tempImages.length === 0) {
+      setFieldErrors(prev => ({ ...prev, images: '至少需要上傳一張產品圖片' }))
+      setSubmitError('請至少上傳一張產品圖片')
       return
     }
 
@@ -221,117 +201,80 @@ function AddProductV2() {
     setSubmitSuccess(null)
 
     try {
-      // 使用智慧提交流程
-      const { submitProductWithSmartUpload } = await import(
-        '@/lib/services/productSubmissionService'
-      )
-
-      // 準備提交數據（轉換為統一格式，與 V1 功能對等）
-      const productFormData = {
-        id: productId, // 明確指定產品 ID，確保與圖片上傳時使用的 entityId 一致
+      const productData = {
+        id: productId,
         name: formData.name,
         description: formData.description,
         category: formData.category,
-        // 智慧價格處理：如果是特價商品，設定特價為當前售價，原價為 originalPrice
-        price: formData.isOnSale ? formData.salePrice : formData.price,
-        originalPrice: formData.isOnSale ? formData.price : null,
+        price: formData.price,
         priceUnit: formData.priceUnit,
         unitQuantity: formData.unitQuantity,
         inventory: formData.inventory,
-        images: uploadedImages,
-        isActive: formData.isActive, // 現在可由用戶控制
-        isOnSale: formData.isOnSale,
-        saleEndDate: formData.saleEndDate || null,
-        tags: [],
-        sku: formData.sku.trim() || undefined, // V2 現在支援 SKU
-        weight: undefined,
+        isActive: formData.isActive,
       }
 
-      // 執行智慧提交
-      const result = await submitProductWithSmartUpload(
-        productFormData,
-        uploadedImages,
-        [] // 目前版本先不處理 pending uploads，未來可整合 SmartImageUploader
-      )
+      const imagesData = tempImages.map((img, index) => ({
+        url: img.url,
+        path: img.path,
+        alt: img.alt || `${formData.name} - 圖片 ${index + 1}`,
+        position: img.position ?? index,
+        size: img.size || 'medium',
+        width: img.width,
+        height: img.height,
+        file_size: img.file_size,
+      }))
 
-      if (result.success) {
-        setSubmitSuccess(result.message)
+      logger.info('開始事務式建立產品', {
+        metadata: {
+          productId,
+          productName: formData.name,
+          imageCount: imagesData.length,
+        },
+      })
 
-        logger.info('產品建立成功 (V2 智慧提交)', {
-          metadata: {
-            productId: result.productId,
-            productName: formData.name,
-            imagesCount: result.uploadStatus.completed,
-            version: 'v2',
-            uploadStats: result.uploadStatus,
-            warnings: result.warnings,
-          },
-        })
+      const response = await fetch('/api/admin/products/create-with-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product: productData,
+          images: imagesData,
+        }),
+      })
 
-        // 顯示警告訊息（如有）
-        if (result.warnings.length > 0) {
-          logger.warn('產品提交完成但有警告', {
-            metadata: {
-              productId: result.productId,
-              warnings: result.warnings,
-            },
-          })
-        }
-
-        // 3 秒後跳轉到產品列表
-        setTimeout(() => {
-          router.push('/admin/products')
-        }, 3000)
-      } else {
-        setSubmitError(result.message)
-
-        // 記錄提交失敗詳情
-        if (result.errors.length > 0) {
-          logger.error('產品提交驗證失敗', new Error(result.errors.join(', ')), {
-            metadata: {
-              productName: formData.name,
-              errors: result.errors,
-            },
-          })
-        }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: '建立失敗' }))
+        throw new Error(errorData.message || `建立失敗 (${response.status})`)
       }
-    } catch (error) {
-      logger.error('產品建立失敗', error as Error)
-      setSubmitError('網路錯誤，請稍後再試')
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  // SKU 驗證函數
-  const validateSKU = async (sku: string) => {
-    if (!sku.trim()) {
-      setSkuValidation({ isChecking: false, isValid: null, message: '' })
-      return
-    }
-
-    setSkuValidation({ isChecking: true, isValid: null, message: '驗證中...' })
-
-    try {
-      const response = await fetch(`/api/products/check-sku?sku=${encodeURIComponent(sku)}`)
       const result = await response.json()
 
-      if (response.ok) {
-        if (result.available) {
-          setSkuValidation({ isChecking: false, isValid: true, message: 'SKU 可用' })
-        } else {
-          setSkuValidation({
-            isChecking: false,
-            isValid: false,
-            message: 'SKU 已存在，請使用其他 SKU',
-          })
-        }
-      } else {
-        setSkuValidation({ isChecking: false, isValid: false, message: 'SKU 驗證失敗' })
-      }
+      setSubmitSuccess('產品建立成功！即將跳轉...')
+
+      logger.info('產品建立成功', {
+        metadata: {
+          productId: productId,
+          productName: formData.name,
+          imageCount: imagesData.length,
+          executionTime: result.data?.meta?.executionTime,
+        },
+      })
+
+      setTimeout(() => {
+        router.push('/admin/products')
+      }, 2000)
     } catch (error) {
-      logger.warn('SKU 驗證失敗', { metadata: { sku, error: String(error) } })
-      setSkuValidation({ isChecking: false, isValid: null, message: 'SKU 驗證服務暫時不可用' })
+      const errorMessage = error instanceof Error ? error.message : '建立失敗，請重試'
+      setSubmitError(errorMessage)
+
+      logger.error('產品建立失敗', error as Error, {
+        metadata: {
+          formData: { name: formData.name, category: formData.category },
+        },
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -343,31 +286,13 @@ function AddProductV2() {
     if (fieldErrors[field as keyof typeof fieldErrors]) {
       setFieldErrors(prev => ({ ...prev, [field]: '' }))
     }
-
-    // SKU 輸入時觸發驗證
-    if (field === 'sku' && typeof value === 'string') {
-      // 使用防抖來避免過於頻繁的 API 請求
-      const timeoutId = setTimeout(() => validateSKU(value), 500)
-      return () => clearTimeout(timeoutId)
-    }
   }
 
-  // 處理圖片上傳完成
-  const handleImagesChange = (images: string[]) => {
-    setUploadedImages(images)
-    setFormData(prev => ({ ...prev, images }))
-
-    // 清除圖片錯誤
-    if (fieldErrors.images && (images.length > 0 || totalImages > 0)) {
-      setFieldErrors(prev => ({ ...prev, images: '' }))
-    }
-  }
+  // 圖片變更處理已整合到 handleImageChange
 
   // 處理上傳統計更新
   const handleUploadStatsChange = (stats: typeof uploadStats) => {
     setUploadStats(stats)
-    // 更新總圖片數（包含本地暫存的圖片）
-    setTotalImages(stats.totalImages)
   }
 
   // 載入中狀態
@@ -646,173 +571,41 @@ function AddProductV2() {
                 </div>
               </div>
 
-              {/* SKU 和庫存 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-2">
-                    產品 SKU（選填）
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      id="sku"
-                      value={formData.sku}
-                      onChange={e => handleInputChange('sku', e.target.value)}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                        fieldErrors.sku
-                          ? 'border-red-500'
-                          : skuValidation.isValid === true
-                            ? 'border-green-500'
-                            : skuValidation.isValid === false
-                              ? 'border-red-500'
-                              : 'border-gray-300'
-                      }`}
-                      placeholder="輸入產品 SKU（如：PROD-001）"
-                    />
-                    {skuValidation.isChecking && (
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <div className="animate-spin h-4 w-4 border-2 border-green-500 border-t-transparent rounded-full"></div>
-                      </div>
-                    )}
-                  </div>
-                  {skuValidation.message && (
-                    <p
-                      className={`mt-1 text-sm ${
-                        skuValidation.isValid === true
-                          ? 'text-green-600'
-                          : skuValidation.isValid === false
-                            ? 'text-red-600'
-                            : 'text-gray-600'
-                      }`}
-                    >
-                      {skuValidation.message}
-                    </p>
-                  )}
-                  {fieldErrors.sku && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.sku}</p>
-                  )}
-                  <p className="mt-1 text-xs text-gray-500">SKU 用於產品識別，留空將自動生成</p>
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="inventory"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    庫存數量 *
-                  </label>
-                  <input
-                    type="number"
-                    id="inventory"
-                    value={formData.inventory}
-                    onChange={e => handleInputChange('inventory', parseInt(e.target.value) || 0)}
-                    min="0"
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      fieldErrors.inventory ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                    placeholder="請輸入庫存數量"
-                  />
-                  {fieldErrors.inventory && (
-                    <p className="mt-1 text-sm text-red-600">{fieldErrors.inventory}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* 特價設定 */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex items-center mb-4">
-                  <input
-                    type="checkbox"
-                    id="isOnSale"
-                    checked={formData.isOnSale}
-                    onChange={e => handleInputChange('isOnSale', e.target.checked)}
-                    className="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded mr-3"
-                  />
-                  <label htmlFor="isOnSale" className="text-sm font-medium text-gray-800">
-                    設為特價商品
-                  </label>
-                </div>
-
-                {formData.isOnSale && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label
-                          htmlFor="salePrice"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          特價 (NT$) *
-                        </label>
-                        <input
-                          type="number"
-                          id="salePrice"
-                          value={formData.salePrice}
-                          onChange={e =>
-                            handleInputChange('salePrice', parseInt(e.target.value) || 0)
-                          }
-                          min="0"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                          placeholder="輸入特價"
-                        />
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="saleEndDate"
-                          className="block text-sm font-medium text-gray-700 mb-2"
-                        >
-                          特價結束日期
-                        </label>
-                        <input
-                          type="date"
-                          id="saleEndDate"
-                          value={formData.saleEndDate}
-                          onChange={e => handleInputChange('saleEndDate', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                        />
-                      </div>
-                    </div>
-
-                    {/* 折扣計算顯示 */}
-                    {formData.price > 0 &&
-                      formData.salePrice > 0 &&
-                      formData.price > formData.salePrice && (
-                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                          <div className="text-sm text-green-800">
-                            <span className="font-medium">折扣：</span>
-                            {Math.round((1 - formData.salePrice / formData.price) * 100)}% OFF
-                            <span className="ml-2">
-                              （省 NT$ {formData.price - formData.salePrice}）
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                    {formData.salePrice >= formData.price &&
-                      formData.price > 0 &&
-                      formData.salePrice > 0 && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                          <div className="text-sm text-red-800">
-                            <span className="font-medium">注意：</span>
-                            特價不能大於或等於原價
-                          </div>
-                        </div>
-                      )}
-                  </div>
+              {/* 庫存 */}
+              <div>
+                <label htmlFor="inventory" className="block text-sm font-medium text-gray-700 mb-2">
+                  庫存數量 *
+                </label>
+                <input
+                  type="number"
+                  id="inventory"
+                  value={formData.inventory}
+                  onChange={e => handleInputChange('inventory', parseInt(e.target.value) || 0)}
+                  min="0"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                    fieldErrors.inventory ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="請輸入庫存數量"
+                />
+                {fieldErrors.inventory && (
+                  <p className="mt-1 text-sm text-red-600">{fieldErrors.inventory}</p>
                 )}
               </div>
 
-              {/* 智慧圖片上傳 */}
+              {/* 產品圖片管理 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">產品圖片 *</label>
-                <SmartImageUploader
-                  productId={productId}
-                  onImagesChange={handleImagesChange}
-                  onStatsChange={handleUploadStatsChange}
-                  maxImages={5}
-                  enabled={isV2Enabled}
-                  csrfToken={csrfToken}
-                />
+                <p className="text-xs text-gray-600 mb-3">
+                  支援批量上傳、拖放排序、設定主圖等功能。建議圖片尺寸為 800x800 像素以上。
+                </p>
+                <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                  <ProductImageManager
+                    productId={productId}
+                    maxImages={10}
+                    mode="memory"
+                    onImagesChange={handleImageChange}
+                  />
+                </div>
                 {fieldErrors.images && (
                   <p className="mt-1 text-sm text-red-600">{fieldErrors.images}</p>
                 )}
@@ -849,18 +642,12 @@ function AddProductV2() {
                 </Link>
                 <button
                   type="submit"
-                  disabled={loading || skuValidation.isChecking}
+                  disabled={loading}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   {loading && <BeakerIcon className="w-4 h-4 animate-spin" />}
                   <span>
-                    {loading
-                      ? '建立中...'
-                      : skuValidation.isChecking
-                        ? 'SKU 驗證中...'
-                        : formData.isActive
-                          ? '建立並上架產品'
-                          : '儲存草稿'}
+                    {loading ? '建立中...' : formData.isActive ? '建立並上架產品' : '儲存草稿'}
                   </span>
                 </button>
               </div>

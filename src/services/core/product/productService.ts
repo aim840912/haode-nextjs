@@ -1,115 +1,12 @@
-/**
- * 產品服務 v2 - 使用統一服務架構
- *
- * 重構的產品服務，遵循新的服務層標準：
- * - 實作統一的 BaseService 介面
- * - 支援 Supabase 和 JSON 兩種實作
- * - 整合新的錯誤處理系統
- * - 提供向後相容性
- */
-
-import path from 'path'
-import { Product, ProductImage } from '@/types/product'
-
-import {
-  AbstractSupabaseService,
-  DataTransformer,
-  SupabaseServiceConfig,
-} from '@/services/base/abstract-supabase-service'
-import {
-  AbstractJsonService,
-  JsonEntity,
-  JsonServiceConfig,
-  SearchConfig,
-} from '@/services/base/abstract-json-service'
-import {
-  BaseService,
-  SearchableService,
-  PaginatedService,
-  QueryOptions,
-  PaginatedQueryOptions,
-  PaginatedResult,
-} from '@/services/base/base-service'
+import { Product, CreateProductData, UpdateProductData, ProductImage } from '@/types/product'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
+import { ErrorFactory } from '@/lib/errors'
 
-/**
- * 產品建立 DTO
- */
-export interface CreateProductDTO {
-  name: string
-  description: string
-  category: string
-  price: number
-  originalPrice?: number
-  isOnSale?: boolean
-  saleEndDate?: string
-  images: string[]
-  productImages?: Array<Record<string, unknown>>
-  primaryImageUrl?: string
-  thumbnailUrl?: string
-  galleryImages?: string[]
-  inventory: number
-  isActive: boolean
-}
+export class ProductService {
+  private supabase = createServiceSupabaseClient()
 
-/**
- * 產品更新 DTO
- */
-export interface UpdateProductDTO {
-  name?: string
-  description?: string
-  category?: string
-  price?: number
-  originalPrice?: number
-  isOnSale?: boolean
-  saleEndDate?: string
-  images?: string[]
-  productImages?: Array<Record<string, unknown>>
-  primaryImageUrl?: string
-  thumbnailUrl?: string
-  galleryImages?: string[]
-  inventory?: number
-  isActive?: boolean
-}
-
-/**
- * Supabase 資料庫記錄與 Product 實體的轉換器
- */
-export class ProductDataTransformer implements DataTransformer<Product> {
-  /**
-   * 從資料庫記錄轉換為實體 (新介面方法)
-   */
-  transform(record: Record<string, unknown>): Product {
-    return this.fromDB(record)
-  }
-
-  fromDB(record: Record<string, unknown>): Product {
-    // Parse images from JSON string if needed
-    let images: string[] = []
-    if (record.images) {
-      try {
-        if (typeof record.images === 'string') {
-          images = JSON.parse(record.images)
-        } else if (Array.isArray(record.images)) {
-          images = record.images
-        }
-      } catch (error) {
-        dbLogger.warn('Failed to parse images JSON', {
-          module: 'ProductService',
-          action: 'transformFromSupabase',
-          metadata: {
-            error: error instanceof Error ? error.message : String(error),
-          },
-        })
-        images = []
-      }
-    }
-
-    // Ensure images is always an array with at least a placeholder
-    if (!images || images.length === 0) {
-      images = ['/images/placeholder.jpg']
-    }
-
+  private transformFromDB(record: Record<string, unknown>, images?: ProductImage[]): Product {
     return {
       id: record.id as string,
       name: record.name as string,
@@ -121,19 +18,15 @@ export class ProductDataTransformer implements DataTransformer<Product> {
       originalPrice: record.original_price as number | undefined,
       isOnSale: (record.is_on_sale as boolean) || false,
       saleEndDate: record.sale_end_date as string | undefined,
-      images,
-      productImages: record.product_images as ProductImage[] | undefined,
-      primaryImageUrl: record.primary_image_url as string | undefined,
-      thumbnailUrl: record.thumbnail_url as string | undefined,
-      galleryImages: (record.gallery_images as string[]) || [],
+      productImages: images || [],
       inventory: (record.stock as number) || 0,
-      isActive: (record.is_active as boolean) !== false, // 預設為 true
+      isActive: (record.is_active as boolean) !== false,
       createdAt: record.created_at as string,
       updatedAt: record.updated_at as string,
     }
   }
 
-  toDB(entity: Partial<Product>): Record<string, unknown> {
+  private transformToDB(entity: Partial<Product>): Record<string, unknown> {
     const record: Record<string, unknown> = {}
 
     if (entity.name !== undefined) record.name = entity.name
@@ -145,322 +38,266 @@ export class ProductDataTransformer implements DataTransformer<Product> {
     if (entity.originalPrice !== undefined) record.original_price = entity.originalPrice
     if (entity.isOnSale !== undefined) record.is_on_sale = entity.isOnSale
     if (entity.saleEndDate !== undefined) record.sale_end_date = entity.saleEndDate
-    if (entity.images !== undefined) record.images = entity.images
-    if (entity.productImages !== undefined) record.product_images = entity.productImages
-    if (entity.primaryImageUrl !== undefined) record.primary_image_url = entity.primaryImageUrl
-    if (entity.thumbnailUrl !== undefined) record.thumbnail_url = entity.thumbnailUrl
-    if (entity.galleryImages !== undefined) record.gallery_images = entity.galleryImages
     if (entity.inventory !== undefined) record.stock = entity.inventory
     if (entity.isActive !== undefined) record.is_active = entity.isActive
 
     return record
   }
-}
 
-/**
- * Supabase 產品服務實作
- */
-export class SupabaseProductService
-  extends AbstractSupabaseService<Product, CreateProductDTO, UpdateProductDTO>
-  implements SearchableService<Product, CreateProductDTO, UpdateProductDTO>
-{
-  protected transformer: ProductDataTransformer
+  private async loadProductImages(productId: string): Promise<ProductImage[]> {
+    const { data, error } = await this.supabase
+      .from('product_images')
+      .select('*')
+      .eq('product_id', productId)
+      .order('position', { ascending: true })
 
-  constructor() {
-    const config: SupabaseServiceConfig = {
-      tableName: 'products',
-      useAdminClient: true, // 需要管理員權限進行 CRUD 操作
-      enableCache: true,
-      cacheTTL: 300,
-      enableAuditLog: true,
-      defaultPageSize: 20,
-      maxPageSize: 100,
+    if (error) {
+      dbLogger.warn('載入產品圖片失敗', {
+        module: 'ProductService',
+        metadata: { productId, error: error.message },
+      })
+      return []
     }
 
-    const transformer = new ProductDataTransformer()
-    super(config, transformer)
-    this.transformer = transformer
+    return (data || []).map(img => ({
+      id: img.id,
+      product_id: img.product_id,
+      url: img.url,
+      path: img.path,
+      alt: img.alt,
+      position: img.position,
+      size: img.size,
+      width: img.width,
+      height: img.height,
+      file_size: img.file_size,
+      created_at: img.created_at,
+      updated_at: img.updated_at,
+    }))
   }
 
-  /**
-   * 搜尋產品（實作 SearchableService）
-   */
-  async search(query: string): Promise<Product[]> {
+  async getProducts(): Promise<Product[]> {
+    const timer = dbLogger.timer('取得產品列表')
+
     try {
-      const { data, error } = await this.createQuery()
-        .select('*')
-        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`)
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        this.handleError(error, 'search', { query })
-      }
-
-      const result = (data || []).map((record: Record<string, unknown>) =>
-        this.transformFromDB(record)
-      )
-
-      return result
-    } catch (error) {
-      this.handleError(error, 'search', { query })
-    }
-  }
-
-  /**
-   * 取得所有產品（包含下架的，管理員用）
-   */
-  async findAllAdmin(): Promise<Product[]> {
-    try {
-      const { data, error } = await this.createQuery(true)
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        this.handleError(error, 'findAllAdmin')
-      }
-
-      return (data || []).map((record: Record<string, unknown>) => this.transformFromDB(record))
-    } catch (error) {
-      this.handleError(error, 'findAllAdmin')
-    }
-  }
-
-  /**
-   * 覆寫 findAll，只回傳上架的產品
-   * 直接實作以避免抽象服務的問題
-   */
-  async findAll(): Promise<Product[]> {
-    try {
-      const { createServiceSupabaseClient } = await import('@/lib/database/supabase-server')
-      const client = createServiceSupabaseClient()
-
-      const { data, error } = await client
+      const { data, error } = await this.supabase
         .from('products')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false })
 
       if (error) {
-        throw error
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'getProducts',
+        })
       }
 
-      return (data || []).map((record: Record<string, unknown>) => this.transformer.fromDB(record))
+      const products = await Promise.all(
+        (data || []).map(async record => {
+          const images = await this.loadProductImages(record.id)
+          return this.transformFromDB(record, images)
+        })
+      )
+
+      timer.end({ metadata: { count: products.length } })
+      return products
     } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  async getAllProducts(): Promise<Product[]> {
+    const timer = dbLogger.timer('取得所有產品（含下架）')
+
+    try {
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'getAllProducts',
+        })
+      }
+
+      const products = await Promise.all(
+        (data || []).map(async record => {
+          const images = await this.loadProductImages(record.id)
+          return this.transformFromDB(record, images)
+        })
+      )
+
+      timer.end({ metadata: { count: products.length } })
+      return products
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  async getProductById(id: string): Promise<Product | null> {
+    const timer = dbLogger.timer('取得產品詳情')
+
+    try {
+      const { data, error } = await this.supabase.from('products').select('*').eq('id', id).single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          timer.end({ metadata: { found: false } })
+          return null
+        }
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'getProductById',
+          context: { productId: id },
+        })
+      }
+
+      const images = await this.loadProductImages(id)
+      const product = this.transformFromDB(data, images)
+
+      timer.end({ metadata: { found: true, productId: id } })
+      return product
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  async addProduct(productData: CreateProductData): Promise<Product> {
+    const timer = dbLogger.timer('新增產品')
+
+    try {
+      const dbData = this.transformToDB(productData as Partial<Product>)
+
+      const { data, error } = await this.supabase
+        .from('products')
+        .insert(dbData as any) // 使用 any 繞過 Supabase 的嚴格類型檢查
+        .select()
+        .single()
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'addProduct',
+          context: { productName: productData.name },
+        })
+      }
+
+      const product = this.transformFromDB(data, [])
+
+      timer.end({ metadata: { productId: product.id } })
+      dbLogger.info('產品新增成功', {
+        module: 'ProductService',
+        metadata: { productId: product.id, productName: product.name },
+      })
+
+      return product
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  async updateProduct(id: string, productData: UpdateProductData): Promise<Product> {
+    const timer = dbLogger.timer('更新產品')
+
+    try {
+      const dbData = this.transformToDB(productData as Partial<Product>)
+
+      const { data, error } = await this.supabase
+        .from('products')
+        .update(dbData)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'updateProduct',
+          context: { productId: id },
+        })
+      }
+
+      const images = await this.loadProductImages(id)
+      const product = this.transformFromDB(data, images)
+
+      timer.end({ metadata: { productId: id } })
+      dbLogger.info('產品更新成功', {
+        module: 'ProductService',
+        metadata: { productId: id, productName: product.name },
+      })
+
+      return product
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    const timer = dbLogger.timer('刪除產品')
+
+    try {
+      const { error } = await this.supabase.from('products').delete().eq('id', id)
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'deleteProduct',
+          context: { productId: id },
+        })
+      }
+
+      timer.end({ metadata: { productId: id } })
+      dbLogger.info('產品刪除成功', {
+        module: 'ProductService',
+        metadata: { productId: id },
+      })
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  async searchProducts(query: string): Promise<Product[]> {
+    const timer = dbLogger.timer('搜尋產品')
+
+    try {
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'searchProducts',
+          context: { query },
+        })
+      }
+
+      const products = await Promise.all(
+        (data || []).map(async record => {
+          const images = await this.loadProductImages(record.id)
+          return this.transformFromDB(record, images)
+        })
+      )
+
+      timer.end({ metadata: { query, count: products.length } })
+      return products
+    } catch (error) {
+      timer.end()
       throw error
     }
   }
 }
 
-/**
- * JSON 產品實體（加入 JsonEntity 必要欄位）
- */
-interface JsonProduct extends Product, JsonEntity {}
-
-/**
- * JSON 檔案產品服務實作
- */
-export class JsonProductService
-  extends AbstractJsonService<JsonProduct, CreateProductDTO, UpdateProductDTO>
-  implements SearchableService<Product, CreateProductDTO, UpdateProductDTO>
-{
-  constructor() {
-    const config: JsonServiceConfig = {
-      filePath: path.join(process.cwd(), 'src/data/products.json'),
-      enableBackup: true,
-      maxBackupFiles: 5,
-      useMemoryCache: true,
-      enableCache: true,
-      cacheTTL: 300,
-    }
-
-    const searchConfig: SearchConfig = {
-      searchableFields: ['name', 'description', 'category'],
-      caseSensitive: false,
-      exactMatch: false,
-    }
-
-    super(config, searchConfig)
-  }
-
-  /**
-   * 覆寫 transformCreateDTO 以確保型別正確
-   */
-  protected transformCreateDTO(data: CreateProductDTO): JsonProduct {
-    const baseProduct = super.transformCreateDTO(data)
-
-    return {
-      ...baseProduct,
-      isActive: data.isActive !== false, // 預設為 true
-      inventory: data.inventory || 0,
-      images: data.images || [],
-      galleryImages: data.galleryImages || [],
-    } as JsonProduct
-  }
-
-  /**
-   * 覆寫 findAll，只回傳上架的產品
-   */
-  async findAll(): Promise<Product[]> {
-    const result = await super.findAll({
-      filters: { isActive: true },
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    })
-
-    // 轉換為 Product 類型（移除 JsonEntity 的額外欄位）
-    return result.map(
-      item =>
-        ({
-          id: item.id,
-          name: item.name,
-          description: item.description,
-          category: item.category,
-          price: item.price,
-          originalPrice: item.originalPrice,
-          isOnSale: item.isOnSale,
-          saleEndDate: item.saleEndDate,
-          images: item.images,
-          productImages: item.productImages,
-          primaryImageUrl: item.primaryImageUrl,
-          thumbnailUrl: item.thumbnailUrl,
-          galleryImages: item.galleryImages,
-          inventory: item.inventory,
-          isActive: item.isActive,
-          createdAt: item.createdAt,
-          updatedAt: item.updatedAt,
-        }) as Product
-    )
-  }
-
-  /**
-   * 取得所有產品（包含下架的，管理員用）
-   */
-  async findAllAdmin(): Promise<Product[]> {
-    const result = await super.findAll({
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-    })
-
-    return result.map(item => item as Product)
-  }
-}
-
-/**
- * 產品服務類型定義（統一介面）
- */
-export interface IProductService extends BaseService<Product, CreateProductDTO, UpdateProductDTO> {
-  // 搜尋功能
-  search(query: string, options?: QueryOptions): Promise<Product[]>
-
-  // 分頁功能
-  findAllPaginated(options?: PaginatedQueryOptions): Promise<PaginatedResult<Product>>
-
-  /** 管理員用：取得所有產品（包含下架的） */
-  findAllAdmin(): Promise<Product[]>
-}
-
-/**
- * 統一的產品服務介面實作
- * 包裝現有服務以提供統一的介面
- */
-export class UnifiedProductService implements IProductService {
-  constructor(private service: SupabaseProductService | JsonProductService) {}
-
-  // 基礎 CRUD 操作
-  async findAll(options?: QueryOptions): Promise<Product[]> {
-    return this.service.findAll()
-  }
-
-  async findById(id: string): Promise<Product | null> {
-    return this.service.findById(id)
-  }
-
-  async create(data: CreateProductDTO): Promise<Product> {
-    return this.service.create(data)
-  }
-
-  async update(id: string, data: UpdateProductDTO): Promise<Product> {
-    return this.service.update(id, data)
-  }
-
-  async delete(id: string): Promise<void> {
-    return this.service.delete(id)
-  }
-
-  async exists(id: string): Promise<boolean> {
-    return this.service.exists(id)
-  }
-
-  // 分頁操作
-  async findAllPaginated(options?: PaginatedQueryOptions): Promise<PaginatedResult<Product>> {
-    return this.service.findAllPaginated(options)
-  }
-
-  // 搜尋操作
-  async search(query: string, options?: QueryOptions): Promise<Product[]> {
-    return this.service.search(query, options)
-  }
-
-  // 擴展操作
-  async findAllAdmin(): Promise<Product[]> {
-    return this.service.findAllAdmin()
-  }
-}
-
-/**
- * 向後相容性包裝器
- * 將新的服務介面適配到舊的 ProductService 介面
- */
-export class LegacyProductServiceAdapter {
-  constructor(private service: IProductService) {}
-
-  async getProducts(): Promise<Product[]> {
-    return this.service.findAll()
-  }
-
-  async getAllProducts(): Promise<Product[]> {
-    return this.service.findAllAdmin()
-  }
-
-  async addProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product> {
-    return this.service.create(product as CreateProductDTO)
-  }
-
-  async updateProduct(
-    id: string,
-    product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>
-  ): Promise<Product> {
-    return this.service.update(id, product as UpdateProductDTO)
-  }
-
-  async deleteProduct(id: string): Promise<void> {
-    return this.service.delete(id)
-  }
-
-  async getProductById(id: string): Promise<Product | null> {
-    return this.service.findById(id)
-  }
-
-  async searchProducts(query: string): Promise<Product[]> {
-    return this.service.search(query)
-  }
-}
-
-// === 預設服務實例 ===
-
-/**
- * 預設產品服務實例
- * 使用 Supabase 作為後端，提供向後相容的 API
- */
-export const productService = new LegacyProductServiceAdapter(
-  new UnifiedProductService(new SupabaseProductService())
-)
-
-/**
- * 管理員產品服務實例
- * 使用管理員權限，支援所有 CRUD 操作
- */
-export const adminProductService = new LegacyProductServiceAdapter(
-  new UnifiedProductService(new SupabaseProductService())
-)
+export const productService = new ProductService()
+export const adminProductService = productService

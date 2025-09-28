@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server'
 import { productService } from '@/services/core/product/productService'
+import { ProductImageService } from '@/services/core/product/productImageService'
 import { AdminProductSchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
@@ -104,45 +105,19 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     metadata: { productId: id },
   })
 
-  // 使用完整的圖片清理服務
-  let cleanupResult
+  // 清理產品圖片
   try {
-    const { productImageCleanupService } = await import(
-      '@/services/infrastructure/product-image-cleanup-service'
-    )
-    cleanupResult = await productImageCleanupService.cleanupProductImages(id)
-
+    await ProductImageService.clearProductImages(id)
     apiLogger.info('產品圖片清理完成', {
-      metadata: {
-        productId: id,
-        totalImages: cleanupResult.totalImages,
-        deletedFromStorage: cleanupResult.deletedFromStorage,
-        deletedFromDatabase: cleanupResult.deletedFromDatabase,
-        errorCount: cleanupResult.errors.length,
-        legacyImagesCount: cleanupResult.details.legacyImages.length,
-        unifiedImagesCount: cleanupResult.details.unifiedImages.length,
-      },
+      metadata: { productId: id },
     })
-
-    // 如果有清理錯誤，記錄警告但不阻塞刪除
-    if (cleanupResult.errors.length > 0) {
-      apiLogger.warn('圖片清理過程中發生部分錯誤', {
-        metadata: {
-          productId: id,
-          errors: cleanupResult.errors,
-          failedPaths: cleanupResult.details.failedPaths,
-        },
-      })
-    }
   } catch (imageError) {
     apiLogger.warn('產品圖片清理失敗，但繼續刪除產品', {
       metadata: {
         productId: id,
         error: (imageError as Error).message,
-        errorType: (imageError as Error).constructor.name,
       },
     })
-    // 即使圖片清理完全失敗，也繼續刪除產品（避免阻塞）
   }
 
   // 刪除產品記錄
@@ -161,38 +136,14 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
   // 準備回應資料
   const responseData = {
     id,
-    ...(cleanupResult && {
-      imageCleanup: {
-        totalImages: cleanupResult.totalImages,
-        deletedFromStorage: cleanupResult.deletedFromStorage,
-        deletedFromDatabase: cleanupResult.deletedFromDatabase,
-        hasErrors: cleanupResult.errors.length > 0,
-      },
-    }),
-  }
-
-  // 生成回應訊息
-  let message = '產品刪除成功'
-  if (cleanupResult && cleanupResult.totalImages > 0) {
-    const totalDeleted = cleanupResult.deletedFromStorage + cleanupResult.deletedFromDatabase
-    message += `，已清理 ${totalDeleted} 張圖片`
-
-    if (cleanupResult.errors.length > 0) {
-      message += ` (${cleanupResult.errors.length} 個清理錯誤)`
-    }
+    message: '產品刪除成功',
   }
 
   apiLogger.info('產品刪除完成', {
-    metadata: {
-      productId: id,
-      ...(cleanupResult && {
-        totalImages: cleanupResult.totalImages,
-        cleanupErrors: cleanupResult.errors.length,
-      }),
-    },
+    metadata: { productId: id },
   })
 
-  return success(responseData, message)
+  return success(responseData, '產品刪除成功')
 }
 
 // 導出處理器

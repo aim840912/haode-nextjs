@@ -52,7 +52,10 @@ async function handleGET(request: NextRequest) {
     type: 'product' as const,
     url: `/products?productId=${product.id}`,
     category: product.category,
-    image: product.images[0],
+    image:
+      product.productImages && product.productImages.length > 0
+        ? product.productImages[0].url
+        : '/images/placeholder.jpg',
     price: product.price,
     relevanceScore: calculateProductRelevance(product, query),
   }))

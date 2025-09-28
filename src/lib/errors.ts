@@ -242,6 +242,7 @@ export class ErrorFactory {
 
     // 改善錯誤訊息提取邏輯
     let errorMessage = ''
+    let errorCode = ''
     if (error instanceof Error) {
       errorMessage = error.message
     } else if (error && typeof error === 'object') {
@@ -249,8 +250,36 @@ export class ErrorFactory {
       const errorObj = error as any
       errorMessage =
         errorObj.message || errorObj.error_description || errorObj.error || JSON.stringify(error)
+      errorCode = errorObj.code || ''
     } else {
       errorMessage = String(error)
+    }
+
+    // 先檢查錯誤代碼（PostgreSQL 標準錯誤代碼，最準確）
+    // 參考：https://www.postgresql.org/docs/current/errcodes-appendix.html
+    if (errorCode) {
+      // 23503: 外鍵違反
+      if (errorCode === '23503') {
+        return new ValidationError('資料關聯錯誤，相關資料不存在', details)
+      }
+
+      // 23505: 唯一性約束違反
+      if (errorCode === '23505') {
+        return new ConflictError('資料已存在，請勿重複提交', details)
+      }
+
+      // 42501: 權限不足
+      if (errorCode === '42501') {
+        return new AuthorizationError('權限不足，請確認您已正確登入', details)
+      }
+    }
+
+    // 外鍵約束錯誤（必須在 permission/violates 之前檢查）
+    if (
+      errorMessage?.includes('foreign key') ||
+      errorMessage?.includes('violates foreign key constraint')
+    ) {
+      return new ValidationError('資料關聯錯誤，相關資料不存在', details)
     }
 
     // RLS 政策錯誤
@@ -258,8 +287,8 @@ export class ErrorFactory {
       return new AuthorizationError(' 資料庫權限設定問題，請聯繫系統管理員', details)
     }
 
-    // 權限錯誤
-    if (errorMessage?.includes('permission') || errorMessage?.includes('violates')) {
+    // 權限錯誤（已移除 violates，避免誤判）
+    if (errorMessage?.includes('permission')) {
       return new AuthorizationError('權限不足，請確認您已正確登入', details)
     }
 
@@ -273,9 +302,9 @@ export class ErrorFactory {
       return new ConflictError('資料已存在，請勿重複提交', details)
     }
 
-    // 外鍵約束錯誤
-    if (errorMessage?.includes('foreign key') || errorMessage?.includes('constraint')) {
-      return new ValidationError('資料關聯錯誤，請檢查相關資料是否存在', details)
+    // 一般約束錯誤
+    if (errorMessage?.includes('constraint') || errorMessage?.includes('violates')) {
+      return new ValidationError('資料驗證失敗，請檢查輸入', details)
     }
 
     // 一般資料庫錯誤

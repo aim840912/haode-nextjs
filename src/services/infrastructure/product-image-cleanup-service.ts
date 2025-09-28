@@ -1,9 +1,8 @@
 /**
  * 產品圖片清理服務
  *
- * 統一處理產品刪除時的圖片清理，支援新舊兩套圖片系統：
- * 1. 舊系統：產品表直接存儲圖片 URL
- * 2. 新系統：使用 images 表統一管理
+ * 統一處理產品刪除時的圖片清理
+ * 只支援新系統：使用 product_images 表統一管理
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
@@ -180,29 +179,6 @@ export class ProductImageCleanupService {
         return null
       }
 
-      // 解析 images JSON 欄位（使用類型斷言處理動態欄位）
-      let images: string[] = []
-      const dataWithImages = data as any // 類型斷言以訪問動態欄位
-      if (dataWithImages.images) {
-        try {
-          if (typeof dataWithImages.images === 'string') {
-            images = JSON.parse(dataWithImages.images)
-          } else if (Array.isArray(dataWithImages.images)) {
-            images = dataWithImages.images
-          }
-        } catch (error) {
-          dbLogger.warn('解析產品 images 欄位失敗', {
-            module: 'ProductImageCleanupService',
-            metadata: {
-              productId: data.id,
-              imagesValue: dataWithImages.images,
-              error: String(error),
-            },
-          })
-          images = []
-        }
-      }
-
       // 轉換為 Product 類型（基於實際資料庫結構）
       return {
         id: data.id,
@@ -212,15 +188,10 @@ export class ProductImageCleanupService {
         price: data.price,
         priceUnit: data.price_unit,
         unitQuantity: data.unit_quantity,
-        // 實際資料庫中沒有這些欄位，使用預設值
         originalPrice: undefined,
         isOnSale: false,
         saleEndDate: undefined,
-        images: images, // 從資料庫解析的圖片陣列
-        productImages: [], // 實際資料庫中沒有此欄位
-        primaryImageUrl: data.image_url, // 對應到 image_url 欄位
-        thumbnailUrl: undefined, // 實際資料庫中沒有此欄位
-        galleryImages: [], // 實際資料庫中沒有此欄位
+        productImages: [], // 由 loadProductImages 載入
         inventory: data.stock || 0,
         isActive: data.is_active !== false,
         createdAt: data.created_at,
@@ -245,50 +216,11 @@ export class ProductImageCleanupService {
       metadata: {
         productId: product.id,
         productName: product.name,
-        imagesCount: product.images?.length || 0,
-        primaryImageUrl: product.primaryImageUrl,
-        hasGalleryImages: product.galleryImages?.length || 0,
         hasProductImages: product.productImages?.length || 0,
       },
     })
 
-    // 1. images 陣列
-    if (product.images && Array.isArray(product.images)) {
-      urls.push(...product.images)
-      dbLogger.debug(`從 images 陣列提取 ${product.images.length} 張圖片`, {
-        module: 'ProductImageCleanupService',
-        metadata: { productId: product.id, images: product.images },
-      })
-    }
-
-    // 2. primaryImageUrl
-    if (product.primaryImageUrl) {
-      urls.push(product.primaryImageUrl)
-      dbLogger.debug('從 primaryImageUrl 提取 1 張圖片', {
-        module: 'ProductImageCleanupService',
-        metadata: { productId: product.id, primaryImageUrl: product.primaryImageUrl },
-      })
-    }
-
-    // 3. thumbnailUrl
-    if (product.thumbnailUrl) {
-      urls.push(product.thumbnailUrl)
-      dbLogger.debug('從 thumbnailUrl 提取 1 張圖片', {
-        module: 'ProductImageCleanupService',
-        metadata: { productId: product.id, thumbnailUrl: product.thumbnailUrl },
-      })
-    }
-
-    // 4. galleryImages 陣列
-    if (product.galleryImages && Array.isArray(product.galleryImages)) {
-      urls.push(...product.galleryImages)
-      dbLogger.debug(`從 galleryImages 陣列提取 ${product.galleryImages.length} 張圖片`, {
-        module: 'ProductImageCleanupService',
-        metadata: { productId: product.id, galleryImages: product.galleryImages },
-      })
-    }
-
-    // 5. productImages 結構化資料
+    // 只處理 productImages 結構化資料（新系統）
     if (product.productImages && Array.isArray(product.productImages)) {
       const productImageUrls = product.productImages
         .map((img: ProductImage) => img.url)

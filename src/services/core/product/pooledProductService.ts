@@ -503,6 +503,7 @@ export class PooledProductService extends AbstractPooledService {
 
   /**
    * 轉換資料庫記錄為業務物件
+   * 注意：此服務應該被棄用，建議使用 adminProductService
    */
   private transformFromDB(record: SupabaseProductRecord): Product {
     return {
@@ -513,7 +514,7 @@ export class PooledProductService extends AbstractPooledService {
       price: record.price,
       priceUnit: record.price_unit || undefined,
       unitQuantity: record.unit_quantity || undefined,
-      images: record.image_url ? [record.image_url] : ['/images/placeholder.jpg'],
+      productImages: [], // 應由 adminProductService.loadProductImages 提供
       inventory: record.stock || 0,
       isActive: record.is_active !== false,
       createdAt: record.created_at,

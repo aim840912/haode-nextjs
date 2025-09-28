@@ -530,6 +530,7 @@ export class FullTextSearchService {
 
   /**
    * 轉換產品搜尋結果
+   * 注意：productImages 需由調用方從 product_images 表載入
    */
   private transformProductResult(item: any): any {
     return {
@@ -540,9 +541,7 @@ export class FullTextSearchService {
       price: item.price,
       originalPrice: item.original_price,
       isOnSale: item.is_on_sale,
-      images: item.images || [],
-      primaryImageUrl: item.primary_image_url,
-      thumbnailUrl: item.thumbnail_url,
+      productImages: [], // 需由調用方從 product_images 表載入
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     }

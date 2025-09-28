@@ -115,12 +115,16 @@ export function createProductImage(
 
   return {
     id: `${productId}-${size}-${position}`,
+    product_id: productId,
     url,
+    path: `products/${filename}`,
     alt,
     position,
     size,
     width: sizeConfig.width,
     height: sizeConfig.height,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   }
 }
 

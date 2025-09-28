@@ -46,7 +46,7 @@ export class SiteSettingsService {
 
       timer.end({ metadata: { count: data?.length || 0 } })
 
-      return (data || []) as SiteSetting[]
+      return (data || []) as unknown as SiteSetting[]
     } catch (error) {
       timer.end()
       dbLogger.error('取得網站設定失敗', error as Error, {
@@ -93,7 +93,7 @@ export class SiteSettingsService {
       }
 
       timer.end({ metadata: { found: true } })
-      return data as SiteSetting | null
+      return data as unknown as SiteSetting | null
     } catch (error) {
       timer.end()
       dbLogger.error('取得網站設定失敗', error as Error, {
@@ -134,7 +134,7 @@ export class SiteSettingsService {
       if (error) throw error
 
       const result: Record<string, SiteSetting> = {}
-      ;(data as SiteSetting[])?.forEach(setting => {
+      ;(data as unknown as SiteSetting[])?.forEach(setting => {
         result[setting.key] = setting
       })
 
@@ -191,7 +191,7 @@ export class SiteSettingsService {
 
       if (error) throw error
 
-      const setting = data as SiteSetting
+      const setting = data as unknown as SiteSetting
 
       timer.end({ metadata: { key: setting.key } })
 
@@ -252,7 +252,7 @@ export class SiteSettingsService {
 
       if (error) throw error
 
-      const updatedSetting = data as SiteSetting
+      const updatedSetting = data as unknown as SiteSetting
 
       timer.end({ metadata: { key: updatedSetting.key } })
 

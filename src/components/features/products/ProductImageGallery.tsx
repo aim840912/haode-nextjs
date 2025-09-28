@@ -26,25 +26,13 @@ export default function ProductImageGallery({
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isImageLoaded, setIsImageLoaded] = useState(false)
 
-  // 處理圖片數據，支援新舊格式
-  const images =
-    product.productImages ||
-    product.images.map((url, index) => ({
-      id: `${product.id}-${index}`,
-      url,
-      alt: product.name,
-      position: index,
-      size: 'medium' as const,
-    }))
-
-  // 主圖片URLs，優先使用galleryImages，其次使用第一張圖片
+  // 處理圖片數據
   const imageUrls = useMemo(
     () =>
-      product.galleryImages ||
-      (images.length > 0
-        ? images.map(img => img.url)
-        : [product.images[0] || '/images/placeholder.jpg']),
-    [product.galleryImages, images, product.images]
+      product.productImages && product.productImages.length > 0
+        ? product.productImages.map(img => img.url)
+        : ['/images/placeholder.jpg'],
+    [product.productImages]
   )
 
   useEffect(() => {
@@ -239,39 +227,26 @@ export default function ProductImageGallery({
       {/* 縮圖列表 - 現代化設計 */}
       {showThumbnails && imageUrls.length > 1 && (
         <div className="flex space-x-3 overflow-x-auto pb-2 px-1">
-          {imageUrls.map((url, index) => {
-            // 對於縮圖，直接使用主圖 URL 避免產生不存在的縮圖變體
-            let thumbnailUrl = url
-
-            // 只有當有明確的 productImages 且有縮圖時才使用
-            if (
-              product.productImages?.[index]?.url &&
-              !product.productImages[index].url.includes('thumbnail-')
-            ) {
-              thumbnailUrl = product.productImages[index].url
-            }
-
-            return (
-              <button
-                key={index}
-                onClick={() => handleImageChange(index)}
-                className={`flex-shrink-0 w-18 h-18 rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 ${
-                  index === currentImageIndex
-                    ? 'ring-3 ring-amber-500 shadow-lg shadow-amber-500/30 scale-105'
-                    : 'ring-2 ring-gray-200 hover:ring-gray-300 hover:shadow-md'
-                }`}
-              >
-                <OptimizedImage
-                  src={thumbnailUrl}
-                  alt={`${product.name} 縮圖 ${index + 1}`}
-                  width={72}
-                  height={72}
-                  className="w-full h-full object-cover transition-transform duration-300"
-                  lazy={false}
-                />
-              </button>
-            )
-          })}
+          {imageUrls.map((url, index) => (
+            <button
+              key={index}
+              onClick={() => handleImageChange(index)}
+              className={`flex-shrink-0 w-18 h-18 rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 ${
+                index === currentImageIndex
+                  ? 'ring-3 ring-amber-500 shadow-lg shadow-amber-500/30 scale-105'
+                  : 'ring-2 ring-gray-200 hover:ring-gray-300 hover:shadow-md'
+              }`}
+            >
+              <OptimizedImage
+                src={url}
+                alt={`${product.name} 縮圖 ${index + 1}`}
+                width={72}
+                height={72}
+                className="w-full h-full object-cover transition-transform duration-300"
+                lazy={false}
+              />
+            </button>
+          ))}
         </div>
       )}
     </div>
@@ -290,10 +265,9 @@ export function SimpleProductImage({
 }) {
   // 根據所需尺寸選擇最適合的圖片 URL
   let imageUrl =
-    product.primaryImageUrl ||
-    product.thumbnailUrl ||
-    product.images[0] ||
-    '/images/placeholder.jpg'
+    (product.productImages && product.productImages.length > 0
+      ? product.productImages[0].url
+      : null) || '/images/placeholder.jpg'
 
   // 如果是 Supabase Storage URL 且需要特定尺寸，生成對應的縮圖
   if (imageUrl && imageUrl.includes('supabase.co/storage') && size !== 'medium') {
@@ -337,10 +311,9 @@ export function ProductCardImage({
   index?: number
 }) {
   const imageUrl =
-    product.thumbnailUrl ||
-    product.primaryImageUrl ||
-    product.images[0] ||
-    '/images/placeholder.jpg'
+    (product.productImages && product.productImages.length > 0
+      ? product.productImages[0].url
+      : null) || '/images/placeholder.jpg'
 
   // 直接設定 padding-bottom 確保容器有明確高度
   const paddingBottomMap: Record<string, string> = {

@@ -14,15 +14,18 @@ import OptimizedImage from '@/components/ui/image/OptimizedImage'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 
-// 動態載入圖片上傳器，減少初始 bundle 大小
-const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
-  loading: () => (
-    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-      載入圖片上傳器...
-    </div>
-  ),
-  ssr: false,
-})
+// 動態載入產品圖片管理器，減少初始 bundle 大小
+const ProductImageManager = dynamic(
+  () => import('@/components/features/products/ProductImageManager'),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+        載入圖片管理器...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function EditProduct({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
@@ -47,7 +50,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     isOnSale: false,
     saleEndDate: '',
     inventory: 0,
-    images: [''],
     isActive: true,
   })
 
@@ -96,7 +98,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             isOnSale: isOnSale,
             saleEndDate: product.saleEndDate || '',
             inventory: product.inventory,
-            images: product.images.length > 0 ? product.images : [''],
             isActive: product.isActive,
           })
 
@@ -183,13 +184,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       return
     }
 
-    // 驗證至少要有一張圖片
-    const validImages = formData.images.filter(img => img.trim() !== '')
-    if (validImages.length === 0) {
-      alert('產品必須至少有一張圖片，請先上傳圖片後再提交')
-      return
-    }
-
     setLoading(true)
 
     try {
@@ -197,7 +191,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
       const { salePrice: _unusedSalePrice, ...restData } = formData
       const productData = {
         ...restData,
-        images: formData.images.filter(img => img.trim() !== ''),
+        images: [],
         // 如果是特價商品，設定特價為當前售價，原價為 originalPrice
         // 如果不是特價商品，設定原價為當前售價，originalPrice 為 null
         price: formData.isOnSale ? formData.salePrice : formData.price,
@@ -248,103 +242,7 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     }))
   }
 
-  const handleImageUploadSuccess = (
-    images: Array<{ id: string; url?: string; path: string; size: string; position: number }>
-  ) => {
-    const urls = images.map(img => img.url || img.path).filter(Boolean)
-    setUploadedImages(prev => [...prev, ...urls])
-
-    // 同時更新 formData 中的 images
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images.filter(img => img.trim() !== ''), ...urls],
-    }))
-  }
-
-  const handleImageUploadError = (error: string) => {
-    logger.error('圖片上傳錯誤', new Error(error))
-    alert(`圖片上傳失敗: ${error}`)
-  }
-
-  const addImageField = () => {
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ''],
-    }))
-  }
-
-  const removeImageField = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter((_, i) => i !== index),
-    }))
-  }
-
-  const updateImageField = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.map((img, i) => (i === index ? value : img)),
-    }))
-  }
-
-  // 刪除現有圖片
-  const handleDeleteExistingImage = async (imageUrl: string, index: number) => {
-    if (!imageUrl || !imageUrl.trim()) {
-      // 如果是空的 URL，直接從陣列中移除
-      removeImageField(index)
-      return
-    }
-
-    const confirmed = confirm('確定要刪除這張圖片嗎？圖片將在保存產品時被移除。')
-    if (!confirmed) return
-
-    setIsDeletingImage(imageUrl)
-
-    // 先從 UI 中移除圖片，避免 CORS 錯誤
-    const originalImages = formData.images
-    removeImageField(index)
-
-    try {
-      // 從 URL 中提取 path
-      // 假設 URL 格式類似：https://domain.com/storage/v1/object/public/bucket/path
-      const urlParts = imageUrl.split('/')
-      const bucketIndex = urlParts.findIndex(part => part === 'public')
-      let filePath = ''
-
-      if (bucketIndex !== -1 && bucketIndex < urlParts.length - 2) {
-        // 跳過 'public' 和 bucket 名稱，取得實際的檔案路径
-        filePath = urlParts.slice(bucketIndex + 2).join('/')
-      } else {
-        // 如果無法解析路径，嘗試使用最後的部分
-        filePath = urlParts[urlParts.length - 1]
-      }
-
-      if (!filePath) {
-        throw new Error('無法解析圖片路径')
-      }
-
-      // 不再調用舊的刪除 API，讓後端在更新產品時自動清理未使用的圖片
-      // 只需在前端移除即可
-      logger.info('圖片從產品中移除（文件清理將在保存時進行）', {
-        metadata: { imageUrl, productId },
-      })
-
-      logger.info('圖片刪除成功', {
-        metadata: { imageUrl, filePath, productId },
-      })
-    } catch (error) {
-      // 如果刪除失敗，恢復原始狀態
-      setFormData(prev => ({ ...prev, images: originalImages }))
-
-      const errorMessage = error instanceof Error ? error.message : '刪除失敗'
-      logger.error('圖片刪除失敗', error instanceof Error ? error : new Error(errorMessage), {
-        metadata: { imageUrl, productId },
-      })
-      alert(`圖片刪除失敗: ${errorMessage}`)
-    } finally {
-      setIsDeletingImage(null)
-    }
-  }
+  // 圖片管理已由 ProductImageManager 元件處理
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
@@ -602,100 +500,31 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-2">產品圖片</label>
             <p className="text-xs text-gray-600 mb-3">
-              支援上傳圖片檔案或輸入圖片 URL。建議圖片尺寸為 400x400 像素以上。
+              支援批量上傳、拖放排序、設定主圖等功能。建議圖片尺寸為 800x800 像素以上。
             </p>
 
-            {/* 圖片上傳組件 */}
-            <div className="mb-6 border border-gray-200 rounded-lg p-4 bg-gray-50">
-              <h4 className="font-medium text-gray-900 mb-3">上傳新圖片</h4>
-              <ImageUploader
-                productId={productId}
-                module="products"
-                onUploadSuccess={handleImageUploadSuccess}
-                onUploadError={handleImageUploadError}
-                maxFiles={5}
-                allowMultiple={true}
-                generateMultipleSizes={false}
-                enableCompression={true}
-                className="mb-4"
-              />
-              {uploadedImages.length > 0 && (
-                <div className="text-sm text-green-600">
-                  本次編輯已上傳 {uploadedImages.length} 張新圖片
+            {/* 新的產品圖片管理器 */}
+            <div className="border border-gray-200 rounded-lg p-4 bg-white">
+              {productId ? (
+                <ProductImageManager
+                  productId={productId}
+                  maxImages={10}
+                  onImagesChange={images => {
+                    logger.info('圖片列表更新', {
+                      metadata: {
+                        context: 'EditProduct',
+                        productId,
+                        imageCount: images.length,
+                      },
+                    })
+                  }}
+                />
+              ) : (
+                <div className="flex items-center justify-center py-8 text-gray-500">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900 mr-3"></div>
+                  <span>載入圖片管理器...</span>
                 </div>
               )}
-            </div>
-
-            {/* 現有圖片 URL 編輯 */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium text-gray-900">現有圖片 URL</h4>
-                <div className="text-sm text-gray-500">
-                  {formData.images.filter(img => img.trim() !== '').length} 張圖片
-                  {formData.images.filter(img => img.trim() !== '').length === 0 && (
-                    <span className="text-red-500 ml-2">⚠ 至少需要一張圖片</span>
-                  )}
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 mb-3">
-                可直接編輯現有的圖片 URL，或透過上方上傳組件新增圖片。點擊刪除按鈕可移除圖片。
-              </p>
-            </div>
-            <div className="space-y-4">
-              {formData.images.map((image, index) => (
-                <div key={index} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex gap-2 mb-3">
-                    <input
-                      type="url"
-                      value={image}
-                      onChange={e => updateImageField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                      placeholder="輸入圖片 URL"
-                      disabled={isDeletingImage === image}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteExistingImage(image, index)}
-                      disabled={isDeletingImage === image}
-                      className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-w-[44px] flex items-center justify-center"
-                      title={image.trim() ? '從伺服器刪除此圖片' : '移除此欄位'}
-                    >
-                      {isDeletingImage === image ? (
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      ) : (
-                        '✕'
-                      )}
-                    </button>
-                  </div>
-                  {image.trim() && (
-                    <div className="mt-2">
-                      <div className="text-xs text-gray-600 mb-2">圖片預覽：</div>
-                      <div className="w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center relative">
-                        <OptimizedImage
-                          src={imageUrlValidator.clean(image)}
-                          alt={`產品圖片 ${index + 1}`}
-                          fill
-                          className="object-cover"
-                          showErrorDetails={true}
-                          enableMultiLevelFallback={true}
-                          onError={error => {
-                            logger.warn('圖片預覽載入失敗', {
-                              metadata: { imageUrl: image, error, index },
-                            })
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addImageField}
-                className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 transition-colors text-sm"
-              >
-                + 新增圖片
-              </button>
             </div>
           </div>
 

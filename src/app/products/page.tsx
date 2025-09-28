@@ -68,8 +68,8 @@ function ProductsPage() {
                 price: product.price,
                 inventory: product.inventory,
                 images:
-                  product.images && product.images.length > 0
-                    ? product.images
+                  product.productImages && product.productImages.length > 0
+                    ? product.productImages.map(img => img.url)
                     : ['/images/placeholder.jpg'],
               }}
             />

@@ -6,12 +6,15 @@ import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { ProductImageService } from '@/services/core/product/productImageService'
 
-async function handleGET(request: NextRequest, params?: unknown) {
-  const context = params as { params: Promise<{ id: string }> } | undefined
-  const { id: productId } = await (context?.params || Promise.resolve({ id: '' }))
+async function handleGET(request: NextRequest, context?: { params: Promise<{ id: string }> }) {
+  if (!context || !context.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+
+  const { id: productId } = await context.params
 
   // 驗證產品 ID
-  if (!productId) {
+  if (!productId || productId.trim() === '') {
     throw new ValidationError('產品 ID 不能為空')
   }
 
@@ -48,12 +51,17 @@ async function handleGET(request: NextRequest, params?: unknown) {
   }
 }
 
-async function handleDELETE(request: NextRequest, params?: unknown) {
-  const context = params as { params: Promise<{ id: string }> } | undefined
-  const { id: productId } = await (context?.params || Promise.resolve({ id: '' }))
+async function handleDELETE(request: NextRequest, _user: unknown, routeContext?: unknown) {
+  const context = routeContext as { params: Promise<{ id: string }> } | undefined
+
+  if (!context || !context.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+
+  const { id: productId } = await context.params
 
   // 驗證產品 ID
-  if (!productId) {
+  if (!productId || productId.trim() === '') {
     throw new ValidationError('產品 ID 不能為空')
   }
 
@@ -89,45 +97,104 @@ async function handleDELETE(request: NextRequest, params?: unknown) {
   }
 }
 
-async function handlePOST(request: NextRequest, params?: unknown) {
-  const context = params as { params: Promise<{ id: string }> } | undefined
-  const { id: productId } = await (context?.params || Promise.resolve({ id: '' }))
+async function handlePOST(request: NextRequest, _user: unknown, routeContext?: unknown) {
+  const context = routeContext as { params: Promise<{ id: string }> } | undefined
 
-  if (!productId) {
+  if (!context || !context.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+
+  const { id: productId } = await context.params
+
+  if (!productId || productId.trim() === '') {
     throw new ValidationError('產品 ID 不能為空')
   }
 
   try {
     const body = await request.json()
 
-    if (!body.url || !body.path) {
-      throw new ValidationError('url 和 path 為必填欄位')
+    // 檢查是批量上傳還是單張上傳
+    if (Array.isArray(body)) {
+      // 批量上傳多張圖片
+      if (body.length === 0) {
+        throw new ValidationError('圖片列表不能為空')
+      }
+
+      // 驗證每張圖片的必填欄位
+      for (const [index, img] of body.entries()) {
+        if (!img.url || !img.path) {
+          throw new ValidationError(`第 ${index + 1} 張圖片缺少 url 或 path 欄位`)
+        }
+      }
+
+      apiLogger.info('開始批量上傳產品圖片', {
+        metadata: { productId, imageCount: body.length },
+      })
+
+      // 準備圖片資料
+      const imagesData = body.map((img, index) => ({
+        product_id: productId,
+        url: img.url,
+        path: img.path,
+        alt: img.alt || `產品圖片 ${index + 1}`,
+        position: img.position ?? index,
+        size: img.size || 'medium',
+        width: img.width,
+        height: img.height,
+        file_size: img.file_size,
+      }))
+
+      // 批量建立圖片
+      const images = await ProductImageService.createProductImages(imagesData)
+
+      apiLogger.info('產品圖片批量上傳成功', {
+        metadata: {
+          productId,
+          uploadedCount: images.length,
+          imageIds: images.map(img => img.id),
+        },
+      })
+
+      return created(
+        {
+          productId,
+          images,
+          count: images.length,
+          message: `成功上傳 ${images.length} 張圖片`,
+        },
+        '批量圖片上傳成功'
+      )
+    } else {
+      // 單張圖片上傳（保持向後相容）
+      if (!body.url || !body.path) {
+        throw new ValidationError('url 和 path 為必填欄位')
+      }
+
+      apiLogger.info('開始上傳單張產品圖片', {
+        metadata: { productId, url: body.url },
+      })
+
+      const image = await ProductImageService.createProductImage({
+        product_id: productId,
+        url: body.url,
+        path: body.path,
+        alt: body.alt || '產品圖片',
+        position: body.position,
+        size: body.size || 'medium',
+        width: body.width,
+        height: body.height,
+        file_size: body.file_size,
+      })
+
+      apiLogger.info('產品圖片上傳成功', {
+        metadata: {
+          productId,
+          imageId: image.id,
+        },
+      })
+
+      return created(image, '圖片上傳成功')
     }
-
-    apiLogger.info('開始上傳產品圖片', {
-      metadata: { productId, url: body.url },
-    })
-
-    const image = await ProductImageService.createProductImage({
-      product_id: productId,
-      url: body.url,
-      path: body.path,
-      alt: body.alt,
-      position: body.position,
-      size: body.size,
-      width: body.width,
-      height: body.height,
-      file_size: body.file_size,
-    })
-
-    apiLogger.info('產品圖片上傳成功', {
-      metadata: {
-        productId,
-        imageId: image.id,
-      },
-    })
-
-    return created(image, '圖片上傳成功')
   } catch (error) {
     apiLogger.error('上傳產品圖片失敗', error instanceof Error ? error : new Error(String(error)), {
       metadata: { productId },
@@ -143,10 +210,10 @@ export const GET = withErrorHandler(handleGET, {
 })
 
 // POST 和 DELETE 需要管理員權限
-export const POST = requireAdmin(async (req, context) => {
-  return await handlePOST(req, context)
+export const POST = requireAdmin(async (req, user, context) => {
+  return await handlePOST(req, user, context)
 })
 
-export const DELETE = requireAdmin(async (req, context) => {
-  return await handleDELETE(req, context)
+export const DELETE = requireAdmin(async (req, user, context) => {
+  return await handleDELETE(req, user, context)
 })
