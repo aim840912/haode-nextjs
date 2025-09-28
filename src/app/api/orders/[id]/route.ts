@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -94,8 +94,8 @@ async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
   throw new MethodNotAllowedError(`不支援的方法: ${request.method}`)
 }
 
-// 匯出 API 處理器
-export const GET = requireAuth(handleGET)
-export const PATCH = requireAuth(handlePATCH)
-export const PUT = requireAuth(handleUnsupportedMethod)
-export const DELETE = requireAuth(handleUnsupportedMethod)
+// 匯出 API 處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'OrderAPI' })
+export const PATCH = withAuthAndError(handlePATCH, { module: 'OrderAPI', enableAuditLog: true })
+export const PUT = withAuthAndError(handleUnsupportedMethod, { module: 'OrderAPI' })
+export const DELETE = withAuthAndError(handleUnsupportedMethod, { module: 'OrderAPI' })

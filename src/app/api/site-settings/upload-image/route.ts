@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
@@ -14,7 +14,7 @@ import { apiLogger } from '@/lib/logger'
  * POST /api/site-settings/upload-image
  * 上傳圖片並返回 URL
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+async function handlePOST(req: NextRequest, user: User) {
   const formData = await req.formData()
   const file = formData.get('file') as File | null
 
@@ -91,4 +91,9 @@ export const POST = requireAdmin(async (req: NextRequest) => {
     },
     '圖片上傳成功'
   )
+}
+
+export const POST = withAdminAndError(handlePOST, {
+  module: 'SiteSettingsUploadAPI',
+  enableAuditLog: true,
 })

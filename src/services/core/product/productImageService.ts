@@ -4,16 +4,16 @@ import { DatabaseError, NotFoundError, ValidationError, ErrorFactory } from '@/l
 import type { Database } from '@/types/database'
 import type { ProductImage } from '@/types/product'
 
-type ProductImageRow = Database['public']['Tables']['product_images']['Row']
-type ProductImageInsert = Database['public']['Tables']['product_images']['Insert']
-type ProductImageUpdate = Database['public']['Tables']['product_images']['Update']
+type ImageRow = Database['public']['Tables']['images']['Row']
+type ImageInsert = Database['public']['Tables']['images']['Insert']
+type ImageUpdate = Database['public']['Tables']['images']['Update']
 
 export interface CreateProductImageData {
   product_id: string
-  url: string
-  path: string
-  alt?: string
-  position?: number
+  storage_url: string
+  file_path: string
+  alt_text?: string
+  display_position?: number
   size?: 'thumbnail' | 'medium' | 'large'
   width?: number
   height?: number
@@ -21,10 +21,10 @@ export interface CreateProductImageData {
 }
 
 export interface UpdateProductImageData {
-  url?: string
-  path?: string
-  alt?: string
-  position?: number
+  storage_url?: string
+  file_path?: string
+  alt_text?: string
+  display_position?: number
   size?: 'thumbnail' | 'medium' | 'large'
   width?: number
   height?: number
@@ -32,23 +32,26 @@ export interface UpdateProductImageData {
 }
 
 export class ProductImageService {
-  private static readonly TABLE_NAME = 'product_images'
+  private static readonly TABLE_NAME = 'images'
   private static readonly MODULE_NAME = 'ProductImageService'
+  private static readonly MODULE = 'products'
 
-  private static transformFromDB(row: ProductImageRow): ProductImage {
+  private static transformFromDB(row: ImageRow): ProductImage {
+    const metadata = (row.metadata as any) || {}
     return {
       id: row.id,
-      product_id: row.product_id,
-      url: row.url,
-      path: row.path,
-      alt: row.alt || undefined,
-      position: row.position,
+      entity_id: row.entity_id,
+      storage_url: row.storage_url,
+      file_path: row.file_path,
+      alt_text: row.alt_text || undefined,
+      display_position: row.display_position,
       size: row.size as 'thumbnail' | 'medium' | 'large',
-      width: row.width || undefined,
-      height: row.height || undefined,
-      file_size: row.file_size || undefined,
+      width: metadata.width || undefined,
+      height: metadata.height || undefined,
+      file_size: metadata.file_size || undefined,
       created_at: row.created_at,
       updated_at: row.updated_at,
+      module: row.module,
     }
   }
 
@@ -70,8 +73,9 @@ export class ProductImageService {
       const { data, error } = await supabase
         .from(this.TABLE_NAME)
         .select('*')
-        .eq('product_id', productId)
-        .order('position', { ascending: true })
+        .eq('module', this.MODULE)
+        .eq('entity_id', productId)
+        .order('display_position', { ascending: true })
 
       if (error) throw error
 
@@ -149,26 +153,29 @@ export class ProductImageService {
         throw new DatabaseError('Supabase admin client 未初始化')
       }
 
-      if (!imageData.product_id || !imageData.url || !imageData.path) {
-        throw new ValidationError('product_id, url, path 為必填欄位')
+      if (!imageData.product_id || !imageData.storage_url || !imageData.file_path) {
+        throw new ValidationError('product_id, storage_url, file_path 為必填欄位')
       }
 
-      const insertData: ProductImageInsert = {
-        product_id: imageData.product_id,
-        url: imageData.url,
-        path: imageData.path,
-        alt: imageData.alt,
-        position: imageData.position ?? 0,
+      const insertData: ImageInsert = {
+        module: this.MODULE,
+        entity_id: imageData.product_id,
+        storage_url: imageData.storage_url,
+        file_path: imageData.file_path,
+        alt_text: imageData.alt_text,
+        display_position: imageData.display_position ?? 0,
         size: imageData.size ?? 'medium',
-        width: imageData.width,
-        height: imageData.height,
-        file_size: imageData.file_size,
+        metadata: {
+          width: imageData.width,
+          height: imageData.height,
+          file_size: imageData.file_size,
+        },
       }
 
       dbLogger.debug('建立產品圖片', {
         module: this.MODULE_NAME,
         action: 'createProductImage',
-        metadata: { productId: imageData.product_id, position: insertData.position },
+        metadata: { productId: imageData.product_id, position: insertData.display_position },
       })
 
       const { data, error } = await supabase
@@ -185,7 +192,7 @@ export class ProductImageService {
       dbLogger.info('產品圖片建立成功', {
         module: this.MODULE_NAME,
         action: 'createProductImage',
-        metadata: { imageId: image.id, productId: image.product_id },
+        metadata: { imageId: image.id, productId: image.entity_id },
       })
 
       return image
@@ -217,21 +224,24 @@ export class ProductImageService {
       }
 
       for (const imageData of imagesData) {
-        if (!imageData.product_id || !imageData.url || !imageData.path) {
-          throw new ValidationError('所有圖片都必須包含 product_id, url, path')
+        if (!imageData.product_id || !imageData.storage_url || !imageData.file_path) {
+          throw new ValidationError('所有圖片都必須包含 product_id, storage_url, file_path')
         }
       }
 
-      const insertData: ProductImageInsert[] = imagesData.map((imageData, index) => ({
-        product_id: imageData.product_id,
-        url: imageData.url,
-        path: imageData.path,
-        alt: imageData.alt,
-        position: imageData.position ?? index,
+      const insertData: ImageInsert[] = imagesData.map((imageData, index) => ({
+        module: this.MODULE,
+        entity_id: imageData.product_id,
+        storage_url: imageData.storage_url,
+        file_path: imageData.file_path,
+        alt_text: imageData.alt_text,
+        display_position: imageData.display_position ?? index,
         size: imageData.size ?? 'medium',
-        width: imageData.width,
-        height: imageData.height,
-        file_size: imageData.file_size,
+        metadata: {
+          width: imageData.width,
+          height: imageData.height,
+          file_size: imageData.file_size,
+        },
       }))
 
       dbLogger.debug('批次建立產品圖片', {
@@ -297,15 +307,20 @@ export class ProductImageService {
         throw new NotFoundError(`圖片不存在: ${imageId}`)
       }
 
-      const updatePayload: ProductImageUpdate = {
-        ...(updateData.url && { url: updateData.url }),
-        ...(updateData.path && { path: updateData.path }),
-        ...(updateData.alt !== undefined && { alt: updateData.alt }),
-        ...(updateData.position !== undefined && { position: updateData.position }),
+      const metadata: any = {}
+      if (updateData.width !== undefined) metadata.width = updateData.width
+      if (updateData.height !== undefined) metadata.height = updateData.height
+      if (updateData.file_size !== undefined) metadata.file_size = updateData.file_size
+
+      const updatePayload: ImageUpdate = {
+        ...(updateData.storage_url && { storage_url: updateData.storage_url }),
+        ...(updateData.file_path && { file_path: updateData.file_path }),
+        ...(updateData.alt_text !== undefined && { alt_text: updateData.alt_text }),
+        ...(updateData.display_position !== undefined && {
+          display_position: updateData.display_position,
+        }),
         ...(updateData.size && { size: updateData.size }),
-        ...(updateData.width !== undefined && { width: updateData.width }),
-        ...(updateData.height !== undefined && { height: updateData.height }),
-        ...(updateData.file_size !== undefined && { file_size: updateData.file_size }),
+        ...(Object.keys(metadata).length > 0 && { metadata }),
       }
 
       dbLogger.debug('更新產品圖片', {
@@ -364,7 +379,7 @@ export class ProductImageService {
       dbLogger.debug('刪除產品圖片', {
         module: this.MODULE_NAME,
         action: 'deleteProductImage',
-        metadata: { imageId, productId: existingImage.product_id },
+        metadata: { imageId, productId: existingImage.entity_id },
       })
 
       const { error } = await supabase.from(this.TABLE_NAME).delete().eq('id', imageId)
@@ -409,7 +424,11 @@ export class ProductImageService {
         metadata: { productId, imageCount: existingImages.length },
       })
 
-      const { error } = await supabase.from(this.TABLE_NAME).delete().eq('product_id', productId)
+      const { error } = await supabase
+        .from(this.TABLE_NAME)
+        .delete()
+        .eq('module', this.MODULE)
+        .eq('entity_id', productId)
 
       if (error) throw error
 
@@ -455,9 +474,10 @@ export class ProductImageService {
       for (const { id, position } of imageOrders) {
         const { error } = await supabase
           .from(this.TABLE_NAME)
-          .update({ position })
+          .update({ display_position: position })
           .eq('id', id)
-          .eq('product_id', productId)
+          .eq('module', this.MODULE)
+          .eq('entity_id', productId)
 
         if (error) throw error
       }
@@ -497,7 +517,7 @@ export class ProductImageService {
         throw new NotFoundError(`圖片不存在: ${imageId}`)
       }
 
-      if (targetImage.product_id !== productId) {
+      if (targetImage.entity_id !== productId) {
         throw new ValidationError('圖片不屬於指定產品')
       }
 
@@ -510,18 +530,19 @@ export class ProductImageService {
       const currentPrimary = await supabase
         .from(this.TABLE_NAME)
         .select('*')
-        .eq('product_id', productId)
-        .eq('position', 0)
+        .eq('module', this.MODULE)
+        .eq('entity_id', productId)
+        .eq('display_position', 0)
         .maybeSingle()
 
       if (currentPrimary.data) {
         await supabase
           .from(this.TABLE_NAME)
-          .update({ position: targetImage.position })
+          .update({ display_position: targetImage.display_position })
           .eq('id', currentPrimary.data.id)
       }
 
-      await supabase.from(this.TABLE_NAME).update({ position: 0 }).eq('id', imageId)
+      await supabase.from(this.TABLE_NAME).update({ display_position: 0 }).eq('id', imageId)
 
       timer.end({ metadata: { productId, imageId } })
 
@@ -556,8 +577,9 @@ export class ProductImageService {
       const { data, error } = await supabase
         .from(this.TABLE_NAME)
         .select('*')
-        .eq('product_id', productId)
-        .eq('position', 0)
+        .eq('module', this.MODULE)
+        .eq('entity_id', productId)
+        .eq('display_position', 0)
         .maybeSingle()
 
       if (error) throw error

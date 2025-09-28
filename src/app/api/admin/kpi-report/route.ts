@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin, User } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
 import { apiLogger } from '@/lib/logger'
@@ -32,5 +32,5 @@ async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {
   return success(report, 'KPI 監控報告取得成功')
 }
 
-// 導出處理器 - 需要管理員權限
-export const GET = requireAdmin(handleGET)
+// 導出處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAdminAndError(handleGET, { module: 'KPIReportAPI' })

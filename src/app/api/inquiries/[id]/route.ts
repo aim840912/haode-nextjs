@@ -13,8 +13,7 @@ import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
-import { requireAuth } from '@/lib/middleware/api-middleware'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import type { Database } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -473,8 +472,14 @@ async function handlePATCH(request: NextRequest, user: any, context?: any) {
   return success(updatedInquiry, '詢問單更新成功')
 }
 
-// 導出處理器 - 使用統一的權限中間件
-export const GET = requireAuth(handleGET)
-export const PUT = requireAuth(handlePUT)
-export const DELETE = requireAuth(handleDELETE)
-export const PATCH = requireAuth(handlePATCH)
+// 導出處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'InquiryDetailAPI' })
+export const PUT = withAuthAndError(handlePUT, { module: 'InquiryDetailAPI', enableAuditLog: true })
+export const DELETE = withAuthAndError(handleDELETE, {
+  module: 'InquiryDetailAPI',
+  enableAuditLog: true,
+})
+export const PATCH = withAuthAndError(handlePATCH, {
+  module: 'InquiryDetailAPI',
+  enableAuditLog: true,
+})

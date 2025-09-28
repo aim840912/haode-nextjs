@@ -250,7 +250,46 @@ export function optionalAuth(handler: OptionalAuthInternalHandler): NextRouteHan
   }
 }
 
-// 舊版輔助函數已移除 - 現在直接使用 requireAuth/requireAdmin 即可
+/**
+ * 組合輔助函數：權限檢查 + 錯誤處理
+ * 這些函數遵循最佳實踐，保持中間件分離但提供便捷的組合方式
+ */
+
+/**
+ * 需要使用者認證 + 統一錯誤處理
+ * 適用於需要登入的 API 路由
+ */
+export function withAuthAndError(
+  handler: AuthenticatedInternalHandler,
+  options?: import('./error-handler').ErrorHandlerOptions
+): NextRouteHandler {
+  const { withErrorHandler } = require('./error-handler')
+  return withErrorHandler(requireAuth(handler), options)
+}
+
+/**
+ * 需要管理員權限 + 統一錯誤處理
+ * 適用於需要管理員權限的 API 路由
+ */
+export function withAdminAndError(
+  handler: AdminInternalHandler,
+  options?: import('./error-handler').ErrorHandlerOptions
+): NextRouteHandler {
+  const { withErrorHandler } = require('./error-handler')
+  return withErrorHandler(requireAdmin(handler), options)
+}
+
+/**
+ * 可選認證 + 統一錯誤處理
+ * 適用於公開 API 但可能需要使用者資訊的路由
+ */
+export function withOptionalAuthAndError(
+  handler: OptionalAuthInternalHandler,
+  options?: import('./error-handler').ErrorHandlerOptions
+): NextRouteHandler {
+  const { withErrorHandler } = require('./error-handler')
+  return withErrorHandler(optionalAuth(handler), options)
+}
 
 /**
  * 檢查使用者是否有權限存取特定資源

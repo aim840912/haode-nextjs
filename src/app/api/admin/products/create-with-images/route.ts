@@ -1,6 +1,5 @@
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { ValidationError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
@@ -161,4 +160,7 @@ async function handlePOST(request: NextRequest, user: any) {
   )
 }
 
-export const POST = requireAdmin(handlePOST)
+export const POST = withAdminAndError(handlePOST, {
+  module: 'CreateProductWithImagesAPI',
+  enableAuditLog: true,
+})

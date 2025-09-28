@@ -433,6 +433,35 @@ export class UnifiedImageService {
   }
 
   /**
+   * 根據 ID 查詢圖片
+   */
+  async getImageById(imageId: string): Promise<ImageRecord | null> {
+    try {
+      const supabaseAdmin = getSupabaseAdmin()
+      if (!supabaseAdmin) {
+        throw new UnifiedImageError('Supabase admin client 未配置')
+      }
+
+      const { data, error } = await (supabaseAdmin as any)
+        .from('images')
+        .select('*')
+        .eq('id', imageId)
+        .maybeSingle()
+
+      if (error) {
+        throw new UnifiedImageError('查詢圖片失敗', error)
+      }
+
+      return data as ImageRecord | null
+    } catch (error) {
+      if (error instanceof UnifiedImageError) {
+        throw error
+      }
+      throw new UnifiedImageError('查詢圖片過程發生未知錯誤', error)
+    }
+  }
+
+  /**
    * 刪除圖片
    */
   async deleteImage(imageId: string): Promise<void> {

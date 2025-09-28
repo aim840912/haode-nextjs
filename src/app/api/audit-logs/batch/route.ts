@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { apiLogger } from '@/lib/logger'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { success, error as errorResponse } from '@/lib/api-response'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
 import type { Database } from '@/types/database'
@@ -114,7 +114,10 @@ async function handlePOST(request: NextRequest, user: any) {
   })
 }
 
-export const POST = requireAuth(handlePOST)
+export const POST = withAuthAndError(handlePOST, {
+  module: 'AuditLogBatchAPI',
+  enableAuditLog: true,
+})
 
 // 按 ID 批量刪除
 async function handleDeleteByIds(

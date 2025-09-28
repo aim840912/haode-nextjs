@@ -4,7 +4,7 @@ import { NewsSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { apiLogger } from '@/lib/logger'
 
 /**
@@ -69,4 +69,4 @@ export const GET = withErrorHandler(handleGET, {
   enableAuditLog: false,
 })
 
-export const POST = requireAdmin(handlePOST)
+export const POST = withAdminAndError(handlePOST, { module: 'NewsAPI', enableAuditLog: true })

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { dbLogger } from '@/lib/logger'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
@@ -179,4 +179,4 @@ async function handlePOST(request: NextRequest): Promise<Response> {
   }
 }
 
-export const POST = requireAdmin(handlePOST)
+export const POST = withAdminAndError(handlePOST, { module: 'FixPricesAPI', enableAuditLog: true })

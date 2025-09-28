@@ -6,7 +6,7 @@
 import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { AuditLogQueryParams, AuditAction, ResourceType, UserRole } from '@/types/audit'
@@ -50,15 +50,15 @@ async function handleGET(request: NextRequest, user: any) {
   return success(auditLogs, '審計日誌查詢成功')
 }
 
-// 導出 API 處理器 - 使用統一的權限中間件
-export const GET = requireAuth(handleGET)
+// 導出 API 處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'AuditLogsAPI' })
 
 // 處理其他不支援的 HTTP 方法
 async function handleUnsupportedMethods(): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 
-export const POST = requireAuth(handleUnsupportedMethods)
-export const PUT = requireAuth(handleUnsupportedMethods)
-export const DELETE = requireAuth(handleUnsupportedMethods)
-export const PATCH = requireAuth(handleUnsupportedMethods)
+export const POST = withAuthAndError(handleUnsupportedMethods, { module: 'AuditLogsAPI' })
+export const PUT = withAuthAndError(handleUnsupportedMethods, { module: 'AuditLogsAPI' })
+export const DELETE = withAuthAndError(handleUnsupportedMethods, { module: 'AuditLogsAPI' })
+export const PATCH = withAuthAndError(handleUnsupportedMethods, { module: 'AuditLogsAPI' })

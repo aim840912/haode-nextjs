@@ -12,7 +12,7 @@ import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter
@@ -126,7 +126,6 @@ async function handlePOST(request: NextRequest, user: any) {
   return created(inquiry, '詢問單建立成功')
 }
 
-// 導出 API 處理器 - 使用統一的權限中間件
-// requireAuth 已內建 withErrorHandler，無需重複包裝
-export const GET = requireAuth(handleGET)
-export const POST = requireAuth(handlePOST)
+// 導出 API 處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'InquiryAPI' })
+export const POST = withAuthAndError(handlePOST, { module: 'InquiryAPI', enableAuditLog: true })

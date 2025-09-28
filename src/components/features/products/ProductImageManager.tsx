@@ -49,7 +49,9 @@ export default function ProductImageManager({
       setIsLoading(true)
       setError(null)
 
-      const response = await fetch(`/api/products/${encodeURIComponent(productId)}/images`)
+      const response = await fetch(
+        `/api/upload/unified?module=products&entityId=${encodeURIComponent(productId)}`
+      )
 
       if (!response.ok) {
         throw new Error('載入圖片失敗')
@@ -127,7 +129,7 @@ export default function ProductImageManager({
         formData.append('entityId', productId)
         formData.append('size', 'medium')
         formData.append('display_position', String(images.length + index))
-        formData.append('altText', file.name.replace(/\.[^/.]+$/, ''))
+        formData.append('alt_text', file.name.replace(/\.[^/.]+$/, ''))
 
         const headers: HeadersInit = {}
         if (csrfToken) {
@@ -159,17 +161,18 @@ export default function ProductImageManager({
       if (mode === 'memory') {
         const newImages = uploadedImages.map((img, index) => ({
           id: `temp-${Date.now()}-${index}`,
-          url: img.url,
-          path: img.path,
-          alt: img.alt || `產品圖片 ${index + 1}`,
-          position: images.length + index,
+          entity_id: productId,
+          storage_url: img.url || img.storage_url,
+          file_path: img.path || img.file_path,
+          alt_text: img.alt || img.alt_text || `產品圖片 ${index + 1}`,
+          display_position: images.length + index,
           size: 'medium' as const,
           width: img.width,
           height: img.height,
           file_size: img.file_size,
-          product_id: productId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
+          module: 'products',
         }))
 
         const updatedImages = [...images, ...newImages]
@@ -188,33 +191,7 @@ export default function ProductImageManager({
         return
       }
 
-      // 資料庫模式：在 product_images 表中建立記錄
-      const imagesData = uploadedImages.map((img, index) => ({
-        url: img.url,
-        path: img.path,
-        alt: img.alt || `產品圖片 ${index + 1}`,
-        position: images.length + index,
-        size: 'medium',
-      }))
-
-      const headersJson: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-      if (csrfToken) {
-        headersJson['X-CSRF-Token'] = csrfToken
-      }
-
-      const createResponse = await fetch(`/api/products/${encodeURIComponent(productId)}/images`, {
-        method: 'POST',
-        headers: headersJson,
-        body: JSON.stringify(imagesData),
-      })
-
-      if (!createResponse.ok) {
-        const errorData = await createResponse.json()
-        throw new Error(errorData.message || '建立圖片記錄失敗')
-      }
-
+      // 資料庫模式：統一 API 已經完成所有操作，直接重新載入
       logger.info('產品圖片上傳完成（資料庫模式）', {
         metadata: {
           context: 'ProductImageManager',
@@ -256,7 +233,7 @@ export default function ProductImageManager({
         return
       }
 
-      // 資料庫模式：調用 API 刪除
+      // 資料庫模式：使用統一 API 刪除
       const csrfToken = getCSRFTokenFromCookie()
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -265,13 +242,11 @@ export default function ProductImageManager({
         headers['X-CSRF-Token'] = csrfToken
       }
 
-      const response = await fetch(
-        `/api/products/${encodeURIComponent(productId)}/images/${imageId}`,
-        {
-          method: 'DELETE',
-          headers,
-        }
-      )
+      const response = await fetch('/api/upload/unified', {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ imageId }),
+      })
 
       if (!response.ok) {
         throw new Error('刪除圖片失敗')
@@ -308,10 +283,10 @@ export default function ProductImageManager({
         if (img.id === imageId) {
           return { id: img.id, position: 0 }
         }
-        const currentPos = img.position
+        const currentPos = img.display_position
         return {
           id: img.id,
-          position: currentPos < targetImage.position ? currentPos : currentPos + 1,
+          position: currentPos < targetImage.display_position ? currentPos : currentPos + 1,
         }
       })
 
@@ -323,14 +298,16 @@ export default function ProductImageManager({
         headers['X-CSRF-Token'] = csrfToken
       }
 
-      const response = await fetch(
-        `/api/products/${encodeURIComponent(productId)}/images/reorder`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ imageOrders }),
-        }
-      )
+      const response = await fetch('/api/upload/unified', {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          action: 'reorder',
+          module: 'products',
+          entityId: productId,
+          images: imageOrders.map(order => ({ id: order.id, display_position: order.position })),
+        }),
+      })
 
       if (!response.ok) {
         throw new Error('設定主圖失敗')
@@ -368,10 +345,10 @@ export default function ProductImageManager({
     newImages.splice(draggedIndex, 1)
     newImages.splice(index, 0, draggedImage)
 
-    // 更新 position
+    // 更新 display_position
     const updatedImages = newImages.map((img, idx) => ({
       ...img,
-      position: idx,
+      display_position: idx,
     }))
 
     setImages(updatedImages)
@@ -395,14 +372,16 @@ export default function ProductImageManager({
         headers['X-CSRF-Token'] = csrfToken
       }
 
-      const response = await fetch(
-        `/api/products/${encodeURIComponent(productId)}/images/reorder`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ imageOrders }),
-        }
-      )
+      const response = await fetch('/api/upload/unified', {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          action: 'reorder',
+          module: 'products',
+          entityId: productId,
+          images: imageOrders.map(order => ({ id: order.id, display_position: order.position })),
+        }),
+      })
 
       if (!response.ok) {
         throw new Error('更新排序失敗')
@@ -487,13 +466,13 @@ export default function ProductImageManager({
               onDragOver={e => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
               className={`relative group cursor-move border-2 rounded-lg overflow-hidden transition-all ${
-                image.position === 0
+                image.display_position === 0
                   ? 'border-amber-500 ring-2 ring-amber-200'
                   : 'border-gray-200 hover:border-gray-300'
               } ${draggedIndex === index ? 'opacity-50' : ''}`}
             >
               {/* 主圖標籤 */}
-              {image.position === 0 && (
+              {image.display_position === 0 && (
                 <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full z-10">
                   主圖
                 </div>
@@ -502,8 +481,8 @@ export default function ProductImageManager({
               {/* 圖片 */}
               <div className="aspect-square relative">
                 <Image
-                  src={image.url}
-                  alt={image.alt || '產品圖片'}
+                  src={image.storage_url}
+                  alt={image.alt_text || '產品圖片'}
                   fill
                   className="object-cover"
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
@@ -512,7 +491,7 @@ export default function ProductImageManager({
 
               {/* 操作按鈕 */}
               <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                {image.position !== 0 && (
+                {image.display_position !== 0 && (
                   <button
                     onClick={() => handleSetPrimary(image.id)}
                     className="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { getPoolStats } from '@/lib/supabase/connection-factory'
 import { apiLogger } from '@/lib/logger'
@@ -8,7 +8,7 @@ import { apiLogger } from '@/lib/logger'
  * 取得連線池狀態和統計資訊
  * 只有管理員可以存取
  */
-async function handleGET(request: NextRequest) {
+async function handleGET(request: NextRequest, user: User) {
   try {
     // 動態導入 connectionFactory 避免全域實例創建
     const { shouldUseConnectionPool } = await import('@/lib/supabase/connection-factory')
@@ -172,5 +172,5 @@ function generateRecommendations(stats: any): string[] {
   return recommendations
 }
 
-// 匯出 API 路由
-export const GET = requireAdmin(handleGET)
+// 匯出 API 路由 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAdminAndError(handleGET, { module: 'PoolStatusAPI' })

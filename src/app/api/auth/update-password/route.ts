@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { supabase } from '@/lib/database/supabase-auth'
@@ -125,4 +125,7 @@ async function handlePOST(request: NextRequest, user: any) {
   }
 }
 
-export const POST = requireAuth(handlePOST)
+export const POST = withAuthAndError(handlePOST, {
+  module: 'UpdatePasswordAPI',
+  enableAuditLog: true,
+})

@@ -3,7 +3,7 @@ import { productService } from '@/services/core/product/productService'
 import { withProductsCache } from '@/lib/middleware/api-cache-middleware'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { PublicProductSchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
@@ -106,13 +106,16 @@ const handleGETWithError = withErrorHandler(handleGET, {
 
 // 導出 API 處理器
 export const GET = handleGETWithError
-// POST 需要管理員權限（requireAdmin 已內建 withErrorHandler）
-export const POST = requireAdmin(async req => {
-  const result = await handlePOST(req)
-  // 清除產品快取
-  try {
-    const { CachedProductService } = await import('@/services/core/product/cachedProductService')
-    await CachedProductService.clearGlobalCache()
-  } catch {}
-  return result
-})
+// POST 需要管理員權限 - 使用組合函數：權限檢查 + 錯誤處理
+export const POST = withAdminAndError(
+  async req => {
+    const result = await handlePOST(req)
+    // 清除產品快取
+    try {
+      const { CachedProductService } = await import('@/services/core/product/cachedProductService')
+      await CachedProductService.clearGlobalCache()
+    } catch {}
+    return result
+  },
+  { module: 'PublicProductsAPI', enableAuditLog: true }
+)

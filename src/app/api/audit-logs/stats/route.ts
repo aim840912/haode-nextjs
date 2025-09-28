@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditStatsService } from '@/services/infrastructure/auditStatsService'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
@@ -117,8 +117,8 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
   return success(stats, '取得審計統計成功')
 }
 
-// 導出使用 requireAuth 中間件的 GET 處理器
-export const GET = requireAuth(handleGET)
+// 導出使用組合函數的 GET 處理器：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'AuditLogsStatsAPI' })
 
 // 處理其他不支援的 HTTP 方法
 async function handleUnsupportedMethod(): Promise<never> {

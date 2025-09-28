@@ -10,7 +10,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAuth, User } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
@@ -404,5 +404,5 @@ async function handleGET(request: NextRequest, user: User) {
   )
 }
 
-// 匯出處理器
-export const GET = requireAuth(handleGET)
+// 匯出處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'InquiryStatsAPI' })

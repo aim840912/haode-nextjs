@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -140,8 +140,11 @@ async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
   throw new MethodNotAllowedError(`不支援的方法: ${request.method}`)
 }
 
-// 匯出 API 處理器
-export const GET = requireAdmin(handleGET)
-export const PATCH = requireAdmin(handlePATCH)
-export const PUT = requireAdmin(handleUnsupportedMethod)
-export const DELETE = requireAdmin(handleUnsupportedMethod)
+// 匯出 API 處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAdminAndError(handleGET, { module: 'AdminOrderDetailAPI' })
+export const PATCH = withAdminAndError(handlePATCH, {
+  module: 'AdminOrderDetailAPI',
+  enableAuditLog: true,
+})
+export const PUT = withAdminAndError(handleUnsupportedMethod, { module: 'AdminOrderDetailAPI' })
+export const DELETE = withAdminAndError(handleUnsupportedMethod, { module: 'AdminOrderDetailAPI' })

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { userInterestsServiceSimple } from '@/services/core/user/userInterestsServiceSimple'
@@ -66,9 +66,14 @@ async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
   throw new MethodNotAllowedError(`不支援的方法: ${request.method}`)
 }
 
-// 匯出處理器
-export const POST = requireAuth(handlePOST)
-export const GET = requireAuth(handleUnsupportedMethod)
-export const DELETE = requireAuth(handleUnsupportedMethod)
-export const PUT = requireAuth(handleUnsupportedMethod)
-export const PATCH = requireAuth(handleUnsupportedMethod)
+// 匯出處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const POST = withAuthAndError(handlePOST, {
+  module: 'UserInterestsToggleAPI',
+  enableAuditLog: true,
+})
+export const GET = withAuthAndError(handleUnsupportedMethod, { module: 'UserInterestsToggleAPI' })
+export const DELETE = withAuthAndError(handleUnsupportedMethod, {
+  module: 'UserInterestsToggleAPI',
+})
+export const PUT = withAuthAndError(handleUnsupportedMethod, { module: 'UserInterestsToggleAPI' })
+export const PATCH = withAuthAndError(handleUnsupportedMethod, { module: 'UserInterestsToggleAPI' })

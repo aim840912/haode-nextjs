@@ -223,7 +223,7 @@ export class ProductImageCleanupService {
     // 只處理 productImages 結構化資料（新系統）
     if (product.productImages && Array.isArray(product.productImages)) {
       const productImageUrls = product.productImages
-        .map((img: ProductImage) => img.url)
+        .map((img: ProductImage) => img.storage_url)
         .filter(Boolean)
       urls.push(...productImageUrls)
       dbLogger.debug(`從 productImages 陣列提取 ${productImageUrls.length} 張圖片`, {

@@ -30,7 +30,7 @@ export default function ProductImageGallery({
   const imageUrls = useMemo(
     () =>
       product.productImages && product.productImages.length > 0
-        ? product.productImages.map(img => img.url)
+        ? product.productImages.map(img => img.storage_url)
         : ['/images/placeholder.jpg'],
     [product.productImages]
   )
@@ -266,7 +266,7 @@ export function SimpleProductImage({
   // 根據所需尺寸選擇最適合的圖片 URL
   let imageUrl =
     (product.productImages && product.productImages.length > 0
-      ? product.productImages[0].url
+      ? product.productImages[0].storage_url
       : null) || '/images/placeholder.jpg'
 
   // 如果是 Supabase Storage URL 且需要特定尺寸，生成對應的縮圖
@@ -312,7 +312,7 @@ export function ProductCardImage({
 }) {
   const imageUrl =
     (product.productImages && product.productImages.length > 0
-      ? product.productImages[0].url
+      ? product.productImages[0].storage_url
       : null) || '/images/placeholder.jpg'
 
   // 直接設定 padding-bottom 確保容器有明確高度

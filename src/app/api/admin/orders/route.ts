@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -75,5 +75,5 @@ async function handleGET(req: NextRequest, user: any) {
   )
 }
 
-// 匯出 API 處理器
-export const GET = requireAdmin(handleGET)
+// 匯出 API 處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAdminAndError(handleGET, { module: 'AdminOrdersAPI' })

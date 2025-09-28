@@ -1,20 +1,22 @@
-// 產品圖片結構 - 對應 product_images 表
+// 產品圖片結構 - 對應 images 表 (module='products')
+// 使用資料庫原始欄位名稱，與統一 API 格式一致
 export interface ProductImage {
   id: string
-  product_id: string
-  url: string
-  path: string
-  alt?: string | null
-  position: number
+  entity_id: string // 資料庫: images.entity_id (產品 ID)
+  storage_url: string // 資料庫: images.storage_url
+  file_path: string // 資料庫: images.file_path
+  alt_text?: string | null // 資料庫: images.alt_text
+  display_position: number // 資料庫: images.display_position
   size: 'thumbnail' | 'medium' | 'large'
-  width?: number | null
-  height?: number | null
-  file_size?: number | null
+  width?: number | null // 存在 images.metadata
+  height?: number | null // 存在 images.metadata
+  file_size?: number | null // 存在 images.metadata
   created_at: string
   updated_at: string
+  module: string // 資料庫: images.module (固定為 'products')
 }
 
-// 產品主介面 - 使用 product_images 表
+// 產品主介面 - 使用 images 表存放產品圖片
 export interface Product {
   id: string
   name: string

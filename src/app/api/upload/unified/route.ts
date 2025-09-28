@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { requireAuth, requireAdmin } from '@/lib/middleware/api-middleware'
-import { ValidationError } from '@/lib/errors'
+import { ValidationError, AuthorizationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
@@ -20,7 +20,7 @@ const UploadFormSchema = z.object({
   size: z.string().optional().default('medium'),
   display_position: z.coerce.number().optional().default(0),
   generateMultipleSizes: z.coerce.boolean().optional().default(false),
-  altText: z.string().optional(),
+  alt_text: z.string().optional(),
 })
 
 const QuerySchema = z.object({
@@ -49,7 +49,7 @@ const UpdateSchema = z.object({
   imageId: z.string().optional(),
   data: z
     .object({
-      altText: z.string().optional(),
+      alt_text: z.string().optional(),
       metadata: z.record(z.string(), z.any()).optional(),
     })
     .optional(),
@@ -82,11 +82,16 @@ async function handlePOST(request: NextRequest, user: any) {
     throw new ValidationError(`上傳參數驗證失敗: ${errorMessage}`)
   }
 
-  const { module, entityId, size, display_position, generateMultipleSizes, altText } = result.data
+  const { module, entityId, size, display_position, generateMultipleSizes, alt_text } = result.data
 
   // 驗證模組
   if (!isValidModule(module)) {
     throw new ValidationError(`不支援的圖片模組: ${module}`)
+  }
+
+  // 權限檢查：產品模組需要管理員權限
+  if (module === 'products' && !user.isAdmin) {
+    throw new AuthorizationError('產品圖片上傳需要管理員權限')
   }
 
   const config = getModuleConfig(module)
@@ -113,9 +118,9 @@ async function handlePOST(request: NextRequest, user: any) {
         display_position
       )
 
-      // 如果有 altText，更新第一個圖片的替代文字
-      if (altText && results.length > 0) {
-        await unifiedImageService.updateImageInfo(results[0].id, { alt_text: altText })
+      // 如果有 alt_text，更新第一個圖片的替代文字
+      if (alt_text && results.length > 0) {
+        await unifiedImageService.updateImageInfo(results[0].id, { alt_text })
       }
 
       apiLogger.info('多尺寸圖片上傳完成', {
@@ -146,9 +151,9 @@ async function handlePOST(request: NextRequest, user: any) {
         display_position
       )
 
-      // 如果有 altText，更新圖片的替代文字
-      if (altText) {
-        await unifiedImageService.updateImageInfo(result.id, { alt_text: altText })
+      // 如果有 alt_text，更新圖片的替代文字
+      if (alt_text) {
+        await unifiedImageService.updateImageInfo(result.id, { alt_text })
       }
 
       apiLogger.info('單一尺寸圖片上傳完成', {
@@ -354,6 +359,17 @@ async function handleDELETE(request: NextRequest, user: any) {
   })
 
   try {
+    // 先取得圖片資訊以檢查模組
+    const imageInfo = await unifiedImageService.getImageById(imageId)
+    if (!imageInfo) {
+      throw new ValidationError(`圖片不存在: ${imageId}`)
+    }
+
+    // 權限檢查：產品模組需要管理員權限
+    if (imageInfo.module === 'products' && !user.isAdmin) {
+      throw new AuthorizationError('產品圖片刪除需要管理員權限')
+    }
+
     await unifiedImageService.deleteImage(imageId)
 
     apiLogger.info('圖片刪除完成', {

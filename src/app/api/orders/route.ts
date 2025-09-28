@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -108,6 +108,6 @@ async function handlePOST(req: NextRequest, user: any) {
   return created(order, '訂單建立成功')
 }
 
-// 匯出 API 處理器
-export const GET = requireAuth(handleGET)
-export const POST = requireAuth(handlePOST)
+// 匯出 API 處理器 - 使用組合函數：權限檢查 + 錯誤處理
+export const GET = withAuthAndError(handleGET, { module: 'OrdersAPI' })
+export const POST = withAuthAndError(handlePOST, { module: 'OrdersAPI', enableAuditLog: true })

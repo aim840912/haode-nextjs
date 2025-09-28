@@ -5,7 +5,7 @@ import {
   healthCheck,
 } from '@/services/factory/serviceFactory'
 import { apiLogger } from '@/lib/logger'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 
 async function handlePOST(request: NextRequest, user: { id: string }) {
@@ -48,5 +48,8 @@ async function handlePOST(request: NextRequest, user: { id: string }) {
   return success(result, '服務實例重置成功')
 }
 
-// 導出使用 requireAdmin 中間件的 POST 處理器
-export const POST = requireAdmin(handlePOST)
+// 導出使用組合函數的 POST 處理器：權限檢查 + 錯誤處理
+export const POST = withAdminAndError(handlePOST, {
+  module: 'ResetServiceAPI',
+  enableAuditLog: true,
+})

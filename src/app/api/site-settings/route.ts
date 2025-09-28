@@ -7,7 +7,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { requireAdmin, optionalAuth } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, withOptionalAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { siteSettingsService } from '@/services/core/content/siteSettingsService'
@@ -17,7 +17,7 @@ import type { SiteSettingInput, SiteSettingUpdate } from '@/types/siteSettings'
  * GET /api/site-settings
  * 取得所有設定或指定 key 的設定
  */
-export const GET = optionalAuth(async (req: NextRequest) => {
+async function handleGET(req: NextRequest, user: User | null) {
   const { searchParams } = new URL(req.url)
   const key = searchParams.get('key')
   const keys = searchParams.get('keys')
@@ -35,13 +35,15 @@ export const GET = optionalAuth(async (req: NextRequest) => {
 
   const settings = await siteSettingsService.getAll()
   return success(settings, '所有設定取得成功')
-})
+}
+
+export const GET = withOptionalAuthAndError(handleGET, { module: 'SiteSettingsAPI' })
 
 /**
  * POST /api/site-settings
  * 建立新設定（管理員權限）
  */
-export const POST = requireAdmin(async (req: NextRequest) => {
+async function handlePOST(req: NextRequest, user: User) {
   const body = await req.json()
 
   if (!body.key?.trim()) {
@@ -65,13 +67,18 @@ export const POST = requireAdmin(async (req: NextRequest) => {
 
   const setting = await siteSettingsService.create(input)
   return created(setting, '設定建立成功')
+}
+
+export const POST = withAdminAndError(handlePOST, {
+  module: 'SiteSettingsAPI',
+  enableAuditLog: true,
 })
 
 /**
  * PUT /api/site-settings
  * 更新設定（管理員權限）
  */
-export const PUT = requireAdmin(async (req: NextRequest) => {
+async function handlePUT(req: NextRequest, user: User) {
   const { searchParams } = new URL(req.url)
   const key = searchParams.get('key')
 
@@ -92,13 +99,15 @@ export const PUT = requireAdmin(async (req: NextRequest) => {
 
   const setting = await siteSettingsService.update(key, input)
   return success(setting, '設定更新成功')
-})
+}
+
+export const PUT = withAdminAndError(handlePUT, { module: 'SiteSettingsAPI', enableAuditLog: true })
 
 /**
  * DELETE /api/site-settings
  * 刪除設定（管理員權限）
  */
-export const DELETE = requireAdmin(async (req: NextRequest) => {
+async function handleDELETE(req: NextRequest, user: User) {
   const { searchParams } = new URL(req.url)
   const key = searchParams.get('key')
 
@@ -108,10 +117,15 @@ export const DELETE = requireAdmin(async (req: NextRequest) => {
 
   await siteSettingsService.delete(key)
   return success({ deleted: true }, '設定刪除成功')
+}
+
+export const DELETE = withAdminAndError(handleDELETE, {
+  module: 'SiteSettingsAPI',
+  enableAuditLog: true,
 })
 
 async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
   throw new MethodNotAllowedError(`不支援的方法: ${request.method}`)
 }
 
-export const PATCH = requireAdmin(handleUnsupportedMethod)
+export const PATCH = withAdminAndError(handleUnsupportedMethod, { module: 'SiteSettingsAPI' })

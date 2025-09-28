@@ -234,7 +234,7 @@ function ProductsSection() {
                     <div className="relative product-image-wrapper">
                       <div className={`${index === 0 ? 'h-[320px]' : 'h-[280px]'} relative`}>
                         <SafeImage
-                          src={product.productImages?.[0]?.url || '/images/placeholder.jpg'}
+                          src={product.productImages?.[0]?.storage_url || '/images/placeholder.jpg'}
                           alt={product.name || '產品圖片'}
                           fill
                           className="object-cover"

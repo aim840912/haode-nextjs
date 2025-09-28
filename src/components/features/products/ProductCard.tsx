@@ -4,6 +4,7 @@ import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
 import { cn } from '@/lib/utils'
 import { Star, ShoppingCart, Eye, Share2 } from 'lucide-react'
+import { logger } from '@/lib/logger'
 
 // 動態載入圖片元件以提升效能
 const ProductCardImage = dynamic(
@@ -62,7 +63,11 @@ export const ProductCard = React.memo<ProductCardProps>(
     const handleQuickAction = (action: string, e: React.MouseEvent) => {
       e.stopPropagation()
       // 這裡可以實作快速操作功能
-      console.log(`Quick action: ${action}`)
+      logger.debug('產品快速操作', {
+        module: 'ProductCard',
+        action: 'handleQuickAction',
+        metadata: { action, productId: product.id },
+      })
     }
 
     return (

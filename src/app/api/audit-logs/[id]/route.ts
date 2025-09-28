@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { apiLogger } from '@/lib/logger'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { success, error as errorResponse } from '@/lib/api-response'
 import { AuthorizationError, NotFoundError } from '@/lib/errors'
 
@@ -57,7 +57,7 @@ async function handleGET(request: NextRequest, user: any, context?: any) {
   return success(auditLog)
 }
 
-export const GET = requireAuth(handleGET)
+export const GET = withAuthAndError(handleGET, { module: 'AuditLogDetailAPI' })
 
 // DELETE /api/audit-logs/[id] - 刪除單個審計日誌
 async function handleDELETE(request: NextRequest, user: any, context?: any) {
@@ -145,7 +145,10 @@ async function handleDELETE(request: NextRequest, user: any, context?: any) {
   return success(null, '審計日誌已成功刪除')
 }
 
-export const DELETE = requireAuth(handleDELETE)
+export const DELETE = withAuthAndError(handleDELETE, {
+  module: 'AuditLogDetailAPI',
+  enableAuditLog: true,
+})
 
 // 處理其他不支援的 HTTP 方法
 export async function POST() {

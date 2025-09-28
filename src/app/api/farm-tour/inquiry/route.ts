@@ -8,7 +8,7 @@ import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceAdapter'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { requireAuth } from '@/lib/middleware/api-middleware'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
@@ -97,7 +97,10 @@ async function handlePOST(request: NextRequest, user: any) {
 }
 
 // 套用認證中間件與 Rate Limiting 並導出 API 處理器
-const authenticatedPOST = requireAuth(handlePOST)
+const authenticatedPOST = withAuthAndError(handlePOST, {
+  module: 'FarmTourInquiryAPI',
+  enableAuditLog: true,
+})
 
 export const POST = withRateLimit(authenticatedPOST, {
   maxRequests: 5,
@@ -113,7 +116,7 @@ async function handleUnsupportedMethods(): Promise<never> {
   throw new MethodNotAllowedError('不支援的請求方法')
 }
 
-export const GET = requireAuth(handleUnsupportedMethods)
-export const PUT = requireAuth(handleUnsupportedMethods)
-export const DELETE = requireAuth(handleUnsupportedMethods)
-export const PATCH = requireAuth(handleUnsupportedMethods)
+export const GET = withAuthAndError(handleUnsupportedMethods, { module: 'FarmTourInquiryAPI' })
+export const PUT = withAuthAndError(handleUnsupportedMethods, { module: 'FarmTourInquiryAPI' })
+export const DELETE = withAuthAndError(handleUnsupportedMethods, { module: 'FarmTourInquiryAPI' })
+export const PATCH = withAuthAndError(handleUnsupportedMethods, { module: 'FarmTourInquiryAPI' })

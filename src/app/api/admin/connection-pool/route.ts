@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import {
@@ -173,7 +173,7 @@ async function handlePOST(req: NextRequest, user: any): Promise<NextResponse> {
   }
 }
 
-async function handleGET(): Promise<NextResponse> {
+async function handleGET(req: NextRequest, user: User): Promise<NextResponse> {
   apiLogger.info('查詢連線池狀態', {
     module: 'ConnectionPoolAdminAPI',
     action: 'GET /api/admin/connection-pool',
@@ -214,5 +214,8 @@ async function handleGET(): Promise<NextResponse> {
   )
 }
 
-export const POST = requireAdmin(handlePOST)
-export const GET = requireAdmin(handleGET)
+export const POST = withAdminAndError(handlePOST, {
+  module: 'ConnectionPoolAdminAPI',
+  enableAuditLog: true,
+})
+export const GET = withAdminAndError(handleGET, { module: 'ConnectionPoolAdminAPI' })

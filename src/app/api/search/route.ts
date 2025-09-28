@@ -54,7 +54,7 @@ async function handleGET(request: NextRequest) {
     category: product.category,
     image:
       product.productImages && product.productImages.length > 0
-        ? product.productImages[0].url
+        ? product.productImages[0].storage_url
         : '/images/placeholder.jpg',
     price: product.price,
     relevanceScore: calculateProductRelevance(product, query),

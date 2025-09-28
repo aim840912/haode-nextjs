@@ -2,6 +2,7 @@ import { Product, CreateProductData, UpdateProductData, ProductImage } from '@/t
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory } from '@/lib/errors'
+import { ProductImageService } from './productImageService'
 
 export class ProductService {
   private supabase = createServiceSupabaseClient()
@@ -45,34 +46,16 @@ export class ProductService {
   }
 
   private async loadProductImages(productId: string): Promise<ProductImage[]> {
-    const { data, error } = await this.supabase
-      .from('product_images')
-      .select('*')
-      .eq('product_id', productId)
-      .order('position', { ascending: true })
-
-    if (error) {
+    try {
+      // 使用 ProductImageService 統一管理產品圖片
+      return await ProductImageService.getProductImages(productId)
+    } catch (error) {
       dbLogger.warn('載入產品圖片失敗', {
         module: 'ProductService',
-        metadata: { productId, error: error.message },
+        metadata: { productId, error: error instanceof Error ? error.message : String(error) },
       })
       return []
     }
-
-    return (data || []).map(img => ({
-      id: img.id,
-      product_id: img.product_id,
-      url: img.url,
-      path: img.path,
-      alt: img.alt,
-      position: img.position,
-      size: img.size,
-      width: img.width,
-      height: img.height,
-      file_size: img.file_size,
-      created_at: img.created_at,
-      updated_at: img.updated_at,
-    }))
   }
 
   async getProducts(): Promise<Product[]> {
