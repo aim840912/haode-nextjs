@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Product } from '@/types/product'
 
 interface ProductTableActionsProps {
@@ -20,15 +20,24 @@ export function ProductTableActions({
   onToggleActive,
   isActionDisabled,
 }: ProductTableActionsProps) {
+  const router = useRouter()
+
+  const handleEditClick = () => {
+    if (!isActionDisabled) {
+      router.push(`/admin/products/${product.id}/edit`)
+    }
+  }
+
   return (
     <div className="flex items-center justify-center space-x-2">
       {/* 編輯按鈕 */}
-      <Link
-        href={`/admin/products/${product.id}/edit`}
-        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+      <button
+        onClick={handleEditClick}
+        disabled={isActionDisabled}
+        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
       >
         編輯
-      </Link>
+      </button>
 
       {/* 上架/下架按鈕 */}
       {onToggleActive && (

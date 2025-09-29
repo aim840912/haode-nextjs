@@ -10,7 +10,13 @@ import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { v4 as uuidv4 } from 'uuid'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
-import { LockClosedIcon, BeakerIcon, ArrowLeftIcon } from '@heroicons/react/24/outline'
+import {
+  LockClosedIcon,
+  BeakerIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline'
 
 // 動態載入產品圖片管理器，減少初始 bundle 大小
 const ProductImageManager = dynamic(
@@ -76,6 +82,51 @@ function AddProductV2() {
     savedTime: 0, // 節省的時間 (ms)
   })
 
+  // === 統一狀態管理系統 ===
+  // 統一提交狀態機
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>(
+    'idle'
+  )
+
+  // 防重複提交標記
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+
+  // 資源清理標記
+  const [shouldCleanup, setShouldCleanup] = useState(false)
+
+  // === 狀態重置函數 ===
+  const resetFormState = useCallback(() => {
+    setSubmitStatus('idle')
+    setLoading(false)
+    setSubmitError(null)
+    setSubmitSuccess(null)
+    setHasSubmitted(false)
+    setShouldCleanup(false)
+  }, [])
+
+  const resetToInitialState = useCallback(() => {
+    setFormData({
+      name: '',
+      description: '',
+      category: '',
+      price: 0,
+      priceUnit: '斤',
+      unitQuantity: 1,
+      inventory: 0,
+      isActive: true,
+    })
+    setTempImages([])
+    setFieldErrors({
+      name: '',
+      description: '',
+      category: '',
+      price: '',
+      inventory: '',
+      images: '',
+    })
+    resetFormState()
+  }, [resetFormState])
+
   // 載入分類資料
   const fetchCategories = useCallback(async () => {
     try {
@@ -122,6 +173,69 @@ function AddProductV2() {
   useEffect(() => {
     fetchCategories()
   }, [fetchCategories])
+
+  // === 資源清理與記憶體管理 ===
+  // Blob URL 清理效果
+  useEffect(() => {
+    if (shouldCleanup) {
+      logger.info('開始清理資源', {
+        metadata: {
+          imageCount: tempImages.length,
+          productId,
+          submitStatus,
+        },
+      })
+
+      // 清理 Blob URLs 防止記憶體泄漏
+      tempImages.forEach((img, index) => {
+        if (img.storage_url && img.storage_url.startsWith('blob:')) {
+          URL.revokeObjectURL(img.storage_url)
+          logger.debug(`已清理 Blob URL ${index + 1}`, {
+            metadata: { blobUrl: img.storage_url.substring(0, 50) + '...' },
+          })
+        }
+      })
+
+      // 延遲清空數據，在跳轉前完成
+      setTimeout(() => {
+        setTempImages([])
+        setFormData(prev => ({
+          ...prev,
+          name: '',
+          description: '',
+          category: '',
+        }))
+        logger.info('表單資料已清理', { metadata: { productId } })
+      }, 1500) // 在 2 秒跳轉前清理
+    }
+  }, [shouldCleanup, tempImages, productId, submitStatus])
+
+  // 頁面離開保護
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // 只在有未儲存資料且未成功提交時警告
+      if (tempImages.length > 0 && submitStatus !== 'success') {
+        e.preventDefault()
+        e.returnValue = '您有未儲存的圖片，確定要離開嗎？'
+        return '您有未儲存的圖片，確定要離開嗎？'
+      }
+    }
+
+    // 監聽頁面關閉/重新整理
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // 清理函數
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+
+      // 組件卸載時清理所有 Blob URLs
+      tempImages.forEach(img => {
+        if (img.storage_url && img.storage_url.startsWith('blob:')) {
+          URL.revokeObjectURL(img.storage_url)
+        }
+      })
+    }
+  }, [tempImages, submitStatus])
 
   // 使用增強的表單驗證（保留向後相容）
   const validateForm = () => {
@@ -176,10 +290,25 @@ function AddProductV2() {
     [productId]
   )
 
-  // 處理表單提交（使用事務式 API）
+  // === 增強版表單提交處理（防禦性編程 + 統一狀態管理）===
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // 🛡️ 防禦性檢查 - 三重防護機制
+    if (loading || submitStatus !== 'idle' || hasSubmitted) {
+      logger.warn('阻止重複提交', {
+        metadata: {
+          loading,
+          submitStatus,
+          hasSubmitted,
+          productId,
+          timestamp: new Date().toISOString(),
+        },
+      })
+      return
+    }
+
+    // 📋 表單驗證
     if (!validateForm()) {
       setSubmitError('請修正表單中的錯誤')
       return
@@ -196,7 +325,10 @@ function AddProductV2() {
       return
     }
 
+    // 🔒 鎖定狀態 - 統一狀態管理
+    setSubmitStatus('submitting')
     setLoading(true)
+    setHasSubmitted(true)
     setSubmitError(null)
     setSubmitSuccess(null)
 
@@ -213,22 +345,69 @@ function AddProductV2() {
         isActive: formData.isActive,
       }
 
-      const imagesData = tempImages.map((img, index) => ({
-        url: img.url,
-        path: img.path,
-        alt: img.alt || `${formData.name} - 圖片 ${index + 1}`,
-        position: img.position ?? index,
-        size: img.size || 'medium',
-        width: img.width,
-        height: img.height,
-        file_size: img.file_size,
-      }))
+      // 處理圖片資料：記憶體模式轉換為 Base64，已上傳模式使用 URL/path
+      const imagesData = await Promise.all(
+        tempImages.map(async (img, index) => {
+          if (img._originalFile) {
+            // 記憶體模式：轉換 File 為 Base64
+            const file = img._originalFile
+
+            // 檔案大小檢查 (5MB = 5 * 1024 * 1024 bytes)
+            if (file.size > 5 * 1024 * 1024) {
+              throw new Error(
+                `圖片檔案 "${file.name}" 過大 (${(file.size / 1024 / 1024).toFixed(1)}MB)，請選擇小於 5MB 的圖片`
+              )
+            }
+
+            const base64Data = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader()
+              reader.onload = () => {
+                const result = reader.result
+                if (typeof result === 'string') {
+                  resolve(result)
+                } else {
+                  reject(new Error(`圖片 "${file.name}" 讀取失敗：結果格式錯誤`))
+                }
+              }
+              reader.onerror = () => {
+                const error = reader.error
+                reject(new Error(`圖片 "${file.name}" 讀取失敗：${error?.message || '未知錯誤'}`))
+              }
+              reader.readAsDataURL(file)
+            })
+
+            return {
+              base64Data,
+              fileName: img._originalFile.name,
+              alt: img.alt || `${formData.name} - 圖片 ${index + 1}`,
+              position: img.position ?? index,
+              size: img.size || 'medium',
+              width: img.width,
+              height: img.height,
+              file_size: img.file_size || img._originalFile.size,
+            }
+          } else {
+            // 已上傳模式：使用現有的 URL/path
+            return {
+              url: img.storage_url || img.url,
+              path: img.file_path || img.path,
+              alt: img.alt || `${formData.name} - 圖片 ${index + 1}`,
+              position: img.position ?? index,
+              size: img.size || 'medium',
+              width: img.width,
+              height: img.height,
+              file_size: img.file_size,
+            }
+          }
+        })
+      )
 
       logger.info('開始事務式建立產品', {
         metadata: {
           productId,
           productName: formData.name,
           imageCount: imagesData.length,
+          submitStatus,
         },
       })
 
@@ -250,7 +429,10 @@ function AddProductV2() {
 
       const result = await response.json()
 
+      // ✅ 成功處理 - 設置成功狀態
+      setSubmitStatus('success')
       setSubmitSuccess('產品建立成功！即將跳轉...')
+      setShouldCleanup(true)
 
       logger.info('產品建立成功', {
         metadata: {
@@ -258,24 +440,34 @@ function AddProductV2() {
           productName: formData.name,
           imageCount: imagesData.length,
           executionTime: result.data?.meta?.executionTime,
+          submitStatus: 'success',
         },
       })
 
+      // 延遲跳轉，確保狀態穩定
       setTimeout(() => {
         router.push('/admin/products')
       }, 2000)
     } catch (error) {
+      // ❌ 錯誤處理 - 允許重試
+      setSubmitStatus('error')
       const errorMessage = error instanceof Error ? error.message : '建立失敗，請重試'
       setSubmitError(errorMessage)
+
+      // 重置提交標記，允許重試
+      setHasSubmitted(false)
+
+      // 錯誤時立即重置 loading 狀態
+      setLoading(false)
 
       logger.error('產品建立失敗', error as Error, {
         metadata: {
           formData: { name: formData.name, category: formData.category },
+          submitStatus: 'error',
         },
       })
-    } finally {
-      setLoading(false)
     }
+    // 🎯 修復競態條件：移除 finally block，成功時保持 loading=true 直到跳轉
   }
 
   // 處理輸入變化
@@ -425,10 +617,24 @@ function AddProductV2() {
           )}
 
           {/* 產品表單 */}
-          <div className="bg-white rounded-lg shadow-sm border">
+          <div className="bg-white rounded-lg shadow-sm border relative">
             <div className="px-6 py-4 border-b">
               <h2 className="text-lg font-medium text-gray-900">產品資訊</h2>
             </div>
+
+            {/* 成功狀態覆蓋層 */}
+            {submitStatus === 'success' && (
+              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+                <div className="text-center p-8">
+                  <CheckCircleIcon className="w-16 h-16 text-green-500 mx-auto mb-4 animate-bounce" />
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">產品建立成功！</h3>
+                  <p className="text-lg text-gray-600 mb-4">即將跳轉到產品列表...</p>
+                  <div className="w-32 h-2 bg-gray-200 rounded-full mx-auto overflow-hidden">
+                    <div className="h-full bg-gradient-to-r from-green-400 to-green-600 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* 成功/錯誤訊息 */}
@@ -642,12 +848,27 @@ function AddProductV2() {
                 </Link>
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  disabled={loading || submitStatus === 'submitting' || submitStatus === 'success'}
+                  className={`px-6 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2 font-medium ${
+                    submitStatus === 'success'
+                      ? 'bg-green-600 text-white cursor-not-allowed ring-2 ring-green-300'
+                      : loading || submitStatus === 'submitting'
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-green-600 text-white hover:bg-green-700 hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl'
+                  }`}
                 >
-                  {loading && <BeakerIcon className="w-4 h-4 animate-spin" />}
+                  {(loading || submitStatus === 'submitting') && (
+                    <BeakerIcon className="w-4 h-4 animate-spin" />
+                  )}
+                  {submitStatus === 'success' && <CheckIcon className="w-4 h-4 animate-pulse" />}
                   <span>
-                    {loading ? '建立中...' : formData.isActive ? '建立並上架產品' : '儲存草稿'}
+                    {submitStatus === 'submitting'
+                      ? '建立中...'
+                      : submitStatus === 'success'
+                        ? '跳轉中...'
+                        : formData.isActive
+                          ? '建立並上架產品'
+                          : '儲存草稿'}
                   </span>
                 </button>
               </div>

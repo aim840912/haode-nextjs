@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Product } from '@/types/product'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
@@ -19,6 +19,7 @@ interface UseProductActionsReturn {
   handleDelete: (id: string) => Promise<void>
   handleToggleActive: (id: string, isActive: boolean) => Promise<void>
   isActionDisabled: boolean
+  isProductOperating: (id: string) => boolean
 }
 
 /**
@@ -36,7 +37,18 @@ export function useProductActions({
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
   const { success, error: errorToast, warning } = useToast()
 
+  // 操作狀態管理 - 追蹤正在進行操作的產品 ID
+  const [operatingProductIds, setOperatingProductIds] = useState<Set<string>>(new Set())
+
   const isActionDisabled = csrfLoading || !csrfToken || !!csrfError
+
+  // 檢查特定產品是否正在進行操作
+  const isProductOperating = useCallback(
+    (id: string) => {
+      return operatingProductIds.has(id)
+    },
+    [operatingProductIds]
+  )
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -45,14 +57,36 @@ export function useProductActions({
         return
       }
 
+      // 檢查產品是否正在進行操作
+      if (operatingProductIds.has(id)) {
+        warning('請稍候', '該產品正在進行其他操作，請稍後再試')
+        return
+      }
+
+      // 🔒 立即將產品加入操作狀態，防止重複點擊（在任何用戶交互之前）
+      setOperatingProductIds(prev => new Set(prev).add(id))
+
       const productToDelete = products.find(p => p.id === id)
       const productName = productToDelete?.name || '產品'
 
       if (!confirm(`確定要刪除產品「${productName}」嗎？此操作無法復原。`)) {
+        // 🔓 用戶取消，移除操作狀態
+        setOperatingProductIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
         return
       }
 
       if (isActionDisabled) {
+        // 🔓 CSRF 錯誤，移除操作狀態
+        setOperatingProductIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
+
         if (csrfLoading) {
           warning('請稍候', '正在初始化安全驗證...')
         } else if (csrfError) {
@@ -103,11 +137,19 @@ export function useProductActions({
         if (refetchData) {
           await refetchData()
         }
+      } finally {
+        // 🔓 操作完成，移除產品的操作狀態
+        setOperatingProductIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
       }
     },
     [
       user,
       products,
+      operatingProductIds,
       csrfToken,
       csrfLoading,
       csrfError,
@@ -127,12 +169,28 @@ export function useProductActions({
         return
       }
 
+      // 檢查產品是否正在進行操作
+      if (operatingProductIds.has(id)) {
+        warning('請稍候', '該產品正在進行其他操作，請稍後再試')
+        return
+      }
+
+      // 🔒 立即將產品加入操作狀態，防止重複點擊
+      setOperatingProductIds(prev => new Set(prev).add(id))
+
       const productToUpdate = products.find(p => p.id === id)
       const productName = productToUpdate?.name || '產品'
       const newActiveState = !isActive
       const actionText = newActiveState ? '上架' : '下架'
 
       if (isActionDisabled) {
+        // 🔓 CSRF 錯誤，移除操作狀態
+        setOperatingProductIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
+
         if (csrfLoading) {
           warning('請稍候', '正在初始化安全驗證...')
         } else if (csrfError) {
@@ -190,12 +248,20 @@ export function useProductActions({
         setProducts(prevProducts =>
           prevProducts.map(p => (p.id === id ? { ...p, isActive: isActive } : p))
         )
+      } finally {
+        // 🔓 操作完成，移除產品的操作狀態
+        setOperatingProductIds(prev => {
+          const newSet = new Set(prev)
+          newSet.delete(id)
+          return newSet
+        })
       }
     },
     [
       user,
       products,
       setProducts,
+      operatingProductIds,
       csrfToken,
       csrfLoading,
       csrfError,
@@ -211,5 +277,6 @@ export function useProductActions({
     handleDelete,
     handleToggleActive,
     isActionDisabled,
+    isProductOperating,
   }
 }

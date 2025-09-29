@@ -51,13 +51,14 @@ export default function UnifiedProductsTable({
   )
 
   // 使用統一的 Hook 管理產品操作
-  const { handleDelete, handleToggleActive, isActionDisabled } = useProductActions({
-    products,
-    setProducts,
-    refetchData: refetch,
-    onDelete,
-    onToggleActive,
-  })
+  const { handleDelete, handleToggleActive, isActionDisabled, isProductOperating } =
+    useProductActions({
+      products,
+      setProducts,
+      refetchData: refetch,
+      onDelete,
+      onToggleActive,
+    })
 
   // 篩選處理函數
   const handleFiltersChange = useCallback((newFilters: AdminFilterState) => {
@@ -138,7 +139,7 @@ export default function UnifiedProductsTable({
                 product={product}
                 onDelete={showAdminFeatures ? handleDelete : undefined}
                 onToggleActive={showAdminFeatures ? handleToggleActive : undefined}
-                isActionDisabled={isActionDisabled}
+                isActionDisabled={isActionDisabled || isProductOperating(product.id)}
                 isAdmin={showAdminFeatures}
               />
             ))}

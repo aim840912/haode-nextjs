@@ -56,6 +56,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
   ({ product, isInterested, onClose, onToggleInterest, onRequestQuote }) => {
     const [quantity, setQuantity] = useState(1)
     const [isChangingQuantity, setIsChangingQuantity] = useState(false)
+    const [currentImageIndex, setCurrentImageIndex] = useState(0)
     const { user } = useAuth()
 
     // 動畫控制
@@ -91,6 +92,11 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       if (quantity > 1) {
         handleQuantityChange(quantity - 1)
       }
+    }
+
+    // 圖片切換處理
+    const handleImageChange = (index: number) => {
+      setCurrentImageIndex(index)
     }
 
     // 準備圖片畫廊的產品資料
@@ -188,9 +194,11 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                       <div className="absolute inset-0 rounded-lg border-2 border-amber-900/10 shadow-inner z-0 pointer-events-none"></div>
                       <ProductImageGallery
                         product={galleryProduct}
-                        showThumbnails={true}
+                        showThumbnails={false}
                         autoSlide={false}
                         className="h-full elegant-frame"
+                        onImageChange={handleImageChange}
+                        currentImageIndex={currentImageIndex}
                       />
                     </div>
 
@@ -225,15 +233,39 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                     </div>
                   </div>
 
-                  {/* 底部優雅簽名區 */}
+                  {/* 底部區域 - 縮圖預覽或產地直送文字 */}
                   <div className="mt-4 pt-3 border-t border-amber-200/50">
-                    <div className="flex justify-center items-center space-x-2">
-                      <div className="w-8 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-                      <span className="text-xs text-amber-900 font-medium tracking-wide">
-                        產地直送
-                      </span>
-                      <div className="w-8 h-0.5 bg-gradient-to-r from-transparent via-amber-400 to-transparent"></div>
-                    </div>
+                    {galleryProduct.productImages && galleryProduct.productImages.length > 1 ? (
+                      // 多張圖片：顯示縮圖預覽
+                      <div className="flex space-x-2 overflow-x-auto pb-1 px-1 justify-center">
+                        {galleryProduct.productImages.map((image, index) => (
+                          <button
+                            key={image.id}
+                            onClick={() => handleImageChange(index)}
+                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden
+                              transition-all duration-300 hover:scale-110
+                              ${
+                                currentImageIndex === index
+                                  ? 'ring-2 ring-amber-500 shadow-lg shadow-amber-500/30'
+                                  : 'ring-1 ring-gray-200 hover:ring-amber-300'
+                              }`}
+                          >
+                            <img
+                              src={image.storage_url}
+                              alt={`預覽 ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      // 單張或無圖片：顯示產地直送文字
+                      <div className="text-center py-2">
+                        <span className="text-sm font-medium text-amber-800">
+                          產地直送 • 新鮮保證
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
