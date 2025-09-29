@@ -5,6 +5,7 @@ import { X, Plus, Minus, ShoppingCart, Share2, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
+import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
 import { useModalAnimation, useEscapeKey, useFocusTrap } from '@/hooks/useModalAnimation'
 import { cn } from '@/lib/utils'
 
@@ -451,51 +452,40 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                     </div>
                   </div>
 
-                  {/* 主要操作按鈕 - 醒目設計 */}
-                  <button
-                    onClick={handleRequestQuote}
-                    disabled={product.inventory <= 0 || isRequestingQuote}
-                    className={cn(
-                      'w-full py-4 rounded-xl font-bold text-base md:text-lg transition-all duration-300',
-                      'shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98]',
-                      'flex items-center justify-center gap-3',
-                      'animate-fade-in opacity-0',
-                      'focus:outline-none focus:ring-2 focus:ring-offset-2',
-                      product.inventory <= 0 || isRequestingQuote
-                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none hover:scale-100'
-                        : !user
-                          ? 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500'
-                          : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500'
-                    )}
+                  {/* 主要操作按鈕 - 綠色 Tailwind 設計 */}
+                  <div
+                    className="animate-fade-in opacity-0"
                     style={{ animationDelay: '600ms', animationFillMode: 'forwards' }}
-                    aria-label={isRequestingQuote ? '處理中...' : '立即詢問報價'}
                   >
-                    {product.inventory <= 0 ? (
-                      <>
-                        <span>暫時缺貨</span>
-                      </>
-                    ) : isRequestingQuote ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        <span>處理中...</span>
-                      </>
-                    ) : !user ? (
-                      <>
-                        <span>請先登入</span>
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-5 h-5" />
-                        <div className="flex flex-col items-center">
-                          <span>立即詢問報價</span>
-                          <span className="text-xs opacity-90">
-                            總計 NT$ {(product.price * quantity).toLocaleString()}
-                            {product.priceUnit && ` (${quantity} ${product.priceUnit})`}
-                          </span>
+                    <TailwindGreenButton
+                      onClick={handleRequestQuote}
+                      disabled={product.inventory <= 0 || isRequestingQuote}
+                      aria-label={isRequestingQuote ? '處理中...' : '立即詢問報價'}
+                      className="py-4 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      {product.inventory <= 0 ? (
+                        <span className="font-bold text-base md:text-lg">暫時缺貨</span>
+                      ) : isRequestingQuote ? (
+                        <div className="flex items-center justify-center gap-3">
+                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                          <span className="font-bold text-base md:text-lg">處理中...</span>
                         </div>
-                      </>
-                    )}
-                  </button>
+                      ) : !user ? (
+                        <span className="font-bold text-base md:text-lg">請先登入</span>
+                      ) : (
+                        <div className="flex items-center justify-center gap-3">
+                          <ShoppingCart className="w-5 h-5" />
+                          <div className="flex flex-col items-center">
+                            <span className="font-bold text-base md:text-lg">立即詢問報價</span>
+                            <span className="text-xs opacity-90">
+                              總計 NT$ {(product.price * quantity).toLocaleString()}
+                              {product.priceUnit && ` (${quantity} ${product.priceUnit})`}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </TailwindGreenButton>
+                  </div>
                 </div>
               </div>
             </div>

@@ -38,8 +38,8 @@ const ClockIcon = ({ className }: { className?: string }) => (
 export default function Footer() {
   return (
     <footer className="bg-green-900 text-white">
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="grid md:grid-cols-4 gap-6">
           {/* 公司簡介 */}
           <div className="md:col-span-2">
             <div className="flex items-center mb-4">
@@ -98,7 +98,7 @@ export default function Footer() {
           {/* 聯絡資訊 */}
           <div>
             <h4 className="text-lg font-semibold mb-4 text-green-200">聯絡資訊</h4>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div className="flex items-center">
                 <div suppressHydrationWarning={true}>
                   <LocationIcon className="w-5 h-5 mr-3 text-green-300 flex-shrink-0" />
@@ -146,7 +146,7 @@ export default function Footer() {
         </div>
 
         {/* 版權資訊 */}
-        <div className="border-t border-green-800 mt-8 pt-8">
+        <div className="border-t border-green-800 mt-6 pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center text-green-200 text-sm">
             <p>© 2024 豪德製茶所 Haude Tea Company. 版權所有</p>
             <div className="flex space-x-4 mt-2 md:mt-0">

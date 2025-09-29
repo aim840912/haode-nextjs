@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
+import { UIverseButton } from '@/components/ui/buttons/UIverseButton'
 import { cn } from '@/lib/utils'
 import { Star, ShoppingCart, Eye, Share2 } from 'lucide-react'
 import { logger } from '@/lib/logger'
@@ -195,20 +196,12 @@ export const ProductCard = React.memo<ProductCardProps>(
 
           {/* 操作按鈕組 */}
           <div className="flex gap-3">
-            {/* 主要操作按鈕 */}
-            <button
-              className={cn(
-                'flex-1 flex items-center justify-center py-3 rounded-lg text-sm font-medium transition-all duration-300',
-                'shadow-md hover:shadow-lg transform hover:scale-[1.02]',
-                product.inventory > 0
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-600 cursor-not-allowed'
-              )}
-              disabled={product.inventory <= 0}
-              onClick={handleViewDetails}
-            >
-              {product.inventory > 0 ? '查看詳情' : '暫時缺貨'}
-            </button>
+            {/* 主要操作按鈕 - UIverse felipesntr 設計 */}
+            <div className="flex-1">
+              <UIverseButton disabled={product.inventory <= 0} onClick={handleViewDetails}>
+                {product.inventory > 0 ? '查看詳情' : '暫時缺貨'}
+              </UIverseButton>
+            </div>
 
             {/* 快速購買按鈕 */}
             {product.inventory > 0 && (
