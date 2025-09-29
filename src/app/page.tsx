@@ -165,11 +165,11 @@ export default function Home() {
         <section
           id="features"
           data-animate
-          className="min-h-screen flex items-center py-20 px-6 bg-gradient-to-b from-white via-amber-50/50 to-white relative overflow-hidden"
+          className="min-h-screen flex items-center py-20 px-6 bg-gradient-to-b from-white via-green-50/50 to-white relative overflow-hidden"
         >
           {/* 背景裝飾元素 */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-20 left-10 w-64 h-64 bg-amber-200/20 rounded-full blur-3xl animate-float"></div>
+            <div className="absolute top-20 left-10 w-64 h-64 bg-green-200/20 rounded-full blur-3xl animate-float"></div>
             <div
               className="absolute bottom-20 right-10 w-96 h-96 bg-green-200/20 rounded-full blur-3xl animate-float"
               style={{ animationDelay: '1s' }}
@@ -178,7 +178,7 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto relative z-10">
             <h2
-              className={`text-5xl md:text-6xl font-bold text-center text-amber-900 mb-6 tracking-wider ${
+              className={`text-5xl md:text-6xl font-bold text-center text-green-900 mb-6 tracking-wider ${
                 visibleSections.has('features') ? 'animate-fade-in' : 'opacity-0'
               }`}
             >
@@ -223,9 +223,9 @@ export default function Home() {
                   Icon: Users,
                   title: '農場體驗',
                   desc: '四季活動豐富',
-                  color: 'from-amber-400 to-orange-500',
-                  bgColor: 'bg-amber-50',
-                  iconColor: 'text-amber-600',
+                  color: 'from-green-400 to-emerald-500',
+                  bgColor: 'bg-green-50',
+                  iconColor: 'text-green-600',
                 },
                 {
                   Icon: Recycle,
@@ -285,7 +285,7 @@ export default function Home() {
                   : 'opacity-0'
               }`}
             >
-              <h3 className="text-3xl font-bold text-center text-amber-900 mb-8">四季體驗</h3>
+              <h3 className="text-3xl font-bold text-center text-green-900 mb-8">四季體驗</h3>
 
               {/* 季節切換按鈕 */}
               <div className="flex justify-center gap-4 mb-10 flex-wrap">
@@ -293,7 +293,7 @@ export default function Home() {
                   { name: '春季賞花', Icon: Flower2, color: 'green' },
                   { name: '夏日採果', Icon: Apple, color: 'red' },
                   { name: '秋收體驗', Icon: Wheat, color: 'orange' },
-                  { name: '冬日品茶', Icon: Coffee, color: 'amber' },
+                  { name: '冬日品茶', Icon: Coffee, color: 'green' },
                 ].map((season, index) => (
                   <button
                     key={index}
@@ -351,7 +351,7 @@ export default function Home() {
 
                 <div className="space-y-6">
                   <div className="glass-card rounded-2xl p-8">
-                    <h4 className="text-2xl font-bold text-amber-900 mb-4">
+                    <h4 className="text-2xl font-bold text-green-900 mb-4">
                       {activeSeason === 0 && '春季賞花'}
                       {activeSeason === 1 && '夏日採果'}
                       {activeSeason === 2 && '秋收體驗'}
@@ -419,15 +419,15 @@ export default function Home() {
                       {activeSeason === 3 && (
                         <>
                           <li className="flex items-start">
-                            <span className="text-amber-500 mr-2">✓</span>
+                            <span className="text-green-500 mr-2">✓</span>
                             <span className="text-gray-600">茶道文化體驗</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-amber-500 mr-2">✓</span>
+                            <span className="text-green-500 mr-2">✓</span>
                             <span className="text-gray-600">品茶技巧教學</span>
                           </li>
                           <li className="flex items-start">
-                            <span className="text-amber-500 mr-2">✓</span>
+                            <span className="text-green-500 mr-2">✓</span>
                             <span className="text-gray-600">茶葉製程介紹</span>
                           </li>
                         </>
@@ -474,7 +474,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <h2
-                className={`text-4xl md:text-5xl font-bold text-amber-900 mb-4 ${
+                className={`text-4xl md:text-5xl font-bold text-green-900 mb-4 ${
                   visibleSections.has('news') ? 'animate-fade-in' : 'opacity-0'
                 }`}
               >
@@ -512,17 +512,17 @@ export default function Home() {
               </div>
 
               {/* 農場活動 */}
-              <div className="bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <PartyPopper className="w-10 h-10 mr-3 text-amber-600" strokeWidth={2} />
-                  <h3 className="text-2xl font-bold text-amber-900">農場活動</h3>
+                  <PartyPopper className="w-10 h-10 mr-3 text-green-600" strokeWidth={2} />
+                  <h3 className="text-2xl font-bold text-green-900">農場活動</h3>
                 </div>
-                <p className="text-amber-800 mb-6 text-lg">
+                <p className="text-green-800 mb-6 text-lg">
                   週末採果體驗活動熱烈報名中！帶孩子來體驗親手採摘的樂趣
                 </p>
                 <Link
                   href="/farm-tour"
-                  className="inline-flex items-center text-amber-700 hover:text-amber-900 font-medium"
+                  className="inline-flex items-center text-green-700 hover:text-green-900 font-medium"
                 >
                   立即預約 →
                 </Link>

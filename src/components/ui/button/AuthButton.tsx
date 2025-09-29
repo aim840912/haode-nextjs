@@ -226,10 +226,10 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
   // 共用樣式
   const baseClasses = isMobile
-    ? 'px-2 py-1 text-xs font-medium rounded-full transition-all duration-200 border border-amber-200'
-    : 'px-3 py-2 text-xs font-medium rounded-full transition-all duration-200 flex items-center space-x-1 border border-amber-200 h-8'
+    ? 'px-2 py-1 text-xs font-medium rounded-full transition-all duration-200 border border-green-200'
+    : 'px-3 py-2 text-xs font-medium rounded-full transition-all duration-200 flex items-center space-x-1 border border-green-200 h-8'
 
-  const loginClasses = 'text-amber-900 bg-amber-50 hover:bg-amber-100'
+  const loginClasses = 'text-green-900 bg-green-50 hover:bg-green-100'
 
   // 在客戶端掛載前，顯示統一的初始狀態以避免 hydration 錯誤
   if (!hasMounted) {
@@ -275,8 +275,8 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-          className={`${baseClasses} text-amber-900 bg-amber-50 hover:bg-amber-100 ${
-            isDropdownOpen ? 'bg-amber-100' : ''
+          className={`${baseClasses} text-green-900 bg-green-50 hover:bg-green-100 ${
+            isDropdownOpen ? 'bg-green-100' : ''
           }`}
         >
           <UserIcon className="w-4 h-4" />
@@ -302,7 +302,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
             <Link
               href="/profile?tab=profile"
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               <UserIcon className="w-4 h-4 mr-2" />
@@ -311,7 +311,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
             <Link
               href="/inquiry"
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               <InquiryIcon className="w-4 h-4 mr-2" />
@@ -320,7 +320,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
 
             <Link
               href="/profile?tab=interests"
-              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 transition-colors"
+              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
               onClick={() => setIsDropdownOpen(false)}
             >
               <HeartIcon className="w-4 h-4 mr-2" />

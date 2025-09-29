@@ -57,6 +57,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
     const [quantity, setQuantity] = useState(1)
     const [isChangingQuantity, setIsChangingQuantity] = useState(false)
     const [currentImageIndex, setCurrentImageIndex] = useState(0)
+    const [isRequestingQuote, setIsRequestingQuote] = useState(false)
     const { user } = useAuth()
 
     // 動畫控制
@@ -72,8 +73,13 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       }
     }
 
-    const handleRequestQuote = () => {
-      onRequestQuote(product)
+    const handleRequestQuote = async () => {
+      setIsRequestingQuote(true)
+      try {
+        await onRequestQuote(product)
+      } finally {
+        setIsRequestingQuote(false)
+      }
     }
 
     // 數量變更動畫
@@ -149,106 +155,60 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       >
         <div className={cn(contentClasses, 'overflow-hidden')}>
           {/* Modal 主體 - 響應式設計 */}
-          <div className="bg-gradient-to-br from-white via-amber-50/30 to-orange-50/20 backdrop-blur-sm rounded-2xl shadow-2xl shadow-amber-900/25 border border-amber-200/30 overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
             {/* 移動端頂部拖拽指示器 */}
-            <div className="md:hidden bg-gradient-to-r from-amber-200 to-orange-200 h-1 w-full"></div>
+            <div className="md:hidden bg-gray-300 h-1 w-full"></div>
 
             <div className="grid md:grid-cols-2 gap-0">
-              {/* 產品圖片畫廊 - 左側 優雅框架設計 */}
-              <div className="relative bg-gradient-to-br from-amber-50/80 via-orange-50/70 via-yellow-50/60 to-amber-25/50 md:rounded-l-2xl overflow-hidden">
-                {/* 柔和背景紋理層 */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/30 via-transparent to-amber-50/40 pointer-events-none"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(251,191,36,0.1),transparent_50%)] pointer-events-none"></div>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(251,146,60,0.08),transparent_50%)] pointer-events-none"></div>
-                {/* 優雅的相框外框 */}
-                <div className="p-6 md:p-8 h-full flex flex-col">
-                  {/* 頂部優雅裝飾條 */}
-                  <div className="mb-4 pb-3 border-b border-amber-200/50">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full shadow-sm"></div>
-                      <span className="text-sm font-medium text-amber-800">{product.category}</span>
-                    </div>
+              {/* 產品圖片畫廊 - 左側 現代簡潔設計 */}
+              <div className="relative bg-gray-50 md:rounded-l-2xl overflow-hidden border-r border-gray-100">
+                <div className="p-6 md:p-8">
+                  {/* 頂部分類標籤 */}
+                  <div>
+                    <span className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
+                      {product.category}
+                    </span>
                   </div>
 
-                  {/* 精緻的相框容器 */}
-                  <div className="flex-1 relative">
-                    {/* 外框 - 仿古相框效果 */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-100 rounded-2xl shadow-inner">
-                      {/* 外框紋理 */}
-                      <div className="absolute inset-0 rounded-2xl border border-amber-300/30 shadow-md"></div>
-                      <div className="absolute inset-1 rounded-2xl border border-white/60"></div>
-                    </div>
-
-                    {/* 中框 - 立體邊框 */}
-                    <div className="absolute inset-2 bg-gradient-to-br from-white via-amber-25 to-orange-25 rounded-xl shadow-lg">
-                      {/* 中框細節 */}
-                      <div className="absolute inset-0 rounded-xl border-2 border-amber-200/40 shadow-inner"></div>
-                      <div className="absolute inset-0.5 rounded-xl border border-white/80"></div>
-                      {/* 立體感增強 */}
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-transparent via-white/20 to-amber-100/30"></div>
-                    </div>
-
-                    {/* 內框 - 圖片容器 */}
-                    <div className="absolute inset-4 rounded-lg overflow-hidden shadow-2xl">
-                      {/* 內框邊界 - 確保不干擾點擊事件 */}
-                      <div className="absolute inset-0 rounded-lg border-2 border-amber-900/10 shadow-inner z-0 pointer-events-none"></div>
+                  {/* 圖片容器 - 現代簡潔設計 */}
+                  <div className="mb-6">
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
                       <ProductImageGallery
                         product={galleryProduct}
                         showThumbnails={false}
                         autoSlide={false}
-                        className="h-full elegant-frame"
+                        className=""
                         onImageChange={handleImageChange}
-                        currentImageIndex={currentImageIndex}
                       />
-                    </div>
-
-                    {/* 角落裝飾 - 精緻相框金屬角 */}
-                    <div className="absolute top-0.5 left-0.5 w-5 h-5 z-20">
-                      <div className="relative w-full h-full">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-600 transform rotate-45 rounded-sm shadow-lg"></div>
-                        <div className="absolute inset-0.5 bg-gradient-to-br from-yellow-200 to-amber-300 transform rotate-45 rounded-sm"></div>
-                        <div className="absolute inset-1 bg-gradient-to-br from-white/80 to-amber-100/60 transform rotate-45 rounded-sm"></div>
-                      </div>
-                    </div>
-                    <div className="absolute top-0.5 right-0.5 w-5 h-5 z-20">
-                      <div className="relative w-full h-full">
-                        <div className="absolute inset-0 bg-gradient-to-bl from-amber-400 via-orange-400 to-amber-600 transform -rotate-45 rounded-sm shadow-lg"></div>
-                        <div className="absolute inset-0.5 bg-gradient-to-bl from-yellow-200 to-amber-300 transform -rotate-45 rounded-sm"></div>
-                        <div className="absolute inset-1 bg-gradient-to-bl from-white/80 to-amber-100/60 transform -rotate-45 rounded-sm"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0.5 left-0.5 w-5 h-5 z-20">
-                      <div className="relative w-full h-full">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-amber-400 via-orange-400 to-amber-600 transform -rotate-45 rounded-sm shadow-lg"></div>
-                        <div className="absolute inset-0.5 bg-gradient-to-tr from-yellow-200 to-amber-300 transform -rotate-45 rounded-sm"></div>
-                        <div className="absolute inset-1 bg-gradient-to-tr from-white/80 to-amber-100/60 transform -rotate-45 rounded-sm"></div>
-                      </div>
-                    </div>
-                    <div className="absolute bottom-0.5 right-0.5 w-5 h-5 z-20">
-                      <div className="relative w-full h-full">
-                        <div className="absolute inset-0 bg-gradient-to-tl from-amber-400 via-orange-400 to-amber-600 transform rotate-45 rounded-sm shadow-lg"></div>
-                        <div className="absolute inset-0.5 bg-gradient-to-tl from-yellow-200 to-amber-300 transform rotate-45 rounded-sm"></div>
-                        <div className="absolute inset-1 bg-gradient-to-tl from-white/80 to-amber-100/60 transform rotate-45 rounded-sm"></div>
-                      </div>
                     </div>
                   </div>
 
-                  {/* 底部區域 - 縮圖預覽或產地直送文字 */}
-                  <div className="mt-4 pt-3 border-t border-amber-200/50">
+                  {/* 底部區域 - 縮圖預覽 */}
+                  <div>
                     {galleryProduct.productImages && galleryProduct.productImages.length > 1 ? (
                       // 多張圖片：顯示縮圖預覽
-                      <div className="flex space-x-2 overflow-x-auto pb-1 px-1 justify-center">
+                      <div className="flex space-x-3 overflow-x-auto pb-2 justify-center">
                         {galleryProduct.productImages.map((image, index) => (
                           <button
                             key={image.id}
                             onClick={() => handleImageChange(index)}
-                            className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden
-                              transition-all duration-300 hover:scale-110
+                            onKeyDown={e => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                handleImageChange(index)
+                              }
+                            }}
+                            className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden
+                              transition-all duration-200 hover:scale-105
+                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
                               ${
                                 currentImageIndex === index
-                                  ? 'ring-2 ring-amber-500 shadow-lg shadow-amber-500/30'
-                                  : 'ring-1 ring-gray-200 hover:ring-amber-300'
+                                  ? 'ring-2 ring-gray-400 shadow-md'
+                                  : 'ring-1 ring-gray-300 hover:ring-gray-400'
                               }`}
+                            aria-label={`切換到圖片 ${index + 1}，共 ${galleryProduct.productImages.length} 張`}
+                            aria-pressed={currentImageIndex === index}
+                            tabIndex={0}
                           >
                             <img
                               src={image.storage_url}
@@ -259,25 +219,14 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                         ))}
                       </div>
                     ) : (
-                      // 單張或無圖片：顯示產地直送文字
-                      <div className="text-center py-2">
-                        <span className="text-sm font-medium text-amber-800">
+                      // 單張或無圖片：顯示產地標籤
+                      <div className="text-center">
+                        <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-sm font-medium rounded-full border border-green-200">
                           產地直送 • 新鮮保證
                         </span>
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* 柔和的背景紋理 */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none">
-                  <div
-                    className="w-full h-full"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d97706' fill-opacity='0.15'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3Ccircle cx='50' cy='10' r='2'/%3E%3Ccircle cx='10' cy='50' r='2'/%3E%3Ccircle cx='50' cy='50' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                      backgroundSize: '60px 60px',
-                    }}
-                  />
                 </div>
               </div>
 
@@ -286,6 +235,12 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                 {/* 關閉按鈕 - 現代化圓形設計 */}
                 <button
                   onClick={onClose}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onClose()
+                    }
+                  }}
                   className={cn(
                     'absolute top-4 right-4 z-10',
                     'w-10 h-10 bg-white/90 hover:bg-red-50 backdrop-blur-sm rounded-full',
@@ -293,9 +248,11 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                     'shadow-lg hover:shadow-xl',
                     'text-gray-400 hover:text-red-500',
                     'transition-all duration-300 ease-out',
-                    'hover:scale-110 hover:rotate-90'
+                    'hover:scale-110 hover:rotate-90',
+                    'focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2'
                   )}
-                  aria-label="關閉視窗"
+                  aria-label="關閉產品詳細資訊視窗"
+                  tabIndex={0}
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -303,12 +260,12 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                 {/* 產品基本資訊 */}
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                       <Zap className="w-3 h-3 mr-1" />
                       熱門商品
                     </span>
                     {product.inventory > 0 && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                         現貨
                       </span>
                     )}
@@ -316,7 +273,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
 
                   <h2
                     id="modal-title"
-                    className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight"
+                    className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight"
                   >
                     {product.name}
                   </h2>
@@ -340,14 +297,16 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                         <span
                           key={index}
                           className={cn(
-                            'bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800',
+                            'bg-gray-100 text-gray-700',
                             'px-3 py-1.5 rounded-full text-xs md:text-sm font-medium',
-                            'shadow-md hover:shadow-lg',
-                            'transition-all duration-200 hover:scale-105',
-                            'border border-amber-200/50'
+                            'shadow-sm hover:shadow-md',
+                            'transition-all duration-300 hover:scale-105 hover:-translate-y-0.5',
+                            'border border-gray-200 hover:border-gray-300',
+                            'animate-fade-in opacity-0'
                           )}
                           style={{
-                            animationDelay: `${index * 100}ms`,
+                            animationDelay: `${index * 150 + 200}ms`,
+                            animationFillMode: 'forwards',
                           }}
                         >
                           {feature}
@@ -377,14 +336,14 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                   </div>
                 )}
 
-                {/* 價格和操作區域 - 漸變分隔線 */}
-                <div className="border-t border-gradient-to-r from-amber-200 via-orange-200 to-amber-200 pt-6">
-                  {/* 價格顯示 - 更醒目的設計 */}
-                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 mb-6 border border-amber-200/30">
+                {/* 價格和操作區域 */}
+                <div className="border-t border-gray-200 pt-6">
+                  {/* 價格顯示 - 現代簡潔設計 */}
+                  <div className="bg-gray-50 rounded-xl p-5 mb-6 border border-gray-200 animate-fade-in transition-all duration-300 hover:shadow-md hover:scale-[1.01]">
                     <div className="flex items-center justify-between">
                       <div className="space-y-1">
                         <div className="flex items-baseline gap-2">
-                          <span className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-900 to-orange-800 bg-clip-text text-transparent">
+                          <span className="text-2xl md:text-3xl font-bold text-gray-900">
                             NT$ {product.price.toLocaleString()}
                           </span>
                           {product.priceUnit && (
@@ -417,24 +376,40 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                           'hover:bg-gray-50 active:scale-95',
                           quantity <= 1
                             ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-gray-700 hover:text-amber-600'
+                            : 'text-gray-700 hover:text-blue-600'
                         )}
                         aria-label="減少數量"
                       >
                         <Minus className="w-4 h-4" />
                       </button>
-                      <div
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={e => {
+                          const newValue = Math.max(1, parseInt(e.target.value) || 1)
+                          handleQuantityChange(newValue)
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'ArrowUp') {
+                            e.preventDefault()
+                            incrementQuantity()
+                          } else if (e.key === 'ArrowDown') {
+                            e.preventDefault()
+                            decrementQuantity()
+                          }
+                        }}
                         className={cn(
-                          'w-16 h-10 flex items-center justify-center border-x border-gray-200',
-                          'font-bold text-lg transition-all duration-200',
-                          isChangingQuantity ? 'scale-110 text-amber-600' : 'text-gray-900'
+                          'w-16 h-10 text-center border-x border-gray-200 bg-transparent',
+                          'font-bold text-lg transition-all duration-200 outline-none',
+                          'focus:bg-blue-50 focus:text-blue-600',
+                          isChangingQuantity ? 'scale-110 text-blue-600' : 'text-gray-900'
                         )}
-                      >
-                        {quantity}
-                      </div>
+                        aria-label="產品數量"
+                      />
                       <button
                         onClick={incrementQuantity}
-                        className="w-10 h-10 flex items-center justify-center rounded-r-xl text-gray-700 hover:text-amber-600 hover:bg-gray-50 transition-all duration-200 active:scale-95"
+                        className="w-10 h-10 flex items-center justify-center rounded-r-xl text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-all duration-200 active:scale-95"
                         aria-label="增加數量"
                       >
                         <Plus className="w-4 h-4" />
@@ -443,7 +418,10 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                   </div>
 
                   {/* 操作按鈕組 - 現代化設計 */}
-                  <div className="space-y-3 mb-6">
+                  <div
+                    className="space-y-3 mb-6 animate-fade-in opacity-0"
+                    style={{ animationDelay: '400ms', animationFillMode: 'forwards' }}
+                  >
                     {/* 次要操作按鈕 */}
                     <div className="flex gap-3 relative z-10">
                       <InterestButton
@@ -458,7 +436,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                       <button
                         className={cn(
                           'px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg',
-                          'text-gray-700 hover:text-amber-600 transition-all duration-200',
+                          'text-gray-700 hover:text-blue-600 transition-all duration-200',
                           'shadow-md hover:shadow-lg flex items-center gap-2'
                         )}
                         onClick={e => {
@@ -476,21 +454,30 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                   {/* 主要操作按鈕 - 醒目設計 */}
                   <button
                     onClick={handleRequestQuote}
-                    disabled={product.inventory <= 0}
+                    disabled={product.inventory <= 0 || isRequestingQuote}
                     className={cn(
                       'w-full py-4 rounded-xl font-bold text-base md:text-lg transition-all duration-300',
                       'shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98]',
                       'flex items-center justify-center gap-3',
-                      product.inventory <= 0
+                      'animate-fade-in opacity-0',
+                      'focus:outline-none focus:ring-2 focus:ring-offset-2',
+                      product.inventory <= 0 || isRequestingQuote
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed shadow-none hover:scale-100'
                         : !user
-                          ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800'
-                          : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:from-amber-700 hover:to-orange-700'
+                          ? 'bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500'
                     )}
+                    style={{ animationDelay: '600ms', animationFillMode: 'forwards' }}
+                    aria-label={isRequestingQuote ? '處理中...' : '立即詢問報價'}
                   >
                     {product.inventory <= 0 ? (
                       <>
                         <span>暫時缺貨</span>
+                      </>
+                    ) : isRequestingQuote ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>處理中...</span>
                       </>
                     ) : !user ? (
                       <>

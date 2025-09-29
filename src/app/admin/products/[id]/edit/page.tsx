@@ -39,6 +39,22 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const { user, isLoading } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
 
+  // === 統一狀態管理系統 ===
+  // 統一提交狀態機
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>(
+    'idle'
+  )
+
+  // 防重複提交標記
+  const [hasSubmitted, setHasSubmitted] = useState(false)
+
+  // 資源清理標記
+  const [shouldCleanup, setShouldCleanup] = useState(false)
+
+  // 錯誤狀態管理
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -52,6 +68,20 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     inventory: 0,
     isActive: true,
   })
+
+  // === 狀態重置函數 ===
+  const resetFormState = useCallback(() => {
+    setSubmitStatus('idle')
+    setLoading(false)
+    setSubmitError(null)
+    setSubmitSuccess(null)
+    setHasSubmitted(false)
+    setShouldCleanup(false)
+  }, [])
+
+  const resetToInitialState = useCallback(() => {
+    resetFormState()
+  }, [resetFormState])
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -134,6 +164,44 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     })
   }, [params, fetchProduct, fetchCategories])
 
+  // === 資源清理與記憶體管理 ===
+  // 成功後資源清理
+  useEffect(() => {
+    if (shouldCleanup) {
+      logger.info('開始清理資源', {
+        metadata: {
+          productId,
+          submitStatus,
+        },
+      })
+
+      // 延遲清理，在跳轉前完成
+      setTimeout(() => {
+        logger.info('編輯頁面資源已清理', { metadata: { productId } })
+      }, 1500) // 在 2 秒跳轉前清理
+    }
+  }, [shouldCleanup, productId, submitStatus])
+
+  // 頁面離開保護
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // 只在有未儲存變更且未成功提交時警告
+      if ((formData.name || formData.description) && submitStatus !== 'success') {
+        e.preventDefault()
+        e.returnValue = '您有未儲存的變更，確定要離開嗎？'
+        return '您有未儲存的變更，確定要離開嗎？'
+      }
+    }
+
+    // 監聽頁面關閉/重新整理
+    window.addEventListener('beforeunload', handleBeforeUnload)
+
+    // 清理函數
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [formData, submitStatus])
+
   // 載入中狀態
   if (isLoading || initialLoading) {
     return (
@@ -170,21 +238,41 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     )
   }
 
+  // === 增強版表單提交處理（防禦性編程 + 統一狀態管理）===
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // 🛡️ 防禦性檢查 - 三重防護機制
+    if (loading || submitStatus !== 'idle' || hasSubmitted) {
+      logger.warn('阻止重複提交', {
+        metadata: {
+          loading,
+          submitStatus,
+          hasSubmitted,
+          productId,
+          timestamp: new Date().toISOString(),
+        },
+      })
+      return
+    }
+
     // 防止在 CSRF token 未準備好時提交
     if (csrfLoading || !csrfToken) {
-      alert('請稍候，正在初始化安全驗證...')
+      setSubmitError('請稍候，正在初始化安全驗證...')
       return
     }
 
     if (csrfError) {
-      alert('安全驗證初始化失敗，請重新整理頁面')
+      setSubmitError('安全驗證初始化失敗，請重新整理頁面')
       return
     }
 
+    // 🔒 鎖定狀態 - 統一狀態管理
+    setSubmitStatus('submitting')
     setLoading(true)
+    setHasSubmitted(true)
+    setSubmitError(null)
+    setSubmitSuccess(null)
 
     try {
       // 根據是否為特價商品設定正確的價格，但保留 priceUnit 和 unitQuantity
@@ -206,6 +294,14 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         headers['x-csrf-token'] = csrfToken
       }
 
+      logger.info('開始更新產品', {
+        metadata: {
+          productId,
+          productName: formData.name,
+          submitStatus,
+        },
+      })
+
       const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
         headers,
@@ -213,18 +309,50 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
         body: JSON.stringify({ id: productId, ...productData }),
       })
 
-      if (response.ok) {
-        await response.json()
-        router.push('/admin/products')
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        alert(`更新失敗: ${errorData.error || response.status}`)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: '更新失敗' }))
+        throw new Error(errorData.error || `更新失敗 (${response.status})`)
       }
-    } catch {
-      alert('更新失敗')
-    } finally {
+
+      const result = await response.json()
+
+      // ✅ 成功處理 - 設置成功狀態
+      setSubmitStatus('success')
+      setSubmitSuccess('產品更新成功！即將跳轉...')
+      setShouldCleanup(true)
+
+      logger.info('產品更新成功', {
+        metadata: {
+          productId: productId,
+          productName: formData.name,
+          submitStatus: 'success',
+        },
+      })
+
+      // 延遲跳轉，確保狀態穩定
+      setTimeout(() => {
+        router.push('/admin/products')
+      }, 2000)
+    } catch (error) {
+      // ❌ 錯誤處理 - 允許重試
+      setSubmitStatus('error')
+      const errorMessage = error instanceof Error ? error.message : '更新失敗，請重試'
+      setSubmitError(errorMessage)
+
+      // 重置提交標記，允許重試
+      setHasSubmitted(false)
+
+      // 錯誤時立即重置 loading 狀態
       setLoading(false)
+
+      logger.error('產品更新失敗', error as Error, {
+        metadata: {
+          formData: { name: formData.name, category: formData.category },
+          submitStatus: 'error',
+        },
+      })
     }
+    // 🎯 修復競態條件：移除 finally block，成功時保持 loading=true 直到跳轉
   }
 
   const handleInputChange = (
@@ -240,6 +368,11 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             ? (e.target as HTMLInputElement).checked
             : value,
     }))
+
+    // 清除錯誤狀態當使用者開始輸入
+    if (submitError) {
+      setSubmitError(null)
+    }
   }
 
   // 圖片管理已由 ProductImageManager 元件處理
@@ -541,6 +674,41 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             </div>
           </div>
 
+          {/* 錯誤和成功訊息顯示 */}
+          {submitError && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <div className="text-red-600">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="text-red-800 text-sm font-medium">{submitError}</div>
+              </div>
+            </div>
+          )}
+
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-center space-x-2">
+                <div className="text-green-600">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="text-green-800 text-sm font-medium">{submitSuccess}</div>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end space-x-4 pt-6">
             <Link
               href="/admin/products"
@@ -550,16 +718,25 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
             </Link>
             <button
               type="submit"
-              disabled={loading || csrfLoading || !csrfToken || isDeletingImage !== null}
+              disabled={
+                loading ||
+                csrfLoading ||
+                !csrfToken ||
+                isDeletingImage !== null ||
+                submitStatus === 'submitting' ||
+                hasSubmitted
+              }
               className="px-6 py-2 bg-amber-900 text-white rounded-md hover:bg-amber-800 transition-colors disabled:opacity-50"
             >
-              {loading
+              {loading || submitStatus === 'submitting'
                 ? '更新中...'
                 : csrfLoading
                   ? '初始化中...'
                   : isDeletingImage
                     ? '圖片處理中...'
-                    : '更新產品'}
+                    : submitStatus === 'success'
+                      ? '更新成功！'
+                      : '更新產品'}
             </button>
           </div>
         </form>

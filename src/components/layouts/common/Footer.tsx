@@ -37,33 +37,33 @@ const ClockIcon = ({ className }: { className?: string }) => (
 
 export default function Footer() {
   return (
-    <footer className="bg-amber-900 text-white">
+    <footer className="bg-green-900 text-white">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid md:grid-cols-4 gap-8">
           {/* 公司簡介 */}
           <div className="md:col-span-2">
             <div className="flex items-center mb-4">
               <h3 className="text-xl font-bold">豪德製茶所</h3>
-              <span className="ml-3 text-amber-200 text-sm">HAUDE TEA</span>
+              <span className="ml-3 text-green-200 text-sm">HAUDE TEA</span>
             </div>
-            <p className="text-amber-100 mb-4 leading-relaxed">
+            <p className="text-green-100 mb-4 leading-relaxed">
               傳承百年茶文化，座落梅山群峰的豪德農場，以自然農法呈現四季最美的農產滋味。
               堅持有機無毒栽培，為您帶來最純淨的台灣高山農產品。
             </p>
             <div className="flex items-center space-x-4">
-              <span className="text-amber-200 text-sm">追蹤我們：</span>
+              <span className="text-green-200 text-sm">追蹤我們：</span>
               <SocialLinks size="sm" />
             </div>
           </div>
 
           {/* 快速連結 */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-amber-200">快速連結</h4>
+            <h4 className="text-lg font-semibold mb-4 text-green-200">快速連結</h4>
             <ul className="space-y-2">
               <li>
                 <Link
                   href="/products"
-                  className="text-amber-100 hover:text-white transition-colors"
+                  className="text-green-100 hover:text-white transition-colors"
                 >
                   產品介紹
                 </Link>
@@ -71,7 +71,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/farm-tour"
-                  className="text-amber-100 hover:text-white transition-colors"
+                  className="text-green-100 hover:text-white transition-colors"
                 >
                   農場參觀
                 </Link>
@@ -79,7 +79,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/schedule"
-                  className="text-amber-100 hover:text-white transition-colors"
+                  className="text-green-100 hover:text-white transition-colors"
                 >
                   擺攤行程
                 </Link>
@@ -87,7 +87,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="/locations"
-                  className="text-amber-100 hover:text-white transition-colors"
+                  className="text-green-100 hover:text-white transition-colors"
                 >
                   門市據點
                 </Link>
@@ -97,57 +97,57 @@ export default function Footer() {
 
           {/* 聯絡資訊 */}
           <div>
-            <h4 className="text-lg font-semibold mb-4 text-amber-200">聯絡資訊</h4>
+            <h4 className="text-lg font-semibold mb-4 text-green-200">聯絡資訊</h4>
             <div className="space-y-3">
               <div className="flex items-center">
                 <div suppressHydrationWarning={true}>
-                  <LocationIcon className="w-5 h-5 mr-3 text-amber-300 flex-shrink-0" />
+                  <LocationIcon className="w-5 h-5 mr-3 text-green-300 flex-shrink-0" />
                 </div>
-                <span className="text-amber-100 text-sm leading-relaxed">
+                <span className="text-green-100 text-sm leading-relaxed">
                   嘉義縣梅山鄉太和村一鄰八號
                 </span>
               </div>
               <div className="flex items-center">
                 <div suppressHydrationWarning={true}>
-                  <PhoneIcon className="w-5 h-5 mr-3 text-amber-300 flex-shrink-0" />
+                  <PhoneIcon className="w-5 h-5 mr-3 text-green-300 flex-shrink-0" />
                 </div>
                 <a
                   href="tel:05-2561843"
-                  className="text-amber-100 hover:text-white transition-colors"
+                  className="text-green-100 hover:text-white transition-colors"
                 >
                   05-2561843
                 </a>
               </div>
               <div className="flex items-center">
                 <div suppressHydrationWarning={true}>
-                  <EmailIcon className="w-5 h-5 mr-3 text-amber-300 flex-shrink-0" />
+                  <EmailIcon className="w-5 h-5 mr-3 text-green-300 flex-shrink-0" />
                 </div>
                 <a
                   href="mailto:aim840912@gmail.com"
-                  className="text-amber-100 hover:text-white transition-colors"
+                  className="text-green-100 hover:text-white transition-colors"
                 >
                   aim840912@gmail.com
                 </a>
               </div>
               <div className="flex items-center">
                 <div suppressHydrationWarning={true}>
-                  <LineIcon className="w-5 h-5 mr-3 text-amber-300 flex-shrink-0" />
+                  <LineIcon className="w-5 h-5 mr-3 text-green-300 flex-shrink-0" />
                 </div>
-                <span className="text-amber-100 text-sm">LINE ID: @haudetea</span>
+                <span className="text-green-100 text-sm">LINE ID: @haudetea</span>
               </div>
               <div className="flex items-center">
                 <div suppressHydrationWarning={true}>
-                  <ClockIcon className="w-5 h-5 mr-3 text-amber-300 flex-shrink-0" />
+                  <ClockIcon className="w-5 h-5 mr-3 text-green-300 flex-shrink-0" />
                 </div>
-                <span className="text-amber-100 text-sm">營業時間: 08:00-18:00 (週一公休)</span>
+                <span className="text-green-100 text-sm">營業時間: 08:00-18:00 (週一公休)</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* 版權資訊 */}
-        <div className="border-t border-amber-800 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center text-amber-200 text-sm">
+        <div className="border-t border-green-800 mt-8 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center text-green-200 text-sm">
             <p>© 2024 豪德製茶所 Haude Tea Company. 版權所有</p>
             <div className="flex space-x-4 mt-2 md:mt-0">
               <Link href="/privacy" className="hover:text-white transition-colors">

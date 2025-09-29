@@ -13,9 +13,7 @@ const ProductCardImage = dynamic(
       default: mod.ProductCardImage,
     })),
   {
-    loading: () => (
-      <div className="h-64 bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-100 rounded-t-xl animate-pulse"></div>
-    ),
+    loading: () => <div className="h-64 bg-gray-100 rounded-t-xl animate-pulse"></div>,
     ssr: false,
   }
 )
@@ -73,16 +71,16 @@ export const ProductCard = React.memo<ProductCardProps>(
     return (
       <div
         className={cn(
-          // 基礎樣式 - 奢華漸變背景
-          'group relative bg-gradient-to-br from-white via-amber-50/30 to-orange-50/50',
+          // 基礎樣式 - 簡潔背景
+          'group relative bg-white',
           'cursor-pointer overflow-hidden rounded-xl',
-          // 多層陰影系統
-          'shadow-lg shadow-amber-900/5 hover:shadow-2xl hover:shadow-amber-900/20',
-          // 邊框漸變
-          'border border-transparent bg-gradient-to-br from-amber-200/20 via-transparent to-orange-200/20 bg-clip-padding',
+          // 簡潔陰影系統
+          'shadow-lg hover:shadow-xl',
+          // 簡潔邊框
+          'border border-gray-200',
           // 動畫效果
-          'transition-all duration-500 ease-out',
-          'hover:-translate-y-3 hover:scale-[1.02]',
+          'transition-all duration-300 ease-out',
+          'hover:-translate-y-2 hover:scale-[1.01]',
           // 響應式
           'w-full max-w-sm mx-auto'
         )}
@@ -96,21 +94,18 @@ export const ProductCard = React.memo<ProductCardProps>(
           setShowQuickActions(false)
         }}
       >
-        {/* 頂部裝飾線 */}
-        <div className="absolute top-0 left-1/4 right-1/4 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent rounded-b-full" />
-
         {/* 產品標籤系統 */}
         <div className="absolute top-4 left-4 z-20 space-y-2 max-w-[calc(100%-120px)] sm:max-w-[calc(100%-100px)]">
           {/* 促銷標籤 */}
           {product.originalPrice && product.originalPrice > product.price && (
-            <div className="inline-flex items-center bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg max-w-full">
+            <div className="inline-flex items-center bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg max-w-full">
               <Star className="w-3 h-3 mr-1 fill-current flex-shrink-0" />
               <span className="truncate">特價</span>
             </div>
           )}
 
           {/* 類別標籤 */}
-          <div className="inline-block bg-gradient-to-r from-amber-600 to-orange-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md max-w-full">
+          <div className="inline-block bg-gray-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md max-w-full">
             <span className="truncate">{product.category}</span>
           </div>
         </div>
@@ -148,11 +143,11 @@ export const ProductCard = React.memo<ProductCardProps>(
         <div className="relative overflow-hidden rounded-t-xl">
           <ProductCardImage product={product} index={index} />
 
-          {/* 圖片遮罩漸變 */}
+          {/* 圖片遮罩 */}
           <div
             className={cn(
-              'absolute inset-0 transition-opacity duration-500',
-              'bg-gradient-to-t from-black/40 via-transparent to-transparent',
+              'absolute inset-0 transition-opacity duration-300',
+              'bg-black/20',
               isHovered ? 'opacity-100' : 'opacity-0'
             )}
           />
@@ -171,7 +166,7 @@ export const ProductCard = React.memo<ProductCardProps>(
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               {/* 現價 */}
-              <span className="text-2xl font-bold bg-gradient-to-r from-amber-900 to-orange-800 bg-clip-text text-transparent">
+              <span className="text-2xl font-bold text-gray-900">
                 NT$ {product.price}
                 {product.priceUnit && (
                   <span className="text-sm font-normal text-gray-600 ml-1">
@@ -206,10 +201,7 @@ export const ProductCard = React.memo<ProductCardProps>(
                 'flex-1 flex items-center justify-center py-3 rounded-lg text-sm font-medium transition-all duration-300',
                 'shadow-md hover:shadow-lg transform hover:scale-[1.02]',
                 product.inventory > 0
-                  ? cn(
-                      'bg-gradient-to-r from-amber-600 to-orange-600 text-white',
-                      'hover:from-amber-700 hover:to-orange-700'
-                    )
+                  ? 'bg-blue-600 text-white hover:bg-blue-700'
                   : 'bg-gray-300 text-gray-600 cursor-not-allowed'
               )}
               disabled={product.inventory <= 0}
@@ -229,12 +221,6 @@ export const ProductCard = React.memo<ProductCardProps>(
             )}
           </div>
         </div>
-
-        {/* 底部裝飾 */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 via-orange-400 to-yellow-400 rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-        {/* 角落裝飾 */}
-        <div className="absolute top-0 right-0 w-0 h-0 border-l-[30px] border-l-transparent border-b-[30px] border-b-gradient-to-br border-b-amber-200/30" />
       </div>
     )
   }

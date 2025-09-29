@@ -63,7 +63,7 @@ export default function SocialLinks({
           rel="noopener noreferrer"
           className={`
             ${sizeClasses[size]} 
-            bg-amber-100 text-amber-900 
+            bg-green-100 text-green-900 
             rounded-full flex items-center justify-center 
             transition-all duration-300 
             ${social.bgColor} hover:text-white 

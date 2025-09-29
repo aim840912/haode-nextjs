@@ -109,7 +109,7 @@ export default function Header() {
   ]
 
   return (
-    <header className="fixed top-0 w-full backdrop-blur-lg z-50 bg-amber-50/98 shadow-md min-h-[60px]">
+    <header className="fixed top-0 w-full backdrop-blur-lg z-50 bg-green-50/98 shadow-md min-h-[60px]">
       <nav className="max-w-7xl mx-auto px-8 py-1">
         <div className="hidden lg:block">
           {/* Desktop Layout - 統一緊湊樣式 */}
@@ -119,10 +119,10 @@ export default function Header() {
               {/* 品牌標誌（緊湊版）*/}
               <Link href="/" className="flex items-center">
                 <div className="flex items-center gap-2 h-8">
-                  <div className="font-display text-amber-900 tracking-tight text-2xl">
+                  <div className="font-display text-green-900 tracking-tight text-2xl">
                     豪德製茶所
                   </div>
-                  <div className="text-amber-700/70 font-inter font-medium tracking-wider text-[8px]">
+                  <div className="text-green-700/70 font-inter font-medium tracking-wider text-[8px]">
                     HAUDE TEA
                   </div>
                 </div>
@@ -135,14 +135,14 @@ export default function Header() {
                     {item.isExternal ? (
                       <a href={item.href} className="block py-2 px-2">
                         <span
-                          className={`text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-sans font-medium ${
-                            isActive(item.href) ? 'text-amber-900' : ''
+                          className={`text-gray-700 hover:text-green-900 transition-colors duration-200 text-sm font-sans font-medium ${
+                            isActive(item.href) ? 'text-green-900' : ''
                           }`}
                         >
                           {item.label}
                         </span>
                         <div
-                          className={`absolute bottom-0 left-0 h-0.5 bg-amber-900 transition-all duration-300 ${
+                          className={`absolute bottom-0 left-0 h-0.5 bg-green-900 transition-all duration-300 ${
                             isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
                           }`}
                         ></div>
@@ -150,14 +150,14 @@ export default function Header() {
                     ) : (
                       <Link href={item.href} className="block py-2 px-2">
                         <span
-                          className={`text-gray-700 hover:text-amber-900 transition-colors duration-200 text-sm font-sans font-medium ${
-                            isActive(item.href) ? 'text-amber-900' : ''
+                          className={`text-gray-700 hover:text-green-900 transition-colors duration-200 text-sm font-sans font-medium ${
+                            isActive(item.href) ? 'text-green-900' : ''
                           }`}
                         >
                           {item.label}
                         </span>
                         <div
-                          className={`absolute bottom-0 left-0 h-0.5 bg-amber-900 transition-all duration-300 ${
+                          className={`absolute bottom-0 left-0 h-0.5 bg-green-900 transition-all duration-300 ${
                             isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
                           }`}
                         ></div>
@@ -180,7 +180,7 @@ export default function Header() {
               {user?.role === 'admin' && (
                 <div className="relative" ref={desktopAdminMenuRef}>
                   <button
-                    className="w-10 h-10 flex items-center justify-center text-amber-800 hover:text-amber-900 hover:bg-amber-50/50 transition-colors duration-200 rounded-md"
+                    className="w-10 h-10 flex items-center justify-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-colors duration-200 rounded-md"
                     title="管理功能"
                     onClick={handleDesktopAdminMenuToggle}
                   >
@@ -219,7 +219,7 @@ export default function Header() {
                       </div>
                       <Link
                         href="/admin/dashboard"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@ export default function Header() {
                       </Link>
                       <Link
                         href="/admin/monitoring"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -239,7 +239,7 @@ export default function Header() {
                       </Link>
                       <Link
                         href="/admin/audit-logs"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -249,7 +249,7 @@ export default function Header() {
                       </Link>
                       <Link
                         href="/admin/analytics"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -267,7 +267,7 @@ export default function Header() {
                         </div>
                         <Link
                           href="/admin/products"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -277,7 +277,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/news"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -287,7 +287,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/farm-tour"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -297,7 +297,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/schedule"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -307,7 +307,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/locations"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -320,7 +320,7 @@ export default function Header() {
                         <div className="border-t border-gray-100 mt-1 pt-1">
                           <Link
                             href="/admin/inquiries"
-                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                             onClick={handleMenuItemClick}
                           >
                             <div className="flex items-center">
@@ -353,8 +353,8 @@ export default function Header() {
             {/* Brand - 左側固定 */}
             <Link href="/" className="flex items-center flex-shrink-0">
               <div>
-                <div className="font-display text-amber-900 tracking-tight text-xl">豪德製茶所</div>
-                <div className="text-amber-700/70 font-inter font-medium tracking-wider text-[8px]">
+                <div className="font-display text-green-900 tracking-tight text-xl">豪德製茶所</div>
+                <div className="text-green-700/70 font-inter font-medium tracking-wider text-[8px]">
                   HAUDE TEA
                 </div>
               </div>
@@ -369,8 +369,8 @@ export default function Header() {
               {user?.role === 'admin' && (
                 <div className="relative" ref={mobileAdminMenuRef}>
                   <button
-                    className={`flex items-center text-amber-800 hover:text-amber-900 hover:bg-amber-50/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
-                      isMobileAdminMenuOpen ? 'bg-amber-50 text-amber-900' : ''
+                    className={`flex items-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
+                      isMobileAdminMenuOpen ? 'bg-green-50 text-green-900' : ''
                     }`}
                     title="管理功能"
                     onClick={handleMobileAdminMenuToggle}
@@ -410,7 +410,7 @@ export default function Header() {
                       </div>
                       <Link
                         href="/admin/dashboard"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -420,7 +420,7 @@ export default function Header() {
                       </Link>
                       <Link
                         href="/admin/monitoring"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -430,7 +430,7 @@ export default function Header() {
                       </Link>
                       <Link
                         href="/admin/audit-logs"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -440,7 +440,7 @@ export default function Header() {
                       </Link>
                       <Link
                         href="/admin/analytics"
-                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                         onClick={handleMenuItemClick}
                       >
                         <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -458,7 +458,7 @@ export default function Header() {
                         </div>
                         <Link
                           href="/admin/products"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -468,7 +468,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/news"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -478,7 +478,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/farm-tour"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -488,7 +488,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/schedule"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -498,7 +498,7 @@ export default function Header() {
                         </Link>
                         <Link
                           href="/admin/locations"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                           onClick={handleMenuItemClick}
                         >
                           <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -511,7 +511,7 @@ export default function Header() {
                         <div className="border-t border-gray-100 mt-1 pt-1">
                           <Link
                             href="/admin/inquiries"
-                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-amber-900"
+                            className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
                             onClick={handleMenuItemClick}
                           >
                             <div className="flex items-center">
@@ -536,7 +536,7 @@ export default function Header() {
               {/* 漢堡選單按鈕 - Mobile */}
               <button
                 ref={mobileMenuButtonRef}
-                className="flex items-center text-gray-700 hover:text-amber-900 hover:bg-amber-50 transition-all duration-200 justify-center rounded-md min-h-[44px] min-w-[44px] p-2"
+                className="flex items-center text-gray-700 hover:text-green-900 hover:bg-green-50 transition-all duration-200 justify-center rounded-md min-h-[44px] min-w-[44px] p-2"
                 title="導航選單"
                 onClick={handleMobileMenuToggle}
               >
@@ -590,7 +590,7 @@ export default function Header() {
                     {item.isExternal ? (
                       <a
                         href={item.href}
-                        className="block px-4 py-3 text-gray-700 hover:text-amber-900 hover:bg-amber-50 transition-colors duration-200 rounded-lg mx-2"
+                        className="block px-4 py-3 text-gray-700 hover:text-green-900 hover:bg-green-50 transition-colors duration-200 rounded-lg mx-2"
                         onClick={handleMenuItemClick}
                       >
                         <span className="font-sans font-medium text-base">{item.label}</span>
@@ -600,8 +600,8 @@ export default function Header() {
                         href={item.href}
                         className={`block px-4 py-3 transition-colors duration-200 rounded-lg mx-2 ${
                           isActive(item.href)
-                            ? 'text-amber-900 bg-amber-50 font-semibold'
-                            : 'text-gray-700 hover:text-amber-900 hover:bg-amber-50'
+                            ? 'text-green-900 bg-green-50 font-semibold'
+                            : 'text-gray-700 hover:text-green-900 hover:bg-green-50'
                         }`}
                         onClick={handleMenuItemClick}
                       >

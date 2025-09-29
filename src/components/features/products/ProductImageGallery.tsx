@@ -84,7 +84,7 @@ export default function ProductImageGallery({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={className}>
       {/* 主圖片顯示區域 - 優雅框架內的圖片 */}
       <div
         className={`relative bg-white overflow-hidden group ${className.includes('elegant-frame') ? 'rounded-lg' : 'rounded-2xl shadow-2xl shadow-black/10 border border-white/20'}`}
@@ -233,7 +233,7 @@ export default function ProductImageGallery({
               onClick={() => handleImageChange(index)}
               className={`flex-shrink-0 w-18 h-18 rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 ${
                 index === currentImageIndex
-                  ? 'ring-3 ring-amber-500 shadow-lg shadow-amber-500/30 scale-105'
+                  ? 'ring-2 ring-gray-400 shadow-lg shadow-gray-400/20 scale-105'
                   : 'ring-2 ring-gray-200 hover:ring-gray-300 hover:shadow-md'
               }`}
             >

@@ -119,8 +119,8 @@ function ProductsPage() {
               <ProductsEmptyState type="no_results" />
             ) : (
               <div className="mt-8">
-                <div className="relative bg-gradient-to-br from-amber-50/50 to-orange-50/30 rounded-xl p-8">
-                  {/* 精品風格網格布局 */}
+                <div className="relative bg-gray-50 rounded-xl p-8 border border-gray-200">
+                  {/* 簡潔風格網格布局 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredProducts.map((product, index) => (
                       <ProductCard
@@ -133,9 +133,6 @@ function ProductsPage() {
                       />
                     ))}
                   </div>
-
-                  {/* 裝飾性漸變背景 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-100/10 via-transparent to-orange-100/10 rounded-xl pointer-events-none" />
                 </div>
               </div>
             )}
