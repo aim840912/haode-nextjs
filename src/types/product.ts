@@ -14,6 +14,7 @@ export interface ProductImage {
   created_at: string
   updated_at: string
   module: string // 資料庫: images.module (固定為 'products')
+  _originalFile?: File // 記憶體模式專用：保存原始 File 物件以供後續上傳
 }
 
 // 產品主介面 - 使用 images 表存放產品圖片

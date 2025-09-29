@@ -51,7 +51,8 @@
       "mcp__playwright__browser_handle_dialog",
       "Bash(xargs sed:*)",
       "Bash(awk:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "mcp__playwright__browser_fill_form"
     ],
     "deny": [],
     "ask": []

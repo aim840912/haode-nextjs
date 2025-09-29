@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { logger } from '@/lib/logger'
 import { ProductImage } from '@/types/product'
 import Image from 'next/image'
@@ -33,6 +33,25 @@ export default function ProductImageManager({
   const [isUploading, setIsUploading] = useState(false)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // 追蹤 Blob URLs 以便清理記憶體
+  const blobUrlsRef = useRef<Set<string>>(new Set())
+
+  // 清理單一 Blob URL
+  const revokeBlobUrl = useCallback((url: string) => {
+    if (url.startsWith('blob:')) {
+      URL.revokeObjectURL(url)
+      blobUrlsRef.current.delete(url)
+    }
+  }, [])
+
+  // 清理所有 Blob URLs
+  const revokeAllBlobUrls = useCallback(() => {
+    blobUrlsRef.current.forEach(url => {
+      URL.revokeObjectURL(url)
+    })
+    blobUrlsRef.current.clear()
+  }, [])
 
   // 載入產品圖片
   const loadImages = useCallback(async () => {
@@ -98,6 +117,14 @@ export default function ProductImageManager({
     }
   }, [productId, loadImages, mode])
 
+  // 元件卸載時清理所有 Blob URLs
+  useEffect(() => {
+    return () => {
+      // 清理所有追蹤的 Blob URLs
+      revokeAllBlobUrls()
+    }
+  }, [revokeAllBlobUrls])
+
   // 處理圖片上傳
   const handleUpload = async (files: FileList) => {
     if (files.length === 0) return
@@ -110,6 +137,17 @@ export default function ProductImageManager({
       setIsUploading(true)
       setError(null)
 
+      // 檢查檔案大小
+      const oversizedFiles = Array.from(files).filter(file => file.size > 5 * 1024 * 1024)
+      if (oversizedFiles.length > 0) {
+        const fileNames = oversizedFiles
+          .map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`)
+          .join(', ')
+        setError(`以下檔案過大，請選擇小於 5MB 的圖片：${fileNames}`)
+        setIsUploading(false)
+        return
+      }
+
       logger.info('開始上傳產品圖片', {
         metadata: {
           context: 'ProductImageManager',
@@ -119,9 +157,52 @@ export default function ProductImageManager({
         },
       })
 
+      // 記憶體模式：只在記憶體中處理，不上傳到 Supabase
+      if (mode === 'memory') {
+        const newImages = Array.from(files).map((file, index) => {
+          // 生成本地預覽 URL
+          const previewUrl = URL.createObjectURL(file)
+          // 追蹤 Blob URL 以便後續清理
+          blobUrlsRef.current.add(previewUrl)
+
+          return {
+            id: `temp-${Date.now()}-${index}`,
+            entity_id: productId,
+            storage_url: previewUrl, // 使用本地 Blob URL
+            file_path: `temp/${file.name}`, // 臨時路徑
+            alt_text: file.name.replace(/\.[^/.]+$/, '') || `產品圖片 ${index + 1}`,
+            display_position: images.length + index,
+            size: 'medium' as const,
+            width: undefined, // 將在實際上傳時處理
+            height: undefined,
+            file_size: file.size,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            module: 'products',
+            // 保存原始檔案供後續上傳使用
+            _originalFile: file,
+          }
+        })
+
+        const updatedImages = [...images, ...newImages]
+        setImages(updatedImages)
+        onImagesChange?.(updatedImages)
+
+        logger.info('圖片上傳完成（記憶體模式）', {
+          metadata: {
+            context: 'ProductImageManager',
+            productId,
+            uploadCount: files.length,
+            totalImages: updatedImages.length,
+          },
+        })
+
+        return
+      }
+
+      // 資料庫模式：實際上傳到 Supabase
       const csrfToken = getCSRFTokenFromCookie()
 
-      // 上傳檔案到 Storage
       const uploadPromises = Array.from(files).map(async (file, index) => {
         const formData = new FormData()
         formData.append('file', file)
@@ -157,40 +238,6 @@ export default function ProductImageManager({
 
       const uploadedImages = await Promise.all(uploadPromises)
 
-      // 記憶體模式：只更新本地狀態
-      if (mode === 'memory') {
-        const newImages = uploadedImages.map((img, index) => ({
-          id: `temp-${Date.now()}-${index}`,
-          entity_id: productId,
-          storage_url: img.url || img.storage_url,
-          file_path: img.path || img.file_path,
-          alt_text: img.alt || img.alt_text || `產品圖片 ${index + 1}`,
-          display_position: images.length + index,
-          size: 'medium' as const,
-          width: img.width,
-          height: img.height,
-          file_size: img.file_size,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          module: 'products',
-        }))
-
-        const updatedImages = [...images, ...newImages]
-        setImages(updatedImages)
-        onImagesChange?.(updatedImages)
-
-        logger.info('圖片上傳完成（記憶體模式）', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            uploadCount: files.length,
-            totalImages: updatedImages.length,
-          },
-        })
-
-        return
-      }
-
       // 資料庫模式：統一 API 已經完成所有操作，直接重新載入
       logger.info('產品圖片上傳完成（資料庫模式）', {
         metadata: {
@@ -219,6 +266,12 @@ export default function ProductImageManager({
     try {
       // 記憶體模式：只更新本地狀態
       if (mode === 'memory') {
+        // 找到要刪除的圖片並清理其 Blob URL
+        const imageToDelete = images.find(img => img.id === imageId)
+        if (imageToDelete) {
+          revokeBlobUrl(imageToDelete.storage_url)
+        }
+
         const newImages = images.filter(img => img.id !== imageId)
         setImages(newImages)
         onImagesChange?.(newImages)

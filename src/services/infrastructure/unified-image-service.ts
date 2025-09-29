@@ -239,6 +239,18 @@ export class UnifiedImageService {
       // 取得公開 URL（使用 admin client）
       const { data: urlData } = supabaseAdmin.storage.from(this.MEDIA_BUCKET).getPublicUrl(filePath)
 
+      // 除錯：記錄 URL 資料
+      dbLogger.info('公開 URL 取得結果', {
+        module: 'UnifiedImageService',
+        metadata: {
+          filePath,
+          bucket: this.MEDIA_BUCKET,
+          urlData,
+          publicUrl: urlData?.publicUrl,
+          hasPublicUrl: !!urlData?.publicUrl,
+        },
+      })
+
       // 儲存到資料庫（使用 admin client 繞過 RLS）
       const imageRecord = {
         module,

@@ -4,6 +4,7 @@ import { ValidationError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { z } from 'zod'
 
 const ProductWithImagesSchema = z.object({
@@ -20,16 +21,31 @@ const ProductWithImagesSchema = z.object({
   }),
   images: z
     .array(
-      z.object({
-        url: z.string().url('圖片 URL 格式不正確'),
-        path: z.string().min(1, '圖片路徑不能為空'),
-        alt: z.string().max(255, '圖片替代文字過長').optional(),
-        position: z.number().int().min(0, '圖片位置不能為負').optional(),
-        size: z.enum(['thumbnail', 'medium', 'large']).default('medium'),
-        width: z.number().int().positive('圖片寬度必須為正整數').optional(),
-        height: z.number().int().positive('圖片高度必須為正整數').optional(),
-        file_size: z.number().int().positive('檔案大小必須為正整數').optional(),
-      })
+      z
+        .object({
+          // 支援兩種模式：已上傳模式（有 url/path）或記憶體模式（有 base64Data）
+          url: z.string().url('圖片 URL 格式不正確').optional(),
+          path: z.string().min(1, '圖片路徑不能為空').optional(),
+          base64Data: z.string().optional(), // 記憶體模式：Base64 編碼的圖片資料
+          fileName: z.string().optional(), // 記憶體模式：原始檔案名稱
+          alt: z.string().max(255, '圖片替代文字過長').optional(),
+          position: z.number().int().min(0, '圖片位置不能為負').optional(),
+          size: z.enum(['thumbnail', 'medium', 'large']).default('medium'),
+          width: z.number().int().positive('圖片寬度必須為正整數').optional(),
+          height: z.number().int().positive('圖片高度必須為正整數').optional(),
+          file_size: z.number().int().positive('檔案大小必須為正整數').optional(),
+        })
+        .refine(
+          data => {
+            // 必須是已上傳模式（有 url 和 path）或記憶體模式（有 base64Data 和 fileName）
+            const hasUploadedData = data.url && data.path
+            const hasMemoryData = data.base64Data && data.fileName
+            return hasUploadedData || hasMemoryData
+          },
+          {
+            message: '圖片必須提供 URL+路徑（已上傳模式）或 Base64資料+檔名（記憶體模式）',
+          }
+        )
     )
     .max(10, '最多只能上傳 10 張圖片')
     .default([]),
@@ -76,6 +92,78 @@ async function handlePOST(request: NextRequest, user: any) {
     },
   })
 
+  // 處理記憶體模式的圖片：將 Base64 資料上傳到 Supabase
+  const processedImages = []
+  for (const imageData of images) {
+    if (imageData.base64Data && imageData.fileName) {
+      // 記憶體模式：需要先上傳圖片
+      apiLogger.info('處理記憶體模式圖片', {
+        metadata: {
+          fileName: imageData.fileName,
+          size: imageData.size,
+          productId: product.id,
+        },
+      })
+
+      try {
+        // 將 Base64 轉換為 File 物件
+        const base64Response = await fetch(imageData.base64Data)
+        const blob = await base64Response.blob()
+        const file = new File([blob], imageData.fileName, { type: blob.type })
+
+        // 使用統一圖片服務上傳
+        const uploadResult = await unifiedImageService.uploadImage(
+          file,
+          'products',
+          product.id,
+          imageData.size || 'medium',
+          imageData.position || 0
+        )
+
+        // 轉換為資料庫期望的格式
+        processedImages.push({
+          url: uploadResult.url, // 使用統一圖片服務返回的 url
+          path: uploadResult.path, // 使用統一圖片服務返回的 path
+          alt: imageData.alt || '',
+          position: imageData.position || 0,
+          size: imageData.size || 'medium',
+          width: imageData.width,
+          height: imageData.height,
+          file_size: imageData.file_size || file.size,
+        })
+
+        apiLogger.info('記憶體模式圖片上傳成功', {
+          metadata: {
+            fileName: imageData.fileName,
+            uploadedUrl: uploadResult.url,
+            uploadedPath: uploadResult.path,
+            productId: product.id,
+          },
+        })
+      } catch (uploadError) {
+        apiLogger.error('記憶體模式圖片上傳失敗', uploadError as Error, {
+          metadata: {
+            fileName: imageData.fileName,
+            productId: product.id,
+          },
+        })
+        throw new Error(`圖片上傳失敗：${imageData.fileName}`)
+      }
+    } else if (imageData.url && imageData.path) {
+      // 已上傳模式：直接使用現有的 URL 和路徑
+      processedImages.push({
+        url: imageData.url,
+        path: imageData.path,
+        alt: imageData.alt || '',
+        position: imageData.position || 0,
+        size: imageData.size || 'medium',
+        width: imageData.width,
+        height: imageData.height,
+        file_size: imageData.file_size,
+      })
+    }
+  }
+
   const supabase = getSupabaseAdmin()
 
   if (!supabase) {
@@ -85,10 +173,26 @@ async function handlePOST(request: NextRequest, user: any) {
     throw new Error('系統設定錯誤，請聯繫管理員')
   }
 
+  // 除錯：記錄傳遞給 RPC 函數的資料
+  apiLogger.info('即將調用 RPC 函數', {
+    metadata: {
+      productId: product.id,
+      processedImagesCount: processedImages.length,
+      processedImages: processedImages.map(img => ({
+        url: img.url,
+        path: img.path,
+        hasUrl: !!img.url,
+        hasPath: !!img.path,
+        urlType: typeof img.url,
+        pathType: typeof img.path,
+      })),
+    },
+  })
+
   // @ts-expect-error - Supabase RPC 函數未在類型定義中，但在資料庫中已定義
   const result = await supabase.rpc('create_product_with_images', {
     product_data: product,
-    images_data: images,
+    images_data: processedImages,
   })
 
   const { data, error } = result as { data: any; error: any }
@@ -128,7 +232,7 @@ async function handlePOST(request: NextRequest, user: any) {
   const duration = timer.end({
     metadata: {
       productId: product.id,
-      imageCount: images.length,
+      imageCount: processedImages.length,
       executionTime: data.meta?.executionTime,
     },
   })
@@ -137,7 +241,7 @@ async function handlePOST(request: NextRequest, user: any) {
     metadata: {
       productId: product.id,
       productName: product.name,
-      imageCount: images.length,
+      imageCount: processedImages.length,
       duration: `${duration}ms`,
       executionTime: data.meta?.executionTime,
       userId: user.id,
@@ -151,7 +255,7 @@ async function handlePOST(request: NextRequest, user: any) {
       images: data.data?.images || [],
       meta: {
         productId: product.id,
-        imageCount: images.length,
+        imageCount: processedImages.length,
         executionTime: data.meta?.executionTime,
         totalDuration: `${duration}ms`,
       },
