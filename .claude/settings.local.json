@@ -56,7 +56,8 @@
       "Bash(tree:*)",
       "Bash(find:*)",
       "Bash(do echo \"=== $file ===\")",
-      "Bash(head:*)"
+      "Bash(head:*)",
+      "Bash(sort:*)"
     ],
     "deny": [],
     "ask": []

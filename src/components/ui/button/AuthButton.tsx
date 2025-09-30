@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { logger } from '@/lib/logger'
 import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
 
@@ -85,7 +85,7 @@ interface AuthButtonProps {
   isMobile?: boolean
 }
 
-export default function AuthButton({ isMobile = false }: AuthButtonProps) {
+function AuthButton({ isMobile = false }: AuthButtonProps) {
   const { user, logout, isLoading } = useAuth()
   const { success, error: showError } = useToast()
   const { stats, error: statsError, isRetrying } = useInquiryStatsContext()
@@ -175,7 +175,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     }
   }, [user?.id, hasMounted]) // 依賴 hasMounted 確保只在客戶端執行
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     if (isLoggingOut) return
 
     setIsLoggingOut(true)
@@ -216,7 +216,15 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     } finally {
       setIsLoggingOut(false)
     }
-  }
+  }, [isLoggingOut, logout, success, user?.id, showError])
+
+  const toggleDropdown = useCallback(() => {
+    setIsDropdownOpen(prev => !prev)
+  }, [])
+
+  const closeDropdown = useCallback(() => {
+    setIsDropdownOpen(false)
+  }, [])
 
   // 共用樣式
   const baseClasses = isMobile
@@ -268,7 +276,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     return (
       <div className="relative" ref={dropdownRef}>
         <button
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          onClick={toggleDropdown}
           className={`${baseClasses} text-green-900 bg-green-50 hover:bg-green-100 ${
             isDropdownOpen ? 'bg-green-100' : ''
           }`}
@@ -297,7 +305,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             <Link
               href="/profile?tab=profile"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
-              onClick={() => setIsDropdownOpen(false)}
+              onClick={closeDropdown}
             >
               <UserIcon className="w-4 h-4 mr-2" />
               個人資料
@@ -306,7 +314,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             <Link
               href="/inquiry"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
-              onClick={() => setIsDropdownOpen(false)}
+              onClick={closeDropdown}
             >
               <InquiryIcon className="w-4 h-4 mr-2" />
               詢問單問答紀錄
@@ -315,7 +323,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
             <Link
               href="/profile?tab=interests"
               className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition-colors"
-              onClick={() => setIsDropdownOpen(false)}
+              onClick={closeDropdown}
             >
               <HeartIcon className="w-4 h-4 mr-2" />
               <span className="flex items-center justify-between w-full">
@@ -363,3 +371,7 @@ export default function AuthButton({ isMobile = false }: AuthButtonProps) {
     </div>
   )
 }
+
+// 使用 React.memo 來優化渲染效能
+// 當 isMobile prop 沒有變化時，避免不必要的重渲染
+export default memo(AuthButton)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import SearchInput from '@/components/ui/search/SearchInput'
 import PopularSearches from '@/components/ui/search/PopularSearches'
 
@@ -46,16 +46,16 @@ export default function ProductFilter({
     onFilterChange(filters)
   }, [filters, onFilterChange])
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = useCallback((category: string) => {
     setFilters(prev => ({
       ...prev,
       categories: prev.categories.includes(category)
         ? prev.categories.filter(c => c !== category)
         : [...prev.categories, category],
     }))
-  }
+  }, [])
 
-  const handlePriceRangeChange = (type: 'min' | 'max', value: string) => {
+  const handlePriceRangeChange = useCallback((type: 'min' | 'max', value: string) => {
     const numValue = parseInt(value) || 0
     setFilters(prev => ({
       ...prev,
@@ -64,9 +64,9 @@ export default function ProductFilter({
         [type]: numValue,
       },
     }))
-  }
+  }, [])
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setFilters({
       categories: [],
       availability: 'all',
@@ -78,20 +78,50 @@ export default function ProductFilter({
       },
     })
     setShowPriceRange(false)
-  }
+  }, [])
 
-  const hasActiveFilters =
-    filters.categories.length > 0 ||
-    filters.availability !== 'all' ||
-    showPriceRange ||
-    (filters.search && filters.search.trim().length > 0)
+  const hasActiveFilters = useMemo(
+    () =>
+      filters.categories.length > 0 ||
+      filters.availability !== 'all' ||
+      showPriceRange ||
+      (filters.search && filters.search.trim().length > 0),
+    [filters.categories.length, filters.availability, showPriceRange, filters.search]
+  )
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded(prev => !prev)
+  }, [])
+
+  const handleSearchChange = useCallback((value: string) => {
+    setFilters(prev => ({ ...prev, search: value }))
+  }, [])
+
+  const handleSortChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilters(prev => ({ ...prev, sortBy: e.target.value as FilterState['sortBy'] }))
+  }, [])
+
+  const handleSearchSelect = useCallback((query: string) => {
+    setFilters(prev => ({ ...prev, search: query }))
+  }, [])
+
+  const handleAvailabilityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters(prev => ({
+      ...prev,
+      availability: e.target.value as FilterState['availability'],
+    }))
+  }, [])
+
+  const togglePriceRange = useCallback(() => {
+    setShowPriceRange(prev => !prev)
+  }, [])
 
   return (
     <div className={`bg-white rounded-lg shadow-lg ${isExpanded ? 'p-6' : 'p-4'} mb-6`}>
       {/* Toggle Button - 所有裝置都可使用 */}
       <div className={isExpanded ? 'mb-4' : ''}>
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={toggleExpanded}
           className="flex items-center justify-between w-full hover:bg-gray-50 p-1.5 rounded-lg transition-colors"
         >
           <div className="flex items-center gap-3">
@@ -167,7 +197,7 @@ export default function ProductFilter({
               <h3 className="font-semibold text-gray-800 mb-3">搜尋產品</h3>
               <SearchInput
                 value={filters.search || ''}
-                onChange={value => setFilters(prev => ({ ...prev, search: value }))}
+                onChange={handleSearchChange}
                 placeholder="搜尋產品名稱、描述或類別..."
                 showHistory={true}
                 showSuggestions={true}
@@ -177,9 +207,7 @@ export default function ProductFilter({
               <h3 className="font-semibold text-gray-800 mb-3">排序方式</h3>
               <select
                 value={filters.sortBy}
-                onChange={e =>
-                  setFilters(prev => ({ ...prev, sortBy: e.target.value as FilterState['sortBy'] }))
-                }
+                onChange={handleSortChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-gray-900 bg-white"
               >
                 <option value="name">名稱 A-Z</option>
@@ -193,11 +221,7 @@ export default function ProductFilter({
           {/* Popular Searches - 只在沒有搜尋條件時顯示 */}
           {(!filters.search || filters.search.trim().length === 0) && (
             <div className="lg:w-1/2">
-              <PopularSearches
-                onSearchSelect={query => setFilters(prev => ({ ...prev, search: query }))}
-                limit={5}
-                showStats={false}
-              />
+              <PopularSearches onSearchSelect={handleSearchSelect} limit={5} showStats={false} />
             </div>
           )}
 
@@ -239,12 +263,7 @@ export default function ProductFilter({
                       name="availability"
                       value={option.value}
                       checked={filters.availability === option.value}
-                      onChange={e =>
-                        setFilters(prev => ({
-                          ...prev,
-                          availability: e.target.value as FilterState['availability'],
-                        }))
-                      }
+                      onChange={handleAvailabilityChange}
                       className="text-amber-600 focus:ring-amber-500 mr-2"
                     />
                     <span className="text-sm text-gray-900">{option.label}</span>
@@ -258,7 +277,7 @@ export default function ProductFilter({
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-800">價格區間</h3>
                 <button
-                  onClick={() => setShowPriceRange(!showPriceRange)}
+                  onClick={togglePriceRange}
                   className={`text-sm px-3 py-1 rounded ${
                     showPriceRange
                       ? 'bg-amber-100 text-amber-800'

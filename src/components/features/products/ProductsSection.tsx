@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Product } from '@/types/product'
 import { useAuth } from '@/contexts/AuthContext'
@@ -41,7 +41,7 @@ function ProductsSection() {
     return () => observer.disconnect()
   }, [])
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setError(null)
       const response = await fetch('/api/products')
@@ -67,9 +67,9 @@ function ProductsSection() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const getProductBadge = (index: number, product: Product) => {
+  const getProductBadge = useCallback((index: number, product: Product) => {
     if (index === 0) {
       return {
         icon: <Award className="w-3.5 h-3.5" />,
@@ -95,9 +95,9 @@ function ProductsSection() {
       }
     }
     return null
-  }
+  }, [])
 
-  const getProductFeatures = (index: number) => {
+  const getProductFeatures = useCallback((index: number) => {
     const features = [
       [
         {
@@ -127,7 +127,12 @@ function ProductsSection() {
       ],
     ]
     return features[index] || []
-  }
+  }, [])
+
+  const handleRetry = useCallback(() => {
+    setLoading(true)
+    fetchProducts()
+  }, [fetchProducts])
 
   if (loading) {
     return (
@@ -172,10 +177,7 @@ function ProductsSection() {
               <div className="text-red-600 mb-4">載入產品時發生錯誤</div>
               <p className="text-sm text-red-700 mb-4">{error}</p>
               <button
-                onClick={() => {
-                  setLoading(true)
-                  fetchProducts()
-                }}
+                onClick={handleRetry}
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
               >
                 重新載入
