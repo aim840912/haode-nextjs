@@ -34,7 +34,7 @@ export interface SearchConfig {
 /**
  * 搜尋結果介面
  */
-export interface SearchResult<T = any> {
+export interface SearchResult<T = unknown> {
   /** 結果資料 */
   item: T
   /** 搜尋排名分數 */
@@ -43,6 +43,33 @@ export interface SearchResult<T = any> {
   highlight?: string
   /** 匹配的欄位 */
   matchedFields?: string[]
+}
+
+/**
+ * Supabase RPC 回應類型
+ */
+type SupabaseRpcResponse<T> = {
+  data: T[] | null
+  error: { message: string } | null
+}
+
+/**
+ * 資料庫搜尋結果項目類型
+ */
+interface DbSearchResultItem {
+  id: string
+  name: string
+  description?: string
+  category?: string
+  price?: number
+  original_price?: number
+  is_on_sale?: boolean
+  rank?: number
+  created_at?: string
+  updated_at?: string
+  suggestion?: string
+  highlight?: string
+  matched_fields?: string[]
 }
 
 /**
@@ -117,7 +144,7 @@ export class FullTextSearchService {
         search_limit: limit,
         search_offset: offset,
         lang_config: language === 'chinese' ? 'simple' : language,
-      })) as { data: any[] | null; error: any }
+      })) as SupabaseRpcResponse<DbSearchResultItem>
 
       const count = data?.length || 0
 
@@ -240,7 +267,7 @@ export class FullTextSearchService {
         min_price: minPrice,
         max_price: maxPrice,
         result_limit: limit,
-      })) as { data: any[] | null; error: any }
+      })) as SupabaseRpcResponse<DbSearchResultItem>
 
       if (error) {
         throw new Error(`進階搜尋產品失敗: ${error.message}`)
@@ -257,7 +284,7 @@ export class FullTextSearchService {
       })
 
       // 格式化結果
-      const results: SearchResult[] = (data || []).map((item: any) => ({
+      const results: SearchResult[] = (data || []).map(item => ({
         item: this.transformProductResult(item),
         rank: item.rank || 1,
         matchedFields: ['name', 'description', 'category'],
@@ -297,7 +324,7 @@ export class FullTextSearchService {
       const { data, error } = (await clientAny.rpc('get_search_suggestions', {
         partial_query: partialQuery,
         suggestion_limit: limit,
-      })) as { data: any[] | null; error: any }
+      })) as SupabaseRpcResponse<DbSearchResultItem>
 
       if (error) {
         throw new Error(`獲取搜尋建議失敗: ${error.message}`)
@@ -311,7 +338,7 @@ export class FullTextSearchService {
         },
       })
 
-      return (data || []).map((item: any) => item.suggestion || item.name || '')
+      return (data || []).map(item => item.suggestion || item.name || '')
     } catch (error) {
       timer.end()
       dbLogger.warn('獲取搜尋建議失敗', {
@@ -456,7 +483,7 @@ export class FullTextSearchService {
    * 轉換產品搜尋結果
    * 注意：productImages 需由調用方從 product_images 表載入
    */
-  private transformProductResult(item: any): any {
+  private transformProductResult(item: DbSearchResultItem): Record<string, unknown> {
     return {
       id: item.id,
       name: item.name,

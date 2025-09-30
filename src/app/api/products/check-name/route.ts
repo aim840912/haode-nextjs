@@ -36,7 +36,8 @@ async function handleGET(request: NextRequest) {
 
       // 檢查是否有完全相同的名稱
       exactMatch = products.some(
-        (product: any) => product.name.toLowerCase().trim() === name.toLowerCase().trim()
+        (product: { name: string }) =>
+          product.name.toLowerCase().trim() === name.toLowerCase().trim()
       )
     }
 

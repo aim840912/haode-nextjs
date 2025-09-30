@@ -24,7 +24,7 @@ async function handlePOST(request: NextRequest) {
   const validation = UserSchemas.resetPassword.safeParse(requestData)
   if (!validation.success) {
     const errors = validation.error.issues
-      .map((issue: any) => `${issue.path.join('.')}: ${issue.message}`)
+      .map(issue => `${issue.path.join('.')}: ${issue.message}`)
       .join(', ')
     throw new ValidationError(`驗證失敗: ${errors}`)
   }

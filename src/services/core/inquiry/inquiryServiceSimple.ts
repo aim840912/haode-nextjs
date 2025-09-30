@@ -562,9 +562,8 @@ export class InquiryServiceSimple implements InquiryService {
 
   /**
    * 應用查詢參數到 Supabase 查詢構建器
-   * 使用與專案其他服務一致的 any 類型斷言策略
+   * Note: 使用 any 以處理 Supabase PostgrestFilterBuilder 的鏈式調用
    */
-
   private applyQueryParams(query: any, params?: InquiryQueryParams): any {
     if (!params) return query
 

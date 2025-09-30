@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { supabase } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
 
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: User) {
   apiLogger.info('開始處理密碼更新請求', {
     module: 'UpdatePasswordAPI',
     action: 'start',

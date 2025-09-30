@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 
-export type ValidationRule<T = any> = {
+export type ValidationRule<T = unknown> = {
   required?: boolean
   minLength?: number
   maxLength?: number
@@ -15,17 +15,17 @@ export type ValidationRule<T = any> = {
   asyncValidator?: (value: T) => Promise<string | null>
 }
 
-export type ValidationRules<T extends Record<string, any>> = {
+export type ValidationRules<T extends Record<string, unknown>> = {
   [K in keyof T]?: ValidationRule<T[K]>
 }
 
-export type ValidationErrors<T extends Record<string, any>> = {
+export type ValidationErrors<T extends Record<string, unknown>> = {
   [K in keyof T]?: string
 }
 
 export type ValidationMode = 'onSubmit' | 'onChange' | 'onBlur' | 'onFocus'
 
-export interface UseFormValidationOptions<T extends Record<string, any>> {
+export interface UseFormValidationOptions<T extends Record<string, unknown>> {
   initialValues: T
   validationRules: ValidationRules<T>
   mode?: ValidationMode
@@ -34,7 +34,7 @@ export interface UseFormValidationOptions<T extends Record<string, any>> {
   onValidationChange?: (isValid: boolean, errors: ValidationErrors<T>) => void
 }
 
-export interface UseFormValidationResult<T extends Record<string, any>> {
+export interface UseFormValidationResult<T extends Record<string, unknown>> {
   values: T
   errors: ValidationErrors<T>
   isValid: boolean
@@ -382,14 +382,14 @@ export const validationRules = {
   }),
 
   positiveNumber: (message = '請輸入正數'): ValidationRule => ({
-    customValidator: (value: any) => {
+    customValidator: (value: unknown) => {
       const num = Number(value)
       return isNaN(num) || num <= 0 ? message : null
     },
   }),
 
   nonNegativeNumber: (message = '數值不能為負'): ValidationRule => ({
-    customValidator: (value: any) => {
+    customValidator: (value: unknown) => {
       const num = Number(value)
       return isNaN(num) || num < 0 ? message : null
     },

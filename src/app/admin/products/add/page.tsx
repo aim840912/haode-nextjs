@@ -281,7 +281,7 @@ function AddProductV2() {
 
   // 處理圖片變更（記憶體暫存）
   const handleImageChange = useCallback(
-    (images: any[]) => {
+    (images: unknown[]) => {
       setTempImages(images)
       logger.debug('圖片列表更新（記憶體暫存）', {
         metadata: { imageCount: images.length, productId },
@@ -471,7 +471,7 @@ function AddProductV2() {
   }
 
   // 處理輸入變化
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }))
 
     // 清除對應欄位的錯誤

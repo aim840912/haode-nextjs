@@ -49,9 +49,16 @@ async function handleGET(request: NextRequest) {
     // 使用 RPC 函數進行跨表查詢
     const supabaseService = createServiceSupabaseClient()
 
-    const { data: userResult, error } = (await (supabaseService as any).rpc('get_email_by_phone', {
+    const { data: userResult, error } = (await (
+      supabaseService as unknown as {
+        rpc: (
+          name: string,
+          params: Record<string, unknown>
+        ) => Promise<{ data: Array<{ email: string; user_id: string }> | null; error: unknown }>
+      }
+    ).rpc('get_email_by_phone', {
       phone_number: normalizedPhone,
-    })) as { data: Array<{ email: string; user_id: string }> | null; error: any }
+    })) as { data: Array<{ email: string; user_id: string }> | null; error: unknown }
 
     if (error) {
       apiLogger.warn('RPC 函數查詢失敗', {
@@ -59,7 +66,7 @@ async function handleGET(request: NextRequest) {
         action: 'rpc_lookup_failed',
         metadata: {
           phonePrefix: normalizedPhone.substring(0, 3) + '***',
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           clientIP: clientIP.substring(0, 15),
         },
       })

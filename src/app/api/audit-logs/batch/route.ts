@@ -7,11 +7,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { apiLogger } from '@/lib/logger'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success, error as errorResponse } from '@/lib/api-response'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
 import type { Database } from '@/types/database'
-import type { User } from '@supabase/supabase-js'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js'
 import type { AuditAction, ResourceType } from '@/types/audit'
 
@@ -48,7 +48,7 @@ function createErrorResponse(message: string, status: number, details?: string) 
 }
 
 // POST /api/audit-logs/batch - 批量操作審計日誌
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: User) {
   // 檢查權限（只有管理員可以批量操作審計日誌）
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase
@@ -76,7 +76,7 @@ async function handlePOST(request: NextRequest, user: any) {
       }
       return await handleDeleteByIds(
         supabase as unknown as RealSupabaseClient<Database>,
-        user,
+        user as unknown as SupabaseUser,
         profile as PartialProfile,
         ids,
         request
@@ -88,7 +88,7 @@ async function handlePOST(request: NextRequest, user: any) {
       }
       return await handleDeleteByFilters(
         supabase as unknown as RealSupabaseClient<Database>,
-        user,
+        user as unknown as SupabaseUser,
         profile as PartialProfile,
         filters,
         request
@@ -97,7 +97,7 @@ async function handlePOST(request: NextRequest, user: any) {
     case 'cleanup_old':
       return await handleCleanupOld(
         supabase as unknown as RealSupabaseClient<Database>,
-        user,
+        user as unknown as SupabaseUser,
         profile as PartialProfile,
         filters?.days || 365,
         request
@@ -122,7 +122,7 @@ export const POST = withAuthAndError(handlePOST, {
 // 按 ID 批量刪除
 async function handleDeleteByIds(
   supabase: RealSupabaseClient<Database>,
-  user: User,
+  user: SupabaseUser,
   profile: PartialProfile,
   ids: string[],
   request: NextRequest
@@ -211,7 +211,7 @@ async function handleDeleteByIds(
 // 按條件批量刪除
 async function handleDeleteByFilters(
   supabase: RealSupabaseClient<Database>,
-  user: User,
+  user: SupabaseUser,
   profile: PartialProfile,
   filters: NonNullable<BatchRequestBody['filters']>,
   request: NextRequest
@@ -291,7 +291,7 @@ async function handleDeleteByFilters(
 // 清理舊日誌
 async function handleCleanupOld(
   supabase: RealSupabaseClient<Database>,
-  user: User,
+  user: SupabaseUser,
   profile: PartialProfile,
   daysToKeep: number,
   request: NextRequest

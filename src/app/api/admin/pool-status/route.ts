@@ -4,6 +4,17 @@ import { success } from '@/lib/api-response'
 import { getPoolStats } from '@/lib/supabase/connection-factory'
 import { apiLogger } from '@/lib/logger'
 
+// 連線池統計資料類型
+interface PoolStats {
+  poolUtilization: number
+  averageAcquireTime: number
+  totalRequests: number
+  failedRequests: number
+  totalConnections: number
+  unhealthyConnections: number
+  activeConnections: number
+}
+
 /**
  * 取得連線池狀態和統計資訊
  * 只有管理員可以存取
@@ -94,7 +105,7 @@ async function handleGET(request: NextRequest, user: User) {
 /**
  * 計算連線池健康分數 (0-100)
  */
-function calculateHealthScore(stats: any): number {
+function calculateHealthScore(stats: PoolStats): number {
   let score = 100
 
   // 失敗率扣分（每 1% 失敗率扣 10 分）
@@ -132,7 +143,7 @@ function getUtilizationLevel(utilization: number): string {
 /**
  * 生成優化建議
  */
-function generateRecommendations(stats: any): string[] {
+function generateRecommendations(stats: PoolStats): string[] {
   const recommendations: string[] = []
 
   // 使用率建議

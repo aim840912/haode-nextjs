@@ -6,13 +6,13 @@
 import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { AuditLogQueryParams, AuditAction, ResourceType, UserRole } from '@/types/audit'
 
 // GET /api/audit-logs - 取得審計日誌清單
-async function handleGET(request: NextRequest, user: any) {
+async function handleGET(request: NextRequest, user: User) {
   // 檢查權限（只有管理員和稽核人員可以查看審計日誌）
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase

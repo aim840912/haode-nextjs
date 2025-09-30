@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -40,7 +40,7 @@ const CreateOrderSchema = z.object({
 /**
  * GET /api/orders - 取得使用者的訂單列表
  */
-async function handleGET(req: NextRequest, user: any) {
+async function handleGET(req: NextRequest, user: User) {
   const { searchParams } = new URL(req.url)
   const page = parseInt(searchParams.get('page') || '1')
   const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
@@ -73,7 +73,7 @@ async function handleGET(req: NextRequest, user: any) {
 /**
  * POST /api/orders - 建立新訂單
  */
-async function handlePOST(req: NextRequest, user: any) {
+async function handlePOST(req: NextRequest, user: User) {
   const body = await req.json()
 
   apiLogger.info('建立新訂單請求', {

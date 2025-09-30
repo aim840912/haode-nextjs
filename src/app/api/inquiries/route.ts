@@ -12,13 +12,13 @@ import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas } from '@/lib/validation-schemas'
 import { ValidationError } from '@/lib/errors'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter
 
 // GET /api/inquiries - 取得庫存查詢單清單
-async function handleGET(request: NextRequest, user: any) {
+async function handleGET(request: NextRequest, user: User) {
   // 解析並驗證查詢參數
   const url = new URL(request.url)
   const searchParams = Object.fromEntries(url.searchParams.entries())
@@ -64,7 +64,7 @@ async function handleGET(request: NextRequest, user: any) {
 }
 
 // POST /api/inquiries - 建立新庫存查詢單
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: User) {
   // 取得使用者資訊用於審計日誌
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase

@@ -258,7 +258,7 @@ export default function ImageUploader({
                 if (result.multiple && result.images) {
                   // 多尺寸上傳結果
                   const uploadedImages: UploadedImage[] = result.images.map(
-                    (img: any, index: number) => {
+                    (img, index: number) => {
                       const url = imageUrlValidator.clean(img.url)
                       return {
                         id: img.id,

@@ -76,27 +76,28 @@ export default function AddLocation() {
   })
 
   // 驗證函數
-  const validateField = (field: string, value: any) => {
+  const validateField = (field: string, value: unknown) => {
+    const stringValue = String(value)
     switch (field) {
       case 'name':
-        return !value.trim() ? '請輸入門市名稱' : ''
+        return !stringValue.trim() ? '請輸入門市名稱' : ''
       case 'title':
-        return !value.trim() ? '請輸入完整標題' : ''
+        return !stringValue.trim() ? '請輸入完整標題' : ''
       case 'address':
-        return !value.trim() ? '請輸入門市地址' : ''
+        return !stringValue.trim() ? '請輸入門市地址' : ''
       case 'phone':
-        if (!value.trim()) return '請輸入電話號碼'
+        if (!stringValue.trim()) return '請輸入電話號碼'
         // 台灣電話格式簡單驗證 (09xxxxxxxx 或 0x-xxxxxxx)
         const phoneRegex = /^(09\d{8}|0\d{1,2}-\d{6,8})$/
-        return !phoneRegex.test(value.replace(/\s+/g, '')) ? '電話格式不正確' : ''
+        return !phoneRegex.test(stringValue.replace(/\s+/g, '')) ? '電話格式不正確' : ''
       case 'hours':
-        return !value.trim() ? '請輸入營業時間' : ''
+        return !stringValue.trim() ? '請輸入營業時間' : ''
       default:
         return ''
     }
   }
 
-  const handleFieldChange = (field: string, value: any) => {
+  const handleFieldChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }))
 
     // 清除對應欄位錯誤

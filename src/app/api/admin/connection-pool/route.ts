@@ -30,7 +30,7 @@ interface ConnectionPoolOperation {
   checkInterval?: number
 }
 
-async function handlePOST(req: NextRequest, user: any): Promise<NextResponse> {
+async function handlePOST(req: NextRequest, user: User): Promise<NextResponse> {
   const body = (await req.json()) as ConnectionPoolOperation
 
   // 輸入驗證

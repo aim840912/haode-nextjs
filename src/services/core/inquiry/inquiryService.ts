@@ -70,6 +70,7 @@ interface SupabaseInquiryRecord {
 class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseInquiryRecord> {
   /**
    * 從資料庫記錄轉換為實體 (新介面方法)
+   * Note: 使用 any 以符合 DataTransformer 介面要求（接受 DatabaseRecord）
    */
   transform(record: any): InquiryWithItems {
     return this.fromDB(record)
@@ -77,6 +78,7 @@ class InquiryTransformer implements DataTransformer<InquiryWithItems, SupabaseIn
 
   /**
    * 從資料庫記錄轉換為實體
+   * Note: 使用 any 以處理 Supabase 查詢結果的動態結構（包含 inquiry_items 關聯）
    */
   fromDB(record: any): InquiryWithItems {
     // 解析農場參觀資料
@@ -245,6 +247,7 @@ export class InquiryService
 
   /**
    * 覆寫查詢以包含關聯資料
+   * Note: 使用 any 以符合 Supabase PostgrestQueryBuilder 的複雜泛型類型
    */
   protected createQuery(useAdmin: boolean = false): any {
     const query = super.createQuery(useAdmin)

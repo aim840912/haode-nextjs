@@ -42,8 +42,8 @@ function ProductsPage() {
 
   // 篩選處理函數
   const handleFilterChange = useCallback(
-    (newFilters: any) => {
-      setFilters(newFilters)
+    (newFilters: unknown) => {
+      setFilters(newFilters as typeof filters)
     },
     [setFilters]
   )

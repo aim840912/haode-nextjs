@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { withAdminAndError } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { ValidationError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
@@ -51,7 +51,7 @@ const ProductWithImagesSchema = z.object({
     .default([]),
 })
 
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: User) {
   const timer = apiLogger.timer('事務式建立產品')
 
   apiLogger.info('收到事務式建立產品請求', {
@@ -195,10 +195,29 @@ async function handlePOST(request: NextRequest, user: any) {
     images_data: processedImages,
   })
 
-  const { data, error } = result as { data: any; error: any }
+  type RpcResponse = {
+    success: boolean
+    error?: string
+    error_code?: string
+    error_details?: unknown
+    message?: string
+    data?: {
+      product: unknown
+      images: unknown[]
+    }
+    meta?: {
+      executionTime?: string
+    }
+  }
+
+  const { data, error } = result as {
+    data: RpcResponse | null
+    error: { code: string; message: string } | null
+  }
 
   if (error) {
-    apiLogger.error('PostgreSQL 函數執行失敗', error, {
+    const errorObj = new Error(error.message)
+    apiLogger.error('PostgreSQL 函數執行失敗', errorObj, {
       metadata: {
         productId: product.id,
         function: 'create_product_with_images',
@@ -207,7 +226,7 @@ async function handlePOST(request: NextRequest, user: any) {
         userId: user.id,
       },
     })
-    throw error
+    throw errorObj
   }
 
   if (!data) {

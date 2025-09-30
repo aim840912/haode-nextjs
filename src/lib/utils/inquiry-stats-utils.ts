@@ -48,6 +48,14 @@ export interface CacheConfig {
 }
 
 /**
+ * 快取資料結構
+ */
+export interface CacheData {
+  data: unknown
+  timestamp: number
+}
+
+/**
  * 計算重試延遲時間
  */
 export function calculateRetryDelay(config: RetryConfig): number {
@@ -125,10 +133,11 @@ export function calculateDynamicPollingInterval(config: PollingConfig): number |
 /**
  * 驗證快取資料是否有效
  */
-export function isCacheValid(cacheData: any, maxAge: number): boolean {
+export function isCacheValid(cacheData: unknown, maxAge: number): boolean {
   if (!cacheData || typeof cacheData !== 'object') return false
 
-  const { data, timestamp } = cacheData
+  const cache = cacheData as CacheData
+  const { data, timestamp } = cache
   if (!data || !timestamp) return false
 
   return Date.now() - timestamp < maxAge

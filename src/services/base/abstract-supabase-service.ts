@@ -220,9 +220,9 @@ export abstract class AbstractSupabaseService<
   /**
    * 轉換實體為資料庫記錄
    */
-  protected transformToDB(entity: any): DatabaseRecord {
+  protected transformToDB(entity: CreateDTO | UpdateDTO | unknown): DatabaseRecord {
     if (this.transformer && this.transformer.reverseTransform) {
-      return this.transformer.reverseTransform(entity)
+      return this.transformer.reverseTransform(entity as T)
     }
     return entity as Record<string, unknown>
   }

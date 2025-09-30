@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { requireAuth, requireAdmin } from '@/lib/middleware/api-middleware'
+import { requireAuth, requireAdmin, User } from '@/lib/middleware/api-middleware'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
@@ -58,7 +58,7 @@ const UpdateSchema = z.object({
 /**
  * POST - 上傳圖片 (需要認證)
  */
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: User) {
   const formData = await request.formData()
   const file = formData.get('file') as File
 
@@ -340,7 +340,7 @@ async function handlePATCH(request: NextRequest) {
 /**
  * DELETE - 刪除圖片 (需要認證)
  */
-async function handleDELETE(request: NextRequest, user: any) {
+async function handleDELETE(request: NextRequest, user: User) {
   const body = await request.json()
   const result = DeleteSchema.safeParse(body)
 

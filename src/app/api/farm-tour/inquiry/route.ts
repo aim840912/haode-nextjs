@@ -8,7 +8,7 @@ import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceAdapter'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { created } from '@/lib/api-response'
@@ -26,7 +26,7 @@ interface FarmTourInquiryRequest {
 }
 
 // POST /api/farm-tour/inquiry - 建立農場參觀預約詢問
-async function handlePOST(request: NextRequest, user: any) {
+async function handlePOST(request: NextRequest, user: User) {
   // 取得使用者資訊
   const supabase = await createServerSupabaseClient()
   const { data: profile } = (await supabase

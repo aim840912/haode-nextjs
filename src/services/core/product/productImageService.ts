@@ -307,7 +307,7 @@ export class ProductImageService {
         throw new NotFoundError(`圖片不存在: ${imageId}`)
       }
 
-      const metadata: any = {}
+      const metadata: Partial<{ width: number; height: number; file_size: number }> = {}
       if (updateData.width !== undefined) metadata.width = updateData.width
       if (updateData.height !== undefined) metadata.height = updateData.height
       if (updateData.file_size !== undefined) metadata.file_size = updateData.file_size

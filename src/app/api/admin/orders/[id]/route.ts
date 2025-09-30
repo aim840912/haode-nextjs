@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAdminAndError } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -35,8 +35,12 @@ const AdminUpdateOrderSchema = z.object({
 /**
  * GET /api/admin/orders/[id] - 管理員取得單一訂單詳情
  */
-async function handleGET(req: NextRequest, user: any, context?: any) {
-  const { id } = await context?.params
+async function handleGET(req: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id } = await routeContext.params
 
   if (!id) {
     throw new ValidationError('訂單 ID 不能為空')
@@ -64,8 +68,12 @@ async function handleGET(req: NextRequest, user: any, context?: any) {
 /**
  * PATCH /api/admin/orders/[id] - 管理員更新訂單
  */
-async function handlePATCH(req: NextRequest, user: any, context?: any) {
-  const { id } = await context?.params
+async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id } = await routeContext.params
   const body = await req.json()
 
   if (!id) {
@@ -101,7 +109,11 @@ async function handlePATCH(req: NextRequest, user: any, context?: any) {
   }
 
   // 更新其他欄位
-  const otherUpdates: any = {}
+  const otherUpdates: Partial<{
+    trackingNumber: string
+    estimatedDeliveryDate: string
+    notes: string
+  }> = {}
   if (updates.trackingNumber !== undefined) {
     otherUpdates.trackingNumber = updates.trackingNumber
   }

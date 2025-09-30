@@ -13,7 +13,7 @@ import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { InquirySchemas, CommonValidations } from '@/lib/validation-schemas'
 import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import type { Database } from '@/types/database'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -23,9 +23,12 @@ const inquiryService = inquiryServiceAdapter
 /**
  * GET /api/inquiries/[id] - 取得特定庫存查詢單
  */
-async function handleGET(request: NextRequest, user: any, context?: any) {
-  const { params } = context || {}
-  const { id: inquiryId } = await params
+async function handleGET(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id: inquiryId } = await routeContext.params
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -122,9 +125,12 @@ async function handleGET(request: NextRequest, user: any, context?: any) {
 /**
  * PUT /api/inquiries/[id] - 更新庫存查詢單
  */
-async function handlePUT(request: NextRequest, user: any, context?: any) {
-  const { params } = context || {}
-  const { id: inquiryId } = await params
+async function handlePUT(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id: inquiryId } = await routeContext.params
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -267,9 +273,12 @@ async function handlePUT(request: NextRequest, user: any, context?: any) {
 /**
  * DELETE /api/inquiries/[id] - 刪除詢問單（僅管理員）
  */
-async function handleDELETE(request: NextRequest, user: any, context?: any) {
-  const { params } = context || {}
-  const { id: inquiryId } = await params
+async function handleDELETE(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id: inquiryId } = await routeContext.params
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })
@@ -339,9 +348,12 @@ async function handleDELETE(request: NextRequest, user: any, context?: any) {
 /**
  * PATCH /api/inquiries/[id] - 快速更新詢問單讀取/回覆狀態（僅管理員）
  */
-async function handlePATCH(request: NextRequest, user: any, context?: any) {
-  const { params } = context || {}
-  const { id: inquiryId } = await params
+async function handlePATCH(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id: inquiryId } = await routeContext.params
 
   // 驗證 UUID 格式
   const paramResult = CommonValidations.uuidParam.safeParse({ id: inquiryId })

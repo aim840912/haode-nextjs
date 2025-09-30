@@ -63,13 +63,11 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.55.0",
     "@tailwindcss/line-clamp": "^0.4.4",
-    "@upstash/redis": "^1.35.4",
     "@vercel/analytics": "^1.5.0",
     "@vercel/kv": "^3.0.0",
     "@vercel/speed-insights": "^1.2.0",
     "browser-image-compression": "^2.0.2",
     "dotenv": "^17.2.2",
-    "idb": "^8.0.3",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.543.0",
     "next": "^15.5.2",
@@ -79,7 +77,6 @@
     "react-dom": "19.1.0",
     "styled-components": "^6.1.19",
     "uuid": "^11.1.0",
-    "workbox-sw": "^7.3.0",
     "zod": "^4.0.17"
   },
   "devDependencies": {

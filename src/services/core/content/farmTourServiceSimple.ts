@@ -108,6 +108,7 @@ export class FarmTourServiceSimple implements FarmTourService {
 
   /**
    * 轉換資料庫記錄為 FarmTourActivity
+   * Note: 使用 any 以避免 Supabase 查詢結果的複雜類型斷言
    */
   private transformFromDB(record: any): FarmTourActivity {
     return {

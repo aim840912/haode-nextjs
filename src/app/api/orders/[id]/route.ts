@@ -6,7 +6,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
@@ -22,8 +22,12 @@ const UpdateOrderSchema = z.object({
 /**
  * GET /api/orders/[id] - 取得單一訂單詳情
  */
-async function handleGET(req: NextRequest, user: any, context?: any) {
-  const { id } = await context?.params
+async function handleGET(req: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id } = await routeContext.params
 
   if (!id) {
     throw new ValidationError('訂單 ID 不能為空')
@@ -47,8 +51,12 @@ async function handleGET(req: NextRequest, user: any, context?: any) {
 /**
  * PATCH /api/orders/[id] - 更新訂單
  */
-async function handlePATCH(req: NextRequest, user: any, context?: any) {
-  const { id } = await context?.params
+async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id } = await routeContext.params
   const body = await req.json()
 
   if (!id) {

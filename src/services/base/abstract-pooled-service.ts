@@ -183,7 +183,7 @@ export abstract class AbstractPooledService {
    */
   protected async checkPoolStatus(): Promise<{
     enabled: boolean
-    stats?: any
+    stats?: unknown
   }> {
     try {
       const { shouldUseConnectionPool, getPoolStats } = await import(

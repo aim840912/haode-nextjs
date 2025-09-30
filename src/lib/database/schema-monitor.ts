@@ -3,6 +3,15 @@ import { dbLogger } from '@/lib/logger'
 import { refreshConnectionPoolSchema } from '@/lib/supabase/connection-factory'
 
 /**
+ * Schema 資料表資訊結構
+ */
+interface SchemaTableInfo {
+  table: string
+  fields?: string[]
+  error?: string
+}
+
+/**
  * Schema 監控器 - 偵測資料庫 schema 變更
  * 當偵測到變更時自動重新整理連線池
  */
@@ -184,7 +193,7 @@ export class SchemaMonitor {
     try {
       // 查詢主要資料表的 schema 資訊
       const mainTables = ['locations', 'products', 'users', 'inquiries']
-      const schemaData: any[] = []
+      const schemaData: SchemaTableInfo[] = []
 
       for (const tableName of mainTables) {
         try {

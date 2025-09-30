@@ -3,6 +3,8 @@ import { ConnectionManager } from '@/lib/database/pooled-connection'
 import { PoolConfigManager } from './pool-config'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
+import { SupabaseClient } from '@supabase/supabase-js'
+import { Database } from '@/types/database'
 
 /**
  * 連線工廠單例
@@ -246,7 +248,7 @@ export async function getConnectionManager(): Promise<ConnectionManager> {
  * 便利函數：執行單一查詢（自動管理連線）
  */
 export async function withPooledConnection<T>(
-  queryBuilder: (client: any) => Promise<T>,
+  queryBuilder: (client: SupabaseClient<Database>) => Promise<T>,
   context?: { action?: string; metadata?: Record<string, unknown> }
 ): Promise<T> {
   try {

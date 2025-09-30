@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { userInterestsServiceSimple } from '@/services/core/user/userInterestsServiceSimple'
@@ -13,7 +13,7 @@ const ToggleInterestSchema = z.object({
 /**
  * 切換產品興趣狀態（加入或移除）
  */
-async function handlePOST(req: NextRequest, user: any) {
+async function handlePOST(req: NextRequest, user: User) {
   try {
     const body = await req.json()
     const result = ToggleInterestSchema.safeParse(body)

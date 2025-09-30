@@ -82,8 +82,8 @@ interface DataLoadingProps<T> {
   children: (data: T) => ReactNode
   fallback?: ReactNode
   skeleton?: ReactNode
-  errorComponent?: (error: any, retry: () => void) => ReactNode
-  dependencies?: any[]
+  errorComponent?: (error: { message: string }, retry: () => void) => ReactNode
+  dependencies?: React.DependencyList
   className?: string
 }
 

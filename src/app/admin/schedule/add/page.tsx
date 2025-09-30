@@ -45,22 +45,23 @@ export default function AddSchedule() {
   })
 
   // 驗證函數
-  const validateField = (field: string, value: any) => {
+  const validateField = (field: string, value: unknown) => {
+    const stringValue = String(value)
     switch (field) {
       case 'title':
-        return !value.trim() ? '請輸入市集/夜市名稱' : ''
+        return !stringValue.trim() ? '請輸入市集/夜市名稱' : ''
       case 'location':
-        return !value.trim() ? '請輸入詳細地址' : ''
+        return !stringValue.trim() ? '請輸入詳細地址' : ''
       case 'date':
-        return !value ? '請選擇日期' : ''
+        return !stringValue ? '請選擇日期' : ''
       case 'time':
         const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
         return !formattedTime ? '請選擇開始時間和結束時間' : ''
       case 'contact':
-        if (!value.trim()) return '請輸入聯絡電話'
+        if (!stringValue.trim()) return '請輸入聯絡電話'
         // 台灣電話格式簡單驗證
         const phoneRegex = /^(09\d{8}|0\d{1,2}-\d{6,8})$/
-        return !phoneRegex.test(value.replace(/\s+/g, '')) ? '電話格式不正確' : ''
+        return !phoneRegex.test(stringValue.replace(/\s+/g, '')) ? '電話格式不正確' : ''
       default:
         return ''
     }

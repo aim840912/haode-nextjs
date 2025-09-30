@@ -97,27 +97,27 @@ export default function AddFarmTourActivity() {
   }))
 
   // 驗證函數
-  const validateField = (field: string, value: any) => {
+  const validateField = (field: string, value: unknown) => {
     switch (field) {
       case 'title':
-        return !value.trim() ? '請輸入活動標題' : ''
+        return !String(value).trim() ? '請輸入活動標題' : ''
       case 'activities':
         const validActivities = Array.isArray(value)
-          ? value.filter(activity => activity.trim() !== '')
+          ? value.filter(activity => String(activity).trim() !== '')
           : []
         return validActivities.length === 0 ? '至少需要一個活動項目' : ''
       case 'price':
-        return value < 0 ? '價格不能為負數' : ''
+        return Number(value) < 0 ? '價格不能為負數' : ''
       case 'start_month':
-        return value < 1 || value > 12 ? '開始月份必須是 1-12' : ''
+        return Number(value) < 1 || Number(value) > 12 ? '開始月份必須是 1-12' : ''
       case 'end_month':
-        return value < 1 || value > 12 ? '結束月份必須是 1-12' : ''
+        return Number(value) < 1 || Number(value) > 12 ? '結束月份必須是 1-12' : ''
       default:
         return ''
     }
   }
 
-  const handleFieldChange = (field: string, value: any) => {
+  const handleFieldChange = (field: string, value: unknown) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // 清除該欄位的錯誤訊息
     if (fieldErrors[field as keyof typeof fieldErrors]) {
@@ -128,7 +128,7 @@ export default function AddFarmTourActivity() {
     setSubmitSuccess(null)
   }
 
-  const handleFieldBlur = (field: string, value: any) => {
+  const handleFieldBlur = (field: string, value: unknown) => {
     const error = validateField(field, value)
     setFieldErrors(prev => ({ ...prev, [field]: error }))
   }

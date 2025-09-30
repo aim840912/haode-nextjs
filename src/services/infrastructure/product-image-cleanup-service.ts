@@ -405,7 +405,7 @@ export class ProductImageCleanupService {
   /**
    * 安全解析 JSON 陣列
    */
-  private parseJsonArray(value: any): any[] | null {
+  private parseJsonArray(value: unknown): unknown[] | null {
     if (Array.isArray(value)) {
       return value
     }

@@ -7,14 +7,17 @@ import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { auditLogService } from '@/services/infrastructure/auditLogService'
 import { apiLogger } from '@/lib/logger'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success, error as errorResponse } from '@/lib/api-response'
-import { AuthorizationError, NotFoundError } from '@/lib/errors'
+import { AuthorizationError, NotFoundError, ValidationError } from '@/lib/errors'
 
 // GET /api/audit-logs/[id] - 取得單個審計日誌詳情
-async function handleGET(request: NextRequest, user: any, context?: any) {
-  const { params } = context || {}
-  const { id } = await params
+async function handleGET(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id } = await routeContext.params
 
   // 檢查權限（只有管理員和稽核人員可以查看審計日誌詳情）
   const supabase = await createServerSupabaseClient()
@@ -60,9 +63,12 @@ async function handleGET(request: NextRequest, user: any, context?: any) {
 export const GET = withAuthAndError(handleGET, { module: 'AuditLogDetailAPI' })
 
 // DELETE /api/audit-logs/[id] - 刪除單個審計日誌
-async function handleDELETE(request: NextRequest, user: any, context?: any) {
-  const { params } = context || {}
-  const { id } = await params
+async function handleDELETE(request: NextRequest, user: User, context?: unknown) {
+  const routeContext = context as { params: Promise<{ id: string }> } | undefined
+  if (!routeContext?.params) {
+    throw new ValidationError('缺少路由參數')
+  }
+  const { id } = await routeContext.params
 
   // 檢查權限（只有管理員可以刪除審計日誌）
   const supabase = await createServerSupabaseClient()

@@ -12,8 +12,18 @@ export class PooledConnectionWrapper {
   private queryCount = 0
   private startTime = Date.now()
 
+  /**
+   * Note: connection 使用 any 型別是為了避免循環依賴問題
+   * 實際類型為 PooledConnection from db-pool.ts，包含:
+   * - id: string
+   * - client: SupabaseClient<Database>
+   * - state: ConnectionState (enum: 'idle' | 'active' | 'unhealthy')
+   * - createdAt: number
+   * - lastUsed: number
+   * - useCount: number
+   */
   constructor(
-    private connection: any, // PooledConnection from db-pool.ts
+    private connection: any,
     private pool: SupabaseConnectionPool,
     private autoRelease = true
   ) {}

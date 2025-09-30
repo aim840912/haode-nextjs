@@ -34,17 +34,43 @@ async function handleGET(request: NextRequest) {
 
   try {
     // 使用搜尋統計 RPC 函數
-    // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
-    const supabaseAny = supabase as any
-    const { data: stats, error } = (await supabaseAny.rpc('get_popular_searches', {
+    // 為了避免 Supabase 類型檢查問題，使用類型斷言
+    const { data: stats, error } = (await (
+      supabase as unknown as {
+        rpc: (
+          name: string,
+          params: Record<string, unknown>
+        ) => Promise<{
+          data: Array<{
+            query: string
+            count: number
+            avgExecutionTime: number
+            avgResultCount: number
+          }> | null
+          error: unknown
+        }>
+      }
+    ).rpc('get_popular_searches', {
       days_back: daysBack,
       result_limit: limit,
-    })) as { data: any[] | null; error: any }
+    })) as {
+      data: Array<{
+        query?: string
+        search_count?: number
+        avg_execution_time?: number
+        avg_result_count?: number
+      }> | null
+      error: unknown
+    }
 
     if (error) {
       apiLogger.warn('搜尋統計 RPC 失敗，返回模擬數據', {
         module: 'SearchStatsAPI',
-        metadata: { error: error.message, daysBack, limit },
+        metadata: {
+          error: error instanceof Error ? error.message : String(error),
+          daysBack,
+          limit,
+        },
       })
 
       // 如果 RPC 函數不可用，返回模擬數據
@@ -82,11 +108,11 @@ async function handleGET(request: NextRequest) {
         },
         summary: {
           totalSearches:
-            stats?.reduce((sum: number, item: any) => sum + (item.search_count || 0), 0) || 0,
+            stats?.reduce((sum: number, item) => sum + (item.search_count || 0), 0) || 0,
           uniqueQueries: stats?.length || 0,
           averageExecutionTime:
-            stats?.reduce((sum: number, item: any) => sum + (item.avg_execution_time || 0), 0) /
-              (stats?.length || 1) || 0,
+            (stats?.reduce((sum: number, item) => sum + (item.avg_execution_time || 0), 0) || 0) /
+            (stats?.length || 1),
         },
       },
       '取得搜尋統計成功'

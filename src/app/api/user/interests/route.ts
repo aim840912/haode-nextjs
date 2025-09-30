@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { userInterestsServiceSimple } from '@/services/core/user/userInterestsServiceSimple'
@@ -17,7 +17,7 @@ const RemoveInterestSchema = z.object({
 /**
  * 獲取使用者興趣清單
  */
-async function handleGET(req: NextRequest, user: any) {
+async function handleGET(req: NextRequest, user: User) {
   try {
     const interests = await userInterestsServiceSimple.getUserInterests(user.id)
     return success({ interests }, '獲取興趣清單成功')
@@ -29,7 +29,7 @@ async function handleGET(req: NextRequest, user: any) {
 /**
  * 新增產品到興趣清單
  */
-async function handlePOST(req: NextRequest, user: any) {
+async function handlePOST(req: NextRequest, user: User) {
   try {
     const body = await req.json()
     const result = AddInterestSchema.safeParse(body)
@@ -69,7 +69,7 @@ async function handlePOST(req: NextRequest, user: any) {
 /**
  * 從興趣清單移除產品
  */
-async function handleDELETE(req: NextRequest, user: any) {
+async function handleDELETE(req: NextRequest, user: User) {
   try {
     const body = await req.json()
     const result = RemoveInterestSchema.safeParse(body)
