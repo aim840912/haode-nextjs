@@ -9,6 +9,7 @@ interface ProductTableHeaderProps {
   onFiltersChange: (filters: AdminFilterState) => void
   productsCount: number
   loading: boolean
+  availableCategories: string[]
 }
 
 /**
@@ -20,6 +21,7 @@ export function ProductTableHeader({
   onFiltersChange,
   productsCount,
   loading,
+  availableCategories,
 }: ProductTableHeaderProps) {
   const [searchHistory, setSearchHistory] = useState<string[]>([])
 
@@ -66,7 +68,7 @@ export function ProductTableHeader({
       {/* 篩選器 */}
       <AdminProductFilter
         onFilterChange={handleFiltersChange}
-        availableCategories={[]} // TODO: 從產品資料中計算可用分類
+        availableCategories={availableCategories}
         productCount={productsCount}
         totalCount={productsCount} // 目前使用相同值
         loading={loading}

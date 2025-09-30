@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { AdminFilterState } from './AdminProductFilter'
 import { useProductsData } from './admin/hooks/useProductsData'
 import { useProductActions } from './admin/hooks/useProductActions'
@@ -65,6 +65,14 @@ export default function UnifiedProductsTable({
     setFilters(newFilters)
   }, [])
 
+  // 從產品資料中計算可用分類（去重且排序）
+  const availableCategories = useMemo(() => {
+    const categories = products
+      .map(product => product.category)
+      .filter((category): category is string => !!category && category.trim() !== '')
+    return Array.from(new Set(categories)).sort()
+  }, [products])
+
   // 使用 ProductFilters 工具類處理篩選和排序
   const filteredAndSortedProducts = ProductFilters.filterAndSortProducts(products, filters)
 
@@ -77,6 +85,7 @@ export default function UnifiedProductsTable({
             onFiltersChange={handleFiltersChange}
             productsCount={0}
             loading={true}
+            availableCategories={[]}
           />
         )}
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -98,6 +107,7 @@ export default function UnifiedProductsTable({
             onFiltersChange={handleFiltersChange}
             productsCount={0}
             loading={false}
+            availableCategories={availableCategories}
           />
         )}
         <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -125,6 +135,7 @@ export default function UnifiedProductsTable({
           onFiltersChange={handleFiltersChange}
           productsCount={filteredAndSortedProducts.length}
           loading={loading}
+          availableCategories={availableCategories}
         />
       )}
 
