@@ -16,7 +16,7 @@ interface ExpandableSearchBarProps {
 }
 
 export function ExpandableSearchBar({
-  placeholder = '搜尋產品、新聞...',
+  placeholder,
   onSearch,
   showSuggestions = true,
   className = '',
@@ -211,7 +211,7 @@ export function ExpandableSearchBar({
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
-            placeholder={placeholder}
+            placeholder={placeholder || '搜尋產品...'}
             className={`w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all duration-300 text-gray-900 placeholder-gray-500 ${
               iconOnly && isExpanded ? 'bg-white shadow-lg ring-1 ring-gray-200' : 'bg-white'
             }`}
@@ -263,11 +263,7 @@ export function ExpandableSearchBar({
                   {/* 類型圖示 */}
                   <div
                     className={`flex-shrink-0 w-3 h-3 rounded-full shadow-sm ${
-                      suggestion.type === 'product'
-                        ? 'bg-blue-500'
-                        : suggestion.type === 'news'
-                          ? 'bg-green-500'
-                          : 'bg-gray-500'
+                      suggestion.type === 'product' ? 'bg-blue-500' : 'bg-gray-500'
                     }`}
                   />
 
@@ -291,16 +287,10 @@ export function ExpandableSearchBar({
                       className={`text-xs font-medium px-2.5 py-1 rounded-full shadow-sm ${
                         suggestion.type === 'product'
                           ? 'bg-blue-100 text-blue-800 border border-blue-200'
-                          : suggestion.type === 'news'
-                            ? 'bg-green-100 text-green-800 border border-green-200'
-                            : 'bg-gray-100 text-gray-800 border border-gray-200'
+                          : 'bg-gray-100 text-gray-800 border border-gray-200'
                       }`}
                     >
-                      {suggestion.type === 'product'
-                        ? '產品'
-                        : suggestion.type === 'news'
-                          ? '新聞'
-                          : suggestion.type}
+                      {suggestion.type === 'product' ? '產品' : suggestion.type}
                     </div>
                   </div>
                 </div>

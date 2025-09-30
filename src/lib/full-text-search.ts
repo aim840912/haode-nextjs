@@ -172,85 +172,11 @@ export class FullTextSearchService {
   }
 
   /**
-   * 搜尋新聞
-   */
-  async searchNews(query: string, config: SearchConfig = {}): Promise<PaginatedSearchResult> {
-    const timer = dbLogger.timer('全文搜尋新聞')
-    const startTime = Date.now()
-
-    try {
-      const {
-        language = 'chinese',
-        limit = 20,
-        offset = 0,
-        enableRanking = true,
-        enableHighlight = true,
-      } = config
-
-      // 使用新的新聞全文搜尋 RPC 函數
-      // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言
-      const clientAny = this.client as any
-      const { data, error } = (await clientAny.rpc('full_text_search_news', {
-        search_query: query,
-        search_limit: limit,
-        search_offset: offset,
-        lang_config: language === 'chinese' ? 'simple' : language,
-      })) as { data: any[] | null; error: any }
-
-      const count = data?.length || 0
-
-      if (error) {
-        throw new Error(`搜尋新聞失敗: ${error.message}`)
-      }
-
-      const executionTime = timer.end({
-        metadata: {
-          query: query.substring(0, 50),
-          resultCount: data?.length || 0,
-        },
-      })
-
-      this.recordSearchStats({
-        query,
-        resultCount: count || 0,
-        executionTime,
-        timestamp: new Date(),
-      })
-
-      const results: SearchResult[] = (data || []).map(item => ({
-        item: this.transformNewsResult(item),
-        rank: item.rank,
-        highlight: enableHighlight ? item.highlight : undefined,
-        matchedFields: item.matched_fields,
-      }))
-
-      const pageSize = limit
-      const totalPages = Math.ceil((count || 0) / pageSize)
-      const page = Math.floor(offset / pageSize) + 1
-
-      return {
-        results,
-        totalCount: count || 0,
-        page,
-        pageSize,
-        totalPages,
-        executionTime,
-      }
-    } catch (error) {
-      timer.end()
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: 'FullTextSearch',
-        action: 'searchNews',
-      })
-    }
-  }
-
-  /**
    * 通用全文搜尋
    */
   async searchAll(
     query: string,
-    tables: string[] = ['products', 'news'],
+    tables: string[] = ['products'],
     config: SearchConfig = {}
   ): Promise<Record<string, PaginatedSearchResult>> {
     const timer = dbLogger.timer('全文搜尋全部')
@@ -263,8 +189,6 @@ export class FullTextSearchService {
         switch (table) {
           case 'products':
             return ['products', await this.searchProducts(query, config)]
-          case 'news':
-            return ['news', await this.searchNews(query, config)]
           default:
             return [
               table,
@@ -542,23 +466,6 @@ export class FullTextSearchService {
       originalPrice: item.original_price,
       isOnSale: item.is_on_sale,
       productImages: [], // 需由調用方從 product_images 表載入
-      createdAt: item.created_at,
-      updatedAt: item.updated_at,
-    }
-  }
-
-  /**
-   * 轉換新聞搜尋結果
-   */
-  private transformNewsResult(item: any): any {
-    return {
-      id: item.id,
-      title: item.title,
-      content: item.content,
-      author: item.author,
-      publishedAt: item.published_at,
-      imageUrl: item.image_url,
-      tags: item.tags || [],
       createdAt: item.created_at,
       updatedAt: item.updated_at,
     }

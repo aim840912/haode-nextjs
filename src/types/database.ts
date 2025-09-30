@@ -198,54 +198,6 @@ export interface Database {
           },
         ]
       }
-      news: {
-        Row: {
-          id: string
-          title: string
-          summary: string
-          content: string
-          author: string
-          publish_date: string
-          category: string
-          tags: string[]
-          image_url: string | null
-          featured: boolean
-          is_published: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          summary: string
-          content: string
-          author: string
-          publish_date: string
-          category: string
-          tags?: string[]
-          image_url?: string | null
-          featured?: boolean
-          is_published?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          summary?: string
-          content?: string
-          author?: string
-          publish_date?: string
-          category?: string
-          tags?: string[]
-          image_url?: string | null
-          featured?: boolean
-          is_published?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       schedule: {
         Row: {
           id: string

@@ -8,7 +8,6 @@
 import { ProductService } from '@/types/product'
 import { ScheduleService } from '@/types/schedule'
 import { FarmTourActivity } from '@/types/farmTour'
-import { NewsService } from '@/types/news'
 import { LocationService } from '@/types/location'
 import { ServiceConfig } from '@/services/base/base-service'
 import {
@@ -79,7 +78,6 @@ interface UserInterestsService {
 let productServiceInstance: ProductService | null = null
 let scheduleServiceInstance: ScheduleService | null = null
 let farmTourServiceInstance: FarmTourService | null = null
-let newsServiceInstance: NewsService | null = null
 let locationServiceInstance: LocationService | null = null
 let userInterestsServiceInstance: UserInterestsService | null = null
 
@@ -329,7 +327,6 @@ const serviceInstances = {
   product: productServiceInstance,
   schedule: scheduleServiceInstance,
   farmTour: farmTourServiceInstance,
-  news: newsServiceInstance,
   locations: locationServiceInstance,
   userInterests: userInterestsServiceInstance,
 }
@@ -419,48 +416,6 @@ export async function getFarmTourService(): Promise<FarmTourService> {
 }
 
 /**
- * 獲取新聞服務實例
- * 使用 v2 架構適配器，提供向後相容性
- */
-export async function getNewsService(): Promise<NewsService> {
-  if (newsServiceInstance) {
-    return newsServiceInstance
-  }
-
-  dbLogger.info('初始化新聞服務', {
-    module: 'ServiceFactory',
-    action: 'getNewsService',
-    metadata: { architecture: 'v2' },
-  })
-
-  try {
-    const { newsServiceSimple } = await import('../core/content/newsServiceSimple')
-    newsServiceInstance = newsServiceSimple
-
-    // 測試連線
-    await newsServiceInstance.getNews()
-
-    dbLogger.info('新聞服務初始化成功', {
-      module: 'ServiceFactory',
-      action: 'getNewsService',
-      metadata: { architecture: 'v2-simple' },
-    })
-
-    return newsServiceInstance
-  } catch (error) {
-    dbLogger.error(
-      '新聞服務初始化失敗',
-      error instanceof Error ? error : new Error('Unknown error'),
-      {
-        module: 'ServiceFactory',
-        action: 'getNewsService',
-      }
-    )
-    throw new Error('新聞服務初始化失敗，請檢查服務配置')
-  }
-}
-
-/**
  * 獲取地點服務實例
  * 使用 v2 架構適配器，提供向後相容性
  */
@@ -509,7 +464,6 @@ export function resetServiceInstances() {
   productServiceInstance = null
   scheduleServiceInstance = null
   farmTourServiceInstance = null
-  newsServiceInstance = null
   locationServiceInstance = null
   userInterestsServiceInstance = null
   dbLogger.info('所有服務實例已重設', {

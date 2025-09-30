@@ -105,7 +105,6 @@ export default function Header() {
     { href: '/products', label: '產品介紹', isExternal: false },
     { href: '/locations', label: '門市據點', isExternal: false },
     { href: '/schedule', label: '擺攤行程', isExternal: false },
-    { href: '/news', label: '農產新聞', isExternal: false },
   ]
 
   return (
@@ -274,16 +273,6 @@ export default function Header() {
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
                           </svg>
                           產品管理
-                        </Link>
-                        <Link
-                          href="/admin/news"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
-                          onClick={handleMenuItemClick}
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                          </svg>
-                          新聞管理
                         </Link>
                         <Link
                           href="/admin/farm-tour"
@@ -465,16 +454,6 @@ export default function Header() {
                             <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
                           </svg>
                           產品管理
-                        </Link>
-                        <Link
-                          href="/admin/news"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
-                          onClick={handleMenuItemClick}
-                        >
-                          <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                          </svg>
-                          新聞管理
                         </Link>
                         <Link
                           href="/admin/farm-tour"

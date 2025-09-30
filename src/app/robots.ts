@@ -29,13 +29,11 @@ export default function robots(): MetadataRoute.Robots {
         allow: [
           '/',
           '/products',
-          '/news',
           '/moments',
           '/locations',
           '/farm-tour',
           '/schedule',
           '/products/*',
-          '/news/*',
           '/moments/*',
         ],
         disallow: [
@@ -52,7 +50,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'Bingbot',
-        allow: ['/', '/products', '/news', '/moments', '/locations', '/farm-tour', '/schedule'],
+        allow: ['/', '/products', '/moments', '/locations', '/farm-tour', '/schedule'],
         disallow: [
           '/admin/',
           '/api/',
@@ -66,7 +64,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'facebookexternalhit',
-        allow: ['/', '/products', '/news', '/moments'],
+        allow: ['/', '/products', '/moments'],
         disallow: ['/admin/', '/api/', '/login', '/register'],
       },
     ],

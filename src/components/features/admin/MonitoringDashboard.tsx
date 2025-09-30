@@ -35,7 +35,6 @@ interface BusinessMetrics {
     newProducts: number
     totalInquiries: number
     farmTourBookings: number
-    newsArticles: number
   }
   performance: {
     apiResponseTime: number[]
@@ -84,7 +83,6 @@ export default function MonitoringDashboard() {
       newProducts: 0,
       totalInquiries: 0,
       farmTourBookings: 0,
-      newsArticles: 0,
     },
     performance: {
       apiResponseTime: [],
@@ -124,7 +122,6 @@ export default function MonitoringDashboard() {
             newProducts: Math.floor(Math.random() * 10) + 5,
             totalInquiries: Math.floor(Math.random() * 100) + 50,
             farmTourBookings: Math.floor(Math.random() * 20) + 10,
-            newsArticles: Math.floor(Math.random() * 15) + 8,
           },
           performance: {
             apiResponseTime: Array(10)

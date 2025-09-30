@@ -1,5 +1,4 @@
 import { MetadataRoute } from 'next'
-import { NewsItem } from '@/types/news'
 import { adminProductService } from '@/services/core/product/productService'
 import { logger } from '@/lib/logger'
 
@@ -19,12 +18,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'daily' as const,
       priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/news`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
     },
     {
       url: `${baseUrl}/locations`,
@@ -71,32 +64,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
-  // 動態新聞頁面
-  let newsPages: MetadataRoute.Sitemap = []
-  try {
-    const response = await fetch(`${baseUrl}/api/news`)
-    if (response.ok) {
-      const result = await response.json()
-      // 處理統一 API 回應格式：{ success: boolean, data: any[], message?: string }
-      const newsArray = Array.isArray(result) ? result : result.data || []
-
-      if (Array.isArray(newsArray)) {
-        newsPages = newsArray
-          .filter((item: NewsItem & { isPublished?: boolean }) => item.isPublished !== false)
-          .map((item: NewsItem) => ({
-            url: `${baseUrl}/news/${item.id}`,
-            lastModified: new Date(item.publishedAt || new Date()),
-            changeFrequency: 'monthly' as const,
-            priority: 0.5,
-          }))
-      }
-    }
-  } catch (error) {
-    logger.error('Error generating news sitemap', error as Error, {
-      module: 'sitemap',
-      action: 'generateNewsSitemap',
-    })
-  }
-
-  return [...staticPages, ...productPages, ...newsPages]
+  return [...staticPages, ...productPages]
 }

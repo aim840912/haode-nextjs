@@ -52,7 +52,9 @@
       "Bash(xargs sed:*)",
       "Bash(awk:*)",
       "Bash(npm install:*)",
-      "mcp__playwright__browser_fill_form"
+      "mcp__playwright__browser_fill_form",
+      "Bash(tree:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

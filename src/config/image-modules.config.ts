@@ -39,18 +39,6 @@ export const IMAGE_MODULE_CONFIGS: Record<string, ImageModuleConfig> = {
     storageFolder: 'products',
     displayName: '產品圖片',
   },
-  news: {
-    maxFiles: 1,
-    allowMultiple: false,
-    generateSizes: ['medium'],
-    enableSorting: false,
-    enableDelete: true,
-    enableCompression: true,
-    acceptedTypes: ['image/jpeg', 'image/png', 'image/webp'],
-    maxFileSize: 5 * 1024 * 1024, // 5MB
-    storageFolder: 'news',
-    displayName: '新聞圖片',
-  },
   locations: {
     maxFiles: 1,
     allowMultiple: false,

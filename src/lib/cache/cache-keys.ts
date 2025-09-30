@@ -59,41 +59,6 @@ export const ProductCacheKeys = {
 } as const
 
 /**
- * 新聞相關快取鍵
- */
-export const NewsCacheKeys = {
-  // 新聞列表
-  list: (): CacheKeyWithTags => ({
-    key: 'news:list',
-    tags: ['news', 'news-list'],
-  }),
-
-  // 所有新聞（管理員用）
-  all: (): CacheKeyWithTags => ({
-    key: 'news:all',
-    tags: ['news', 'news-list', 'admin'],
-  }),
-
-  // 單篇新聞
-  item: (id: string): CacheKeyWithTags => ({
-    key: `news:item:${id}`,
-    tags: ['news', 'news-item', `news-${id}`],
-  }),
-
-  // 最新新聞
-  latest: (limit: number = 5): CacheKeyWithTags => ({
-    key: `news:latest:${limit}`,
-    tags: ['news', 'news-latest'],
-  }),
-
-  // 新聞統計
-  stats: (): CacheKeyWithTags => ({
-    key: 'news:stats',
-    tags: ['news', 'news-stats', 'admin'],
-  }),
-} as const
-
-/**
  * 精彩時刻相關快取鍵
  */
 export const MomentsCacheKeys = {
@@ -224,7 +189,6 @@ export const UserCacheKeys = {
  */
 export const CacheKeys = {
   products: ProductCacheKeys,
-  news: NewsCacheKeys,
   moments: MomentsCacheKeys,
   farmTour: FarmTourCacheKeys,
   locations: LocationCacheKeys,
@@ -239,7 +203,6 @@ export const CacheKeys = {
 export const CacheTags = {
   // 按模組分組
   ALL_PRODUCTS: ['products'],
-  ALL_NEWS: ['news'],
   ALL_MOMENTS: ['moments'],
   ALL_FARMTOUR: ['farmtour'],
   ALL_LOCATIONS: ['locations'],
@@ -248,12 +211,12 @@ export const CacheTags = {
   ALL_USER: ['user'],
 
   // 按功能分組
-  ALL_LISTS: ['product-list', 'news-list', 'moments-list', 'farmtour-list', 'location-list'],
+  ALL_LISTS: ['product-list', 'moments-list', 'farmtour-list', 'location-list'],
   ALL_ADMIN: ['admin'],
-  ALL_STATS: ['product-stats', 'news-stats', 'inquiry-stats'],
+  ALL_STATS: ['product-stats', 'inquiry-stats'],
 
   // 按數據類型分組
-  PUBLIC_DATA: ['products', 'news', 'moments', 'farmtour', 'locations'],
+  PUBLIC_DATA: ['products', 'moments', 'farmtour', 'locations'],
   ADMIN_DATA: ['admin'],
   USER_DATA: ['user'],
 } as const

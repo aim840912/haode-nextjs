@@ -139,11 +139,6 @@ export function ProductPageLoader() {
   return <PageLoader type="card" message="載入產品資料中..." itemCount={6} />
 }
 
-// 新聞頁面載入
-export function NewsPageLoader() {
-  return <PageLoader type="card" message="載入新聞資料中..." itemCount={4} />
-}
-
 // 精彩時刻頁面載入
 export function MomentsPageLoader() {
   return <PageLoader type="card" message="載入精彩時刻中..." itemCount={6} />

@@ -59,8 +59,6 @@ export function withApiCache(
       // 使用標籤系統進行智慧失效
       if (pathname.includes('/api/products')) {
         await UnifiedCacheManager.invalidate([...CacheTags.ALL_PRODUCTS])
-      } else if (pathname.includes('/api/news')) {
-        await UnifiedCacheManager.invalidate([...CacheTags.ALL_NEWS])
       } else if (pathname.includes('/api/moments')) {
         await UnifiedCacheManager.invalidate([...CacheTags.ALL_MOMENTS])
       } else if (pathname.includes('/api/farm-tour')) {

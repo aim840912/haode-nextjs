@@ -176,7 +176,6 @@ export const generateBreadcrumbs = (
   // 預設路徑名稱對映
   const defaultNames: Record<string, string> = {
     products: '產品',
-    news: '新聞',
     moments: '精彩時刻',
     locations: '產地介紹',
     'farm-tour': '農場導覽',
@@ -222,16 +221,6 @@ export const createProductBreadcrumbs = (productName?: string): BreadcrumbItem[]
 
   if (productName) {
     items.push({ name: productName })
-  }
-
-  return items
-}
-
-export const createNewsBreadcrumbs = (newsTitle?: string): BreadcrumbItem[] => {
-  const items: BreadcrumbItem[] = [{ name: '農產新聞', href: '/news' }]
-
-  if (newsTitle) {
-    items.push({ name: newsTitle })
   }
 
   return items

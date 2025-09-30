@@ -1,8 +1,7 @@
 import { NextRequest } from 'next/server'
-import { getProductService, getNewsService } from '@/services/factory/serviceFactory'
+import { getProductService } from '@/services/factory/serviceFactory'
 import { SearchResult, SearchResponse } from '@/types/search'
 import { Product } from '@/types/product'
-import { NewsItem } from '@/types/news'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
@@ -38,14 +37,11 @@ async function handleGET(request: NextRequest) {
     )
   }
 
-  // 並行搜尋所有數據源
-  const [products, news] = await Promise.all([
-    (await getProductService()).searchProducts(query),
-    (await getNewsService()).searchNews(query),
-  ])
+  // 搜尋產品
+  const products = await (await getProductService()).searchProducts(query)
 
   // 轉換為統一的搜尋結果格式
-  const productResults: SearchResult[] = products.map(product => ({
+  const productResults: SearchResult[] = products.map((product: Product) => ({
     id: product.id,
     title: product.name,
     description: product.description,
@@ -60,21 +56,8 @@ async function handleGET(request: NextRequest) {
     relevanceScore: calculateProductRelevance(product, query),
   }))
 
-  const newsResults: SearchResult[] = news.map(item => ({
-    id: item.id,
-    title: item.title,
-    description: item.summary,
-    type: 'news' as const,
-    url: `/news/${item.id}`,
-    category: item.category,
-    image: item.imageUrl,
-    relevanceScore: calculateNewsRelevance(item, query),
-  }))
-
-  // 合併結果並按相關性排序
-  const allResults = [...productResults, ...newsResults].sort(
-    (a, b) => b.relevanceScore - a.relevanceScore
-  )
+  // 按相關性排序
+  const allResults = [...productResults].sort((a, b) => b.relevanceScore - a.relevanceScore)
 
   // 應用分頁
   const paginatedResults = allResults.slice(offset, offset + limit)
@@ -126,36 +109,6 @@ function calculateProductRelevance(product: Product, query: string): number {
 
   // 如果是特價商品，增加分數
   if (product.isOnSale) score += 1
-
-  return score
-}
-
-// 計算新聞相關性分數
-function calculateNewsRelevance(newsItem: NewsItem, query: string): number {
-  const searchTerm = query.toLowerCase()
-  const title = newsItem.title.toLowerCase()
-  const summary = newsItem.summary.toLowerCase()
-  const content = newsItem.content.toLowerCase()
-  const tags = newsItem.tags.join(' ').toLowerCase()
-
-  let score = 0
-
-  // 標題完全匹配
-  if (title === searchTerm) score += 10
-  // 標題包含搜尋詞
-  else if (title.includes(searchTerm)) score += 8
-
-  // 標籤匹配
-  if (tags.includes(searchTerm)) score += 6
-
-  // 摘要匹配
-  if (summary.includes(searchTerm)) score += 4
-
-  // 內容匹配
-  if (content.includes(searchTerm)) score += 2
-
-  // 如果是特色新聞，增加分數
-  if (newsItem.featured) score += 1
 
   return score
 }

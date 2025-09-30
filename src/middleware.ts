@@ -34,7 +34,6 @@ const CSRF_EXCLUDED_PATHS = [
   '/api/csrf-token',
   '/api/products', // 公開的產品 API（只讀）
   '/api/locations', // 公開的地點 API（只讀）
-  '/api/news', // 公開的新聞 API（GET 請求）
   '/api/moments', // 公開的精彩時刻 API（GET 請求）
   '/api/farm-tour', // 公開的農場導覽 API（GET 請求）
   '/api/schedule', // 公開的行程 API（GET 請求）

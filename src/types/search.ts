@@ -2,7 +2,7 @@ export interface SearchResult {
   id: string
   title: string
   description: string
-  type: 'product' | 'news' | 'review' | 'farmTour' | 'location'
+  type: 'product' | 'review' | 'farmTour' | 'location'
   url: string
   category?: string
   image?: string

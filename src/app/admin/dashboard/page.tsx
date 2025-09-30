@@ -8,7 +8,6 @@ import {
   ArchiveBoxIcon,
   ChatBubbleLeftRightIcon,
   TruckIcon,
-  NewspaperIcon,
   LinkIcon,
   CircleStackIcon,
   Cog6ToothIcon,
@@ -117,21 +116,6 @@ export default function AdminDashboard() {
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900">農場導覽</h3>
                     <p className="text-sm text-gray-600">管理導覽活動和預約</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-
-            {/* 新聞管理卡片 */}
-            <Link href="/admin/news" className="group">
-              <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-red-100 rounded-lg group-hover:bg-red-200 transition-colors">
-                    <NewspaperIcon className="h-8 w-8 text-red-600" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900">最新消息</h3>
-                    <p className="text-sm text-gray-600">發佈和管理農場消息</p>
                   </div>
                 </div>
               </div>

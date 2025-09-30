@@ -105,16 +105,10 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
                   className={`text-xs px-2 py-1 rounded-full ${
                     result.type === 'product'
                       ? 'bg-blue-100 text-blue-800'
-                      : result.type === 'news'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                      : 'bg-gray-100 text-gray-800'
                   }`}
                 >
-                  {result.type === 'product'
-                    ? '產品'
-                    : result.type === 'news'
-                      ? '新聞'
-                      : result.type}
+                  {result.type === 'product' ? '產品' : result.type}
                 </span>
 
                 {result.category && (
@@ -185,7 +179,7 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">類型</label>
               <div className="space-y-2">
-                {['product', 'news'].map(type => (
+                {['product'].map(type => (
                   <label key={type} className="flex items-center">
                     <input
                       type="checkbox"
@@ -202,9 +196,7 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
                       }}
                       className="mr-2"
                     />
-                    <span className="text-sm">
-                      {type === 'product' ? '產品' : type === 'news' ? '新聞' : type}
-                    </span>
+                    <span className="text-sm"></span>
                   </label>
                 ))}
               </div>

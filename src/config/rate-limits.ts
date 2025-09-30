@@ -246,7 +246,6 @@ export const API_RATE_LIMITS: Record<string, RateLimitConfig> = {
   }),
 
   '/api/locations': createConfig(SecurityLevel.PUBLIC),
-  '/api/news': createConfig(SecurityLevel.PUBLIC),
   '/api/moments': createConfig(SecurityLevel.PUBLIC),
   '/api/farm-tour': createConfig(SecurityLevel.PUBLIC),
   '/api/schedule': createConfig(SecurityLevel.PUBLIC),
