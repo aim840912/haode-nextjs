@@ -1,19 +1,181 @@
-# 產品服務層架構指南
+# 服務層架構指南
+
+> 最後更新：2025-10-01
+> 版本：v3.0
 
 ## 📋 目錄結構
 
 ```
 src/services/
-├── core/product/
-│   ├── productService.ts          # 統一產品服務入口
-│   ├── pooledProductService.ts    # 連線池版本（高效能）
-│   └── cachedProductService.ts    # 快取版本（一般使用）
-├── factory/
-│   └── serviceFactory.ts          # 服務工廠（動態選擇）
-└── README.md                      # 本檔案
+├── base/                          # 抽象層（可選使用）
+│   ├── base-service.ts            # 服務介面定義
+│   ├── abstract-supabase-service.ts  # Supabase 抽象層
+│   └── abstract-pooled-service.ts    # 連線池抽象層
+├── core/                          # 核心業務服務
+│   ├── product/
+│   │   ├── productService.ts      # 標準實作
+│   │   ├── pooledProductService.ts  # 連線池版本
+│   │   └── cachedProductService.ts  # 快取版本
+│   ├── inquiry/
+│   │   ├── inquiryService.ts      # 使用抽象層
+│   │   ├── inquiryServiceSimple.ts  # 直接實作版本
+│   │   └── inquiryServiceAdapter.ts # 向後相容適配器
+│   └── order/
+│       └── orderService.ts        # 使用抽象層
+├── infrastructure/                # 基礎設施服務
+│   ├── auditLogService.ts
+│   └── email-service.ts
+└── factory/
+    └── serviceFactory.ts          # 服務工廠
 ```
 
-## 🎯 使用策略
+## 🏗 架構原則
+
+### 核心信念
+1. **實用主義優於教條主義** - 不強制使用抽象層
+2. **簡單優於複雜** - 避免過度設計
+3. **統一優於混亂** - 統一錯誤處理和日誌記錄
+
+### 設計決策（2025-10-01）
+經過深入分析，我們採用**混合架構策略**：
+- ✅ 保留但不強制使用抽象層（使用率 10.7%）
+- ✅ 移除完全未使用的 AbstractJsonService（654行）
+- ✅ 規範 Simple/Adapter 命名約定
+- ✅ 統一錯誤處理（ErrorFactory）和日誌系統（dbLogger）
+
+## 📝 命名規範
+
+### 服務命名約定
+
+#### 標準服務（無後綴）
+```typescript
+// 例：productService.ts, orderService.ts
+// 用途：標準實作，可能使用或不使用抽象層
+export class ProductService { }
+```
+
+#### Simple 服務（後綴 Simple）
+```typescript
+// 例：inquiryServiceSimple.ts
+// 用途：直接實作版本，不使用抽象層繼承
+// 特點：簡單直接，完全控制實作細節
+export class InquiryServiceSimple implements InquiryService { }
+```
+
+#### Adapter 服務（後綴 Adapter）
+```typescript
+// 例：inquiryServiceAdapter.ts
+// 用途：適配器模式，提供向後相容性
+// 特點：橋接舊版 API 到新版服務
+export class InquiryServiceAdapter implements InquiryService {
+  constructor(private serviceV2: InquiryServiceSimple) {}
+}
+```
+
+#### Pooled 服務（後綴 Pooled）
+```typescript
+// 例：pooledProductService.ts
+// 用途：使用連線池的高效能版本
+// 特點：適合高併發場景
+export class PooledProductService extends AbstractPooledService { }
+```
+
+#### Cached 服務（後綴 Cached）
+```typescript
+// 例：cachedProductService.ts
+// 用途：帶快取的版本
+// 特點：適合讀取密集場景
+export class CachedProductService implements ProductService { }
+```
+
+## 🎯 使用抽象層的指南
+
+### 何時使用抽象層？
+
+#### ✅ 建議使用（以下情況）
+1. **需要統一的 CRUD 模式**
+   - 標準的 findAll, findById, create, update, delete
+   - 需要分頁和搜尋功能
+
+2. **複雜的資料轉換邏輯**
+   - DB 欄位名稱與 DTO 不一致
+   - 需要多層資料轉換
+
+3. **需要內建功能**
+   - 軟刪除支援
+   - 自動錯誤處理
+   - 統一日誌記錄
+
+#### ❌ 不建議使用（以下情況）
+1. **簡單的服務** - 只有 2-3 個方法
+2. **特殊業務邏輯** - 不符合標準 CRUD 模式
+3. **效能敏感場景** - 需要最大化控制
+
+### 抽象層對比
+
+| 特性 | AbstractSupabaseService | AbstractPooledService | 直接實作 |
+|------|------------------------|----------------------|---------|
+| 程式碼行數 | -200~-300 行 | -100~-150 行 | 基準 |
+| 靈活性 | 中 | 中 | 高 |
+| 學習曲線 | 陡峭 | 中等 | 平緩 |
+| 適用場景 | 標準 CRUD | 高併發 | 特殊邏輯 |
+
+### 實作範例
+
+#### 使用抽象層
+```typescript
+// 優點：程式碼簡潔，統一模式
+// 缺點：學習曲線，靈活性受限
+export class InquiryService extends AbstractSupabaseService<
+  InquiryWithItems,
+  CreateInquiryRequest,
+  UpdateInquiryRequest
+> {
+  constructor() {
+    super(
+      { tableName: 'inquiries', useAdminClient: true },
+      new InquiryTransformer()
+    )
+  }
+
+  // 只需實作特殊方法，CRUD 自動處理
+  async getInquiryStats(): Promise<InquiryStats[]> {
+    // 特殊業務邏輯
+  }
+}
+```
+
+#### 直接實作
+```typescript
+// 優點：完全控制，簡單直接
+// 缺點：需要自行處理錯誤和日誌
+export class ProductService {
+  private supabase = createServiceSupabaseClient()
+
+  async getProducts(): Promise<Product[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('*')
+        .eq('is_active', true)
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'getProducts'
+        })
+      }
+
+      return data.map(this.transformFromDB)
+    } catch (error) {
+      dbLogger.error('取得產品失敗', error as Error)
+      throw error
+    }
+  }
+}
+```
+
+## 🎯 服務選擇策略
 
 ### 1. API 路由中的服務選擇
 
@@ -214,6 +376,11 @@ grep -r "apiLogger" src/app/api --include="*.ts"
 
 ---
 
-**最後更新**: 2024-09-25
-**版本**: v2.0
-**負責人**: Claude Code Assistant
+---
+
+**變更記錄**：
+- 2025-10-01: 服務層架構統一（移除未使用的 AbstractJsonService，規範命名約定）
+- 2024-09-25: 產品服務層重構
+
+**版本**: v3.0
+**最後更新**: 2025-10-01

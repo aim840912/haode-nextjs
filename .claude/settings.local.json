@@ -54,7 +54,9 @@
       "Bash(npm install:*)",
       "mcp__playwright__browser_fill_form",
       "Bash(tree:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)"
     ],
     "deny": [],
     "ask": []
