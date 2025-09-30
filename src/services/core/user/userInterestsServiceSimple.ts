@@ -13,8 +13,17 @@
 import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, ValidationError } from '@/lib/errors'
 import { supabaseAdmin } from '@/lib/database/supabase-auth'
-import type { UserInterest } from './userInterestsService'
 import type { Database } from '@/types/database'
+
+/**
+ * 使用者興趣類型定義
+ */
+export interface UserInterest {
+  id: string
+  user_id: string
+  product_id: string
+  created_at: string
+}
 
 /**
  * 資料庫記錄類型

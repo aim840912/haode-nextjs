@@ -496,47 +496,6 @@ export class InquiryServiceSimple implements InquiryService {
     }
   }
 
-  async updateInquiryItems(inquiryId: string, items: InquiryItem[]): Promise<void> {
-    try {
-      const client = this.getSupabaseClient()
-
-      // 刪除現有項目
-      const { error: deleteError } = await client
-        .from('inquiry_items')
-        .delete()
-        .eq('inquiry_id', inquiryId)
-
-      if (deleteError) {
-        this.handleError(deleteError, 'updateInquiryItems:delete', { inquiryId })
-      }
-
-      // 建立新項目
-      if (items.length > 0) {
-        const itemsData = items.map((item: InquiryItem) => ({
-          ...item,
-          inquiry_id: inquiryId,
-        }))
-
-        const { error: insertError } = await client.from('inquiry_items').insert(itemsData)
-
-        if (insertError) {
-          this.handleError(insertError, 'updateInquiryItems:insert', {
-            inquiryId,
-            items: itemsData,
-          })
-        }
-      }
-
-      dbLogger.info('詢問項目更新成功', {
-        module: this.moduleName,
-        action: 'updateInquiryItems',
-        metadata: { inquiryId, itemCount: items.length },
-      })
-    } catch (error) {
-      this.handleError(error, 'updateInquiryItems', { inquiryId, items })
-    }
-  }
-
   // === 私有輔助方法 ===
 
   private validateCreateInquiryRequest(data: CreateInquiryRequest): void {

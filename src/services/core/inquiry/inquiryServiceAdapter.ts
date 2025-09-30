@@ -78,18 +78,10 @@ export class InquiryServiceAdapter implements InquiryService {
 
   /**
    * 管理員取得詢問單詳情
-   * @deprecated 使用 getInquiryByIdForAdmin 替代
+   * 此方法提供管理員繞過權限檢查直接查詢詢問單
    */
   async getInquiryByIdForAdmin(inquiryId: string): Promise<InquiryWithItems | null> {
     return this.serviceV2.getInquiryByIdForAdmin(inquiryId)
-  }
-
-  /**
-   * 更新詢問項目
-   * @deprecated 此方法將在未來版本移除
-   */
-  async updateInquiryItems(inquiryId: string, items: Record<string, unknown>[]): Promise<void> {
-    return this.serviceV2.updateInquiryItems(inquiryId, items as unknown as InquiryItem[])
   }
 }
 

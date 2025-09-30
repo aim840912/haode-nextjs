@@ -351,33 +351,6 @@ export class AuditLogger {
     })
   }
 
-  // 記錄詢問單列表查看
-  // @deprecated 已棄用：列表瀏覽記錄會產生過多雜訊，建議移除調用
-  static async logInquiryListView(
-    userId: string | null,
-    userEmail: string,
-    userName: string | undefined,
-    userRole: string | undefined,
-    filters?: Record<string, unknown>,
-    request?: Request
-  ): Promise<void> {
-    await auditLogService.log({
-      user_id: userId,
-      user_email: userEmail,
-      user_name: userName,
-      user_role: AuditTypeGuards.toUserRole(userRole),
-      action: 'view_list',
-      resource_type: 'inquiry',
-      resource_id: 'list',
-      metadata: {
-        filters: filters || {},
-      },
-      ip_address:
-        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined,
-    })
-  }
-
   // 記錄詢問單建立
   static async logInquiryCreate(
     userId: string | null,

@@ -12,7 +12,16 @@
  */
 
 import { UserInterestsApiService } from './userInterestsApiService'
-import type { UserInterest } from './userInterestsService'
+
+/**
+ * 使用者興趣類型定義
+ */
+export interface UserInterest {
+  id: string
+  user_id: string
+  product_id: string
+  created_at: string
+}
 
 /**
  * 使用者興趣服務適配器類別
@@ -106,6 +115,3 @@ export class UserInterestsServiceAdapter {
 
 // 匯出適配器作為預設的服務介面
 export { UserInterestsServiceAdapter as UserInterestsService }
-
-// 同時匯出原始介面類型以保持相容性
-export type { UserInterest }

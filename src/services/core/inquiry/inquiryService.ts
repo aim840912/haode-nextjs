@@ -207,7 +207,6 @@ export interface ExtendedInquiryService {
   getInquiryByIdForAdmin(inquiryId: string): Promise<InquiryWithItems | null>
   updateInquiryStatus(inquiryId: string, status: InquiryStatus): Promise<InquiryWithItems>
   getInquiryStats(): Promise<InquiryStats[]>
-  updateInquiryItems(inquiryId: string, items: InquiryItem[]): Promise<void>
 
   // 搜尋方法
   search(query: string, options?: QueryOptions): Promise<InquiryWithItems[]>
@@ -442,47 +441,6 @@ export class InquiryService
       return data as InquiryStats[]
     } catch (error) {
       this.handleError(error, 'getInquiryStats')
-    }
-  }
-
-  /**
-   * 更新詢問項目
-   */
-  async updateInquiryItems(inquiryId: string, items: InquiryItem[]): Promise<void> {
-    try {
-      const client = this.getClient(true)
-
-      // 刪除現有項目
-      const { error: deleteError } = await client
-        .from('inquiry_items')
-        .delete()
-        .eq('inquiry_id', inquiryId)
-
-      if (deleteError) {
-        throw ErrorFactory.fromSupabaseError(deleteError)
-      }
-
-      // 建立新項目
-      if (items.length > 0) {
-        const itemsData = items.map(item => ({
-          ...item,
-          inquiry_id: inquiryId,
-        }))
-
-        const { error: insertError } = await client.from('inquiry_items').insert(itemsData)
-
-        if (insertError) {
-          throw ErrorFactory.fromSupabaseError(insertError)
-        }
-      }
-
-      dbLogger.info('詢問項目更新成功', {
-        module: this.metadata.name,
-        action: 'updateInquiryItems',
-        metadata: { inquiryId, itemCount: items.length },
-      })
-    } catch (error) {
-      this.handleError(error, 'updateInquiryItems', { inquiryId, items })
     }
   }
 
