@@ -1,12 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { FarmTourActivity } from '@/types/farmTour'
 import SocialLinks from '@/components/features/social/SocialLinks'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter } from 'next/navigation'
-import { logger } from '@/lib/logger'
-import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
 import { SETTING_KEYS } from '@/types/siteSettings'
@@ -60,13 +57,11 @@ const farmFacilities = [
 export default function FarmTourPage() {
   const [selectedActivity, setSelectedActivity] = useState<FarmTourActivity | null>(null)
   const [activeTab, setActiveTab] = useState('activities')
-  const [seasonalActivities, setSeasonalActivities] = useState<FarmTourActivity[]>([])
-  const [loading, setLoading] = useState(true)
-  const { user } = useAuth()
-  const router = useRouter()
   const [showPromoBar, setShowPromoBar] = useState(true)
   const [viewCount] = useState(Math.floor(Math.random() * 200) + 300) // 模擬今日瀏覽人次
   const [todayBookings] = useState(Math.floor(Math.random() * 10) + 5) // 今日預約組數
+
+  const { user } = useAuth()
 
   const { setting: heroBgSetting, loading: heroBgLoading } = useSiteSetting(
     SETTING_KEYS.FARM_TOUR_HERO_BG
@@ -75,204 +70,27 @@ export default function FarmTourPage() {
   const heroBackground =
     !heroBgLoading && heroBgSetting ? heroBgSetting.value : '/images/hero/farm-tour.jpg'
 
-  // 預約表單狀態
-  const [formData, setFormData] = useState({
-    customer_name: '',
-    customer_email: user?.email || '',
-    customer_phone: '',
-    visit_date: '',
-    visitor_count: '1人',
-    notes: '',
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
+  // ✅ 使用 Custom Hooks
+  const { seasonalActivities, loading, error } = useFarmTourActivities()
+  const {
+    formData,
+    fieldErrors,
+    isSubmitting,
+    submitError,
+    handleFormChange,
+    handleFieldBlur,
+    handleSubmit,
+    resetForm,
+  } = useFarmTourForm(user)
 
-  // 欄位級錯誤狀態
-  const [fieldErrors, setFieldErrors] = useState({
-    customer_name: '',
-    customer_email: '',
-    customer_phone: '',
-    visit_date: '',
-  })
-
-  useEffect(() => {
-    fetchActivities()
-  }, [])
-
-  // 當使用者狀態改變時，更新表單中的 email
-  useEffect(() => {
-    if (user?.email) {
-      setFormData(prev => ({ ...prev, customer_email: user.email }))
-    }
-  }, [user])
-
-  const fetchActivities = async () => {
-    try {
-      const response = await fetch('/api/farm-tour')
-      const result = await response.json()
-
-      // 處理統一 API 回應格式
-      const data = result.data || result
-
-      // 確保 data 是陣列
-      if (!Array.isArray(data)) {
-        logger.error(
-          'API 回應格式錯誤：farm-tour data 不是陣列',
-          new Error('Invalid API response'),
-          { metadata: { response: result } }
-        )
-        setSeasonalActivities([])
-        return
-      }
-
-      setSeasonalActivities(data)
-    } catch (error) {
-      logger.error(
-        'Error fetching farm tour activities:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // UI 事件處理函數
   const openBookingModal = (activity: FarmTourActivity) => {
     setSelectedActivity(activity)
   }
 
   const closeModal = () => {
     setSelectedActivity(null)
-    // 重置表單狀態
-    setFormData({
-      customer_name: '',
-      customer_email: user?.email || '',
-      customer_phone: '',
-      visit_date: '',
-      visitor_count: '1人',
-      notes: '',
-    })
-    setSubmitError(null)
-    // 重置欄位錯誤狀態
-    setFieldErrors({
-      customer_name: '',
-      customer_email: '',
-      customer_phone: '',
-      visit_date: '',
-    })
-  }
-
-  // 驗證函數
-  const validateField = (field: string, value: string) => {
-    switch (field) {
-      case 'customer_name':
-        return !value.trim() ? '請輸入姓名' : ''
-      case 'customer_email':
-        if (!value.trim()) return '請輸入 Email'
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return '請輸入有效的 Email 格式'
-        return ''
-      case 'customer_phone':
-        if (value && !/^[0-9\-\+\(\)\s]{8,15}$/.test(value)) return '請輸入有效的電話號碼'
-        return ''
-      case 'visit_date':
-        if (!value) return '請選擇參觀日期'
-        const selectedDate = new Date(value)
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        if (selectedDate < today) return '參觀日期不能是過去的日期'
-        return ''
-      default:
-        return ''
-    }
-  }
-
-  const handleFormChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // 清除該欄位的錯誤訊息（當使用者開始輸入時）
-    if (fieldErrors[field as keyof typeof fieldErrors]) {
-      setFieldErrors(prev => ({ ...prev, [field]: '' }))
-    }
-  }
-
-  const handleFieldBlur = (field: string, value: string) => {
-    const error = validateField(field, value)
-    setFieldErrors(prev => ({ ...prev, [field]: error }))
-  }
-
-  const handleSubmitInquiry = async () => {
-    if (!user) {
-      setSubmitError('請先登入以提交預約詢問')
-      return
-    }
-
-    if (!selectedActivity) {
-      setSubmitError('未選中活動')
-      return
-    }
-
-    // 欄位級驗證
-    const newFieldErrors = {
-      customer_name: validateField('customer_name', formData.customer_name),
-      customer_email: validateField('customer_email', formData.customer_email),
-      customer_phone: validateField('customer_phone', formData.customer_phone),
-      visit_date: validateField('visit_date', formData.visit_date),
-    }
-
-    setFieldErrors(newFieldErrors)
-
-    // 檢查是否有任何錯誤
-    const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
-    if (hasErrors) {
-      setSubmitError('請修正表單中的錯誤後再提交')
-      return
-    }
-
-    setIsSubmitting(true)
-    setSubmitError(null)
-
-    try {
-      // 取得認證 token
-      const supabase = getSupabaseClient()
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('認證失敗，請重新登入')
-      }
-
-      const response = await fetch('/api/farm-tour/inquiry', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          customer_name: formData.customer_name,
-          customer_email: formData.customer_email,
-          customer_phone: formData.customer_phone,
-          activity_title: selectedActivity.title,
-          visit_date: formData.visit_date,
-          visitor_count: formData.visitor_count,
-          notes: formData.notes,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || '提交預約詢問失敗')
-      }
-
-      // 成功提交，導向詢問單詳情頁
-      router.push(`/inquiries/${result.data.id}`)
-    } catch (error) {
-      logger.error(
-        'Error submitting farm tour inquiry:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      setSubmitError(error instanceof Error ? error.message : '提交預約詢問時發生錯誤')
-    } finally {
-      setIsSubmitting(false)
-    }
+    resetForm() // ✅ 使用 Hook 的 resetForm
   }
 
   const scrollToContent = () => {
@@ -892,7 +710,7 @@ export default function FarmTourPage() {
                     取消
                   </button>
                   <button
-                    onClick={handleSubmitInquiry}
+                    onClick={() => selectedActivity && handleSubmit(selectedActivity)}
                     disabled={isSubmitting || !user}
                     className="flex-1 bg-amber-900 text-white py-3 rounded-lg hover:bg-amber-800 transition-colors disabled:opacity-50"
                   >

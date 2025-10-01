@@ -1,82 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/logger'
 import Breadcrumbs, { createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
-
-interface ScheduleItem {
-  id: string
-  title: string
-  location: string
-  date: string
-  time: string
-  status: 'upcoming' | 'ongoing' | 'completed'
-  products: string[]
-  description: string
-  contact: string
-  specialOffer: string
-  weatherNote: string
-  createdAt: string
-  updatedAt: string
-}
+import { useSchedule } from '@/hooks/useSchedule'
+import type { ScheduleItem } from '@/lib/api/schedule-api'
 
 export default function SchedulePage() {
-  const [marketSchedule, setMarketSchedule] = useState<ScheduleItem[]>([])
-  const [filteredSchedule, setFilteredSchedule] = useState<ScheduleItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
   const { user } = useAuth()
 
-  // 從 API 獲取擺攤行程資料
-  useEffect(() => {
-    async function fetchSchedule() {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/schedule')
-        if (!response.ok) {
-          throw new Error('Failed to fetch schedule')
-        }
-        const result = await response.json()
-
-        // 處理統一 API 回應格式
-        const data = result.data || result
-
-        // 確保 data 是陣列
-        if (!Array.isArray(data)) {
-          logger.error('API 回應格式錯誤：schedule data 不是陣列', new Error('非陣列格式'), {
-            module: 'SchedulePage',
-            action: 'fetchSchedule',
-            metadata: { result },
-          })
-          setMarketSchedule([])
-          setFilteredSchedule([])
-          return
-        }
-
-        setMarketSchedule(data)
-        setFilteredSchedule(data)
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load schedule')
-        logger.error('Error fetching schedule', err as Error, {
-          module: 'SchedulePage',
-          action: 'fetchSchedule',
-        })
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSchedule()
-  }, [])
-
-  const filterByStatus = (status: 'all' | 'upcoming' | 'ongoing' | 'completed') => {
-    if (status === 'all') {
-      setFilteredSchedule(marketSchedule)
-    } else {
-      setFilteredSchedule(marketSchedule.filter(item => item.status === status))
-    }
-  }
+  // ✅ 使用 Custom Hook 管理行程資料
+  const { filteredSchedule, loading, error, filterByStatus } = useSchedule()
 
   const getStatusColor = (status: 'upcoming' | 'ongoing' | 'completed') => {
     switch (status) {

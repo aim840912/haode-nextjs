@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import { getSupabaseClient } from '@/lib/database/supabase-auth'
+import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
 import type { FarmTourActivity } from '@/types/farmTour'
 
 export interface UseFarmTourActivitiesReturn {
@@ -25,34 +25,26 @@ export function useFarmTourActivities(): UseFarmTourActivitiesReturn {
 
     try {
       logger.info('開始載入農場導覽活動', {
-        module: 'FarmTourPage',
+        module: 'useFarmTourActivities',
         action: 'fetchActivities',
       })
 
-      const supabase = getSupabaseClient()
-      const { data, error: fetchError } = await supabase
-        .from('farm_tour_activities')
-        .select('*')
-        .eq('is_active', true)
-        .order('start_month', { ascending: true })
+      // ✅ 使用 API Client Layer
+      const data = await fetchFarmTourActivities()
 
-      if (fetchError) {
-        throw fetchError
-      }
-
-      setSeasonalActivities(data || [])
+      setSeasonalActivities(data)
 
       logger.info('農場導覽活動載入完成', {
-        module: 'FarmTourPage',
+        module: 'useFarmTourActivities',
         action: 'fetchActivities',
-        metadata: { count: data?.length || 0 },
+        metadata: { count: data.length },
       })
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '載入活動失敗'
       setError(errorMessage)
 
       logger.error('載入農場導覽活動失敗', err as Error, {
-        module: 'FarmTourPage',
+        module: 'useFarmTourActivities',
         action: 'fetchActivities',
       })
     } finally {

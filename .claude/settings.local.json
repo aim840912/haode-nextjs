@@ -59,7 +59,9 @@
       "Bash(head:*)",
       "Bash(sort:*)",
       "Bash(git log:*)",
-      "Bash(npm audit:*)"
+      "Bash(npm audit:*)",
+      "Bash(npx depcheck:*)",
+      "Bash(npm outdated:*)"
     ],
     "deny": [],
     "ask": []

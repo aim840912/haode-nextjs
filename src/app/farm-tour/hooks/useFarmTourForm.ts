@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
+import { createFarmTourInquiry } from '@/lib/api/farm-tour-api'
 import type { User } from '@/types/auth'
+import type { FarmTourActivity } from '@/types/farmTour'
 
 export interface FarmTourFormData {
   customer_name: string
@@ -20,8 +24,11 @@ export interface FarmTourFormErrors {
 export interface UseFarmTourFormReturn {
   formData: FarmTourFormData
   fieldErrors: FarmTourFormErrors
+  isSubmitting: boolean
+  submitError: string | null
   handleFormChange: (field: string, value: string) => void
   handleFieldBlur: (field: string, value: string) => void
+  handleSubmit: (activity: FarmTourActivity) => Promise<void>
   resetForm: () => void
   validateAllFields: () => boolean
 }
@@ -44,14 +51,17 @@ const INITIAL_ERRORS: FarmTourFormErrors = {
 
 /**
  * 農場導覽表單管理 Hook
- * 負責表單狀態、驗證邏輯和欄位更新
+ * 負責表單狀態、驗證邏輯、欄位更新和表單提交
  */
 export function useFarmTourForm(user: User | null): UseFarmTourFormReturn {
+  const router = useRouter()
   const [formData, setFormData] = useState<FarmTourFormData>({
     ...INITIAL_FORM_DATA,
     customer_email: user?.email || '',
   })
   const [fieldErrors, setFieldErrors] = useState<FarmTourFormErrors>(INITIAL_ERRORS)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   // 當使用者狀態改變時，更新表單中的 email
   useEffect(() => {
@@ -144,6 +154,71 @@ export function useFarmTourForm(user: User | null): UseFarmTourFormReturn {
     return !Object.values(errors).some(error => error !== '')
   }, [formData, validateField])
 
+  // 提交表單
+  const handleSubmit = useCallback(
+    async (activity: FarmTourActivity) => {
+      // 驗證使用者是否登入
+      if (!user) {
+        setSubmitError('請先登入以提交預約詢問')
+        return
+      }
+
+      // 驗證活動是否選中
+      if (!activity) {
+        setSubmitError('未選中活動')
+        return
+      }
+
+      // 驗證所有欄位
+      if (!validateAllFields()) {
+        setSubmitError('請修正表單中的錯誤後再提交')
+        return
+      }
+
+      setIsSubmitting(true)
+      setSubmitError(null)
+
+      try {
+        logger.info('開始提交農場參觀預約詢問', {
+          module: 'useFarmTourForm',
+          action: 'handleSubmit',
+          metadata: { activityTitle: activity.title },
+        })
+
+        // ✅ 使用 API Client Layer
+        const result = await createFarmTourInquiry({
+          customer_name: formData.customer_name,
+          customer_email: formData.customer_email,
+          customer_phone: formData.customer_phone,
+          activity_title: activity.title,
+          visit_date: formData.visit_date,
+          visitor_count: formData.visitor_count,
+          notes: formData.notes,
+        })
+
+        logger.info('農場參觀預約詢問提交成功', {
+          module: 'useFarmTourForm',
+          action: 'handleSubmit',
+          metadata: { inquiryId: result.id },
+        })
+
+        // 成功提交，導向詢問單詳情頁
+        router.push(`/inquiries/${result.id}`)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : '提交預約詢問時發生錯誤'
+        setSubmitError(errorMessage)
+
+        logger.error('提交農場參觀預約詢問失敗', error as Error, {
+          module: 'useFarmTourForm',
+          action: 'handleSubmit',
+        })
+      } finally {
+        setIsSubmitting(false)
+      }
+    },
+    [user, formData, validateAllFields, router]
+  )
+
   // 重置表單
   const resetForm = useCallback(() => {
     setFormData({
@@ -151,13 +226,17 @@ export function useFarmTourForm(user: User | null): UseFarmTourFormReturn {
       customer_email: user?.email || '',
     })
     setFieldErrors(INITIAL_ERRORS)
+    setSubmitError(null)
   }, [user])
 
   return {
     formData,
     fieldErrors,
+    isSubmitting,
+    submitError,
     handleFormChange,
     handleFieldBlur,
+    handleSubmit,
     resetForm,
     validateAllFields,
   }

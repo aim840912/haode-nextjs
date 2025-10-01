@@ -1,14 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Location } from '@/types/location'
 import Link from 'next/link'
 import { SimpleImage, AvatarSimpleImage } from '@/components/ui/image/OptimizedImage'
-import { logger } from '@/lib/logger'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import Breadcrumbs, { createLocationsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { LocationsPageLoader } from '@/components/ui/loading/PageLoader'
+import { useLocations } from '@/hooks/useLocations'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -22,46 +21,15 @@ const isValidImageUrl = (url: string | undefined): boolean => {
 }
 
 export default function LocationsPage() {
-  const [storeLocations, setStoreLocations] = useState<Location[]>([])
-  const [selectedStore, setSelectedStore] = useState<Location | null>(null)
-  const [loading, setLoading] = useState(true)
   const { user } = useAuth()
 
-  useEffect(() => {
-    fetchLocations()
-  }, [])
-
-  const fetchLocations = async () => {
-    try {
-      const response = await fetch('/api/locations')
-      const result = await response.json()
-
-      // 處理統一 API 回應格式
-      const data = result.data || result
-
-      // 確保 data 是陣列
-      if (Array.isArray(data)) {
-        setStoreLocations(data)
-        if (data.length > 0) {
-          setSelectedStore(data[0])
-        }
-      } else {
-        logger.error('API 回應格式錯誤：locations data 不是陣列', new Error('非陣列格式'), {
-          module: 'LocationsPage',
-          action: 'fetchLocations',
-          metadata: { result },
-        })
-        setStoreLocations([])
-      }
-    } catch (error) {
-      logger.error('Error fetching locations', error as Error, {
-        module: 'LocationsPage',
-        action: 'fetchLocations',
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
+  // ✅ 使用 Custom Hook 管理門市資料
+  const {
+    locations: storeLocations,
+    selectedLocation: selectedStore,
+    loading,
+    setSelectedLocation: setSelectedStore,
+  } = useLocations()
 
   const handleStoreSelect = (store: Location) => {
     setSelectedStore(store)

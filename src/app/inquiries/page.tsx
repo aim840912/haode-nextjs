@@ -1,15 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/database/supabase-auth'
-import { logger } from '@/lib/logger'
+import { useInquiries } from '@/hooks/useInquiries'
 import {
-  InquiryWithItems,
   InquiryStatus,
   InquiryType,
   INQUIRY_STATUS_LABELS,
@@ -21,73 +18,21 @@ import {
 
 function InquiriesPage() {
   const { user, isLoading: authLoading } = useAuth()
-  const _router = useRouter()
-  const [inquiries, setInquiries] = useState<InquiryWithItems[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all')
   const [typeFilter, setTypeFilter] = useState<InquiryType | 'all'>('all')
 
-  // 取得詢問單列表
-  const fetchInquiries = useCallback(async () => {
-    if (!user) return
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      // 取得認證 token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('認證失敗')
-      }
-
-      // 建立查詢參數
-      const params = new URLSearchParams()
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter)
-      }
-      if (typeFilter !== 'all') {
-        params.append('inquiry_type', typeFilter)
-      }
-      params.append('sort_by', 'created_at')
-      params.append('sort_order', 'desc')
-
-      // 呼叫 API
-      const response = await fetch(`/api/inquiries?${params}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || '取得詢問單列表失敗')
-      }
-
-      setInquiries(result.data || [])
-    } catch (err) {
-      logger.error('Error fetching inquiries', err as Error, {
-        module: 'InquiriesPage',
-        action: 'fetchInquiries',
-      })
-      setError(err instanceof Error ? err.message : '載入詢問單時發生錯誤')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [user, statusFilter, typeFilter])
-
-  // 初始載入
-  useEffect(() => {
-    if (user) {
-      fetchInquiries()
-    } else if (!authLoading) {
-      setIsLoading(false)
-    }
-  }, [user, authLoading, statusFilter, typeFilter, fetchInquiries])
+  // ✅ 使用 Custom Hook 管理詢問單資料
+  const {
+    inquiries,
+    loading: isLoading,
+    error,
+    refetch: fetchInquiries,
+  } = useInquiries({
+    statusFilter,
+    typeFilter,
+    sortBy: 'created_at',
+    sortOrder: 'desc',
+  })
 
   // 載入中狀態
   if (authLoading || isLoading) {
