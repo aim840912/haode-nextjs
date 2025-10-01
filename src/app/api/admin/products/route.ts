@@ -11,7 +11,7 @@ import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogServi
 import { adminProductService } from '@/services/core/product/productService'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { AdminProductSchemas } from '@/lib/validation-schemas'
+import { AdminProductSchemas } from '@/lib/validation'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 

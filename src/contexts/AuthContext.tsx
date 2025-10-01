@@ -19,7 +19,7 @@ import {
   signUpUser,
   updateProfile as updateUserProfile,
 } from '@/lib/database/supabase-auth'
-import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
+import { userInterestsService } from '@/services/core/user/userInterestsService'
 import { Session } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 
@@ -211,13 +211,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const syncUserInterests = useCallback(async (userId: string) => {
     try {
       // 取得本地興趣清單
-      const localInterests = UserInterestsService.getLocalInterests()
+      const localInterests = userInterestsService.getLocalInterests()
 
       // 同步到雲端並取得合併後的清單
-      const mergedInterests = await UserInterestsService.syncLocalInterests(userId, localInterests)
+      const mergedInterests = await userInterestsService.syncLocalInterests(userId, localInterests)
 
       // 清除本地儲存，改用雲端資料
-      UserInterestsService.clearLocalInterests()
+      userInterestsService.clearLocalInterests()
 
       logger.debug('User interests synced', {
         metadata: { count: mergedInterests.length, action: 'sync_interests' },

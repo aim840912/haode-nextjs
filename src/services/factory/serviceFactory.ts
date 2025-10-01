@@ -389,8 +389,8 @@ export async function getFarmTourService(): Promise<FarmTourService> {
   })
 
   try {
-    const { farmTourServiceSimple } = await import('../core/content/farmTourServiceSimple')
-    farmTourServiceInstance = farmTourServiceSimple
+    const { farmTourService } = await import('../core/content/farmTourService')
+    farmTourServiceInstance = farmTourService
 
     // 測試連線
     await farmTourServiceInstance.getAll()
@@ -533,8 +533,8 @@ export async function getUserInterestsService(): Promise<UserInterestsService> {
   })
 
   try {
-    const { UserInterestsService } = await import('../core/user/userInterestsServiceAdapter')
-    userInterestsServiceInstance = UserInterestsService
+    const { userInterestsService } = await import('../core/user/userInterestsService')
+    userInterestsServiceInstance = userInterestsService
 
     dbLogger.info('使用者興趣服務初始化成功', {
       module: 'ServiceFactory',

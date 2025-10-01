@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { productService } from '@/services/core/product/productService'
 import { ProductImageService } from '@/services/core/product/productImageService'
-import { AdminProductSchemas, CommonValidations } from '@/lib/validation-schemas'
+import { AdminProductSchemas, CommonValidations } from '@/lib/validation'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { withErrorHandler } from '@/lib/middleware/error-handler'

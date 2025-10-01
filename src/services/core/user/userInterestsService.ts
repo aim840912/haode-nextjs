@@ -38,7 +38,7 @@ interface SupabaseUserInterestRecord {
 /**
  * 使用者興趣服務 簡化實作
  */
-export class UserInterestsServiceSimple {
+export class UserInterestsService {
   private readonly moduleName = 'UserInterestsService'
 
   /**
@@ -546,4 +546,4 @@ export class UserInterestsServiceSimple {
 }
 
 // 建立並匯出服務實例
-export const userInterestsServiceSimple = new UserInterestsServiceSimple()
+export const userInterestsService = new UserInterestsService()

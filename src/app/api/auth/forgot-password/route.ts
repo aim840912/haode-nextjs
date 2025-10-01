@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { UserSchemas } from '@/lib/validation-schemas'
+import { UserSchemas } from '@/lib/validation'
 import { supabase } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
 

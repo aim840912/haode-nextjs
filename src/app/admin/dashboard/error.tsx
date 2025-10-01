@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { logger } from '@/lib/logger'
 
 export default function DashboardError({
   error,
@@ -12,7 +13,10 @@ export default function DashboardError({
 }) {
   useEffect(() => {
     // 記錄錯誤到客戶端日誌
-    console.error('Dashboard error:', error)
+    logger.error('Dashboard error', error, {
+      module: 'AdminDashboard',
+      metadata: { digest: error.digest },
+    })
   }, [error])
 
   return (

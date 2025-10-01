@@ -57,7 +57,9 @@
       "Bash(find:*)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(head:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git log:*)",
+      "Bash(npm audit:*)"
     ],
     "deny": [],
     "ask": []

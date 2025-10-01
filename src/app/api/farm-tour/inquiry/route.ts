@@ -5,7 +5,7 @@
 
 import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceAdapter'
+import { inquiryService } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
@@ -64,7 +64,7 @@ async function handlePOST(request: NextRequest, user: User) {
   }
 
   // 建立詢問單
-  const inquiry = await inquiryServiceAdapter.createInquiry(user.id, inquiryData)
+  const inquiry = await inquiryService.createInquiry(user.id, inquiryData)
 
   // 記錄農場參觀預約詢問建立的審計日誌
   AuditLogger.logInquiryCreate(

@@ -4,6 +4,7 @@
  */
 
 import { imageUrlValidator } from '@/lib/utils/image-url-validator'
+import { logger } from '@/lib/logger'
 
 /**
  * 將相對圖片路徑轉換為完整的 Supabase Storage URL
@@ -103,7 +104,10 @@ export function extractStoragePathFromUrl(url: string): string {
     // 如果都無法解析，返回空字串
     return ''
   } catch (error) {
-    console.warn('無法解析 Storage URL:', url, error)
+    logger.warn('無法解析 Storage URL', {
+      module: 'ImageUrlUtils',
+      metadata: { url, error: error instanceof Error ? error.message : String(error) },
+    })
     return ''
   }
 }
@@ -141,7 +145,10 @@ export function addImageUrlParams(url: string, params: Record<string, string> = 
 
     return urlObj.toString()
   } catch (error) {
-    console.warn('Invalid URL provided to addImageUrlParams:', url)
+    logger.warn('Invalid URL provided to addImageUrlParams', {
+      module: 'ImageUrlUtils',
+      metadata: { url, error: error instanceof Error ? error.message : String(error) },
+    })
     return url
   }
 }

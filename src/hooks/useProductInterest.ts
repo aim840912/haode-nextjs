@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
+import { userInterestsService } from '@/services/core/user/userInterestsService'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { logger } from '@/lib/logger'
 
@@ -29,7 +29,7 @@ export function useProductInterest(): UseProductInterestReturn {
     const loadInterestedProducts = async () => {
       if (user?.id) {
         try {
-          const interests = await UserInterestsService.getUserInterests(user.id)
+          const interests = await userInterestsService.getUserInterests(user.id)
           setInterestedProducts(new Set(interests))
         } catch (error) {
           logger.error('載入興趣清單失敗', error as Error, {
@@ -72,7 +72,7 @@ export function useProductInterest(): UseProductInterestReturn {
 
       try {
         // 儲存到資料庫
-        const success = await UserInterestsService.toggleInterest(user.id, productId)
+        const success = await userInterestsService.toggleInterest(user.id, productId)
 
         if (!success) {
           // 如果儲存失敗，恢復原狀態

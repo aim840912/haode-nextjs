@@ -6,11 +6,11 @@
 
 import { NextRequest } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { inquiryServiceSimple as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryServiceSimple'
+import { inquiryService as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
-import { InquirySchemas } from '@/lib/validation-schemas'
+import { InquirySchemas } from '@/lib/validation'
 import { ValidationError } from '@/lib/errors'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 

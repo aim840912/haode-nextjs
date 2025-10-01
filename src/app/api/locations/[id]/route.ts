@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { locationServiceSimple as locationServiceAdapter } from '@/services/core/content/locationServiceSimple'
-import { LocationSchemas } from '@/lib/validation-schemas'
+import { LocationSchemas } from '@/lib/validation'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { withErrorHandler } from '@/lib/middleware/error-handler'

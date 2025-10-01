@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { Database } from '@/types/database'
-import { LocationSchemas } from '@/lib/validation-schemas'
+import { LocationSchemas } from '@/lib/validation'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { withErrorHandler } from '@/lib/middleware/error-handler'

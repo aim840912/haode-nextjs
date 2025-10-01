@@ -4,7 +4,7 @@ import { withProductsCache } from '@/lib/middleware/api-cache-middleware'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { withAdminAndError } from '@/lib/middleware/api-middleware'
-import { PublicProductSchemas } from '@/lib/validation-schemas'
+import { PublicProductSchemas } from '@/lib/validation'
 import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 

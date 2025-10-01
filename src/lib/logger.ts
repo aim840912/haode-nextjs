@@ -254,7 +254,7 @@ class Logger {
       })
     } catch (sentryError) {
       // 避免 Sentry 錯誤影響主要功能
-      console.debug('Sentry 整合錯誤:', sentryError)
+      console.error('Sentry 整合錯誤:', sentryError)
     }
   }
 }

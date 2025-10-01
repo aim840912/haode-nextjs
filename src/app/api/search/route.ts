@@ -5,7 +5,7 @@ import { Product } from '@/types/product'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { SearchSchemas } from '@/lib/validation-schemas'
+import { SearchSchemas } from '@/lib/validation'
 import { apiLogger } from '@/lib/logger'
 
 async function handleGET(request: NextRequest) {

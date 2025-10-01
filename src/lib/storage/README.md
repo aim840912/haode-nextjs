@@ -1,24 +1,19 @@
 # 存儲系統模組
 
-本目錄包含智慧上傳系統的存儲相關功能：
+本目錄包含圖片上傳系統的存儲相關功能。
 
 ## 檔案結構
 
-- `LocalImageCache.ts` - IndexedDB 本地圖片快取系統
-- `CacheManager.ts` - 快取管理器，包含 LRU 清理策略
-- `StorageEstimator.ts` - 存儲空間評估工具
+- `BlobURLManager.ts` - Blob URL 生命週期管理
 
 ## 功能概述
 
-### LocalImageCache
-- IndexedDB 初始化和管理
-- 記憶體快取管理 (Memory Cache)
-- 圖片元數據提取
-- 預覽圖和縮圖生成
-- LRU 清理策略
+### BlobURLManager
+- 管理 Blob URL 的建立和釋放
+- 防止記憶體洩漏
+- 自動追蹤和清理未使用的 Blob URLs
 
-### 設計原則
-- 優先使用 IndexedDB 進行持久化存儲
-- 記憶體快取作為第二層快速存取
-- 自動清理過期和超額數據
-- 支援批量操作以提高性能
+## 設計原則
+- 簡化架構，移除不必要的抽象層
+- 專注於核心功能：Blob URL 管理
+- 避免過度工程化

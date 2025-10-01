@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
-import { userInterestsServiceSimple } from '@/services/core/user/userInterestsServiceSimple'
+import { userInterestsService } from '@/services/core/user/userInterestsService'
 import { z } from 'zod'
 
 // 請求驗證架構
@@ -19,7 +19,7 @@ const RemoveInterestSchema = z.object({
  */
 async function handleGET(req: NextRequest, user: User) {
   try {
-    const interests = await userInterestsServiceSimple.getUserInterests(user.id)
+    const interests = await userInterestsService.getUserInterests(user.id)
     return success({ interests }, '獲取興趣清單成功')
   } catch (error) {
     throw new Error('獲取興趣清單失敗')
@@ -44,7 +44,7 @@ async function handlePOST(req: NextRequest, user: User) {
     const { productId } = result.data
 
     // 使用 toggleInterest 來處理，如果已存在則不會重複添加
-    const success_result = await userInterestsServiceSimple.addInterest(user.id, productId)
+    const success_result = await userInterestsService.addInterest(user.id, productId)
 
     if (!success_result) {
       throw new Error('新增興趣失敗')
@@ -83,7 +83,7 @@ async function handleDELETE(req: NextRequest, user: User) {
 
     const { productId } = result.data
 
-    const success_result = await userInterestsServiceSimple.removeInterest(user.id, productId)
+    const success_result = await userInterestsService.removeInterest(user.id, productId)
 
     if (!success_result) {
       throw new Error('移除興趣失敗')

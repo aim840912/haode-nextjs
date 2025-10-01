@@ -3,7 +3,7 @@ import { getFarmTourService } from '@/services/factory/serviceFactory'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { FarmTourActivitySchemas } from '@/lib/validation-schemas'
+import { FarmTourActivitySchemas } from '@/lib/validation'
 import { apiLogger } from '@/lib/logger'
 
 // GET - 獲取所有農場體驗活動

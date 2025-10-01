@@ -1,15 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/logger'
-import { FarmTourActivity } from '@/types/farmTour'
+import type { FarmTourActivity } from '@/types/farmTour'
 import SocialLinks from '@/components/features/social/SocialLinks'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { logger } from '@/lib/logger'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
 import { SETTING_KEYS } from '@/types/siteSettings'
+import { useFarmTourActivities } from './hooks/useFarmTourActivities'
+import { useFarmTourForm } from './hooks/useFarmTourForm'
+import { BookingModal } from './components/BookingModal'
+import { ActivityCard } from './components/ActivityCard'
 import {
   PartyPopper,
   Users,

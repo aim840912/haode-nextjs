@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
-import { validateData, validateRequestData, validateSearchParams } from '@/lib/validation-schemas'
+import { validateData, validateRequestData, validateSearchParams } from '@/lib/validation'
 import {
   ValidationConfig as BaseValidationConfig,
   ValidationResult as BaseValidationResult,

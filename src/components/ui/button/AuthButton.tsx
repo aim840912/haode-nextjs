@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
-import { UserInterestsService } from '@/services/core/user/userInterestsServiceAdapter'
+import { userInterestsService } from '@/services/core/user/userInterestsService'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { logger } from '@/lib/logger'
@@ -123,7 +123,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
       if (user?.id) {
         // 已登入：從資料庫取得數量
         try {
-          const interests = await UserInterestsService.getUserInterests(user.id)
+          const interests = await userInterestsService.getUserInterests(user.id)
           setInterestedCount(interests.length)
         } catch (error) {
           // 如果是 401 錯誤，可能用戶未授權，不顯示錯誤
