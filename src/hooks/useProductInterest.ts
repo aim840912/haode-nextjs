@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { userInterestsService } from '@/services/core/user/userInterestsService'
+import { fetchUserInterests, toggleUserInterest } from '@/lib/api/user-interests-api'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { logger } from '@/lib/logger'
 
@@ -29,7 +29,7 @@ export function useProductInterest(): UseProductInterestReturn {
     const loadInterestedProducts = async () => {
       if (user?.id) {
         try {
-          const interests = await userInterestsService.getUserInterests(user.id)
+          const interests = await fetchUserInterests()
           setInterestedProducts(new Set(interests))
         } catch (error) {
           logger.error('載入興趣清單失敗', error as Error, {
@@ -71,30 +71,11 @@ export function useProductInterest(): UseProductInterestReturn {
       })
 
       try {
-        // 儲存到資料庫
-        const success = await userInterestsService.toggleInterest(user.id, productId)
-
-        if (!success) {
-          // 如果儲存失敗，恢復原狀態
-          setInterestedProducts(prev => {
-            const newSet = new Set(prev)
-            if (wasInterested) {
-              newSet.add(productId) // 恢復
-            } else {
-              newSet.delete(productId) // 恢復
-            }
-            return newSet
-          })
-
-          showError('操作失敗', '請稍後再試')
-          logger.error('更新興趣清單失敗', undefined, {
-            metadata: { action: 'toggle_interest', productId, userId: user.id },
-          })
-          return
-        }
+        // 儲存到資料庫（使用 API 呼叫）
+        const result = await toggleUserInterest(productId)
 
         // 成功提示
-        if (wasInterested) {
+        if (result.action === 'removed') {
           showSuccess('已移除', `已從興趣清單移除 ${productName}`)
         } else {
           showSuccess('已加入', `已將 ${productName} 加入興趣清單！`)
