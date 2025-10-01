@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import { userInterestsService } from '@/services/core/user/userInterestsService'
 import type { Product } from '@/types/product'
 import type { User } from '@/types/auth'
 
@@ -67,7 +66,14 @@ export function useInterests(
     if (!user) return
 
     try {
-      const interests = await userInterestsService.getUserInterests(user.id)
+      // 使用 API 路由取得興趣清單
+      const response = await fetch('/api/user/interests')
+      if (!response.ok) {
+        throw new Error('Failed to fetch interests')
+      }
+
+      const result = await response.json()
+      const interests = result.data?.interests || []
       setInterestedProducts(interests)
 
       if (interests.length > 0) {
@@ -88,7 +94,18 @@ export function useInterests(
       if (!user) return
 
       try {
-        await userInterestsService.removeInterest(user.id, productId)
+        // 使用 toggle API 移除興趣
+        const response = await fetch('/api/user/interests/toggle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to remove interest')
+        }
 
         // 更新本地狀態
         setInterestedProducts(prev => prev.filter(id => id !== productId))
