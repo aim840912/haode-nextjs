@@ -19,9 +19,9 @@ import {
   signUpUser,
   updateProfile as updateUserProfile,
 } from '@/lib/database/supabase-auth'
-import { userInterestsService } from '@/services/core/user/userInterestsService'
 import { Session } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
+import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-interests-api'
 
 interface AuthContextType {
   user: User | null
@@ -207,17 +207,49 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => clearInterval(interval)
   }, [user?.id, validateSession])
 
+  // 本地儲存工具函數
+  const getLocalInterests = (): string[] => {
+    try {
+      if (typeof localStorage === 'undefined') {
+        return []
+      }
+      const saved = localStorage.getItem('interestedProducts')
+      return saved ? JSON.parse(saved) : []
+    } catch (error) {
+      logger.error('取得本地興趣清單失敗', error as Error, {
+        metadata: { action: 'get_local_interests' },
+      })
+      return []
+    }
+  }
+
+  const clearLocalInterests = (): void => {
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('interestedProducts')
+        // 觸發事件通知其他元件更新
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('interestedProductsUpdated'))
+        }
+      }
+    } catch (error) {
+      logger.error('清除本地興趣清單失敗', error as Error, {
+        metadata: { action: 'clear_local_interests' },
+      })
+    }
+  }
+
   // 同步使用者興趣清單
   const syncUserInterests = useCallback(async (userId: string) => {
     try {
       // 取得本地興趣清單
-      const localInterests = userInterestsService.getLocalInterests()
+      const localInterests = getLocalInterests()
 
-      // 同步到雲端並取得合併後的清單
-      const mergedInterests = await userInterestsService.syncLocalInterests(userId, localInterests)
+      // 同步到雲端並取得合併後的清單（使用 API 呼叫）
+      const mergedInterests = await syncInterestsToCloud(localInterests)
 
       // 清除本地儲存，改用雲端資料
-      userInterestsService.clearLocalInterests()
+      clearLocalInterests()
 
       logger.debug('User interests synced', {
         metadata: { count: mergedInterests.length, action: 'sync_interests' },
