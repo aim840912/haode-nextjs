@@ -5,16 +5,7 @@
 
 import { apiLogger } from '@/lib/logger'
 import { FarmTourActivity } from '@/types/farmTour'
-
-/**
- * API 回應格式
- */
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
+import { ApiResponse, handleApiError } from './common'
 
 /**
  * 農場參觀預約詢問資料
@@ -34,18 +25,6 @@ export interface FarmTourInquiryData {
  */
 interface InquiryCreatedResponse {
   id: string
-}
-
-/**
- * 處理 API 錯誤
- */
-function handleApiError(error: unknown, operation: string): never {
-  const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-  apiLogger.error(`農場體驗 API ${operation} 失敗`, error as Error, {
-    module: 'FarmTourAPI',
-    action: operation,
-  })
-  throw new Error(errorMessage)
 }
 
 /**
@@ -85,7 +64,7 @@ export async function fetchFarmTourActivities(
 
     return result.data
   } catch (error) {
-    handleApiError(error, 'fetchFarmTourActivities')
+    handleApiError(error, 'fetchFarmTourActivities', 'FarmTourAPI')
   }
 }
 
@@ -124,6 +103,6 @@ export async function createFarmTourInquiry(
 
     return result.data
   } catch (error) {
-    handleApiError(error, 'createFarmTourInquiry')
+    handleApiError(error, 'createFarmTourInquiry', 'FarmTourAPI')
   }
 }

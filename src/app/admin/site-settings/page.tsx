@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import ImageUploader from '@/components/admin/ImageUploader'
@@ -23,11 +23,12 @@ export default function SiteSettingsPage() {
   const [homeHeroImages, setHomeHeroImages] = useState<string[]>([])
   const [farmTourHeroBg, setFarmTourHeroBg] = useState<string>('')
 
-  useEffect(() => {
-    loadSettings()
+  const showMessage = useCallback((type: 'success' | 'error', text: string) => {
+    setMessage({ type, text })
+    setTimeout(() => setMessage(null), 5000)
   }, [])
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true)
       const response = await fetch('/api/site-settings')
@@ -61,12 +62,11 @@ export default function SiteSettingsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showMessage])
 
-  const showMessage = (type: 'success' | 'error', text: string) => {
-    setMessage({ type, text })
-    setTimeout(() => setMessage(null), 5000)
-  }
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
 
   const handleAddHomeHeroImage = (imageUrl: string) => {
     setHomeHeroImages(prev => [...prev, imageUrl])

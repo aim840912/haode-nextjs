@@ -4,16 +4,7 @@
  */
 
 import { apiLogger } from '@/lib/logger'
-
-/**
- * API 回應格式
- */
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
+import { ApiResponse, handleApiError } from './common'
 
 /**
  * 興趣清單回應
@@ -42,18 +33,6 @@ interface ActionResponse {
 }
 
 /**
- * 處理 API 錯誤
- */
-function handleApiError(error: unknown, operation: string): never {
-  const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-  apiLogger.error(`使用者興趣 API ${operation} 失敗`, error as Error, {
-    module: 'UserInterestsAPI',
-    action: operation,
-  })
-  throw new Error(errorMessage)
-}
-
-/**
  * 取得使用者興趣清單
  */
 export async function fetchUserInterests(): Promise<string[]> {
@@ -76,7 +55,7 @@ export async function fetchUserInterests(): Promise<string[]> {
 
     return result.data.interests
   } catch (error) {
-    handleApiError(error, 'fetchUserInterests')
+    handleApiError(error, 'fetchUserInterests', 'UserInterestsAPI')
   }
 }
 
@@ -156,7 +135,7 @@ export async function addUserInterest(productId: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    handleApiError(error, 'addUserInterest')
+    handleApiError(error, 'addUserInterest', 'UserInterestsAPI')
   }
 }
 
@@ -187,7 +166,7 @@ export async function removeUserInterest(productId: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    handleApiError(error, 'removeUserInterest')
+    handleApiError(error, 'removeUserInterest', 'UserInterestsAPI')
   }
 }
 
@@ -224,6 +203,6 @@ export async function toggleUserInterest(productId: string): Promise<{
       productId: result.data.productId,
     }
   } catch (error) {
-    handleApiError(error, 'toggleUserInterest')
+    handleApiError(error, 'toggleUserInterest', 'UserInterestsAPI')
   }
 }

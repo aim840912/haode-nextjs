@@ -5,28 +5,7 @@
 
 import { apiLogger } from '@/lib/logger'
 import { Location } from '@/types/location'
-
-/**
- * API 回應格式
- */
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
-
-/**
- * 處理 API 錯誤
- */
-function handleApiError(error: unknown, operation: string): never {
-  const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-  apiLogger.error(`Locations API ${operation} 失敗`, error as Error, {
-    module: 'LocationsAPI',
-    action: operation,
-  })
-  throw new Error(errorMessage)
-}
+import { ApiResponse, handleApiError } from './common'
 
 /**
  * 取得所有門市據點清單
@@ -65,7 +44,7 @@ export async function fetchLocations(): Promise<Location[]> {
 
     return data
   } catch (error) {
-    handleApiError(error, 'fetchLocations')
+    handleApiError(error, 'fetchLocations', 'LocationsAPI')
   }
 }
 
@@ -98,6 +77,6 @@ export async function fetchLocationById(id: string): Promise<Location> {
 
     return result.data
   } catch (error) {
-    handleApiError(error, 'fetchLocationById')
+    handleApiError(error, 'fetchLocationById', 'LocationsAPI')
   }
 }

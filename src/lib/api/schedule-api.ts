@@ -4,6 +4,7 @@
  */
 
 import { apiLogger } from '@/lib/logger'
+import { ApiResponse, handleApiError } from './common'
 
 /**
  * 行程項目介面
@@ -22,28 +23,6 @@ export interface ScheduleItem {
   weatherNote: string
   createdAt: string
   updatedAt: string
-}
-
-/**
- * API 回應格式
- */
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
-
-/**
- * 處理 API 錯誤
- */
-function handleApiError(error: unknown, operation: string): never {
-  const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-  apiLogger.error(`Schedule API ${operation} 失敗`, error as Error, {
-    module: 'ScheduleAPI',
-    action: operation,
-  })
-  throw new Error(errorMessage)
 }
 
 /**
@@ -83,7 +62,7 @@ export async function fetchSchedule(): Promise<ScheduleItem[]> {
 
     return data
   } catch (error) {
-    handleApiError(error, 'fetchSchedule')
+    handleApiError(error, 'fetchSchedule', 'ScheduleAPI')
   }
 }
 
@@ -116,6 +95,6 @@ export async function fetchScheduleById(id: string): Promise<ScheduleItem> {
 
     return result.data
   } catch (error) {
-    handleApiError(error, 'fetchScheduleById')
+    handleApiError(error, 'fetchScheduleById', 'ScheduleAPI')
   }
 }

@@ -5,16 +5,7 @@
 
 import { apiLogger } from '@/lib/logger'
 import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
-
-/**
- * API 回應格式
- */
-interface ApiResponse<T> {
-  success: boolean
-  data?: T
-  message?: string
-  error?: string
-}
+import { ApiResponse, handleApiError } from './common'
 
 /**
  * 詢問單查詢參數
@@ -24,18 +15,6 @@ export interface FetchInquiriesParams {
   typeFilter?: InquiryType | 'all'
   sortBy?: string
   sortOrder?: 'asc' | 'desc'
-}
-
-/**
- * 處理 API 錯誤
- */
-function handleApiError(error: unknown, operation: string): never {
-  const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-  apiLogger.error(`Inquiries API ${operation} 失敗`, error as Error, {
-    module: 'InquiriesAPI',
-    action: operation,
-  })
-  throw new Error(errorMessage)
 }
 
 /**
@@ -83,7 +62,7 @@ export async function fetchInquiries(params?: FetchInquiriesParams): Promise<Inq
 
     return result.data
   } catch (error) {
-    handleApiError(error, 'fetchInquiries')
+    handleApiError(error, 'fetchInquiries', 'InquiriesAPI')
   }
 }
 
@@ -116,7 +95,7 @@ export async function fetchInquiryById(id: string): Promise<InquiryWithItems> {
 
     return result.data
   } catch (error) {
-    handleApiError(error, 'fetchInquiryById')
+    handleApiError(error, 'fetchInquiryById', 'InquiriesAPI')
   }
 }
 
@@ -154,7 +133,7 @@ export async function updateInquiryStatus(id: string, status: InquiryStatus): Pr
 
     return true
   } catch (error) {
-    handleApiError(error, 'updateInquiryStatus')
+    handleApiError(error, 'updateInquiryStatus', 'InquiriesAPI')
   }
 }
 
@@ -187,6 +166,6 @@ export async function deleteInquiry(id: string): Promise<boolean> {
 
     return true
   } catch (error) {
-    handleApiError(error, 'deleteInquiry')
+    handleApiError(error, 'deleteInquiry', 'InquiriesAPI')
   }
 }
