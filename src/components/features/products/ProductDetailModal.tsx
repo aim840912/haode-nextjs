@@ -200,7 +200,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                                 handleImageChange(index)
                               }
                             }}
-                            className={`flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden
+                            className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden
                               transition-all duration-200 hover:scale-105
                               focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
                               ${
