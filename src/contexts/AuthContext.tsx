@@ -205,7 +205,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     ) // 5 分鐘
 
     return () => clearInterval(interval)
-  }, [user?.id, validateSession])
+    // validateSession 已包含 user 依賴，因此 user 變化時會重新創建 interval
+  }, [validateSession, user])
 
   // 本地儲存工具函數
   const getLocalInterests = (): string[] => {

@@ -300,9 +300,10 @@ export function useRateLimitStatus(): UseRateLimitStatusReturn {
 
   // 清理計時器
   useEffect(() => {
+    // 在 effect 內複製 ref 值，避免清理時使用可能已改變的 ref
+    const timeouts = notificationTimeouts.current
     return () => {
       stopTimer()
-      const timeouts = notificationTimeouts.current
       timeouts.forEach(timeout => clearTimeout(timeout))
     }
   }, [stopTimer])

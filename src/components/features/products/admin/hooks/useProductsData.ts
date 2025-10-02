@@ -84,6 +84,7 @@ export function useProductsData(
     } finally {
       setLoading(false)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // 移除 filters 依賴，因為我們只需要在初始化時載入，篩選由前端處理
 
   // 初始載入

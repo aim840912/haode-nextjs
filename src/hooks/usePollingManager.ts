@@ -192,6 +192,7 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
         })
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [enabled, getPollingInterval, onPoll, isDevelopment]
     // 移除 stopPolling 和 isVisible，避免循環依賴和頻繁重建
   )
@@ -242,8 +243,8 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
-    // 移除 onVisibilityChange 依賴，避免無限循環
-  }, [updateActivity, isDevelopment])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [updateActivity, isDevelopment]) // 移除 onVisibilityChange 依賴，避免無限循環
 
   /**
    * 使用者活動檢測
@@ -282,7 +283,8 @@ export function usePollingManager(options: UsePollingManagerOptions): UsePolling
       // 頁面可見且未在輪詢時才啟動
       setTimeout(() => startPolling(), 0)
     }
-  }, [isVisible, enabled]) // 移除 isPolling 避免無限循環
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible, enabled]) // 移除 isPolling, stopPolling, startPolling 避免無限循環
 
   /**
    * 清理資源

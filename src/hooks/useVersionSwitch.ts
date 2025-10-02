@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { logger } from '@/lib/logger'
 
@@ -56,7 +56,7 @@ const DEFAULT_CONFIG: VersionConfig = {
  * - 強制版本控制
  */
 export function useVersionSwitch(config: Partial<VersionConfig> = {}): VersionSwitchResult {
-  const mergedConfig = { ...DEFAULT_CONFIG, ...config }
+  const mergedConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config])
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -258,8 +258,12 @@ export function useVersionSwitch(config: Partial<VersionConfig> = {}): VersionSw
     }
   }, [])
 
-  // 初始化
+  // 初始化 - 使用 ref 確保只執行一次
+  const isInitialized = useRef(false)
   useEffect(() => {
+    if (isInitialized.current) return
+    isInitialized.current = true
+
     const initialVersion = determineVersion()
     switchToVersion(initialVersion, false)
 
@@ -267,7 +271,7 @@ export function useVersionSwitch(config: Partial<VersionConfig> = {}): VersionSw
     if (initialVersion !== searchParams?.get('version')) {
       updateURL(initialVersion)
     }
-  }, []) // 只在 mount 時執行
+  }, [determineVersion, switchToVersion, searchParams, updateURL])
 
   // 監聽 URL 參數變化
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, ReactNode, Suspense } from 'react'
+import { useState, useEffect, useCallback, ReactNode, Suspense } from 'react'
 import { LoadingSkeleton } from './LoadingSkeleton'
 import LoadingSpinner from './LoadingSpinner'
 import { LoadingError, GenericError } from './LoadingError'
@@ -102,7 +102,7 @@ export function DataLoading<T>({
     maxRetries: 3,
   })
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const result = await executeAsync(async updateProgress => {
         updateProgress({ current: 10, total: 100, message: '準備載入資料...' })
@@ -114,7 +114,8 @@ export function DataLoading<T>({
     } catch (err) {
       // 錯誤由 executeAsync 處理
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asyncData, executeAsync, ...dependencies])
 
   const handleRetry = async () => {
     reset()
@@ -124,7 +125,7 @@ export function DataLoading<T>({
 
   useEffect(() => {
     loadData()
-  }, dependencies)
+  }, [loadData])
 
   if (error) {
     return errorComponent ? (

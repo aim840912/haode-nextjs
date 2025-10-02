@@ -187,7 +187,8 @@ export function useInquiryStats(
         })
       }
     }
-  }, [isAdmin, isDevelopment]) // 只保留穩定的依賴
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, isDevelopment]) // 只保留穩定的依賴，避免 pollingOperation 重新創建導致頻繁重新整理
 
   /**
    * 初始化效果：載入快取資料和開始輪詢
@@ -227,7 +228,8 @@ export function useInquiryStats(
     setTimeout(() => {
       initializingRef.current = false
     }, 100)
-  }, [isAdmin, user?.id]) // 只在 isAdmin 和 user.id 變化時重新執行
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, user?.id]) // 只在 isAdmin 和 user.id 變化時重新執行，避免因其他依賴變化導致重複初始化
 
   /**
    * 輪詢間隔變化效果 - 只在關鍵狀態變化時重新計算
@@ -248,6 +250,7 @@ export function useInquiryStats(
         })
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isAdmin,
     stats?.unread_count,
@@ -264,7 +267,8 @@ export function useInquiryStats(
       pollingManager.stopPolling()
       retryManager.reset()
     }
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // 只在組件卸載時清理，不需要依賴函數
 
   return {
     stats,
