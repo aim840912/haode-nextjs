@@ -111,7 +111,7 @@ export function DataLoading<T>({
         return data
       }, '載入資料中...')
       setData(result as T | null)
-    } catch (err) {
+    } catch (_err) {
       // 錯誤由 executeAsync 處理
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

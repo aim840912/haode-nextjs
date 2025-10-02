@@ -241,7 +241,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }
 
   // 同步使用者興趣清單
-  const syncUserInterests = useCallback(async (userId: string) => {
+  const syncUserInterests = useCallback(async () => {
     try {
       // 取得本地興趣清單
       const localInterests = getLocalInterests()
@@ -284,7 +284,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               setUser(userData)
 
               // 同步興趣清單（登入成功後）
-              await syncUserInterests(userData.id)
+              await syncUserInterests()
             } else {
               // 如果找不到 profile，建立基本使用者資訊
               logger.warn('Profile not found, creating basic user info', {
@@ -301,7 +301,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               setUser(basicUser)
 
               // 同步興趣清單（登入成功後）
-              await syncUserInterests(basicUser.id)
+              await syncUserInterests()
             }
           } catch (error) {
             // 檢查是否為認證相關錯誤
@@ -328,7 +328,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setUser(basicUser)
 
             // 同步興趣清單（登入成功後）
-            await syncUserInterests(basicUser.id)
+            await syncUserInterests()
           }
         } else {
           setUser(null)

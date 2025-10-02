@@ -17,7 +17,7 @@ import type { SiteSettingInput, SiteSettingUpdate } from '@/types/siteSettings'
  * GET /api/site-settings
  * 取得所有設定或指定 key 的設定
  */
-async function handleGET(req: NextRequest, user: User | null) {
+async function handleGET(req: NextRequest, _user: User | null) {
   const { searchParams } = new URL(req.url)
   const key = searchParams.get('key')
   const keys = searchParams.get('keys')
@@ -43,7 +43,7 @@ export const GET = withOptionalAuthAndError(handleGET, { module: 'SiteSettingsAP
  * POST /api/site-settings
  * 建立新設定（管理員權限）
  */
-async function handlePOST(req: NextRequest, user: User) {
+async function handlePOST(req: NextRequest, _user: User) {
   const body = await req.json()
 
   if (!body.key?.trim()) {
@@ -78,7 +78,7 @@ export const POST = withAdminAndError(handlePOST, {
  * PUT /api/site-settings
  * 更新設定（管理員權限）
  */
-async function handlePUT(req: NextRequest, user: User) {
+async function handlePUT(req: NextRequest, _user: User) {
   const { searchParams } = new URL(req.url)
   const key = searchParams.get('key')
 
@@ -107,7 +107,7 @@ export const PUT = withAdminAndError(handlePUT, { module: 'SiteSettingsAPI', ena
  * DELETE /api/site-settings
  * 刪除設定（管理員權限）
  */
-async function handleDELETE(req: NextRequest, user: User) {
+async function handleDELETE(req: NextRequest, _user: User) {
   const { searchParams } = new URL(req.url)
   const key = searchParams.get('key')
 

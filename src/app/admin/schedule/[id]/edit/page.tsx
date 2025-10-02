@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { ScheduleItem } from '@/types/schedule'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/contexts/AuthContext'
 import TimePickerChinese from '@/components/ui/form/TimePickerChinese'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 
@@ -14,7 +13,6 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [scheduleId, setScheduleId] = useState<string>('')
-  const { user, isLoading } = useAuth()
   const [newProduct, setNewProduct] = useState('')
 
   const [formData, setFormData] = useState({

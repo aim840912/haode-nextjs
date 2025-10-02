@@ -32,7 +32,7 @@ async function handleGET(request: NextRequest) {
       },
       'SKU 檢查完成'
     )
-  } catch (error) {
+  } catch (_error) {
     // 如果檢查失敗，返回不存在以不阻止用戶繼續
     return success(
       {

@@ -162,7 +162,6 @@ class Logger {
       console[consoleMethod](`${prefix} | ${message}${contextStr}`)
 
       if (error?.stack && level >= LogLevel.ERROR) {
-        // eslint-disable-next-line no-console
         console.error(error.stack)
       }
     } else {

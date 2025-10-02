@@ -638,7 +638,7 @@ export class UnifiedImageService {
 
       const fileName = filePath.substring(filePath.lastIndexOf('/') + 1)
       return (data || []).some(file => file.name === fileName)
-    } catch (error) {
+    } catch (_error) {
       return false
     }
   }

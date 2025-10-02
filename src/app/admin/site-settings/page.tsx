@@ -50,7 +50,7 @@ export default function SiteSettingsPage() {
         try {
           const images = JSON.parse(settingsMap[SETTING_KEYS.HOME_HERO_IMAGES].value)
           setHomeHeroImages(Array.isArray(images) ? images : [])
-        } catch (e) {
+        } catch (_e) {
           setHomeHeroImages([])
         }
       }

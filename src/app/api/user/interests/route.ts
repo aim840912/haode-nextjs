@@ -18,12 +18,8 @@ const RemoveInterestSchema = z.object({
  * 獲取使用者興趣清單
  */
 async function handleGET(req: NextRequest, user: User) {
-  try {
-    const interests = await userInterestsService.getUserInterests(user.id)
-    return success({ interests }, '獲取興趣清單成功')
-  } catch (error) {
-    throw new Error('獲取興趣清單失敗')
-  }
+  const interests = await userInterestsService.getUserInterests(user.id)
+  return success({ interests }, '獲取興趣清單成功')
 }
 
 /**

@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import { Product } from '@/types/product'
-import { useAuth } from '@/contexts/AuthContext'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { SafeImage } from '@/components/ui/image/OptimizedImage'
@@ -16,7 +15,6 @@ function ProductsSection() {
   const [error, setError] = useState<string | null>(null)
   const [isVisible, setIsVisible] = useState(false)
   const sectionRef = useRef<HTMLElement>(null)
-  const { user } = useAuth()
 
   const fetchProducts = useCallback(async () => {
     try {

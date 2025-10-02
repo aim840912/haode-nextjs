@@ -119,7 +119,7 @@ export default function SearchInput({
     }
   }
 
-  const handleBlur = (e: React.FocusEvent) => {
+  const handleBlur = (_e: React.FocusEvent) => {
     // 延遲關閉以允許點擊下拉選項
     setTimeout(() => {
       if (!dropdownRef.current?.contains(document.activeElement)) {

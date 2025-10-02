@@ -8,7 +8,6 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
-import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { getFullImageUrl, extractStoragePathFromUrl } from '@/lib/utils/image-url-utils'
 import AdminProtection from '@/components/features/admin/AdminProtection'
@@ -32,7 +31,6 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
   const [existingImages, setExistingImages] = useState<string[]>([])
   // 新增狀態來儲存圖片路徑對應關係
   const [imagePaths, setImagePaths] = useState<Map<string, string>>(new Map())
-  const { user, isLoading } = useAuth()
   const { token: csrfToken } = useCSRFToken()
 
   const [formData, setFormData] = useState({

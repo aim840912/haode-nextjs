@@ -285,7 +285,7 @@ export async function validateImageFile(file: File): Promise<{ valid: boolean; e
     if (!magicBytesValidation.valid) {
       return magicBytesValidation
     }
-  } catch (error) {
+  } catch (_error) {
     return {
       valid: false,
       error: '檔案內容驗證失敗',

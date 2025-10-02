@@ -217,7 +217,7 @@ export function useInquiryStatsCache(
 
       const cacheData = JSON.parse(cached)
       return isCacheValid(cacheData, maxAge)
-    } catch (err) {
+    } catch (_err) {
       return false
     }
   }, [maxAge])

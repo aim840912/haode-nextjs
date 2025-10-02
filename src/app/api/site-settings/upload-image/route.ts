@@ -14,7 +14,7 @@ import { apiLogger } from '@/lib/logger'
  * POST /api/site-settings/upload-image
  * 上傳圖片並返回 URL
  */
-async function handlePOST(req: NextRequest, user: User) {
+async function handlePOST(req: NextRequest, _user: User) {
   const formData = await req.formData()
   const file = formData.get('file') as File | null
 

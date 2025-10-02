@@ -294,7 +294,7 @@ export function getEnvStatus() {
       const value = client[key as keyof ClientEnv]
       status.client[key] = value ? '✅ 已設定' : '❌ 未設定'
     })
-  } catch (error) {
+  } catch (_error) {
     status.isValid = false
     status.client.error = '❌ 驗證失敗'
   }
@@ -321,7 +321,7 @@ export function getEnvStatus() {
           }
         }
       })
-    } catch (error) {
+    } catch (_error) {
       status.server.error = '❌ 驗證失敗'
       if (process.env.NODE_ENV === 'production') {
         status.isValid = false

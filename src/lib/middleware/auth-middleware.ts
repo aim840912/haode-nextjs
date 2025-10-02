@@ -210,7 +210,7 @@ export function verifyToken(token: string) {
       email: decoded.email,
       isAdmin: decoded.isAdmin || false,
     }
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }
