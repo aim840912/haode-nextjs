@@ -219,6 +219,7 @@ export default function OptimizedImage({
           finalSrc &&
           (shouldUseNativeImg ? (
             // 對於 base64、Blob URL 或無效 URL，使用原生 img 標籤
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={finalSrc}
               alt={alt}
@@ -232,6 +233,7 @@ export default function OptimizedImage({
             />
           ) : (
             // 對於普通 URL，在 fill 模式下使用原生 img 標籤避免 Next.js Image 的兼容性問題
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={finalSrc}
               alt={alt}
@@ -274,6 +276,7 @@ export default function OptimizedImage({
         finalSrc &&
         (shouldUseNativeImg ? (
           // 對於 base64、Blob URL 或無效 URL，使用原生 img 標籤
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={finalSrc}
             alt={alt}

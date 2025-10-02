@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
 import { createPortal } from 'react-dom'
 import { X, Plus, Minus, ShoppingCart, Share2, Zap } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -211,10 +212,12 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                             aria-pressed={currentImageIndex === index}
                             tabIndex={0}
                           >
-                            <img
+                            <Image
                               src={image.storage_url}
                               alt={`預覽 ${index + 1}`}
-                              className="w-full h-full object-cover"
+                              fill
+                              className="object-cover"
+                              sizes="120px"
                             />
                           </button>
                         ))}

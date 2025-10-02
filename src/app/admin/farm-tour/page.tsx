@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { FarmTourActivity } from '@/types/farmTour'
 import Link from 'next/link'
+import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
@@ -171,10 +172,12 @@ export default function FarmTourAdmin() {
                 <div className="relative h-48 bg-gradient-to-br from-green-100 to-amber-100">
                   {/* 圖片層 */}
                   {activity.image && (
-                    <img
+                    <Image
                       src={activity.image}
                       alt={activity.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   )}
 

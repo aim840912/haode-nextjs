@@ -85,6 +85,7 @@ export default function ImageUploader({
       <div className="relative">
         {preview ? (
           <div className="relative group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={preview}
               alt="預覽"

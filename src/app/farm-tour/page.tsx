@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import type { FarmTourActivity } from '@/types/farmTour'
 import SocialLinks from '@/components/features/social/SocialLinks'
 import { useAuth } from '@/contexts/AuthContext'
@@ -300,10 +301,12 @@ export default function FarmTourPage() {
 
                       {/* 圖片層 */}
                       {activity.image && (
-                        <img
+                        <Image
                           src={activity.image}
                           alt={activity.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                         />
                       )}
 

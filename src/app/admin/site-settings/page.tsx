@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import ImageUploader from '@/components/admin/ImageUploader'
 import { Save, RefreshCw, Home, Leaf, ArrowLeft, Plus, Trash2 } from 'lucide-react'
@@ -202,11 +203,15 @@ export default function SiteSettingsPage() {
                       {index + 1}
                     </div>
                     <div className="flex-1">
-                      <img
-                        src={image}
-                        alt={`首頁圖片 ${index + 1}`}
-                        className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
-                      />
+                      <div className="relative w-full h-48">
+                        <Image
+                          src={image}
+                          alt={`首頁圖片 ${index + 1}`}
+                          fill
+                          className="object-cover rounded-lg border-2 border-gray-200"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
+                        />
+                      </div>
                       <p className="text-sm text-gray-600 mt-2 break-all">{image}</p>
                     </div>
                     <button

@@ -1,4 +1,5 @@
 import type { FarmTourActivity } from '@/types/farmTour'
+import Image from 'next/image'
 import { Calendar, Banknote, Users2, Check, Flame, Zap } from 'lucide-react'
 
 interface ActivityCardProps {
@@ -36,10 +37,12 @@ export function ActivityCard({ activity, index, onBookingClick }: ActivityCardPr
 
         {/* 圖片層 */}
         {activity.image && (
-          <img
+          <Image
             src={activity.image}
             alt={activity.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         )}
 

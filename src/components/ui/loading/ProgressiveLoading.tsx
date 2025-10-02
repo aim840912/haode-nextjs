@@ -216,12 +216,14 @@ export function ProgressiveImage({
       {!imageLoaded && (
         <div className="absolute inset-0">
           {blurDataURL ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={blurDataURL}
               alt=""
               className="w-full h-full object-cover filter blur-sm scale-110"
             />
           ) : placeholder ? (
+            // eslint-disable-next-line @next/next/no-img-element
             <img src={placeholder} alt="" className="w-full h-full object-cover opacity-50" />
           ) : (
             <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
@@ -232,6 +234,7 @@ export function ProgressiveImage({
       )}
 
       {/* 實際圖片 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
