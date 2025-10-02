@@ -177,7 +177,7 @@ async function handleGET(request: NextRequest) {
 
   // 如果有狀態過濾
   if (statusFilter && statusFilter !== 'all') {
-    const statuses = statusFilter.split(',').filter(s => s.length > 0)
+    const statuses = statusFilter.split(',').filter(s => s.length > 0) as InquiryStatus[]
     if (statuses.length > 0) {
       query = query.in('status', statuses)
     }

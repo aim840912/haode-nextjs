@@ -15,6 +15,7 @@ import { getCurrentUser } from '@/lib/database/supabase-server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { error } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from './error-handler'
 
 // 使用者類型定義
 export interface User {
@@ -263,7 +264,6 @@ export function withAuthAndError(
   handler: AuthenticatedInternalHandler,
   options?: import('./error-handler').ErrorHandlerOptions
 ): NextRouteHandler {
-  const { withErrorHandler } = require('./error-handler')
   return withErrorHandler(requireAuth(handler), options)
 }
 
@@ -275,7 +275,6 @@ export function withAdminAndError(
   handler: AdminInternalHandler,
   options?: import('./error-handler').ErrorHandlerOptions
 ): NextRouteHandler {
-  const { withErrorHandler } = require('./error-handler')
   return withErrorHandler(requireAdmin(handler), options)
 }
 
@@ -287,7 +286,6 @@ export function withOptionalAuthAndError(
   handler: OptionalAuthInternalHandler,
   options?: import('./error-handler').ErrorHandlerOptions
 ): NextRouteHandler {
-  const { withErrorHandler } = require('./error-handler')
   return withErrorHandler(optionalAuth(handler), options)
 }
 

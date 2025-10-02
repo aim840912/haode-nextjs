@@ -274,7 +274,7 @@ export function ProgressiveList<T>({
     setVisibleCount(Math.min(batchSize, items.length))
   }, [items.length, batchSize])
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (isLoadingMore || visibleCount >= items.length) return
 
     setIsLoadingMore(true)
@@ -284,7 +284,7 @@ export function ProgressiveList<T>({
 
     setVisibleCount(prev => Math.min(prev + batchSize, items.length))
     setIsLoadingMore(false)
-  }
+  }, [isLoadingMore, visibleCount, items.length, batchSize])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -299,7 +299,7 @@ export function ProgressiveList<T>({
 
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [isLoadingMore, visibleCount, items.length, loadMoreThreshold])
+  }, [isLoadingMore, visibleCount, items.length, loadMoreThreshold, loadMore])
 
   return (
     <div className={className}>

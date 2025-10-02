@@ -130,6 +130,44 @@ export function useRateLimitStatus(): UseRateLimitStatusReturn {
   }, [])
 
   /**
+   * 清除單個通知
+   */
+  const clearNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id))
+
+    const timeout = notificationTimeouts.current.get(id)
+    if (timeout) {
+      clearTimeout(timeout)
+      notificationTimeouts.current.delete(id)
+    }
+  }, [])
+
+  /**
+   * 添加通知
+   */
+  const addNotification = useCallback(
+    (notification: Omit<RateLimitNotification, 'id'>) => {
+      const id = `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      const newNotification: RateLimitNotification = {
+        id,
+        ...notification,
+      }
+
+      setNotifications(prev => [...prev, newNotification])
+
+      // 設置自動清除
+      if (notification.duration && notification.duration > 0) {
+        const timeout = setTimeout(() => {
+          clearNotification(id)
+        }, notification.duration)
+
+        notificationTimeouts.current.set(id, timeout)
+      }
+    },
+    [clearNotification]
+  )
+
+  /**
    * 從 HTTP 響應標頭更新狀態
    */
   const updateFromHeaders = useCallback(
@@ -170,7 +208,7 @@ export function useRateLimitStatus(): UseRateLimitStatusReturn {
         }
       }
     },
-    [startTimer, stopTimer]
+    [startTimer, stopTimer, addNotification]
   )
 
   /**
@@ -217,42 +255,7 @@ export function useRateLimitStatus(): UseRateLimitStatusReturn {
         },
       })
     },
-    [startTimer]
-  )
-
-  /**
-   * 添加通知
-   */
-  const clearNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-
-    const timeout = notificationTimeouts.current.get(id)
-    if (timeout) {
-      clearTimeout(timeout)
-      notificationTimeouts.current.delete(id)
-    }
-  }, [])
-
-  const addNotification = useCallback(
-    (notification: Omit<RateLimitNotification, 'id'>) => {
-      const id = `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      const newNotification: RateLimitNotification = {
-        id,
-        ...notification,
-      }
-
-      setNotifications(prev => [...prev, newNotification])
-
-      // 設置自動清除
-      if (notification.duration && notification.duration > 0) {
-        const timeout = setTimeout(() => {
-          clearNotification(id)
-        }, notification.duration)
-
-        notificationTimeouts.current.set(id, timeout)
-      }
-    },
-    [clearNotification]
+    [startTimer, addNotification]
   )
 
   /**

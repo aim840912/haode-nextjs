@@ -178,7 +178,11 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
     return null
   }
 
-  return data
+  return {
+    ...data,
+    phone: data.phone ?? undefined,
+    address: data.address ?? undefined,
+  } as Profile
 }
 
 // 建立或更新使用者 profile

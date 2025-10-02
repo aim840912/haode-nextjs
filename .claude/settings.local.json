@@ -61,7 +61,12 @@
       "Bash(git log:*)",
       "Bash(npm audit:*)",
       "Bash(npx depcheck:*)",
-      "Bash(npm outdated:*)"
+      "Bash(npm outdated:*)",
+      "Bash(cat:*)",
+      "Bash(npm update)",
+      "Bash(npm cache clean:*)",
+      "Bash(npm update:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
