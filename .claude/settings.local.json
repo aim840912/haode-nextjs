@@ -68,7 +68,8 @@
       "Bash(npm update:*)",
       "WebSearch",
       "Bash(npx eslint:*)",
-      "Read(///**)"
+      "Read(///**)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []

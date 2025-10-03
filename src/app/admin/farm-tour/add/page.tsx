@@ -4,17 +4,31 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
-import ImageUploader from '@/components/features/products/ImageUploader'
 import { v4 as uuidv4 } from 'uuid'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
+import { ProductImage } from '@/types/product'
+import { useFarmTourSubmit } from '@/hooks/farm-tour/useFarmTourSubmit'
+
+// 動態載入圖片管理器
+const ProductImageManager = dynamic(
+  () => import('@/components/features/products/ProductImageManager'),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+        載入圖片管理器...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function AddFarmTourActivity() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('')
+  const [images, setImages] = useState<ProductImage[]>([])
   const [activityId] = useState(() => uuidv4())
   const { user, isLoading } = useAuth()
 
@@ -24,14 +38,19 @@ export default function AddFarmTourActivity() {
     title: '',
     activities: [''],
     price: 0,
-    image: uploadedImageUrl,
     available: true,
     note: '',
   })
 
-  // 錯誤狀態管理
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
+  // 使用 farm-tour 提交 hook
+  const { submitError, submitSuccess, loading, submitActivity } = useFarmTourSubmit()
+
+  // 處理圖片變更
+  const handleImagesChange = (newImages: ProductImage[]) => {
+    setImages(newImages)
+  }
+
+  // 欄位錯誤狀態管理
   const [fieldErrors, setFieldErrors] = useState({
     title: '',
     activities: '',
@@ -123,9 +142,6 @@ export default function AddFarmTourActivity() {
     if (fieldErrors[field as keyof typeof fieldErrors]) {
       setFieldErrors(prev => ({ ...prev, [field]: '' }))
     }
-    // 清除總體錯誤
-    setSubmitError(null)
-    setSubmitSuccess(null)
   }
 
   const handleFieldBlur = (field: string, value: unknown) => {
@@ -135,98 +151,32 @@ export default function AddFarmTourActivity() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
 
-    try {
-      const submitData = {
-        id: activityId, // 添加前端生成的 UUID
-        ...formData,
-        image: uploadedImageUrl || formData.image,
-        activities: formData.activities.filter(activity => activity.trim() !== ''),
-      }
+    // 欄位級驗證
+    const newFieldErrors = {
+      title: validateField('title', formData.title),
+      activities: validateField('activities', formData.activities),
+      price: validateField('price', formData.price),
+      start_month: validateField('start_month', formData.start_month),
+      end_month: validateField('end_month', formData.end_month),
+    }
 
-      // 確保使用最新的圖片 URL
-      if (uploadedImageUrl) {
-        submitData.image = uploadedImageUrl
-      }
+    setFieldErrors(newFieldErrors)
 
-      // 清除之前的錯誤
-      setSubmitError(null)
-      setSubmitSuccess(null)
+    // 檢查是否有任何錯誤
+    const hasFieldErrors = Object.values(newFieldErrors).some(error => error !== '')
+    if (hasFieldErrors) {
+      return
+    }
 
-      // 欄位級驗證
-      const newFieldErrors = {
-        title: validateField('title', submitData.title),
-        activities: validateField('activities', submitData.activities),
-        price: validateField('price', submitData.price),
-        start_month: validateField('start_month', submitData.start_month),
-        end_month: validateField('end_month', submitData.end_month),
-      }
+    // 使用 hook 提交活動
+    const success = await submitActivity(activityId, formData, images)
 
-      setFieldErrors(newFieldErrors)
-
-      // 檢查圖片 URL
-      const finalImageUrl = uploadedImageUrl || submitData.image
-      const validationErrors = []
-      if (!finalImageUrl.trim()) {
-        validationErrors.push('請先上傳活動圖片')
-      } else {
-        // 檢查是否為有效 URL
-        try {
-          new URL(finalImageUrl)
-        } catch {
-          if (!finalImageUrl.startsWith('http://') && !finalImageUrl.startsWith('https://')) {
-            validationErrors.push('圖片 URL 格式不正確，必須是完整的 URL（http:// 或 https://）')
-          }
-        }
-      }
-
-      // 檢查是否有任何錯誤
-      const hasFieldErrors = Object.values(newFieldErrors).some(error => error !== '')
-      if (hasFieldErrors || validationErrors.length > 0) {
-        const allErrors = [
-          ...Object.values(newFieldErrors).filter(error => error !== ''),
-          ...validationErrors,
-        ]
-        setSubmitError(`請修正以下問題：${allErrors.join('、')}`)
-        setLoading(false)
-        return
-      }
-
-      // 除錯：檢查實際提交的資料
-      logger.info('提交農場體驗活動資料', { metadata: { submitData } })
-
-      const response = await fetch('/api/farm-tour', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
-      })
-
-      if (response.ok) {
-        setSubmitSuccess('農場活動新增成功！')
-        // 延遲跳轉讓使用者看到成功訊息
-        setTimeout(() => {
-          router.push('/admin/farm-tour')
-        }, 1500)
-      } else {
-        // 取得詳細的錯誤訊息
-        const errorData = await response.json().catch(() => ({ error: '未知錯誤' }))
-        const errorMessage = errorData.error || errorData.message || '新增失敗'
-
-        logger.error('API 回應錯誤', new Error(errorMessage), {
-          metadata: { status: response.status, errorData },
-        })
-
-        setSubmitError(`新增失敗：${errorMessage}`)
-      }
-    } catch (error) {
-      logger.error(
-        'Error adding farm tour activity:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      setSubmitError('網路錯誤，請檢查網路連線後再試')
-    } finally {
-      setLoading(false)
+    // 成功後跳轉
+    if (success) {
+      setTimeout(() => {
+        router.push('/admin/farm-tour')
+      }, 1500)
     }
   }
 
@@ -263,19 +213,6 @@ export default function AddFarmTourActivity() {
   const updateActivityField = (index: number, value: string) => {
     const newActivities = formData.activities.map((activity, i) => (i === index ? value : activity))
     handleFieldChange('activities', newActivities)
-  }
-
-  const handleImageUploadSuccess = (images: Array<{ url?: string; preview?: string }>) => {
-    if (images.length > 0 && images[0].url) {
-      setUploadedImageUrl(images[0].url)
-      setFormData(prev => ({ ...prev, image: images[0].url || '' }))
-      logger.info('農場體驗活動圖片上傳成功', { metadata: { url: images[0].url } })
-    }
-  }
-
-  const handleImageUploadError = (error: string) => {
-    logger.error('農場體驗活動圖片上傳失敗', new Error(error))
-    setSubmitError(`圖片上傳失敗：${error}`)
   }
 
   return (
@@ -488,20 +425,16 @@ export default function AddFarmTourActivity() {
 
               {/* 活動圖片 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片</label>
-                <ImageUploader
+                <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片 *</label>
+                <ProductImageManager
                   productId={activityId}
-                  module="farm-tour"
-                  maxFiles={1}
-                  allowMultiple={false}
-                  generateMultipleSizes={false}
-                  enableCompression={true}
-                  onUploadSuccess={handleImageUploadSuccess}
-                  onUploadError={handleImageUploadError}
+                  onImagesChange={handleImagesChange}
+                  maxImages={1}
+                  mode="memory"
                   className="mb-4"
                 />
-                {uploadedImageUrl && (
-                  <div className="mt-2 text-sm text-green-600">圖片上傳成功</div>
+                {images.length > 0 && (
+                  <div className="mt-2 text-sm text-green-600">✓ 已選擇 {images.length} 張圖片</div>
                 )}
               </div>
 
@@ -556,18 +489,9 @@ export default function AddFarmTourActivity() {
               {/* Preview Card */}
               <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
                 <div className="mb-3">
-                  {uploadedImageUrl ? (
+                  {images.length > 0 ? (
                     <Image
-                      src={uploadedImageUrl}
-                      alt="活動圖片"
-                      width={64}
-                      height={64}
-                      unoptimized
-                      className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
-                    />
-                  ) : formData.image ? (
-                    <Image
-                      src={formData.image}
+                      src={images[0].storage_url}
                       alt="活動圖片"
                       width={64}
                       height={64}

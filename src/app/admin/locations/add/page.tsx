@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import { useLocationForm } from '@/hooks/location/useLocationForm'
-import { useLocationImageUpload } from '@/hooks/location/useLocationImageUpload'
 import { LocationBasicInfo } from '@/components/features/location/LocationBasicInfo'
 import { LocationContactInfo } from '@/components/features/location/LocationContactInfo'
 import { LocationTransportInfo } from '@/components/features/location/LocationTransportInfo'
@@ -16,20 +15,25 @@ import { LocationFeatures } from '@/components/features/location/LocationFeature
 import { LocationSpecialties } from '@/components/features/location/LocationSpecialties'
 import { LocationPreview } from '@/components/features/location/LocationPreview'
 import { FormMessage } from '@/components/features/location/FormMessage'
+import { ProductImage } from '@/types/product'
 
-// 動態載入圖片上傳器，減少初始 bundle 大小
-const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
-  loading: () => (
-    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-      載入圖片上傳器...
-    </div>
-  ),
-  ssr: false,
-})
+// 動態載入圖片管理器，減少初始 bundle 大小
+const ProductImageManager = dynamic(
+  () => import('@/components/features/products/ProductImageManager'),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+        載入圖片管理器...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function AddLocation() {
   const [locationId] = useState(() => uuidv4())
   const { user, isLoading } = useAuth()
+  const [images, setImages] = useState<ProductImage[]>([])
 
   // 使用 custom hooks
   const {
@@ -49,8 +53,10 @@ export default function AddLocation() {
     updateSpecialtyField,
   } = useLocationForm(locationId)
 
-  const { uploadedImageUrl, uploadError, handleImageUploadSuccess, handleImageUploadError } =
-    useLocationImageUpload()
+  // 處理圖片變更
+  const handleImagesChange = (newImages: ProductImage[]) => {
+    setImages(newImages)
+  }
 
   // 載入中狀態
   if (isLoading) {
@@ -103,12 +109,12 @@ export default function AddLocation() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
           <form
-            onSubmit={e => handleSubmit(e, uploadedImageUrl)}
+            onSubmit={e => handleSubmit(e, images)}
             noValidate
             className="bg-white rounded-lg shadow-md p-6 space-y-6"
           >
             {/* 錯誤訊息顯示 */}
-            <FormMessage message={submitError || uploadError} type="error" />
+            <FormMessage message={submitError} type="error" />
 
             {/* 成功訊息顯示 */}
             <FormMessage message={submitSuccess} type="success" />
@@ -157,19 +163,15 @@ export default function AddLocation() {
                 <label className="block text-sm font-semibold text-gray-800 mb-3">
                   門市圖片 (選填)
                 </label>
-                <ImageUploader
+                <ProductImageManager
                   productId={locationId}
-                  module="locations"
-                  maxFiles={1}
-                  allowMultiple={false}
-                  generateMultipleSizes={false}
-                  enableCompression={true}
-                  onUploadSuccess={handleImageUploadSuccess}
-                  onUploadError={handleImageUploadError}
+                  onImagesChange={handleImagesChange}
+                  maxImages={1}
+                  mode="memory"
                   className="mb-4"
                 />
-                {uploadedImageUrl && (
-                  <div className="mt-2 text-sm text-green-600">✓ 圖片上傳成功</div>
+                {images.length > 0 && (
+                  <div className="mt-2 text-sm text-green-600">✓ 已選擇 {images.length} 張圖片</div>
                 )}
               </div>
 
@@ -204,7 +206,10 @@ export default function AddLocation() {
           </form>
 
           {/* Preview */}
-          <LocationPreview formData={formData} uploadedImageUrl={uploadedImageUrl} />
+          <LocationPreview
+            formData={formData}
+            uploadedImageUrl={images.length > 0 ? images[0].storage_url : ''}
+          />
         </div>
       </div>
     </div>
