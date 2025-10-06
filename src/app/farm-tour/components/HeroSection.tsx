@@ -9,13 +9,11 @@
  * - 管理員操作按鈕
  */
 
-import { Users, Leaf, Sparkles } from 'lucide-react'
+import { Leaf, Sparkles } from 'lucide-react'
 
 interface HeroSectionProps {
   /** 背景圖片 URL */
   heroBackground: string
-  /** 今日瀏覽人次 */
-  viewCount: number
   /** 點擊「季節體驗活動」按鈕的處理函數 */
   onActivityClick: () => void
   /** 是否為管理員 */
@@ -24,7 +22,6 @@ interface HeroSectionProps {
 
 export function HeroSection({
   heroBackground,
-  viewCount,
   onActivityClick,
   isAdmin = false,
 }: HeroSectionProps) {
@@ -52,14 +49,6 @@ export function HeroSection({
 
       {/* Hero 內容 */}
       <div className="relative z-20 px-6">
-        {/* 今日瀏覽統計 */}
-        <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full mb-6 border border-white/30">
-          <Users className="w-4 h-4 text-white/90" />
-          <span className="text-sm text-white/90">今日瀏覽</span>
-          <span className="text-lg font-bold text-white">{viewCount}</span>
-          <span className="text-sm text-white/90">人次</span>
-        </div>
-
         <div className="text-center max-w-7xl mx-auto mb-8">
           <h1 className="text-6xl md:text-8xl font-light text-white mb-6 drop-shadow-2xl">
             豪德觀光果園

@@ -14,8 +14,9 @@ export interface UseProductModalReturn {
  *
  * 統一管理產品詳情 Modal 的狀態和 URL 參數同步
  * - URL 參數自動開啟對應產品 Modal
+ * - 開啟 Modal 時更新 URL（用於分享）
+ * - 關閉 Modal 時清理 URL
  * - 處理詢問單頁面導向
- * - 統一關閉邏輯
  */
 export function useProductModal(products: Product[]): UseProductModalReturn {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
@@ -26,25 +27,34 @@ export function useProductModal(products: Product[]): UseProductModalReturn {
     if (typeof window === 'undefined' || products.length === 0) return
 
     const params = new URLSearchParams(window.location.search)
-    const productId = params.get('productId')
+    const productId = params.get('id') || params.get('productId') // 支援兩種格式
 
     if (productId) {
       const product = products.find(p => p.id === productId)
       if (product) {
         setSelectedProduct(product)
-        // 移除 URL 參數，保持 URL 乾淨
-        const newUrl = window.location.pathname
-        window.history.replaceState({}, '', newUrl)
       }
     }
   }, [products])
 
   const openModal = useCallback((product: Product) => {
     setSelectedProduct(product)
+
+    // 更新 URL，加入產品 ID（用於分享）
+    if (typeof window !== 'undefined') {
+      const newUrl = `${window.location.pathname}?id=${product.id}`
+      window.history.pushState({}, '', newUrl)
+    }
   }, [])
 
   const closeModal = useCallback(() => {
     setSelectedProduct(null)
+
+    // 清理 URL 參數
+    if (typeof window !== 'undefined') {
+      const newUrl = window.location.pathname
+      window.history.pushState({}, '', newUrl)
+    }
   }, [])
 
   const requestQuote = useCallback(

@@ -84,6 +84,35 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       }
     }
 
+    // 分享功能
+    const handleShare = async () => {
+      // 取得當前產品的分享 URL
+      const shareUrl = `${window.location.origin}/products?id=${product.id}`
+      const shareData = {
+        title: product.name,
+        text: `查看這個產品：${product.name}`,
+        url: shareUrl,
+      }
+
+      try {
+        // 優先使用 Web Share API（行動裝置支援）
+        if (navigator.share) {
+          await navigator.share(shareData)
+        } else {
+          // 備援方案：複製連結到剪貼簿
+          await navigator.clipboard.writeText(shareUrl)
+          alert('✓ 連結已複製到剪貼簿！')
+        }
+      } catch (error) {
+        // AbortError 是使用者取消分享，不需要顯示錯誤
+        if ((error as Error).name !== 'AbortError') {
+          console.error('分享失敗:', error)
+          // 最終備援：顯示連結讓使用者手動複製
+          alert(`請複製此連結分享：\n${shareUrl}`)
+        }
+      }
+    }
+
     // 數量變更動畫
     const handleQuantityChange = (newQuantity: number) => {
       setIsChangingQuantity(true)
@@ -445,7 +474,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                         )}
                         onClick={e => {
                           e.stopPropagation()
-                          // 分享功能
+                          handleShare()
                         }}
                         aria-label="分享產品"
                       >

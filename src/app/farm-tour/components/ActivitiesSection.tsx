@@ -6,15 +6,13 @@
 
 import Image from 'next/image'
 import type { FarmTourActivity } from '@/types/farmTour'
-import { Flame, Zap, Calendar, Banknote, Users2, Check, Circle } from 'lucide-react'
+import { Flame, Zap, Calendar, Banknote, Users2, Check } from 'lucide-react'
 
 interface ActivitiesSectionProps {
   /** 活動列表 */
   activities: FarmTourActivity[]
   /** 載入狀態 */
   loading: boolean
-  /** 今日預約組數 */
-  todayBookings: number
   /** 點擊「了解詳情」按鈕的處理函數 */
   onActivityClick: (activity: FarmTourActivity) => void
 }
@@ -22,21 +20,12 @@ interface ActivitiesSectionProps {
 export function ActivitiesSection({
   activities,
   loading,
-  todayBookings,
   onActivityClick,
 }: ActivitiesSectionProps) {
   return (
     <div>
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-        <h2 className="text-3xl font-light text-amber-900 mb-4 md:mb-0">四季農園體驗</h2>
-        <div className="flex items-center gap-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-2 flex items-center gap-2">
-            <Circle className="w-3 h-3 text-green-600 animate-pulse fill-current" />
-            <span className="text-sm text-gray-700">
-              今日已有 <strong className="text-green-600">{todayBookings}</strong> 組預約
-            </span>
-          </div>
-        </div>
+      <div className="mb-8">
+        <h2 className="text-3xl font-light text-amber-900">四季農園體驗</h2>
       </div>
       {loading ? (
         <div className="text-center py-12">

@@ -12,7 +12,6 @@ interface BookingModalProps {
   user: User | null
   formData: FarmTourFormData
   fieldErrors: FarmTourFormErrors
-  todayBookings: number
   onClose: () => void
   onFormChange: (field: string, value: string) => void
   onFieldBlur: (field: string, value: string) => void
@@ -28,7 +27,6 @@ export function BookingModal({
   user,
   formData,
   fieldErrors,
-  todayBookings,
   onClose,
   onFormChange,
   onFieldBlur,
@@ -104,14 +102,13 @@ export function BookingModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transform transition-all">
         {/* 緊急感橫幅 */}
-        <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white px-6 py-3 flex items-center justify-center">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 animate-pulse" />
             <span className="font-bold text-sm">
               熱門體驗！僅剩 {Math.floor(Math.random() * 15) + 5} 個名額
             </span>
           </div>
-          <span className="text-xs opacity-90">{todayBookings} 組已預約</span>
         </div>
 
         <div className="p-8">

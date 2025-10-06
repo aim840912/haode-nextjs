@@ -9,7 +9,6 @@ import { SETTING_KEYS } from '@/types/siteSettings'
 import { useFarmTourActivities } from './hooks/useFarmTourActivities'
 import { useFarmTourForm } from './hooks/useFarmTourForm'
 import { BookingModal } from './components/BookingModal'
-import { PromoBar } from './components/PromoBar'
 import { HeroSection } from './components/HeroSection'
 import { ActivitiesSection } from './components/ActivitiesSection'
 import { FacilitiesSection } from './components/FacilitiesSection'
@@ -41,9 +40,6 @@ const farmFacilities = [
 export default function FarmTourPage() {
   const [selectedActivity, setSelectedActivity] = useState<FarmTourActivity | null>(null)
   const [activeTab, setActiveTab] = useState('activities')
-  const [showPromoBar, setShowPromoBar] = useState(true)
-  const [viewCount] = useState(Math.floor(Math.random() * 200) + 300) // 模擬今日瀏覽人次
-  const [todayBookings] = useState(Math.floor(Math.random() * 10) + 5) // 今日預約組數
 
   const { user } = useAuth()
 
@@ -103,13 +99,9 @@ export default function FarmTourPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 限時優惠橫幅 */}
-      <PromoBar show={showPromoBar} onClose={() => setShowPromoBar(false)} />
-
       {/* Hero Section */}
       <HeroSection
         heroBackground={heroBackground}
-        viewCount={viewCount}
         onActivityClick={() => handleTabClick('activities')}
         isAdmin={user?.role === 'admin'}
       />
@@ -152,7 +144,6 @@ export default function FarmTourPage() {
           <ActivitiesSection
             activities={seasonalActivities}
             loading={loading}
-            todayBookings={todayBookings}
             onActivityClick={openBookingModal}
           />
         )}
@@ -171,7 +162,6 @@ export default function FarmTourPage() {
           user={user}
           formData={formData}
           fieldErrors={fieldErrors}
-          todayBookings={todayBookings}
           onClose={closeModal}
           onFormChange={handleFormChange}
           onFieldBlur={handleFieldBlur}

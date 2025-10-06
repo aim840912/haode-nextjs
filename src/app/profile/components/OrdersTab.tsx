@@ -1,6 +1,7 @@
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import Link from 'next/link'
 import type { Order } from '@/types/order'
+import { Package } from 'lucide-react'
 
 interface OrdersTabProps {
   orders: Order[]
@@ -47,7 +48,7 @@ export function OrdersTab({
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">📦</div>
+          <Package className="w-16 h-16 mx-auto mb-4 text-amber-900" strokeWidth={1.5} />
           <h3 className="text-xl font-medium text-gray-900 mb-2">尚無訂單記錄</h3>
           <p className="text-gray-600 mb-4">開始探索我們的產品吧！</p>
           <Link

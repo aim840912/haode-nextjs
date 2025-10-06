@@ -2,6 +2,7 @@ import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import OptimizedImage from '@/components/ui/image/OptimizedImage'
 import Link from 'next/link'
 import type { Product } from '@/types/product'
+import { Heart } from 'lucide-react'
 
 interface InterestsTabProps {
   products: Product[]
@@ -28,7 +29,10 @@ export function InterestsTab({ products, loading, onRemove }: InterestsTabProps)
     return (
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">💚</div>
+          <Heart
+            className="w-16 h-16 mx-auto mb-4 text-green-500 fill-green-500"
+            strokeWidth={1.5}
+          />
           <h3 className="text-xl font-medium text-gray-900 mb-2">尚無收藏的產品</h3>
           <p className="text-gray-600 mb-4">探索產品頁面，收藏您喜愛的商品吧！</p>
           <Link

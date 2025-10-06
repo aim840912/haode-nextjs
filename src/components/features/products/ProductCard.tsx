@@ -59,14 +59,43 @@ export const ProductCard = React.memo<ProductCardProps>(
       }
     }
 
-    const handleQuickAction = (action: string, e: React.MouseEvent) => {
+    const handleQuickAction = async (action: string, e: React.MouseEvent) => {
       e.stopPropagation()
-      // 這裡可以實作快速操作功能
-      logger.debug('產品快速操作', {
-        module: 'ProductCard',
-        action: 'handleQuickAction',
-        metadata: { action, productId: product.id },
-      })
+
+      if (action === 'share') {
+        // 分享功能
+        const shareUrl = `${window.location.origin}/products?id=${product.id}`
+        const shareData = {
+          title: product.name,
+          text: `查看這個產品：${product.name}`,
+          url: shareUrl,
+        }
+
+        try {
+          // 優先使用 Web Share API（行動裝置支援）
+          if (navigator.share) {
+            await navigator.share(shareData)
+          } else {
+            // 備援方案：複製連結到剪貼簿
+            await navigator.clipboard.writeText(shareUrl)
+            alert('✓ 連結已複製到剪貼簿！')
+          }
+        } catch (error) {
+          // AbortError 是使用者取消分享，不需要顯示錯誤
+          if ((error as Error).name !== 'AbortError') {
+            console.error('分享失敗:', error)
+            // 最終備援：顯示連結讓使用者手動複製
+            alert(`請複製此連結分享：\n${shareUrl}`)
+          }
+        }
+      } else {
+        // 其他快速操作功能
+        logger.debug('產品快速操作', {
+          module: 'ProductCard',
+          action: 'handleQuickAction',
+          metadata: { action, productId: product.id },
+        })
+      }
     }
 
     return (

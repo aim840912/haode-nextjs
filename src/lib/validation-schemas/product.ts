@@ -144,7 +144,7 @@ export const AdminProductSchemas = {
 
   /** 更新產品（管理員用）*/
   update: z.object({
-    id: StringSchemas.uuid,
+    id: StringSchemas.uuid.optional(), // 改為 optional，因為 API 端點從 URL 參數獲取 ID
     name: StringSchemas.nonEmpty.max(100, '產品名稱不能超過 100 字元').optional(),
     description: z
       .string()

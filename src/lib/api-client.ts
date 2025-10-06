@@ -158,7 +158,11 @@ class ApiClient {
    * 處理 API 錯誤
    */
   private async handleApiError(response: Response): Promise<never> {
-    let errorData: { error?: string; code?: string; details?: string }
+    let errorData: {
+      error?: string | { message?: string; code?: string; type?: string }
+      code?: string
+      details?: string
+    }
 
     try {
       errorData = await response.json()
@@ -166,8 +170,17 @@ class ApiClient {
       errorData = { error: `HTTP ${response.status}: ${response.statusText}` }
     }
 
-    const message = errorData.error || `Request failed with status ${response.status}`
-    const code = errorData.code
+    // 正確處理錯誤訊息：伺服器可能返回物件或字串格式
+    const message =
+      typeof errorData.error === 'object' && errorData.error?.message
+        ? errorData.error.message
+        : typeof errorData.error === 'string'
+          ? errorData.error
+          : `Request failed with status ${response.status}`
+    const code =
+      typeof errorData.error === 'object' && errorData.error?.code
+        ? errorData.error.code
+        : errorData.code
     const details = errorData.details
 
     // 特殊處理 CSRF 錯誤

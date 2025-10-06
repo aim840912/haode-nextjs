@@ -159,6 +159,11 @@ async function handlePUT(request: NextRequest) {
 
   const { id, ...productData } = result.data
 
+  // 驗證 id 是否存在（此路由需要在 body 中提供 id）
+  if (!id) {
+    throw new ValidationError('產品 ID 是必填的')
+  }
+
   // 轉換資料格式
   const dbProduct: Record<string, unknown> = {}
 
