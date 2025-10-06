@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useCallback, Suspense } from 'react'
+import { useCallback, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { Product } from '@/types/product'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { LoadingManager } from '@/components/ui/loading/LoadingManager'
 import { ErrorHandler } from '@/components/ui/error/ErrorHandler'
@@ -10,7 +9,7 @@ import { ProductStructuredData } from '@/components/features/seo/StructuredData'
 import Breadcrumbs, { createProductBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { ToastProvider } from '@/providers/ToastProvider'
 import { useProductInterest } from '@/hooks/useProductInterest'
-import { useProductFilter } from '@/hooks/useProductFilter'
+import { useProductFilter, FilterState } from '@/hooks/useProductFilter'
 import { useProductsData } from '@/hooks/useProductsData'
 import { useProductModal } from '@/hooks/useProductModal'
 import { ProductCard } from '@/components/features/products/ProductCard'
@@ -42,8 +41,8 @@ function ProductsPage() {
 
   // 篩選處理函數
   const handleFilterChange = useCallback(
-    (newFilters: unknown) => {
-      setFilters(newFilters as typeof filters)
+    (newFilters: FilterState) => {
+      setFilters(newFilters)
     },
     [setFilters]
   )

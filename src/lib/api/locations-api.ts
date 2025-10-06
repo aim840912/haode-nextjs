@@ -4,8 +4,9 @@
  */
 
 import { apiLogger } from '@/lib/logger'
+import { apiClient } from '@/lib/api-client'
 import { Location } from '@/types/location'
-import { ApiResponse, handleApiError } from './common'
+import { handleApiError } from './common'
 
 /**
  * 取得所有門市據點清單
@@ -13,20 +14,10 @@ import { ApiResponse, handleApiError } from './common'
  */
 export async function fetchLocations(): Promise<Location[]> {
   try {
-    const response = await fetch('/api/locations', {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || '取得門市據點清單失敗')
-    }
-
-    const result: ApiResponse<Location[]> = await response.json()
+    const result = await apiClient.get<Location[]>('/api/locations')
 
     // 處理統一 API 回應格式（支援舊格式和新格式）
-    const data = result.data || result
+    const data = result.data || (result as unknown as Location[])
 
     // 確保 data 是陣列
     if (!Array.isArray(data)) {
@@ -55,17 +46,7 @@ export async function fetchLocations(): Promise<Location[]> {
  */
 export async function fetchLocationById(id: string): Promise<Location> {
   try {
-    const response = await fetch(`/api/locations/${id}`, {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || '取得門市據點詳情失敗')
-    }
-
-    const result: ApiResponse<Location> = await response.json()
+    const result = await apiClient.get<Location>(`/api/locations/${id}`)
 
     if (!result.success || !result.data) {
       throw new Error(result.message || '取得門市據點詳情失敗')
@@ -78,5 +59,35 @@ export async function fetchLocationById(id: string): Promise<Location> {
     return result.data
   } catch (error) {
     handleApiError(error, 'fetchLocationById', 'LocationsAPI')
+  }
+}
+
+/**
+ * 刪除門市據點
+ * @param id - 門市 ID
+ * @returns 刪除結果（包含圖片清理資訊）
+ */
+export async function deleteLocation(
+  id: string
+): Promise<{ imageCleanup?: { deletedCount: number } }> {
+  try {
+    const result = await apiClient.delete<{ imageCleanup?: { deletedCount: number } }>(
+      `/api/admin-proxy/locations?id=${id}`
+    )
+
+    if (!result.success) {
+      throw new Error(result.message || '刪除門市據點失敗')
+    }
+
+    apiLogger.info('門市據點刪除成功', {
+      metadata: {
+        locationId: id,
+        deletedImages: result.data?.imageCleanup?.deletedCount || 0,
+      },
+    })
+
+    return result.data || {}
+  } catch (error) {
+    handleApiError(error, 'deleteLocation', 'LocationsAPI')
   }
 }

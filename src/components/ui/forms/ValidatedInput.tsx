@@ -127,7 +127,7 @@ export function ValidatedInput({
   }
 
   // 處理聚焦
-  const handleFocus = (_e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleFocus = () => {
     if (suggestions.length > 0) {
       setShowSuggestions(true)
     }
@@ -135,7 +135,7 @@ export function ValidatedInput({
   }
 
   // 處理失焦
-  const handleBlur = (_e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleBlur = () => {
     // 延遲隱藏建議列表，讓用戶有機會點擊建議項目
     setTimeout(() => setShowSuggestions(false), 200)
     onBlur?.()

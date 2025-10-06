@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Product } from '@/types/product'
 import { useAsyncWithError } from '@/components/ui/error/ErrorHandler'
 import { logger } from '@/lib/logger'
+import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
 
 export interface UseProductsDataReturn {
   products: Product[]
@@ -33,35 +34,13 @@ export function useProductsData(): UseProductsDataReturn {
       try {
         const result = await executeWithErrorHandling(
           async () => {
-            // 添加時間戳參數避免快取，確保獲取最新資料
-            const timestamp = Date.now()
-            const url = forceRefresh
-              ? `/api/products?t=${timestamp}&nocache=true`
-              : `/api/products?t=${timestamp}`
+            const data = await fetchProductsAPI({ isActive: true })
 
-            const response = await fetch(url)
-
-            if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`)
-            }
-
-            const result = await response.json()
-
-            // 處理統一 API 回應格式
-            const data = result.data || result
-
-            // 確保 data 是陣列
-            if (!Array.isArray(data)) {
-              throw new Error('API 回應格式錯誤：data 不是陣列')
-            }
-
-            // 過濾重複和非活躍產品
-            const uniqueProducts = data
-              .filter((p: Product) => p.isActive)
-              .filter(
-                (product: Product, index: number, self: Product[]) =>
-                  index === self.findIndex(p => p.id === product.id)
-              )
+            // 過濾重複產品
+            const uniqueProducts = data.filter(
+              (product: Product, index: number, self: Product[]) =>
+                index === self.findIndex(p => p.id === product.id)
+            )
 
             setProducts(uniqueProducts)
             return uniqueProducts

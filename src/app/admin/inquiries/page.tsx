@@ -47,7 +47,6 @@ function AdminInquiriesPage() {
     markAsRead,
     deleteInquiry,
     updateInquiryStatus: updateInquiryStatusBase,
-    setInquiries,
   } = useInquiriesData({
     userId: user?.id || null,
     statusFilter,
@@ -78,7 +77,6 @@ function AdminInquiriesPage() {
   const {
     selectedInquiries,
     isBatchProcessing,
-    showBatchActions,
     toggleInquirySelection,
     selectAllInquiries,
     clearSelection,

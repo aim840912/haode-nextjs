@@ -1,4 +1,6 @@
 import { LocationFormData, FieldErrors } from '@/hooks/location/useLocationForm'
+import TimeRangePicker from '@/components/ui/form/TimeRangePicker'
+import WeekdaySelector from '@/components/ui/form/WeekdaySelector'
 
 interface LocationContactInfoProps {
   formData: LocationFormData
@@ -50,37 +52,34 @@ export const LocationContactInfo = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-semibold text-gray-800 mb-2">營業時間 *</label>
-          <input
-            type="text"
-            name="hours"
-            value={formData.hours}
-            onChange={onInputChange}
-            onBlur={() => onFieldBlur('hours')}
-            required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
-              fieldErrors.hours
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-amber-500'
-            }`}
-            placeholder="例：09:00-19:00"
-          />
-          {fieldErrors.hours && <p className="mt-1 text-sm text-red-600">{fieldErrors.hours}</p>}
-        </div>
+      {/* 營業時間 - 獨立一行 */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-800 mb-2">營業時間 *</label>
+        <TimeRangePicker
+          value={formData.hours}
+          onChange={value => {
+            const syntheticEvent = {
+              target: { name: 'hours', value, type: 'text' },
+            } as React.ChangeEvent<HTMLInputElement>
+            onInputChange(syntheticEvent)
+          }}
+          required
+          error={fieldErrors.hours}
+        />
+      </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-gray-800 mb-2">公休日</label>
-          <input
-            type="text"
-            name="closedDays"
-            value={formData.closedDays}
-            onChange={onInputChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-            placeholder="例：週一公休"
-          />
-        </div>
+      {/* 公休日 - 獨立一行 */}
+      <div className="mb-4">
+        <label className="block text-sm font-semibold text-gray-800 mb-2">公休日（可複選）</label>
+        <WeekdaySelector
+          value={formData.closedDays}
+          onChange={days => {
+            const syntheticEvent = {
+              target: { name: 'closedDays', value: days, type: 'array' },
+            } as unknown as React.ChangeEvent<HTMLInputElement>
+            onInputChange(syntheticEvent)
+          }}
+        />
       </div>
     </div>
   )

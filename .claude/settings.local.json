@@ -69,7 +69,19 @@
       "WebSearch",
       "Bash(npx eslint:*)",
       "Read(///**)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(du:*)",
+      "Bash(do)",
+      "Bash(while read file)",
+      "Bash(tee:*)",
+      "Bash(do echo \"$file\")",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(xargs ls:*)",
+      "Bash(npm run test:e2e:chrome:*)",
+      "Bash(echo:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(do echo \"=== $file ===\" grep -E \"(requireAdmin|withAdminAndError|checkAdminPermission|export const (GET|POST))\" \"$file\")"
     ],
     "deny": [],
     "ask": []

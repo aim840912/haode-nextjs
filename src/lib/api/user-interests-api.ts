@@ -4,7 +4,8 @@
  */
 
 import { apiLogger } from '@/lib/logger'
-import { ApiResponse, handleApiError } from './common'
+import { apiClient } from '@/lib/api-client'
+import { handleApiError } from './common'
 
 /**
  * 興趣清單回應
@@ -37,17 +38,7 @@ interface ActionResponse {
  */
 export async function fetchUserInterests(): Promise<string[]> {
   try {
-    const response = await fetch('/api/user/interests', {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || '取得興趣清單失敗')
-    }
-
-    const result: ApiResponse<InterestsResponse> = await response.json()
+    const result = await apiClient.get<InterestsResponse>('/api/user/interests')
 
     if (!result.success || !result.data) {
       throw new Error(result.message || '取得興趣清單失敗')
@@ -64,21 +55,9 @@ export async function fetchUserInterests(): Promise<string[]> {
  */
 export async function syncLocalInterests(localInterests: string[]): Promise<string[]> {
   try {
-    const response = await fetch('/api/user/interests/sync', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ localInterests }),
+    const result = await apiClient.post<SyncResponse>('/api/user/interests/sync', {
+      localInterests,
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || '同步興趣清單失敗')
-    }
-
-    const result: ApiResponse<SyncResponse> = await response.json()
 
     if (!result.success || !result.data) {
       throw new Error(result.message || '同步興趣清單失敗')
@@ -113,21 +92,7 @@ export async function syncLocalInterests(localInterests: string[]): Promise<stri
  */
 export async function addUserInterest(productId: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/user/interests', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ productId }),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || '新增興趣失敗')
-    }
-
-    const result: ApiResponse<ActionResponse> = await response.json()
+    const result = await apiClient.post<ActionResponse>('/api/user/interests', { productId })
 
     if (!result.success) {
       throw new Error(result.message || '新增興趣失敗')
@@ -144,21 +109,9 @@ export async function addUserInterest(productId: string): Promise<boolean> {
  */
 export async function removeUserInterest(productId: string): Promise<boolean> {
   try {
-    const response = await fetch('/api/user/interests', {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
+    const result = await apiClient.delete<ActionResponse>('/api/user/interests', {
       body: JSON.stringify({ productId }),
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || '移除興趣失敗')
-    }
-
-    const result: ApiResponse<ActionResponse> = await response.json()
 
     if (!result.success) {
       throw new Error(result.message || '移除興趣失敗')
@@ -178,21 +131,9 @@ export async function toggleUserInterest(productId: string): Promise<{
   productId: string
 }> {
   try {
-    const response = await fetch('/api/user/interests/toggle', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ productId }),
+    const result = await apiClient.post<ActionResponse>('/api/user/interests/toggle', {
+      productId,
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || '切換興趣狀態失敗')
-    }
-
-    const result: ApiResponse<ActionResponse> = await response.json()
 
     if (!result.success || !result.data) {
       throw new Error(result.message || '切換興趣狀態失敗')

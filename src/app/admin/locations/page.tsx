@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
+import { fetchLocations as fetchLocationsAPI, deleteLocation } from '@/lib/api/locations-api'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 img 標籤）
 const isValidImageUrl = (url: string | undefined): boolean => {
@@ -36,20 +37,9 @@ export default function LocationsAdmin() {
 
   const fetchLocations = async () => {
     try {
-      const response = await fetch('/api/locations')
-      const result = await response.json()
-
-      // 處理統一 API 回應格式
-      const data = result.data || result
-
-      // 確保 data 是陣列
-      if (Array.isArray(data)) {
-        setLocations(data)
-        logger.info('門市資料載入成功', { metadata: { count: data.length } })
-      } else {
-        logger.error('API 回應格式錯誤：locations data 不是陣列', result)
-        setLocations([])
-      }
+      const data = await fetchLocationsAPI()
+      setLocations(data)
+      logger.info('門市資料載入成功', { metadata: { count: data.length } })
     } catch (error) {
       logger.error(
         'Error fetching locations:',
@@ -70,24 +60,14 @@ export default function LocationsAdmin() {
     if (!confirm('確定要刪除此門市嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
     try {
-      const response = await fetch(`/api/admin-proxy/locations?id=${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json()
+      const result = await deleteLocation(id)
+      setLocations(locations.filter(l => l.id !== id))
 
-      if (result.success) {
-        setLocations(locations.filter(l => l.id !== id))
-        // 顯示圖片清理結果
-        if (result.data?.imageCleanup?.deletedCount > 0) {
-          alert(`門市已刪除，同時清理了 ${result.data.imageCleanup.deletedCount} 個相關圖片`)
-        } else {
-          alert('門市已刪除')
-        }
+      // 顯示圖片清理結果
+      if (result.imageCleanup?.deletedCount && result.imageCleanup.deletedCount > 0) {
+        alert(`門市已刪除，同時清理了 ${result.imageCleanup.deletedCount} 個相關圖片`)
       } else {
-        throw new Error(result.error || '刪除失敗')
+        alert('門市已刪除')
       }
     } catch (error) {
       logger.error(

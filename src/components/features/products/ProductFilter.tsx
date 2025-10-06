@@ -3,17 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import SearchInput from '@/components/ui/search/SearchInput'
 import PopularSearches from '@/components/ui/search/PopularSearches'
-
-export interface FilterState {
-  categories: string[]
-  availability: 'all' | 'in_stock' | 'out_of_stock'
-  sortBy: 'price_low' | 'price_high' | 'name' | 'rating' | 'newest'
-  search?: string
-  priceRange?: {
-    min: number
-    max: number
-  }
-}
+import { FilterState } from '@/hooks/useProductFilter'
 
 interface ProductFilterProps {
   onFilterChange: (filters: FilterState) => void

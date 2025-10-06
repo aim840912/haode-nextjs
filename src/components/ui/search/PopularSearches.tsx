@@ -2,27 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { logger } from '@/lib/logger'
-
-interface PopularSearch {
-  query: string
-  count: number
-  avgExecutionTime?: number
-  avgResultCount?: number
-}
-
-interface PopularSearchesResponse {
-  popularSearches: PopularSearch[]
-  period: {
-    daysBack: number
-    startDate: string
-    endDate: string
-  }
-  summary: {
-    totalSearches: number
-    uniqueQueries: number
-    averageExecutionTime: number
-  }
-}
+import { fetchSearchStats, type SearchStatsResponse } from '@/lib/api/search-api'
 
 interface PopularSearchesProps {
   onSearchSelect?: (query: string) => void
@@ -37,7 +17,7 @@ export default function PopularSearches({
   showStats = false,
   limit = 5,
 }: PopularSearchesProps) {
-  const [data, setData] = useState<PopularSearchesResponse | null>(null)
+  const [data, setData] = useState<SearchStatsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -47,19 +27,8 @@ export default function PopularSearches({
         setLoading(true)
         setError(null)
 
-        const response = await fetch(`/api/search/stats?days=7&limit=${limit}`)
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const result = await response.json()
-
-        if (result.success && result.data) {
-          setData(result.data)
-        } else {
-          throw new Error(result.message || '載入熱門搜尋失敗')
-        }
+        const result = await fetchSearchStats()
+        setData(result)
       } catch (error) {
         logger.warn('Failed to fetch popular searches', {
           module: 'PopularSearches',

@@ -12,19 +12,14 @@ import {
   InquiryWithItems,
 } from '@/types/inquiry'
 import { ApiResponse } from '@/types/infrastructure.types'
+import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
+import { FarmTourActivity } from '@/types/farmTour'
 
 interface QuickAddInquiryModalProps {
   isOpen: boolean
   onClose: () => void
   selectedDate: Date | null
   onSuccess?: (inquiryId: string) => void
-}
-
-interface FarmTourOption {
-  id: string
-  title: string
-  season: string
-  available?: boolean
 }
 
 export default function QuickAddInquiryModal({
@@ -34,7 +29,7 @@ export default function QuickAddInquiryModal({
   onSuccess,
 }: QuickAddInquiryModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [farmTours, setFarmTours] = useState<FarmTourOption[]>([])
+  const [farmTours, setFarmTours] = useState<FarmTourActivity[]>([])
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_email: '',
@@ -72,26 +67,18 @@ export default function QuickAddInquiryModal({
 
   const loadFarmTours = async () => {
     try {
-      const response = await fetch('/api/farm-tour')
-      if (response.ok) {
-        const data = await response.json()
-        const tours = data.success ? data.data : data
+      const tours = await fetchFarmTourActivities()
 
-        // 過濾可用的農場導覽，如果沒有 available 屬性則預設為可用
-        const availableTours = tours.filter(
-          (tour: FarmTourOption) => tour.available !== false // 只排除明確設為 false 的項目
-        )
+      // 過濾可用的農場導覽
+      const availableTours = tours.filter(tour => tour.available !== false)
 
-        setFarmTours(availableTours)
-        logger.info('農場導覽選項載入成功', {
-          metadata: {
-            totalCount: tours.length,
-            availableCount: availableTours.length,
-          },
-        })
-      } else {
-        throw new Error(`API 請求失敗: ${response.status} ${response.statusText}`)
-      }
+      setFarmTours(availableTours)
+      logger.info('農場導覽選項載入成功', {
+        metadata: {
+          totalCount: tours.length,
+          availableCount: availableTours.length,
+        },
+      })
     } catch (error) {
       logger.error('載入農場導覽選項失敗', error as Error)
       setErrors(prev => ({ ...prev, general: '載入農場導覽選項失敗，請稍後再試' }))
@@ -341,7 +328,7 @@ export default function QuickAddInquiryModal({
               ) : (
                 farmTours.map(tour => (
                   <option key={tour.id} value={tour.id}>
-                    {tour.title} ({tour.season})
+                    {tour.title} ({tour.start_month}月-{tour.end_month}月)
                   </option>
                 ))
               )}

@@ -81,11 +81,24 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
 
       case 'contact':
         if (!value || !value.trim()) return '請輸入聯絡電話'
-        // 簡單的手機號碼格式驗證 (09xxxxxxxx 或 09xx-xxxxxx)
-        const phoneNumber = value.replace(/[-\s]/g, '')
-        if (!/^09\d{8}$/.test(phoneNumber)) {
-          return '請輸入正確的手機號碼格式 (09xxxxxxxx)'
+
+        // 台灣電話格式增強驗證 - 支援多種格式
+        // 1. 移除格式字元（空白、中線、括號）保留數字、加號、分機標記
+        const cleanPhone = value.replace(/[\s\-()]/g, '')
+
+        // 2. 驗證主要號碼格式
+        // 支援格式：
+        // - 手機: 09xxxxxxxx, +8869xxxxxxxx
+        // - 市話: 0x-xxxxxxx (區碼2-3碼，號碼6-8碼)
+        // - 特殊: 0800xxxxxx, 0204xxxxxx, 070xxxxxxx
+        // - 分機: #123, ext.123, 轉123
+        const phoneRegex =
+          /^(\+?886)?0?(9\d{8}|[2-8]\d{7,8}|800\d{6}|204\d{6}|70\d{7})((?:#|ext\.?|轉)\d+)?$/i
+
+        if (!phoneRegex.test(cleanPhone)) {
+          return '電話格式不正確'
         }
+
         return ''
 
       case 'startTime':

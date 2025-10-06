@@ -7,8 +7,8 @@ import AdminProtection from '@/components/features/admin/AdminProtection'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
-import { supabase } from '@/lib/database/supabase-auth'
 import { AuditLog } from '@/types/audit'
+import { deleteAuditLog, batchDeleteAuditLogs } from '@/lib/api/audit-logs-api'
 
 // Hooks
 import { useAuditLogsData } from './hooks/useAuditLogsData'
@@ -69,47 +69,19 @@ function AuditLogsPage() {
     setIsDeleting(true)
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('認證失敗')
-      }
-
-      let response
-
       if (deleteTarget.type === 'single') {
         // 刪除單個日誌
         const logId = deleteTarget.data?.id
-        response = await fetch(`/api/audit-logs/${logId}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        })
+        if (!logId) throw new Error('無效的日誌 ID')
+        await deleteAuditLog(logId)
       } else {
         // 批量刪除
-        response = await fetch('/api/audit-logs/batch', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            operation: 'delete_by_ids',
-            ids: deleteTarget.data?.ids,
-          }),
-        })
+        const ids = deleteTarget.data?.ids
+        if (!ids || ids.length === 0) throw new Error('無效的 ID 列表')
+        await batchDeleteAuditLogs(ids)
       }
 
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || '刪除失敗')
-      }
-
-      success(result.message || '刪除成功')
+      success('刪除成功')
       setShowDeleteConfirm(false)
       setSelectedLogs([])
       await refetch() // 重新載入數據

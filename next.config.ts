@@ -205,9 +205,7 @@ const nextConfig: NextConfig = {
           'accelerometer=()',
           // 裝置權限控制
           'usb=()',
-          'bluetooth=()',
           'serial=()',
-          'hid=()',
           // 支付相關（農場電商可能需要）
           'payment=(self "https://js.stripe.com")',
           // 其他安全相關

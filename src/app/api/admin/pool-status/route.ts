@@ -19,7 +19,7 @@ interface PoolStats {
  * 取得連線池狀態和統計資訊
  * 只有管理員可以存取
  */
-async function handleGET(request: NextRequest, _user: User) {
+async function handleGET(_request: NextRequest, _user: User) {
   try {
     // 動態導入 connectionFactory 避免全域實例創建
     const { shouldUseConnectionPool } = await import('@/lib/supabase/connection-factory')

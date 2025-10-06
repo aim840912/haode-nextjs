@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { Product } from '@/types/product'
 import {
@@ -38,13 +38,17 @@ function transformFromDB(dbProduct: Record<string, unknown>): Product {
 
 // GET - 取得所有產品（包含未啟用的）
 async function handleGET(request: NextRequest) {
-  // 驗證管理員權限
+  // API Key 認證
   const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
     return createAuthErrorResponse(authResult)
   }
 
   try {
+    apiLogger.debug('管理員請求產品列表', {
+      metadata: { source: 'admin-api-key' },
+    })
+
     // 使用 adminProductService 直接取得產品（包含圖片資料）
     const products = await adminProductService.getAllProducts()
 
@@ -57,11 +61,15 @@ async function handleGET(request: NextRequest) {
 
 // POST - 新增產品
 async function handlePOST(request: NextRequest) {
-  // 驗證管理員權限
+  // API Key 認證
   const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
     return createAuthErrorResponse(authResult)
   }
+
+  apiLogger.debug('管理員新增產品', {
+    metadata: { source: 'admin-api-key' },
+  })
 
   const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
@@ -123,11 +131,15 @@ async function handlePOST(request: NextRequest) {
 
 // PUT - 更新產品
 async function handlePUT(request: NextRequest) {
-  // 驗證管理員權限
+  // API Key 認證
   const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
     return createAuthErrorResponse(authResult)
   }
+
+  apiLogger.debug('管理員更新產品', {
+    metadata: { source: 'admin-api-key' },
+  })
 
   const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
@@ -182,11 +194,15 @@ async function handlePUT(request: NextRequest) {
 
 // DELETE - 刪除產品
 async function handleDELETE(request: NextRequest) {
-  // 驗證管理員權限
+  // API Key 認證
   const authResult = await checkAdminPermission(request)
   if (!authResult.isValid) {
     return createAuthErrorResponse(authResult)
   }
+
+  apiLogger.debug('管理員刪除產品', {
+    metadata: { source: 'admin-api-key' },
+  })
 
   const supabaseAdmin = getSupabaseAdmin()
   if (!supabaseAdmin) {
@@ -289,17 +305,17 @@ async function handleDELETE(request: NextRequest) {
   )
 }
 
-// 套用 Rate Limiting 並導出 API 處理器
+// 套用 Rate Limiting 配置
 const adminRateLimitConfig = {
   maxRequests: 50,
   windowMs: 60 * 1000, // 1 分鐘
-  strategy: IdentifierStrategy.API_KEY,
+  strategy: IdentifierStrategy.USER_ID,
   enableAuditLog: true,
   includeHeaders: true,
   message: '管理員 API 使用頻率超出限制，請稍後重試',
 }
 
-// 整合錯誤處理中間件
+// 整合錯誤處理中間件（API Key 認證已在各處理器內部完成）
 const handleGETWithError = withErrorHandler(handleGET, {
   module: 'AdminProductsAPI',
   enableAuditLog: false,

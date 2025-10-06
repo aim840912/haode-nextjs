@@ -44,14 +44,14 @@ export class HomePage {
       .first()
     this.footer = page.locator('footer').first()
 
-    // 導航連結
-    this.homeLink = page.locator('a[href="/"]')
-    this.productsLink = page.locator('a[href="/products"]')
-    this.newsLink = page.locator('a[href="/news"]')
-    this.cultureLink = page.locator('a[href="/culture"]')
-    this.contactLink = page.locator('a[href="/contact"]')
-    this.loginLink = page.locator('a[href="/login"]')
-    this.adminLink = page.locator('a[href="/admin"]')
+    // 導航連結 - 限定在導航選單內以避免 strict mode violation
+    this.homeLink = page.locator('nav a[href="/"], header a[href="/"]').first()
+    this.productsLink = page.locator('nav a[href="/products"], header a[href="/products"]').first()
+    this.newsLink = page.locator('nav a[href="/news"], header a[href="/news"]').first()
+    this.cultureLink = page.locator('nav a[href="/culture"], header a[href="/culture"]').first()
+    this.contactLink = page.locator('nav a[href="/contact"], header a[href="/contact"]').first()
+    this.loginLink = page.locator('nav a[href="/login"], header a[href="/login"]').first()
+    this.adminLink = page.locator('nav a[href="/admin"], header a[href="/admin"]').first()
 
     // 功能按鈕
     this.inquiryButton = page

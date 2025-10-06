@@ -6,16 +6,15 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import { supabase } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import {
-  InquiryStatsData,
   createCacheKey,
   formatUserFriendlyError,
   shouldShowErrorToUser,
   INQUIRY_STATS_CONSTANTS,
 } from '@/lib/utils/inquiry-stats-utils'
 import { isRateLimitError, isNetworkError } from '@/lib/utils/error-utils'
+import { fetchInquiryStats, type InquiryStatsData } from '@/lib/api/inquiries-api'
 
 // 全域請求去重機制
 interface PendingRequest {
@@ -77,58 +76,14 @@ export function useInquiryStatsFetcher(
   }, [])
 
   /**
-   * 建立請求 URL
-   */
-  const buildRequestUrl = useCallback(() => {
-    const url = new URL(endpoint, window.location.origin)
-    Object.entries(params).forEach(([key, value]) => {
-      url.searchParams.set(key, value)
-    })
-    return url.toString()
-  }, [endpoint, params])
-
-  /**
    * 執行 API 請求
    */
   const executeRequest = useCallback(
-    async (url: string, token: string, signal?: AbortSignal): Promise<InquiryStatsData> => {
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        signal,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        const errorMessage = errorData.error || `HTTP ${response.status}: ${response.statusText}`
-
-        // 記錄詳細錯誤資訊
-        if (isDevelopment) {
-          logger.error('[useInquiryStatsFetcher] API Error', undefined, {
-            module: 'useInquiryStatsFetcher',
-            metadata: {
-              status: response.status,
-              statusText: response.statusText,
-              errorData,
-              url: response.url,
-            },
-          })
-        }
-
-        throw new Error(errorMessage)
-      }
-
-      const result = await response.json()
-
-      if (result.success && result.data?.summary) {
-        return result.data.summary
-      } else {
-        throw new Error('統計資料格式錯誤')
-      }
+    async (signal?: AbortSignal): Promise<InquiryStatsData> => {
+      const timeframe = parseInt(params.timeframe || '30', 10)
+      return await fetchInquiryStats(timeframe)
     },
-    [isDevelopment]
+    [params]
   )
 
   /**
@@ -165,21 +120,10 @@ export function useInquiryStatsFetcher(
       setLoading(true)
       setError(null)
 
-      let dedupCacheKey = ''
+      // 建立請求去重鍵值（使用 endpoint 和 params 作為 key）
+      const dedupCacheKey = createCacheKey('inquiry-stats-request', JSON.stringify(params))
 
       try {
-        // 取得認證 session
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (!session?.access_token) {
-          throw new Error('認證失敗')
-        }
-
-        // 建立請求去重鍵值
-        dedupCacheKey = createCacheKey('inquiry-stats-request', session.access_token)
-
         // 清理過期請求
         cleanupExpiredRequests()
 
@@ -204,8 +148,7 @@ export function useInquiryStatsFetcher(
         }
 
         // 建立新的請求 Promise
-        const url = buildRequestUrl()
-        const requestPromise = executeRequest(url, session.access_token, signal)
+        const requestPromise = executeRequest(signal)
 
         // 將請求加入去重快取
         globalRequestCache.set(dedupCacheKey, {
@@ -229,7 +172,6 @@ export function useInquiryStatsFetcher(
             module: 'useInquiryStatsFetcher',
             metadata: {
               stats: result,
-              url,
               responseTime: Date.now() - (globalRequestCache.get(dedupCacheKey)?.timestamp || 0),
             },
           })
@@ -238,9 +180,7 @@ export function useInquiryStatsFetcher(
         return result
       } catch (err) {
         // 請求失敗時清理快取
-        if (dedupCacheKey) {
-          globalRequestCache.delete(dedupCacheKey)
-        }
+        globalRequestCache.delete(dedupCacheKey)
 
         // 如果是 AbortError，不處理
         if (err instanceof Error && err.name === 'AbortError') {
@@ -289,7 +229,7 @@ export function useInquiryStatsFetcher(
         throw err
       }
     },
-    [buildRequestUrl, executeRequest, cleanupExpiredRequests, isDevelopment]
+    [executeRequest, cleanupExpiredRequests, isDevelopment, params]
   )
 
   /**

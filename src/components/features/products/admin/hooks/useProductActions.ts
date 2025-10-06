@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { logger } from '@/lib/logger'
+import { deleteProduct, updateProduct } from '@/lib/api/products-api'
 
 interface UseProductActionsProps {
   products: Product[]
@@ -96,23 +97,7 @@ export function useProductActions({
       }
 
       try {
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        }
-
-        if (csrfToken) {
-          headers['x-csrf-token'] = csrfToken
-        }
-
-        const response = await fetch(`/api/admin-proxy/products?id=${id}`, {
-          method: 'DELETE',
-          headers,
-          credentials: 'include',
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
+        await deleteProduct(id)
 
         success('刪除成功', `產品「${productName}」已刪除`)
         onDelete?.(id)
@@ -150,7 +135,6 @@ export function useProductActions({
       user,
       products,
       operatingProductIds,
-      csrfToken,
       csrfLoading,
       csrfError,
       isActionDisabled,
@@ -205,24 +189,7 @@ export function useProductActions({
           prevProducts.map(p => (p.id === id ? { ...p, isActive: newActiveState } : p))
         )
 
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        }
-
-        if (csrfToken) {
-          headers['x-csrf-token'] = csrfToken
-        }
-
-        const response = await fetch(`/api/admin-proxy/products`, {
-          method: 'PUT',
-          headers,
-          credentials: 'include',
-          body: JSON.stringify({ id, isActive: newActiveState }),
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
+        await updateProduct(id, { isActive: newActiveState })
 
         success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
         onToggleActive?.(id, newActiveState)
@@ -262,7 +229,6 @@ export function useProductActions({
       products,
       setProducts,
       operatingProductIds,
-      csrfToken,
       csrfLoading,
       csrfError,
       isActionDisabled,

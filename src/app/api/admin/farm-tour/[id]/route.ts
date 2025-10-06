@@ -9,7 +9,6 @@ import { success } from '@/lib/api-response'
 import {
   checkAdminPermission,
   createAuthErrorResponse,
-  checkRateLimit,
 } from '@/lib/middleware/admin-auth-middleware'
 
 // DELETE - 刪除農場體驗活動 (管理員專用)

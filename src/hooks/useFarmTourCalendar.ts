@@ -4,12 +4,14 @@ import { useState, useCallback, useRef } from 'react'
 import type FullCalendar from '@fullcalendar/react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
-import type {
-  CalendarEvent,
-  CalendarResponse,
-  CalendarStatistics,
-} from '@/app/api/farm-tour/calendar/route'
 import type { InquiryStatus } from '@/types/inquiry'
+import {
+  fetchFarmTourCalendar,
+  updateFarmTourVisitDate,
+  type CalendarEvent,
+  type CalendarResponse,
+  type CalendarStatistics,
+} from '@/lib/api/farm-tour-api'
 
 export interface UseFarmTourCalendarOptions {
   defaultView?: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
@@ -63,32 +65,14 @@ export function useFarmTourCalendar(
       setCurrentRange({ start, end })
 
       try {
-        const params = new URLSearchParams({
-          start: start.toISOString(),
-          end: end.toISOString(),
-        })
+        const status =
+          statusFilter !== 'all'
+            ? Array.isArray(statusFilter)
+              ? statusFilter.join(',')
+              : statusFilter
+            : undefined
 
-        // 如果有狀態過濾
-        if (statusFilter !== 'all') {
-          params.append(
-            'status',
-            Array.isArray(statusFilter) ? statusFilter.join(',') : statusFilter
-          )
-        }
-
-        const response = await fetch(`/api/farm-tour/calendar?${params}`)
-
-        if (!response.ok) {
-          throw new Error('取得行事曆資料失敗')
-        }
-
-        const result = await response.json()
-
-        if (!result.success) {
-          throw new Error(result.error || '取得資料失敗')
-        }
-
-        const data: CalendarResponse = result.data
+        const data = await fetchFarmTourCalendar(start, end, status)
         setEvents(data.events)
         setStatistics(data.statistics)
 
@@ -115,36 +99,20 @@ export function useFarmTourCalendar(
       }
 
       try {
-        const response = await fetch(`/api/farm-tour/calendar?id=${eventId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            visit_date: newDate.toISOString(),
-          }),
-        })
+        const success = await updateFarmTourVisitDate(eventId, newDate)
 
-        if (!response.ok) {
-          throw new Error('更新預約時間失敗')
-        }
-
-        const result = await response.json()
-
-        if (!result.success) {
-          throw new Error(result.error || '更新失敗')
-        }
-
-        // 更新本地事件資料
-        setEvents(prevEvents =>
-          prevEvents.map(event =>
-            event.id === eventId ? { ...event, start: newDate.toISOString() } : event
+        if (success) {
+          // 更新本地事件資料
+          setEvents(prevEvents =>
+            prevEvents.map(event =>
+              event.id === eventId ? { ...event, start: newDate.toISOString() } : event
+            )
           )
-        )
 
-        logger.info('預約時間更新成功')
+          logger.info('預約時間更新成功')
+        }
 
-        return true
+        return success
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : '更新失敗'
         logger.error('更新預約時間失敗')

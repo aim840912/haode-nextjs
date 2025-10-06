@@ -50,7 +50,7 @@ async function handleGET(request: NextRequest) {
       },
       '產品名稱檢查完成'
     )
-  } catch (_error) {
+  } catch {
     // 如果檢查失敗，返回不存在以不阻止用戶繼續
     return success(
       {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { logger } from '@/lib/logger'
-import { supabase } from '@/lib/database/supabase-auth'
 import { AuditLog, AuditLogQueryParams } from '@/types/audit'
+import { fetchAuditLogs as fetchAuditLogsAPI } from '@/lib/api/audit-logs-api'
 
 export interface UseAuditLogsDataReturn {
   auditLogs: AuditLog[]
@@ -31,36 +31,8 @@ export function useAuditLogsData(
     setError(null)
 
     try {
-      // 取得認證 token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('認證失敗')
-      }
-
-      // 建立查詢參數
-      const params = new URLSearchParams()
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, value.toString())
-        }
-      })
-
-      // 呼叫 API
-      const response = await fetch(`/api/audit-logs?${params}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || '取得審計日誌失敗')
-      }
-
-      setAuditLogs(result.data || [])
+      const data = await fetchAuditLogsAPI(filters)
+      setAuditLogs(data)
     } catch (err) {
       logger.error('載入審計日誌失敗', err instanceof Error ? err : new Error('Unknown error'), {
         module: 'useAuditLogsData',

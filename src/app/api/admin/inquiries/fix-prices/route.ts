@@ -23,7 +23,7 @@ interface FixResult {
   }>
 }
 
-async function handlePOST(request: NextRequest): Promise<Response> {
+async function handlePOST(_request: NextRequest): Promise<Response> {
   const supabase = createServiceSupabaseClient()
   const result: FixResult = {
     total_items: 0,

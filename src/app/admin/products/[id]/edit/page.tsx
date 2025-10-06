@@ -1,18 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Product } from '@/types/product'
 import Link from 'next/link'
-import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { imageUrlValidator } from '@/lib/utils/image-url-validator'
-import OptimizedImage from '@/components/ui/image/OptimizedImage'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import AdminProtection from '@/components/features/admin/AdminProtection'
+import { useProductImageSync } from './hooks/useProductImageSync'
+import type { PendingImageChanges } from '@/components/features/products/ProductImageManager'
 
 // 動態載入產品圖片管理器，減少初始 bundle 大小
 const ProductImageManager = dynamic(
@@ -34,10 +33,18 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
   const [productId, setProductId] = useState<string>('')
   const [categories, setCategories] = useState<string[]>([])
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
-  const [isDeletingImage, setIsDeletingImage] = useState<string | null>(null)
+  const [isDeletingImage] = useState<string | null>(null)
   const { user, isLoading } = useAuth()
   const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
+
+  // 圖片同步相關
+  const { syncAllChanges } = useProductImageSync(productId)
+  const [hasPendingImageChanges, setHasPendingImageChanges] = useState(false)
+  const getPendingChangesRef = useRef<() => PendingImageChanges>(() => ({
+    deletedIds: [],
+    newImages: [],
+    reorderedImages: [],
+  }))
 
   // === 統一狀態管理系統 ===
   // 統一提交狀態機
@@ -78,10 +85,6 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
     setHasSubmitted(false)
     setShouldCleanup(false)
   }, [])
-
-  const resetToInitialState = useCallback(() => {
-    resetFormState()
-  }, [resetFormState])
 
   const fetchCategories = useCallback(async () => {
     try {
@@ -299,8 +302,37 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
           productId,
           productName: formData.name,
           submitStatus,
+          hasPendingImageChanges,
         },
       })
+
+      // 先同步圖片變更（如果有）
+      if (hasPendingImageChanges) {
+        try {
+          const pendingChanges = getPendingChangesRef.current()
+          logger.info('同步圖片變更', {
+            metadata: {
+              productId,
+              deletedCount: pendingChanges.deletedIds.length,
+              newImagesCount: pendingChanges.newImages.length,
+              reorderedCount: pendingChanges.reorderedImages.length,
+            },
+          })
+
+          await syncAllChanges(
+            pendingChanges.deletedIds,
+            pendingChanges.newImages,
+            pendingChanges.reorderedImages
+          )
+
+          logger.info('圖片變更同步完成', { metadata: { productId } })
+        } catch (imageError) {
+          logger.error('圖片同步失敗', imageError as Error, { metadata: { productId } })
+          throw new Error(
+            `圖片同步失敗: ${imageError instanceof Error ? imageError.message : '未知錯誤'}`
+          )
+        }
+      }
 
       const response = await fetch(`/api/admin-proxy/products`, {
         method: 'PUT',
@@ -642,6 +674,9 @@ export default function EditProduct({ params }: { params: Promise<{ id: string }
                 <ProductImageManager
                   productId={productId}
                   maxImages={10}
+                  mode="edit"
+                  onPendingChanges={setHasPendingImageChanges}
+                  onGetPendingChanges={getPendingChangesRef}
                   onImagesChange={images => {
                     logger.info('圖片列表更新', {
                       metadata: {

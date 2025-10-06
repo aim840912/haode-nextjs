@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import type { SiteSetting, SettingKey } from '@/types/siteSettings'
+import { fetchSiteSettingsByKeys } from '@/lib/api/site-settings-api'
 
 export function useSiteSettings(keys: (SettingKey | string)[]) {
   const [settings, setSettings] = useState<Record<string, SiteSetting>>({})
@@ -15,15 +16,12 @@ export function useSiteSettings(keys: (SettingKey | string)[]) {
     const fetchSettings = async () => {
       try {
         setLoading(true)
-        const keysParam = keys.join(',')
-        const response = await fetch(`/api/site-settings?keys=${keysParam}`)
-        const result = await response.json()
-
-        if (!response.ok) {
-          throw new Error(result.error || '載入設定失敗')
-        }
-
-        setSettings(result.data)
+        const result = await fetchSiteSettingsByKeys(keys)
+        const settingsMap: Record<string, SiteSetting> = {}
+        result.forEach(setting => {
+          settingsMap[setting.key] = setting
+        })
+        setSettings(settingsMap)
       } catch (err) {
         setError(err instanceof Error ? err.message : '載入設定失敗')
       } finally {

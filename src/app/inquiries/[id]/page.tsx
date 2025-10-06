@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { supabase } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
+import { fetchInquiryById } from '@/lib/api/inquiries-api'
 import {
   InquiryWithItems,
   INQUIRY_STATUS_LABELS,
@@ -56,31 +56,8 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
     setError(null)
 
     try {
-      // 取得認證 token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session?.access_token) {
-        throw new Error('認證失敗')
-      }
-
-      // 呼叫 API
-      const response = await fetch(`/api/inquiries/${inquiryId}`, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error('找不到詢問單')
-        }
-        throw new Error(result.error || '取得詢問單詳情失敗')
-      }
-
-      setInquiry(result.data)
+      const data = await fetchInquiryById(inquiryId)
+      setInquiry(data)
     } catch (err) {
       logger.error('Error fetching inquiry', err as Error, {
         module: 'InquiryDetailPage',

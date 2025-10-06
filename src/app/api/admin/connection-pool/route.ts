@@ -173,7 +173,7 @@ async function handlePOST(req: NextRequest, user: User): Promise<NextResponse> {
   }
 }
 
-async function handleGET(req: NextRequest, _user: User): Promise<NextResponse> {
+async function handleGET(_req: NextRequest, _user: User): Promise<NextResponse> {
   apiLogger.info('查詢連線池狀態', {
     module: 'ConnectionPoolAdminAPI',
     action: 'GET /api/admin/connection-pool',

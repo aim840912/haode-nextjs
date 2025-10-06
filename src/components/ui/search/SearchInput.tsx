@@ -27,20 +27,13 @@ export default function SearchInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const {
-    suggestions,
-    searchHistory,
-    loading,
-    getSuggestions,
-    saveToHistory,
-    clearHistory,
-    clearSuggestions,
-  } = useSearchSuggestions({
-    debounceMs: 300,
-    minQueryLength: 2,
-    maxSuggestions: 5,
-    enableHistory: showHistory,
-  })
+  const { suggestions, searchHistory, loading, getSuggestions, saveToHistory, clearHistory } =
+    useSearchSuggestions({
+      debounceMs: 300,
+      minQueryLength: 2,
+      maxSuggestions: 5,
+      enableHistory: showHistory,
+    })
 
   // 合併建議和歷史
   const combinedOptions = [

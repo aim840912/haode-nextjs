@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server'
 import { productService } from '@/services/core/product/productService'
-import { ProductImageService } from '@/services/core/product/productImageService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { AdminProductSchemas, CommonValidations } from '@/lib/validation'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { requireAdmin, User } from '@/lib/middleware/api-middleware'
 import { apiLogger } from '@/lib/logger'
 
 /**
@@ -39,9 +40,10 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
 }
 
 /**
- * PUT /api/products/[id] - 更新產品
+ * PUT /api/products/[id] - 更新產品（需要管理員權限）
  */
-async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handlePUT(request: NextRequest, user: User & { isAdmin: true }, context?: unknown) {
+  const { params } = context as { params: Promise<{ id: string }> }
   const { id } = await params
 
   // 驗證 UUID 格式
@@ -64,8 +66,10 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     throw new ValidationError(`資料驗證失敗: ${errors}`)
   }
 
-  apiLogger.info('更新產品', {
+  apiLogger.info('管理員更新產品', {
     metadata: {
+      userId: user.id,
+      email: user.email,
       productId: id,
       changes: Object.keys(result.data),
     },
@@ -87,9 +91,14 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
 }
 
 /**
- * DELETE /api/products/[id] - 刪除產品
+ * DELETE /api/products/[id] - 刪除產品（需要管理員權限）
  */
-async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+async function handleDELETE(
+  request: NextRequest,
+  user: User & { isAdmin: true },
+  context?: unknown
+) {
+  const { params } = context as { params: Promise<{ id: string }> }
   const { id } = await params
 
   // 驗證 UUID 格式
@@ -101,15 +110,19 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     throw new ValidationError(`參數驗證失敗: ${errors}`)
   }
 
-  apiLogger.info('開始刪除產品', {
-    metadata: { productId: id },
+  apiLogger.info('管理員開始刪除產品', {
+    metadata: {
+      userId: user.id,
+      email: user.email,
+      productId: id,
+    },
   })
 
-  // 清理產品圖片
+  // 清理產品圖片（資料庫記錄 + Storage 檔案）
   try {
-    await ProductImageService.clearProductImages(id)
+    const deletedCount = await unifiedImageService.deleteEntityImages('products', id)
     apiLogger.info('產品圖片清理完成', {
-      metadata: { productId: id },
+      metadata: { productId: id, deletedCount },
     })
   } catch (imageError) {
     apiLogger.warn('產品圖片清理失敗，但繼續刪除產品', {
@@ -147,17 +160,21 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
 }
 
 // 導出處理器
+// GET 保持公開（任何人都可以查看產品）
 export const GET = withErrorHandler(handleGET, {
   module: 'ProductAPI',
   enableAuditLog: false,
 })
 
-export const PUT = withErrorHandler(handlePUT, {
+// PUT 和 DELETE 需要管理員權限
+const handlePUTWithAuth = requireAdmin(handlePUT)
+export const PUT = withErrorHandler(handlePUTWithAuth, {
   module: 'ProductAPI',
   enableAuditLog: true,
 })
 
-export const DELETE = withErrorHandler(handleDELETE, {
+const handleDELETEWithAuth = requireAdmin(handleDELETE)
+export const DELETE = withErrorHandler(handleDELETEWithAuth, {
   module: 'ProductAPI',
   enableAuditLog: true,
 })

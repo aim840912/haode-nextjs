@@ -10,25 +10,7 @@ import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { orderService } from '@/services/core/order/orderService'
-import { OrderStatus } from '@/types/order'
-import { z } from 'zod'
 import { apiLogger } from '@/lib/logger'
-
-// 訂單狀態更新的驗證 schema
-const AdminUpdateOrderSchema = z.object({
-  status: z.enum([
-    'pending',
-    'confirmed',
-    'processing',
-    'shipped',
-    'delivered',
-    'cancelled',
-    'refunded',
-  ] as const),
-  notes: z.string().optional(),
-  trackingNumber: z.string().optional(),
-  estimatedDeliveryDate: z.string().optional(),
-})
 
 /**
  * GET /api/admin/orders - 取得所有訂單

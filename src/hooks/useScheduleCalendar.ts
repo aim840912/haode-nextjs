@@ -3,24 +3,13 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import { logger } from '@/lib/logger'
+import {
+  fetchScheduleCalendar,
+  type ScheduleCalendarEvent as APIScheduleCalendarEvent,
+} from '@/lib/api/schedule-api'
 
-export interface ScheduleCalendarEvent {
-  id: string
-  title: string
-  start: string
-  end?: string
-  backgroundColor: string
-  borderColor: string
-  extendedProps: {
-    location: string
-    products: string[]
-    specialOffer?: string
-    weatherNote?: string
-    contact: string
-    status: 'upcoming' | 'ongoing' | 'completed'
-    description: string
-  }
-}
+// 重新匯出類型供外部使用
+export type ScheduleCalendarEvent = APIScheduleCalendarEvent
 
 export interface ScheduleCalendarStatistics {
   total: number
@@ -115,14 +104,7 @@ export function useScheduleCalendar(): UseScheduleCalendarReturn {
     try {
       logger.debug('開始獲取擺攤行程行事曆資料')
 
-      const response = await fetch('/api/schedule/calendar')
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const apiResponse = await response.json()
-      const eventsData = apiResponse.data || []
+      const eventsData = await fetchScheduleCalendar()
 
       logger.info(`成功獲取擺攤行程行事曆資料: ${eventsData.length} 個事件`)
 

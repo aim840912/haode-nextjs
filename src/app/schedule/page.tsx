@@ -3,7 +3,6 @@
 import { useAuth } from '@/contexts/AuthContext'
 import Breadcrumbs, { createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { useSchedule } from '@/hooks/useSchedule'
-import type { ScheduleItem } from '@/lib/api/schedule-api'
 
 export default function SchedulePage() {
   const { user } = useAuth()

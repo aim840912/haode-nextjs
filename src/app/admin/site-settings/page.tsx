@@ -5,8 +5,10 @@ import Link from 'next/link'
 import Image from 'next/image'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import ImageUploader from '@/components/admin/ImageUploader'
-import { Save, RefreshCw, Home, Leaf, ArrowLeft, Plus, Trash2 } from 'lucide-react'
+import { Save, RefreshCw, Home, Leaf, ArrowLeft, Trash2 } from 'lucide-react'
 import { SETTING_KEYS } from '@/types/siteSettings'
+import { fetchAllSiteSettings, updateSiteSetting } from '@/lib/api/site-settings-api'
+import { useLoadingManager } from '@/hooks/useLoadingManager'
 
 interface Setting {
   key: string
@@ -16,8 +18,6 @@ interface Setting {
 }
 
 export default function SiteSettingsPage() {
-  const [settings, setSettings] = useState<Record<string, Setting>>({})
-  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
@@ -29,41 +29,41 @@ export default function SiteSettingsPage() {
     setTimeout(() => setMessage(null), 5000)
   }, [])
 
+  // 使用 useLoadingManager 管理載入狀態
+  const { isLoading: loading, execute } = useLoadingManager({
+    module: 'SiteSettingsPage',
+    initialLoading: true,
+  })
+
   const loadSettings = useCallback(async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/site-settings')
-      const result = await response.json()
+    await execute(
+      async () => {
+        const data = await fetchAllSiteSettings()
 
-      if (!response.ok) {
-        throw new Error(result.error || '載入設定失敗')
-      }
+        const settingsMap: Record<string, Setting> = {}
+        data.forEach((setting: Setting) => {
+          settingsMap[setting.key] = setting
+        })
 
-      const settingsMap: Record<string, Setting> = {}
-      result.data.forEach((setting: Setting) => {
-        settingsMap[setting.key] = setting
-      })
-
-      setSettings(settingsMap)
-
-      if (settingsMap[SETTING_KEYS.HOME_HERO_IMAGES]) {
-        try {
-          const images = JSON.parse(settingsMap[SETTING_KEYS.HOME_HERO_IMAGES].value)
-          setHomeHeroImages(Array.isArray(images) ? images : [])
-        } catch (_e) {
-          setHomeHeroImages([])
+        if (settingsMap[SETTING_KEYS.HOME_HERO_IMAGES]) {
+          try {
+            const images = JSON.parse(settingsMap[SETTING_KEYS.HOME_HERO_IMAGES].value)
+            setHomeHeroImages(Array.isArray(images) ? images : [])
+          } catch {
+            setHomeHeroImages([])
+          }
         }
-      }
 
-      if (settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG]) {
-        setFarmTourHeroBg(settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG].value)
+        if (settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG]) {
+          setFarmTourHeroBg(settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG].value)
+        }
+      },
+      {
+        logAction: 'loadSettings',
+        onError: err => showMessage('error', err.message),
       }
-    } catch (err) {
-      showMessage('error', err instanceof Error ? err.message : '載入設定失敗')
-    } finally {
-      setLoading(false)
-    }
-  }, [showMessage])
+    )
+  }, [execute, showMessage])
 
   useEffect(() => {
     loadSettings()
@@ -96,16 +96,7 @@ export default function SiteSettingsPage() {
       ]
 
       for (const update of updates) {
-        const response = await fetch(`/api/site-settings?key=${update.key}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ value: update.value }),
-        })
-
-        if (!response.ok) {
-          const result = await response.json()
-          throw new Error(result.error || '儲存失敗')
-        }
+        await updateSiteSetting(update.key, { value: update.value })
       }
 
       showMessage('success', '設定已成功儲存')

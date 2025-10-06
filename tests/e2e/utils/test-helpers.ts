@@ -9,9 +9,12 @@ import { testTimeouts } from '../fixtures/test-data'
 
 /**
  * 等待頁面載入完成
+ * 使用 domcontentloaded 而非 networkidle 以避免超時問題
  */
 export async function waitForPageLoad(page: Page, timeout = testTimeouts.navigation) {
-  await page.waitForLoadState('networkidle', { timeout })
+  await page.waitForLoadState('domcontentloaded', { timeout })
+  // 額外等待一小段時間讓 React 完成 hydration
+  await page.waitForTimeout(500)
 }
 
 /**
@@ -48,7 +51,8 @@ export async function clickAndWait(page: Page, selector: string, waitFor?: strin
   if (waitFor) {
     await page.waitForSelector(waitFor)
   } else {
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
+    await page.waitForTimeout(300)
   }
 }
 

@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { requireAuth, requireAdmin, User } from '@/lib/middleware/api-middleware'
+import { requireAuth, User } from '@/lib/middleware/api-middleware'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'

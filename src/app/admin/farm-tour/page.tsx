@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
+import { fetchFarmTourActivities, deleteFarmTour, updateFarmTour } from '@/lib/api/farm-tour-api'
 
 export default function FarmTourAdmin() {
   const [activities, setActivities] = useState<FarmTourActivity[]>([])
@@ -19,22 +20,14 @@ export default function FarmTourAdmin() {
 
   const fetchActivities = async () => {
     try {
-      const response = await fetch('/api/farm-tour')
-      const result = await response.json()
-
-      // 處理新的統一回應格式
-      if (result.success && result.data) {
-        setActivities(result.data) // 從 data 屬性取得活動陣列
-      } else {
-        // 向後相容：如果是舊格式（直接陣列）
-        setActivities(Array.isArray(result) ? result : [])
-      }
+      const data = await fetchFarmTourActivities()
+      setActivities(data)
     } catch (error) {
       logger.error(
         'Error fetching farm tour activities:',
         error instanceof Error ? error : new Error('Unknown error')
       )
-      setActivities([]) // 錯誤時設為空陣列
+      setActivities([])
     } finally {
       setLoading(false)
     }
@@ -44,24 +37,14 @@ export default function FarmTourAdmin() {
     if (!confirm('確定要刪除此體驗活動嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
     try {
-      const response = await fetch(`/api/admin-proxy/farm-tour/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json()
+      const result = await deleteFarmTour(id)
+      setActivities(activities.filter(activity => activity.id !== id))
 
-      if (result.success) {
-        setActivities(activities.filter(activity => activity.id !== id))
-        // 顯示圖片清理結果
-        if (result.data?.imageCleanup?.deletedCount > 0) {
-          alert(`體驗活動已刪除，同時清理了 ${result.data.imageCleanup.deletedCount} 個相關圖片`)
-        } else {
-          alert('體驗活動已刪除')
-        }
+      // 顯示圖片清理結果
+      if (result.imageCleanup?.deletedCount && result.imageCleanup.deletedCount > 0) {
+        alert(`體驗活動已刪除，同時清理了 ${result.imageCleanup.deletedCount} 個相關圖片`)
       } else {
-        throw new Error(result.error || '刪除失敗')
+        alert('體驗活動已刪除')
       }
     } catch (error) {
       logger.error(
@@ -74,22 +57,12 @@ export default function FarmTourAdmin() {
 
   const toggleAvailability = async (id: string, available: boolean) => {
     try {
-      const response = await fetch(`/api/farm-tour/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ available: !available }),
-      })
-      const result = await response.json()
-
-      if (result.success) {
-        setActivities(
-          activities.map(activity =>
-            activity.id === id ? { ...activity, available: !available } : activity
-          )
+      await updateFarmTour(id, { available: !available })
+      setActivities(
+        activities.map(activity =>
+          activity.id === id ? { ...activity, available: !available } : activity
         )
-      } else {
-        throw new Error(result.error || '更新狀態失敗')
-      }
+      )
     } catch (error) {
       logger.error(
         'Error updating availability:',

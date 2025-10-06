@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { FarmStructuredData } from '@/components/features/seo/StructuredData'
 import ProductsSection from '@/components/features/products/ProductsSection'
-import OptimizedImage from '@/components/ui/image/OptimizedImage'
 import {
   Sprout,
   ShieldCheck,
@@ -14,7 +13,6 @@ import {
   Apple,
   Wheat,
   Coffee,
-  Calendar,
   CalendarDays,
   Phone,
   PartyPopper,

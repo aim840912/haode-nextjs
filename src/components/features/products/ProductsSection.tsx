@@ -8,6 +8,7 @@ import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { SafeImage } from '@/components/ui/image/OptimizedImage'
 import { logger } from '@/lib/logger'
 import { Award, Sparkles, TrendingUp, Leaf, ShoppingBag } from 'lucide-react'
+import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
 
 function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
@@ -19,20 +20,8 @@ function ProductsSection() {
   const fetchProducts = useCallback(async () => {
     try {
       setError(null)
-      const response = await fetch('/api/products')
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      const data = result.data || result
-
-      if (!Array.isArray(data)) {
-        throw new Error('API 回應格式錯誤：data 不是陣列')
-      }
-
-      const activeProducts = data.filter((p: Product) => p.isActive).slice(0, 3)
+      const data = await fetchProductsAPI({ isActive: true })
+      const activeProducts = data.slice(0, 3)
       setProducts(activeProducts)
     } catch (error) {
       logger.error('Error fetching products', error as Error, {

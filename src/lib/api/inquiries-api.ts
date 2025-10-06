@@ -4,8 +4,13 @@
  */
 
 import { apiLogger } from '@/lib/logger'
+import { apiClient } from '@/lib/api-client'
 import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
-import { ApiResponse, handleApiError } from './common'
+import { handleApiError } from './common'
+import { InquiryStatsData as InquiryStatsDataUtil } from '@/lib/utils/inquiry-stats-utils'
+
+// 重新匯出 InquiryStatsData 供外部使用
+export type InquiryStatsData = InquiryStatsDataUtil
 
 /**
  * 詢問單查詢參數
@@ -38,19 +43,9 @@ export async function fetchInquiries(params?: FetchInquiriesParams): Promise<Inq
     searchParams.append('sort_by', params?.sortBy || 'created_at')
     searchParams.append('sort_order', params?.sortOrder || 'desc')
 
-    const url = `/api/inquiries${searchParams.toString() ? `?${searchParams}` : ''}`
+    const endpoint = `/api/inquiries${searchParams.toString() ? `?${searchParams}` : ''}`
 
-    const response = await fetch(url, {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || '取得詢問單列表失敗')
-    }
-
-    const result: ApiResponse<InquiryWithItems[]> = await response.json()
+    const result = await apiClient.get<InquiryWithItems[]>(endpoint)
 
     if (!result.success || !result.data) {
       throw new Error(result.message || '取得詢問單列表失敗')
@@ -73,17 +68,7 @@ export async function fetchInquiries(params?: FetchInquiriesParams): Promise<Inq
  */
 export async function fetchInquiryById(id: string): Promise<InquiryWithItems> {
   try {
-    const response = await fetch(`/api/inquiries/${id}`, {
-      method: 'GET',
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || '取得詢問單詳情失敗')
-    }
-
-    const result: ApiResponse<InquiryWithItems> = await response.json()
+    const result = await apiClient.get<InquiryWithItems>(`/api/inquiries/${id}`)
 
     if (!result.success || !result.data) {
       throw new Error(result.message || '取得詢問單詳情失敗')
@@ -107,21 +92,7 @@ export async function fetchInquiryById(id: string): Promise<InquiryWithItems> {
  */
 export async function updateInquiryStatus(id: string, status: InquiryStatus): Promise<boolean> {
   try {
-    const response = await fetch(`/api/inquiries/${id}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      body: JSON.stringify({ status }),
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || '更新詢問單狀態失敗')
-    }
-
-    const result: ApiResponse<unknown> = await response.json()
+    const result = await apiClient.patch<unknown>(`/api/inquiries/${id}`, { status })
 
     if (!result.success) {
       throw new Error(result.message || '更新詢問單狀態失敗')
@@ -144,17 +115,7 @@ export async function updateInquiryStatus(id: string, status: InquiryStatus): Pr
  */
 export async function deleteInquiry(id: string): Promise<boolean> {
   try {
-    const response = await fetch(`/api/inquiries/${id}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.error || '刪除詢問單失敗')
-    }
-
-    const result: ApiResponse<unknown> = await response.json()
+    const result = await apiClient.delete<unknown>(`/api/inquiries/${id}`)
 
     if (!result.success) {
       throw new Error(result.message || '刪除詢問單失敗')
@@ -167,5 +128,31 @@ export async function deleteInquiry(id: string): Promise<boolean> {
     return true
   } catch (error) {
     handleApiError(error, 'deleteInquiry', 'InquiriesAPI')
+  }
+}
+
+/**
+ * 取得詢問單統計資料
+ * @param timeframe - 時間範圍（天數）
+ * @returns 詢問單統計資料
+ */
+export async function fetchInquiryStats(timeframe: number = 30): Promise<InquiryStatsDataUtil> {
+  try {
+    const params = new URLSearchParams({ timeframe: String(timeframe) })
+    const endpoint = `/api/inquiries/stats?${params}`
+
+    const result = await apiClient.get<{ summary: InquiryStatsDataUtil }>(endpoint)
+
+    if (!result.success || !result.data) {
+      throw new Error(result.message || '取得詢問單統計資料失敗')
+    }
+
+    apiLogger.info('詢問單統計資料取得成功', {
+      metadata: { timeframe, totalInquiries: result.data.summary.total_inquiries },
+    })
+
+    return result.data.summary
+  } catch (error) {
+    handleApiError(error, 'fetchInquiryStats', 'InquiriesAPI')
   }
 }

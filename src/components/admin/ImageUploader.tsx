@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { uploadSiteSettingImage } from '@/lib/api/site-settings-api'
 
 interface ImageUploaderProps {
   currentImage?: string
@@ -45,22 +46,10 @@ export default function ImageUploader({
       const previewUrl = URL.createObjectURL(file)
       setPreview(previewUrl)
 
-      const formData = new FormData()
-      formData.append('file', file)
+      const result = await uploadSiteSettingImage(file)
 
-      const response = await fetch('/api/site-settings/upload-image', {
-        method: 'POST',
-        body: formData,
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.error || '上傳失敗')
-      }
-
-      onUpload(result.data.url)
-      setPreview(result.data.url)
+      onUpload(result.url)
+      setPreview(result.url)
     } catch (err) {
       setError(err instanceof Error ? err.message : '上傳失敗')
       setPreview(currentImage || null)

@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
 import { ProductImage } from '@/types/product'
+import { createLocationWithImages } from '@/lib/api/admin-api'
 
 export interface LocationFormData {
   name: string
@@ -11,7 +12,7 @@ export interface LocationFormData {
   phone: string
   lineId: string
   hours: string
-  closedDays: string
+  closedDays: string[] // 改為陣列以支援多選星期
   parking: string
   publicTransport: string
   features: string[]
@@ -39,8 +40,8 @@ const initialFormData: LocationFormData = {
   landmark: '',
   phone: '',
   lineId: '',
-  hours: '',
-  closedDays: '',
+  hours: '08:00-18:00', // 預設營業時間：早上8點到下午6點
+  closedDays: [], // 預設無公休日
   parking: '',
   publicTransport: '',
   features: [''],
@@ -61,6 +62,63 @@ const initialFieldErrors: FieldErrors = {
   hours: '',
 }
 
+/**
+ * 將公休日陣列轉換為顯示字串
+ * @param days - 公休日陣列，例如：["週一", "週三"]
+ * @returns 格式化的字串，例如："週一、週三公休"
+ */
+const formatClosedDays = (days: string[]): string => {
+  if (days.length === 0) {
+    return '' // 空字串表示未設定，顯示為全年無休
+  }
+
+  if (days.includes('全年無休')) {
+    return '全年無休'
+  }
+
+  if (days.includes('不定期公休')) {
+    const otherDays = days.filter(d => d !== '不定期公休')
+    if (otherDays.length > 0) {
+      return `${otherDays.join('、')}及不定期公休`
+    }
+    return '不定期公休'
+  }
+
+  return `${days.join('、')}公休`
+}
+
+/**
+ * 將公休日字串解析為陣列（用於載入現有資料）
+ * @param closedDaysStr - 公休日字串，例如："週一、週三公休"
+ * @returns 公休日陣列，例如：["週一", "週三"]
+ */
+const parseClosedDays = (closedDaysStr: string): string[] => {
+  if (!closedDaysStr || closedDaysStr === '' || closedDaysStr === '全年無休') {
+    return []
+  }
+
+  if (closedDaysStr === '不定期公休') {
+    return ['不定期公休']
+  }
+
+  // 解析格式如 "週一、週三公休" 或 "週一及不定期公休"
+  const cleanStr = closedDaysStr.replace(/公休$/, '').trim()
+
+  if (cleanStr.includes('及不定期公休')) {
+    const parts = cleanStr.split('及不定期公休')
+    const days = parts[0]
+      .split('、')
+      .map(d => d.trim())
+      .filter(d => d)
+    return [...days, '不定期公休']
+  }
+
+  return cleanStr
+    .split('、')
+    .map(d => d.trim())
+    .filter(d => d)
+}
+
 // 驗證函數
 const validateField = (field: string, value: unknown): string => {
   const stringValue = String(value)
@@ -73,11 +131,48 @@ const validateField = (field: string, value: unknown): string => {
       return !stringValue.trim() ? '請輸入門市地址' : ''
     case 'phone':
       if (!stringValue.trim()) return '請輸入電話號碼'
-      // 台灣電話格式簡單驗證 (09xxxxxxxx 或 0x-xxxxxxx)
-      const phoneRegex = /^(09\d{8}|0\d{1,2}-\d{6,8})$/
-      return !phoneRegex.test(stringValue.replace(/\s+/g, '')) ? '電話格式不正確' : ''
+
+      // 台灣電話格式增強驗證 - 支援多種格式
+      // 1. 移除格式字元（空白、中線、括號）保留數字、加號、分機標記
+      const cleanPhone = stringValue.replace(/[\s\-()]/g, '')
+
+      // 2. 驗證主要號碼格式
+      // 支援格式：
+      // - 手機: 09xxxxxxxx, +8869xxxxxxxx
+      // - 市話: 0x-xxxxxxx (區碼2-3碼，號碼6-8碼)
+      // - 特殊: 0800xxxxxx, 0204xxxxxx, 070xxxxxxx
+      // - 分機: #123, ext.123, 轉123
+      const phoneRegex =
+        /^(\+?886)?0?(9\d{8}|[2-8]\d{7,8}|800\d{6}|204\d{6}|70\d{7})((?:#|ext\.?|轉)\d+)?$/i
+
+      if (!phoneRegex.test(cleanPhone)) {
+        return '電話格式不正確'
+      }
+
+      return ''
     case 'hours':
-      return !stringValue.trim() ? '請輸入營業時間' : ''
+      if (!stringValue.trim()) return '請輸入營業時間'
+
+      // 驗證時間範圍格式：HH:mm-HH:mm
+      const timeRangeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]-([0-1][0-9]|2[0-3]):[0-5][0-9]$/
+      if (!timeRangeRegex.test(stringValue)) {
+        return '營業時間格式錯誤（格式：HH:mm-HH:mm）'
+      }
+
+      // 驗證時間範圍（支援跨日營業）
+      const [start, end] = stringValue.split('-')
+      const [startHour, startMinute] = start.split(':').map(Number)
+      const [endHour, endMinute] = end.split(':').map(Number)
+      const startMinutes = startHour * 60 + startMinute
+      const endMinutes = endHour * 60 + endMinute
+
+      // 不允許開始和結束時間完全相同（0小時營業）
+      if (endMinutes === startMinutes) {
+        return '營業時間不能為0小時'
+      }
+
+      // 允許跨日營業（例如：22:00-02:00 表示晚上10點到隔天凌晨2點）
+      return ''
     default:
       return ''
   }
@@ -106,7 +201,16 @@ export const useLocationForm = (locationId: string) => {
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value, type } = e.target
-      const newValue = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+      let newValue: unknown
+
+      if (type === 'checkbox') {
+        newValue = (e.target as HTMLInputElement).checked
+      } else if (type === 'array') {
+        // 支援陣列型別（用於 WeekdaySelector）
+        newValue = value
+      } else {
+        newValue = value
+      }
 
       handleFieldChange(name, newValue)
     },
@@ -260,7 +364,7 @@ export const useLocationForm = (locationId: string) => {
           phone: formData.phone,
           lineId: formData.lineId || '',
           hours: formData.hours,
-          closedDays: formData.closedDays || '',
+          closedDays: formatClosedDays(formData.closedDays), // 將陣列轉換為字串
           parking: formData.parking || '',
           publicTransport: formData.publicTransport || '',
           features: formData.features.filter(feature => feature.trim() !== ''),
@@ -281,21 +385,10 @@ export const useLocationForm = (locationId: string) => {
         })
 
         // 提交到事務式 API
-        const response = await fetch('/api/admin/locations/create-with-images', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            location: locationData,
-            image: imageData,
-          }),
+        await createLocationWithImages({
+          location: locationData,
+          image: imageData,
         })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: '建立失敗' }))
-          throw new Error(errorData.message || `建立失敗 (${response.status})`)
-        }
-
-        const result = await response.json()
 
         setSubmitSuccess('門市新增成功！正在跳轉...')
 
@@ -345,3 +438,6 @@ export const useLocationForm = (locationId: string) => {
     updateSpecialtyField,
   }
 }
+
+// 匯出工具函數供外部使用
+export { parseClosedDays, formatClosedDays }

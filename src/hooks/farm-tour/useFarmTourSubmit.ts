@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import { ProductImage } from '@/types/product'
+import { createFarmTourWithImages } from '@/lib/api/admin-api'
 
 export interface FarmTourFormData {
   start_month: number
@@ -139,21 +140,10 @@ export function useFarmTourSubmit(): UseFarmTourSubmitReturn {
         })
 
         // 提交到事務式 API
-        const response = await fetch('/api/admin/farm-tour/create-with-images', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            activity: activityData,
-            image: imageData,
-          }),
+        await createFarmTourWithImages({
+          activity: activityData,
+          image: imageData,
         })
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({ message: '建立失敗' }))
-          throw new Error(errorData.message || `建立失敗 (${response.status})`)
-        }
-
-        const result = await response.json()
 
         setSubmitSuccess('農場活動新增成功！')
 

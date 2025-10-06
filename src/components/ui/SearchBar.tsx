@@ -6,6 +6,7 @@ import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useDebounce } from '@/hooks/useDebounce'
 import { SearchResult } from '@/types/search'
 import { logger } from '@/lib/logger'
+import { searchContent } from '@/lib/api/search-api'
 
 interface SearchBarProps {
   placeholder?: string
@@ -42,8 +43,7 @@ export function SearchBar({
     const fetchSuggestions = async () => {
       setIsLoading(true)
       try {
-        const response = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}&limit=5`)
-        const data = await response.json()
+        const data = await searchContent(debouncedQuery, { limit: 5 })
         setSuggestions(data.results || [])
         setShowDropdown(data.results?.length > 0)
       } catch (error) {

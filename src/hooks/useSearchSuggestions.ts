@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { logger } from '@/lib/logger'
+import { fetchSearchSuggestions } from '@/lib/api/search-api'
 
 export interface SearchSuggestionsResponse {
   suggestions: string[]
@@ -28,7 +29,6 @@ export function useSearchSuggestions(options: UseSearchSuggestionsOptions = {}) 
   const [error, setError] = useState<string | null>(null)
 
   const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined)
-  const abortControllerRef = useRef<AbortController | undefined>(undefined)
 
   // 載入搜尋歷史
   useEffect(() => {
@@ -98,42 +98,13 @@ export function useSearchSuggestions(options: UseSearchSuggestionsOptions = {}) 
         return
       }
 
-      // 取消之前的請求
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
-      }
-
-      abortControllerRef.current = new AbortController()
       setLoading(true)
       setError(null)
 
       try {
-        const response = await fetch(
-          `/api/search/suggestions?q=${encodeURIComponent(query)}&limit=${maxSuggestions}`,
-          {
-            signal: abortControllerRef.current.signal,
-          }
-        )
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
-
-        const result = await response.json()
-        if (result.success && result.data) {
-          setSuggestions(result.data.suggestions || [])
-        } else {
-          setSuggestions([])
-          if (!result.success) {
-            setError(result.message || '取得建議失敗')
-          }
-        }
+        const suggestions = await fetchSearchSuggestions(query, maxSuggestions)
+        setSuggestions(suggestions)
       } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') {
-          // 請求被取消，正常情況
-          return
-        }
-
         logger.warn('Failed to fetch search suggestions', {
           module: 'useSearchSuggestions',
           metadata: { error: String(error), query: query.substring(0, 20) },
@@ -169,9 +140,6 @@ export function useSearchSuggestions(options: UseSearchSuggestionsOptions = {}) 
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current)
-      }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort()
       }
     }
   }, [])

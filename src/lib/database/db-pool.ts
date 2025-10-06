@@ -213,7 +213,7 @@ export class SupabaseConnectionPool {
       }
 
       return isHealthy
-    } catch (_error) {
+    } catch {
       connection.state = ConnectionState.UNHEALTHY
       return false
     }

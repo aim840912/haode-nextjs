@@ -1,54 +1,49 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { ScheduleItem } from '@/types/schedule'
 import Link from 'next/link'
 import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
+import {
+  fetchSchedule as fetchScheduleAPI,
+  deleteSchedule,
+  updateScheduleStatus,
+} from '@/lib/api/schedule-api'
+import { useLoadingManager } from '@/hooks/useLoadingManager'
 
 export default function ScheduleAdmin() {
   const [schedule, setSchedule] = useState<ScheduleItem[]>([])
-  const [loading, setLoading] = useState(true)
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const { user } = useAuth()
 
+  // 使用 useLoadingManager 管理載入狀態
+  const { isLoading: loading, execute } = useLoadingManager<ScheduleItem[]>({
+    module: 'ScheduleAdmin',
+    initialLoading: true,
+  })
+
+  const fetchSchedule = useCallback(async () => {
+    const data = await execute(() => fetchScheduleAPI(), {
+      logAction: 'fetchSchedule',
+      onSuccess: data => setSchedule(data),
+      onError: () => setSchedule([]),
+    })
+    if (data) {
+      logger.info('行程資料載入成功', { metadata: { count: data.length } })
+    }
+  }, [execute])
+
   useEffect(() => {
     fetchSchedule()
-  }, [])
-
-  const fetchSchedule = async () => {
-    try {
-      const response = await fetch('/api/schedule')
-      const result = await response.json()
-
-      // 處理統一 API 回應格式
-      const data = result.data || result
-
-      // 確保 data 是陣列
-      if (Array.isArray(data)) {
-        setSchedule(data)
-        logger.info('行程資料載入成功', { metadata: { count: data.length } })
-      } else {
-        logger.error('API 回應格式錯誤：schedule data 不是陣列', result)
-        setSchedule([])
-      }
-    } catch (error) {
-      logger.error(
-        'Error fetching schedule:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      setSchedule([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [fetchSchedule])
 
   const handleDelete = async (id: string) => {
     if (!confirm('確定要刪除此行程嗎？')) return
 
     try {
-      await fetch(`/api/schedule/${id}`, { method: 'DELETE' })
+      await deleteSchedule(id)
       setSchedule(schedule.filter(s => s.id !== id))
     } catch (error) {
       logger.error(
@@ -61,11 +56,7 @@ export default function ScheduleAdmin() {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      await fetch(`/api/schedule/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      })
+      await updateScheduleStatus(id, status as 'upcoming' | 'ongoing' | 'completed')
       fetchSchedule()
     } catch (error) {
       logger.error(

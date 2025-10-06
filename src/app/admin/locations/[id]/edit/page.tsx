@@ -6,11 +6,13 @@ import { Location } from '@/types/location'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { getFullImageUrl, extractStoragePathFromUrl } from '@/lib/utils/image-url-utils'
 import AdminProtection from '@/components/features/admin/AdminProtection'
+import TimeRangePicker from '@/components/ui/form/TimeRangePicker'
+import WeekdaySelector from '@/components/ui/form/WeekdaySelector'
+import { parseClosedDays, formatClosedDays } from '@/hooks/location/useLocationForm'
 
 // 動態載入圖片上傳器
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -41,7 +43,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
     phone: '',
     lineId: '',
     hours: '',
-    closedDays: '',
+    closedDays: [] as string[], // 改為陣列
     parking: '',
     publicTransport: '',
     features: [''],
@@ -70,7 +72,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
             phone: location.phone || '',
             lineId: location.lineId || '',
             hours: location.hours || '',
-            closedDays: location.closedDays || '',
+            closedDays: parseClosedDays(location.closedDays || ''), // 解析字串為陣列
             parking: location.parking || '',
             publicTransport: location.publicTransport || '',
             features: location.features || [''],
@@ -172,9 +174,20 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value, type } = e.target
+    let newValue: unknown
+
+    if (type === 'checkbox') {
+      newValue = (e.target as HTMLInputElement).checked
+    } else if (type === 'array') {
+      // 支援陣列型別（用於 WeekdaySelector）
+      newValue = value
+    } else {
+      newValue = value
+    }
+
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+      [name]: newValue,
     }))
   }
 
@@ -447,33 +460,37 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">
-                      營業時間 *
-                    </label>
-                    <input
-                      type="text"
-                      name="hours"
-                      value={formData.hours}
-                      onChange={handleInputChange}
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                      placeholder="例：09:00-19:00"
-                    />
-                  </div>
+                {/* 營業時間 - 獨立一行 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    營業時間 *
+                  </label>
+                  <TimeRangePicker
+                    value={formData.hours}
+                    onChange={value => {
+                      const syntheticEvent = {
+                        target: { name: 'hours', value, type: 'text' },
+                      } as React.ChangeEvent<HTMLInputElement>
+                      handleInputChange(syntheticEvent)
+                    }}
+                    required
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-800 mb-2">公休日</label>
-                    <input
-                      type="text"
-                      name="closedDays"
-                      value={formData.closedDays}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
-                      placeholder="例：週一公休"
-                    />
-                  </div>
+                {/* 公休日 - 獨立一行 */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-800 mb-2">
+                    公休日（可複選）
+                  </label>
+                  <WeekdaySelector
+                    value={formData.closedDays}
+                    onChange={days => {
+                      const syntheticEvent = {
+                        target: { name: 'closedDays', value: days, type: 'array' },
+                      } as unknown as React.ChangeEvent<HTMLInputElement>
+                      handleInputChange(syntheticEvent)
+                    }}
+                  />
                 </div>
               </div>
 
@@ -726,8 +743,10 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                       <span className="mr-2 text-sm">⏰</span>
                       <span className="text-sm text-gray-700">{formData.hours || '營業時間'}</span>
                     </div>
-                    {formData.closedDays && (
-                      <div className="text-xs text-gray-500 ml-5">{formData.closedDays}</div>
+                    {formData.closedDays.length > 0 && (
+                      <div className="text-xs text-gray-500 ml-5">
+                        {formatClosedDays(formData.closedDays)}
+                      </div>
                     )}
                   </div>
 

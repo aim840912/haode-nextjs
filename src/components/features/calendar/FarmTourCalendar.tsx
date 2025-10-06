@@ -73,8 +73,11 @@ export default function FarmTourCalendar({
         // 預設行為：顯示事件詳情（這裡可以開啟彈窗等）
         const event = events.find(e => e.id === eventId)
         if (event) {
+          const statusLabel =
+            INQUIRY_STATUS_LABELS[event.extendedProps.status as InquiryStatus] ||
+            event.extendedProps.status
           alert(
-            `預約詳情：\n客戶：${event.extendedProps.customer_name}\n活動：${event.extendedProps.activity_title}\n人數：${event.extendedProps.visitor_count}人\n狀態：${INQUIRY_STATUS_LABELS[event.extendedProps.status]}`
+            `預約詳情：\n客戶：${event.extendedProps.customer_name}\n活動：${event.extendedProps.activity_title}\n人數：${event.extendedProps.visitor_count}人\n狀態：${statusLabel}`
           )
         }
       }

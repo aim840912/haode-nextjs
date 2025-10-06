@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { SearchResult, SearchResponse, SearchFilters } from '@/types/search'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { searchContent } from '@/lib/api/search-api'
 
 interface SearchResultsProps {
   query: string
@@ -32,30 +33,7 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
       setError(null)
 
       try {
-        const searchParams = new URLSearchParams({ q: query })
-
-        // 添加篩選參數
-        if (filters?.type && filters.type.length > 0) {
-          searchParams.append('type', filters.type.join(','))
-        }
-        if (filters?.category && filters.category.length > 0) {
-          searchParams.append('category', filters.category.join(','))
-        }
-        if (filters?.priceRange) {
-          searchParams.append('minPrice', filters.priceRange[0].toString())
-          searchParams.append('maxPrice', filters.priceRange[1].toString())
-        }
-        if (filters?.minRating) {
-          searchParams.append('minRating', filters.minRating.toString())
-        }
-
-        const response = await fetch(`/api/search?${searchParams.toString()}`)
-
-        if (!response.ok) {
-          throw new Error('搜尋失敗')
-        }
-
-        const data: SearchResponse = await response.json()
+        const data = await searchContent(query, { filters })
         setResults(data.results)
         setSearchResponse(data)
       } catch (err) {

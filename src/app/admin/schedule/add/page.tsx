@@ -59,9 +59,25 @@ export default function AddSchedule() {
         return !formattedTime ? '請選擇開始時間和結束時間' : ''
       case 'contact':
         if (!stringValue.trim()) return '請輸入聯絡電話'
-        // 台灣電話格式簡單驗證
-        const phoneRegex = /^(09\d{8}|0\d{1,2}-\d{6,8})$/
-        return !phoneRegex.test(stringValue.replace(/\s+/g, '')) ? '電話格式不正確' : ''
+
+        // 台灣電話格式增強驗證 - 支援多種格式
+        // 1. 移除格式字元（空白、中線、括號）保留數字、加號、分機標記
+        const cleanPhone = stringValue.replace(/[\s\-()]/g, '')
+
+        // 2. 驗證主要號碼格式
+        // 支援格式：
+        // - 手機: 09xxxxxxxx, +8869xxxxxxxx
+        // - 市話: 0x-xxxxxxx (區碼2-3碼，號碼6-8碼)
+        // - 特殊: 0800xxxxxx, 0204xxxxxx, 070xxxxxxx
+        // - 分機: #123, ext.123, 轉123
+        const phoneRegex =
+          /^(\+?886)?0?(9\d{8}|[2-8]\d{7,8}|800\d{6}|204\d{6}|70\d{7})((?:#|ext\.?|轉)\d+)?$/i
+
+        if (!phoneRegex.test(cleanPhone)) {
+          return '電話格式不正確'
+        }
+
+        return ''
       default:
         return ''
     }

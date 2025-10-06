@@ -52,7 +52,7 @@ function AddProductV2() {
   // 圖片和分類狀態
   const [tempImages, setTempImages] = useState<any[]>([])
   const [categories, setCategories] = useState<string[]>([])
-  const [uploadStats, setUploadStats] = useState({
+  const [uploadStats] = useState({
     totalImages: 0,
     uploadedImages: 0,
     queuedImages: 0,
