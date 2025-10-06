@@ -4,11 +4,20 @@ import { createContext, useContext, useState, ReactNode, useCallback } from 'rea
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading'
 
+export type ToastPosition =
+  | 'top-left'
+  | 'top-center'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-center'
+  | 'bottom-right'
+
 export interface Toast {
   id: string
   type: ToastType
   title: string
   message?: string
+  position?: ToastPosition // Toast 顯示位置，預設為 bottom-right
   duration?: number
   progress?: number // 0-100 for loading toasts
   persistent?: boolean // 不自動消失
@@ -138,15 +147,54 @@ export function useToast() {
   return context
 }
 
+/**
+ * 根據位置參數取得對應的 CSS class
+ */
+function getPositionClasses(position: ToastPosition = 'bottom-right'): string {
+  const positions: Record<ToastPosition, string> = {
+    'top-left': 'fixed top-4 left-4 z-50 space-y-2',
+    'top-center': 'fixed top-4 left-1/2 -translate-x-1/2 z-50 space-y-2',
+    'top-right': 'fixed top-4 right-4 z-50 space-y-2',
+    'bottom-left': 'fixed bottom-4 left-4 z-50 space-y-2',
+    'bottom-center': 'fixed bottom-4 left-1/2 -translate-x-1/2 z-50 space-y-2',
+    'bottom-right': 'fixed bottom-4 right-4 z-50 space-y-2',
+  }
+  return positions[position]
+}
+
+/**
+ * 將 toasts 依照位置分組
+ */
+function groupToastsByPosition(toasts: Toast[]): Map<ToastPosition, Toast[]> {
+  const grouped = new Map<ToastPosition, Toast[]>()
+
+  toasts.forEach(toast => {
+    const position = toast.position || 'bottom-right'
+    if (!grouped.has(position)) {
+      grouped.set(position, [])
+    }
+    grouped.get(position)!.push(toast)
+  })
+
+  return grouped
+}
+
 function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: string) => void }) {
   if (toasts.length === 0) return null
 
+  // 將 toasts 依位置分組
+  const toastsByPosition = groupToastsByPosition(toasts)
+
   return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2">
-      {toasts.map(toast => (
-        <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
+    <>
+      {Array.from(toastsByPosition.entries()).map(([position, positionToasts]) => (
+        <div key={position} className={getPositionClasses(position)}>
+          {positionToasts.map(toast => (
+            <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
+          ))}
+        </div>
       ))}
-    </div>
+    </>
   )
 }
 

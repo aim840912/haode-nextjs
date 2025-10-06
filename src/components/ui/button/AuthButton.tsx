@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { fetchUserInterests } from '@/lib/api/user-interests-api'
@@ -86,6 +87,7 @@ interface AuthButtonProps {
 }
 
 function AuthButton({ isMobile = false }: AuthButtonProps) {
+  const router = useRouter()
   const { user, logout, isLoading } = useAuth()
   const { success, error: showError } = useToast()
   const { stats, error: statsError, isRetrying } = useInquiryStatsContext()
@@ -184,6 +186,9 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
       await logout()
       // 顯示成功提示
       success('登出成功', '您已成功登出帳號')
+
+      // 登出成功後導向首頁
+      router.push('/')
     } catch (error) {
       // 檢查是否為預期的錯誤（session 已失效等）
       const err = error as { message?: string; status?: number }
@@ -203,6 +208,9 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
           },
         })
         success('登出成功', '您已成功登出帳號')
+
+        // 即使發生預期錯誤，仍然導向首頁
+        router.push('/')
       } else {
         // 真正的錯誤才顯示錯誤訊息
         logger.error('登出失敗', error as Error, {
@@ -216,7 +224,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
     } finally {
       setIsLoggingOut(false)
     }
-  }, [isLoggingOut, logout, success, user?.id, showError])
+  }, [isLoggingOut, logout, success, user?.id, showError, router])
 
   const toggleDropdown = useCallback(() => {
     setIsDropdownOpen(prev => !prev)
