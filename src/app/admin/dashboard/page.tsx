@@ -11,6 +11,7 @@ import {
   LinkIcon,
   CircleStackIcon,
   Cog6ToothIcon,
+  BugAntIcon,
 } from '@heroicons/react/24/outline'
 
 export default function AdminDashboard() {
@@ -131,6 +132,21 @@ export default function AdminDashboard() {
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900">網站設定</h3>
                     <p className="text-sm text-gray-600">管理首頁和頁面圖片</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* 開發筆記卡片 */}
+            <Link href="/admin/dev-notes" className="group">
+              <div className="bg-white p-6 rounded-xl shadow-sm border group-hover:shadow-md transition-shadow">
+                <div className="flex items-center">
+                  <div className="p-3 bg-rose-100 rounded-lg group-hover:bg-rose-200 transition-colors">
+                    <BugAntIcon className="h-8 w-8 text-rose-600" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-900">開發筆記</h3>
+                    <p className="text-sm text-gray-600">Bug 追蹤與待辦事項</p>
                   </div>
                 </div>
               </div>
