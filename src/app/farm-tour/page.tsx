@@ -1,11 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { FarmTourActivity } from '@/types/farmTour'
 import { useAuth } from '@/contexts/AuthContext'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
-import { SETTING_KEYS } from '@/types/siteSettings'
+import {
+  SETTING_KEYS,
+  type FacilityItem,
+  type FAQItem,
+  type VisitInfoData,
+  type VisitNotesData,
+} from '@/types/siteSettings'
 import { useFarmTourActivities } from './hooks/useFarmTourActivities'
 import { useFarmTourForm } from './hooks/useFarmTourForm'
 import { BookingModal } from './components/BookingModal'
@@ -18,8 +24,8 @@ import { FAQSection } from './components/FAQSection'
 import { ContactCTA } from './components/ContactCTA'
 import { FloatingCTA } from './components/FloatingCTA'
 
-// 農場設施
-const farmFacilities = [
+// 預設農場設施（向下相容）
+const DEFAULT_FACILITIES: FacilityItem[] = [
   {
     name: '品茶亭',
     description: '傳統竹造涼亭，提供農場自產茶品品嚐',
@@ -37,32 +43,137 @@ const farmFacilities = [
   },
 ]
 
+// 預設常見問題（向下相容）
+const DEFAULT_FAQS: FAQItem[] = [
+  {
+    question: '農場的開放時間是？',
+    answer: '週二至週日：09:00 - 17:00\n週一公休（國定假日正常開放）\n※ 體驗活動請提前電話預約',
+    icon: 'clock',
+  },
+  {
+    question: '如何前往農場？',
+    answer:
+      '自行開車：國道4號 → 台3線 → 東關路\n大眾運輸：台中客運 → 和平區 → 農場接駁\n團體包車：可協助安排遊覽車接駁',
+    icon: 'car',
+  },
+  {
+    question: '適合帶小孩嗎？',
+    answer:
+      '非常適合！我們的體驗活動專為親子設計，提供：\n• 安全的採果環境\n• 適合兒童的活動設計\n• 休息區和洗手設施\n• 專業導覽解說',
+    icon: 'users',
+  },
+  {
+    question: '費用包含哪些內容？',
+    answer:
+      '體驗費用包含：\n• 專業導覽解說\n• 採果體驗（可帶走一定數量）\n• 農場茶飲品嚐\n• 免費停車',
+    icon: 'banknote',
+  },
+]
+
+// 預設參觀資訊（向下相容）
+const DEFAULT_VISIT_INFO: VisitInfoData = {
+  address: '嘉義縣梅山鄉太和村一鄰八號',
+  opening_hours: {
+    weekdays: '週二至週日：09:00 - 17:00',
+    closed: '週一公休（國定假日正常開放）',
+    note: '* 體驗活動請電話詢問',
+  },
+  transportation: [
+    { type: '自行開車', route: '國道4號→台3線→東關路' },
+    { type: '大眾運輸', route: '台中客運→和平區→農場接駁' },
+    { type: '團體包車', route: '可協助安排遊覽車接駁' },
+  ],
+  contact: {
+    phone: '05-2561843',
+    line: '@haudetea',
+    email: 'tour@haudetea.com',
+  },
+}
+
+// 預設參觀須知（向下相容）
+const DEFAULT_VISIT_NOTES: VisitNotesData = {
+  important: ['體驗活動請來電詢問詳情', '團體參觀請來電洽詢', '如遇天候不佳，活動可能調整或取消'],
+  recommended_items: [
+    '舒適的運動鞋或登山鞋',
+    '帽子和防曬用品',
+    '水壺（農場有飲水機）',
+    '相機記錄美好時光',
+  ],
+  special_services: [
+    '免費農場導覽解說',
+    '團體活動客製化規劃',
+    '農產品宅配服務',
+    '企業員工旅遊包套',
+  ],
+}
+
 export default function FarmTourPage() {
   const [selectedActivity, setSelectedActivity] = useState<FarmTourActivity | null>(null)
   const [activeTab, setActiveTab] = useState('activities')
 
   const { user } = useAuth()
 
+  // 載入 Hero 背景圖片
   const { setting: heroBgSetting, loading: heroBgLoading } = useSiteSetting(
     SETTING_KEYS.FARM_TOUR_HERO_BG
   )
 
+  // 載入農場設施
+  const { setting: facilitiesSetting } = useSiteSetting(SETTING_KEYS.FARM_TOUR_FACILITIES)
+
+  // 載入常見問題
+  const { setting: faqsSetting } = useSiteSetting(SETTING_KEYS.FARM_TOUR_FAQS)
+
+  // 載入參觀資訊
+  const { setting: visitInfoSetting } = useSiteSetting(SETTING_KEYS.FARM_TOUR_VISIT_INFO)
+
+  // 載入參觀須知
+  const { setting: visitNotesSetting } = useSiteSetting(SETTING_KEYS.FARM_TOUR_VISIT_NOTES)
+
   const heroBackground =
     !heroBgLoading && heroBgSetting ? heroBgSetting.value : '/images/hero/farm-tour.jpg'
 
+  // 解析 JSON 資料並提供預設值
+  const facilities = useMemo<FacilityItem[]>(() => {
+    if (!facilitiesSetting?.value) return DEFAULT_FACILITIES
+    try {
+      return JSON.parse(facilitiesSetting.value)
+    } catch {
+      return DEFAULT_FACILITIES
+    }
+  }, [facilitiesSetting])
+
+  const faqs = useMemo<FAQItem[]>(() => {
+    if (!faqsSetting?.value) return DEFAULT_FAQS
+    try {
+      return JSON.parse(faqsSetting.value)
+    } catch {
+      return DEFAULT_FAQS
+    }
+  }, [faqsSetting])
+
+  const visitInfo = useMemo<VisitInfoData>(() => {
+    if (!visitInfoSetting?.value) return DEFAULT_VISIT_INFO
+    try {
+      return JSON.parse(visitInfoSetting.value)
+    } catch {
+      return DEFAULT_VISIT_INFO
+    }
+  }, [visitInfoSetting])
+
+  const visitNotes = useMemo<VisitNotesData>(() => {
+    if (!visitNotesSetting?.value) return DEFAULT_VISIT_NOTES
+    try {
+      return JSON.parse(visitNotesSetting.value)
+    } catch {
+      return DEFAULT_VISIT_NOTES
+    }
+  }, [visitNotesSetting])
+
   // ✅ 使用 Custom Hooks
-  const { seasonalActivities, loading, error } = useFarmTourActivities()
-  const {
-    formData,
-    fieldErrors,
-    isSubmitting,
-    submitError,
-    handleFormChange,
-    handleFieldBlur,
-    handleSubmit,
-    resetForm,
-    validateAllFields,
-  } = useFarmTourForm(user)
+  const { seasonalActivities, loading } = useFarmTourActivities()
+  const { formData, fieldErrors, handleFormChange, handleFieldBlur, resetForm, validateAllFields } =
+    useFarmTourForm(user)
 
   // UI 事件處理函數
   const openBookingModal = (activity: FarmTourActivity) => {
@@ -149,10 +260,10 @@ export default function FarmTourPage() {
         )}
 
         {/* 農場設施 */}
-        {activeTab === 'facilities' && <FacilitiesSection facilities={farmFacilities} />}
+        {activeTab === 'facilities' && <FacilitiesSection facilities={facilities} />}
 
         {/* 參觀資訊 */}
-        {activeTab === 'info' && <InfoSection />}
+        {activeTab === 'info' && <InfoSection visitInfo={visitInfo} visitNotes={visitNotes} />}
       </div>
 
       {/* Booking Modal */}
@@ -173,7 +284,7 @@ export default function FarmTourPage() {
       <TrustSection />
 
       {/* FAQ 區塊 */}
-      <FAQSection />
+      <FAQSection faqs={faqs} />
 
       {/* Contact CTA */}
       <ContactCTA onMapClick={() => handleTabClick('info')} />

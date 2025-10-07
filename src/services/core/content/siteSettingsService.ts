@@ -278,6 +278,53 @@ export class SiteSettingsService {
   }
 
   /**
+   * Upsert 設定（存在則更新，不存在則創建）
+   */
+  async upsert(
+    key: SettingKey | string,
+    input: SiteSettingUpdate & { type?: string }
+  ): Promise<SiteSetting> {
+    const timer = dbLogger.timer('Upsert 網站設定')
+
+    try {
+      dbLogger.info('Upsert 網站設定', {
+        module: this.moduleName,
+        action: 'upsert',
+        metadata: { key },
+      })
+
+      const existing = await this.getByKey(key)
+
+      if (existing) {
+        // 設定存在，執行更新
+        timer.end({ metadata: { operation: 'update' } })
+        return await this.update(key, input)
+      } else {
+        // 設定不存在，執行創建
+        const createInput: SiteSettingInput = {
+          key,
+          value: input.value,
+          type: input.type || 'string',
+          description: input.description,
+        }
+        timer.end({ metadata: { operation: 'create' } })
+        return await this.create(createInput)
+      }
+    } catch (error) {
+      timer.end()
+      dbLogger.error('Upsert 網站設定失敗', error as Error, {
+        module: this.moduleName,
+        action: 'upsert',
+        metadata: { key },
+      })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: this.moduleName,
+        action: 'upsert',
+      })
+    }
+  }
+
+  /**
    * 刪除設定
    */
   async delete(key: SettingKey | string): Promise<boolean> {

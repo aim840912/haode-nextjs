@@ -75,6 +75,18 @@ export const IMAGE_MODULE_CONFIGS: Record<string, ImageModuleConfig> = {
     storageFolder: 'moments',
     displayName: '精彩時刻圖片',
   },
+  'site-settings': {
+    maxFiles: 10,
+    allowMultiple: true,
+    generateSizes: ['medium'],
+    enableSorting: true,
+    enableDelete: true,
+    enableCompression: true,
+    acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    maxFileSize: 5 * 1024 * 1024, // 5MB
+    storageFolder: 'site-settings',
+    displayName: '網站設定圖片',
+  },
 }
 
 /**

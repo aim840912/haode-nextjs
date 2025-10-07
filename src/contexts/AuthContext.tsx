@@ -526,10 +526,55 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     try {
       await signUpUser(userData.email, userData.password, userData.name, userData.phone)
-      // 認證狀態變化會由 onAuthStateChange 處理
+
+      // 主動載入 profile 資料以確保完整性
+      // 避免時間競爭問題導致註冊後 phone 等資料不顯示
+      if (userData.phone) {
+        try {
+          // 等待一點時間讓資料庫觸發器執行
+          await new Promise(resolve => setTimeout(resolve, 1500))
+
+          // 取得當前 session
+          const {
+            data: { session },
+          } = await supabase.auth.getSession()
+
+          if (session?.user) {
+            // 主動從資料庫取得 profile 資料
+            const profile = await getUserProfile(session.user.id)
+
+            if (profile) {
+              const userData: User = {
+                id: profile.id,
+                email: session.user.email!,
+                name: profile.name,
+                phone: profile.phone || undefined,
+                address: profile.address || undefined,
+                role: profile.role,
+                createdAt: profile.created_at,
+                updatedAt: profile.updated_at,
+              }
+              setUser(userData)
+
+              logger.info('註冊後 Profile 資料已載入', {
+                metadata: { hasPhone: !!profile.phone, action: 'register_profile_loaded' },
+              })
+            }
+          }
+        } catch (profileError) {
+          // 載入 profile 失敗不影響註冊流程，會由 onAuthStateChange 處理
+          logger.warn('註冊後主動載入 profile 失敗', {
+            metadata: { error: String(profileError), action: 'register_profile_load_failed' },
+          })
+        }
+      }
+
+      // 認證狀態變化也會由 onAuthStateChange 處理（雙重保險）
     } catch (error) {
       setIsLoading(false)
       throw error
+    } finally {
+      setIsLoading(false)
     }
   }
 

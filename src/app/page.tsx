@@ -30,6 +30,14 @@ export default function Home() {
   const { setting: heroImagesSetting, loading: heroImagesLoading } = useSiteSetting(
     SETTING_KEYS.HOME_HERO_IMAGES
   )
+  const { setting: featureCard1Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE)
+  const { setting: featureCard2Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE)
+  const { setting: featureCard3Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE)
+  const { setting: featureCard4Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE)
+  const { setting: seasonSpringSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_SPRING_IMAGE)
+  const { setting: seasonSummerSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE)
+  const { setting: seasonAutumnSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE)
+  const { setting: seasonWinterSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_WINTER_IMAGE)
 
   const defaultHeroImages = [
     '/images/hero/scene1.jpg',
@@ -50,6 +58,29 @@ export default function Home() {
       return defaultHeroImages
     }
   })()
+
+  // 翻轉卡片背景圖片
+  const featureCardImages = [
+    featureCard1Setting?.value || '',
+    featureCard2Setting?.value || '',
+    featureCard3Setting?.value || '',
+    featureCard4Setting?.value || '',
+  ]
+
+  // 四季體驗圖片（提供 fallback 預設值）
+  const defaultSeasonImages = [
+    '/images/locations/mountain.jpg', // 春季預設
+    '/images/farm-tour/many_people_1.jpg', // 夏季預設
+    '/images/locations/mountain.jpg', // 秋季預設
+    '/images/farm-tour/many_people_1.jpg', // 冬季預設
+  ]
+
+  const seasonImages = [
+    seasonSpringSetting?.value || defaultSeasonImages[0],
+    seasonSummerSetting?.value || defaultSeasonImages[1],
+    seasonAutumnSetting?.value || defaultSeasonImages[2],
+    seasonWinterSetting?.value || defaultSeasonImages[3],
+  ]
 
   // 視差滾動效果
   useEffect(() => {
@@ -259,17 +290,17 @@ export default function Home() {
                     </div>
                     {/* 背面 */}
                     <div
-                      className={`flip-card-back glass-card rounded-2xl p-6 shadow-xl flex flex-col justify-center text-center bg-gradient-to-br ${feature.color}`}
-                    >
-                      <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                      <p className="text-white/90 text-sm leading-relaxed">
-                        {index === 0 &&
-                          '傳承百年農業技術，不使用化學肥料與農藥，採用天然堆肥與生物防治'}
-                        {index === 1 && '通過有機認證標準，每批產品都經過嚴格檢驗，確保安全無虞'}
-                        {index === 2 && '春賞花、夏採果、秋收成、冬品茶，全年都有精彩活動等您參與'}
-                        {index === 3 && '注重生態平衡，與自然和諧共存，為下一代保留美好環境'}
-                      </p>
-                    </div>
+                      className="flip-card-back rounded-2xl shadow-xl overflow-hidden"
+                      style={
+                        featureCardImages[index]
+                          ? {
+                              backgroundImage: `url(${featureCardImages[index]})`,
+                              backgroundSize: 'cover',
+                              backgroundPosition: 'center',
+                            }
+                          : {}
+                      }
+                    ></div>
                   </div>
                 </div>
               ))}
@@ -314,15 +345,7 @@ export default function Home() {
                   <div
                     className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl"
                     style={{
-                      backgroundImage: `url(${
-                        activeSeason === 0
-                          ? '/images/locations/mountain.jpg'
-                          : activeSeason === 1
-                            ? '/images/farm-tour/many_people_1.jpg'
-                            : activeSeason === 2
-                              ? '/images/locations/mountain.jpg'
-                              : '/images/farm-tour/many_people_1.jpg'
-                      })`,
+                      backgroundImage: `url(${seasonImages[activeSeason]})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
                     }}

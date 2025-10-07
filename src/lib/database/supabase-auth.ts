@@ -255,8 +255,8 @@ export async function signUpUser(email: string, password: string, name: string, 
   // 後端補救機制：確保電話號碼儲存到 profiles 表
   if (data.user && phone) {
     try {
-      // 等待一點時間讓觸發器執行
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // 等待一點時間讓觸發器執行（增加到 2 秒以確保觸發器完成）
+      await new Promise(resolve => setTimeout(resolve, 2000))
 
       // 檢查 profile 是否已建立且有電話號碼
       const { data: profile, error: profileError } = (await supabase

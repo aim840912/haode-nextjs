@@ -145,6 +145,37 @@ export async function updateSiteSetting(
 }
 
 /**
+ * Upsert 網站設定（存在則更新，不存在則創建）（管理員）
+ * @param key - 設定鍵
+ * @param data - 設定資料
+ * @returns 設定資料
+ */
+export async function upsertSiteSetting(
+  key: string,
+  data: SiteSettingUpdate & { type?: string }
+): Promise<SiteSetting> {
+  try {
+    const params = new URLSearchParams({ key })
+    const result = await apiClient.patch<SiteSetting>(
+      `/api/site-settings?${params}`,
+      data as unknown as Record<string, unknown>
+    )
+
+    if (!result.success || !result.data) {
+      throw new Error(result.message || '儲存網站設定失敗')
+    }
+
+    apiLogger.info('網站設定已儲存', {
+      metadata: { key },
+    })
+
+    return result.data
+  } catch (error) {
+    handleApiError(error, 'upsertSiteSetting', 'SiteSettingsAPI')
+  }
+}
+
+/**
  * 刪除網站設定（管理員）
  * @param key - 設定鍵
  * @returns 是否刪除成功

@@ -29,7 +29,9 @@ async function handleGET(req: NextRequest, _user: User | null) {
 
   if (keys) {
     const keyArray = keys.split(',').map(k => k.trim())
-    const settings = await siteSettingsService.getByKeys(keyArray)
+    const settingsMap = await siteSettingsService.getByKeys(keyArray)
+    // 將 Record 轉換為陣列，因為前端期望的是 SiteSetting[]
+    const settings = Object.values(settingsMap)
     return success(settings, '批次設定取得成功')
   }
 
@@ -124,8 +126,35 @@ export const DELETE = withAdminAndError(handleDELETE, {
   enableAuditLog: true,
 })
 
-async function handleUnsupportedMethod(request: NextRequest): Promise<never> {
-  throw new MethodNotAllowedError(`不支援的方法: ${request.method}`)
+/**
+ * PATCH /api/site-settings
+ * Upsert 設定（存在則更新，不存在則創建）（管理員權限）
+ */
+async function handlePATCH(req: NextRequest, _user: User) {
+  const { searchParams } = new URL(req.url)
+  const key = searchParams.get('key')
+
+  if (!key) {
+    throw new ValidationError('請提供設定鍵 (key)')
+  }
+
+  const body = await req.json()
+
+  if (!body.value) {
+    throw new ValidationError('設定值 (value) 為必填欄位')
+  }
+
+  const input = {
+    value: body.value,
+    description: body.description,
+    type: body.type,
+  }
+
+  const setting = await siteSettingsService.upsert(key, input)
+  return success(setting, '設定已儲存')
 }
 
-export const PATCH = withAdminAndError(handleUnsupportedMethod, { module: 'SiteSettingsAPI' })
+export const PATCH = withAdminAndError(handlePATCH, {
+  module: 'SiteSettingsAPI',
+  enableAuditLog: true,
+})

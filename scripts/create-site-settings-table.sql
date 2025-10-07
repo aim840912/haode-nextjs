@@ -36,6 +36,10 @@ INSERT INTO site_settings (key, value, type, description) VALUES
   ('home.hero_images', '["\/images\/hero\/scene1.jpg","\/images\/locations\/mountain.jpg","\/images\/farm-tour\/many_people_1.jpg"]', 'images_array', '首頁輪播圖片'),
   ('home.hero_title', '純淨農產的守護者', 'string', '首頁主標題'),
   ('home.hero_subtitle', '梅山優質農場，傳承自然農法的美好', 'string', '首頁副標題'),
+  ('home.feature_card_1_image', '', 'image', '首頁農場特色 - 自然農法卡片背面圖片'),
+  ('home.feature_card_2_image', '', 'image', '首頁農場特色 - 品質認證卡片背面圖片'),
+  ('home.feature_card_3_image', '', 'image', '首頁農場特色 - 農場體驗卡片背面圖片'),
+  ('home.feature_card_4_image', '', 'image', '首頁農場特色 - 永續經營卡片背面圖片'),
   ('farm_tour.hero_background', '\/images\/hero\/farm-tour.jpg', 'image', '農場體驗頁面背景圖片'),
   ('farm_tour.hero_title', '農場體驗之旅', 'string', '農場體驗頁面主標題'),
   ('farm_tour.hero_subtitle', '走進自然，體驗四季農事之美', 'string', '農場體驗頁面副標題')
@@ -44,12 +48,14 @@ ON CONFLICT (key) DO NOTHING;
 -- 加入 RLS (Row Level Security) 政策
 ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
 
--- 允許所有人讀取
+-- 允許所有人讀取（先刪除再創建，確保冪等性）
+DROP POLICY IF EXISTS "允許所有人讀取網站設定" ON site_settings;
 CREATE POLICY "允許所有人讀取網站設定"
   ON site_settings FOR SELECT
   USING (true);
 
--- 只有管理員可以修改
+-- 只有管理員可以修改（先刪除再創建，確保冪等性）
+DROP POLICY IF EXISTS "只有管理員可以修改網站設定" ON site_settings;
 CREATE POLICY "只有管理員可以修改網站設定"
   ON site_settings FOR ALL
   USING (

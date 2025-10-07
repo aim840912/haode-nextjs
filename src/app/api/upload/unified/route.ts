@@ -89,9 +89,11 @@ async function handlePOST(request: NextRequest, user: User) {
     throw new ValidationError(`不支援的圖片模組: ${module}`)
   }
 
-  // 權限檢查：產品模組需要管理員權限
-  if (module === 'products' && !user.isAdmin) {
-    throw new AuthorizationError('產品圖片上傳需要管理員權限')
+  // 權限檢查：產品和網站設定模組需要管理員權限
+  if ((module === 'products' || module === 'site-settings') && !user.isAdmin) {
+    throw new AuthorizationError(
+      `${module === 'products' ? '產品' : '網站設定'}圖片上傳需要管理員權限`
+    )
   }
 
   const config = getModuleConfig(module)
@@ -365,9 +367,14 @@ async function handleDELETE(request: NextRequest, user: User) {
       throw new ValidationError(`圖片不存在: ${imageId}`)
     }
 
-    // 權限檢查：產品模組需要管理員權限
-    if (imageInfo.module === 'products' && !user.isAdmin) {
-      throw new AuthorizationError('產品圖片刪除需要管理員權限')
+    // 權限檢查：產品和網站設定模組需要管理員權限
+    if (
+      (imageInfo.module === 'products' || imageInfo.module === 'site-settings') &&
+      !user.isAdmin
+    ) {
+      throw new AuthorizationError(
+        `${imageInfo.module === 'products' ? '產品' : '網站設定'}圖片刪除需要管理員權限`
+      )
     }
 
     await unifiedImageService.deleteImage(imageId)

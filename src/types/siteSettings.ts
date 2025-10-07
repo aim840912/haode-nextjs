@@ -23,6 +23,7 @@ export interface SiteSettingInput {
 
 export interface SiteSettingUpdate {
   value: string
+  type?: SettingType
   description?: string
 }
 
@@ -38,13 +39,88 @@ export interface FarmTourPageSettings {
   hero_subtitle?: string
 }
 
+/**
+ * 農場設施項目
+ */
+export interface FacilityItem {
+  name: string
+  description: string
+  features: string[]
+}
+
+/**
+ * 常見問題項目
+ */
+export interface FAQItem {
+  question: string
+  answer: string
+  icon: 'clock' | 'car' | 'users' | 'banknote'
+}
+
+/**
+ * 開放時間資訊
+ */
+export interface OpeningHours {
+  weekdays: string
+  closed: string
+  note: string
+}
+
+/**
+ * 交通方式
+ */
+export interface TransportationItem {
+  type: string
+  route: string
+}
+
+/**
+ * 聯絡資訊
+ */
+export interface ContactInfo {
+  phone: string
+  line: string
+  email: string
+}
+
+/**
+ * 參觀資訊
+ */
+export interface VisitInfoData {
+  address: string
+  opening_hours: OpeningHours
+  transportation: TransportationItem[]
+  contact: ContactInfo
+}
+
+/**
+ * 參觀須知
+ */
+export interface VisitNotesData {
+  important: string[]
+  recommended_items: string[]
+  special_services: string[]
+}
+
 export const SETTING_KEYS = {
   HOME_HERO_IMAGES: 'home.hero_images',
   HOME_HERO_TITLE: 'home.hero_title',
   HOME_HERO_SUBTITLE: 'home.hero_subtitle',
+  HOME_FEATURE_CARD_1_IMAGE: 'home.feature_card_1_image',
+  HOME_FEATURE_CARD_2_IMAGE: 'home.feature_card_2_image',
+  HOME_FEATURE_CARD_3_IMAGE: 'home.feature_card_3_image',
+  HOME_FEATURE_CARD_4_IMAGE: 'home.feature_card_4_image',
+  HOME_SEASON_SPRING_IMAGE: 'home.season_spring_image',
+  HOME_SEASON_SUMMER_IMAGE: 'home.season_summer_image',
+  HOME_SEASON_AUTUMN_IMAGE: 'home.season_autumn_image',
+  HOME_SEASON_WINTER_IMAGE: 'home.season_winter_image',
   FARM_TOUR_HERO_BG: 'farm_tour.hero_background',
   FARM_TOUR_HERO_TITLE: 'farm_tour.hero_title',
   FARM_TOUR_HERO_SUBTITLE: 'farm_tour.hero_subtitle',
+  FARM_TOUR_FACILITIES: 'farm_tour.facilities',
+  FARM_TOUR_FAQS: 'farm_tour.faqs',
+  FARM_TOUR_VISIT_INFO: 'farm_tour.visit_info',
+  FARM_TOUR_VISIT_NOTES: 'farm_tour.visit_notes',
 } as const
 
 export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS]
