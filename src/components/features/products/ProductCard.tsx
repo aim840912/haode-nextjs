@@ -83,7 +83,11 @@ export const ProductCard = React.memo<ProductCardProps>(
         } catch (error) {
           // AbortError 是使用者取消分享，不需要顯示錯誤
           if ((error as Error).name !== 'AbortError') {
-            console.error('分享失敗:', error)
+            logger.error('產品分享失敗', error as Error, {
+              module: 'ProductCard',
+              action: 'handleShare',
+              metadata: { productId: product.id, productName: product.name },
+            })
             // 最終備援：顯示連結讓使用者手動複製
             alert(`請複製此連結分享：\n${shareUrl}`)
           }

@@ -251,7 +251,11 @@ export function useScheduleForm({
                 label: '查看錯誤',
                 onClick: () => {
                   // 可以在這裡添加滾動到錯誤欄位的邏輯
-                  console.error('Validation error:', displayMessage)
+                  logger.error('行程驗證錯誤', new Error(displayMessage), {
+                    module: 'useScheduleForm',
+                    action: 'handleValidationError',
+                    metadata: { scheduleId, errorMessage: displayMessage },
+                  })
                 },
                 variant: 'secondary',
               },

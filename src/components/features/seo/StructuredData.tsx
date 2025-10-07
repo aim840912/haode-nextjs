@@ -1,13 +1,41 @@
 import { FC } from 'react'
+import {
+  sanitizeStructuredData,
+  validateStructuredData,
+} from '@/lib/utils/structured-data-sanitizer'
+import { logger } from '@/lib/logger'
 
 interface StructuredDataProps {
   data: Record<string, unknown>
 }
 
+/**
+ * 結構化資料元件
+ *
+ * 安全性說明：
+ * - 使用 dangerouslySetInnerHTML 來嵌入 JSON-LD 結構化資料
+ * - 透過 sanitizeStructuredData 清理資料，防止 XSS 攻擊
+ * - JSON-LD 資料放在 <script type="application/ld+json"> 中，不會被執行為 JavaScript
+ * - 這是 Google、Schema.org 推薦的 SEO 標準做法
+ */
 const StructuredData: FC<StructuredDataProps> = ({ data }) => {
-  return (
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />
-  )
+  // 驗證結構化資料格式
+  const validation = validateStructuredData(data)
+  if (!validation.isValid) {
+    logger.warn('結構化資料格式不符合 Schema.org 規範', {
+      module: 'StructuredData',
+      action: 'validate',
+      metadata: { errors: validation.errors },
+    })
+  }
+
+  // 清理並序列化資料
+  const sanitizedJson = sanitizeStructuredData(data, {
+    enableLogging: true,
+    moduleName: 'StructuredData',
+  })
+
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: sanitizedJson }} />
 }
 
 // 農場主要資訊的結構化資料
@@ -85,28 +113,40 @@ export const ProductStructuredData = ({
     images?: string[]
   }
 }) => {
-  const data = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
+  // 使用專門的產品資料清理函數
+  const sanitizedProduct = {
     name: product.name,
     description: product.description,
     category: product.category,
+    price: product.price,
+    inventory: product.inventory,
+    images: product.images,
+  }
+
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: sanitizedProduct.name,
+    description: sanitizedProduct.description,
+    category: sanitizedProduct.category,
     brand: {
       '@type': 'Brand',
       name: '豪德農場',
     },
     offers: {
       '@type': 'Offer',
-      price: product.price,
+      price: sanitizedProduct.price,
       priceCurrency: 'TWD',
       availability:
-        product.inventory > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        sanitizedProduct.inventory > 0
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
       seller: {
         '@type': 'Organization',
         name: '豪德農場',
       },
     },
-    image: product.images?.[0] || '/images/placeholder.jpg',
+    image: sanitizedProduct.images?.[0] || '/images/placeholder.jpg',
   }
 
   return <StructuredData data={data} />
@@ -125,12 +165,22 @@ export const ArticleStructuredData = ({
     author?: string
   }
 }) => {
+  // 使用專門的文章資料清理函數
+  const sanitizedArticle = {
+    title: article.title,
+    summary: article.summary,
+    imageUrl: article.imageUrl,
+    publishedDate: article.publishedDate,
+    modifiedDate: article.modifiedDate,
+    author: article.author,
+  }
+
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    headline: article.title,
-    description: article.summary,
-    image: article.imageUrl,
+    headline: sanitizedArticle.title,
+    description: sanitizedArticle.summary,
+    image: sanitizedArticle.imageUrl,
     author: {
       '@type': 'Organization',
       name: '豪德農場',
@@ -143,8 +193,8 @@ export const ArticleStructuredData = ({
         url: 'https://haode-nextjs.vercel.app/logo.png',
       },
     },
-    datePublished: article.publishedDate,
-    dateModified: article.modifiedDate || article.publishedDate,
+    datePublished: sanitizedArticle.publishedDate,
+    dateModified: sanitizedArticle.modifiedDate || sanitizedArticle.publishedDate,
   }
 
   return <StructuredData data={data} />

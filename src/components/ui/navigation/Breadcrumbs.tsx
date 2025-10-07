@@ -7,6 +7,11 @@
 
 import Link from 'next/link'
 import { FC, useMemo } from 'react'
+import {
+  sanitizeStructuredData,
+  validateStructuredData,
+} from '@/lib/utils/structured-data-sanitizer'
+import { logger } from '@/lib/logger'
 
 // ============================================================================
 // 類型定義
@@ -45,6 +50,15 @@ interface BreadcrumbStructuredDataProps {
   baseUrl: string
 }
 
+/**
+ * BreadcrumbStructuredData 子組件
+ *
+ * 安全性說明：
+ * - 使用 dangerouslySetInnerHTML 來嵌入 JSON-LD 結構化資料
+ * - 透過 sanitizeStructuredData 清理資料，防止 XSS 攻擊
+ * - JSON-LD 資料放在 <script type="application/ld+json"> 中，不會被執行為 JavaScript
+ * - 這是 Google、Schema.org 推薦的 SEO 標準做法
+ */
 const BreadcrumbStructuredData: FC<BreadcrumbStructuredDataProps> = ({ items, baseUrl }) => {
   const structuredData = useMemo(() => {
     const itemListElement = items.map((item, index) => ({
@@ -66,12 +80,23 @@ const BreadcrumbStructuredData: FC<BreadcrumbStructuredDataProps> = ({ items, ba
     }
   }, [items, baseUrl])
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-    />
-  )
+  // 驗證結構化資料格式
+  const validation = validateStructuredData(structuredData)
+  if (!validation.isValid) {
+    logger.warn('麵包屑結構化資料格式不符合 Schema.org 規範', {
+      module: 'BreadcrumbStructuredData',
+      action: 'validate',
+      metadata: { errors: validation.errors },
+    })
+  }
+
+  // 清理並序列化資料
+  const sanitizedJson = sanitizeStructuredData(structuredData, {
+    enableLogging: true,
+    moduleName: 'BreadcrumbStructuredData',
+  })
+
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: sanitizedJson }} />
 }
 
 // ============================================================================

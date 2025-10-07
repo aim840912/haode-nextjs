@@ -21,6 +21,7 @@ import {
   DevNotePriority,
   DevNoteInput,
 } from '@/types/devNote'
+import { apiLogger } from '@/lib/logger'
 
 export default function DevNotesPage() {
   const [notes, setNotes] = useState<DevNote[]>([])
@@ -57,7 +58,11 @@ export default function DevNotesPage() {
       const notesData = await notesRes.json()
       setNotes(notesData.data)
     } catch (error) {
-      console.error('載入失敗:', error)
+      apiLogger.error('開發筆記載入失敗', error as Error, {
+        module: 'DevNotesPage',
+        action: 'loadDevNotes',
+        metadata: { typeFilter, statusFilter, priorityFilter },
+      })
     } finally {
       setLoading(false)
     }

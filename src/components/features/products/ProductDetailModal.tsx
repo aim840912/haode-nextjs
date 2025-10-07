@@ -9,6 +9,7 @@ import { InterestButton } from './InterestButton'
 import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
 import { useModalAnimation, useEscapeKey, useFocusTrap } from '@/hooks/useModalAnimation'
 import { cn } from '@/lib/utils'
+import { logger } from '@/lib/logger'
 
 // 動態載入圖片畫廊
 const ProductImageGallery = dynamic(
@@ -106,7 +107,11 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
       } catch (error) {
         // AbortError 是使用者取消分享，不需要顯示錯誤
         if ((error as Error).name !== 'AbortError') {
-          console.error('分享失敗:', error)
+          logger.error('產品詳情分享失敗', error as Error, {
+            module: 'ProductDetailModal',
+            action: 'handleShare',
+            metadata: { productId: product.id, productName: product.name },
+          })
           // 最終備援：顯示連結讓使用者手動複製
           alert(`請複製此連結分享：\n${shareUrl}`)
         }
