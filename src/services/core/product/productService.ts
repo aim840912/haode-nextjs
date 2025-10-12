@@ -1,13 +1,23 @@
-import { Product, CreateProductData, UpdateProductData, ProductImage } from '@/types/product'
+import {
+  Product,
+  CreateProductData,
+  UpdateProductData,
+  ProductImage,
+  InventoryStatus,
+} from '@/types/product'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
-import { ErrorFactory } from '@/lib/errors'
+import { ErrorFactory, NotFoundError } from '@/lib/errors'
 import { ProductImageService } from './productImageService'
 
 export class ProductService {
   private supabase = createServiceSupabaseClient()
 
   private transformFromDB(record: Record<string, unknown>, images?: ProductImage[]): Product {
+    const stock = (record.stock as number) || 0
+    const reservedStock = (record.reserved_stock as number) || 0
+    const availableStock = stock - reservedStock
+
     return {
       id: record.id as string,
       name: record.name as string,
@@ -20,7 +30,9 @@ export class ProductService {
       isOnSale: (record.is_on_sale as boolean) || false,
       saleEndDate: record.sale_end_date as string | undefined,
       productImages: images || [],
-      inventory: (record.stock as number) || 0,
+      inventory: stock, // 實際庫存
+      reservedStock: reservedStock, // 保留庫存
+      availableStock: availableStock, // 可用庫存
       isActive: (record.is_active as boolean) !== false,
       createdAt: record.created_at as string,
       updatedAt: record.updated_at as string,
@@ -275,6 +287,51 @@ export class ProductService {
 
       timer.end({ metadata: { query, count: products.length } })
       return products
+    } catch (error) {
+      timer.end()
+      throw error
+    }
+  }
+
+  /**
+   * 取得產品庫存狀態
+   * 包含實際庫存、保留庫存、可用庫存
+   */
+  async getInventoryStatus(productId: string): Promise<InventoryStatus> {
+    const timer = dbLogger.timer('取得庫存狀態')
+
+    try {
+      const { data, error } = await this.supabase
+        .from('products')
+        .select('stock, reserved_stock')
+        .eq('id', productId)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new NotFoundError(`產品不存在: ${productId}`)
+        }
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'ProductService',
+          action: 'getInventoryStatus',
+          context: { productId },
+        })
+      }
+
+      const stock = (data.stock as number) || 0
+      const reserved = (data.reserved_stock as number) || 0
+      const available = stock - reserved
+
+      const status: InventoryStatus = {
+        stock,
+        reserved,
+        available,
+        canPurchase: available > 0,
+        reservedPercentage: stock > 0 ? Math.round((reserved / stock) * 100 * 100) / 100 : 0,
+      }
+
+      timer.end({ metadata: { productId, status } })
+      return status
     } catch (error) {
       timer.end()
       throw error

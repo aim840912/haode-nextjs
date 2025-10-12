@@ -111,6 +111,7 @@ export interface Database {
           category: string
           image_url: string | null
           stock: number | null
+          reserved_stock: number | null
           is_active: boolean | null
           created_at: string
           updated_at: string
@@ -125,6 +126,7 @@ export interface Database {
           category: string
           image_url?: string | null
           stock?: number | null
+          reserved_stock?: number | null
           is_active?: boolean | null
           created_at?: string
           updated_at?: string
@@ -139,6 +141,7 @@ export interface Database {
           category?: string
           image_url?: string | null
           stock?: number | null
+          reserved_stock?: number | null
           is_active?: boolean | null
           created_at?: string
           updated_at?: string
@@ -566,7 +569,65 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_product_inventory: {
+        Args: {
+          p_product_id: string
+          p_quantity_change: number
+        }
+        Returns: void
+      }
+      reserve_product_inventory: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: {
+          success: boolean
+          error?: string
+          product_id?: string
+          available_stock?: number
+          requested?: number
+          shortfall?: number
+          reserved_quantity?: number
+          previous_reserved?: number
+          new_reserved_stock?: number
+          new_available_stock?: number
+        }
+      }
+      release_reserved_inventory: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: {
+          success: boolean
+          error?: string
+          product_id?: string
+          released_quantity?: number
+          previous_reserved?: number
+          new_reserved_stock?: number
+        }
+      }
+      finalize_reserved_inventory: {
+        Args: {
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: {
+          success: boolean
+          error?: string
+          product_id?: string
+          finalized_quantity?: number
+          previous_stock?: number
+          new_stock?: number
+          previous_reserved?: number
+          new_reserved_stock?: number
+        }
+      }
+      generate_order_number: {
+        Args: Record<string, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

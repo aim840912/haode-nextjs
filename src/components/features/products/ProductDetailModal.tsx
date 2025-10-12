@@ -302,11 +302,30 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                       <Zap className="w-3 h-3 mr-1" />
                       熱門商品
                     </span>
-                    {product.inventory > 0 && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        現貨
-                      </span>
-                    )}
+                    {(() => {
+                      const availableStock = product.availableStock ?? product.inventory
+                      const reservedStock = product.reservedStock ?? 0
+
+                      if (availableStock > 0) {
+                        return (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            現貨 ({availableStock} 件可購買)
+                          </span>
+                        )
+                      } else if (product.inventory > 0 && reservedStock > 0) {
+                        return (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                            庫存已保留 ({reservedStock} 件)
+                          </span>
+                        )
+                      } else {
+                        return (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                            缺貨中
+                          </span>
+                        )
+                      }
+                    })()}
                   </div>
 
                   <h2
@@ -496,12 +515,16 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                   >
                     <TailwindGreenButton
                       onClick={handleRequestQuote}
-                      disabled={product.inventory <= 0 || isRequestingQuote}
+                      disabled={
+                        (product.availableStock ?? product.inventory) <= 0 || isRequestingQuote
+                      }
                       aria-label={isRequestingQuote ? '處理中...' : '立即詢問報價'}
                       className="py-4 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     >
-                      {product.inventory <= 0 ? (
-                        <span className="font-bold text-base md:text-lg">暫時缺貨</span>
+                      {(product.availableStock ?? product.inventory) <= 0 ? (
+                        <span className="font-bold text-base md:text-lg">
+                          {product.inventory > 0 ? '庫存已保留' : '暫時缺貨'}
+                        </span>
                       ) : isRequestingQuote ? (
                         <div className="flex items-center justify-center gap-3">
                           <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>

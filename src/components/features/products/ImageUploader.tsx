@@ -16,6 +16,7 @@ interface UploadedImage {
   size: 'thumbnail' | 'medium' | 'large'
   file?: File
   preview?: string
+  storage_url?: string
   position: number
   alt?: string
 }

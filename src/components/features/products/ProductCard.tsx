@@ -227,17 +227,50 @@ export const ProductCard = React.memo<ProductCardProps>(
             </div>
           </div>
 
+          {/* 庫存資訊 */}
+          <div className="flex items-center gap-2 text-sm">
+            {(() => {
+              const availableStock = product.availableStock ?? product.inventory
+              const reservedStock = product.reservedStock ?? 0
+
+              if (availableStock > 0) {
+                return (
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-600 font-medium">
+                      ✓ 可購買: {availableStock} 件
+                    </span>
+                    {reservedStock > 0 && (
+                      <span className="text-xs text-amber-600">（保留中: {reservedStock}）</span>
+                    )}
+                  </div>
+                )
+              } else if (product.inventory > 0 && reservedStock > 0) {
+                return (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-red-600 font-medium">⚠️ 庫存已被保留</span>
+                    <span className="text-xs text-gray-500">保留: {reservedStock} 件</span>
+                  </div>
+                )
+              } else {
+                return <span className="text-red-600 font-medium">✗ 暫時缺貨</span>
+              }
+            })()}
+          </div>
+
           {/* 操作按鈕組 */}
           <div className="flex gap-3">
             {/* 主要操作按鈕 - UIverse felipesntr 設計 */}
             <div className="flex-1">
-              <UIverseButton disabled={product.inventory <= 0} onClick={handleViewDetails}>
-                {product.inventory > 0 ? '查看詳情' : '暫時缺貨'}
+              <UIverseButton
+                disabled={(product.availableStock ?? product.inventory) <= 0}
+                onClick={handleViewDetails}
+              >
+                {(product.availableStock ?? product.inventory) > 0 ? '查看詳情' : '暫時缺貨'}
               </UIverseButton>
             </div>
 
             {/* 快速購買按鈕 */}
-            {product.inventory > 0 && (
+            {(product.availableStock ?? product.inventory) > 0 && (
               <button
                 onClick={e => handleQuickAction('addtocart', e)}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-800 p-3 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"

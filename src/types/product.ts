@@ -29,7 +29,9 @@ export interface Product {
   originalPrice?: number
   isOnSale?: boolean
   saleEndDate?: string
-  inventory: number
+  inventory: number // 實際庫存
+  reservedStock?: number // 保留庫存（已確認但未完成的詢價單）
+  availableStock?: number // 可用庫存 = inventory - reservedStock
   isActive: boolean
   createdAt: string
   updatedAt: string
@@ -66,6 +68,15 @@ export interface UpdateProductData {
   isActive?: boolean
 }
 
+// 庫存狀態介面
+export interface InventoryStatus {
+  stock: number // 實際庫存
+  reserved: number // 保留庫存
+  available: number // 可用庫存 = stock - reserved
+  canPurchase: boolean // 是否可購買
+  reservedPercentage?: number // 保留比例（可選）
+}
+
 export interface ProductService {
   getProducts(): Promise<Product[]>
   getAllProducts?(): Promise<Product[]> // 管理員用：獲取所有產品（包含下架）
@@ -77,4 +88,5 @@ export interface ProductService {
   deleteProduct(id: string): Promise<void>
   getProductById(id: string): Promise<Product | null>
   searchProducts(query: string): Promise<Product[]>
+  getInventoryStatus?(productId: string): Promise<InventoryStatus> // 獲取庫存狀態
 }
