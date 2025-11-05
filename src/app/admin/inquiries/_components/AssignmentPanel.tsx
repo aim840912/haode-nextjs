@@ -142,15 +142,15 @@ export function AssignmentPanel({
   ])
 
   return (
-    <div className="mt-8 pt-6 border-t border-gray-200">
+    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-600">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">分配管理</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">分配管理</h3>
         <button
           onClick={handleTogglePanel}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             showAssignmentPanel
-              ? 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-              : 'bg-purple-900 text-white hover:bg-purple-800'
+              ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50'
+              : 'bg-purple-900 dark:bg-purple-800 text-white hover:bg-purple-800 dark:hover:bg-purple-700'
           }`}
         >
           {showAssignmentPanel ? '收起分配面板' : '管理分配'}
@@ -159,15 +159,15 @@ export function AssignmentPanel({
 
       {/* 當前分配狀態 */}
       {currentAssignment ? (
-        <div className="mb-4 p-4 bg-purple-50 rounded-lg border border-purple-200">
+        <div className="mb-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-700">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-medium text-purple-900">當前分配</h4>
+              <h4 className="font-medium text-purple-900 dark:text-purple-300">當前分配</h4>
               <div className="mt-2 space-y-1">
-                <p className="text-sm text-purple-800">
+                <p className="text-sm text-purple-800 dark:text-purple-300">
                   <span className="font-medium">處理人員：</span> {currentAssignment.assignee_name}
                 </p>
-                <p className="text-sm text-purple-800">
+                <p className="text-sm text-purple-800 dark:text-purple-300">
                   <span className="font-medium">優先級：</span>
                   <span
                     className={`ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -177,12 +177,12 @@ export function AssignmentPanel({
                     {PRIORITY_LABELS[currentAssignment.priority]}
                   </span>
                 </p>
-                <p className="text-sm text-purple-800">
+                <p className="text-sm text-purple-800 dark:text-purple-300">
                   <span className="font-medium">分配時間：</span>
                   {new Date(currentAssignment.assigned_at).toLocaleString('zh-TW')}
                 </p>
                 {currentAssignment.due_date && (
-                  <p className="text-sm text-purple-800">
+                  <p className="text-sm text-purple-800 dark:text-purple-300">
                     <span className="font-medium">截止時間：</span>
                     <span
                       className={`ml-1 ${
@@ -226,8 +226,8 @@ export function AssignmentPanel({
           </div>
         </div>
       ) : (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <div className="text-center text-gray-600">
+        <div className="mb-4 p-4 bg-gray-50 dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600">
+          <div className="text-center text-gray-600 dark:text-gray-300">
             <p className="font-medium">尚未分配處理人員</p>
             <p className="text-sm mt-1">點擊「管理分配」來指派處理人員</p>
           </div>
@@ -239,11 +239,13 @@ export function AssignmentPanel({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* 選擇處理人員 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">指派處理人員</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                指派處理人員
+              </label>
               <select
                 value={selectedAssignee}
                 onChange={e => setSelectedAssignee(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">選擇處理人員...</option>
                 {availableAssignees.map(assignee => {
@@ -259,11 +261,13 @@ export function AssignmentPanel({
 
             {/* 設定優先級 */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">優先級</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                優先級
+              </label>
               <select
                 value={selectedPriority}
                 onChange={e => setSelectedPriority(e.target.value as InquiryPriority)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100"
               >
                 {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
@@ -276,13 +280,15 @@ export function AssignmentPanel({
 
           {/* 分配備註 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">分配備註</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              分配備註
+            </label>
             <textarea
               value={assignmentNotes}
               onChange={e => setAssignmentNotes(e.target.value)}
               placeholder="輸入分配相關備註或特殊說明..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
 
@@ -290,7 +296,7 @@ export function AssignmentPanel({
           <div className="flex items-center justify-end space-x-3">
             <button
               onClick={handleProcessWorkflow}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
             >
               套用工作流程規則
             </button>
@@ -298,7 +304,7 @@ export function AssignmentPanel({
             <button
               onClick={handleConfirmAssignment}
               disabled={!selectedAssignee}
-              className="px-4 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-purple-600 dark:bg-purple-700 text-white text-sm rounded hover:bg-purple-700 dark:hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               確認分配
             </button>

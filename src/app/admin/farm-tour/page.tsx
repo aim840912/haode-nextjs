@@ -83,8 +83,8 @@ export default function FarmTourAdmin() {
   if (loading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">載入中...</div>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+          <div className="text-center text-gray-900 dark:text-gray-100">載入中...</div>
         </div>
       </AdminProtection>
     )
@@ -92,39 +92,41 @@ export default function FarmTourAdmin() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">農場導覽管理</h1>
-                <p className="text-gray-600 mt-2">管理農場導覽活動和體驗預約</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                  農場導覽管理
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">管理農場導覽活動和體驗預約</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 {user?.role === 'admin' && (
                   <Link
                     href="/admin/farm-tour/add"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"
+                    className="bg-green-600 dark:bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm"
                   >
                     新增體驗活動
                   </Link>
                 )}
                 <Link
                   href="/admin/farm-tour/calendar"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm"
                 >
                   預約行事曆
                 </Link>
                 <Link
                   href="/farm-tour"
-                  className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors text-sm"
+                  className="bg-amber-600 dark:bg-amber-700 text-white px-4 py-2 rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors text-sm"
                 >
                   查看果園頁面
                 </Link>
                 <Link
                   href="/"
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  className="bg-gray-600 dark:bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 transition-colors text-sm"
                 >
                   回到首頁
                 </Link>
@@ -139,10 +141,10 @@ export default function FarmTourAdmin() {
             {activities.map(activity => (
               <div
                 key={activity.id}
-                className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-gray-200 dark:border-slate-600"
               >
                 {/* Activity Preview */}
-                <div className="relative h-48 bg-gradient-to-br from-green-100 to-amber-100">
+                <div className="relative h-48 bg-gradient-to-br from-green-100 to-amber-100 dark:from-green-900/30 dark:to-amber-900/30">
                   {/* 圖片層 */}
                   {activity.image && (
                     <Image
@@ -179,7 +181,9 @@ export default function FarmTourAdmin() {
                 <div className="p-4">
                   {activity.note && (
                     <div className="mb-4">
-                      <p className="text-sm text-gray-600 line-clamp-2">{activity.note}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                        {activity.note}
+                      </p>
                     </div>
                   )}
 
@@ -188,8 +192,8 @@ export default function FarmTourAdmin() {
                     <div
                       className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                         activity.available
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                          : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                       }`}
                     >
                       {activity.available ? '開放預約' : '暫停開放'}
@@ -198,23 +202,28 @@ export default function FarmTourAdmin() {
 
                   {/* Activities List Preview */}
                   <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-gray-700 mb-2">活動內容</h4>
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                      活動內容
+                    </h4>
                     <div className="space-y-1">
                       {activity.activities.slice(0, 3).map((act, index) => (
-                        <div key={index} className="flex items-center text-xs text-gray-600">
-                          <span className="mr-1 text-green-500">•</span>
+                        <div
+                          key={index}
+                          className="flex items-center text-xs text-gray-600 dark:text-gray-300"
+                        >
+                          <span className="mr-1 text-green-500 dark:text-green-400">•</span>
                           <span>{act}</span>
                         </div>
                       ))}
                       {activity.activities.length > 3 && (
-                        <div className="text-xs text-gray-500">
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
                           ...等 {activity.activities.length} 項活動
                         </div>
                       )}
                     </div>
                   </div>
 
-                  <div className="text-xs text-gray-500 mb-4">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                     建立：{formatDate(activity.createdAt)}
                   </div>
 
@@ -224,7 +233,7 @@ export default function FarmTourAdmin() {
                       <div className="flex space-x-2">
                         <Link
                           href={`/admin/farm-tour/${activity.id}/edit`}
-                          className="flex-1 bg-amber-600 text-white px-3 py-2 rounded text-sm text-center hover:bg-amber-700 transition-colors"
+                          className="flex-1 bg-amber-600 dark:bg-amber-700 text-white px-3 py-2 rounded text-sm text-center hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors"
                         >
                           編輯
                         </Link>
@@ -232,8 +241,8 @@ export default function FarmTourAdmin() {
                           onClick={() => toggleAvailability(activity.id, activity.available)}
                           className={`flex-1 px-3 py-2 rounded text-sm transition-colors ${
                             activity.available
-                              ? 'bg-orange-600 text-white hover:bg-orange-700'
-                              : 'bg-green-600 text-white hover:bg-green-700'
+                              ? 'bg-orange-600 dark:bg-orange-700 text-white hover:bg-orange-700 dark:hover:bg-orange-600'
+                              : 'bg-green-600 dark:bg-green-700 text-white hover:bg-green-700 dark:hover:bg-green-600'
                           }`}
                         >
                           {activity.available ? '停用' : '啟用'}
@@ -241,13 +250,15 @@ export default function FarmTourAdmin() {
                       </div>
                       <button
                         onClick={() => handleDelete(activity.id)}
-                        className="w-full bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700 transition-colors"
+                        className="w-full bg-red-600 dark:bg-red-700 text-white px-3 py-2 rounded text-sm hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
                       >
                         刪除活動
                       </button>
                     </div>
                   ) : (
-                    <div className="text-center text-gray-400 text-sm py-2">需要管理員權限</div>
+                    <div className="text-center text-gray-400 dark:text-gray-500 text-sm py-2">
+                      需要管理員權限
+                    </div>
                   )}
                 </div>
               </div>
@@ -256,11 +267,11 @@ export default function FarmTourAdmin() {
 
           {activities.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">尚無體驗活動</p>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">尚無體驗活動</p>
               {user?.role === 'admin' && (
                 <Link
                   href="/admin/farm-tour/add"
-                  className="inline-block bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                  className="inline-block bg-green-600 dark:bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors"
                 >
                   新增第一個體驗活動
                 </Link>
@@ -270,11 +281,11 @@ export default function FarmTourAdmin() {
 
           {/* 統計資訊 */}
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-6 h-6 text-green-600 dark:text-green-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -288,17 +299,19 @@ export default function FarmTourAdmin() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-gray-900">{activities.length}</div>
-                  <div className="text-sm text-gray-500">總體驗活動</div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {activities.length}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">總體驗活動</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
+                <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
                   <svg
-                    className="w-6 h-6 text-green-600"
+                    className="w-6 h-6 text-green-600 dark:text-green-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -312,19 +325,19 @@ export default function FarmTourAdmin() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                     {activities.filter(a => a.available).length}
                   </div>
-                  <div className="text-sm text-gray-500">開放預約</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">開放預約</div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
               <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
                   <svg
-                    className="w-6 h-6 text-blue-600"
+                    className="w-6 h-6 text-blue-600 dark:text-blue-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -338,10 +351,10 @@ export default function FarmTourAdmin() {
                   </svg>
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                     {activities.filter(a => a.price && a.price > 0).length}
                   </div>
-                  <div className="text-sm text-gray-500">付費活動</div>
+                  <div className="text-sm text-gray-500 dark:text-gray-400">付費活動</div>
                 </div>
               </div>
             </div>

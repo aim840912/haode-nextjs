@@ -282,36 +282,42 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-block mb-6">
-            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
-            <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
+            <div className="text-3xl font-bold text-amber-900 dark:text-amber-300 tracking-tight">
+              豪德製茶所
+            </div>
+            <div className="text-sm text-amber-700/70 dark:text-amber-400/70 font-medium tracking-wider">
+              HAUDE TEA
+            </div>
           </Link>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">建立新帳號</h2>
-          <p className="text-gray-600">加入豪德製茶所會員，享受更多優惠</p>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+            建立新帳號
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">加入豪德製茶所會員，享受更多優惠</p>
         </div>
 
         {/* Register Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
           {/* Success Message */}
           {successMessage && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
               <div className="flex items-center">
-                <span className="text-green-500 mr-2">✅</span>
-                <p className="text-green-700 font-medium">{successMessage}</p>
+                <span className="text-green-500 dark:text-green-400 mr-2">✅</span>
+                <p className="text-green-700 dark:text-green-300 font-medium">{successMessage}</p>
               </div>
             </div>
           )}
 
           {/* Error Message */}
           {errors.general && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
               <div className="flex items-center">
-                <span className="text-red-500 mr-2">❌</span>
-                <p className="text-red-700 font-medium">{errors.general}</p>
+                <span className="text-red-500 dark:text-red-400 mr-2">❌</span>
+                <p className="text-red-700 dark:text-red-300 font-medium">{errors.general}</p>
               </div>
             </div>
           )}
@@ -319,7 +325,10 @@ export default function RegisterPage() {
           <form onSubmit={handleRegister} className="space-y-6">
             {/* Full Name Input */}
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="fullName"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 姓名 *
               </label>
               <input
@@ -330,15 +339,20 @@ export default function RegisterPage() {
                 value={formData.fullName}
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                 placeholder="請輸入您的姓名"
               />
-              {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+              {errors.fullName && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.fullName}</p>
+              )}
             </div>
 
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 電子郵件 *
               </label>
               <input
@@ -349,15 +363,20 @@ export default function RegisterPage() {
                 value={formData.email}
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                 placeholder="請輸入您的電子郵件"
               />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email}</p>
+              )}
             </div>
 
             {/* Phone Input */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 手機號碼 *
               </label>
               <div className="relative">
@@ -369,7 +388,7 @@ export default function RegisterPage() {
                   value={formData.phone}
                   onChange={handleInputChange}
                   onBlur={handleInputBlur}
-                  className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                  className="w-full px-4 py-3 pr-10 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                   placeholder="請輸入手機號碼（例：0912345678）"
                 />
                 {isCheckingPhone && (
@@ -382,17 +401,24 @@ export default function RegisterPage() {
                   !errors.phone &&
                   /^09\d{8}$/.test(formData.phone.replace(/[-\s]/g, '')) && (
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                      <span className="text-green-500 text-sm">✓</span>
+                      <span className="text-green-500 dark:text-green-400 text-sm">✓</span>
                     </div>
                   )}
               </div>
-              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-              {isCheckingPhone && <p className="mt-1 text-sm text-gray-500">檢查手機號碼中...</p>}
+              {errors.phone && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.phone}</p>
+              )}
+              {isCheckingPhone && (
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">檢查手機號碼中...</p>
+              )}
             </div>
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 密碼 *
               </label>
               <input
@@ -403,17 +429,19 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                 placeholder="請輸入密碼（至少8個字元）"
               />
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+              {errors.password && (
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+              )}
             </div>
 
             {/* Confirm Password Input */}
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 確認密碼 *
               </label>
@@ -425,11 +453,13 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                 placeholder="請再次輸入密碼"
               />
               {errors.confirmPassword && (
-                <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  {errors.confirmPassword}
+                </p>
               )}
             </div>
 
@@ -437,7 +467,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-amber-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-amber-900 dark:bg-amber-800 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 dark:hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? '註冊中...' : '建立帳號'}
             </button>
@@ -445,11 +475,11 @@ export default function RegisterPage() {
 
           {/* Login Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               已經有帳號了？{' '}
               <Link
                 href="/login"
-                className="text-amber-600 hover:text-amber-800 font-medium transition-colors"
+                className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium transition-colors"
               >
                 立即登入
               </Link>
@@ -459,7 +489,10 @@ export default function RegisterPage() {
 
         {/* Back to Home */}
         <div className="text-center">
-          <Link href="/" className="text-sm text-gray-500 hover:text-amber-600 transition-colors">
+          <Link
+            href="/"
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+          >
             ← 返回首頁
           </Link>
         </div>

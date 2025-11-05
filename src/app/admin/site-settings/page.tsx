@@ -288,10 +288,10 @@ export default function SiteSettingsPage() {
   if (loading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
           <div className="text-center">
             <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">載入設定中...</p>
+            <p className="text-gray-600 dark:text-gray-300">載入設定中...</p>
           </div>
         </div>
       </AdminProtection>
@@ -300,28 +300,32 @@ export default function SiteSettingsPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Link
                   href="/admin/dashboard"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 transition-colors"
                 >
                   <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">網站設定管理</h1>
-                  <p className="text-sm text-gray-600 mt-1">管理首頁和農場體驗頁的圖片</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    網站設定管理
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    管理首頁和農場體驗頁的圖片
+                  </p>
                 </div>
               </div>
               <div className="flex space-x-3">
                 <button
                   onClick={loadSettings}
                   disabled={saving}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                  className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center space-x-2"
                 >
                   <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                   <span>重新載入</span>
@@ -357,10 +361,10 @@ export default function SiteSettingsPage() {
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
           {/* 首頁設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Home className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">首頁輪播圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">首頁輪播圖片</h2>
             </div>
 
             <div className="space-y-6">
@@ -392,10 +396,12 @@ export default function SiteSettingsPage() {
           </section>
 
           {/* 農場體驗頁設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-900">農場體驗頁面背景圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                農場體驗頁面背景圖片
+              </h2>
             </div>
 
             <SingleImageUploader
@@ -410,19 +416,23 @@ export default function SiteSettingsPage() {
 
             {farmTourHeroBg && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">當前圖片路徑：</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">當前圖片路徑：</p>
                 <p className="text-sm text-gray-800 break-all mt-1">{farmTourHeroBg}</p>
               </div>
             )}
           </section>
 
           {/* 農場特色卡片背面圖片設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">農場特色卡片背面圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                農場特色卡片背面圖片
+              </h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">管理首頁「農場特色」區域翻轉卡片背面的圖片</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              管理首頁「農場特色」區域翻轉卡片背面的圖片
+            </p>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* 自然農法卡片 */}
@@ -496,12 +506,14 @@ export default function SiteSettingsPage() {
           </section>
 
           {/* 四季體驗圖片設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-purple-600" />
-              <h2 className="text-xl font-bold text-gray-900">四季體驗圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">四季體驗圖片</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">管理首頁「四季體驗」區域的季節圖片</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              管理首頁「四季體驗」區域的季節圖片
+            </p>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* 春季賞花圖片 */}
@@ -575,12 +587,14 @@ export default function SiteSettingsPage() {
           </section>
 
           {/* 農場導覽內容設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">農場導覽內容管理</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                農場導覽內容管理
+              </h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
               管理農場體驗頁面的設施、常見問題、參觀資訊等內容（JSON 格式）
             </p>
 

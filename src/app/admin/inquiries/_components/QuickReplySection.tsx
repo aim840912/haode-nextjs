@@ -87,15 +87,15 @@ export function QuickReplySection({
   }, [showTemplateSelector])
 
   return (
-    <div className="mt-8 pt-6 border-t border-gray-200">
+    <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-600">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-900">快速回覆模板</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-gray-100">快速回覆模板</h3>
         <button
           onClick={handleToggleTemplateSelector}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             showTemplateSelector
-              ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-              : 'bg-amber-900 text-white hover:bg-amber-800'
+              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 hover:bg-amber-200 dark:hover:bg-amber-900/50'
+              : 'bg-amber-900 dark:bg-amber-800 text-white hover:bg-amber-800 dark:hover:bg-amber-700'
           }`}
         >
           {showTemplateSelector ? '收起模板' : '使用模板回覆'}
@@ -106,11 +106,13 @@ export function QuickReplySection({
         <div className="space-y-4">
           {/* 模板選擇器 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">選擇回覆模板</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              選擇回覆模板
+            </label>
             {isLoadingTemplates ? (
               <div className="text-center py-4">
                 <LoadingSpinner size="sm" />
-                <p className="text-sm text-gray-600 mt-2">載入模板中...</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-2">載入模板中...</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -128,29 +130,31 @@ export function QuickReplySection({
                       onClick={() => handleTemplateSelect(template)}
                       className={`p-3 text-left rounded-lg border transition-colors ${
                         selectedTemplate?.id === template.id
-                          ? 'border-amber-500 bg-amber-50'
+                          ? 'border-amber-500 dark:border-amber-600 bg-amber-50 dark:bg-amber-900/30'
                           : isRelevant
-                            ? 'border-green-200 bg-green-50 hover:bg-green-100'
-                            : 'border-gray-200 bg-white hover:bg-gray-50'
+                            ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30'
+                            : 'border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600'
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <h4 className="font-medium text-sm text-gray-900">{template.title}</h4>
+                        <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                          {template.title}
+                        </h4>
                         <div className="flex items-center space-x-2">
                           {isRelevant && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
                               推薦
                             </span>
                           )}
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                               template.category === 'product'
-                                ? 'bg-blue-100 text-blue-800'
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
                                 : template.category === 'farm_tour'
-                                  ? 'bg-purple-100 text-purple-800'
+                                  ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
                                   : template.category === 'pricing'
-                                    ? 'bg-amber-100 text-amber-800'
-                                    : 'bg-gray-100 text-gray-800'
+                                    ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300'
+                                    : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300'
                             }`}
                           >
                             {template.category === 'product'
@@ -163,11 +167,11 @@ export function QuickReplySection({
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 line-clamp-2">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
                         {template.content.substring(0, 100)}...
                       </p>
                       {template.usage_count > 0 && (
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           使用次數: {template.usage_count}
                         </p>
                       )}
@@ -182,13 +186,13 @@ export function QuickReplySection({
           {selectedTemplate && (
             <div className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-3">
                   填寫模板變數 - {selectedTemplate.title}
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {selectedTemplate.variables.map(variable => (
                     <div key={variable}>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {variable.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </label>
                       <input
@@ -201,7 +205,7 @@ export function QuickReplySection({
                           }))
                         }
                         placeholder={`輸入 ${variable}`}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                       />
                     </div>
                   ))}
@@ -211,10 +215,10 @@ export function QuickReplySection({
               {/* 產生預覽 */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-medium text-gray-900">回覆預覽</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">回覆預覽</h4>
                   <button
                     onClick={handleGeneratePreview}
-                    className="px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700 transition-colors"
+                    className="px-3 py-1 bg-amber-600 dark:bg-amber-700 text-white text-sm rounded hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors"
                   >
                     產生預覽
                   </button>
@@ -224,7 +228,7 @@ export function QuickReplySection({
                   onChange={e => setGeneratedReply(e.target.value)}
                   placeholder="點擊「產生預覽」來查看填寫後的模板內容，您可以在此處進一步編輯..."
                   rows={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
 
@@ -233,7 +237,7 @@ export function QuickReplySection({
                 <button
                   onClick={handleCopyToClipboard}
                   disabled={!generatedReply}
-                  className="px-4 py-2 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white text-sm rounded hover:bg-gray-700 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   複製到剪貼板
                 </button>
@@ -242,7 +246,7 @@ export function QuickReplySection({
                     onWarning('此功能將在後續版本中實作。請先複製內容到您的 Email 系統中。')
                   }}
                   disabled={!generatedReply}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white text-sm rounded hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   發送回覆
                 </button>

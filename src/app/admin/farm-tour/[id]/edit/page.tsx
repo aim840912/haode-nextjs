@@ -13,7 +13,7 @@ import AdminProtection from '@/components/features/admin/AdminProtection'
 // 動態載入圖片上傳器
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
   loading: () => (
-    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+    <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
       載入圖片上傳器...
     </div>
   ),
@@ -231,8 +231,8 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   if (initialLoading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">載入中...</div>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+          <div className="text-center text-gray-900 dark:text-gray-100">載入中...</div>
         </div>
       </AdminProtection>
     )
@@ -240,27 +240,35 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
         <div className="max-w-6xl mx-auto px-4 py-8">
           <div className="mb-8">
             <div className="flex items-center space-x-4 mb-4">
-              <Link href="/admin/farm-tour" className="text-green-600 hover:text-green-800">
+              <Link
+                href="/admin/farm-tour"
+                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+              >
                 ← 回到果園管理
               </Link>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">編輯體驗活動</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">編輯體驗活動</h1>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Form */}
-            <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6 space-y-6">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 space-y-6"
+            >
               {/* 基本資訊 */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  基本資訊
+                </h3>
 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
                       開始月份 *
                     </label>
                     <select
@@ -268,7 +276,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       value={formData.start_month}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                     >
                       {monthOptions.map(option => (
                         <option key={option.value} value={option.value}>
@@ -279,7 +287,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
                       結束月份 *
                     </label>
                     <select
@@ -287,7 +295,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                       value={formData.end_month}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                     >
                       {monthOptions.map(option => (
                         <option key={option.value} value={option.value}>
@@ -299,14 +307,16 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">活動標題 *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                    活動標題 *
+                  </label>
                   <input
                     type="text"
                     name="title"
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                     placeholder="輸入體驗活動標題"
                   />
                 </div>
@@ -314,24 +324,28 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
               {/* 活動內容 */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  活動內容
+                </h3>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">活動項目</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                    活動項目
+                  </label>
                   {formData.activities.map((activity, index) => (
                     <div key={index} className="flex gap-2 mb-2">
                       <input
                         type="text"
                         value={activity}
                         onChange={e => updateActivityField(index, e.target.value)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                         placeholder="輸入活動項目"
                       />
                       {formData.activities.length > 1 && (
                         <button
                           type="button"
                           onClick={() => removeActivityField(index)}
-                          className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                          className="px-3 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
                         >
                           ×
                         </button>
@@ -341,7 +355,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                   <button
                     type="button"
                     onClick={addActivityField}
-                    className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                    className="mt-2 px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm"
                   >
                     + 新增項目
                   </button>
@@ -350,10 +364,12 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
               {/* 費用設定 */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">費用設定</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  費用設定
+                </h3>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
                     價格 (NT$) *
                   </label>
                   <input
@@ -363,20 +379,24 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     onChange={handleInputChange}
                     required
                     min="0"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                     placeholder="0"
                   />
-                  <p className="text-sm text-gray-500 mt-1">設為 0 表示免費體驗</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    設為 0 表示免費體驗
+                  </p>
                 </div>
               </div>
 
               {/* 其他設定 */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
+                <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                  其他設定
+                </h3>
 
                 {/* 活動圖片 */}
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">
                     活動圖片（限一張）
                   </label>
 
@@ -387,12 +407,12 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                         <img
                           src={existingImages[0]}
                           alt="現有活動圖片"
-                          className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200"
+                          className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200 dark:border-slate-600"
                         />
                         <button
                           type="button"
                           onClick={handleDeleteExistingImage}
-                          className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          className="absolute top-2 right-2 bg-red-500 dark:bg-red-600 text-white p-1.5 rounded-full hover:bg-red-600 dark:hover:bg-red-500 transition-colors"
                           title="刪除圖片"
                         >
                           <svg
@@ -410,7 +430,9 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                           </svg>
                         </button>
                       </div>
-                      <p className="text-sm text-gray-500">如需更換圖片，請先刪除現有圖片</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        如需更換圖片，請先刪除現有圖片
+                      </p>
                     </div>
                   ) : (
                     // 顯示上傳區域
@@ -427,28 +449,34 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                         className="mb-4"
                       />
                       {uploadedImages.length > 0 ? (
-                        <div className="text-sm text-green-600">✓ 已上傳新圖片</div>
+                        <div className="text-sm text-green-600 dark:text-green-400">
+                          ✓ 已上傳新圖片
+                        </div>
                       ) : (
-                        <p className="text-sm text-gray-500">請上傳一張活動圖片</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          請上傳一張活動圖片
+                        </p>
                       )}
                     </div>
                   )}
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">注意事項</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                    注意事項
+                  </label>
                   <textarea
                     name="note"
                     value={formData.note}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                     placeholder="輸入參加注意事項"
                   />
                 </div>
 
                 <div>
-                  <label className="flex items-center">
+                  <label className="flex items-center text-gray-700 dark:text-gray-200">
                     <input
                       type="checkbox"
                       name="available"
@@ -465,14 +493,14 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
               <div className="flex justify-end space-x-4 pt-6">
                 <Link
                   href="/admin/farm-tour"
-                  className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-6 py-2 border border-gray-300 dark:border-slate-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   取消
                 </Link>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:opacity-50"
                 >
                   {loading ? '更新中...' : '更新活動'}
                 </button>
@@ -481,10 +509,12 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
             {/* Preview */}
             <div className="lg:sticky lg:top-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                即時預覽
+              </h3>
+              <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden">
                 {/* Preview Card */}
-                <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
+                <div className="bg-gradient-to-br from-green-100 to-amber-100 dark:from-green-900/30 dark:to-amber-900/30 p-6 text-center">
                   <div className="mb-3">
                     {uploadedImages.length > 0 || existingImages.length > 0 ? (
                       <Image
@@ -496,19 +526,19 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                         className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                       />
                     ) : (
-                      <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
-                        <span className="text-gray-500 text-xs">無圖片</span>
+                      <div className="w-16 h-16 bg-gray-200 dark:bg-slate-600 rounded-lg mx-auto flex items-center justify-center">
+                        <span className="text-gray-500 dark:text-gray-400 text-xs">無圖片</span>
                       </div>
                     )}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-800 mb-2">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
                     {formData.title || '活動標題預覽'}
                   </h3>
-                  <div className="flex justify-center items-center gap-2 text-sm text-gray-600">
-                    <span className="bg-white px-2 py-1 rounded-full">
+                  <div className="flex justify-center items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                    <span className="bg-white dark:bg-slate-700 px-2 py-1 rounded-full">
                       {formData.start_month}月 - {formData.end_month}月
                     </span>
-                    <span className="bg-white px-2 py-1 rounded-full">
+                    <span className="bg-white dark:bg-slate-700 px-2 py-1 rounded-full">
                       NT$ {formData.price || 0}
                     </span>
                   </div>
@@ -516,13 +546,18 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
                 <div className="p-4">
                   <div className="mb-4">
-                    <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 text-sm">
+                      活動內容
+                    </h4>
                     <div className="space-y-1">
                       {formData.activities
                         .filter(a => a.trim())
                         .map((activity, index) => (
-                          <div key={index} className="flex items-center text-xs text-gray-600">
-                            <span className="mr-2 text-green-500">•</span>
+                          <div
+                            key={index}
+                            className="flex items-center text-xs text-gray-600 dark:text-gray-300"
+                          >
+                            <span className="mr-2 text-green-500 dark:text-green-400">•</span>
                             <span>{activity}</span>
                           </div>
                         ))}
@@ -531,20 +566,24 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
 
                   <div className="mb-4 text-sm">
                     <div className="flex items-center justify-center">
-                      <span className="mr-2 text-amber-600 font-medium">$</span>
-                      <span className="font-bold text-amber-900">NT$ {formData.price || 0}</span>
+                      <span className="mr-2 text-amber-600 dark:text-amber-400 font-medium">$</span>
+                      <span className="font-bold text-amber-900 dark:text-amber-300">
+                        NT$ {formData.price || 0}
+                      </span>
                     </div>
                   </div>
 
                   {formData.note && (
-                    <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                      <p className="text-blue-700 text-xs">{formData.note}</p>
+                    <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                      <p className="text-blue-700 dark:text-blue-300 text-xs">{formData.note}</p>
                     </div>
                   )}
 
                   <div
                     className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      formData.available
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                     }`}
                   >
                     {formData.available ? '開放預約' : '暫停開放'}

@@ -15,7 +15,7 @@ import { BasicInfoSection } from './_components/BasicInfoSection'
 
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
   loading: () => (
-    <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+    <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
       載入圖片上傳器...
     </div>
   ),
@@ -56,8 +56,8 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
   if (initialLoading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">載入中...</div>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+          <div className="text-center text-gray-900 dark:text-gray-100">載入中...</div>
         </div>
       </AdminProtection>
     )
@@ -133,25 +133,33 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="mb-8">
-            <Link href="/admin/locations" className="text-purple-600 hover:text-purple-800">
+            <Link
+              href="/admin/locations"
+              className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+            >
               ← 回到門市管理
             </Link>
-            <h1 className="text-3xl font-bold text-gray-800 mt-4">編輯門市</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mt-4">編輯門市</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-8">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-8 space-y-8"
+          >
             {/* 基本資訊 */}
             <BasicInfoSection formData={formData} handleInputChange={handleInputChange} />
 
             {/* 營業時間 */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">營業時間</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">營業時間</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">營業時間</label>
+                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    營業時間
+                  </label>
                   <TimeRangePicker
                     value={formData.hours}
                     onChange={value =>
@@ -160,7 +168,9 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">公休日</label>
+                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    公休日
+                  </label>
                   <WeekdaySelector
                     value={formData.closedDays}
                     onChange={value =>
@@ -175,26 +185,30 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
             {/* 交通資訊 */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">交通資訊</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">交通資訊</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">停車資訊</label>
+                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    停車資訊
+                  </label>
                   <textarea
                     name="parking"
                     value={formData.parking}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-2">大眾運輸</label>
+                  <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                    大眾運輸
+                  </label>
                   <textarea
                     name="publicTransport"
                     value={formData.publicTransport}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                   />
                 </div>
               </div>
@@ -202,7 +216,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
             {/* 門市特色 */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">門市特色</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">門市特色</h2>
               <div className="space-y-3">
                 {formData.features.map((feature, index) => (
                   <div key={index} className="flex gap-2">
@@ -210,14 +224,14 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                       type="text"
                       value={feature}
                       onChange={e => updateFeatureField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                       placeholder="例如：提供試吃服務"
                     />
                     {formData.features.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeFeatureField(index)}
-                        className="px-4 py-2 text-red-600 hover:text-red-800"
+                        className="px-4 py-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                       >
                         刪除
                       </button>
@@ -227,7 +241,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 <button
                   type="button"
                   onClick={addFeatureField}
-                  className="text-purple-600 hover:text-purple-800 text-sm"
+                  className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 text-sm"
                 >
                   + 新增特色
                 </button>
@@ -236,7 +250,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
             {/* 特色產品 */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">特色產品</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">特色產品</h2>
               <div className="space-y-3">
                 {formData.specialties.map((specialty, index) => (
                   <div key={index} className="flex gap-2">
@@ -244,14 +258,14 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                       type="text"
                       value={specialty}
                       onChange={e => updateSpecialtyField(index, e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
                       placeholder="例如：梅山紅肉李"
                     />
                     {formData.specialties.length > 1 && (
                       <button
                         type="button"
                         onClick={() => removeSpecialtyField(index)}
-                        className="px-4 py-2 text-red-600 hover:text-red-800"
+                        className="px-4 py-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                       >
                         刪除
                       </button>
@@ -261,7 +275,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
                 <button
                   type="button"
                   onClick={addSpecialtyField}
-                  className="text-purple-600 hover:text-purple-800 text-sm"
+                  className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300 text-sm"
                 >
                   + 新增產品
                 </button>
@@ -270,7 +284,7 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
 
             {/* 圖片上傳 */}
             <div className="space-y-6">
-              <h2 className="text-xl font-semibold text-gray-900">門市圖片</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">門市圖片</h2>
               <ImageUploader
                 productId={locationId}
                 initialImages={existingImages}
@@ -285,14 +299,14 @@ export default function EditLocation({ params }: { params: Promise<{ id: string 
             <div className="flex justify-end space-x-4 pt-6">
               <Link
                 href="/admin/locations"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-50"
+                className="px-6 py-2 border border-gray-300 dark:border-slate-600 rounded-md text-gray-800 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-700"
               >
                 取消
               </Link>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+                className="px-6 py-2 bg-purple-600 dark:bg-purple-700 text-white rounded-md hover:bg-purple-700 dark:hover:bg-purple-600 disabled:opacity-50"
               >
                 {loading ? '更新中...' : '更新門市'}
               </button>

@@ -70,18 +70,23 @@ export default function DevNotesPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <Link href="/admin/dashboard" className="text-gray-600 hover:text-gray-900">
+                <Link
+                  href="/admin/dashboard"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100"
+                >
                   <ArrowLeftIcon className="w-6 h-6" />
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">開發筆記</h1>
-                  <p className="text-sm text-gray-600 mt-1">Bug 追蹤與待辦事項管理</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">開發筆記</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Bug 追蹤與待辦事項管理
+                  </p>
                 </div>
               </div>
               <button
@@ -213,7 +218,7 @@ function StatCard({
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-600">{title}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">{title}</p>
           <p className="text-3xl font-bold mt-2">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
@@ -284,10 +289,10 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">新增開發筆記</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">新增開發筆記</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
               disabled={submitting}
             >
               <XMarkIcon className="w-6 h-6" />
@@ -510,8 +515,12 @@ function NoteCard({ note, onUpdate }: { note: DevNote; onUpdate?: () => void }) 
               {note.status}
             </span>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{note.title}</h3>
-          {note.description && <p className="text-gray-600 text-sm">{note.description}</p>}
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {note.title}
+          </h3>
+          {note.description && (
+            <p className="text-gray-600 dark:text-gray-300 text-sm">{note.description}</p>
+          )}
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
           <div className="mt-3 text-xs text-gray-500">
             建立時間:{new Date(note.created_at).toLocaleString('zh-TW')}

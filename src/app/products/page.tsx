@@ -53,7 +53,7 @@ function ProductsPage() {
   }, [refetch])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* SEO Structured Data for Products */}
       {filteredProducts.length > 0 && (
         <>
@@ -77,18 +77,20 @@ function ProductsPage() {
       )}
 
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
+      <div className="bg-white dark:bg-slate-800 border-b dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Breadcrumbs items={createProductBreadcrumbs()} enableStructuredData={true} />
         </div>
       </div>
 
       {/* Header - 統一簡潔設計 */}
-      <div className="bg-white py-4 border-b border-gray-200">
+      <div className="bg-white dark:bg-slate-800 py-4 border-b border-gray-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
             <div className="text-center lg:text-left">
-              <h1 className="text-xl sm:text-2xl font-light text-amber-900 mb-1">精選農產品</h1>
+              <h1 className="text-xl sm:text-2xl font-light text-amber-900 dark:text-amber-300 mb-1">
+                精選農產品
+              </h1>
             </div>
 
             {/* 管理員控制按鈕 */}
@@ -118,7 +120,7 @@ function ProductsPage() {
               <ProductsEmptyState type="no_results" />
             ) : (
               <div className="mt-8">
-                <div className="relative bg-gray-50 rounded-xl p-8 border border-gray-200">
+                <div className="relative bg-gray-50 dark:bg-slate-800/50 rounded-xl p-8 border border-gray-200 dark:border-slate-700">
                   {/* 簡潔風格網格布局 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredProducts.map((product, index) => (

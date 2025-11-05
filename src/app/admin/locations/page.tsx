@@ -80,22 +80,22 @@ export default function LocationsAdmin() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center pt-24">
-        <div className="text-center text-gray-900 font-medium">載入中...</div>
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center pt-24">
+        <div className="text-center text-gray-900 dark:text-gray-100 font-medium">載入中...</div>
       </div>
     )
   }
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">門市管理</h1>
-                <p className="text-gray-600 mt-2">管理農場門市據點和聯絡資訊</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">門市管理</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">管理農場門市據點和聯絡資訊</p>
               </div>
 
               {/* 操作按鈕組 */}
@@ -103,20 +103,20 @@ export default function LocationsAdmin() {
                 {user?.role === 'admin' && (
                   <Link
                     href="/admin/locations/add"
-                    className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-amber-600 dark:bg-amber-700 text-white text-sm font-medium rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                   >
                     新增門市
                   </Link>
                 )}
                 <Link
                   href="/locations"
-                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-blue-600 dark:bg-blue-700 text-white text-sm font-medium rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   查看門市頁面
                 </Link>
                 <Link
                   href="/"
-                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 bg-gray-600 dark:bg-gray-700 text-white text-sm font-medium rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   回到首頁
                 </Link>
@@ -131,10 +131,10 @@ export default function LocationsAdmin() {
             {locations.map(location => (
               <div
                 key={location.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-amber-300"
+                className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 overflow-hidden hover:shadow-lg transition-all duration-300 hover:border-amber-300 dark:hover:border-amber-600"
               >
                 {/* Location Header */}
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 text-center relative border-b border-gray-100">
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 p-6 text-center relative border-b border-gray-100 dark:border-slate-600">
                   {location.image && isValidImageUrl(location.image) && (
                     <div className="mb-4">
                       <Image
@@ -146,8 +146,10 @@ export default function LocationsAdmin() {
                       />
                     </div>
                   )}
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">{location.title}</h3>
-                  <div className="text-sm font-medium text-gray-600 bg-white bg-opacity-60 rounded-full px-3 py-1">
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                    {location.title}
+                  </h3>
+                  <div className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-slate-700 bg-opacity-60 dark:bg-opacity-80 rounded-full px-3 py-1">
                     {location.name}
                   </div>
                   {location.isMain && (
@@ -182,12 +184,14 @@ export default function LocationsAdmin() {
                           />
                         </svg>
                       </div>
-                      <span className="text-sm text-gray-700 flex-1">{location.address}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                        {location.address}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
                         <svg
-                          className="w-3 h-3 text-green-600"
+                          className="w-3 h-3 text-green-600 dark:text-green-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -200,12 +204,14 @@ export default function LocationsAdmin() {
                           />
                         </svg>
                       </div>
-                      <span className="text-sm text-gray-700">{location.phone}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {location.phone}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-5 h-5 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
                         <svg
-                          className="w-3 h-3 text-blue-600"
+                          className="w-3 h-3 text-blue-600 dark:text-blue-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -218,12 +224,14 @@ export default function LocationsAdmin() {
                           />
                         </svg>
                       </div>
-                      <span className="text-sm text-gray-700">{location.hours}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {location.hours}
+                      </span>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <div className="flex-shrink-0 w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center">
+                      <div className="flex-shrink-0 w-5 h-5 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
                         <svg
-                          className="w-3 h-3 text-purple-600"
+                          className="w-3 h-3 text-purple-600 dark:text-purple-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -236,15 +244,17 @@ export default function LocationsAdmin() {
                           />
                         </svg>
                       </div>
-                      <span className="text-sm text-gray-700">{location.closedDays}</span>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        {location.closedDays}
+                      </span>
                     </div>
                   </div>
 
                   {/* Features Preview */}
                   <div className="mb-6">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
                       <svg
-                        className="w-4 h-4 mr-2 text-amber-600"
+                        className="w-4 h-4 mr-2 text-amber-600 dark:text-amber-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -260,13 +270,16 @@ export default function LocationsAdmin() {
                     </h4>
                     <div className="space-y-2">
                       {location.features.slice(0, 2).map((feature, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-600">
-                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-2 flex-shrink-0"></div>
+                        <div
+                          key={index}
+                          className="flex items-center text-sm text-gray-600 dark:text-gray-300"
+                        >
+                          <div className="w-1.5 h-1.5 bg-green-500 dark:bg-green-400 rounded-full mr-2 flex-shrink-0"></div>
                           <span>{feature}</span>
                         </div>
                       ))}
                       {location.features.length > 2 && (
-                        <div className="text-xs text-gray-500 pl-3.5">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 pl-3.5">
                           ...等 {location.features.length} 項服務
                         </div>
                       )}
@@ -275,9 +288,9 @@ export default function LocationsAdmin() {
 
                   {/* Specialties */}
                   <div className="mb-6">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
+                    <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
                       <svg
-                        className="w-4 h-4 mr-2 text-amber-600"
+                        className="w-4 h-4 mr-2 text-amber-600 dark:text-amber-400"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -295,13 +308,13 @@ export default function LocationsAdmin() {
                       {location.specialties.slice(0, 3).map((specialty, index) => (
                         <span
                           key={index}
-                          className="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-medium border border-amber-200"
+                          className="bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-3 py-1 rounded-full text-xs font-medium border border-amber-200 dark:border-amber-700"
                         >
                           {specialty}
                         </span>
                       ))}
                       {location.specialties.length > 3 && (
-                        <span className="text-xs text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-slate-700 px-3 py-1 rounded-full">
                           +{location.specialties.length - 3}
                         </span>
                       )}
@@ -310,10 +323,10 @@ export default function LocationsAdmin() {
 
                   {/* Controls */}
                   {user?.role === 'admin' ? (
-                    <div className="flex space-x-3 pt-4 border-t border-gray-100">
+                    <div className="flex space-x-3 pt-4 border-t border-gray-100 dark:border-slate-600">
                       <Link
                         href={`/admin/locations/${location.id}/edit`}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-amber-600 dark:bg-amber-700 text-white text-sm font-medium rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200"
                       >
                         <svg
                           className="w-4 h-4 mr-2"
@@ -332,7 +345,7 @@ export default function LocationsAdmin() {
                       </Link>
                       <button
                         onClick={() => handleDelete(location.id)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 dark:bg-red-700 text-white text-sm font-medium rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
                       >
                         <svg
                           className="w-4 h-4 mr-2"
@@ -351,9 +364,9 @@ export default function LocationsAdmin() {
                       </button>
                     </div>
                   ) : (
-                    <div className="text-center text-gray-400 text-sm py-4 border-t border-gray-100">
+                    <div className="text-center text-gray-400 dark:text-gray-500 text-sm py-4 border-t border-gray-100 dark:border-slate-600">
                       <svg
-                        className="w-5 h-5 mx-auto mb-1 text-gray-300"
+                        className="w-5 h-5 mx-auto mb-1 text-gray-300 dark:text-gray-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -376,9 +389,9 @@ export default function LocationsAdmin() {
           {/* 空狀態 */}
           {locations.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-24 h-24 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-6">
                 <svg
-                  className="w-12 h-12 text-gray-400"
+                  className="w-12 h-12 text-gray-400 dark:text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -391,14 +404,16 @@ export default function LocationsAdmin() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">尚無門市資料</h3>
-              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                尚無門市資料
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm mx-auto">
                 還沒有新增任何門市據點。開始新增第一個門市來管理您的業務據點吧！
               </p>
               {user?.role === 'admin' && (
                 <Link
                   href="/admin/locations/add"
-                  className="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
+                  className="inline-flex items-center px-6 py-3 bg-amber-600 dark:bg-amber-700 text-white font-medium rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   <svg
                     className="w-5 h-5 mr-2"

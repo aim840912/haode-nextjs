@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { GoogleAnalytics } from '@next/third-parties/google'
 import GoogleAnalyticsProvider from '@/components/features/analytics/GoogleAnalyticsProvider'
 import { InquiryStatsProvider } from '@/contexts/InquiryStatsContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
 import { validateOnStartup } from '@/lib/env'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -177,23 +178,25 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body
-        className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen bg-gray-50`}
+        className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen bg-gray-50 dark:bg-slate-900`}
       >
         <ErrorBoundary>
-          <GoogleAnalyticsProvider>
-            <ToastProvider>
-              <AuthProvider>
-                <InquiryStatsProvider>
-                  <Header />
-                  <main className="flex-grow">
-                    <HeaderSpacer />
-                    {children}
-                  </main>
-                  <Footer />
-                </InquiryStatsProvider>
-              </AuthProvider>
-            </ToastProvider>
-          </GoogleAnalyticsProvider>
+          <ThemeProvider>
+            <GoogleAnalyticsProvider>
+              <ToastProvider>
+                <AuthProvider>
+                  <InquiryStatsProvider>
+                    <Header />
+                    <main className="flex-grow">
+                      <HeaderSpacer />
+                      {children}
+                    </main>
+                    <Footer />
+                  </InquiryStatsProvider>
+                </AuthProvider>
+              </ToastProvider>
+            </GoogleAnalyticsProvider>
+          </ThemeProvider>
         </ErrorBoundary>
         {/* Google Analytics 4 整合 */}
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID &&

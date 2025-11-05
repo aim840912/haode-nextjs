@@ -8,10 +8,10 @@ const MonitoringDashboard = dynamic(
   () => import('@/components/features/admin/MonitoringDashboard'),
   {
     loading: () => (
-      <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
+      <div className="flex items-center justify-center h-96 bg-white dark:bg-slate-800 rounded-lg shadow-md">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">載入監控儀表板中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">載入監控儀表板中...</p>
         </div>
       </div>
     ),
@@ -22,13 +22,15 @@ const MonitoringDashboard = dynamic(
 export default function AdminMonitoringPage() {
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">系統監控</h1>
-              <p className="text-gray-600 mt-2">監控系統運行狀態、效能指標和錯誤統計</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">系統監控</h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                監控系統運行狀態、效能指標和錯誤統計
+              </p>
             </div>
           </div>
         </div>

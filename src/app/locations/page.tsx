@@ -45,20 +45,22 @@ export default function LocationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex flex-col">
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
+      <div className="bg-white dark:bg-slate-800 border-b dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <Breadcrumbs items={createLocationsBreadcrumbs()} enableStructuredData={true} />
         </div>
       </div>
 
       {/* Hero Section - 統一簡潔設計 */}
-      <div className="bg-white py-4 border-b border-gray-200">
+      <div className="bg-white dark:bg-slate-800 py-4 border-b border-gray-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
             <div className="text-center lg:text-left">
-              <h1 className="text-xl sm:text-2xl font-light text-amber-900 mb-1">門市據點</h1>
+              <h1 className="text-xl sm:text-2xl font-light text-amber-900 dark:text-amber-300 mb-1">
+                門市據點
+              </h1>
             </div>
             {user && user.role === 'admin' && (
               <div className="flex space-x-3">
@@ -99,8 +101,12 @@ export default function LocationsPage() {
                 />
               </svg>
             </div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">尚無門市資料</h2>
-            <p className="text-gray-600 mb-8">系統中暫無門市據點資料，請稍後再試...</p>
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              尚無門市資料
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-8">
+              系統中暫無門市據點資料，請稍後再試...
+            </p>
             {user && user.role === 'admin' && (
               <a
                 href="/admin/locations/add"
@@ -113,7 +119,7 @@ export default function LocationsPage() {
         ) : (
           <>
             {/* Store Selection Tabs */}
-            <div className="flex flex-wrap justify-center mb-12 bg-white rounded-lg shadow-sm p-2">
+            <div className="flex flex-wrap justify-center mb-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm p-2">
               {storeLocations.map(store => (
                 <button
                   key={store.id}
@@ -121,7 +127,7 @@ export default function LocationsPage() {
                   className={`px-6 py-3 rounded-lg font-medium transition-all m-1 ${
                     selectedStore?.id === store.id
                       ? 'bg-amber-900 text-white'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {store.name}
@@ -140,7 +146,7 @@ export default function LocationsPage() {
                 <div className="grid lg:grid-cols-2 gap-12">
                   {/* Store Information */}
                   <div className="space-y-8">
-                    <div className="bg-white rounded-xl shadow-lg p-8">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center">
                           {isValidImageUrl(selectedStore.image) && (
@@ -152,7 +158,7 @@ export default function LocationsPage() {
                             />
                           )}
                           <div>
-                            <h2 className="text-2xl font-bold text-amber-900">
+                            <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-300">
                               {selectedStore.title}
                             </h2>
                             {selectedStore.isMain && (
@@ -175,46 +181,58 @@ export default function LocationsPage() {
                       {/* Address & Contact */}
                       <div className="space-y-4 mb-6">
                         <div className="flex items-start">
-                          <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 mt-2 flex-shrink-0"></span>
+                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 mt-2 flex-shrink-0"></span>
                           <div>
-                            <p className="font-medium text-gray-800">{selectedStore.address}</p>
-                            <p className="text-sm text-gray-600 mt-1">{selectedStore.landmark}</p>
+                            <p className="font-medium text-gray-800 dark:text-gray-200">
+                              {selectedStore.address}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                              {selectedStore.landmark}
+                            </p>
                           </div>
                         </div>
 
                         <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
+                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
                           <a
                             href={`tel:${selectedStore.phone}`}
-                            className="text-amber-900 hover:underline font-medium"
+                            className="text-amber-900 dark:text-amber-300 hover:underline font-medium"
                           >
                             {selectedStore.phone}
                           </a>
                         </div>
 
                         <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700">LINE ID: {selectedStore.lineId}</span>
+                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            LINE ID: {selectedStore.lineId}
+                          </span>
                         </div>
 
                         <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
+                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
                           <div>
-                            <span className="text-gray-700">營業時間: {selectedStore.hours}</span>
-                            <span className="ml-2 text-sm text-gray-500">
+                            <span className="text-gray-700 dark:text-gray-300">
+                              營業時間: {selectedStore.hours}
+                            </span>
+                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
                               ({selectedStore.closedDays})
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700">{selectedStore.parking}</span>
+                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {selectedStore.parking}
+                          </span>
                         </div>
 
                         <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700">{selectedStore.publicTransport}</span>
+                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
+                          <span className="text-gray-700 dark:text-gray-300">
+                            {selectedStore.publicTransport}
+                          </span>
                         </div>
                       </div>
 
@@ -236,13 +254,16 @@ export default function LocationsPage() {
                     </div>
 
                     {/* Store Features */}
-                    <div className="bg-white rounded-xl shadow-lg p-8">
-                      <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
+                      <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
                         門市特色服務
                       </h3>
                       <div className="space-y-3">
                         {selectedStore.features.map((feature, index) => (
-                          <div key={index} className="flex items-center text-gray-700">
+                          <div
+                            key={index}
+                            className="flex items-center text-gray-700 dark:text-gray-300"
+                          >
                             <svg
                               className="mr-3 w-4 h-4 text-green-500 flex-shrink-0"
                               fill="currentColor"
@@ -264,8 +285,8 @@ export default function LocationsPage() {
                   {/* Map and Specialties */}
                   <div className="space-y-8">
                     {/* Interactive Map Area */}
-                    <div className="bg-white rounded-xl shadow-lg p-8">
-                      <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
+                      <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
                         門市位置
                       </h3>
                       <div className="text-center mb-4">
@@ -289,20 +310,22 @@ export default function LocationsPage() {
                         </div>
                       )}
                       <div className="text-center mt-4">
-                        <p className="text-gray-600 text-sm">{selectedStore.landmark}</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">
+                          {selectedStore.landmark}
+                        </p>
                       </div>
                     </div>
 
                     {/* Store Specialties */}
-                    <div className="bg-white rounded-xl shadow-lg p-8">
-                      <h3 className="text-xl font-bold text-amber-900 mb-4 flex items-center">
+                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
+                      <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
                         主打商品
                       </h3>
                       <div className="grid grid-cols-2 gap-3">
                         {selectedStore.specialties.map((specialty, index) => (
                           <div
                             key={index}
-                            className="bg-amber-50 text-amber-800 px-4 py-2 rounded-lg text-center font-medium"
+                            className="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-4 py-2 rounded-lg text-center font-medium"
                           >
                             {specialty}
                           </div>
@@ -314,19 +337,23 @@ export default function LocationsPage() {
 
                 {/* All Stores Quick Reference */}
                 <div className="mt-16">
-                  <h3 className="text-2xl font-bold text-center text-amber-900 mb-8">
+                  <h3 className="text-2xl font-bold text-center text-amber-900 dark:text-amber-300 mb-8">
                     全台門市快速查詢
                   </h3>
                   <div className="grid md:grid-cols-4 gap-6">
                     {storeLocations.map(store => (
                       <div
                         key={store.id}
-                        className={`bg-white rounded-lg shadow-lg p-6 transition-all hover:shadow-xl flex flex-col h-full ${
-                          selectedStore?.id === store.id ? 'ring-2 ring-amber-900' : ''
+                        className={`bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 transition-all hover:shadow-xl flex flex-col h-full ${
+                          selectedStore?.id === store.id
+                            ? 'ring-2 ring-amber-900 dark:ring-amber-400'
+                            : ''
                         }`}
                       >
                         <div className="text-center mb-4">
-                          <h4 className="font-bold text-gray-800">{store.name}</h4>
+                          <h4 className="font-bold text-gray-800 dark:text-gray-200">
+                            {store.name}
+                          </h4>
                           {store.isMain && (
                             <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
                               總店
@@ -334,7 +361,7 @@ export default function LocationsPage() {
                           )}
                         </div>
                         <div className="flex-grow">
-                          <div className="space-y-2 text-sm text-gray-600 mb-4">
+                          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-4">
                             <div className="flex items-center">
                               <span className="inline-block w-1.5 h-1.5 bg-amber-600 rounded-full mr-2 flex-shrink-0"></span>
                               <span>{store.phone}</span>
@@ -352,12 +379,14 @@ export default function LocationsPage() {
                           </div>
 
                           <div className="mb-4">
-                            <h5 className="text-sm font-medium text-gray-800 mb-2">提供服務：</h5>
+                            <h5 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+                              提供服務：
+                            </h5>
                             <div className="space-y-1 min-h-[120px]">
                               {store.features?.map((feature, index) => (
                                 <div
                                   key={index}
-                                  className="flex items-center text-xs text-gray-600"
+                                  className="flex items-center text-xs text-gray-600 dark:text-gray-300"
                                 >
                                   <svg
                                     className="mr-2 w-3 h-3 text-green-500 flex-shrink-0"

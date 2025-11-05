@@ -19,10 +19,10 @@ import { InterestsTab } from './components/InterestsTab'
 // 載入頁面元件
 function ProfilePageLoading() {
   return (
-    <div className="min-h-screen bg-gray-50 pt-36 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-36 flex items-center justify-center">
       <div className="text-center">
         <LoadingSpinner size="lg" />
-        <p className="mt-4 text-gray-600">載入中...</p>
+        <p className="mt-4 text-gray-600 dark:text-gray-300">載入中...</p>
       </div>
     </div>
   )
@@ -98,25 +98,25 @@ function ProfilePageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-28">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-28">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">會員中心</h1>
-          <p className="text-gray-600">歡迎回來，{user.name}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">會員中心</h1>
+          <p className="text-gray-600 dark:text-gray-300">歡迎回來，{user.name}</p>
         </div>
 
         <div className="lg:grid lg:grid-cols-4 gap-8">
           {/* 側邊導航 */}
           <div className="lg:col-span-1 mb-8 lg:mb-0">
-            <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
               <nav className="space-y-2">
                 <button
                   onClick={() => handleTabChange('profile')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                     activeTab === 'profile'
-                      ? 'bg-amber-100 text-amber-900'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <div className="flex items-center">
@@ -140,8 +140,8 @@ function ProfilePageContent() {
                   onClick={() => handleTabChange('orders')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                     activeTab === 'orders'
-                      ? 'bg-amber-100 text-amber-900'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <div className="flex items-center">
@@ -165,8 +165,8 @@ function ProfilePageContent() {
                   onClick={() => handleTabChange('interests')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition-colors ${
                     activeTab === 'interests'
-                      ? 'bg-amber-100 text-amber-900'
-                      : 'text-gray-600 hover:bg-gray-50'
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   <div className="flex items-center">

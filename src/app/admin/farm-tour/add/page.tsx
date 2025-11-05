@@ -17,7 +17,7 @@ const ProductImageManager = dynamic(
   () => import('@/components/features/products/ProductImageManager'),
   {
     loading: () => (
-      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+      <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
         載入圖片管理器...
       </div>
     ),
@@ -70,11 +70,11 @@ export default function AddFarmTourActivity() {
   // 未登入檢查
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-8">
+          <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center mx-auto mb-8">
             <svg
-              className="w-8 h-8 text-gray-600"
+              className="w-8 h-8 text-gray-600 dark:text-gray-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -87,18 +87,18 @@ export default function AddFarmTourActivity() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
-          <p className="text-gray-600 mb-8">此頁面需要管理員權限才能存取</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">需要登入</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
             <Link
               href="/login"
-              className="inline-block bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+              className="inline-block bg-amber-900 dark:bg-amber-800 text-white px-6 py-3 rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors"
             >
               立即登入
             </Link>
             <Link
               href="/"
-              className="inline-block border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"
+              className="inline-block border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 px-6 py-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
             >
               回到首頁
             </Link>
@@ -215,7 +215,7 @@ export default function AddFarmTourActivity() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-24">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center space-x-4 mb-4">
@@ -223,22 +223,22 @@ export default function AddFarmTourActivity() {
               ← 回到果園管理
             </Link>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">新增體驗活動</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">新增體驗活動</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
           <form
             onSubmit={handleSubmit}
-            className="bg-white rounded-lg shadow-md p-6 space-y-6"
+            className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 space-y-6"
             noValidate
           >
             {/* 錯誤和成功訊息 */}
             {submitError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-4">
                 <div className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-red-500 mr-2"
+                    className="w-5 h-5 text-red-500 dark:text-red-400 mr-2"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -248,16 +248,16 @@ export default function AddFarmTourActivity() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <p className="text-red-800">{submitError}</p>
+                  <p className="text-red-800 dark:text-red-300">{submitError}</p>
                 </div>
               </div>
             )}
 
             {submitSuccess && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
                 <div className="flex items-center">
                   <svg
-                    className="w-5 h-5 text-green-500 mr-2"
+                    className="w-5 h-5 text-green-500 dark:text-green-400 mr-2"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -267,28 +267,32 @@ export default function AddFarmTourActivity() {
                       clipRule="evenodd"
                     />
                   </svg>
-                  <p className="text-green-800">{submitSuccess}</p>
+                  <p className="text-green-800 dark:text-green-300">{submitSuccess}</p>
                 </div>
               </div>
             )}
 
             {/* 基本資訊 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">基本資訊</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                基本資訊
+              </h3>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">開始月份 *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                    開始月份 *
+                  </label>
                   <select
                     name="start_month"
                     value={formData.start_month}
                     onChange={handleInputChange}
                     onBlur={e => handleFieldBlur('start_month', Number(e.target.value))}
                     required
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                       fieldErrors.start_month
                         ? 'border-red-500 focus:ring-red-200'
-                        : 'border-gray-300 focus:ring-green-200'
+                        : 'border-gray-300 dark:border-slate-600 focus:ring-green-200'
                     }`}
                   >
                     {monthOptions.map(option => (
@@ -298,22 +302,26 @@ export default function AddFarmTourActivity() {
                     ))}
                   </select>
                   {fieldErrors.start_month && (
-                    <p className="text-red-500 text-sm mt-1">{fieldErrors.start_month}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">
+                      {fieldErrors.start_month}
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">結束月份 *</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                    結束月份 *
+                  </label>
                   <select
                     name="end_month"
                     value={formData.end_month}
                     onChange={handleInputChange}
                     onBlur={e => handleFieldBlur('end_month', Number(e.target.value))}
                     required
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                       fieldErrors.end_month
                         ? 'border-red-500 focus:ring-red-200'
-                        : 'border-gray-300 focus:ring-green-200'
+                        : 'border-gray-300 dark:border-slate-600 focus:ring-green-200'
                     }`}
                   >
                     {monthOptions.map(option => (
@@ -323,13 +331,17 @@ export default function AddFarmTourActivity() {
                     ))}
                   </select>
                   {fieldErrors.end_month && (
-                    <p className="text-red-500 text-sm mt-1">{fieldErrors.end_month}</p>
+                    <p className="text-red-500 dark:text-red-400 text-sm mt-1">
+                      {fieldErrors.end_month}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動標題 *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                  活動標題 *
+                </label>
                 <input
                   type="text"
                   name="title"
@@ -337,20 +349,20 @@ export default function AddFarmTourActivity() {
                   onChange={handleInputChange}
                   onBlur={e => handleFieldBlur('title', e.target.value)}
                   required
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                     fieldErrors.title
                       ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-green-200'
+                      : 'border-gray-300 dark:border-slate-600 focus:ring-green-200'
                   }`}
                   placeholder="輸入體驗活動標題"
                 />
                 {fieldErrors.title && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.title}</p>
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1">{fieldErrors.title}</p>
                 )}
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
                   活動價格 (元)
                 </label>
                 <input
@@ -361,25 +373,29 @@ export default function AddFarmTourActivity() {
                   onBlur={e => handleFieldBlur('price', Number(e.target.value))}
                   min="0"
                   step="1"
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                     fieldErrors.price
                       ? 'border-red-500 focus:ring-red-200'
-                      : 'border-gray-300 focus:ring-green-200'
+                      : 'border-gray-300 dark:border-slate-600 focus:ring-green-200'
                   }`}
                   placeholder="免費請填 0 或留空"
                 />
                 {fieldErrors.price && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.price}</p>
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1">{fieldErrors.price}</p>
                 )}
               </div>
             </div>
 
             {/* 活動內容 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">活動內容</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                活動內容
+              </h3>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">活動項目 *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                  活動項目 *
+                </label>
                 {formData.activities.map((activity, index) => (
                   <div key={index} className="flex gap-2 mb-2">
                     <input
@@ -387,10 +403,10 @@ export default function AddFarmTourActivity() {
                       value={activity}
                       onChange={e => updateActivityField(index, e.target.value)}
                       onBlur={() => handleFieldBlur('activities', formData.activities)}
-                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 placeholder-gray-400 ${
+                      className={`flex-1 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 placeholder-gray-400 ${
                         fieldErrors.activities
                           ? 'border-red-500 focus:ring-red-200'
-                          : 'border-gray-300 focus:ring-green-200'
+                          : 'border-gray-300 dark:border-slate-600 focus:ring-green-200'
                       }`}
                       placeholder="輸入活動項目（例如：有機蔬菜採摘）"
                     />
@@ -398,7 +414,7 @@ export default function AddFarmTourActivity() {
                       <button
                         type="button"
                         onClick={() => removeActivityField(index)}
-                        className="px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                        className="px-3 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
                       >
                         ×
                       </button>
@@ -406,12 +422,14 @@ export default function AddFarmTourActivity() {
                   </div>
                 ))}
                 {fieldErrors.activities && (
-                  <p className="text-red-500 text-sm mt-1">{fieldErrors.activities}</p>
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-1">
+                    {fieldErrors.activities}
+                  </p>
                 )}
                 <button
                   type="button"
                   onClick={addActivityField}
-                  className="mt-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm"
+                  className="mt-2 px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors text-sm"
                 >
                   + 新增項目
                 </button>
@@ -420,11 +438,15 @@ export default function AddFarmTourActivity() {
 
             {/* 其他設定 */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">其他設定</h3>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4">
+                其他設定
+              </h3>
 
               {/* 活動圖片 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-3">活動圖片 *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-3">
+                  活動圖片 *
+                </label>
                 <ProductImageManager
                   productId={activityId}
                   onImagesChange={handleImagesChange}
@@ -433,24 +455,28 @@ export default function AddFarmTourActivity() {
                   className="mb-4"
                 />
                 {images.length > 0 && (
-                  <div className="mt-2 text-sm text-green-600">✓ 已選擇 {images.length} 張圖片</div>
+                  <div className="mt-2 text-sm text-green-600 dark:text-green-400">
+                    ✓ 已選擇 {images.length} 張圖片
+                  </div>
                 )}
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">注意事項</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-100 mb-2">
+                  注意事項
+                </label>
                 <textarea
                   name="note"
                   value={formData.note}
                   onChange={handleInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 placeholder-gray-500 dark:placeholder-gray-400"
                   placeholder="輸入參加注意事項"
                 />
               </div>
 
               <div>
-                <label className="flex items-center text-gray-700 font-medium">
+                <label className="flex items-center text-gray-700 dark:text-gray-200 font-medium">
                   <input
                     type="checkbox"
                     name="available"
@@ -467,14 +493,14 @@ export default function AddFarmTourActivity() {
             <div className="flex justify-end space-x-4 pt-6">
               <Link
                 href="/admin/farm-tour"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+                className="px-6 py-2 border border-gray-300 dark:border-slate-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
               >
                 取消
               </Link>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:opacity-50"
               >
                 {loading ? '新增中...' : '新增活動'}
               </button>
@@ -483,10 +509,10 @@ export default function AddFarmTourActivity() {
 
           {/* Preview */}
           <div className="lg:sticky lg:top-8">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">即時預覽</h3>
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">即時預覽</h3>
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden">
               {/* Preview Card */}
-              <div className="bg-gradient-to-br from-green-100 to-amber-100 p-6 text-center">
+              <div className="bg-gradient-to-br from-green-100 to-amber-100 dark:from-green-900/30 dark:to-amber-900/30 p-6 text-center">
                 <div className="mb-3">
                   {images.length > 0 ? (
                     <Image
@@ -498,25 +524,25 @@ export default function AddFarmTourActivity() {
                       className="w-16 h-16 object-cover rounded-lg mx-auto border-2 border-white shadow-sm"
                     />
                   ) : (
-                    <div className="w-16 h-16 bg-gray-200 rounded-lg mx-auto flex items-center justify-center">
-                      <span className="text-gray-500 text-xs">無圖片</span>
+                    <div className="w-16 h-16 bg-gray-200 dark:bg-slate-600 rounded-lg mx-auto flex items-center justify-center">
+                      <span className="text-gray-500 dark:text-gray-400 text-xs">無圖片</span>
                     </div>
                   )}
                 </div>
-                <h3 className="text-lg font-bold text-gray-800 mb-2">
+                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-2">
                   {formData.title || '活動標題預覽'}
                 </h3>
-                <div className="flex justify-center items-center gap-2 text-sm text-gray-600 flex-wrap">
-                  <span className="bg-white px-2 py-1 rounded-full">
+                <div className="flex justify-center items-center gap-2 text-sm text-gray-600 dark:text-gray-300 flex-wrap">
+                  <span className="bg-white dark:bg-slate-700 px-2 py-1 rounded-full">
                     {formData.start_month}月 - {formData.end_month}月
                   </span>
                   {formData.price > 0 && (
-                    <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded-full font-semibold">
+                    <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded-full font-semibold">
                       NT${formData.price}
                     </span>
                   )}
                   {formData.price === 0 && (
-                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full font-semibold">
+                    <span className="bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 px-2 py-1 rounded-full font-semibold">
                       免費
                     </span>
                   )}
@@ -525,13 +551,18 @@ export default function AddFarmTourActivity() {
 
               <div className="p-4">
                 <div className="mb-4">
-                  <h4 className="font-semibold text-gray-800 mb-2 text-sm">活動內容</h4>
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2 text-sm">
+                    活動內容
+                  </h4>
                   <div className="space-y-1">
                     {formData.activities
                       .filter(a => a.trim())
                       .map((activity, index) => (
-                        <div key={index} className="flex items-center text-xs text-gray-600">
-                          <span className="mr-2 text-green-500">•</span>
+                        <div
+                          key={index}
+                          className="flex items-center text-xs text-gray-600 dark:text-gray-300"
+                        >
+                          <span className="mr-2 text-green-500 dark:text-green-400">•</span>
                           <span>{activity}</span>
                         </div>
                       ))}
@@ -539,14 +570,16 @@ export default function AddFarmTourActivity() {
                 </div>
 
                 {formData.note && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-blue-700 text-xs">{formData.note}</p>
+                  <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <p className="text-blue-700 dark:text-blue-300 text-xs">{formData.note}</p>
                   </div>
                 )}
 
                 <div
                   className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                    formData.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    formData.available
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                      : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                   }`}
                 >
                   {formData.available ? '開放預約' : '暫停開放'}

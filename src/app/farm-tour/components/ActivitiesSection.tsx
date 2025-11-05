@@ -25,26 +25,26 @@ export function ActivitiesSection({
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-3xl font-light text-amber-900">四季農園體驗</h2>
+        <h2 className="text-3xl font-light text-amber-900 dark:text-amber-300">四季農園體驗</h2>
       </div>
       {loading ? (
         <div className="text-center py-12">
-          <div className="text-gray-500">載入體驗活動中...</div>
+          <div className="text-gray-500 dark:text-gray-400">載入體驗活動中...</div>
         </div>
       ) : activities.length === 0 ? (
         <div className="text-center py-12">
-          <div className="text-gray-500 mb-4">目前沒有可預約的體驗活動</div>
-          <p className="text-sm text-gray-400">敬請期待更多精彩活動</p>
+          <div className="text-gray-500 dark:text-gray-400 mb-4">目前沒有可預約的體驗活動</div>
+          <p className="text-sm text-gray-400 dark:text-gray-500">敬請期待更多精彩活動</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
           {activities.map((activity, index) => (
             <div
               key={activity.id}
-              className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full ${!activity.available ? 'opacity-75' : ''} group`}
+              className={`bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 flex flex-col h-full ${!activity.available ? 'opacity-75' : ''} group`}
             >
               {/* Activity Header with Image */}
-              <div className="relative h-56 bg-gradient-to-r from-amber-100 to-orange-100 overflow-hidden">
+              <div className="relative h-56 bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 overflow-hidden">
                 {/* 熱門標籤 */}
                 {index === 0 && (
                   <div className="absolute top-4 left-4 z-20 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
@@ -105,18 +105,25 @@ export function ActivitiesSection({
                 <div className="flex-grow">
                   {/* Note */}
                   {activity.note && (
-                    <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-6 rounded-r-lg">
-                      <p className="text-amber-800 font-medium">{activity.note}</p>
+                    <div className="bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 dark:border-amber-500 p-4 mb-6 rounded-r-lg">
+                      <p className="text-amber-800 dark:text-amber-300 font-medium">
+                        {activity.note}
+                      </p>
                     </div>
                   )}
 
                   {/* Activities List */}
                   <div className="mb-6">
-                    <h4 className="font-semibold text-gray-800 mb-3">活動內容</h4>
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                      活動內容
+                    </h4>
                     <div className="space-y-2">
                       {activity.activities.map((act, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-600">
-                          <Check className="w-4 h-4 mr-2 text-green-500" />
+                        <div
+                          key={index}
+                          className="flex items-center text-sm text-gray-600 dark:text-gray-300"
+                        >
+                          <Check className="w-4 h-4 mr-2 text-green-500 dark:text-green-400" />
                           <span>{act}</span>
                         </div>
                       ))}
@@ -125,8 +132,8 @@ export function ActivitiesSection({
 
                   {/* Additional Info */}
                   {Number(activity.price) > 0 && (
-                    <div className="mb-6 p-3 bg-green-50 rounded-lg">
-                      <p className="text-green-700 text-sm font-medium">
+                    <div className="mb-6 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                      <p className="text-green-700 dark:text-green-300 text-sm font-medium">
                         體驗費用：NT$ {activity.price}
                       </p>
                     </div>
@@ -139,8 +146,8 @@ export function ActivitiesSection({
                   disabled={!activity.available}
                   className={`w-full py-3 rounded-lg font-semibold transition-colors mt-auto ${
                     activity.available
-                      ? 'bg-amber-900 text-white hover:bg-amber-800'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-amber-900 text-white hover:bg-amber-800 dark:hover:bg-amber-700'
+                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   }`}
                 >
                   {activity.available ? '了解詳情' : '暫停開放'}

@@ -25,7 +25,9 @@ export function ProductsSection({
 }: ProductsSectionProps) {
   return (
     <div>
-      <label className="block text-sm font-semibold text-gray-800 mb-3">販售商品 *</label>
+      <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-3">
+        販售商品 *
+      </label>
 
       {/* 新增商品輸入框 */}
       <div className="flex gap-2 mb-4">
@@ -37,7 +39,7 @@ export function ProductsSection({
             onKeyPress={handleProductKeyPress}
             onBlur={() => handleBlur('products')}
             list="product-suggestions"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="輸入商品名稱"
           />
           <datalist id="product-suggestions">
@@ -53,7 +55,7 @@ export function ProductsSection({
           type="button"
           onClick={handleAddProduct}
           disabled={!newProduct.trim()}
-          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-purple-600 dark:bg-purple-700 text-white rounded-md hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           新增
         </button>
@@ -66,13 +68,13 @@ export function ProductsSection({
             {formData.products.map((product, index) => (
               <span
                 key={index}
-                className="inline-flex items-center gap-1 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm"
+                className="inline-flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full text-sm border border-amber-200 dark:border-amber-700"
               >
                 {product}
                 <button
                   type="button"
                   onClick={() => handleRemoveProduct(product)}
-                  className="ml-1 text-amber-600 hover:text-amber-800 transition-colors"
+                  className="ml-1 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
                 >
                   ×
                 </button>
@@ -82,14 +84,14 @@ export function ProductsSection({
         </div>
       )}
 
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-gray-600 dark:text-gray-300">
         已新增 {formData.products.length} 項商品{' '}
         {formData.products.length === 0 && '（至少需要一項商品）'}
       </div>
 
       {/* 驗證錯誤訊息 */}
       {touched.products && errors.products && (
-        <p className="mt-1 text-sm text-red-600">{errors.products}</p>
+        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.products}</p>
       )}
     </div>
   )

@@ -140,8 +140,8 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
   if (initialLoading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="text-center">載入中...</div>
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
+          <div className="text-center text-gray-900 dark:text-gray-100">載入中...</div>
         </div>
       </AdminProtection>
     )
@@ -149,18 +149,24 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="mb-8">
             <div className="flex items-center space-x-4 mb-4">
-              <Link href="/admin/schedule" className="text-purple-600 hover:text-purple-800">
+              <Link
+                href="/admin/schedule"
+                className="text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
+              >
                 ← 回到行程管理
               </Link>
             </div>
-            <h1 className="text-3xl font-bold text-gray-800">編輯擺攤行程</h1>
+            <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">編輯擺攤行程</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-8 space-y-6"
+          >
             {/* 基本資訊 */}
             <BasicInfoSection
               formData={formData}
@@ -185,13 +191,15 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
 
             {/* 描述 */}
             <div>
-              <label className="block text-sm font-semibold text-gray-800 mb-2">地點描述</label>
+              <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                地點描述
+              </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleInputChangeWithValidation}
                 rows={2}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder="攤位位置、交通資訊等補充說明"
               />
             </div>
@@ -229,14 +237,14 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
             <div className="flex justify-end space-x-4 pt-6">
               <Link
                 href="/admin/schedule"
-                className="px-6 py-2 border border-gray-300 rounded-md text-gray-800 font-medium hover:bg-gray-50 transition-colors"
+                className="px-6 py-2 border border-gray-300 dark:border-slate-600 rounded-md text-gray-800 dark:text-gray-100 font-medium hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
               >
                 取消
               </Link>
               <button
                 type="submit"
                 disabled={loading || formData.products.length === 0}
-                className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-purple-600 dark:bg-purple-700 text-white rounded-md hover:bg-purple-700 dark:hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? '更新中...' : '更新行程'}
               </button>

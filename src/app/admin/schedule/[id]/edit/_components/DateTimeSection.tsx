@@ -31,7 +31,9 @@ export function DateTimeSection({
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-2">日期 *</label>
+        <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          日期 *
+        </label>
         <input
           type="date"
           name="date"
@@ -39,15 +41,19 @@ export function DateTimeSection({
           onChange={handleInputChange}
           onBlur={() => handleBlur('date')}
           required
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 ${
-            touched.date && errors.date ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
+            touched.date && errors.date ? 'border-red-500' : 'border-gray-300 dark:border-slate-600'
           }`}
         />
-        {touched.date && errors.date && <p className="mt-1 text-sm text-red-600">{errors.date}</p>}
+        {touched.date && errors.date && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date}</p>
+        )}
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-2">開始時間 *</label>
+        <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          開始時間 *
+        </label>
         <div onBlur={() => handleBlur('startTime')}>
           <TimePickerChinese
             value={timeRange.startTime}
@@ -57,12 +63,14 @@ export function DateTimeSection({
           />
         </div>
         {touched.startTime && errors.startTime && (
-          <p className="mt-1 text-sm text-red-600">{errors.startTime}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.startTime}</p>
         )}
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-gray-800 mb-2">結束時間 *</label>
+        <label className="block text-sm font-semibold text-gray-800 dark:text-gray-100 mb-2">
+          結束時間 *
+        </label>
         <div onBlur={() => handleBlur('endTime')}>
           <TimePickerChinese
             value={timeRange.endTime}
@@ -72,10 +80,10 @@ export function DateTimeSection({
           />
         </div>
         {touched.endTime && errors.endTime && (
-          <p className="mt-1 text-sm text-red-600">{errors.endTime}</p>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.endTime}</p>
         )}
         {timeRange.startTime && timeRange.endTime && !errors.endTime && (
-          <div className="mt-2 text-sm text-gray-600">
+          <div className="mt-2 text-sm text-gray-600 dark:text-gray-300">
             時間範圍：{formatTimeRange(timeRange.startTime, timeRange.endTime)}
           </div>
         )}
