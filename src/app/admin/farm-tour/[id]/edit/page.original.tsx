@@ -9,7 +9,6 @@ import dynamic from 'next/dynamic'
 import { v4 as uuidv4 } from 'uuid'
 import { logger } from '@/lib/logger'
 import AdminProtection from '@/components/features/admin/AdminProtection'
-import { useFarmTourEditReducer } from '@/hooks/useFarmTourEditReducer'
 
 // 動態載入圖片上傳器
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
@@ -23,7 +22,12 @@ const ImageUploader = dynamic(() => import('@/components/features/products/Image
 
 export default function EditFarmTourActivity({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
-  const { state, actions } = useFarmTourEditReducer()
+  const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [activityId, setActivityId] = useState<string>('')
+  const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [existingImages, setExistingImages] = useState<string[]>([])
+  const [imageDeleted, setImageDeleted] = useState(false)
 
   const [formData, setFormData] = useState({
     start_month: 1,
@@ -61,8 +65,14 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
             note: activity.note || '',
           })
 
-          // 使用 reducer action 載入活動資料
-          actions.loadActivitySuccess(id, activity.image)
+          // 設定現有圖片（如果不是 emoji）
+          if (
+            activity.image &&
+            !activity.image.match(/^[\u{1f300}-\u{1f9ff}]$/u) &&
+            activity.image.startsWith('http')
+          ) {
+            setExistingImages([activity.image])
+          }
         } else {
           const errorMessage = result.error || '活動不存在'
           alert(errorMessage)
@@ -74,44 +84,45 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
           error instanceof Error ? error : new Error('Unknown error')
         )
         alert('載入失敗')
-        actions.setInitialLoading(false)
+      } finally {
+        setInitialLoading(false)
       }
     },
-    [router, actions]
+    [router]
   )
 
   useEffect(() => {
     params.then(({ id }) => {
-      actions.setActivityId(id)
+      setActivityId(id)
       fetchActivity(id)
     })
-  }, [params, fetchActivity, actions])
+  }, [params, fetchActivity])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    actions.setLoading(true)
+    setLoading(true)
 
     try {
       // 決定要使用的圖片 URL：優先使用新上傳的圖片，否則使用現有圖片（除非已刪除）
       let imageUrl = ''
-      if (state.uploadedImages.length > 0) {
-        imageUrl = state.uploadedImages[0] // 使用新上傳的圖片
+      if (uploadedImages.length > 0) {
+        imageUrl = uploadedImages[0] // 使用新上傳的圖片
         logger.info('使用新上傳的圖片', {
-          metadata: { imageUrl, activityId: state.activityId },
+          metadata: { imageUrl, activityId },
         })
-      } else if (state.existingImages.length > 0 && !state.imageDeleted) {
-        imageUrl = state.existingImages[0] // 保持現有圖片（如果沒有被刪除）
+      } else if (existingImages.length > 0 && !imageDeleted) {
+        imageUrl = existingImages[0] // 保持現有圖片（如果沒有被刪除）
         logger.info('保持現有圖片', {
-          metadata: { imageUrl, activityId: state.activityId },
+          metadata: { imageUrl, activityId },
         })
-      } else if (state.imageDeleted) {
+      } else if (imageDeleted) {
         imageUrl = '' // 圖片已被刪除，設為空字串
         logger.info('圖片已刪除，將清空資料庫圖片欄位', {
-          metadata: { activityId: state.activityId },
+          metadata: { activityId },
         })
       }
 
-      const response = await fetch(`/api/farm-tour/${state.activityId}`, {
+      const response = await fetch(`/api/farm-tour/${activityId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -135,7 +146,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
       )
       alert(error instanceof Error ? error.message : '更新失敗')
     } finally {
-      actions.setLoading(false)
+      setLoading(false)
     }
   }
 
@@ -189,11 +200,11 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
     }[]
   ) => {
     const urls = images.map(img => img.url || img.path).filter(Boolean)
-    actions.setUploadedImages(urls)
+    setUploadedImages(urls)
     if (urls.length > 0) {
       setFormData(prev => ({ ...prev, image: urls[0] }))
       logger.info('圖片上傳成功', {
-        metadata: { imageUrl: urls[0], activityId: state.activityId },
+        metadata: { imageUrl: urls[0], activityId },
       })
     }
   }
@@ -201,7 +212,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   // 處理圖片上傳錯誤
   const handleImageUploadError = (error: string) => {
     logger.error('圖片上傳失敗', new Error(error), {
-      metadata: { activityId: state.activityId },
+      metadata: { activityId },
     })
     alert(`圖片上傳失敗: ${error}`)
   }
@@ -209,15 +220,15 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
   // 處理刪除現有圖片
   const handleDeleteExistingImage = () => {
     if (confirm('確定要刪除現有圖片嗎？刪除後可以上傳新圖片。')) {
-      actions.deleteExistingImage()
+      setImageDeleted(true)
       setFormData(prev => ({ ...prev, image: '' }))
       logger.info('現有圖片已標記為刪除', {
-        metadata: { activityId: state.activityId, previousImage: state.existingImages[0] },
+        metadata: { activityId, previousImage: existingImages[0] },
       })
     }
   }
 
-  if (state.initialLoading) {
+  if (initialLoading) {
     return (
       <AdminProtection>
         <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
@@ -389,12 +400,12 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     活動圖片（限一張）
                   </label>
 
-                  {state.existingImages.length > 0 && !state.imageDeleted ? (
+                  {existingImages.length > 0 && !imageDeleted ? (
                     // 顯示現有圖片
                     <div className="space-y-3">
                       <div className="relative inline-block">
                         <img
-                          src={state.existingImages[0]}
+                          src={existingImages[0]}
                           alt="現有活動圖片"
                           className="w-48 h-48 object-cover rounded-lg border-2 border-gray-200 dark:border-slate-600"
                         />
@@ -427,7 +438,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                     // 顯示上傳區域
                     <div className="space-y-3">
                       <ImageUploader
-                        productId={state.activityId || uuidv4()}
+                        productId={activityId || uuidv4()}
                         module="farm-tour"
                         onUploadSuccess={handleImageUploadSuccess}
                         onUploadError={handleImageUploadError}
@@ -437,7 +448,7 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                         enableCompression={true}
                         className="mb-4"
                       />
-                      {state.uploadedImages.length > 0 ? (
+                      {uploadedImages.length > 0 ? (
                         <div className="text-sm text-green-600 dark:text-green-400">
                           ✓ 已上傳新圖片
                         </div>
@@ -488,10 +499,10 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 </Link>
                 <button
                   type="submit"
-                  disabled={state.loading}
+                  disabled={loading}
                   className="px-6 py-2 bg-green-600 dark:bg-green-700 text-white rounded-md hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:opacity-50"
                 >
-                  {state.loading ? '更新中...' : '更新活動'}
+                  {loading ? '更新中...' : '更新活動'}
                 </button>
               </div>
             </form>
@@ -505,11 +516,9 @@ export default function EditFarmTourActivity({ params }: { params: Promise<{ id:
                 {/* Preview Card */}
                 <div className="bg-gradient-to-br from-green-100 to-amber-100 dark:from-green-900/30 dark:to-amber-900/30 p-6 text-center">
                   <div className="mb-3">
-                    {state.uploadedImages.length > 0 || state.existingImages.length > 0 ? (
+                    {uploadedImages.length > 0 || existingImages.length > 0 ? (
                       <Image
-                        src={
-                          state.uploadedImages[0] || state.existingImages[0] || '/placeholder.jpg'
-                        }
+                        src={uploadedImages[0] || existingImages[0] || '/placeholder.jpg'}
                         alt="活動圖片"
                         width={64}
                         height={64}

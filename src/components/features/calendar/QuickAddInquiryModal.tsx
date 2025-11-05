@@ -14,6 +14,7 @@ import {
 import { ApiResponse } from '@/types/infrastructure.types'
 import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
 import { FarmTourActivity } from '@/types/farmTour'
+import { formatDate } from '@/lib/utils/formatters'
 
 interface QuickAddInquiryModalProps {
   isOpen: boolean
@@ -59,7 +60,7 @@ export default function QuickAddInquiryModal({
         visitor_count: 1,
         farm_tour_id: '',
         visit_date: defaultDate,
-        notes: selectedDate ? `預設預約日期：${selectedDate.toLocaleDateString('zh-TW')}` : '',
+        notes: selectedDate ? `預設預約日期：${formatDate(selectedDate, 'short')}` : '',
       })
       setErrors({})
     }

@@ -3,6 +3,7 @@
 import { InquiryWithItems } from '@/types/inquiry'
 import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
 import StatusStep from './StatusStep'
+import { formatDate } from '@/lib/utils/formatters'
 import {
   LightBulbIcon,
   TruckIcon,
@@ -185,14 +186,7 @@ export default function InquiryStatusFlow({
             {inquiry.inquiry_type === 'farm_tour' && inquiry.visit_date && (
               <div className="bg-green-50 p-3 rounded-lg">
                 <h4 className="font-medium text-green-900 mb-1">預約日期</h4>
-                <p className="text-green-800">
-                  {new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'short',
-                  })}
-                </p>
+                <p className="text-green-800">{formatDate(inquiry.visit_date, 'full')}</p>
               </div>
             )}
           </div>

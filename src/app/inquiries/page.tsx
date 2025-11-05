@@ -15,6 +15,7 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
+import { formatDateTime } from '@/lib/utils/formatters'
 
 function InquiriesPage() {
   const { user, isLoading: authLoading } = useAuth()
@@ -183,13 +184,7 @@ function InquiriesPage() {
                           詢問單 #{InquiryUtils.formatInquiryNumber(inquiry)}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatDateTime(inquiry.created_at)}
                         </p>
                       </div>
                     </div>

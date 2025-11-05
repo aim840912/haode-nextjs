@@ -17,6 +17,7 @@ import {
   InquiryUtils,
 } from '@/types/inquiry'
 import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
+import { formatDateTime, formatDate } from '@/lib/utils/formatters'
 import {
   LockClosedIcon,
   ClipboardDocumentListIcon,
@@ -191,15 +192,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               >
                 {INQUIRY_STATUS_LABELS[inquiry.status]}
               </span>
-              <span className="text-gray-700">
-                {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
+              <span className="text-gray-700">{formatDateTime(inquiry.created_at)}</span>
             </div>
           </div>
         </div>
@@ -278,14 +271,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                       <div>
                         <h4 className="text-sm font-medium text-gray-800 mb-2">預定參觀日期</h4>
                         <p className="text-lg text-gray-900">
-                          {inquiry.visit_date
-                            ? new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                weekday: 'long',
-                              })
-                            : '未指定'}
+                          {inquiry.visit_date ? formatDate(inquiry.visit_date, 'full') : '未指定'}
                         </p>
                       </div>
                       <div>

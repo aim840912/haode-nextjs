@@ -1,4 +1,5 @@
 import { formatTimeRange } from '../hooks/useScheduleData'
+import { formatDate } from '@/lib/utils/formatters'
 
 interface FormData {
   title: string
@@ -102,7 +103,7 @@ export default function SchedulePreview({ formData, timeRange }: SchedulePreview
         )}
 
         <div className="text-xs text-gray-500 mt-3">
-          更新時間：{new Date().toLocaleDateString('zh-TW')}
+          更新時間：{formatDate(new Date(), 'short')}
         </div>
       </div>
     </div>

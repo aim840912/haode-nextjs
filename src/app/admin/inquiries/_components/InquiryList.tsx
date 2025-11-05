@@ -8,6 +8,7 @@ import {
   INQUIRY_TYPE_LABELS,
   INQUIRY_TYPE_COLORS,
 } from '@/types/inquiry'
+import { formatDate } from '@/lib/utils/formatters'
 
 interface InquiryListProps {
   inquiries: InquiryWithItems[]
@@ -183,7 +184,7 @@ export default function InquiryList({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                    {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
+                    {formatDate(inquiry.created_at, 'short')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
@@ -283,7 +284,7 @@ export default function InquiryList({
                       #{InquiryUtils.formatInquiryNumber(inquiry)}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(inquiry.created_at).toLocaleDateString('zh-TW')}
+                      {formatDate(inquiry.created_at, 'short')}
                     </div>
                   </div>
                 </div>

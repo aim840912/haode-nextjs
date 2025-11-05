@@ -1,3 +1,5 @@
+import { formatDate } from '@/lib/utils/formatters'
+
 interface SchedulePreviewProps {
   formData: {
     title: string
@@ -100,7 +102,7 @@ export function SchedulePreview({ formData, formatTimeRange, timeRange }: Schedu
         )}
 
         <div className="text-xs text-gray-500 dark:text-gray-400 mt-3">
-          更新時間：{new Date().toLocaleDateString('zh-TW')}
+          更新時間：{formatDate(new Date(), 'short')}
         </div>
       </div>
     </div>

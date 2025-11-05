@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { validatePhone } from '@/lib/utils/validation'
 
 export interface TimeRange {
   startTime: string
@@ -36,10 +37,9 @@ export function useScheduleValidation(timeRange: TimeRange) {
 
         case 'contact':
           if (!value || !(value as string).trim()) return '請輸入聯絡電話'
-          // 簡單的手機號碼格式驗證 (09xxxxxxxx 或 09xx-xxxxxx)
-          const phoneNumber = (value as string).replace(/[-\s]/g, '')
-          if (!/^09\d{8}$/.test(phoneNumber)) {
-            return '請輸入正確的手機號碼格式 (09xxxxxxxx)'
+          const result = validatePhone(value as string)
+          if (!result.valid) {
+            return result.message || '請輸入有效的台灣電話號碼（手機或市話）'
           }
           return ''
 

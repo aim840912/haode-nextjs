@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { validatePhone } from '@/lib/utils/validation'
 
 interface TimeRange {
   startTime: string
@@ -39,14 +40,9 @@ export function useScheduleFormValidation() {
 
       case 'contact':
         if (!value || !value.trim()) return '請輸入聯絡電話'
-
-        // 台灣電話格式增強驗證
-        const cleanPhone = value.replace(/[\s\-()]/g, '')
-        const phoneRegex =
-          /^(\+?886)?0?(9\d{8}|[2-8]\d{7,8}|800\d{6}|204\d{6}|70\d{7})((?:#|ext\.?|轉)\d+)?$/i
-
-        if (!phoneRegex.test(cleanPhone)) {
-          return '電話格式不正確'
+        const result = validatePhone(value)
+        if (!result.valid) {
+          return result.message || '請輸入有效的台灣電話號碼（手機或市話）'
         }
         return ''
 

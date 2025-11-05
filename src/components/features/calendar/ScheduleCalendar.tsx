@@ -6,6 +6,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import listPlugin from '@fullcalendar/list'
 import { useScheduleCalendar, type ScheduleCalendarEvent } from '@/hooks/useScheduleCalendar'
 import { logger } from '@/lib/logger'
+import { formatDate } from '@/lib/utils/formatters'
 
 // 狀態過濾選項 - 客戶版本
 const statusOptions = [
@@ -67,7 +68,7 @@ export default function ScheduleCalendar({
   const formatDateTime = (dateTimeStr: string) => {
     const date = new Date(dateTimeStr)
     return {
-      date: date.toLocaleDateString('zh-TW'),
+      date: formatDate(date, 'short'),
       time: date.toLocaleTimeString('zh-TW', {
         hour: '2-digit',
         minute: '2-digit',

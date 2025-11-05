@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/feedback/Toast'
 import { useRouter } from 'next/navigation'
 import { logger } from '@/lib/logger'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
+import { validatePhone } from '@/lib/utils/validation'
 
 // Force recompile
 
@@ -41,7 +42,8 @@ export default function RegisterPage() {
 
   // 檢查手機號碼是否已被使用
   const checkPhoneAvailability = async (phone: string) => {
-    if (!phone || !/^09\d{8}$/.test(phone.replace(/[-\s]/g, ''))) {
+    const result = validatePhone(phone)
+    if (!phone || !result.valid) {
       return // 格式不正確時不檢查
     }
 
@@ -125,8 +127,10 @@ export default function RegisterPage() {
       case 'phone':
         if (!value.trim()) {
           return '請輸入手機號碼'
-        } else if (!/^09\d{8}$/.test(value.replace(/[-\s]/g, ''))) {
-          return '請輸入有效的台灣手機號碼（09開頭，10位數字）'
+        }
+        const phoneResult = validatePhone(value)
+        if (!phoneResult.valid) {
+          return phoneResult.message || '請輸入有效的台灣電話號碼（手機或市話）'
         }
         break
 
@@ -399,7 +403,7 @@ export default function RegisterPage() {
                 {!isCheckingPhone &&
                   formData.phone &&
                   !errors.phone &&
-                  /^09\d{8}$/.test(formData.phone.replace(/[-\s]/g, '')) && (
+                  validatePhone(formData.phone).valid && (
                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                       <span className="text-green-500 dark:text-green-400 text-sm">✓</span>
                     </div>

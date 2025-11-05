@@ -220,9 +220,20 @@ async function validateFileMagicBytes(file: File): Promise<{ valid: boolean; err
  * 驗證圖片檔案
  * 包含基本驗證和深度安全檢查
  */
-export async function validateImageFile(file: File): Promise<{ valid: boolean; error?: string }> {
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
-  const maxSize = 10 * 1024 * 1024 // 10MB
+export async function validateImageFile(
+  file: File,
+  options?: {
+    maxSize?: number // MB
+    allowedTypes?: string[]
+  }
+): Promise<{ valid: boolean; error?: string }> {
+  const allowedTypes = options?.allowedTypes || [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/avif',
+  ]
+  const maxSize = (options?.maxSize || 10) * 1024 * 1024 // 轉換為 bytes
   const minSize = 100 // 100 bytes 最小檔案大小
 
   // 基本檔案名稱檢查

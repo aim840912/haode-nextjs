@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { InquiryWithItems, InquiryUtils } from '@/types/inquiry'
 import InquiryStatusBadge from './InquiryStatusBadge'
+import { formatDateTime } from '@/lib/utils/formatters'
 
 interface InquiryCardProps {
   inquiry: InquiryWithItems
@@ -20,15 +21,7 @@ export default function InquiryCard({ inquiry, showActions = true }: InquiryCard
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
                 庫存查詢單 #{InquiryUtils.formatInquiryNumber(inquiry)}
               </h3>
-              <p className="text-sm text-gray-600">
-                {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
+              <p className="text-sm text-gray-600">{formatDateTime(inquiry.created_at)}</p>
             </div>
             <InquiryStatusBadge status={inquiry.status} />
           </div>

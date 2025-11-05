@@ -13,6 +13,7 @@ import { INQUIRY_STATUS_LABELS, type InquiryStatus } from '@/types/inquiry'
 import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
 import QuickAddInquiryModal from './QuickAddInquiryModal'
+import { formatDate } from '@/lib/utils/formatters'
 
 // 狀態過濾選項
 const statusOptions = [
@@ -129,7 +130,7 @@ export default function FarmTourCalendar({
       logger.debug('事件被拖放')
 
       // 確認操作
-      const confirmed = confirm(`確定要將此預約調整到 ${newDate.toLocaleDateString('zh-TW')} 嗎？`)
+      const confirmed = confirm(`確定要將此預約調整到 ${formatDate(newDate, 'short')} 嗎？`)
 
       if (!confirmed) {
         dropInfo.revert() // 恢復原位置
@@ -147,7 +148,7 @@ export default function FarmTourCalendar({
         const event = events.find(e => e.id === eventId)
         if (event) {
           alert(
-            `「${event.extendedProps.customer_name}」的預約時間已更新至 ${newDate.toLocaleDateString('zh-TW')}`
+            `「${event.extendedProps.customer_name}」的預約時間已更新至 ${formatDate(newDate, 'short')}`
           )
         }
       }

@@ -14,6 +14,7 @@ import {
   INQUIRY_STATUS_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
+import { formatDateTime } from '@/lib/utils/formatters'
 import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 
 function InquiryListPage() {
@@ -276,13 +277,7 @@ function InquiryListPage() {
                           詢問單 #{InquiryUtils.formatInquiryNumber(inquiry)}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatDateTime(inquiry.created_at)}
                         </p>
                       </div>
                       <span

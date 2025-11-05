@@ -1,4 +1,5 @@
 'use client'
+import { formatDate } from '@/lib/utils/formatters'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -815,7 +816,7 @@ export default function EditSchedule({ params }: { params: Promise<{ id: string 
                 )}
 
                 <div className="text-xs text-gray-500 mt-3">
-                  更新時間：{new Date().toLocaleDateString('zh-TW')}
+                  更新時間：{formatDate(new Date(), 'short')}
                 </div>
               </div>
             </div>

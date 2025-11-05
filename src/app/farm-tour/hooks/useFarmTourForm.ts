@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { logger } from '@/lib/logger'
 import { createFarmTourInquiry } from '@/lib/api/farm-tour-api'
+import { validatePhone } from '@/lib/utils/validation'
 import type { User } from '@/types/auth'
 import type { FarmTourActivity } from '@/types/farmTour'
 
@@ -90,8 +91,8 @@ export function useFarmTourForm(user: User | null): UseFarmTourFormReturn {
       case 'customer_phone':
         // 電話為選填，但如果填寫則需驗證格式
         if (value.trim()) {
-          const phoneRegex = /^[0-9-+() ]{8,}$/
-          if (!phoneRegex.test(value)) return '請輸入有效的電話號碼'
+          const result = validatePhone(value)
+          if (!result.valid) return result.message || '請輸入有效的電話號碼'
         }
         return ''
 

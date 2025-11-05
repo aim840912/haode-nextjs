@@ -3,6 +3,8 @@
  * 定義審計日誌相關的介面和枚舉
  */
 
+import { formatDate } from '@/lib/utils/formatters'
+
 // 審計動作類型
 export type AuditAction =
   | 'view' // 查看單一資源
@@ -317,7 +319,7 @@ export class AuditLogUtils {
       const days = Math.floor(diffInSeconds / 86400)
       return `${days} 天前`
     } else {
-      return date.toLocaleDateString('zh-TW')
+      return formatDate(date, 'short')
     }
   }
 

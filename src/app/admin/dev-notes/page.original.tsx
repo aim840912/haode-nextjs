@@ -22,44 +22,49 @@ import {
   DevNoteInput,
 } from '@/types/devNote'
 import { apiLogger } from '@/lib/logger'
-import { useDevNotesReducer } from '@/hooks/useDevNotesReducer'
 
 export default function DevNotesPage() {
-  const { state, actions } = useDevNotesReducer()
+  const [notes, setNotes] = useState<DevNote[]>([])
+  const [stats, setStats] = useState<DevNoteStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // 篩選狀態
+  const [typeFilter, setTypeFilter] = useState<DevNoteType | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<DevNoteStatus | 'all'>('all')
+  const [priorityFilter, setPriorityFilter] = useState<DevNotePriority | 'all'>('all')
+
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.typeFilter, state.statusFilter, state.priorityFilter])
+  }, [typeFilter, statusFilter, priorityFilter])
 
   const loadData = async () => {
-    actions.loadDataStart()
+    setLoading(true)
     try {
       // 載入統計
       const statsRes = await fetch('/api/admin/dev-notes/stats')
       const statsData = await statsRes.json()
+      setStats(statsData.data)
 
       // 載入列表
       const params = new URLSearchParams()
-      if (state.typeFilter !== 'all') params.set('type', state.typeFilter)
-      if (state.statusFilter !== 'all') params.set('status', state.statusFilter)
-      if (state.priorityFilter !== 'all') params.set('priority', state.priorityFilter)
+      if (typeFilter !== 'all') params.set('type', typeFilter)
+      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (priorityFilter !== 'all') params.set('priority', priorityFilter)
 
       const notesRes = await fetch(`/api/admin/dev-notes?${params}`)
       const notesData = await notesRes.json()
-
-      actions.loadDataSuccess(notesData.data, statsData.data)
+      setNotes(notesData.data)
     } catch (error) {
       apiLogger.error('開發筆記載入失敗', error as Error, {
         module: 'DevNotesPage',
         action: 'loadDevNotes',
-        metadata: {
-          typeFilter: state.typeFilter,
-          statusFilter: state.statusFilter,
-          priorityFilter: state.priorityFilter,
-        },
+        metadata: { typeFilter, statusFilter, priorityFilter },
       })
-      actions.loadDataError()
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -85,7 +90,7 @@ export default function DevNotesPage() {
                 </div>
               </div>
               <button
-                onClick={() => actions.setShowCreateModal(true)}
+                onClick={() => setShowCreateModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <PlusIcon className="w-5 h-5" />
@@ -97,29 +102,24 @@ export default function DevNotesPage() {
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 統計卡片 */}
-          {state.stats && (
+          {stats && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <StatCard
                 title="總計"
-                value={state.stats.total}
+                value={stats.total}
                 icon={ClipboardDocumentListIcon}
                 color="blue"
               />
-              <StatCard
-                title="進行中"
-                value={state.stats.in_progress}
-                icon={BugAntIcon}
-                color="yellow"
-              />
+              <StatCard title="進行中" value={stats.in_progress} icon={BugAntIcon} color="yellow" />
               <StatCard
                 title="已完成"
-                value={state.stats.completed}
+                value={stats.completed}
                 icon={ClipboardDocumentListIcon}
                 color="green"
               />
               <StatCard
                 title="高優先級"
-                value={state.stats.by_priority.high + state.stats.by_priority.urgent}
+                value={stats.by_priority.high + stats.by_priority.urgent}
                 icon={BugAntIcon}
                 color="red"
               />
@@ -131,8 +131,8 @@ export default function DevNotesPage() {
             <div className="flex items-center space-x-4">
               <FunnelIcon className="w-5 h-5 text-gray-400" />
               <select
-                value={state.typeFilter}
-                onChange={e => actions.setTypeFilter(e.target.value as DevNoteType | 'all')}
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value as DevNoteType | 'all')}
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">所有類型</option>
@@ -143,8 +143,8 @@ export default function DevNotesPage() {
               </select>
 
               <select
-                value={state.statusFilter}
-                onChange={e => actions.setStatusFilter(e.target.value as DevNoteStatus | 'all')}
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as DevNoteStatus | 'all')}
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">所有狀態</option>
@@ -155,8 +155,8 @@ export default function DevNotesPage() {
               </select>
 
               <select
-                value={state.priorityFilter}
-                onChange={e => actions.setPriorityFilter(e.target.value as DevNotePriority | 'all')}
+                value={priorityFilter}
+                onChange={e => setPriorityFilter(e.target.value as DevNotePriority | 'all')}
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">所有優先級</option>
@@ -170,23 +170,23 @@ export default function DevNotesPage() {
 
           {/* 列表 */}
           <div className="space-y-4">
-            {state.loading ? (
+            {loading ? (
               <div className="text-center py-12">載入中...</div>
-            ) : state.notes.length === 0 ? (
+            ) : notes.length === 0 ? (
               <div className="text-center py-12 text-gray-500">暫無記錄</div>
             ) : (
-              state.notes.map(note => <NoteCard key={note.id} note={note} onUpdate={loadData} />)
+              notes.map(note => <NoteCard key={note.id} note={note} onUpdate={loadData} />)
             )}
           </div>
         </div>
       </div>
 
       {/* 新增 Modal */}
-      {state.showCreateModal && (
+      {showCreateModal && (
         <CreateNoteModal
-          onClose={() => actions.setShowCreateModal(false)}
+          onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
-            actions.setShowCreateModal(false)
+            setShowCreateModal(false)
             loadData()
           }}
         />

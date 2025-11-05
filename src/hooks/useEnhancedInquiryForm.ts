@@ -11,6 +11,7 @@ import { inquiryApi } from '@/lib/api-client'
 import { logger } from '@/lib/logger'
 import { CreateInquiryRequest, CreateInquiryItemRequest } from '@/types/inquiry'
 import { useErrorTracking } from './useErrorTracking'
+import { validatePhone } from '@/lib/utils/validation'
 
 export interface InquiryFormData {
   customer_name: string
@@ -202,8 +203,11 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
           }
           break
         case 'customer_phone':
-          if (typeof value === 'string' && value.trim() && !/^[\d\s\-\+\(\)]+$/.test(value)) {
-            return '請輸入有效的電話號碼'
+          if (typeof value === 'string' && value.trim()) {
+            const result = validatePhone(value)
+            if (!result.valid) {
+              return result.message || '請輸入有效的電話號碼'
+            }
           }
           break
         case 'preferred_delivery_date':

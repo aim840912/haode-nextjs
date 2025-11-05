@@ -12,6 +12,7 @@ import {
   updateScheduleStatus,
 } from '@/lib/api/schedule-api'
 import { useLoadingManager } from '@/hooks/useLoadingManager'
+import { formatDate as formatDateUtil } from '@/lib/utils/formatters'
 
 export default function ScheduleAdmin() {
   const [schedule, setSchedule] = useState<ScheduleItem[]>([])
@@ -94,12 +95,7 @@ export default function ScheduleAdmin() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-TW', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      weekday: 'short',
-    })
+    return formatDateUtil(dateString, 'full')
   }
 
   const filteredSchedule =

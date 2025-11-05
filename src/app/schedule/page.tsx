@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import Breadcrumbs, { createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { useSchedule } from '@/hooks/useSchedule'
+import { formatDate } from '@/lib/utils/formatters'
 
 export default function SchedulePage() {
   const { user } = useAuth()
@@ -36,15 +37,8 @@ export default function SchedulePage() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      weekday: 'long',
-    }
-    return date.toLocaleDateString('zh-TW', options)
+  const formatScheduleDate = (dateString: string) => {
+    return formatDate(dateString, 'full')
   }
 
   return (
@@ -168,7 +162,7 @@ export default function SchedulePage() {
 
                     {/* Date and Time */}
                     <div className="flex items-center mb-3 text-amber-700 dark:text-amber-300">
-                      <span className="font-medium">{formatDate(schedule.date)}</span>
+                      <span className="font-medium">{formatScheduleDate(schedule.date)}</span>
                     </div>
                     <div className="flex items-center mb-3 text-gray-600 dark:text-gray-300">
                       <span>{schedule.time}</span>

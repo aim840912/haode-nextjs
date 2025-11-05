@@ -8,6 +8,7 @@ import { logger } from '@/lib/logger'
 import { useAuth } from '@/contexts/AuthContext'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 import { fetchFarmTourActivities, deleteFarmTour, updateFarmTour } from '@/lib/api/farm-tour-api'
+import { formatDate as formatDateUtil } from '@/lib/utils/formatters'
 
 export default function FarmTourAdmin() {
   const [activities, setActivities] = useState<FarmTourActivity[]>([])
@@ -73,11 +74,7 @@ export default function FarmTourAdmin() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('zh-TW', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
+    return formatDateUtil(dateString, 'medium')
   }
 
   if (loading) {

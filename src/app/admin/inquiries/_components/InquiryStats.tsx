@@ -1,4 +1,5 @@
 import { ChartBarIcon, EyeIcon, ChatBubbleLeftIcon, BoltIcon } from '@heroicons/react/24/outline'
+import { formatDate } from '@/lib/utils/formatters'
 import {
   InquiryStatus,
   InquiryType,
@@ -257,10 +258,7 @@ export default function InquiryStatsComponent({ stats, detailedStats }: InquiryS
             {detailedStats.daily_trends.slice(-7).map((day, index) => (
               <div key={index} className="text-center">
                 <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  {new Date(day.date).toLocaleDateString('zh-TW', {
-                    month: 'numeric',
-                    day: 'numeric',
-                  })}
+                  {formatDate(day.date, 'short').replace(/\//g, '/').split('/').slice(1).join('/')}
                 </div>
                 <div className="bg-gray-100 dark:bg-slate-700 rounded p-3">
                   <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
