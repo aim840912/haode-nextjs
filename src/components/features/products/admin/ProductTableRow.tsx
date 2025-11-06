@@ -3,6 +3,7 @@
 import { SafeImage } from '@/components/ui/image/OptimizedImage'
 import { Product } from '@/types/product'
 import ProductTableActions from './ProductTableActions'
+import { cn } from '@/lib/utils/cn'
 
 interface ProductTableRowProps {
   product: Product
@@ -73,13 +74,14 @@ export function ProductTableRow({
       {/* 庫存欄 */}
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
         <span
-          className={`font-medium ${
+          className={cn(
+            'font-medium',
             product.inventory <= 0
               ? 'text-red-600'
               : product.inventory <= 10
                 ? 'text-yellow-600'
                 : 'text-green-600'
-          }`}
+          )}
         >
           {product.inventory}
         </span>
@@ -91,19 +93,21 @@ export function ProductTableRow({
           <button
             onClick={() => onToggleActive(product.id, product.isActive)}
             disabled={isActionDisabled}
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={cn(
+              'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
               product.isActive
                 ? 'bg-green-100 text-green-800 hover:bg-green-200 focus:ring-green-500'
                 : 'bg-red-100 text-red-800 hover:bg-red-200 focus:ring-red-500'
-            }`}
+            )}
           >
             {product.isActive ? '上架' : '下架'}
           </button>
         ) : (
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+            className={cn(
+              'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
               product.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-            }`}
+            )}
           >
             {product.isActive ? '上架' : '下架'}
           </span>
