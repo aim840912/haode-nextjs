@@ -7,9 +7,9 @@ import AdminProtection from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
 import { useProductImageSync } from './hooks/useProductImageSync'
-import { useProductForm } from './_hooks/useProductForm'
-import { BasicInfoSection } from './_components/BasicInfoSection'
-import { PriceInventorySection } from './_components/PriceInventorySection'
+import { useProductForm } from './hooks/useProductForm'
+import { BasicInfoSection } from './components/BasicInfoSection'
+import { PriceInventorySection } from './components/PriceInventorySection'
 
 const ProductImageManager = dynamic(
   () => import('@/components/features/products/ProductImageManager'),

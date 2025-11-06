@@ -10,8 +10,8 @@ import WeekdaySelector from '@/components/ui/form/WeekdaySelector'
 import { formatClosedDays } from '@/hooks/location/useLocationForm'
 import { extractStoragePathFromUrl } from '@/lib/utils/image-url-utils'
 import { logger } from '@/lib/logger'
-import { useLocationForm } from './_hooks/useLocationForm'
-import { BasicInfoSection } from './_components/BasicInfoSection'
+import { useLocationForm } from './hooks/useLocationForm'
+import { BasicInfoSection } from './components/BasicInfoSection'
 
 const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
   loading: () => (

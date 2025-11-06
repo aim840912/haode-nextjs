@@ -13,15 +13,15 @@ import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 
 // 新的 hooks 和元件
-import { useInquiriesData } from './_hooks/useInquiriesData'
-import { useBatchOperations } from './_hooks/useBatchOperations'
-import InquiryStatsComponent from './_components/InquiryStats'
-import InquiryFilters from './_components/InquiryFilters'
-import BulkActions from './_components/BulkActions'
-import InquiryList from './_components/InquiryList'
-import { InquiryDetailPanel } from './_components/InquiryDetailPanel'
-import { QuickReplySection } from './_components/QuickReplySection'
-import { AssignmentPanel } from './_components/AssignmentPanel'
+import { useInquiriesData } from './hooks/useInquiriesData'
+import { useBatchOperations } from './hooks/useBatchOperations'
+import InquiryStatsComponent from './components/InquiryStats'
+import InquiryFilters from './components/InquiryFilters'
+import BulkActions from './components/BulkActions'
+import InquiryList from './components/InquiryList'
+import { InquiryDetailPanel } from './components/InquiryDetailPanel'
+import { QuickReplySection } from './components/QuickReplySection'
+import { AssignmentPanel } from './components/AssignmentPanel'
 
 function AdminInquiriesPage() {
   const { user } = useAuth()
