@@ -1,6 +1,7 @@
 'use client'
 
 import { InquiryStatus, INQUIRY_STATUS_LABELS, INQUIRY_STATUS_COLORS } from '@/types/inquiry'
+import { cn } from '@/lib/utils/cn'
 
 interface InquiryStatusBadgeProps {
   status: InquiryStatus
@@ -21,12 +22,12 @@ export function InquiryStatusBadge({
 
   return (
     <span
-      className={`
-        ${INQUIRY_STATUS_COLORS[status]}
-        ${sizeClasses[size]}
-        rounded-full font-medium
-        ${className}
-      `}
+      className={cn(
+        INQUIRY_STATUS_COLORS[status],
+        sizeClasses[size],
+        'rounded-full font-medium',
+        className
+      )}
     >
       {INQUIRY_STATUS_LABELS[status]}
     </span>

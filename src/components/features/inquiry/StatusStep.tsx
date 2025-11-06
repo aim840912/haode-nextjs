@@ -7,6 +7,7 @@ import {
   CheckBadgeIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils/cn'
 import { formatDateTime } from '@/lib/utils/formatters'
 import { InquiryStatus, INQUIRY_STATUS_LABELS } from '@/types/inquiry'
 
@@ -66,17 +67,17 @@ export function StatusStep({
         {/* 狀態指示器和連接線 */}
         <div className="flex flex-col items-center">
           <div
-            className={`
-              w-10 h-10 rounded-full border-2 flex items-center justify-center
-              font-semibold text-sm transition-all duration-300
-              ${getStatusColors()}
-              ${isActive ? 'ring-4 ring-amber-200 scale-105' : ''}
-            `}
+            className={cn(
+              'w-10 h-10 rounded-full border-2 flex items-center justify-center',
+              'font-semibold text-sm transition-all duration-300',
+              getStatusColors(),
+              isActive && 'ring-4 ring-amber-200 scale-105'
+            )}
           >
             {statusIcons[status]}
           </div>
           {!isLast && (
-            <div className={`w-1 h-16 mt-2 transition-all duration-500 ${getConnectorColor()}`} />
+            <div className={cn('w-1 h-16 mt-2 transition-all duration-500', getConnectorColor())} />
           )}
         </div>
 
@@ -84,13 +85,14 @@ export function StatusStep({
         <div className="flex-1 pb-8">
           <div className="flex items-center justify-between mb-1">
             <h3
-              className={`font-semibold transition-all duration-300 ${
+              className={cn(
+                'font-semibold transition-all duration-300',
                 isActive
                   ? 'text-amber-900 text-lg'
                   : isCompleted
                     ? 'text-green-800'
                     : 'text-gray-600'
-              }`}
+              )}
             >
               {INQUIRY_STATUS_LABELS[status]}
             </h3>
@@ -100,9 +102,10 @@ export function StatusStep({
           </div>
           {description && (
             <p
-              className={`text-sm transition-all duration-300 ${
+              className={cn(
+                'text-sm transition-all duration-300',
                 isActive ? 'text-gray-700' : 'text-gray-500'
-              }`}
+              )}
             >
               {description}
             </p>
@@ -118,12 +121,12 @@ export function StatusStep({
       {/* 狀態指示器 */}
       <div className="flex flex-col items-center space-y-2">
         <div
-          className={`
-            w-12 h-12 rounded-full border-2 flex items-center justify-center
-            font-semibold transition-all duration-300
-            ${getStatusColors()}
-            ${isActive ? 'ring-4 ring-amber-200 scale-105 shadow-lg' : ''}
-          `}
+          className={cn(
+            'w-12 h-12 rounded-full border-2 flex items-center justify-center',
+            'font-semibold transition-all duration-300',
+            getStatusColors(),
+            isActive && 'ring-4 ring-amber-200 scale-105 shadow-lg'
+          )}
         >
           {statusIcons[status]}
         </div>
@@ -131,9 +134,10 @@ export function StatusStep({
         {/* 狀態標籤 */}
         <div className="text-center">
           <div
-            className={`text-sm font-semibold transition-all duration-300 ${
+            className={cn(
+              'text-sm font-semibold transition-all duration-300',
               isActive ? 'text-amber-900' : isCompleted ? 'text-green-800' : 'text-gray-600'
-            }`}
+            )}
           >
             {INQUIRY_STATUS_LABELS[status]}
           </div>
@@ -145,9 +149,10 @@ export function StatusStep({
         {/* 描述文字 */}
         {description && (
           <div
-            className={`text-xs text-center max-w-24 transition-all duration-300 ${
+            className={cn(
+              'text-xs text-center max-w-24 transition-all duration-300',
               isActive ? 'text-gray-700' : 'text-gray-500'
-            }`}
+            )}
           >
             {description}
           </div>
@@ -156,7 +161,7 @@ export function StatusStep({
 
       {/* 連接線 */}
       {!isLast && (
-        <div className={`flex-1 h-1 mx-4 transition-all duration-500 ${getConnectorColor()}`} />
+        <div className={cn('flex-1 h-1 mx-4 transition-all duration-500', getConnectorColor())} />
       )}
     </div>
   )
