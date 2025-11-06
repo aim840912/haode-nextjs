@@ -5,7 +5,8 @@
  */
 
 import { z } from 'zod'
-import { StringSchemas, DateSchemas } from './base'
+import { StringSchemas } from '../base/string-schemas'
+import { DateSchemas } from '../base/date-schemas'
 
 /**
  * 使用者相關 Schema

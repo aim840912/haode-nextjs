@@ -5,7 +5,8 @@
  */
 
 import { z } from 'zod'
-import { StringSchemas, DateSchemas } from './base'
+import { StringSchemas } from '../base/string-schemas'
+import { DateSchemas } from '../base/date-schemas'
 
 /**
  * 座標驗證 Schema
@@ -21,7 +22,7 @@ const CoordinatesSchema = z.object({
 export const LocationSchemas = {
   /** 創建地點 */
   create: z.object({
-    id: z.string().uuid('ID 必須是有效的 UUID 格式').optional(), // 支援前端提供的 UUID
+    id: z.string().uuid('ID 必須是有效的 UUID 格式').optional(),
     name: StringSchemas.nonEmpty.max(50, '地點名稱不能超過 50 字元'),
     title: StringSchemas.nonEmpty.max(100, '地點標題不能超過 100 字元'),
     address: StringSchemas.nonEmpty.max(200, '地址不能超過 200 字元'),
@@ -48,7 +49,6 @@ export const LocationSchemas = {
       .refine(
         value => {
           if (!value) return true
-          // 允許相對路徑 (以 / 開頭) 或完整 URL
           return value.startsWith('/') || z.string().url().safeParse(value).success
         },
         {
@@ -107,61 +107,36 @@ export const ScheduleSchemas = {
   /** 創建行程 */
   create: z.object({
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元'),
-    location: StringSchemas.nonEmpty.max(100, '地點名稱不能超過 100 字元'),
-    date: DateSchemas.dateString,
-    time: z
-      .string()
-      .regex(
-        /^([01]?[0-9]|2[0-3]):[0-5][0-9](-([01]?[0-9]|2[0-3]):[0-5][0-9])?$/,
-        '時間格式必須為 HH:MM 或 HH:MM-HH:MM'
-      ),
-    status: z.enum(['upcoming', 'ongoing', 'completed']).default('upcoming'),
-    products: z
-      .array(StringSchemas.nonEmpty.max(50, '產品名稱不能超過 50 字元'))
-      .max(20, '最多只能有 20 個產品')
-      .default([]),
-    description: z.string().max(500, '描述不能超過 500 字元').optional().default(''),
-    contact: StringSchemas.nonEmpty.max(100, '聯絡資訊不能超過 100 字元'),
-    specialOffer: z.string().max(200, '特別優惠不能超過 200 字元').optional(),
-    weatherNote: z.string().max(200, '天氣備註不能超過 200 字元').optional(),
+    description: z.string().max(1000, '行程描述不能超過 1000 字元').optional(),
+    location_id: StringSchemas.uuid,
+    start_date: DateSchemas.isoDate,
+    end_date: DateSchemas.isoDate,
+    max_participants: z.number().int().min(1, '最大參與人數至少為 1').optional(),
+    price: z.number().min(0, '價格不能為負數').optional(),
+    status: z.enum(['draft', 'published', 'cancelled', 'completed']).default('draft'),
+    image: z.string().url('圖片必須是有效的 URL').optional(),
   }),
 
   /** 更新行程 */
   update: z.object({
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元').optional(),
-    location: StringSchemas.nonEmpty.max(100, '地點名稱不能超過 100 字元').optional(),
-    date: DateSchemas.dateString.optional(),
-    time: z
-      .string()
-      .regex(
-        /^([01]?[0-9]|2[0-3]):[0-5][0-9](-([01]?[0-9]|2[0-3]):[0-5][0-9])?$/,
-        '時間格式必須為 HH:MM 或 HH:MM-HH:MM'
-      )
-      .optional(),
-    status: z.enum(['upcoming', 'ongoing', 'completed']).optional(),
-    products: z
-      .array(StringSchemas.nonEmpty.max(50, '產品名稱不能超過 50 字元'))
-      .max(20, '最多只能有 20 個產品')
-      .optional(),
-    // 允許空字串，用於清空欄位
-    description: z.string().max(500, '描述不能超過 500 字元').optional(),
-    contact: StringSchemas.nonEmpty.max(100, '聯絡資訊不能超過 100 字元').optional(),
-    // 允許空字串，用於清空欄位
-    specialOffer: z.string().max(200, '特別優惠不能超過 200 字元').optional(),
-    // 允許空字串，用於清空欄位
-    weatherNote: z.string().max(200, '天氣備註不能超過 200 字元').optional(),
+    description: z.string().max(1000, '行程描述不能超過 1000 字元').optional(),
+    location_id: StringSchemas.uuid.optional(),
+    start_date: DateSchemas.isoDate.optional(),
+    end_date: DateSchemas.isoDate.optional(),
+    max_participants: z.number().int().min(1, '最大參與人數至少為 1').optional(),
+    price: z.number().min(0, '價格不能為負數').optional(),
+    status: z.enum(['draft', 'published', 'cancelled', 'completed']).optional(),
+    image: z.string().url('圖片必須是有效的 URL').optional(),
   }),
 
   /** 查詢參數 */
   query: z.object({
-    status: z.enum(['upcoming', 'ongoing', 'completed']).optional(),
-    location: z.string().max(100, '地點名稱不能超過 100 字元').optional(),
-    date_from: DateSchemas.dateString.optional(),
-    date_to: DateSchemas.dateString.optional(),
-    search: z.string().max(100, '搜尋關鍵字不能超過 100 字元').optional(),
+    location_id: StringSchemas.uuid.optional(),
+    status: z.enum(['draft', 'published', 'cancelled', 'completed']).optional(),
+    start_date: DateSchemas.dateString.optional(),
+    end_date: DateSchemas.dateString.optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     offset: z.coerce.number().int().min(0).default(0),
-    sort_by: z.enum(['date', 'title', 'location', 'createdAt']).default('date'),
-    sort_order: z.enum(['asc', 'desc']).default('asc'),
   }),
 }

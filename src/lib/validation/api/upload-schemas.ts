@@ -52,3 +52,42 @@ export const UploadSchemas = {
     filePath: z.string().min(1, '檔案路徑不能為空'),
   }),
 }
+
+/**
+ * 圖片上傳 API 相關 Schema
+ */
+export const ImageUploadSchemas = {
+  /** POST 上傳表單驗證 */
+  uploadForm: z
+    .object({
+      productId: StringSchemas.uuid.optional(),
+      momentId: StringSchemas.uuid.optional(),
+      generateMultipleSizes: z
+        .enum(['true', 'false'])
+        .optional()
+        .transform(val => val === 'true'),
+      compress: z
+        .enum(['true', 'false'])
+        .optional()
+        .transform(val => val === 'true'),
+      size: z.enum(['thumbnail', 'medium', 'large']).optional().default('medium'),
+    })
+    .refine(data => data.productId || data.momentId, {
+      message: '必須提供 productId 或 momentId',
+    }),
+
+  /** GET 查詢參數驗證 */
+  query: z
+    .object({
+      productId: StringSchemas.uuid.optional(),
+      momentId: StringSchemas.uuid.optional(),
+    })
+    .refine(data => data.productId || data.momentId, {
+      message: '必須提供 productId 或 momentId',
+    }),
+
+  /** DELETE 刪除參數驗證 */
+  deleteParams: z.object({
+    filePath: z.string().min(1, '檔案路徑不能為空').max(500, '檔案路徑過長'),
+  }),
+}
