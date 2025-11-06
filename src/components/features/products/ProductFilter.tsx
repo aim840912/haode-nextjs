@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { PopularSearches } from '@/components/ui/search/PopularSearches'
 import { SearchInput } from '@/components/ui/search/SearchInput'
 import { FilterState } from '@/hooks/useProductFilter'
+import { cn } from '@/lib/utils/cn'
 
 interface ProductFilterProps {
   onFilterChange: (filters: FilterState) => void
@@ -107,15 +108,17 @@ export function ProductFilter({
   }, [])
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg ${isExpanded ? 'p-6' : 'p-4'} mb-6`}>
+    <div className={cn('bg-white rounded-lg shadow-lg mb-6', isExpanded ? 'p-6' : 'p-4')}>
       {/* Toggle Button - 所有裝置都可使用 */}
-      <div className={isExpanded ? 'mb-4' : ''}>
+      <div className={cn(isExpanded && 'mb-4')}>
         <button
           onClick={toggleExpanded}
           className="flex items-center justify-between w-full hover:bg-gray-50 p-1.5 rounded-lg transition-colors"
         >
           <div className="flex items-center gap-3">
-            <span className={`${isExpanded ? 'text-lg' : 'text-base'} font-semibold text-gray-800`}>
+            <span
+              className={cn(isExpanded ? 'text-lg' : 'text-base', 'font-semibold text-gray-800')}
+            >
               篩選條件
             </span>
             {hasActiveFilters && (
@@ -130,9 +133,10 @@ export function ProductFilter({
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">{isExpanded ? '收合' : '展開'}</span>
             <svg
-              className={`w-5 h-5 text-gray-500 transform transition-transform duration-200 ${
-                isExpanded ? 'rotate-180' : ''
-              }`}
+              className={cn(
+                'w-5 h-5 text-gray-500 transform transition-transform duration-200',
+                isExpanded && 'rotate-180'
+              )}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -162,7 +166,10 @@ export function ProductFilter({
 
       {/* Filter Content */}
       <div
-        className={`space-y-6 transition-all duration-200 ${!isExpanded ? 'hidden' : 'animate-in slide-in-from-top-2'}`}
+        className={cn(
+          'space-y-6 transition-all duration-200',
+          !isExpanded ? 'hidden' : 'animate-in slide-in-from-top-2'
+        )}
       >
         {/* Results Count */}
         <div className="flex items-center justify-between border-b pb-4">
@@ -268,11 +275,12 @@ export function ProductFilter({
                 <h3 className="font-semibold text-gray-800">價格區間</h3>
                 <button
                   onClick={togglePriceRange}
-                  className={`text-sm px-3 py-1 rounded ${
+                  className={cn(
+                    'text-sm px-3 py-1 rounded',
                     showPriceRange
                       ? 'bg-amber-100 text-amber-800'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  )}
                 >
                   {showPriceRange ? '隱藏' : '設定價格區間'}
                 </button>
