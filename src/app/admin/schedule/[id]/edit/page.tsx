@@ -6,16 +6,16 @@ import Link from 'next/link'
 import AdminProtection from '@/components/features/admin/AdminProtection'
 
 // Hooks
-import { useScheduleForm } from './_hooks/useScheduleForm'
-import { useScheduleFormValidation } from './_hooks/useScheduleFormValidation'
-import { useScheduleFormSubmit } from './_hooks/useScheduleFormSubmit'
+import { useScheduleForm } from './hooks/useScheduleForm'
+import { useScheduleFormValidation } from './hooks/useScheduleFormValidation'
+import { useScheduleFormSubmit } from './hooks/useScheduleFormSubmit'
 
 // Components
-import { BasicInfoSection } from './_components/BasicInfoSection'
-import { DateTimeSection } from './_components/DateTimeSection'
-import { ProductsSection } from './_components/ProductsSection'
-import { AdditionalInfoSection } from './_components/AdditionalInfoSection'
-import { SchedulePreview } from './_components/SchedulePreview'
+import { BasicInfoSection } from './components/BasicInfoSection'
+import { DateTimeSection } from './components/DateTimeSection'
+import { ProductsSection } from './components/ProductsSection'
+import { AdditionalInfoSection } from './components/AdditionalInfoSection'
+import { SchedulePreview } from './components/SchedulePreview'
 
 export default function EditSchedule({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()
