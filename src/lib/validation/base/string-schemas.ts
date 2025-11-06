@@ -18,9 +18,10 @@ export const StringSchemas = {
   /** 電話號碼驗證（台灣） */
   phone: z
     .string()
-    .regex(
-      /^(0[2-9][\d\-]{6,15}|09[\d\-]{8,10})$/,
-      '請輸入有效的台灣電話號碼格式（如：02-12345678 或 0912-345678）'
+    .transform(str => str.replace(/[\s\-()]/g, '')) // 移除空格和特殊字元
+    .refine(
+      cleaned => /^09\d{8}$/.test(cleaned) || /^0[2-9]\d{7,8}$/.test(cleaned),
+      '請輸入有效的台灣電話號碼（手機或市話）'
     ),
 
   /** 手機號碼驗證（台灣） */
