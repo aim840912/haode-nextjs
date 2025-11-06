@@ -9,6 +9,7 @@ import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
 import { logger } from '@/lib/logger'
 import { Product } from '@/types/product'
+import { cn } from '@/lib/utils/cn'
 
 function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
@@ -191,7 +192,7 @@ function ProductsSection() {
       ></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className={`text-center mb-16 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+        <div className={cn('text-center mb-16', isVisible ? 'animate-fade-in' : 'opacity-0')}>
           <h2 className="text-5xl md:text-6xl font-bold text-amber-900 dark:text-amber-300 mb-4 tracking-wider">
             經典產品
           </h2>
@@ -205,9 +206,10 @@ function ProductsSection() {
         {products.length > 0 ? (
           <>
             <div
-              className={`grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 ${
+              className={cn(
+                'grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12',
                 isVisible ? 'animate-slide-up animation-delay-300' : 'opacity-0'
-              }`}
+              )}
             >
               {products.map((product, index) => {
                 const badge = getProductBadge(index, product)
@@ -218,12 +220,14 @@ function ProductsSection() {
                   <Link
                     key={product.id}
                     href={`/products?productId=${product.id}`}
-                    className={`group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden product-card-enhanced gradient-border shadow-lg hover:shadow-2xl dark:shadow-slate-700/50 flex flex-col cursor-pointer ${animationClass} ${
-                      index === 0 ? 'md:col-span-2 lg:col-span-1' : ''
-                    }`}
+                    className={cn(
+                      'group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden product-card-enhanced gradient-border shadow-lg hover:shadow-2xl dark:shadow-slate-700/50 flex flex-col cursor-pointer',
+                      animationClass,
+                      index === 0 && 'md:col-span-2 lg:col-span-1'
+                    )}
                   >
                     <div className="relative product-image-wrapper">
-                      <div className={`${index === 0 ? 'h-[320px]' : 'h-[280px]'} relative`}>
+                      <div className={cn(index === 0 ? 'h-[320px]' : 'h-[280px]', 'relative')}>
                         <SafeImage
                           src={product.productImages?.[0]?.storage_url || '/images/placeholder.jpg'}
                           alt={product.name || '產品圖片'}
@@ -237,7 +241,11 @@ function ProductsSection() {
 
                       {badge && (
                         <div
-                          className={`absolute top-4 left-4 ${badge.bgColor} text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5 ${badge.animation}`}
+                          className={cn(
+                            'absolute top-4 left-4 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5',
+                            badge.bgColor,
+                            badge.animation
+                          )}
                         >
                           {badge.icon}
                           <span>{badge.text}</span>
@@ -263,7 +271,7 @@ function ProductsSection() {
                         )}
                         <div className="flex flex-wrap gap-2">
                           {features.map((feature, idx) => (
-                            <span key={idx} className={`feature-icon-badge ${feature.color}`}>
+                            <span key={idx} className={cn('feature-icon-badge', feature.color)}>
                               {feature.icon}
                               <span>{feature.text}</span>
                             </span>
@@ -312,7 +320,10 @@ function ProductsSection() {
             </div>
 
             <div
-              className={`text-center ${isVisible ? 'animate-scale-in animation-delay-450' : 'opacity-0'}`}
+              className={cn(
+                'text-center',
+                isVisible ? 'animate-scale-in animation-delay-450' : 'opacity-0'
+              )}
             >
               <Link
                 href="/products"
