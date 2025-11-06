@@ -102,40 +102,44 @@ export const LocationSchemas = {
 
 /**
  * 行程相關 Schema
+ * 對應 ScheduleItem 類型 (src/types/schedule.ts)
  */
 export const ScheduleSchemas = {
   /** 創建行程 */
   create: z.object({
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元'),
-    description: z.string().max(1000, '行程描述不能超過 1000 字元').optional(),
-    location_id: StringSchemas.uuid,
-    start_date: DateSchemas.isoDate,
-    end_date: DateSchemas.isoDate,
-    max_participants: z.number().int().min(1, '最大參與人數至少為 1').optional(),
-    price: z.number().min(0, '價格不能為負數').optional(),
-    status: z.enum(['draft', 'published', 'cancelled', 'completed']).default('draft'),
-    image: z.string().url('圖片必須是有效的 URL').optional(),
+    location: StringSchemas.nonEmpty.max(200, '地點名稱不能超過 200 字元'),
+    date: DateSchemas.isoDate,
+    time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, '時間格式應為 HH:mm'),
+    status: z.enum(['upcoming', 'ongoing', 'completed']).default('upcoming'),
+    products: z.array(z.string()).default([]),
+    description: z.string().max(1000, '行程描述不能超過 1000 字元'),
+    contact: StringSchemas.phone,
+    specialOffer: z.string().max(500, '特殊優惠不能超過 500 字元').optional(),
+    weatherNote: z.string().max(500, '天氣備註不能超過 500 字元').optional(),
   }),
 
   /** 更新行程 */
   update: z.object({
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元').optional(),
+    location: StringSchemas.nonEmpty.max(200, '地點名稱不能超過 200 字元').optional(),
+    date: DateSchemas.isoDate.optional(),
+    time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, '時間格式應為 HH:mm')
+      .optional(),
+    status: z.enum(['upcoming', 'ongoing', 'completed']).optional(),
+    products: z.array(z.string()).optional(),
     description: z.string().max(1000, '行程描述不能超過 1000 字元').optional(),
-    location_id: StringSchemas.uuid.optional(),
-    start_date: DateSchemas.isoDate.optional(),
-    end_date: DateSchemas.isoDate.optional(),
-    max_participants: z.number().int().min(1, '最大參與人數至少為 1').optional(),
-    price: z.number().min(0, '價格不能為負數').optional(),
-    status: z.enum(['draft', 'published', 'cancelled', 'completed']).optional(),
-    image: z.string().url('圖片必須是有效的 URL').optional(),
+    contact: StringSchemas.phone.optional(),
+    specialOffer: z.string().max(500, '特殊優惠不能超過 500 字元').optional(),
+    weatherNote: z.string().max(500, '天氣備註不能超過 500 字元').optional(),
   }),
 
   /** 查詢參數 */
   query: z.object({
-    location_id: StringSchemas.uuid.optional(),
-    status: z.enum(['draft', 'published', 'cancelled', 'completed']).optional(),
-    start_date: DateSchemas.dateString.optional(),
-    end_date: DateSchemas.dateString.optional(),
+    status: z.enum(['upcoming', 'ongoing', 'completed']).optional(),
+    date: DateSchemas.dateString.optional(),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     offset: z.coerce.number().int().min(0).default(0),
   }),
