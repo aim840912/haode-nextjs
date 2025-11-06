@@ -8,6 +8,7 @@ import {
   CheckBadgeIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline'
+import { formatDateTime } from '@/lib/utils/formatters'
 
 interface StatusStepProps {
   status: InquiryStatus
@@ -56,13 +57,7 @@ export default function StatusStep({
   }
 
   const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp)
-    return date.toLocaleDateString('zh-TW', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
+    return formatDateTime(timestamp).replace(/年|日/g, match => (match === '年' ? '/' : ''))
   }
 
   if (layout === 'vertical') {

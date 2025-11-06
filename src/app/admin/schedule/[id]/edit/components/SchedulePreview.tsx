@@ -46,17 +46,7 @@ export function SchedulePreview({ formData, formatTimeRange, timeRange }: Schedu
         </div>
 
         <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300 mb-3">
-          <div>
-            📅{' '}
-            {formData.date
-              ? new Date(formData.date).toLocaleDateString('zh-TW', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })
-              : '請選擇日期'}
-          </div>
+          <div>📅 {formData.date ? formatDate(formData.date, 'full') : '請選擇日期'}</div>
           <div>⏰ {formatTimeRange(timeRange.startTime, timeRange.endTime) || '請選擇時間'}</div>
           <div>📍 {formData.location || '請輸入地址'}</div>
           <div>📞 {formData.contact || '請輸入聯絡電話'}</div>
