@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 
 interface ImageDebuggerProps {
   imageUrl: string
@@ -48,7 +49,7 @@ export function ImageDebugger({ imageUrl, className = '' }: ImageDebuggerProps) 
   }
 
   return (
-    <div className={`border border-gray-300 rounded-lg p-4 ${className}`}>
+    <div className={cn('border border-gray-300 rounded-lg p-4', className)}>
       <div className="mb-2">
         <strong>圖片 URL:</strong>
         <div className="text-sm break-all bg-gray-100 p-2 rounded mt-1">{imageUrl}</div>
@@ -57,13 +58,14 @@ export function ImageDebugger({ imageUrl, className = '' }: ImageDebuggerProps) 
       <div className="mb-2">
         <strong>載入狀態:</strong>
         <span
-          className={`ml-2 px-2 py-1 rounded text-sm ${
+          className={cn(
+            'ml-2 px-2 py-1 rounded text-sm',
             loadStatus === 'success'
               ? 'bg-green-100 text-green-800'
               : loadStatus === 'error'
                 ? 'bg-red-100 text-red-800'
                 : 'bg-yellow-100 text-yellow-800'
-          }`}
+          )}
         >
           {loadStatus === 'success' ? '✅ 成功' : loadStatus === 'error' ? '❌ 失敗' : '⏳ 載入中'}
         </span>

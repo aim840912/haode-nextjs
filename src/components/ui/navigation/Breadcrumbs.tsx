@@ -12,6 +12,7 @@ import {
   validateStructuredData,
 } from '@/lib/utils/structured-data-sanitizer'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 
 // ============================================================================
 // 類型定義
@@ -148,7 +149,7 @@ export function Breadcrumbs({
       {enableStructuredData && <BreadcrumbStructuredData items={finalItems} baseUrl={baseUrl} />}
 
       {/* 可見的麵包屑導航 */}
-      <nav className={`text-sm text-gray-600 ${className}`} aria-label="麵包屑導航">
+      <nav className={cn('text-sm text-gray-600', className)} aria-label="麵包屑導航">
         <ol className="flex items-center space-x-2">
           {finalItems.map((item, index) => (
             <li key={index} className="flex items-center">

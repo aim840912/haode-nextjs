@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { LoadingSpinner, LoadingOverlay } from './LoadingSpinner'
+import { cn } from '@/lib/utils/cn'
 
 interface LoadingProgress {
   current: number
@@ -271,7 +272,7 @@ export function LoadingIndicator({
   const progress = currentTask?.progress
 
   return (
-    <div className={`flex items-center justify-center space-x-3 ${className}`}>
+    <div className={cn('flex items-center justify-center space-x-3', className)}>
       <LoadingSpinner size={size} />
       {showMessage && (
         <div className="text-center">

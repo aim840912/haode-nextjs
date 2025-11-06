@@ -113,7 +113,9 @@ export function InquiryNotificationBadge({
       <div className={cn('relative', currentSize.container, className)}>
         <button
           onClick={handleClick}
-          className={`w-full h-full flex items-center justify-center bg-amber-100 text-amber-900 rounded-full transition-all duration-300 hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg group`}
+          className={cn(
+            'w-full h-full flex items-center justify-center bg-amber-100 text-amber-900 rounded-full transition-all duration-300 hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg group'
+          )}
           title={title}
           disabled={loading && !hasData}
         >
