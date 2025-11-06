@@ -237,14 +237,14 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                                 handleImageChange(index)
                               }
                             }}
-                            className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden
-                              transition-all duration-200 hover:scale-105
-                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
-                              ${
-                                currentImageIndex === index
-                                  ? 'ring-2 ring-gray-400 shadow-md'
-                                  : 'ring-1 ring-gray-300 hover:ring-gray-400'
-                              }`}
+                            className={cn(
+                              'relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden',
+                              'transition-all duration-200 hover:scale-105',
+                              'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400',
+                              currentImageIndex === index
+                                ? 'ring-2 ring-gray-400 shadow-md'
+                                : 'ring-1 ring-gray-300 hover:ring-gray-400'
+                            )}
                             aria-label={`切換到圖片 ${index + 1}，共 ${galleryProduct.productImages.length} 張`}
                             aria-pressed={currentImageIndex === index}
                             tabIndex={0}
