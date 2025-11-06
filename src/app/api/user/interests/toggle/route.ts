@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { userInterestsService } from '@/services/core/user/userInterestsService'
-import { z } from 'zod'
 
 // 請求驗證架構
 const ToggleInterestSchema = z.object({

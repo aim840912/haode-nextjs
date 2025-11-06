@@ -5,8 +5,8 @@
  */
 
 import Image from 'next/image'
-import type { FarmTourActivity } from '@/types/farmTour'
 import { Flame, Zap, Calendar, Banknote, Users2, Check } from 'lucide-react'
+import type { FarmTourActivity } from '@/types/farmTour'
 
 interface ActivitiesSectionProps {
   /** 活動列表 */

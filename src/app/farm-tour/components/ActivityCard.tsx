@@ -1,6 +1,6 @@
-import type { FarmTourActivity } from '@/types/farmTour'
 import Image from 'next/image'
 import { Calendar, Banknote, Users2, Check, Flame, Zap } from 'lucide-react'
+import type { FarmTourActivity } from '@/types/farmTour'
 
 interface ActivityCardProps {
   activity: FarmTourActivity

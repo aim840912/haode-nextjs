@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
 import { supabase } from '@/lib/database/supabase-auth'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 
 async function handlePOST(request: NextRequest, user: User) {
   apiLogger.info('開始處理密碼更新請求', {

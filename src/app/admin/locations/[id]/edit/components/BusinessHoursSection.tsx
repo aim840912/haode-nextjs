@@ -1,5 +1,5 @@
-import TimeRangePicker from '@/components/ui/form/TimeRangePicker'
-import WeekdaySelector from '@/components/ui/form/WeekdaySelector'
+import { TimeRangePicker } from '@/components/ui/form/TimeRangePicker'
+import { WeekdaySelector } from '@/components/ui/form/WeekdaySelector'
 
 interface BusinessHoursSectionProps {
   hours: string

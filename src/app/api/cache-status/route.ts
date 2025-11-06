@@ -1,9 +1,9 @@
+import { success } from '@/lib/api-response'
 import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
-import { getProductService } from '@/services/factory/serviceFactory'
+import { ValidationError } from '@/lib/errors'
 import { cacheLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { ValidationError } from '@/lib/errors'
-import { success } from '@/lib/api-response'
+import { getProductService } from '@/services/factory/serviceFactory'
 
 async function handleGET(request: Request) {
   const url = new URL(request.url)

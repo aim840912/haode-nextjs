@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
+import { fetchAuditLogs as fetchAuditLogsAPI } from '@/lib/api/audit-logs-api'
 import { logger } from '@/lib/logger'
 import { AuditLog, AuditLogQueryParams } from '@/types/audit'
-import { fetchAuditLogs as fetchAuditLogsAPI } from '@/lib/api/audit-logs-api'
 
 export interface UseAuditLogsDataReturn {
   auditLogs: AuditLog[]

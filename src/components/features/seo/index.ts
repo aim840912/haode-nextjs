@@ -1,1 +1,6 @@
-export { default as StructuredData } from './StructuredData'
+export {
+  StructuredData,
+  FarmStructuredData,
+  ProductStructuredData,
+  ArticleStructuredData,
+} from './StructuredData'

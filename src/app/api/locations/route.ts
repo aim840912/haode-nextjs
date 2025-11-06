@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server'
-import { locationServiceSimple as locationServiceAdapter } from '@/services/core/content/locationServiceSimple'
-import { LocationSchemas } from '@/lib/validation'
-import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { LocationSchemas } from '@/lib/validation'
+import { locationServiceSimple as locationServiceAdapter } from '@/services/core/content/locationServiceSimple'
 
 /**
  * GET /api/locations - 取得地點列表

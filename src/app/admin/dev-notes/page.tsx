@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import AdminProtection from '@/components/features/admin/AdminProtection'
 import {
   BugAntIcon,
   ClipboardDocumentListIcon,
@@ -13,6 +12,9 @@ import {
   CheckCircleIcon,
   ArrowUturnLeftIcon,
 } from '@heroicons/react/24/outline'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { useDevNotesReducer } from '@/hooks/useDevNotesReducer'
+import { apiLogger } from '@/lib/logger'
 import {
   DevNote,
   DevNoteStats,
@@ -21,8 +23,6 @@ import {
   DevNotePriority,
   DevNoteInput,
 } from '@/types/devNote'
-import { apiLogger } from '@/lib/logger'
-import { useDevNotesReducer } from '@/hooks/useDevNotesReducer'
 
 export default function DevNotesPage() {
   const { state, actions } = useDevNotesReducer()

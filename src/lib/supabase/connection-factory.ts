@@ -1,10 +1,10 @@
+import { SupabaseClient } from '@supabase/supabase-js'
 import { SupabaseConnectionPool } from '@/lib/database/db-pool'
 import { ConnectionManager } from '@/lib/database/pooled-connection'
-import { PoolConfigManager } from './pool-config'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
-import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
+import { PoolConfigManager } from './pool-config'
 
 /**
  * 連線工廠單例

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import TimePickerChinese from './TimePickerChinese'
+import { TimePickerChinese } from './TimePickerChinese'
 
 interface TimeRangePickerProps {
   /** 時間範圍值，格式："HH:mm-HH:mm" (例如："08:00-18:00") */
@@ -22,7 +22,7 @@ interface TimeRangePickerProps {
  * 使用兩個 TimePickerChinese 元件來選擇營業時間範圍
  * 自動驗證結束時間必須大於開始時間
  */
-export default function TimeRangePicker({
+export function TimeRangePicker({
   value,
   onChange,
   required = false,

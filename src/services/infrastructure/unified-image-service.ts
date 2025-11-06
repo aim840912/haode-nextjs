@@ -3,10 +3,10 @@
  * 整合所有模組的圖片上傳、管理功能
  */
 
-import { supabase, getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { validateImageFile, generateFileName } from '@/lib/utils/image-utils'
-import { dbLogger } from '@/lib/logger'
 import { getModuleConfig, getModuleStoragePath, isValidModule } from '@/config/image-modules.config'
+import { supabase, getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { dbLogger } from '@/lib/logger'
+import { validateImageFile, generateFileName } from '@/lib/utils/image-utils'
 import type { Database } from '@/types/database'
 import type { ImageUploadResult } from '@/types/supabase.types'
 

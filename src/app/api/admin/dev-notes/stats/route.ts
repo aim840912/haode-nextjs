@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { DevNoteStats, DevNoteType, DevNoteStatus, DevNotePriority } from '@/types/devNote'
 
 interface NoteData {

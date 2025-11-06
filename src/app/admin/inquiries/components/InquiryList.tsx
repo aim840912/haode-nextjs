@@ -1,4 +1,5 @@
 import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { formatDate } from '@/lib/utils/formatters'
 import {
   InquiryWithItems,
   InquiryStatus,
@@ -8,7 +9,6 @@ import {
   INQUIRY_TYPE_LABELS,
   INQUIRY_TYPE_COLORS,
 } from '@/types/inquiry'
-import { formatDate } from '@/lib/utils/formatters'
 
 interface InquiryListProps {
   inquiries: InquiryWithItems[]

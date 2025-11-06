@@ -3,8 +3,8 @@
  * 處理庫存查詢單相關的 Email 通知功能
  */
 
-import { InquiryWithItems, InquiryEmailData, EmailTemplate } from '@/types/inquiry'
 import { logger } from '@/lib/logger'
+import { InquiryWithItems, InquiryEmailData, EmailTemplate } from '@/types/inquiry'
 
 // Email 服務配置
 interface EmailConfig {

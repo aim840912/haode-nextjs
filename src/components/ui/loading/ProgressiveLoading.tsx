@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect, useCallback, ReactNode, Suspense } from 'react'
-import { LoadingSkeleton } from './LoadingSkeleton'
-import LoadingSpinner from './LoadingSpinner'
-import { LoadingError, GenericError } from './LoadingError'
 import { useLoadingState } from '@/hooks/useLoadingState'
 import { ComponentErrorBoundary } from '../error/ErrorBoundary'
+import { LoadingError, GenericError } from './LoadingError'
+import { LoadingSkeleton } from './LoadingSkeleton'
+import { LoadingSpinner } from './LoadingSpinner'
 
 interface ProgressiveLoadingProps {
   children: ReactNode

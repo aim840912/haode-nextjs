@@ -5,11 +5,11 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 async function handleGET(request: NextRequest) {
   const { searchParams } = new URL(request.url)

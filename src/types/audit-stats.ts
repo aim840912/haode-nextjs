@@ -94,7 +94,11 @@ export interface AuditStatsService {
   getResourceAccessStats(params?: BaseStatsQueryParams): Promise<FormattedResourceAccessStats[]>
 
   // 取得使用者歷史統計
-  getUserHistory(userId: string, limit?: number, offset?: number): Promise<FormattedUserActivityStats[]>
+  getUserHistory(
+    userId: string,
+    limit?: number,
+    offset?: number
+  ): Promise<FormattedUserActivityStats[]>
 
   // 取得資源存取歷史
   getResourceHistory(

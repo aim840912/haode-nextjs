@@ -1,12 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/components/ui/feedback/Toast'
 import Link from 'next/link'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { useToast } from '@/components/ui/feedback/Toast'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { inquiryApi } from '@/lib/api-client'
+import { formatDateTime } from '@/lib/utils/formatters'
 import {
   InquiryWithItems,
   InquiryStatus,
@@ -14,8 +16,6 @@ import {
   INQUIRY_STATUS_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { formatDateTime } from '@/lib/utils/formatters'
-import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 
 function InquiryListPage() {
   const { user, isLoading: authLoading } = useAuth()

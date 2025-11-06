@@ -1,9 +1,8 @@
-import { FC } from 'react'
+import { logger } from '@/lib/logger'
 import {
   sanitizeStructuredData,
   validateStructuredData,
 } from '@/lib/utils/structured-data-sanitizer'
-import { logger } from '@/lib/logger'
 
 interface StructuredDataProps {
   data: Record<string, unknown>
@@ -18,7 +17,7 @@ interface StructuredDataProps {
  * - JSON-LD 資料放在 <script type="application/ld+json"> 中，不會被執行為 JavaScript
  * - 這是 Google、Schema.org 推薦的 SEO 標準做法
  */
-const StructuredData: FC<StructuredDataProps> = ({ data }) => {
+export function StructuredData({ data }: StructuredDataProps) {
   // 驗證結構化資料格式
   const validation = validateStructuredData(data)
   if (!validation.isValid) {
@@ -199,5 +198,3 @@ export const ArticleStructuredData = ({
 
   return <StructuredData data={data} />
 }
-
-export default StructuredData

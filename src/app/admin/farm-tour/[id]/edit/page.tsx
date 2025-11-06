@@ -1,25 +1,28 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { FarmTourActivity } from '@/types/farmTour'
-import Link from 'next/link'
-import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
-import { logger } from '@/lib/logger'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useFarmTourEditReducer } from '@/hooks/useFarmTourEditReducer'
+import { logger } from '@/lib/logger'
+import { FarmTourActivity } from '@/types/farmTour'
 
 // 動態載入圖片上傳器
-const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
-  loading: () => (
-    <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
-      載入圖片上傳器...
-    </div>
-  ),
-  ssr: false,
-})
+const ImageUploader = dynamic(
+  () => import('@/components/features/products/ImageUploader').then(mod => mod.ImageUploader),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
+        載入圖片上傳器...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function EditFarmTourActivity({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()

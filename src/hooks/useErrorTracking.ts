@@ -32,7 +32,7 @@ interface PerformanceMetrics extends Record<string, unknown> {
 
 export function useErrorTracking(config: ErrorTrackingConfig = {}) {
   // Navigation functionality removed to avoid unused import
-  
+
   const {
     enableConsoleErrors = true,
     enableUnhandledRejections = true,
@@ -41,64 +41,63 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
   } = config
 
   // 追蹤使用者行為
-  const trackUserAction = useCallback((
-    action: string, 
-    metadata?: Record<string, unknown>
-  ) => {
+  const trackUserAction = useCallback((action: string, metadata?: Record<string, unknown>) => {
     const userAction: UserAction = {
       action,
       path: window.location.pathname,
       timestamp: Date.now(),
-      metadata
+      metadata,
     }
 
     logger.info('使用者行為追蹤', {
       module: 'ErrorTracking',
       action: 'userAction',
-      metadata: userAction
+      metadata: userAction,
     })
 
     // 儲存到本地儲存以供分析（最多保留 50 筆）
     try {
       const stored = localStorage.getItem('user_actions') || '[]'
       const actions: UserAction[] = JSON.parse(stored)
-      
+
       actions.push(userAction)
-      
+
       // 只保留最新的 50 筆記錄
       if (actions.length > 50) {
         actions.splice(0, actions.length - 50)
       }
-      
+
       localStorage.setItem('user_actions', JSON.stringify(actions))
     } catch (error) {
-      logger.warn('無法儲存使用者行為記錄', { 
-        metadata: { error: String(error) } 
+      logger.warn('無法儲存使用者行為記錄', {
+        metadata: { error: String(error) },
       })
     }
   }, [])
 
   // 追蹤錯誤
-  const trackError = useCallback((
-    error: Error | string,
-    context?: string,
-    metadata?: Record<string, unknown>
-  ) => {
-    const errorMessage = typeof error === 'string' ? error : error.message
+  const trackError = useCallback(
+    (error: Error | string, context?: string, metadata?: Record<string, unknown>) => {
+      const errorMessage = typeof error === 'string' ? error : error.message
 
-    logger.error(`客戶端錯誤: ${context || '未知'}`, 
-      typeof error === 'object' ? error : new Error(errorMessage), {
-      module: 'ErrorTracking',
-      action: 'trackError',
-      metadata: {
-        context,
-        path: window.location.pathname,
-        userAgent: navigator.userAgent,
-        timestamp: Date.now(),
-        ...metadata
-      }
-    })
-  }, [])
+      logger.error(
+        `客戶端錯誤: ${context || '未知'}`,
+        typeof error === 'object' ? error : new Error(errorMessage),
+        {
+          module: 'ErrorTracking',
+          action: 'trackError',
+          metadata: {
+            context,
+            path: window.location.pathname,
+            userAgent: navigator.userAgent,
+            timestamp: Date.now(),
+            ...metadata,
+          },
+        }
+      )
+    },
+    []
+  )
 
   // 效能監控
   const trackPerformance = useCallback((metrics: Partial<PerformanceMetrics>) => {
@@ -108,75 +107,83 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
       navigationTime: 0,
       timestamp: Date.now(),
       path: window.location.pathname,
-      ...metrics
+      ...metrics,
     }
 
     logger.info('效能指標', {
       module: 'ErrorTracking',
       action: 'performance',
-      metadata: performanceData
+      metadata: performanceData,
     })
   }, [])
 
   // 追蹤表單提交成功率
-  const trackFormSubmission = useCallback((
-    formType: string,
-    success: boolean,
-    errorMessage?: string,
-    metadata?: Record<string, unknown>
-  ) => {
-    logger.info('表單提交追蹤', {
-      module: 'ErrorTracking',
-      action: 'formSubmission',
-      metadata: {
-        formType,
-        success,
-        errorMessage,
-        path: window.location.pathname,
-        timestamp: Date.now(),
-        ...metadata
-      }
-    })
-
-    // 更新表單成功率統計
-    try {
-      const statsKey = `form_stats_${formType}`
-      const stored = localStorage.getItem(statsKey) || '{"total":0,"success":0}'
-      const stats = JSON.parse(stored)
-      
-      stats.total += 1
-      if (success) {
-        stats.success += 1
-      }
-      
-      localStorage.setItem(statsKey, JSON.stringify(stats))
-    } catch (error) {
-      logger.warn('無法更新表單統計', { 
-        metadata: { error: String(error) } 
+  const trackFormSubmission = useCallback(
+    (
+      formType: string,
+      success: boolean,
+      errorMessage?: string,
+      metadata?: Record<string, unknown>
+    ) => {
+      logger.info('表單提交追蹤', {
+        module: 'ErrorTracking',
+        action: 'formSubmission',
+        metadata: {
+          formType,
+          success,
+          errorMessage,
+          path: window.location.pathname,
+          timestamp: Date.now(),
+          ...metadata,
+        },
       })
-    }
-  }, [])
+
+      // 更新表單成功率統計
+      try {
+        const statsKey = `form_stats_${formType}`
+        const stored = localStorage.getItem(statsKey) || '{"total":0,"success":0}'
+        const stats = JSON.parse(stored)
+
+        stats.total += 1
+        if (success) {
+          stats.success += 1
+        }
+
+        localStorage.setItem(statsKey, JSON.stringify(stats))
+      } catch (error) {
+        logger.warn('無法更新表單統計', {
+          metadata: { error: String(error) },
+        })
+      }
+    },
+    []
+  )
 
   // 取得表單成功率
-  const getFormSuccessRate = useCallback((formType: string): { 
-    total: number; 
-    success: number; 
-    rate: number 
-  } => {
-    try {
-      const statsKey = `form_stats_${formType}`
-      const stored = localStorage.getItem(statsKey) || '{"total":0,"success":0}'
-      const stats = JSON.parse(stored)
-      
-      return {
-        total: stats.total,
-        success: stats.success,
-        rate: stats.total > 0 ? (stats.success / stats.total) * 100 : 0
+  const getFormSuccessRate = useCallback(
+    (
+      formType: string
+    ): {
+      total: number
+      success: number
+      rate: number
+    } => {
+      try {
+        const statsKey = `form_stats_${formType}`
+        const stored = localStorage.getItem(statsKey) || '{"total":0,"success":0}'
+        const stats = JSON.parse(stored)
+
+        return {
+          total: stats.total,
+          success: stats.success,
+          rate: stats.total > 0 ? (stats.success / stats.total) * 100 : 0,
+        }
+      } catch {
+        return { total: 0, success: 0, rate: 0 }
       }
-    } catch {
-      return { total: 0, success: 0, rate: 0 }
-    }
-  }, [])
+    },
+    []
+  )
 
   // 設置全域錯誤處理器
   useEffect(() => {
@@ -188,7 +195,7 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
         trackError(event.error || event.message, 'JavaScriptError', {
           filename: event.filename,
           lineno: event.lineno,
-          colno: event.colno
+          colno: event.colno,
         })
       }
     }
@@ -220,10 +227,10 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
 
     const handleRouteChange = () => {
       const navigationTime = Date.now() - startTime
-      
+
       trackUserAction('navigation', {
         path: window.location.pathname,
-        navigationTime
+        navigationTime,
       })
     }
 
@@ -250,8 +257,8 @@ export function useErrorTracking(config: ErrorTrackingConfig = {}) {
 
         trackPerformance({
           loadTime,
-          renderTime, 
-          navigationTime
+          renderTime,
+          navigationTime,
         })
       }
     }

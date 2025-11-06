@@ -1,7 +1,7 @@
 import { SupabaseClient } from '@supabase/supabase-js'
+import { dbLogger } from '@/lib/logger'
 import { Database } from '@/types/database'
 import { SupabaseConnectionPool } from './db-pool'
-import { dbLogger } from '@/lib/logger'
 
 /**
  * 池化連線包裝器

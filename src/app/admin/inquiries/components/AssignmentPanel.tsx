@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
-import type { InquiryWithItems } from '@/types/inquiry'
 import type { InquiryPriority, AssigneeRole, InquiryAssignment } from '@/hooks/useInquiryWorkflow'
 import { PRIORITY_LABELS, PRIORITY_COLORS } from '@/hooks/useInquiryWorkflow'
+import type { InquiryWithItems } from '@/types/inquiry'
 
 interface InquiryAssignee {
   id: string

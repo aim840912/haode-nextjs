@@ -1,20 +1,20 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/components/ui/feedback/Toast'
 import { useRouter, useSearchParams } from 'next/navigation'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { useToast } from '@/components/ui/feedback/Toast'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Hooks
-import { useProfileForm } from './hooks/useProfileForm'
-import { useOrders } from './hooks/useOrders'
+import { InterestsTab } from './components/InterestsTab'
+import { OrdersTab } from './components/OrdersTab'
+import { ProfileTab } from './components/ProfileTab'
 import { useInterests } from './hooks/useInterests'
+import { useOrders } from './hooks/useOrders'
 
 // Components
-import { ProfileTab } from './components/ProfileTab'
-import { OrdersTab } from './components/OrdersTab'
-import { InterestsTab } from './components/InterestsTab'
+import { useProfileForm } from './hooks/useProfileForm'
 
 // 載入頁面元件
 function ProfilePageLoading() {

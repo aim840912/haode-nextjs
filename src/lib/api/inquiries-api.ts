@@ -3,11 +3,11 @@
  * 提供類型安全的 API 呼叫函數，供客戶端元件使用
  */
 
-import { apiLogger } from '@/lib/logger'
 import { apiClient } from '@/lib/api-client'
+import { apiLogger } from '@/lib/logger'
+import { InquiryStatsData as InquiryStatsDataUtil } from '@/lib/utils/inquiry-stats-utils'
 import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
 import { handleApiError } from './common'
-import { InquiryStatsData as InquiryStatsDataUtil } from '@/lib/utils/inquiry-stats-utils'
 
 // 重新匯出 InquiryStatsData 供外部使用
 export type InquiryStatsData = InquiryStatsDataUtil

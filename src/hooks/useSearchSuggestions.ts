@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchSearchSuggestions } from '@/lib/api/search-api'
+import { logger } from '@/lib/logger'
 
 export interface SearchSuggestionsResponse {
   suggestions: string[]

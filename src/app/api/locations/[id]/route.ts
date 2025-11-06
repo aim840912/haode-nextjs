@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
-import { locationServiceSimple as locationServiceAdapter } from '@/services/core/content/locationServiceSimple'
-import { LocationSchemas } from '@/lib/validation'
-import { ValidationError, NotFoundError } from '@/lib/errors'
-import { success } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { apiLogger } from '@/lib/logger'
 import { z } from 'zod'
+import { success } from '@/lib/api-response'
+import { ValidationError, NotFoundError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { LocationSchemas } from '@/lib/validation'
+import { locationServiceSimple as locationServiceAdapter } from '@/services/core/content/locationServiceSimple'
 
 // UUID ID 驗證 Schema
 const UuidIdSchema = z.object({

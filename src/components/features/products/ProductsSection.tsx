@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { Product } from '@/types/product'
-import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
-import { SafeImage } from '@/components/ui/image/OptimizedImage'
-import { logger } from '@/lib/logger'
 import { Award, Sparkles, TrendingUp, Leaf, ShoppingBag } from 'lucide-react'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { SafeImage } from '@/components/ui/image/OptimizedImage'
+import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
+import { logger } from '@/lib/logger'
+import { Product } from '@/types/product'
 
 function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
@@ -350,7 +350,7 @@ function ProductsSection() {
   )
 }
 
-export default function ProductsSectionWithErrorBoundary() {
+export function ProductsSectionWithErrorBoundary() {
   return (
     <ComponentErrorBoundary>
       <ProductsSection />

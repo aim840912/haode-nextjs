@@ -3,9 +3,9 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { CreateInquiryItemRequest } from '@/types/inquiry'
 import { useEnhancedInquiryForm } from '@/hooks/useEnhancedInquiryForm'
 import { logger } from '@/lib/logger'
+import { CreateInquiryItemRequest } from '@/types/inquiry'
 
 // 內部組件使用 useSearchParams
 function InquiryFormContent() {

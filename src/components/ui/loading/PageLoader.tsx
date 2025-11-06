@@ -1,8 +1,8 @@
 'use client'
 
 import { ComponentType } from 'react'
-import LoadingSpinner from './LoadingSpinner'
 import { LoadingSkeleton, ProductCardSkeleton, ListItemSkeleton } from './LoadingSkeleton'
+import { LoadingSpinner } from './LoadingSpinner'
 
 export interface PageLoaderProps {
   /**
@@ -50,7 +50,7 @@ export interface PageLoaderProps {
  * }
  * ```
  */
-export default function PageLoader({
+export function PageLoader({
   type = 'skeleton',
   message = '載入中...',
   showProgress = false,

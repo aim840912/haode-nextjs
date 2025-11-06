@@ -1,9 +1,9 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import type { Theme, EffectiveTheme, ThemeContextType } from '@/types/theme'
-import { getTheme, setTheme as saveTheme } from '@/lib/storage/theme'
 import { logger } from '@/lib/logger'
+import { getTheme, setTheme as saveTheme } from '@/lib/storage/theme'
+import type { Theme, EffectiveTheme, ThemeContextType } from '@/types/theme'
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 

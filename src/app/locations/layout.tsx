@@ -21,10 +21,6 @@ export const metadata: Metadata = {
   },
 }
 
-export default function LocationsLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function LocationsLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }

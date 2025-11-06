@@ -5,11 +5,6 @@
  * 支援快取、fallback 和動態切換
  */
 
-import { ProductService } from '@/types/product'
-import { ScheduleService } from '@/types/schedule'
-import { FarmTourActivity } from '@/types/farmTour'
-import { LocationService } from '@/types/location'
-import { ServiceConfig } from '@/services/base/base-service'
 import {
   shouldUseSupabase,
   shouldFallbackToJson,
@@ -18,6 +13,11 @@ import {
   DataStrategyConfig,
 } from '@/config/data-strategy'
 import { dbLogger } from '@/lib/logger'
+import { ServiceConfig } from '@/services/base/base-service'
+import { FarmTourActivity } from '@/types/farmTour'
+import { LocationService } from '@/types/location'
+import { ProductService } from '@/types/product'
+import { ScheduleService } from '@/types/schedule'
 
 /**
  * 檢查是否應該使用連線池服務

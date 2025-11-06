@@ -6,11 +6,11 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { orderService } from '@/services/core/order/orderService'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { orderService } from '@/services/core/order'
 
 /**
  * GET /api/admin/orders - 取得所有訂單

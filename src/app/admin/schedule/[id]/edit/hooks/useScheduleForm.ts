@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
-import { ScheduleItem } from '@/types/schedule'
-import { logger } from '@/lib/logger'
 import { useToast } from '@/components/ui/feedback/Toast'
+import { logger } from '@/lib/logger'
+import { ScheduleItem } from '@/types/schedule'
 
 interface TimeRange {
   startTime: string

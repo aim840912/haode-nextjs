@@ -4,10 +4,10 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
 
 async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {
   apiLogger.info('管理員查詢 KPI 報告', {

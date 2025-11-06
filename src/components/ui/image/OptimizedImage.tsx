@@ -1,11 +1,11 @@
 'use client'
 
-import Image from 'next/image'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { logger } from '@/lib/logger'
-import LoadingSpinner from '../loading/LoadingSpinner'
-import { handleImageError } from '@/lib/utils/image-utils'
+import Image from 'next/image'
 import { useImageBlob } from '@/hooks/useImageBlob'
+import { logger } from '@/lib/logger'
+import { handleImageError } from '@/lib/utils/image-utils'
+import { LoadingSpinner } from '../loading/LoadingSpinner'
 
 /**
  * OptimizedImage 元件
@@ -47,7 +47,7 @@ interface OptimizedImageProps {
   showErrorDetails?: boolean // 是否顯示錯誤詳情 (來自 SimpleImage)
 }
 
-export default function OptimizedImage({
+export function OptimizedImage({
   src,
   alt,
   width,

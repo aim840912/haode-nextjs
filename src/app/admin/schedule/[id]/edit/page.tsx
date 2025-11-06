@@ -1,21 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { useRouter } from 'next/navigation'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
 // Hooks
-import { useScheduleForm } from './hooks/useScheduleForm'
-import { useScheduleFormValidation } from './hooks/useScheduleFormValidation'
-import { useScheduleFormSubmit } from './hooks/useScheduleFormSubmit'
+import { AdditionalInfoSection } from './components/AdditionalInfoSection'
+import { BasicInfoSection } from './components/BasicInfoSection'
 
 // Components
-import { BasicInfoSection } from './components/BasicInfoSection'
 import { DateTimeSection } from './components/DateTimeSection'
 import { ProductsSection } from './components/ProductsSection'
-import { AdditionalInfoSection } from './components/AdditionalInfoSection'
 import { SchedulePreview } from './components/SchedulePreview'
+import { useScheduleForm } from './hooks/useScheduleForm'
+import { useScheduleFormSubmit } from './hooks/useScheduleFormSubmit'
+import { useScheduleFormValidation } from './hooks/useScheduleFormValidation'
 
 export default function EditSchedule({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()

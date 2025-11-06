@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import type { FarmTourActivity } from '@/types/farmTour'
-import { useAuth } from '@/contexts/AuthContext'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
+import { useAuth } from '@/contexts/AuthContext'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
+import type { FarmTourActivity } from '@/types/farmTour'
 import {
   SETTING_KEYS,
   type FacilityItem,
@@ -12,17 +12,17 @@ import {
   type VisitInfoData,
   type VisitNotesData,
 } from '@/types/siteSettings'
-import { useFarmTourActivities } from './hooks/useFarmTourActivities'
-import { useFarmTourForm } from './hooks/useFarmTourForm'
-import { BookingModal } from './components/BookingModal'
-import { HeroSection } from './components/HeroSection'
 import { ActivitiesSection } from './components/ActivitiesSection'
+import { BookingModal } from './components/BookingModal'
+import { ContactCTA } from './components/ContactCTA'
 import { FacilitiesSection } from './components/FacilitiesSection'
+import { FAQSection } from './components/FAQSection'
+import { FloatingCTA } from './components/FloatingCTA'
+import { HeroSection } from './components/HeroSection'
 import { InfoSection } from './components/InfoSection'
 import { TrustSection } from './components/TrustSection'
-import { FAQSection } from './components/FAQSection'
-import { ContactCTA } from './components/ContactCTA'
-import { FloatingCTA } from './components/FloatingCTA'
+import { useFarmTourActivities } from './hooks/useFarmTourActivities'
+import { useFarmTourForm } from './hooks/useFarmTourForm'
 
 // 預設農場設施（向下相容）
 const DEFAULT_FACILITIES: FacilityItem[] = [

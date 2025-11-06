@@ -2,16 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { BasicInfoSection } from './components/BasicInfoSection'
+import { BusinessHoursSection } from './components/BusinessHoursSection'
+import { FeaturesSection } from './components/FeaturesSection'
+import { ImageUploadSection } from './components/ImageUploadSection'
+import { SpecialtiesSection } from './components/SpecialtiesSection'
+import { TransportSection } from './components/TransportSection'
 import { useLocationForm } from './hooks/useLocationForm'
 import { useLocationFormSubmit } from './hooks/useLocationFormSubmit'
 import { useLocationFormValidation } from './hooks/useLocationFormValidation'
-import { BasicInfoSection } from './components/BasicInfoSection'
-import { BusinessHoursSection } from './components/BusinessHoursSection'
-import { TransportSection } from './components/TransportSection'
-import { FeaturesSection } from './components/FeaturesSection'
-import { SpecialtiesSection } from './components/SpecialtiesSection'
-import { ImageUploadSection } from './components/ImageUploadSection'
 
 export default function EditLocation({ params }: { params: Promise<{ id: string }> }) {
   const [locationId, setLocationId] = useState<string>('')

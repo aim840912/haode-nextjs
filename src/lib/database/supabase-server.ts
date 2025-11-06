@@ -1,8 +1,8 @@
+import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
-import { Database } from '@/types/database'
 import { authLogger } from '@/lib/logger'
+import { Database } from '@/types/database'
 
 // 使用 globalThis 確保真正的全域快取
 declare global {

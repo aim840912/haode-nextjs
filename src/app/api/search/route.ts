@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server'
-import { getProductService } from '@/services/factory/serviceFactory'
-import { SearchResult, SearchResponse } from '@/types/search'
-import { Product } from '@/types/product'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { SearchSchemas } from '@/lib/validation'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { SearchSchemas } from '@/lib/validation'
+import { getProductService } from '@/services/factory/serviceFactory'
+import { Product } from '@/types/product'
+import { SearchResult, SearchResponse } from '@/types/search'
 
 async function handleGET(request: NextRequest) {
   const startTime = Date.now()

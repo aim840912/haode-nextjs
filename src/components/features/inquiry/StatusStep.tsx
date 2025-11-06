@@ -1,6 +1,5 @@
 'use client'
 
-import { InquiryStatus, INQUIRY_STATUS_LABELS } from '@/types/inquiry'
 import {
   DocumentTextIcon,
   ChatBubbleLeftRightIcon,
@@ -9,6 +8,7 @@ import {
   XCircleIcon,
 } from '@heroicons/react/24/outline'
 import { formatDateTime } from '@/lib/utils/formatters'
+import { InquiryStatus, INQUIRY_STATUS_LABELS } from '@/types/inquiry'
 
 interface StatusStepProps {
   status: InquiryStatus
@@ -21,7 +21,7 @@ interface StatusStepProps {
   layout?: 'horizontal' | 'vertical'
 }
 
-export default function StatusStep({
+export function StatusStep({
   status,
   isActive,
   isCompleted,

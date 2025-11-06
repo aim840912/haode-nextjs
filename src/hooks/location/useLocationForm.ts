@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react'
-import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
-import { ProductImage } from '@/types/product'
 import { createLocationWithImages } from '@/lib/api/admin-api'
+import { logger } from '@/lib/logger'
 import { validatePhone } from '@/lib/utils/validation'
+import { ProductImage } from '@/types/product'
 
 export interface LocationFormData {
   name: string

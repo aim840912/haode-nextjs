@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import type { QuickReplyTemplate } from '@/hooks/useQuickReplyTemplates'
 import type { InquiryWithItems } from '@/types/inquiry'
 import { InquiryUtils } from '@/types/inquiry'

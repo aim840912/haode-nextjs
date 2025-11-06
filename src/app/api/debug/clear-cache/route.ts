@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { clearServiceClientCache, refreshServiceClient } from '@/lib/database/supabase-server'
 import {
   clearAdminClientCache,
   refreshAdminClient,
   clearAllClientCaches,
 } from '@/lib/database/supabase-auth'
-import { refreshConnectionPoolSchema } from '@/lib/supabase/connection-factory'
+import { clearServiceClientCache, refreshServiceClient } from '@/lib/database/supabase-server'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { refreshConnectionPoolSchema } from '@/lib/supabase/connection-factory'
 
 async function handlePOST(req: NextRequest): Promise<NextResponse> {
   const body = await req.json()

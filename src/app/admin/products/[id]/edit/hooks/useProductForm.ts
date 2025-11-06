@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Product } from '@/types/product'
-import { logger } from '@/lib/logger'
 import type { PendingImageChanges } from '@/components/features/products/ProductImageManager'
+import { logger } from '@/lib/logger'
+import { Product } from '@/types/product'
 
 interface FormData {
   name: string

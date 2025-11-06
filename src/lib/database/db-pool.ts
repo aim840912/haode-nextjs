@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Database } from '@/types/database'
 import { dbLogger } from '@/lib/logger'
+import { Database } from '@/types/database'
 
 /**
  * 連線池配置介面

@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import type FullCalendar from '@fullcalendar/react'
 import { useAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/logger'
-import type { InquiryStatus } from '@/types/inquiry'
 import {
   fetchFarmTourCalendar,
   updateFarmTourVisitDate,
@@ -12,6 +9,9 @@ import {
   type CalendarResponse,
   type CalendarStatistics,
 } from '@/lib/api/farm-tour-api'
+import { logger } from '@/lib/logger'
+import type { InquiryStatus } from '@/types/inquiry'
+import type FullCalendar from '@fullcalendar/react'
 
 export interface UseFarmTourCalendarOptions {
   defaultView?: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'

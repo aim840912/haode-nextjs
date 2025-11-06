@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Location } from '@/types/location'
-import { logger } from '@/lib/logger'
 import { parseClosedDays } from '@/hooks/location/useLocationForm'
+import { logger } from '@/lib/logger'
+import { Location } from '@/types/location'
 
 interface FormData {
   name: string

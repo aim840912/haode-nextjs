@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState('')

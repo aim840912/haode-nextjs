@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import Image from 'next/image'
-import { Product } from '@/types/product'
-import OptimizedImage from '@/components/ui/image/OptimizedImage'
+import { OptimizedImage } from '@/components/ui/image/OptimizedImage'
 import { generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/utils/image-utils'
+import { Product } from '@/types/product'
 
 interface ProductImageGalleryProps {
   product: Product
@@ -15,7 +15,7 @@ interface ProductImageGalleryProps {
   onImageChange?: (index: number) => void
 }
 
-export default function ProductImageGallery({
+export function ProductImageGallery({
   product,
   className = '',
   showThumbnails = true,

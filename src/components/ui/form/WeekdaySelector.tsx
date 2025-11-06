@@ -26,7 +26,7 @@ const SPECIAL_OPTIONS = {
  * 提供多選星期的介面，支援特殊選項（全年無休、不定期公休）
  * 具有互斥邏輯：選擇「全年無休」會清除其他選項
  */
-export default function WeekdaySelector({ value, onChange, className = '' }: WeekdaySelectorProps) {
+export function WeekdaySelector({ value, onChange, className = '' }: WeekdaySelectorProps) {
   const [selectedDays, setSelectedDays] = useState<string[]>(value)
 
   // 同步外部 value 變更

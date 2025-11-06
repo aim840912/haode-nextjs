@@ -1,5 +1,5 @@
-import { InquiryStatus, InquiryType } from './inquiry'
 import { AuditAction, ResourceType, UserRole } from './audit'
+import { InquiryStatus, InquiryType } from './inquiry'
 
 // Supabase 標準 JSON 類型
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]

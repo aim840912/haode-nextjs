@@ -1,10 +1,10 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
+import { useSearchParams } from 'next/navigation'
 import { useToast } from '@/components/ui/feedback/Toast'
+import { useAuth } from '@/contexts/AuthContext'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 

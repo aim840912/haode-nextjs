@@ -1,9 +1,5 @@
 'use client'
 
-import { InquiryWithItems } from '@/types/inquiry'
-import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
-import StatusStep from './StatusStep'
-import { formatDate } from '@/lib/utils/formatters'
 import {
   LightBulbIcon,
   TruckIcon,
@@ -11,6 +7,10 @@ import {
   CheckIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
+import { formatDate } from '@/lib/utils/formatters'
+import { InquiryWithItems } from '@/types/inquiry'
+import { StatusStep } from './StatusStep'
 
 interface InquiryStatusFlowProps {
   inquiry: InquiryWithItems
@@ -22,7 +22,7 @@ interface InquiryStatusFlowProps {
   title?: string
 }
 
-export default function InquiryStatusFlow({
+export function InquiryStatusFlow({
   inquiry,
   layout = 'horizontal',
   showProgress = true,

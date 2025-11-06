@@ -4,8 +4,8 @@
  * 為 Supabase 服務、API 客戶端和驗證中間件提供類型安全的介面定義
  */
 
-import { Database } from './database'
 import { z } from 'zod'
+import { Database } from './database'
 
 // ============================================================================
 // Supabase 查詢建構器類型

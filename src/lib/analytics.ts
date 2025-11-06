@@ -1,7 +1,7 @@
 // Google Analytics 4 整合工具函數
 // 為豪德農場量身定制的分析追蹤功能
 
-import { logger } from '@/lib/logger';
+import { logger } from '@/lib/logger'
 
 declare global {
   interface Window {
@@ -73,13 +73,15 @@ export const productEvents = {
     trackEvent('view_item', {
       currency: product.currency || 'TWD',
       value: product.price,
-      items: [{
-        item_id: product.product_id,
-        item_name: product.product_name,
-        category: product.category,
-        price: product.price,
-        quantity: 1,
-      }]
+      items: [
+        {
+          item_id: product.product_id,
+          item_name: product.product_name,
+          category: product.category,
+          price: product.price,
+          quantity: 1,
+        },
+      ],
     })
   },
 
@@ -95,13 +97,15 @@ export const productEvents = {
     trackEvent('add_to_cart', {
       currency: product.currency || 'TWD',
       value: product.price * product.quantity,
-      items: [{
-        item_id: product.product_id,
-        item_name: product.product_name,
-        category: product.category,
-        price: product.price,
-        quantity: product.quantity,
-      }]
+      items: [
+        {
+          item_id: product.product_id,
+          item_name: product.product_name,
+          category: product.category,
+          price: product.price,
+          quantity: product.quantity,
+        },
+      ],
     })
   },
 
@@ -122,9 +126,9 @@ export const productEvents = {
       transaction_id: order.transaction_id,
       currency: order.currency || 'TWD',
       value: order.value,
-      items: order.items
+      items: order.items,
     })
-  }
+  },
 }
 
 // 用戶互動事件追蹤
@@ -134,7 +138,7 @@ export const interactionEvents = {
     trackEvent('contact', {
       method,
       contact_details: details,
-      category: 'engagement'
+      category: 'engagement',
     })
   },
 
@@ -143,7 +147,7 @@ export const interactionEvents = {
     trackEvent('file_download', {
       file_name: fileName,
       file_extension: fileType,
-      category: 'engagement'
+      category: 'engagement',
     })
   },
 
@@ -152,7 +156,7 @@ export const interactionEvents = {
     trackEvent('search', {
       search_term: searchTerm,
       search_results_count: resultsCount,
-      category: 'site_search'
+      category: 'site_search',
     })
   },
 
@@ -161,7 +165,7 @@ export const interactionEvents = {
     trackEvent('video_play', {
       video_title: videoTitle,
       video_duration: videoDuration,
-      category: 'media'
+      category: 'media',
     })
   },
 
@@ -170,9 +174,9 @@ export const interactionEvents = {
     trackEvent('book_tour', {
       tour_type: tourType,
       tour_date: tourDate,
-      category: 'conversion'
+      category: 'conversion',
     })
-  }
+  },
 }
 
 // 錯誤追蹤
@@ -182,7 +186,7 @@ export function trackError(error: Error, context?: string): void {
     fatal: false,
     context: context,
     stack: error.stack?.substring(0, 500), // 限制堆疊長度
-    category: 'error'
+    category: 'error',
   })
 }
 
@@ -194,7 +198,7 @@ export const performanceEvents = {
       name: 'page_load',
       value: Math.round(loadTime),
       event_category: 'Performance',
-      event_label: pagePath
+      event_label: pagePath,
     })
   },
 
@@ -203,9 +207,9 @@ export const performanceEvents = {
     trackEvent('timing_complete', {
       name: 'first_contentful_paint',
       value: Math.round(fcp),
-      event_category: 'Performance'
+      event_category: 'Performance',
     })
-  }
+  },
 }
 
 // 自定義轉換事件
@@ -215,7 +219,7 @@ export const conversionEvents = {
     trackEvent('sign_up', {
       method,
       user_id: userId,
-      category: 'conversion'
+      category: 'conversion',
     })
   },
 
@@ -223,19 +227,23 @@ export const conversionEvents = {
   subscribe: (email: string) => {
     trackEvent('newsletter_subscribe', {
       email_domain: email.split('@')[1],
-      category: 'conversion'
+      category: 'conversion',
     })
   },
 
   // 分享內容
-  share: (method: 'facebook' | 'line' | 'email' | 'copy_link', contentType: string, contentId?: string) => {
+  share: (
+    method: 'facebook' | 'line' | 'email' | 'copy_link',
+    contentType: string,
+    contentId?: string
+  ) => {
     trackEvent('share', {
       method,
       content_type: contentType,
       content_id: contentId,
-      category: 'engagement'
+      category: 'engagement',
     })
-  }
+  },
 }
 
 // GA4 初始化狀態檢查
@@ -248,7 +256,7 @@ export function checkGAStatus(): {
   return {
     isLoaded: isGALoaded(),
     hasValidId: measurementId !== null && measurementId !== 'G-PLACEHOLDER',
-    measurementId
+    measurementId,
   }
 }
 
@@ -257,13 +265,13 @@ export function logGAStatus(): void {
   if (process.env.NODE_ENV === 'development') {
     const status = checkGAStatus()
     logger.debug('GA4 Status', { metadata: { status } })
-    
+
     if (!status.hasValidId) {
-      logger.warn('GA4: 請在 .env.local 中設定有效的 NEXT_PUBLIC_GA_MEASUREMENT_ID');
+      logger.warn('GA4: 請在 .env.local 中設定有效的 NEXT_PUBLIC_GA_MEASUREMENT_ID')
     } else if (!status.isLoaded) {
-      logger.warn('GA4: Google Analytics 腳本尚未載入');
+      logger.warn('GA4: Google Analytics 腳本尚未載入')
     } else {
-      logger.info('GA4: Google Analytics 已準備就緒');
+      logger.info('GA4: Google Analytics 已準備就緒')
     }
   }
 }

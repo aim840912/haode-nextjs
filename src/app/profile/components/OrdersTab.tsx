@@ -1,8 +1,8 @@
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import Link from 'next/link'
-import type { Order } from '@/types/order'
 import { Package } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { formatDate } from '@/lib/utils/formatters'
+import type { Order } from '@/types/order'
 
 interface OrdersTabProps {
   orders: Order[]

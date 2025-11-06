@@ -1,12 +1,12 @@
 import { NextRequest } from 'next/server'
+import { success } from '@/lib/api-response'
+import { ValidationError, NotFoundError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { requireAdmin, User } from '@/lib/middleware/api-middleware'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { AdminProductSchemas, CommonValidations } from '@/lib/validation'
 import { productService } from '@/services/core/product/productService'
 import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
-import { AdminProductSchemas, CommonValidations } from '@/lib/validation'
-import { ValidationError, NotFoundError } from '@/lib/errors'
-import { success } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { requireAdmin, User } from '@/lib/middleware/api-middleware'
-import { apiLogger } from '@/lib/logger'
 
 /**
  * GET /api/products/[id] - 取得單一產品

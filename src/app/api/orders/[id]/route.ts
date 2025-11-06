@@ -6,12 +6,12 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
-import { orderService } from '@/services/core/order/orderService'
-import { z } from 'zod'
 import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { orderService } from '@/services/core/order'
 
 // 訂單更新的驗證 schema
 const UpdateOrderSchema = z.object({

@@ -1,19 +1,19 @@
 import { NextRequest } from 'next/server'
+import { success, created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { Product } from '@/types/product'
+import { ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
 import {
   checkAdminPermission,
   createAuthErrorResponse,
 } from '@/lib/middleware/admin-auth-middleware'
-import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
-import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
-import { adminProductService } from '@/services/core/product/productService'
-import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { AdminProductSchemas } from '@/lib/validation'
-import { ValidationError } from '@/lib/errors'
-import { success, created } from '@/lib/api-response'
+import { adminProductService } from '@/services/core/product/productService'
+import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { Product } from '@/types/product'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {

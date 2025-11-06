@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
+import {
+  schemaMonitor,
+  startSchemaMonitoring,
+  stopSchemaMonitoring,
+  checkSchemaChanges,
+} from '@/lib/database/schema-monitor'
 import { ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import {
   refreshConnectionPoolSchema,
   resetAllConnections,
@@ -9,13 +16,6 @@ import {
   shouldUseConnectionPool,
   getPoolStats,
 } from '@/lib/supabase/connection-factory'
-import {
-  schemaMonitor,
-  startSchemaMonitoring,
-  stopSchemaMonitoring,
-  checkSchemaChanges,
-} from '@/lib/database/schema-monitor'
-import { apiLogger } from '@/lib/logger'
 
 interface ConnectionPoolOperation {
   operation:

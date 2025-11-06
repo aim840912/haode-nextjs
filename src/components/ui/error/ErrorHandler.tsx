@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { useAsyncLoading } from '../loading/LoadingManager'
 import { AsyncOperation } from '@/types/infrastructure.types'
+import { useAsyncLoading } from '../loading/LoadingManager'
 
 // 錯誤類型定義
 export enum ErrorType {

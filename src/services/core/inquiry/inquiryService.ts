@@ -13,10 +13,9 @@ import type {
   InquiryStats,
   InquiryStatus,
 } from '@/types/inquiry'
-
-import { InquiryQueryService } from './InquiryQueryService'
 import { InquiryCommandService } from './InquiryCommandService'
 import { InquiryInventoryService } from './InquiryInventoryService'
+import { InquiryQueryService } from './InquiryQueryService'
 
 /**
  * 詢問服務（協調器）

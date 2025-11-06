@@ -8,7 +8,7 @@ interface InquiryStatusBadgeProps {
   className?: string
 }
 
-export default function InquiryStatusBadge({
+export function InquiryStatusBadge({
   status,
   size = 'md',
   className = '',

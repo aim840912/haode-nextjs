@@ -13,7 +13,7 @@ interface SearchInputProps {
   showSuggestions?: boolean
 }
 
-export default function SearchInput({
+export function SearchInput({
   value,
   onChange,
   onSearch,

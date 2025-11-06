@@ -1,20 +1,23 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
 import dynamic from 'next/dynamic'
-import { useAuth } from '@/contexts/AuthContext'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
-import { ProductImage } from '@/types/product'
+import { useAuth } from '@/contexts/AuthContext'
 import { useFarmTourSubmit } from '@/hooks/farm-tour/useFarmTourSubmit'
+import { ProductImage } from '@/types/product'
 
 // 動態載入圖片管理器
 const ProductImageManager = dynamic(
-  () => import('@/components/features/products/ProductImageManager'),
+  () =>
+    import('@/components/features/products/ProductImageManager').then(
+      mod => mod.ProductImageManager
+    ),
   {
     loading: () => (
       <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">

@@ -9,7 +9,7 @@ interface GoogleAnalyticsProviderProps {
   children: React.ReactNode
 }
 
-export default function GoogleAnalyticsProvider({ children }: GoogleAnalyticsProviderProps) {
+export function GoogleAnalyticsProvider({ children }: GoogleAnalyticsProviderProps) {
   const pathname = usePathname()
 
   useEffect(() => {

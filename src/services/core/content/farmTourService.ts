@@ -9,16 +9,16 @@
  * - 內建資料轉換和驗證
  */
 
-import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { dbLogger } from '@/lib/logger'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 // 類型斷言，解決 Supabase 重載問題
 const getAdmin = () => getSupabaseAdmin()
-import { UpdateDataObject } from '@/types/service.types'
 import { FarmTourActivity } from '@/types/farmTour'
+import { UpdateDataObject } from '@/types/service.types'
 
 /**
  * 資料庫記錄類型

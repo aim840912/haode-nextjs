@@ -9,7 +9,8 @@ import {
   useRef,
   ReactNode,
 } from 'react'
-import { User, LoginRequest, RegisterRequest } from '@/types/auth'
+import { Session } from '@supabase/supabase-js'
+import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-interests-api'
 import {
   supabase,
   getUserProfile,
@@ -19,9 +20,8 @@ import {
   signUpUser,
   updateProfile as updateUserProfile,
 } from '@/lib/database/supabase-auth'
-import { Session } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
-import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-interests-api'
+import { User, LoginRequest, RegisterRequest } from '@/types/auth'
 
 interface AuthContextType {
   user: User | null

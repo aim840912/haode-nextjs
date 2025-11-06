@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { logger } from '@/lib/logger'
-import { getSupabaseClient } from '@/lib/database/supabase-auth'
-import type { FarmTourActivity } from '@/types/farmTour'
-import type { User } from '@/types/auth'
-import type { FarmTourFormData, FarmTourFormErrors } from '../hooks/useFarmTourForm'
 import { Zap, Circle, Users2, Calendar, Banknote, Info } from 'lucide-react'
+import { getSupabaseClient } from '@/lib/database/supabase-auth'
+import { logger } from '@/lib/logger'
+import type { User } from '@/types/auth'
+import type { FarmTourActivity } from '@/types/farmTour'
+import type { FarmTourFormData, FarmTourFormErrors } from '../hooks/useFarmTourForm'
 
 interface BookingModalProps {
   activity: FarmTourActivity

@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
-import { UserSchemas } from '@/lib/validation'
 import { supabase } from '@/lib/database/supabase-auth'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { UserSchemas } from '@/lib/validation'
 
 async function handlePOST(request: NextRequest) {
   apiLogger.info('開始處理忘記密碼請求', {

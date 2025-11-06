@@ -10,8 +10,8 @@
  */
 
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
-import { dbLogger } from './logger'
 import { ErrorFactory } from './errors'
+import { dbLogger } from './logger'
 
 /**
  * 搜尋配置介面

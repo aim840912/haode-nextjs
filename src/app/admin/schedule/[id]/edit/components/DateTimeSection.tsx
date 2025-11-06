@@ -1,4 +1,4 @@
-import TimePickerChinese from '@/components/ui/form/TimePickerChinese'
+import { TimePickerChinese } from '@/components/ui/form/TimePickerChinese'
 
 interface DateTimeSectionProps {
   formData: {

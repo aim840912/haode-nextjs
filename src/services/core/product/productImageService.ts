@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { dbLogger } from '@/lib/logger'
 import { DatabaseError, NotFoundError, ValidationError, ErrorFactory } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
 import type { Database } from '@/types/database'
 import type { ProductImage } from '@/types/product'
 

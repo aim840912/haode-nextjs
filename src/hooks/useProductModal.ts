@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Product } from '@/types/product'
 import { useAuth } from '@/contexts/AuthContext'
+import { Product } from '@/types/product'
 
 export interface UseProductModalReturn {
   selectedProduct: Product | null

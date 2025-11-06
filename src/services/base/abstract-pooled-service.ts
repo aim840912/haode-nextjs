@@ -1,6 +1,6 @@
+import { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
-import { SupabaseClient } from '@supabase/supabase-js'
 import { Database } from '@/types/database'
 
 /**

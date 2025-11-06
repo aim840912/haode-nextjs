@@ -4,9 +4,9 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useDebounce } from '@/hooks/useDebounce'
-import { SearchResult } from '@/types/search'
-import { logger } from '@/lib/logger'
 import { searchContent } from '@/lib/api/search-api'
+import { logger } from '@/lib/logger'
+import { SearchResult } from '@/types/search'
 
 interface ExpandableSearchBarProps {
   placeholder?: string

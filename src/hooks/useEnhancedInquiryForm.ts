@@ -9,9 +9,9 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { inquiryApi } from '@/lib/api-client'
 import { logger } from '@/lib/logger'
+import { validatePhone } from '@/lib/utils/validation'
 import { CreateInquiryRequest, CreateInquiryItemRequest } from '@/types/inquiry'
 import { useErrorTracking } from './useErrorTracking'
-import { validatePhone } from '@/lib/utils/validation'
 
 export interface InquiryFormData {
   customer_name: string

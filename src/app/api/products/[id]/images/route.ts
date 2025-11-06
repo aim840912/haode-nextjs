@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { ValidationError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { ProductImageService } from '@/services/core/product/productImageService'
 
 /**

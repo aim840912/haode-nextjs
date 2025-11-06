@@ -1,6 +1,6 @@
+import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import { LocationFormData } from '@/hooks/location/useLocationForm'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
-import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 
 interface LocationPreviewProps {
   formData: LocationFormData

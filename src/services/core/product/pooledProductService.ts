@@ -9,12 +9,12 @@
  * - 事務和批次操作優化
  */
 
-import { AbstractPooledService } from '@/services/base/abstract-pooled-service'
-import { dbLogger } from '@/lib/logger'
-import { Product } from '@/types/product'
-import { Database } from '@/types/database'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
+import { AbstractPooledService } from '@/services/base/abstract-pooled-service'
+import { Database } from '@/types/database'
+import { Product } from '@/types/product'
 
 /**
  * 資料庫記錄類型（從 products 表格）

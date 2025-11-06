@@ -6,8 +6,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
 
 interface InquiryNotificationBadgeProps {
@@ -41,7 +41,7 @@ function InquiryIcon({ className = 'w-5 h-5' }: { className?: string }) {
   )
 }
 
-export default function InquiryNotificationBadge({
+export function InquiryNotificationBadge({
   size = 'sm',
   showIcon = true,
   className = '',

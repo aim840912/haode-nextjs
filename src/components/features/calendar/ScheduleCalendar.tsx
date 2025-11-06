@@ -1,9 +1,9 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import listPlugin from '@fullcalendar/list'
+import FullCalendar from '@fullcalendar/react'
 import { useScheduleCalendar, type ScheduleCalendarEvent } from '@/hooks/useScheduleCalendar'
 import { logger } from '@/lib/logger'
 import { formatDate } from '@/lib/utils/formatters'
@@ -22,7 +22,7 @@ interface ScheduleCalendarProps {
   height?: string | number
 }
 
-export default function ScheduleCalendar({
+export function ScheduleCalendar({
   className = '',
   defaultView = 'dayGridMonth',
   height = 'auto',

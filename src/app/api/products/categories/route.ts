@@ -1,7 +1,7 @@
-import { adminProductService } from '@/services/core/product/productService'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { success } from '@/lib/api-response'
 import { getDefaultCategories } from '@/constants/productCategories'
+import { success } from '@/lib/api-response'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { adminProductService } from '@/services/core/product/productService'
 
 async function handleGET() {
   const products = await adminProductService.getProducts()

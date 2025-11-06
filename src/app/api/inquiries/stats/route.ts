@@ -10,11 +10,11 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
-import { z } from 'zod'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { inquiryService } from '@/services/core/inquiry/inquiryService'
 import { InquiryStatus, InquiryType, InquiryUtils } from '@/types/inquiry'
 

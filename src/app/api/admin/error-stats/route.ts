@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler, ErrorStatsCollector } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
+import { withErrorHandler, ErrorStatsCollector } from '@/lib/middleware/error-handler'
 
 async function handleGET(request: NextRequest) {
   // 取得時間範圍參數

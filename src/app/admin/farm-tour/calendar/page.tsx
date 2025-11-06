@@ -1,24 +1,27 @@
 'use client'
 
 // import { useState } from 'react';
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { logger } from '@/lib/logger'
 
 // 動態導入 FarmTourCalendar 以減少初始 Bundle 大小
-const FarmTourCalendar = dynamic(() => import('@/components/features/calendar/FarmTourCalendar'), {
-  loading: () => (
-    <div className="flex items-center justify-center h-96 bg-white dark:bg-slate-800 rounded-lg shadow-md">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-300">載入行事曆中...</p>
+const FarmTourCalendar = dynamic(
+  () => import('@/components/features/calendar/FarmTourCalendar').then(mod => mod.FarmTourCalendar),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">載入行事曆中...</p>
+        </div>
       </div>
-    </div>
-  ),
-  ssr: false,
-})
+    ),
+    ssr: false,
+  }
+)
 
 export default function FarmTourCalendarPage() {
   const router = useRouter()

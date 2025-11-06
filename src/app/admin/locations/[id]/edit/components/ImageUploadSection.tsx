@@ -1,13 +1,16 @@
 import dynamic from 'next/dynamic'
 
-const ImageUploader = dynamic(() => import('@/components/features/products/ImageUploader'), {
-  loading: () => (
-    <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
-      載入圖片上傳器...
-    </div>
-  ),
-  ssr: false,
-})
+const ImageUploader = dynamic(
+  () => import('@/components/features/products/ImageUploader').then(mod => mod.ImageUploader),
+  {
+    loading: () => (
+      <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">
+        載入圖片上傳器...
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 interface ImageUploadSectionProps {
   locationId: string

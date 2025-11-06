@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
-import { AdminFilterState } from './AdminProductFilter'
-import { useProductsData } from './admin/hooks/useProductsData'
 import { useProductActions } from './admin/hooks/useProductActions'
-import { ProductTableHeader } from './admin/ProductTableHeader'
+import { useProductsData } from './admin/hooks/useProductsData'
 import { ProductTableHead } from './admin/ProductTableHead'
+import { ProductTableHeader } from './admin/ProductTableHeader'
 import { ProductTableRow } from './admin/ProductTableRow'
 import { ProductFilters } from './admin/utils/productFilters'
+import { AdminFilterState } from './AdminProductFilter'
 
 interface UnifiedProductsTableProps {
   onDelete?: (id: string) => void
@@ -26,7 +26,7 @@ interface UnifiedProductsTableProps {
  * 整合了 AdminProductsTable 和 ProductsTable 的功能
  * 可根據 props 控制顯示的功能和外觀
  */
-export default function UnifiedProductsTable({
+export function UnifiedProductsTable({
   onDelete,
   onToggleActive,
   refreshTrigger,
@@ -192,5 +192,4 @@ export default function UnifiedProductsTable({
 }
 
 // 向後相容的別名導出
-export { UnifiedProductsTable }
 export { UnifiedProductsTable as ModernProductsTable }

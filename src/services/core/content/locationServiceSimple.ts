@@ -9,10 +9,10 @@
  * - 內建資料轉換和驗證
  */
 
-import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { dbLogger } from '@/lib/logger'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { Location, LocationService } from '@/types/location'
 import { UpdateDataObject } from '@/types/service.types'

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success, created } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { DevNoteInput } from '@/types/devNote'
 
 async function handleGET(request: NextRequest, _user: User) {

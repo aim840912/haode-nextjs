@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import {
   DndContext,
   closestCenter,
@@ -16,13 +17,12 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   horizontalListSortingStrategy,
+  useSortable,
 } from '@dnd-kit/sortable'
-import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import Image from 'next/image'
+import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import { logger } from '@/lib/logger'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
-import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 
 interface SortableImage {
   id: string
@@ -151,7 +151,7 @@ interface SortableImageGalleryProps {
   className?: string
 }
 
-export default function SortableImageGallery({
+export function SortableImageGallery({
   images,
   onImagesReorder,
   onImageRemove,

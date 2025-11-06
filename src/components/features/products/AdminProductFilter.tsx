@@ -29,7 +29,7 @@ interface AdminProductFilterProps {
   loading?: boolean
 }
 
-export default function AdminProductFilter({
+export function AdminProductFilter({
   onFilterChange,
   availableCategories,
   productCount,

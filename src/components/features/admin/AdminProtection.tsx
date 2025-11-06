@@ -9,7 +9,7 @@ interface AdminProtectionProps {
   fallback?: ReactNode
 }
 
-export default function AdminProtection({ children, fallback }: AdminProtectionProps) {
+export function AdminProtection({ children, fallback }: AdminProtectionProps) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
 

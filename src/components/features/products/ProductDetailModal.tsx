@@ -1,19 +1,22 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { createPortal } from 'react-dom'
 import { X, Plus, Minus, ShoppingCart, Share2, Zap } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
 import { useAuth } from '@/contexts/AuthContext'
+import { useModalAnimation, useEscapeKey, useFocusTrap } from '@/hooks/useModalAnimation'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
-import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
-import { useModalAnimation, useEscapeKey, useFocusTrap } from '@/hooks/useModalAnimation'
-import { cn } from '@/lib/utils'
-import { logger } from '@/lib/logger'
 
 // 動態載入圖片畫廊
 const ProductImageGallery = dynamic(
-  () => import('@/components/features/products/ProductImageGallery'),
+  () =>
+    import('@/components/features/products/ProductImageGallery').then(
+      mod => mod.ProductImageGallery
+    ),
   {
     loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>,
     ssr: false,

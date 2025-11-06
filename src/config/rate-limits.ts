@@ -5,8 +5,8 @@
  * 根據業務需求和安全等級進行分級保護
  */
 
-import { RateLimitConfig, IdentifierStrategy } from '@/lib/rate-limiter'
 import { logger } from '@/lib/logger'
+import { RateLimitConfig, IdentifierStrategy } from '@/lib/rate-limiter'
 
 /**
  * 安全等級定義

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { ValidationError, NotFoundError } from '@/lib/errors'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import { ValidationError, NotFoundError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { normalizePhoneNumber, isPhoneNumber } from '@/lib/utils/auth-helpers'
 
 /**

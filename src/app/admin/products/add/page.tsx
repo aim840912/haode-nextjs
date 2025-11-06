@@ -1,29 +1,32 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { logger } from '@/lib/logger'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { LockClosedIcon, BeakerIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { v4 as uuidv4 } from 'uuid'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { v4 as uuidv4 } from 'uuid'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
-import { LockClosedIcon, BeakerIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { logger } from '@/lib/logger'
 
 // Hooks
+import { ProductFormFields } from './components/ProductFormFields'
+import { SuccessOverlay } from './components/SuccessOverlay'
+import { UploadStatsPanel } from './components/UploadStatsPanel'
 import { useProductForm } from './hooks/useProductForm'
 import { useProductSubmit } from './hooks/useProductSubmit'
 
 // Components
-import { ProductFormFields } from './components/ProductFormFields'
-import { UploadStatsPanel } from './components/UploadStatsPanel'
-import { SuccessOverlay } from './components/SuccessOverlay'
 
 // 動態載入產品圖片管理器
 const ProductImageManager = dynamic(
-  () => import('@/components/features/products/ProductImageManager'),
+  () =>
+    import('@/components/features/products/ProductImageManager').then(
+      mod => mod.ProductImageManager
+    ),
   {
     loading: () => (
       <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center animate-pulse">

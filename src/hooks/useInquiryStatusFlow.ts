@@ -1,8 +1,8 @@
 'use client'
 
 import { useMemo } from 'react'
-import { InquiryWithItems, InquiryStatus, InquiryUtils } from '@/types/inquiry'
 import { formatDate } from '@/lib/utils/formatters'
+import { InquiryWithItems, InquiryStatus, InquiryUtils } from '@/types/inquiry'
 
 export interface StatusFlowStep {
   status: InquiryStatus

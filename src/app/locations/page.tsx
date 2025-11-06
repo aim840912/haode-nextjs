@@ -1,13 +1,13 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
-import { Location } from '@/types/location'
 import Link from 'next/link'
 import { SimpleImage, AvatarSimpleImage } from '@/components/ui/image/OptimizedImage'
-import { getFullImageUrl } from '@/lib/utils/image-url-utils'
-import Breadcrumbs, { createLocationsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { LocationsPageLoader } from '@/components/ui/loading/PageLoader'
+import { Breadcrumbs, createLocationsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
+import { useAuth } from '@/contexts/AuthContext'
 import { useLocations } from '@/hooks/useLocations'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
+import { Location } from '@/types/location'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 Image 組件）
 const isValidImageUrl = (url: string | undefined): boolean => {

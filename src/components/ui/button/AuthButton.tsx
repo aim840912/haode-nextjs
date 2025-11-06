@@ -1,12 +1,12 @@
 'use client'
 
+import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
-import { fetchUserInterests } from '@/lib/api/user-interests-api'
+import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
-import { useState, useRef, useEffect, useCallback, memo } from 'react'
+import { fetchUserInterests } from '@/lib/api/user-interests-api'
 import { logger } from '@/lib/logger'
 import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
 

@@ -4,9 +4,8 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { dbLogger } from '@/lib/logger'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
-import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
+import { dbLogger } from '@/lib/logger'
 import {
   InquiryWithItems,
   CreateInquiryRequest,
@@ -14,6 +13,7 @@ import {
   InquiryStatus,
   InquiryItem,
 } from '@/types/inquiry'
+import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 
 const getAdmin = () => getSupabaseAdmin()
 

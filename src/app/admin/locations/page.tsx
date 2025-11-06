@@ -1,14 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Location } from '@/types/location'
-import Link from 'next/link'
 import Image from 'next/image'
-import { logger } from '@/lib/logger'
+import Link from 'next/link'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useAuth } from '@/contexts/AuthContext'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { fetchLocations as fetchLocationsAPI, deleteLocation } from '@/lib/api/locations-api'
+import { logger } from '@/lib/logger'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
+import { Location } from '@/types/location'
 
 // 驗證圖片 URL 是否有效（避免 emoji 或無效 URL 傳遞給 img 標籤）
 const isValidImageUrl = (url: string | undefined): boolean => {

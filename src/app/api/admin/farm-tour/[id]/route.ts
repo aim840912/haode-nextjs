@@ -1,15 +1,15 @@
 import { NextRequest } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
-import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
-import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { ValidationError, NotFoundError } from '@/lib/errors'
 import { success } from '@/lib/api-response'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { ValidationError, NotFoundError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
 import {
   checkAdminPermission,
   createAuthErrorResponse,
 } from '@/lib/middleware/admin-auth-middleware'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 // DELETE - 刪除農場體驗活動 (管理員專用)
 async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

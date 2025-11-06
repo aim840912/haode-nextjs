@@ -1,3 +1,6 @@
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import { ErrorFactory, NotFoundError } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
 import {
   Product,
   CreateProductData,
@@ -5,9 +8,6 @@ import {
   ProductImage,
   InventoryStatus,
 } from '@/types/product'
-import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
-import { dbLogger } from '@/lib/logger'
-import { ErrorFactory, NotFoundError } from '@/lib/errors'
 import { ProductImageService } from './productImageService'
 
 export class ProductService {

@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { DevNoteUpdate } from '@/types/devNote'
 import { ValidationError } from '@/lib/errors'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { DevNoteUpdate } from '@/types/devNote'
 
 async function handleGET(request: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined

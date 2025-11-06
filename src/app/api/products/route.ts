@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server'
-import { productService } from '@/services/core/product/productService'
-import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { withAdminAndError } from '@/lib/middleware/api-middleware'
-import { PublicProductSchemas } from '@/lib/validation'
-import { ValidationError } from '@/lib/errors'
 import { success, created } from '@/lib/api-response'
+import { ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { PublicProductSchemas } from '@/lib/validation'
+import { productService } from '@/services/core/product/productService'
 
 async function handleGET(request: NextRequest) {
   // 驗證查詢參數

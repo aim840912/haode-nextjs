@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
+import { Star, ShoppingCart, Eye, Share2 } from 'lucide-react'
+import { UIverseButton } from '@/components/ui/buttons/UIverseButton'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
-import { UIverseButton } from '@/components/ui/buttons/UIverseButton'
-import { cn } from '@/lib/utils'
-import { Star, ShoppingCart, Eye, Share2 } from 'lucide-react'
-import { logger } from '@/lib/logger'
 
 // 動態載入圖片元件以提升效能
 const ProductCardImage = dynamic(

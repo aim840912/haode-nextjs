@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
-import SearchInput from '@/components/ui/search/SearchInput'
-import PopularSearches from '@/components/ui/search/PopularSearches'
+import { PopularSearches } from '@/components/ui/search/PopularSearches'
+import { SearchInput } from '@/components/ui/search/SearchInput'
 import { FilterState } from '@/hooks/useProductFilter'
 
 interface ProductFilterProps {
@@ -12,7 +12,7 @@ interface ProductFilterProps {
   totalCount: number
 }
 
-export default function ProductFilter({
+export function ProductFilter({
   onFilterChange,
   availableCategories,
   productCount,

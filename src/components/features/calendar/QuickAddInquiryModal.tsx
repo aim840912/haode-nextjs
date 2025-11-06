@@ -3,18 +3,18 @@
 import { useState, useEffect } from 'react'
 // 使用 HTML 符號替代 lucide-react
 // import { X } from 'lucide-react'
-import { logger } from '@/lib/logger'
+import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
 import { inquiryApi } from '@/lib/api-client'
+import { logger } from '@/lib/logger'
+import { formatDate } from '@/lib/utils/formatters'
+import { FarmTourActivity } from '@/types/farmTour'
+import { ApiResponse } from '@/types/infrastructure.types'
 import {
   CreateInquiryRequest,
   CreateInquiryItemRequest,
   InquiryType,
   InquiryWithItems,
 } from '@/types/inquiry'
-import { ApiResponse } from '@/types/infrastructure.types'
-import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
-import { FarmTourActivity } from '@/types/farmTour'
-import { formatDate } from '@/lib/utils/formatters'
 
 interface QuickAddInquiryModalProps {
   isOpen: boolean
@@ -23,7 +23,7 @@ interface QuickAddInquiryModalProps {
   onSuccess?: (inquiryId: string) => void
 }
 
-export default function QuickAddInquiryModal({
+export function QuickAddInquiryModal({
   isOpen,
   onClose,
   selectedDate,

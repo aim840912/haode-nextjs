@@ -6,7 +6,7 @@
  */
 
 import Link from 'next/link'
-import { FC, useMemo } from 'react'
+import { useMemo } from 'react'
 import {
   sanitizeStructuredData,
   validateStructuredData,
@@ -59,7 +59,7 @@ interface BreadcrumbStructuredDataProps {
  * - JSON-LD 資料放在 <script type="application/ld+json"> 中，不會被執行為 JavaScript
  * - 這是 Google、Schema.org 推薦的 SEO 標準做法
  */
-const BreadcrumbStructuredData: FC<BreadcrumbStructuredDataProps> = ({ items, baseUrl }) => {
+function BreadcrumbStructuredData({ items, baseUrl }: BreadcrumbStructuredDataProps) {
   const structuredData = useMemo(() => {
     const itemListElement = items.map((item, index) => ({
       '@type': 'ListItem',
@@ -103,14 +103,14 @@ const BreadcrumbStructuredData: FC<BreadcrumbStructuredDataProps> = ({ items, ba
 // 主要 Breadcrumbs 組件
 // ============================================================================
 
-const Breadcrumbs: FC<BreadcrumbsProps> = ({
+export function Breadcrumbs({
   items,
   className = '',
   separator = '/',
   showHome = true,
   enableStructuredData = true,
   baseUrl = 'https://haode-nextjs.vercel.app',
-}) => {
+}: BreadcrumbsProps) {
   // 準備最終的麵包屑項目列表
   const finalItems = useMemo(() => {
     const result: BreadcrumbItem[] = []
@@ -335,4 +335,4 @@ export const BreadcrumbVariants = {
 // 導出
 // ============================================================================
 
-export default Breadcrumbs
+// Breadcrumbs 已在上方使用 named export 導出

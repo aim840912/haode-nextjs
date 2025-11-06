@@ -9,7 +9,7 @@ interface ImageDebuggerProps {
   className?: string
 }
 
-export default function ImageDebugger({ imageUrl, className = '' }: ImageDebuggerProps) {
+export function ImageDebugger({ imageUrl, className = '' }: ImageDebuggerProps) {
   const [loadStatus, setLoadStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorDetails, setErrorDetails] = useState<string>('')
 

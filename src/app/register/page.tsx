@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/components/ui/feedback/Toast'
 import { useRouter } from 'next/navigation'
-import { logger } from '@/lib/logger'
+import { useToast } from '@/components/ui/feedback/Toast'
+import { useAuth } from '@/contexts/AuthContext'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
+import { logger } from '@/lib/logger'
 import { validatePhone } from '@/lib/utils/validation'
 
 // Force recompile

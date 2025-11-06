@@ -1,4 +1,5 @@
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { InquiryStatusFlowCompact } from '@/components/features/inquiry/InquiryStatusFlow'
 import {
   InquiryWithItems,
   InquiryStatus,
@@ -6,7 +7,6 @@ import {
   INQUIRY_STATUS_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { InquiryStatusFlowCompact } from '@/components/features/inquiry/InquiryStatusFlow'
 
 interface InquiryDetailPanelProps {
   inquiry: InquiryWithItems

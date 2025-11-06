@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { checkGAStatus } from '@/lib/analytics'
-import GA4TrackingExamples from '@/components/examples/GA4TrackingExamples'
-import AdminProtection from '@/components/features/admin/AdminProtection'
 import { ChartBarIcon } from '@heroicons/react/24/outline'
+import { GA4TrackingExamples } from '@/components/examples/GA4TrackingExamples'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { checkGAStatus } from '@/lib/analytics'
 
 interface GAStatus {
   isLoaded: boolean

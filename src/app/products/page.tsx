@@ -2,27 +2,30 @@
 
 import { useCallback, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { LoadingManager } from '@/components/ui/loading/LoadingManager'
-import { ErrorHandler } from '@/components/ui/error/ErrorHandler'
-import { ProductStructuredData } from '@/components/features/seo/StructuredData'
-import Breadcrumbs, { createProductBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
-import { ToastProvider } from '@/providers/ToastProvider'
-import { useProductInterest } from '@/hooks/useProductInterest'
-import { useProductFilter, FilterState } from '@/hooks/useProductFilter'
-import { useProductsData } from '@/hooks/useProductsData'
-import { useProductModal } from '@/hooks/useProductModal'
 import { ProductCard } from '@/components/features/products/ProductCard'
 import { ProductDetailModal } from '@/components/features/products/ProductDetailModal'
+import { ProductStructuredData } from '@/components/features/seo/StructuredData'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { ErrorHandler } from '@/components/ui/error/ErrorHandler'
+import { LoadingManager } from '@/components/ui/loading/LoadingManager'
+import { Breadcrumbs, createProductBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
+import { useProductFilter, FilterState } from '@/hooks/useProductFilter'
+import { useProductInterest } from '@/hooks/useProductInterest'
+import { useProductModal } from '@/hooks/useProductModal'
+import { useProductsData } from '@/hooks/useProductsData'
+import { ToastProvider } from '@/providers/ToastProvider'
 import { AdminControls } from './components/AdminControls'
 import { ProductsEmptyState } from './components/ProductsEmptyState'
 import { ProductsLoadingState } from './components/ProductsLoadingState'
 
 // 動態載入大型組件，提升初始載入速度
-const ProductFilter = dynamic(() => import('@/components/features/products/ProductFilter'), {
-  loading: () => <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>,
-  ssr: false,
-})
+const ProductFilter = dynamic(
+  () => import('@/components/features/products/ProductFilter').then(mod => mod.ProductFilter),
+  {
+    loading: () => <div className="h-16 bg-gray-100 rounded-lg animate-pulse"></div>,
+    ssr: false,
+  }
+)
 
 // 為測試目的擴展 Window 介面
 declare global {

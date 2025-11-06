@@ -1,15 +1,16 @@
 'use client'
 
 import { Suspense } from 'react'
-import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { useAuth } from '@/contexts/AuthContext'
 
 // 動態載入管理端產品表格組件
 const AdminProductsTable = dynamic(
-  () => import('@/components/features/products/AdminProductsTable'),
+  () =>
+    import('@/components/features/products/AdminProductsTable').then(mod => mod.AdminProductsTable),
   {
     loading: () => <div className="flex justify-center items-center h-64">載入產品清單中...</div>,
     ssr: false,

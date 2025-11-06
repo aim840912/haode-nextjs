@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { logger } from '@/lib/logger'
 import { createFarmTourInquiry } from '@/lib/api/farm-tour-api'
+import { logger } from '@/lib/logger'
 import { validatePhone } from '@/lib/utils/validation'
 import type { User } from '@/types/auth'
 import type { FarmTourActivity } from '@/types/farmTour'

@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react'
-import LoadingSpinner, { LoadingOverlay } from './LoadingSpinner'
 import { logger } from '@/lib/logger'
+import { LoadingSpinner, LoadingOverlay } from './LoadingSpinner'
 
 interface LoadingProgress {
   current: number

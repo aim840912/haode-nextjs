@@ -1,5 +1,5 @@
-import { ProductImage } from '@/types/product'
 import { apiLogger } from '@/lib/logger'
+import { ProductImage } from '@/types/product'
 
 export interface ImageSizeConfig {
   thumbnail: { width: 200; height: 200 }

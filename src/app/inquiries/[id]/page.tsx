@@ -1,13 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import {
+  LockClosedIcon,
+  ClipboardDocumentListIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline'
+import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { logger } from '@/lib/logger'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { fetchInquiryById } from '@/lib/api/inquiries-api'
+import { logger } from '@/lib/logger'
+import { formatDateTime, formatDate } from '@/lib/utils/formatters'
 import {
   InquiryWithItems,
   INQUIRY_STATUS_LABELS,
@@ -16,15 +25,6 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
-import { formatDateTime, formatDate } from '@/lib/utils/formatters'
-import {
-  LockClosedIcon,
-  ClipboardDocumentListIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline'
 
 interface InquiryDetailPageProps {
   params: Promise<{

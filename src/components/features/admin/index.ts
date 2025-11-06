@@ -1,1 +1,1 @@
-export { default as AdminProtection } from './AdminProtection'
+export { AdminProtection } from './AdminProtection'

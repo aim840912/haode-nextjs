@@ -1,25 +1,28 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { v4 as uuidv4 } from 'uuid'
-import { useAuth } from '@/contexts/AuthContext'
-import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import { useLocationForm } from '@/hooks/location/useLocationForm'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { FormMessage } from '@/components/features/location/FormMessage'
 import { LocationBasicInfo } from '@/components/features/location/LocationBasicInfo'
 import { LocationContactInfo } from '@/components/features/location/LocationContactInfo'
-import { LocationTransportInfo } from '@/components/features/location/LocationTransportInfo'
 import { LocationFeatures } from '@/components/features/location/LocationFeatures'
-import { LocationSpecialties } from '@/components/features/location/LocationSpecialties'
 import { LocationPreview } from '@/components/features/location/LocationPreview'
-import { FormMessage } from '@/components/features/location/FormMessage'
+import { LocationSpecialties } from '@/components/features/location/LocationSpecialties'
+import { LocationTransportInfo } from '@/components/features/location/LocationTransportInfo'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
+import { useAuth } from '@/contexts/AuthContext'
+import { useLocationForm } from '@/hooks/location/useLocationForm'
 import { ProductImage } from '@/types/product'
 
 // 動態載入圖片管理器，減少初始 bundle 大小
 const ProductImageManager = dynamic(
-  () => import('@/components/features/products/ProductImageManager'),
+  () =>
+    import('@/components/features/products/ProductImageManager').then(
+      mod => mod.ProductImageManager
+    ),
   {
     loading: () => (
       <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center text-gray-900 dark:text-gray-100">

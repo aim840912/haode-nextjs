@@ -1,18 +1,21 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import Link from 'next/link'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
-import { useProductImageSync } from './hooks/useProductImageSync'
-import { useProductForm } from './hooks/useProductForm'
 import { BasicInfoSection } from './components/BasicInfoSection'
 import { PriceInventorySection } from './components/PriceInventorySection'
+import { useProductForm } from './hooks/useProductForm'
+import { useProductImageSync } from './hooks/useProductImageSync'
 
 const ProductImageManager = dynamic(
-  () => import('@/components/features/products/ProductImageManager'),
+  () =>
+    import('@/components/features/products/ProductImageManager').then(
+      mod => mod.ProductImageManager
+    ),
   {
     loading: () => (
       <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">

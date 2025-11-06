@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchInquiries as fetchInquiriesAPI } from '@/lib/api/inquiries-api'
+import { logger } from '@/lib/logger'
 import type { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
 
 export interface UseInquiriesOptions {

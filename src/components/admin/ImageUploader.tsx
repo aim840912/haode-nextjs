@@ -12,7 +12,7 @@ interface ImageUploaderProps {
   maxSize?: number // MB
 }
 
-export default function ImageUploader({
+export function ImageUploader({
   currentImage,
   onUpload,
   onRemove,

@@ -9,7 +9,7 @@ interface TimePickerChineseProps {
   className?: string
 }
 
-export default function TimePickerChinese({
+export function TimePickerChinese({
   value,
   onChange,
   required = false,

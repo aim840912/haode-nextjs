@@ -1,24 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { logger } from '@/lib/logger'
-import { useAuth } from '@/contexts/AuthContext'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
-import { AuditLog } from '@/types/audit'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { deleteAuditLog, batchDeleteAuditLogs } from '@/lib/api/audit-logs-api'
+import { logger } from '@/lib/logger'
+import { AuditLog } from '@/types/audit'
 
 // Hooks
-import { useAuditLogsData } from './hooks/useAuditLogsData'
-import { useAuditLogFilters } from './hooks/useAuditLogFilters'
 
 // Components
+import { AuditLogDetailModal } from './components/AuditLogDetailModal'
 import { AuditLogFilters } from './components/AuditLogFilters'
 import { AuditLogsTable } from './components/AuditLogsTable'
-import { AuditLogDetailModal } from './components/AuditLogDetailModal'
 import { DeleteConfirmModal } from './components/DeleteConfirmModal'
+import { useAuditLogFilters } from './hooks/useAuditLogFilters'
+import { useAuditLogsData } from './hooks/useAuditLogsData'
 
 function AuditLogsPage() {
   const { user } = useAuth()

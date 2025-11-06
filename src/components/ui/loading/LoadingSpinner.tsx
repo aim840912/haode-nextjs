@@ -6,7 +6,7 @@ interface LoadingSpinnerProps {
   className?: string
 }
 
-export default function LoadingSpinner({
+export function LoadingSpinner({
   size = 'md',
   color = 'primary',
   className = '',

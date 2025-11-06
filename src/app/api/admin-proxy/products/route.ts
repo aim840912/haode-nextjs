@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * Admin Proxy API for Products

@@ -1,16 +1,16 @@
 'use client'
 
 import Link from 'next/link'
-import { InquiryWithItems, InquiryUtils } from '@/types/inquiry'
-import InquiryStatusBadge from './InquiryStatusBadge'
 import { formatDateTime } from '@/lib/utils/formatters'
+import { InquiryWithItems, InquiryUtils } from '@/types/inquiry'
+import { InquiryStatusBadge } from './InquiryStatusBadge'
 
 interface InquiryCardProps {
   inquiry: InquiryWithItems
   showActions?: boolean
 }
 
-export default function InquiryCard({ inquiry, showActions = true }: InquiryCardProps) {
+export function InquiryCard({ inquiry, showActions = true }: InquiryCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between">

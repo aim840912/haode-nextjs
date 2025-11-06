@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { logger } from '@/lib/logger'
-import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
-import { imageUrlValidator } from '@/lib/utils/image-url-validator'
-import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import Image from 'next/image'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
-import SortableImageGallery from '@/components/ui/image/SortableImageGallery'
+import { SortableImageGallery } from '@/components/ui/image/SortableImageGallery'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
+import { logger } from '@/lib/logger'
+import { imageUrlValidator } from '@/lib/utils/image-url-validator'
+import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
 
 interface UploadedImage {
   id: string
@@ -70,7 +70,7 @@ interface ImageUploaderProps {
   onDeleteInitialImage?: (imageUrl: string) => void
 }
 
-export default function ImageUploader({
+export function ImageUploader({
   productId,
   onUploadSuccess,
   onUploadError,

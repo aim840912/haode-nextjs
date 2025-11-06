@@ -5,10 +5,10 @@
  * 支援 Vercel KV 和內存快取
  */
 
-import { Product, ProductService } from '@/types/product'
-import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
 import { CacheKeys } from '@/lib/cache/cache-keys'
+import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
 import { cacheLogger } from '@/lib/logger'
+import { Product, ProductService } from '@/types/product'
 
 export class CachedProductService implements ProductService {
   private baseService: ProductService

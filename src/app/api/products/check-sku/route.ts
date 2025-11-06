@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * 檢查 SKU 是否重複的 API 端點

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import Image from 'next/image'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { logger } from '@/lib/logger'
 import { ProductImage } from '@/types/product'
-import Image from 'next/image'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 
 function getCSRFTokenFromCookie(): string | null {
   if (typeof document === 'undefined') return null

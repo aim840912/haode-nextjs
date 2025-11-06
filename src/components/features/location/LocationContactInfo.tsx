@@ -1,6 +1,6 @@
+import { TimeRangePicker } from '@/components/ui/form/TimeRangePicker'
+import { WeekdaySelector } from '@/components/ui/form/WeekdaySelector'
 import { LocationFormData, FieldErrors } from '@/hooks/location/useLocationForm'
-import TimeRangePicker from '@/components/ui/form/TimeRangePicker'
-import WeekdaySelector from '@/components/ui/form/WeekdaySelector'
 
 interface LocationContactInfoProps {
   formData: LocationFormData

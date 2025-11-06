@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchLocations as fetchLocationsAPI } from '@/lib/api/locations-api'
+import { logger } from '@/lib/logger'
 import type { Location } from '@/types/location'
 
 export interface UseLocationsReturn {

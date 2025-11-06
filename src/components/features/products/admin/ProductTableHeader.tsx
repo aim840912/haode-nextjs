@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import AdminProductFilter, { AdminFilterState } from '../AdminProductFilter'
+import { AdminProductFilter, AdminFilterState } from '../AdminProductFilter'
 import { SearchHistoryManager } from './utils/searchHistory'
 
 interface ProductTableHeaderProps {

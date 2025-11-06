@@ -1,16 +1,16 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { SocialLinks } from '@/components/features/social/SocialLinks'
 import AuthButton from '@/components/ui/button/AuthButton'
-import SocialLinks from '@/components/features/social/SocialLinks'
 import { ExpandableSearchBar } from '@/components/ui/ExpandableSearchBar'
 import { ThemeToggle } from '@/components/ui/theme/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 
-export default function Header() {
+export function Header() {
   const pathname = usePathname()
   const { user } = useAuth()
   const { stats } = useInquiryStatsContext()

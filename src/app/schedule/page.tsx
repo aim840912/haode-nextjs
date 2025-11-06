@@ -1,7 +1,7 @@
 'use client'
 
+import { Breadcrumbs, createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { useAuth } from '@/contexts/AuthContext'
-import Breadcrumbs, { createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { useSchedule } from '@/hooks/useSchedule'
 import { formatDate } from '@/lib/utils/formatters'
 

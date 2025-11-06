@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { UnifiedCacheManager, CacheOptions } from '@/lib/cache/unified-cache-manager'
 import { CacheTags } from '@/lib/cache/cache-keys'
+import { UnifiedCacheManager, CacheOptions } from '@/lib/cache/unified-cache-manager'
 import { cacheLogger } from '@/lib/logger'
 
 interface CacheMiddlewareOptions extends CacheOptions {

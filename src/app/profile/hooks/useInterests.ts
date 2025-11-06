@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import type { Product } from '@/types/product'
 import type { User } from '@/types/auth'
+import type { Product } from '@/types/product'
 
 export interface UseInterestsReturn {
   interestedProducts: string[]

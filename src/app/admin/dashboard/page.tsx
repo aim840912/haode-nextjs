@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import AdminProtection from '@/components/features/admin/AdminProtection'
 import {
   ChartBarIcon,
   CubeIcon,
@@ -13,6 +12,7 @@ import {
   Cog6ToothIcon,
   BugAntIcon,
 } from '@heroicons/react/24/outline'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
 export default function AdminDashboard() {
   return (

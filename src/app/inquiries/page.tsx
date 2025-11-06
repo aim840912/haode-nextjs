@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { useInquiries } from '@/hooks/useInquiries'
+import { formatDateTime } from '@/lib/utils/formatters'
 import {
   InquiryStatus,
   InquiryType,
@@ -15,7 +16,6 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { formatDateTime } from '@/lib/utils/formatters'
 
 function InquiriesPage() {
   const { user, isLoading: authLoading } = useAuth()

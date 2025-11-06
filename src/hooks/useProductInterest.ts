@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { fetchUserInterests, toggleUserInterest } from '@/lib/api/user-interests-api'
-import { useToast } from '@/components/ui/feedback/Toast'
 import { logger } from '@/lib/logger'
 
 export interface UseProductInterestReturn {

@@ -21,7 +21,7 @@ interface SocialLinksProps {
   className?: string
 }
 
-export default function SocialLinks({
+export function SocialLinks({
   size = 'md',
   orientation = 'horizontal',
   showLabels = false,

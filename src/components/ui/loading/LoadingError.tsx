@@ -2,8 +2,8 @@
 
 import { AlertTriangle, RefreshCw, AlertCircle, Wifi, WifiOff } from 'lucide-react'
 import { LoadingError as LoadingErrorType } from '@/hooks/useLoadingState'
-import LoadingSpinner from './LoadingSpinner'
 import { logger } from '@/lib/logger'
+import { LoadingSpinner } from './LoadingSpinner'
 
 interface LoadingErrorProps {
   error: LoadingErrorType | null

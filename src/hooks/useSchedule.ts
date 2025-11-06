@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchSchedule as fetchScheduleAPI, ScheduleItem } from '@/lib/api/schedule-api'
+import { logger } from '@/lib/logger'
 
 export type ScheduleStatus = 'all' | 'upcoming' | 'ongoing' | 'completed'
 

@@ -6,15 +6,15 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { fetchInquiryStats, type InquiryStatsData } from '@/lib/api/inquiries-api'
 import { logger } from '@/lib/logger'
+import { isRateLimitError, isNetworkError } from '@/lib/utils/error-utils'
 import {
   createCacheKey,
   formatUserFriendlyError,
   shouldShowErrorToUser,
   INQUIRY_STATS_CONSTANTS,
 } from '@/lib/utils/inquiry-stats-utils'
-import { isRateLimitError, isNetworkError } from '@/lib/utils/error-utils'
-import { fetchInquiryStats, type InquiryStatsData } from '@/lib/api/inquiries-api'
 
 // 全域請求去重機制
 interface PendingRequest {

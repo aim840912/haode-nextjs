@@ -2,11 +2,11 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import FullCalendar from '@fullcalendar/react'
-import { logger } from '@/lib/logger'
 import {
   fetchScheduleCalendar,
   type ScheduleCalendarEvent as APIScheduleCalendarEvent,
 } from '@/lib/api/schedule-api'
+import { logger } from '@/lib/logger'
 
 // 重新匯出類型供外部使用
 export type ScheduleCalendarEvent = APIScheduleCalendarEvent

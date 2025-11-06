@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
-import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/database/supabase-auth'
+import { logger } from '@/lib/logger'
 import {
   InquiryWithItems,
   InquiryStatus,

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import SocialLinks from '@/components/features/social/SocialLinks'
+import { SocialLinks } from '@/components/features/social/SocialLinks'
 
 // Contact Information SVG Icons
 const LocationIcon = ({ className }: { className?: string }) => (
@@ -35,7 +35,7 @@ const ClockIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-export default function Footer() {
+export function Footer() {
   return (
     <footer className="bg-green-900 dark:bg-green-900 text-white dark:text-green-50">
       <div className="max-w-7xl mx-auto px-6 py-8">

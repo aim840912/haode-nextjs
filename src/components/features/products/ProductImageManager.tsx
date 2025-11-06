@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { useProductImageManager, PendingImageChanges } from '@/hooks/useProductImageManager'
 import { ProductImage } from '@/types/product'
 
@@ -18,7 +18,7 @@ interface ProductImageManagerProps {
   onGetPendingChanges?: React.MutableRefObject<() => PendingImageChanges>
 }
 
-export default function ProductImageManager({
+export function ProductImageManager({
   productId,
   onImagesChange,
   maxImages = 10,

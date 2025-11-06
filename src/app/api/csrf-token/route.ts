@@ -6,10 +6,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { CSRFTokenManager, validateOrigin } from '@/lib/middleware/auth-middleware'
-import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { CSRFTokenManager, validateOrigin } from '@/lib/middleware/auth-middleware'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * GET /api/csrf-token

@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import Image from 'next/image'
-import { SearchResult, SearchResponse, SearchFilters } from '@/types/search'
+import Link from 'next/link'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import { searchContent } from '@/lib/api/search-api'
+import { SearchResult, SearchResponse, SearchFilters } from '@/types/search'
 
 interface SearchResultsProps {
   query: string

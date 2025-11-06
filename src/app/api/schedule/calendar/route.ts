@@ -1,7 +1,7 @@
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
-import { getScheduleService } from '@/services/factory/serviceFactory'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { getScheduleService } from '@/services/factory/serviceFactory'
 
 interface ScheduleCalendarEvent {
   id: string

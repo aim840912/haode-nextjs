@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchSearchStats, type SearchStatsResponse } from '@/lib/api/search-api'
+import { logger } from '@/lib/logger'
 
 interface PopularSearchesProps {
   onSearchSelect?: (query: string) => void
@@ -11,7 +11,7 @@ interface PopularSearchesProps {
   limit?: number
 }
 
-export default function PopularSearches({
+export function PopularSearches({
   onSearchSelect,
   className = '',
   showStats = false,

@@ -9,10 +9,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { AppError, ErrorFactory, ErrorUtils, ErrorResponse } from '@/lib/errors'
-import { logger, apiLogger } from '@/lib/logger'
-import { LogContext } from '@/lib/logger'
-import { recordApiRequest } from '@/lib/metrics'
 import {
   captureError,
   addBreadcrumb,
@@ -20,6 +16,9 @@ import {
   startTransaction,
   finishTransaction,
 } from '@/lib/error-tracking'
+import { AppError, ErrorFactory, ErrorUtils, ErrorResponse } from '@/lib/errors'
+import { logger, apiLogger, LogContext } from '@/lib/logger'
+import { recordApiRequest } from '@/lib/metrics'
 
 /**
  * API 路由處理器類型

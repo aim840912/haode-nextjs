@@ -1,7 +1,7 @@
 'use client'
 
-import { Product } from '@/types/product'
 import { SafeImage } from '@/components/ui/image/OptimizedImage'
+import { Product } from '@/types/product'
 import ProductTableActions from './ProductTableActions'
 
 interface ProductTableRowProps {

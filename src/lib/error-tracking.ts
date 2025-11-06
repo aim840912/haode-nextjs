@@ -12,9 +12,8 @@
  * 未來可擴展：Sentry, LogRocket, Rollbar 等
  */
 
-import { LogContext } from './logger'
-import { logger } from './logger'
 import { Transaction } from '@/types/api.types'
+import { LogContext, logger } from './logger'
 
 /**
  * 錯誤追蹤提供者介面

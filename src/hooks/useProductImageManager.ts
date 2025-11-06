@@ -8,9 +8,9 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react'
+import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import { logger } from '@/lib/logger'
 import { ProductImage } from '@/types/product'
-import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 
 export interface PendingImageChanges {
   deletedIds: string[]

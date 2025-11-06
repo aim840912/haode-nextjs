@@ -101,14 +101,14 @@ const StyledButton = styled.button<{ $disabled?: boolean }>`
  * - 黑色陰影系統
  * - 圓角設計 (border-radius: 2em)
  */
-export const UIverseButton: React.FC<UIverseButtonProps> = ({
+export function UIverseButton({
   children,
   onClick,
   disabled = false,
   className,
   type = 'button',
   ...props
-}) => {
+}: UIverseButtonProps) {
   return (
     <StyledButton
       type={type}
