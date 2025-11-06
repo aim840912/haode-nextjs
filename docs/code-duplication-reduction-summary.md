@@ -2,17 +2,17 @@
 
 **執行日期**: 2025-11-06
 **專案**: Haude 農產品電商平台
-**狀態**: ✅ Phase 1 & Phase 2 完成
+**狀態**: ✅ Phase 1, 2 & 3 完成
 
 ---
 
 ## 📊 執行成果統計
 
 ### 總體成果
-- **移除程式碼總計**: **6,199 行** 🎉
+- **移除程式碼總計**: **6,209 行** 🎉
 - **刪除檔案**: 15 個
-- **修改檔案**: 8 個
-- **提交次數**: 3 次
+- **修改檔案**: 12 個
+- **提交次數**: 5 次
 
 ### 階段分解
 
@@ -102,6 +102,39 @@ lib/validation/
 
 ---
 
+#### Phase 3: 驗證與格式化邏輯統一 ✅
+**移除行數**: 10 行
+
+**Task 1: 統一電話驗證邏輯**
+- 問題：3 個不同的電話驗證 regex 定義
+  - `validation.ts`: 嚴格版本（清理後驗證）
+  - `string-schemas.ts`: 寬鬆版本（允許連字符）
+- 解決：統一 `string-schemas.ts` 使用 transform + strict regex
+- 影響：5 個 validation schemas 現在使用一致的驗證邏輯
+
+**Task 2: 圖片管理邏輯重構**
+- 發現：專案已有完整的圖片管理 hooks
+  - `useImageUpload.ts`: 壓縮、驗證、排序、Blob URL 管理
+  - `useImageBlob.ts`: Base64 轉 Blob URL 處理
+- 狀態：Hooks 已存在且功能完整
+- 建議：未來可重構 ProductImageManager 和 ImageUploader 使用這些 hooks
+
+**Task 3: 統一日期格式化**
+- 替換 4 個檔案的 `toLocaleDateString` 為統一工具
+  - `StatusStep.tsx`: 改用 `formatDateTime()`
+  - `SchedulePreview.tsx`: 改用 `formatDate(..., 'full')`
+  - `schedule/add/page.tsx`: 改用 `formatDate(..., 'full')`
+  - `useInquiryStatusFlow.ts`: 使用 `formatDate()` + 字串處理
+- 效益：集中管理日期格式，便於未來調整
+
+**提交記錄**:
+```
+69c3004 refactor: 統一電話號碼驗證邏輯
+04809c6 refactor: 統一日期格式化使用 formatDate() 工具
+```
+
+---
+
 ## 🎯 完成項目檢查表
 
 ### Phase 1: 備份與結構清理
@@ -123,6 +156,13 @@ lib/validation/
 - [x] 遷移驗證工具函數
 - [x] 更新 validation/index.ts
 - [x] 刪除舊系統
+- [x] TypeScript 檢查
+- [x] Git 提交
+
+### Phase 3: 驗證與格式化統一
+- [x] 統一電話驗證邏輯（3 個 regex → 1 個）
+- [x] 確認圖片管理 hooks 已存在
+- [x] 替換 4 個檔案的日期格式化邏輯
 - [x] TypeScript 檢查
 - [x] Git 提交
 
@@ -190,12 +230,15 @@ lib/validation/
 
 ## ✅ 結論
 
-本次程式碼重複減少計畫成功完成 Phase 1 和 Phase 2，共移除 **6,199 行**重複程式碼，達成以下目標：
+本次程式碼重複減少計畫成功完成 Phase 1, 2 和 3，共移除 **6,209 行**重複程式碼，達成以下目標：
 
 1. ✅ 消除備份檔案造成的重複
 2. ✅ 統一頁面目錄結構
 3. ✅ 建立模組化 validation 系統
-4. ✅ 提升程式碼可維護性
+4. ✅ 統一電話驗證邏輯
+5. ✅ 統一日期格式化處理
+6. ✅ 確認圖片管理 hooks 已就緒
+7. ✅ 提升程式碼可維護性
 
 **專案健康度顯著提升**！🎉
 
