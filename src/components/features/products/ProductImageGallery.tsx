@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { OptimizedImage } from '@/components/ui/image/OptimizedImage'
 import { generateImageUrlsFromSupabaseUrl, preloadImages } from '@/lib/utils/image-utils'
 import { Product } from '@/types/product'
+import { cn } from '@/lib/utils/cn'
 
 interface ProductImageGalleryProps {
   product: Product
@@ -74,7 +75,7 @@ export function ProductImageGallery({
 
   if (imageUrls.length === 0) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
+      <div className={cn('flex items-center justify-center bg-gray-100', className)}>
         <div className="text-gray-500 text-center">
           <div className="text-4xl mb-2">📷</div>
           <div>暫無商品圖片</div>
@@ -87,11 +88,16 @@ export function ProductImageGallery({
     <div className={className}>
       {/* 主圖片顯示區域 - 優雅框架內的圖片 */}
       <div
-        className={`relative bg-white overflow-hidden group ${className.includes('elegant-frame') ? 'rounded-lg' : 'rounded-2xl shadow-2xl shadow-black/10 border border-white/20'}`}
+        className={cn(
+          'relative bg-white overflow-hidden group',
+          className.includes('elegant-frame')
+            ? 'rounded-lg'
+            : 'rounded-2xl shadow-2xl shadow-black/10 border border-white/20'
+        )}
       >
         {/* 圖片容器 - 適應父容器高度 */}
         <div
-          className={`relative ${className.includes('h-full') ? 'h-full min-h-[300px]' : ''}`}
+          className={cn('relative', className.includes('h-full') && 'h-full min-h-[300px]')}
           style={!className.includes('h-full') ? { paddingBottom: '100%' } : {}}
         >
           <Image
@@ -158,11 +164,12 @@ export function ProductImageGallery({
           <>
             <button
               onClick={handlePrevious}
-              className={`absolute left-2 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 ${
+              className={cn(
+                'absolute left-2 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110',
                 className.includes('elegant-frame')
                   ? 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 text-amber-800 hover:text-amber-900 p-2 rounded-lg shadow-md border border-amber-200/50'
                   : 'bg-white/90 hover:bg-white text-gray-700 hover:text-amber-600 p-3 rounded-full shadow-lg hover:shadow-xl backdrop-blur-sm'
-              }`}
+              )}
               aria-label="上一張圖片"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -177,11 +184,12 @@ export function ProductImageGallery({
 
             <button
               onClick={handleNext}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110 ${
+              className={cn(
+                'absolute right-2 top-1/2 -translate-y-1/2 transition-all duration-300 opacity-0 group-hover:opacity-100 hover:scale-110',
                 className.includes('elegant-frame')
                   ? 'bg-gradient-to-r from-amber-100 to-orange-100 hover:from-amber-200 hover:to-orange-200 text-amber-800 hover:text-amber-900 p-2 rounded-lg shadow-md border border-amber-200/50'
                   : 'bg-white/90 hover:bg-white text-gray-700 hover:text-amber-600 p-3 rounded-full shadow-lg hover:shadow-xl backdrop-blur-sm'
-              }`}
+              )}
               aria-label="下一張圖片"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,11 +211,12 @@ export function ProductImageGallery({
               <button
                 key={index}
                 onClick={() => handleImageChange(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-125 ${
+                className={cn(
+                  'w-3 h-3 rounded-full transition-all duration-300 hover:scale-125',
                   index === currentImageIndex
                     ? 'bg-white shadow-lg'
                     : 'bg-white/60 hover:bg-white/80'
-                }`}
+                )}
                 aria-label={`切換到第 ${index + 1} 張圖片`}
               />
             ))}
@@ -231,11 +240,12 @@ export function ProductImageGallery({
             <button
               key={index}
               onClick={() => handleImageChange(index)}
-              className={`flex-shrink-0 w-18 h-18 rounded-xl overflow-hidden transition-all duration-300 hover:scale-110 ${
+              className={cn(
+                'flex-shrink-0 w-18 h-18 rounded-xl overflow-hidden transition-all duration-300 hover:scale-110',
                 index === currentImageIndex
                   ? 'ring-2 ring-gray-400 shadow-lg shadow-gray-400/20 scale-105'
                   : 'ring-2 ring-gray-200 hover:ring-gray-300 hover:shadow-md'
-              }`}
+              )}
             >
               <OptimizedImage
                 src={url}
@@ -282,7 +292,7 @@ export function SimpleProductImage({
   }
 
   return (
-    <div className={`relative overflow-hidden rounded-lg ${className}`}>
+    <div className={cn('relative overflow-hidden rounded-lg', className)}>
       <OptimizedImage
         src={imageUrl}
         alt={product.name}
@@ -331,7 +341,7 @@ export function ProductCardImage({
   const loadingStrategy = shouldPrioritize ? 'eager' : 'lazy'
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={cn('relative overflow-hidden', className)}>
       {/* 使用 padding-bottom 技巧創建響應式容器 */}
       <div style={{ paddingBottom }} className="relative">
         <Image
