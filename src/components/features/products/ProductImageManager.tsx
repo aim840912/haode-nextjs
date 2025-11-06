@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { useProductImageManager, PendingImageChanges } from '@/hooks/useProductImageManager'
 import { ProductImage } from '@/types/product'
+import { cn } from '@/lib/utils/cn'
 
 export type { PendingImageChanges } from '@/hooks/useProductImageManager'
 
@@ -81,14 +82,14 @@ export function ProductImageManager({
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center p-8 ${className}`}>
+      <div className={cn('flex items-center justify-center p-8', className)}>
         <LoadingSpinner size="lg" />
       </div>
     )
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-4', className)}>
       {/* 錯誤訊息 */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
@@ -141,15 +142,18 @@ export function ProductImageManager({
                 onDragStart={() => !isPendingDelete && handleDragStart(index)}
                 onDragOver={e => !isPendingDelete && handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
-                className={`relative group rounded-lg overflow-hidden transition-all ${
+                className={cn(
+                  'relative group rounded-lg overflow-hidden transition-all',
                   isPendingDelete
                     ? 'border-2 border-dashed border-red-400 opacity-60 cursor-not-allowed'
-                    : `cursor-move border-2 ${
+                    : cn(
+                        'cursor-move border-2',
                         image.display_position === 0
                           ? 'border-amber-500 ring-2 ring-amber-200 dark:ring-amber-800'
                           : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                      }`
-                } ${draggedIndex === index ? 'opacity-50' : ''}`}
+                      ),
+                  draggedIndex === index && 'opacity-50'
+                )}
               >
                 {/* 待刪除標籤 */}
                 {isPendingDelete && (
