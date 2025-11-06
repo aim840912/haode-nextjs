@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils/cn'
+
 interface LoadingSkeletonProps {
   className?: string
   variant?: 'text' | 'card' | 'circle' | 'rectangle'
@@ -18,19 +20,16 @@ export function LoadingSkeleton({
   switch (variant) {
     case 'text':
       return (
-        <div className={`space-y-2 ${className}`}>
+        <div className={cn('space-y-2', className)}>
           {Array.from({ length: lines }).map((_, i) => (
-            <div
-              key={i}
-              className={`${baseClasses} ${height} ${i === lines - 1 ? 'w-3/4' : width}`}
-            />
+            <div key={i} className={cn(baseClasses, height, i === lines - 1 ? 'w-3/4' : width)} />
           ))}
         </div>
       )
 
     case 'card':
       return (
-        <div className={`${baseClasses} p-6 ${className}`}>
+        <div className={cn(baseClasses, 'p-6', className)}>
           <div className="space-y-4">
             <div className="h-4 bg-gray-300 rounded w-3/4"></div>
             <div className="space-y-2">
@@ -42,11 +41,11 @@ export function LoadingSkeleton({
       )
 
     case 'circle':
-      return <div className={`${baseClasses} rounded-full ${height} ${width} ${className}`} />
+      return <div className={cn(baseClasses, 'rounded-full', height, width, className)} />
 
     case 'rectangle':
     default:
-      return <div className={`${baseClasses} ${height} ${width} ${className}`} />
+      return <div className={cn(baseClasses, height, width, className)} />
   }
 }
 

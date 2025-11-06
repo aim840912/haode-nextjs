@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
+import { cn } from '@/lib/utils/cn'
 import { useImageBlob } from '@/hooks/useImageBlob'
 import { logger } from '@/lib/logger'
 import { handleImageError } from '@/lib/utils/image-utils'
@@ -199,9 +200,7 @@ export function OptimizedImage({
     !finalSrc.startsWith('blob:') &&
     (finalSrc.startsWith('http://') || finalSrc.startsWith('https://'))
 
-  const containerClassName = fill
-    ? `relative overflow-hidden ${className}`
-    : `relative overflow-hidden ${className}`
+  const containerClassName = cn('relative overflow-hidden', className)
 
   if (fill) {
     return (
@@ -224,9 +223,10 @@ export function OptimizedImage({
               src={finalSrc}
               alt={alt}
               {...(needsCrossOrigin && { crossOrigin: 'anonymous' })}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
+              className={cn(
+                'w-full h-full object-cover transition-opacity duration-300',
                 isLoading ? 'opacity-0' : 'opacity-100'
-              }`}
+              )}
               onLoad={handleLoad}
               onError={handleError}
               style={{ objectFit: 'cover' }}
@@ -238,9 +238,10 @@ export function OptimizedImage({
               src={finalSrc}
               alt={alt}
               {...(needsCrossOrigin && { crossOrigin: 'anonymous' })}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${
+              className={cn(
+                'w-full h-full object-cover transition-opacity duration-300',
                 isLoading ? 'opacity-0' : 'opacity-100'
-              }`}
+              )}
               style={{ objectFit: 'cover' }}
               onLoad={handleLoad}
               onError={handleError}
@@ -283,7 +284,11 @@ export function OptimizedImage({
             {...(needsCrossOrigin && { crossOrigin: 'anonymous' })}
             width={width || 400}
             height={height || 300}
-            className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'} ${className}`}
+            className={cn(
+              'transition-opacity duration-300',
+              isLoading ? 'opacity-0' : 'opacity-100',
+              className
+            )}
             onLoad={handleLoad}
             onError={handleError}
             style={{ objectFit: 'cover', maxWidth: '100%', height: 'auto' }}
@@ -300,7 +305,10 @@ export function OptimizedImage({
             quality={quality}
             placeholder={placeholder}
             blurDataURL={blurDataURL || defaultBlurDataURL}
-            className={`transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+            className={cn(
+              'transition-opacity duration-300',
+              isLoading ? 'opacity-0' : 'opacity-100'
+            )}
             onLoad={handleLoad}
             onError={handleError}
           />
@@ -343,7 +351,7 @@ export function ResponsiveImage({
   const paddingBottom = paddingBottomMap[aspectRatio] || '100%'
 
   return (
-    <div className={`relative overflow-hidden ${className}`}>
+    <div className={cn('relative overflow-hidden', className)}>
       <div style={{ paddingBottom }} className="relative">
         <div className="absolute inset-0">
           <OptimizedImage
@@ -393,7 +401,7 @@ export function AvatarImage({
       alt={alt}
       width={sizePx[size].width}
       height={sizePx[size].height}
-      className={`rounded-full object-cover ${sizeClasses[size]} ${className}`}
+      className={cn('rounded-full object-cover', sizeClasses[size], className)}
       {...props}
     />
   )
@@ -423,7 +431,7 @@ export function ResponsiveSimpleImage({
   aspectRatio?: 'aspect-square' | 'aspect-video' | 'aspect-[4/3]' | 'aspect-[3/2]'
 }) {
   return (
-    <div className={`relative ${aspectRatio} overflow-hidden ${className}`}>
+    <div className={cn('relative', aspectRatio, 'overflow-hidden', className)}>
       <OptimizedImage
         src={src}
         alt={alt}

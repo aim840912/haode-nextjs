@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { cn } from '@/lib/utils/cn'
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
@@ -101,13 +102,18 @@ export function SubmissionProgress({
 
   return (
     <div
-      className={`border rounded-lg p-4 ${statusDisplay.bgColor} ${statusDisplay.borderColor} ${className}`}
+      className={cn(
+        'border rounded-lg p-4',
+        statusDisplay.bgColor,
+        statusDisplay.borderColor,
+        className
+      )}
     >
       {/* 標題區域 */}
       <div className="flex items-center space-x-3 mb-3">
         <div className={statusDisplay.color}>{statusDisplay.icon}</div>
         <div>
-          <h3 className={`font-medium ${statusDisplay.color}`}>
+          <h3 className={cn('font-medium', statusDisplay.color)}>
             {status.isComplete ? '提交完成' : status.errors?.length ? '提交失敗' : '正在提交'}
           </h3>
           {status.message && <p className="text-sm text-gray-600 mt-1">{status.message}</p>}
@@ -123,7 +129,10 @@ export function SubmissionProgress({
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
-              className={`h-2 rounded-full transition-all duration-500 ease-out ${statusDisplay.progressColor}`}
+              className={cn(
+                'h-2 rounded-full transition-all duration-500 ease-out',
+                statusDisplay.progressColor
+              )}
               style={{ width: `${displayProgress}%` }}
             />
           </div>

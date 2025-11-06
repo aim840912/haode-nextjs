@@ -1,6 +1,7 @@
 'use client'
 
 import { ComponentType } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { LoadingSkeleton, ProductCardSkeleton, ListItemSkeleton } from './LoadingSkeleton'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -58,7 +59,7 @@ export function PageLoader({
   itemCount = 3,
   minHeight = 'min-h-screen',
 }: PageLoaderProps) {
-  const baseClasses = `${minHeight} bg-gray-50 flex items-center justify-center ${className}`
+  const baseClasses = cn(minHeight, 'bg-gray-50 flex items-center justify-center', className)
 
   const renderContent = () => {
     switch (type) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { cn } from '@/lib/utils/cn'
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions'
 
 interface SearchInputProps {
@@ -152,7 +153,10 @@ export function SearchInput({
           onFocus={handleFocus}
           onBlur={handleBlur}
           placeholder={placeholder}
-          className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-gray-900 placeholder-gray-500 bg-white pr-10 ${className}`}
+          className={cn(
+            'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-gray-900 placeholder-gray-500 bg-white pr-10',
+            className
+          )}
         />
 
         {/* 載入指示器 */}
@@ -205,9 +209,10 @@ export function SearchInput({
             <button
               key={`${option}-${index}`}
               onClick={() => handleSelectItem(option)}
-              className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2 ${
+              className={cn(
+                'w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center gap-2',
                 index === focusedIndex ? 'bg-amber-50 text-amber-900' : 'text-gray-700'
-              }`}
+              )}
             >
               {/* 圖示 */}
               {value.length < 2 ? (

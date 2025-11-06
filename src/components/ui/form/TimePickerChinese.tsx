@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils/cn'
 
 interface TimePickerChineseProps {
   value: string // HH:mm 格式 (24小時制)
@@ -80,7 +81,7 @@ export function TimePickerChinese({
   const minuteOptions = Array.from({ length: 60 }, (_, i) => i)
 
   return (
-    <div className={`flex gap-2 ${className}`}>
+    <div className={cn('flex gap-2', className)}>
       {/* 上午/下午 選擇器 */}
       <select
         value={period}

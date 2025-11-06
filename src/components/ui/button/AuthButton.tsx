@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils/cn'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
@@ -244,7 +245,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
   // 在客戶端掛載前，顯示統一的初始狀態以避免 hydration 錯誤
   if (!hasMounted) {
     return (
-      <div className={`${baseClasses} ${loginClasses}`} suppressHydrationWarning>
+      <div className={cn(baseClasses, loginClasses)} suppressHydrationWarning>
         {isMobile ? (
           <>
             <UserIcon className="w-4 h-4 inline mr-1" />
@@ -263,7 +264,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
   // 客戶端已掛載但正在載入時，顯示載入狀態
   if (isLoading) {
     return (
-      <div className={`${baseClasses} ${loginClasses}`}>
+      <div className={cn(baseClasses, loginClasses)}>
         {isMobile ? (
           <>
             <UserIcon className="w-4 h-4 inline mr-1" />
@@ -285,14 +286,16 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
       <div className="relative" ref={dropdownRef}>
         <button
           onClick={toggleDropdown}
-          className={`${baseClasses} text-green-900 bg-green-50 hover:bg-green-100 ${
-            isDropdownOpen ? 'bg-green-100' : ''
-          }`}
+          className={cn(
+            baseClasses,
+            'text-green-900 bg-green-50 hover:bg-green-100',
+            isDropdownOpen && 'bg-green-100'
+          )}
         >
           <UserIcon className="w-4 h-4" />
           {isMobile ? <span className="sr-only">{user.name}</span> : <span>{user.name}</span>}
           <svg
-            className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+            className={cn('w-4 h-4 transition-transform', isDropdownOpen && 'rotate-180')}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -304,7 +307,10 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
         {/* 下拉選單 */}
         {isDropdownOpen && (
           <div
-            className={`absolute right-0 mt-2 ${isMobile ? 'w-56' : 'w-48'} bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50`}
+            className={cn(
+              'absolute right-0 mt-2 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50',
+              isMobile ? 'w-56' : 'w-48'
+            )}
           >
             <div className="px-4 py-2 text-sm text-gray-600 border-b border-gray-100">
               {user.email}
@@ -363,7 +369,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
   // 客戶端已掛載且無用戶資料時，顯示登入連結
   return (
     <div className="relative">
-      <Link href="/login" className={`${baseClasses} ${loginClasses} block`}>
+      <Link href="/login" className={cn(baseClasses, loginClasses, 'block')}>
         {isMobile ? (
           <>
             <UserIcon className="w-4 h-4 inline mr-1" />

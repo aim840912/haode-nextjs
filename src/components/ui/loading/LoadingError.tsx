@@ -1,6 +1,7 @@
 'use client'
 
 import { AlertTriangle, RefreshCw, AlertCircle, Wifi, WifiOff } from 'lucide-react'
+import { cn } from '@/lib/utils/cn'
 import { LoadingError as LoadingErrorType } from '@/hooks/useLoadingState'
 import { logger } from '@/lib/logger'
 import { LoadingSpinner } from './LoadingSpinner'
@@ -91,7 +92,10 @@ export function LoadingError({
 
   const renderInlineError = () => (
     <div
-      className={`flex items-center space-x-3 p-3 bg-red-50 border border-red-200 rounded-lg ${className}`}
+      className={cn(
+        'flex items-center space-x-3 p-3 bg-red-50 border border-red-200 rounded-lg',
+        className
+      )}
     >
       {getErrorIcon()}
       <div className="flex-1">
@@ -116,7 +120,7 @@ export function LoadingError({
   )
 
   const renderCardError = () => (
-    <div className={`bg-white border border-red-200 rounded-lg shadow-sm p-6 ${className}`}>
+    <div className={cn('bg-white border border-red-200 rounded-lg shadow-sm p-6', className)}>
       <div className="flex items-start space-x-4">
         <div className="flex-shrink-0">{getErrorIcon()}</div>
         <div className="flex-1">
@@ -167,7 +171,10 @@ export function LoadingError({
 
   const renderFullscreenError = () => (
     <div
-      className={`min-h-screen flex items-center justify-center bg-gray-50 px-6 py-8 ${className}`}
+      className={cn(
+        'min-h-screen flex items-center justify-center bg-gray-50 px-6 py-8',
+        className
+      )}
     >
       <div className="max-w-md w-full bg-white border border-red-200 rounded-lg shadow-lg p-8 text-center">
         <div className="flex justify-center mb-6">

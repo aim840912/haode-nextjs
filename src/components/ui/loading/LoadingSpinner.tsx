@@ -1,5 +1,7 @@
 'use client'
 
+import { cn } from '@/lib/utils/cn'
+
 interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl'
   color?: 'primary' | 'secondary' | 'white' | 'gray'
@@ -39,12 +41,12 @@ export function LoadingSpinner({
 
   return (
     <div
-      className={`
-        ${getSizeClass()} 
-        border-2 border-t-transparent rounded-full animate-spin
-        ${getColorClass()}
-        ${className}
-      `}
+      className={cn(
+        getSizeClass(),
+        'border-2 border-t-transparent rounded-full animate-spin',
+        getColorClass(),
+        className
+      )}
       role="status"
       aria-label="載入中"
     >
@@ -93,14 +95,14 @@ export function LoadingButton({
       {...props}
       onClick={loading ? undefined : onClick}
       disabled={disabled || loading}
-      className={`
-        relative flex items-center justify-center space-x-2 transition-opacity
-        ${loading ? 'cursor-not-allowed opacity-75' : ''}
-        ${className}
-      `}
+      className={cn(
+        'relative flex items-center justify-center space-x-2 transition-opacity',
+        loading && 'cursor-not-allowed opacity-75',
+        className
+      )}
     >
       {loading && <LoadingSpinner size="sm" color="white" className="mr-2" />}
-      <span className={loading ? 'opacity-75' : ''}>{children}</span>
+      <span className={cn(loading && 'opacity-75')}>{children}</span>
     </button>
   )
 }
@@ -108,7 +110,7 @@ export function LoadingButton({
 // 卡片載入狀態
 export function LoadingCard({ className = '' }: { className?: string }) {
   return (
-    <div className={`animate-pulse ${className}`}>
+    <div className={cn('animate-pulse', className)}>
       <div className="bg-gray-200 rounded-lg p-6">
         <div className="h-4 bg-gray-300 rounded mb-4"></div>
         <div className="h-4 bg-gray-300 rounded mb-2 w-3/4"></div>
@@ -121,7 +123,7 @@ export function LoadingCard({ className = '' }: { className?: string }) {
 // 列表載入狀態
 export function LoadingList({ items = 3, className = '' }: { items?: number; className?: string }) {
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-4', className)}>
       {Array.from({ length: items }).map((_, index) => (
         <div key={index} className="animate-pulse">
           <div className="flex space-x-4">
