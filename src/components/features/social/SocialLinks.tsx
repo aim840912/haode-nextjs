@@ -1,5 +1,7 @@
 'use client'
 
+import { cn } from '@/lib/utils/cn'
+
 // Facebook SVG Icon
 const FacebookIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -54,22 +56,23 @@ export function SocialLinks({
   ]
 
   return (
-    <div className={`${containerClasses} ${className}`}>
+    <div className={cn(containerClasses, className)}>
       {socialLinks.map(social => (
         <a
           key={social.name}
           href={social.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={`
-            ${sizeClasses[size]} 
-            bg-green-100 text-green-900 
-            rounded-full flex items-center justify-center 
-            transition-all duration-300 
-            ${social.bgColor} hover:text-white 
-            hover:scale-110 hover:shadow-lg
-            group
-          `}
+          className={cn(
+            sizeClasses[size],
+            'bg-green-100 text-green-900',
+            'rounded-full flex items-center justify-center',
+            'transition-all duration-300',
+            social.bgColor,
+            'hover:text-white',
+            'hover:scale-110 hover:shadow-lg',
+            'group'
+          )}
           title={`關注我們的 ${social.name}`}
         >
           <div className="group-hover:scale-110 transition-transform duration-200">

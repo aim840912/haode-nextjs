@@ -6,6 +6,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils/cn'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
@@ -109,7 +110,7 @@ export function InquiryNotificationBadge({
         : '庫存查詢'
 
     return showIcon ? (
-      <div className={`relative ${currentSize.container} ${className}`}>
+      <div className={cn('relative', currentSize.container, className)}>
         <button
           onClick={handleClick}
           className={`w-full h-full flex items-center justify-center bg-amber-100 text-amber-900 rounded-full transition-all duration-300 hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg group`}
@@ -139,16 +140,16 @@ export function InquiryNotificationBadge({
   }
 
   return (
-    <div className={`relative ${currentSize.container} ${className}`}>
+    <div className={cn('relative', currentSize.container, className)}>
       <button
         onClick={handleClick}
-        className={`
-          w-full h-full flex items-center justify-center rounded-full
-          bg-amber-100 text-amber-900
-          transition-all duration-300 group
-          hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg
-          ${hasUnread ? 'animate-pulse' : ''}
-        `}
+        className={cn(
+          'w-full h-full flex items-center justify-center rounded-full',
+          'bg-amber-100 text-amber-900',
+          'transition-all duration-300 group',
+          'hover:bg-amber-700 hover:text-white hover:scale-110 hover:shadow-lg',
+          hasUnread && 'animate-pulse'
+        )}
         title={`庫存查詢${hasUnread ? ` (${unreadCount} 未讀)` : ''}`}
       >
         {showIcon && (
@@ -162,16 +163,18 @@ export function InquiryNotificationBadge({
         {/* 未讀數量徽章 */}
         {hasUnread && (
           <span
-            className={`
-              absolute ${currentSize.badgePosition} ${currentSize.badge}
-              bg-red-500 text-white font-bold
-              flex items-center justify-center
-              rounded-full border-2 border-white
-              group-hover:bg-red-600
-              transition-colors duration-200
-              shadow-sm
-              ${hasUnread ? 'animate-bounce' : ''}
-            `}
+            className={cn(
+              'absolute',
+              currentSize.badgePosition,
+              currentSize.badge,
+              'bg-red-500 text-white font-bold',
+              'flex items-center justify-center',
+              'rounded-full border-2 border-white',
+              'group-hover:bg-red-600',
+              'transition-colors duration-200',
+              'shadow-sm',
+              hasUnread && 'animate-bounce'
+            )}
             style={{
               animationDuration: hasUnread ? '2s' : undefined,
               animationIterationCount: hasUnread ? 'infinite' : undefined,
