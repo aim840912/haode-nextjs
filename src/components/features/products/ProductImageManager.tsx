@@ -1,23 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { logger } from '@/lib/logger'
-import { ProductImage } from '@/types/product'
+import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { useProductImageManager, PendingImageChanges } from '@/hooks/useProductImageManager'
+import { ProductImage } from '@/types/product'
 
-function getCSRFTokenFromCookie(): string | null {
-  if (typeof document === 'undefined') return null
-  const cookies = document.cookie.split(';')
-  const csrfCookie = cookies.find(cookie => cookie.trim().startsWith('csrf-token='))
-  return csrfCookie ? csrfCookie.split('=')[1] : null
-}
-
-export interface PendingImageChanges {
-  deletedIds: string[]
-  newImages: File[]
-  reorderedImages: { id: string; position: number }[]
-}
+export type { PendingImageChanges } from '@/hooks/useProductImageManager'
 
 interface ProductImageManagerProps {
   productId: string
@@ -38,493 +27,37 @@ export default function ProductImageManager({
   onPendingChanges,
   onGetPendingChanges,
 }: ProductImageManagerProps) {
-  const [images, setImages] = useState<ProductImage[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isUploading, setIsUploading] = useState(false)
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  // 追蹤 Blob URLs 以便清理記憶體
-  const blobUrlsRef = useRef<Set<string>>(new Set())
-
-  // Edit 模式專用：追蹤待處理的變更
-  const [pendingDeletes, setPendingDeletes] = useState<Set<string>>(new Set())
-  const [pendingUploads, setPendingUploads] = useState<File[]>([])
-  const [hasReordered, setHasReordered] = useState(false)
-
-  // 清理單一 Blob URL
-  const revokeBlobUrl = useCallback((url: string) => {
-    if (url.startsWith('blob:')) {
-      URL.revokeObjectURL(url)
-      blobUrlsRef.current.delete(url)
-    }
-  }, [])
-
-  // 清理所有 Blob URLs
-  const revokeAllBlobUrls = useCallback(() => {
-    blobUrlsRef.current.forEach(url => {
-      URL.revokeObjectURL(url)
-    })
-    blobUrlsRef.current.clear()
-  }, [])
-
-  // 載入產品圖片
-  const loadImages = useCallback(async () => {
-    // 驗證 productId
-    if (!productId || productId.trim() === '') {
-      logger.warn('ProductImageManager: productId 為空，跳過載入', {
-        metadata: { context: 'ProductImageManager', productId },
-      })
-      setIsLoading(false)
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      setError(null)
-
-      const response = await fetch(
-        `/api/upload/unified?module=products&entityId=${encodeURIComponent(productId)}`
-      )
-
-      if (!response.ok) {
-        throw new Error('載入圖片失敗')
-      }
-
-      const data = await response.json()
-      if (data.success && data.data.images) {
-        const sortedImages = data.data.images
-
-        setImages(sortedImages)
-        onImagesChange?.(sortedImages)
-
-        logger.info('產品圖片載入成功', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            imageCount: sortedImages.length,
-          },
-        })
-      }
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : '載入圖片失敗'
-      setError(errorMsg)
-      logger.error('載入產品圖片失敗', err instanceof Error ? err : new Error(errorMsg), {
-        metadata: { productId },
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }, [productId, onImagesChange])
-
-  useEffect(() => {
-    // 記憶體模式不載入資料庫圖片
-    if (mode === 'memory') {
-      setIsLoading(false)
-      return
-    }
-
-    // 只有當 productId 有效時才載入
-    if (productId && productId.trim() !== '') {
-      loadImages()
-    } else {
-      setIsLoading(false)
-    }
-  }, [productId, loadImages, mode])
-
-  // Edit 模式：通知父元件有待處理的變更
-  useEffect(() => {
-    if (mode === 'edit') {
-      const hasPendingChanges = pendingDeletes.size > 0 || pendingUploads.length > 0 || hasReordered
-      onPendingChanges?.(hasPendingChanges)
-
-      // 提供取得待處理變更的方法
-      if (onGetPendingChanges) {
-        onGetPendingChanges.current = () => ({
-          deletedIds: Array.from(pendingDeletes),
-          newImages: pendingUploads,
-          reorderedImages: hasReordered
-            ? images.map((img, index) => ({ id: img.id, position: index }))
-            : [],
-        })
-      }
-    }
-  }, [
-    mode,
-    pendingDeletes,
-    pendingUploads,
-    hasReordered,
+  const {
     images,
+    isLoading,
+    isUploading,
+    error,
+    handleUpload,
+    handleDelete,
+    handleReorder,
+    handleSetPrimary,
+    handleCancelDelete,
+    getPendingChanges,
+    pendingDeletes,
+  } = useProductImageManager({
+    productId,
+    mode,
+    maxImages,
+    onImagesChange,
     onPendingChanges,
-    onGetPendingChanges,
-  ])
+  })
 
-  // 元件卸載時清理所有 Blob URLs
+  // 拖放狀態
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+
+  // 提供 getPendingChanges 給父元件
   useEffect(() => {
-    return () => {
-      // 清理所有追蹤的 Blob URLs
-      revokeAllBlobUrls()
+    if (onGetPendingChanges && mode === 'edit') {
+      onGetPendingChanges.current = getPendingChanges
     }
-  }, [revokeAllBlobUrls])
+  }, [onGetPendingChanges, getPendingChanges, mode])
 
-  // 處理圖片上傳
-  const handleUpload = async (files: FileList) => {
-    if (files.length === 0) return
-    if (images.length + files.length > maxImages) {
-      setError(`最多只能上傳 ${maxImages} 張圖片`)
-      return
-    }
-
-    try {
-      setIsUploading(true)
-      setError(null)
-
-      // 檢查檔案大小
-      const oversizedFiles = Array.from(files).filter(file => file.size > 5 * 1024 * 1024)
-      if (oversizedFiles.length > 0) {
-        const fileNames = oversizedFiles
-          .map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`)
-          .join(', ')
-        setError(`以下檔案過大，請選擇小於 5MB 的圖片：${fileNames}`)
-        setIsUploading(false)
-        return
-      }
-
-      logger.info('開始上傳產品圖片', {
-        metadata: {
-          context: 'ProductImageManager',
-          productId,
-          fileCount: files.length,
-          mode,
-        },
-      })
-
-      // Edit 模式：只在記憶體中處理，追蹤待上傳檔案
-      if (mode === 'edit') {
-        const newImages = Array.from(files).map((file, index) => {
-          const previewUrl = URL.createObjectURL(file)
-          blobUrlsRef.current.add(previewUrl)
-
-          return {
-            id: `pending-${Date.now()}-${index}`,
-            entity_id: productId,
-            storage_url: previewUrl,
-            file_path: `pending/${file.name}`,
-            alt_text: file.name.replace(/\.[^/.]+$/, '') || `產品圖片 ${index + 1}`,
-            display_position: images.length + index,
-            size: 'medium' as const,
-            width: undefined,
-            height: undefined,
-            file_size: file.size,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            module: 'products',
-            _originalFile: file,
-          }
-        })
-
-        const updatedImages = [...images, ...newImages]
-        setImages(updatedImages)
-        onImagesChange?.(updatedImages)
-
-        // 追蹤待上傳的檔案
-        setPendingUploads(prev => [...prev, ...Array.from(files)])
-
-        logger.info('圖片新增完成（編輯模式）', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            uploadCount: files.length,
-            totalImages: updatedImages.length,
-          },
-        })
-
-        return
-      }
-
-      // 記憶體模式：只在記憶體中處理，不上傳到 Supabase
-      if (mode === 'memory') {
-        const newImages = Array.from(files).map((file, index) => {
-          // 生成本地預覽 URL
-          const previewUrl = URL.createObjectURL(file)
-          // 追蹤 Blob URL 以便後續清理
-          blobUrlsRef.current.add(previewUrl)
-
-          return {
-            id: `temp-${Date.now()}-${index}`,
-            entity_id: productId,
-            storage_url: previewUrl, // 使用本地 Blob URL
-            file_path: `temp/${file.name}`, // 臨時路徑
-            alt_text: file.name.replace(/\.[^/.]+$/, '') || `產品圖片 ${index + 1}`,
-            display_position: images.length + index,
-            size: 'medium' as const,
-            width: undefined, // 將在實際上傳時處理
-            height: undefined,
-            file_size: file.size,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            module: 'products',
-            // 保存原始檔案供後續上傳使用
-            _originalFile: file,
-          }
-        })
-
-        const updatedImages = [...images, ...newImages]
-        setImages(updatedImages)
-        onImagesChange?.(updatedImages)
-
-        logger.info('圖片上傳完成（記憶體模式）', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            uploadCount: files.length,
-            totalImages: updatedImages.length,
-          },
-        })
-
-        return
-      }
-
-      // 資料庫模式：實際上傳到 Supabase
-      const csrfToken = getCSRFTokenFromCookie()
-
-      const uploadPromises = Array.from(files).map(async (file, index) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('module', 'products')
-        formData.append('entityId', productId)
-        formData.append('size', 'medium')
-        formData.append('display_position', String(images.length + index))
-        formData.append('alt_text', file.name.replace(/\.[^/.]+$/, ''))
-
-        const headers: HeadersInit = {}
-        if (csrfToken) {
-          headers['X-CSRF-Token'] = csrfToken
-        }
-
-        const uploadResponse = await fetch('/api/upload/unified', {
-          method: 'POST',
-          headers,
-          body: formData,
-        })
-
-        if (!uploadResponse.ok) {
-          const errorData = await uploadResponse.json()
-          throw new Error(errorData.message || '上傳檔案失敗')
-        }
-
-        const uploadResult = await uploadResponse.json()
-        if (!uploadResult.success || !uploadResult.data.image) {
-          throw new Error('上傳回應格式不正確')
-        }
-
-        return uploadResult.data.image
-      })
-
-      const uploadedImages = await Promise.all(uploadPromises)
-
-      // 資料庫模式：統一 API 已經完成所有操作，直接重新載入
-      logger.info('產品圖片上傳完成（資料庫模式）', {
-        metadata: {
-          context: 'ProductImageManager',
-          productId,
-          uploadCount: files.length,
-        },
-      })
-
-      await loadImages()
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : '上傳失敗'
-      setError(errorMsg)
-      logger.error('上傳產品圖片失敗', err instanceof Error ? err : new Error(errorMsg), {
-        metadata: { productId, fileCount: files.length, mode },
-      })
-    } finally {
-      setIsUploading(false)
-    }
-  }
-
-  // 取消刪除圖片（僅 edit 模式）
-  const handleCancelDelete = (e: React.MouseEvent, imageId: string) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    setPendingDeletes(prev => {
-      const newSet = new Set(prev)
-      newSet.delete(imageId)
-      return newSet
-    })
-
-    logger.info('取消刪除圖片', {
-      metadata: {
-        context: 'ProductImageManager',
-        productId,
-        imageId,
-      },
-    })
-  }
-
-  // 刪除圖片
-  const handleDelete = async (imageId: string) => {
-    if (!confirm('確定要刪除這張圖片嗎？')) return
-
-    try {
-      // Edit 模式：標記為待刪除或直接移除
-      if (mode === 'edit') {
-        const imageToDelete = images.find(img => img.id === imageId)
-        if (!imageToDelete) return
-
-        // 如果是待上傳的圖片（id 以 pending- 開頭），直接移除
-        if (imageId.startsWith('pending-')) {
-          // 清理 Blob URL
-          revokeBlobUrl(imageToDelete.storage_url)
-
-          // 從待上傳列表移除
-          setPendingUploads(prev =>
-            prev.filter((_, index) => `pending-${Date.now()}-${index}` !== imageId)
-          )
-
-          // 從顯示列表移除
-          const newImages = images.filter(img => img.id !== imageId)
-          setImages(newImages)
-          onImagesChange?.(newImages)
-        } else {
-          // 如果是現有圖片，只標記為待刪除（不移除）
-          setPendingDeletes(prev => new Set(prev).add(imageId))
-        }
-
-        logger.info('圖片標記為待刪除（編輯模式）', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            imageId,
-            isPending: imageId.startsWith('pending-'),
-          },
-        })
-        return
-      }
-
-      // 記憶體模式：只更新本地狀態
-      if (mode === 'memory') {
-        // 找到要刪除的圖片並清理其 Blob URL
-        const imageToDelete = images.find(img => img.id === imageId)
-        if (imageToDelete) {
-          revokeBlobUrl(imageToDelete.storage_url)
-        }
-
-        const newImages = images.filter(img => img.id !== imageId)
-        setImages(newImages)
-        onImagesChange?.(newImages)
-
-        logger.info('刪除圖片成功（記憶體模式）', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            imageId,
-          },
-        })
-        return
-      }
-
-      // 資料庫模式：使用統一 API 刪除
-      const csrfToken = getCSRFTokenFromCookie()
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken
-      }
-
-      const response = await fetch('/api/upload/unified', {
-        method: 'DELETE',
-        headers,
-        body: JSON.stringify({ imageId }),
-      })
-
-      if (!response.ok) {
-        throw new Error('刪除圖片失敗')
-      }
-
-      const newImages = images.filter(img => img.id !== imageId)
-      setImages(newImages)
-      onImagesChange?.(newImages)
-
-      logger.info('刪除圖片成功（資料庫模式）', {
-        metadata: {
-          context: 'ProductImageManager',
-          productId,
-          imageId,
-        },
-      })
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : '刪除失敗'
-      setError(errorMsg)
-      logger.error('刪除圖片失敗', err instanceof Error ? err : new Error(errorMsg), {
-        metadata: { productId, imageId, mode },
-      })
-    }
-  }
-
-  // 設定主圖
-  const handleSetPrimary = async (imageId: string) => {
-    try {
-      const targetImage = images.find(img => img.id === imageId)
-      if (!targetImage) return
-
-      // 重新排序: 目標圖片設為 position 0，其他順延
-      const imageOrders = images.map(img => {
-        if (img.id === imageId) {
-          return { id: img.id, position: 0 }
-        }
-        const currentPos = img.display_position
-        return {
-          id: img.id,
-          position: currentPos < targetImage.display_position ? currentPos : currentPos + 1,
-        }
-      })
-
-      const csrfToken = getCSRFTokenFromCookie()
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken
-      }
-
-      const response = await fetch('/api/upload/unified', {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({
-          action: 'reorder',
-          module: 'products',
-          entityId: productId,
-          images: imageOrders.map(order => ({ id: order.id, display_position: order.position })),
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('設定主圖失敗')
-      }
-
-      await loadImages()
-
-      logger.info('設定主圖成功', {
-        metadata: {
-          context: 'ProductImageManager',
-          productId,
-          imageId,
-        },
-      })
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : '設定主圖失敗'
-      setError(errorMsg)
-      logger.error('設定主圖失敗', err instanceof Error ? err : new Error(errorMsg), {
-        metadata: { productId, imageId },
-      })
-    }
-  }
-
-  // 拖放排序
+  // 拖放處理
   const handleDragStart = (index: number) => {
     setDraggedIndex(index)
   }
@@ -538,94 +71,12 @@ export default function ProductImageManager({
     newImages.splice(draggedIndex, 1)
     newImages.splice(index, 0, draggedImage)
 
-    // 更新 display_position
-    const updatedImages = newImages.map((img, idx) => ({
-      ...img,
-      display_position: idx,
-    }))
-
-    setImages(updatedImages)
+    handleReorder(newImages)
     setDraggedIndex(index)
   }
 
-  const handleDragEnd = async () => {
-    if (draggedIndex === null) return
-
-    try {
-      // Edit 模式：只更新本地狀態，標記為已重排序
-      if (mode === 'edit') {
-        setHasReordered(true)
-        onImagesChange?.(images)
-
-        logger.info('圖片排序更新（編輯模式）', {
-          metadata: {
-            context: 'ProductImageManager',
-            productId,
-            imageCount: images.length,
-          },
-        })
-
-        setDraggedIndex(null)
-        return
-      }
-
-      // Memory 模式：只更新本地狀態
-      if (mode === 'memory') {
-        onImagesChange?.(images)
-        setDraggedIndex(null)
-        return
-      }
-
-      // Database 模式：立即更新資料庫
-      const imageOrders = images.map((img, index) => ({
-        id: img.id,
-        position: index,
-      }))
-
-      const csrfToken = getCSRFTokenFromCookie()
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-      if (csrfToken) {
-        headers['X-CSRF-Token'] = csrfToken
-      }
-
-      const response = await fetch('/api/upload/unified', {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({
-          action: 'reorder',
-          module: 'products',
-          entityId: productId,
-          images: imageOrders.map(order => ({ id: order.id, display_position: order.position })),
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error('更新排序失敗')
-      }
-
-      onImagesChange?.(images)
-
-      logger.info('圖片排序更新成功', {
-        metadata: {
-          context: 'ProductImageManager',
-          productId,
-          imageCount: images.length,
-        },
-      })
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : '更新排序失敗'
-      setError(errorMsg)
-      logger.error('更新圖片排序失敗', err instanceof Error ? err : new Error(errorMsg), {
-        metadata: { productId },
-      })
-      if (mode === 'database') {
-        loadImages()
-      }
-    } finally {
-      setDraggedIndex(null)
-    }
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
   }
 
   if (isLoading) {
@@ -640,13 +91,13 @@ export default function ProductImageManager({
     <div className={`space-y-4 ${className}`}>
       {/* 錯誤訊息 */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
           {error}
         </div>
       )}
 
       {/* 上傳區域 */}
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gray-400 transition-colors">
+      <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
         <input
           type="file"
           accept="image/*"
@@ -661,17 +112,19 @@ export default function ProductImageManager({
           className="flex flex-col items-center cursor-pointer"
         >
           <svg
-            className="w-12 h-12 text-gray-400 mb-3"
+            className="w-12 h-12 text-gray-400 dark:text-gray-500 mb-3"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {isUploading ? '上傳中...' : `點擊上傳圖片 (${images.length}/${maxImages})`}
           </p>
-          <p className="text-xs text-gray-500 mt-1">支援 JPG, PNG, WebP 格式</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            支援 JPG, PNG, WebP 格式，單檔最大 5MB
+          </p>
         </label>
       </div>
 
@@ -693,8 +146,8 @@ export default function ProductImageManager({
                     ? 'border-2 border-dashed border-red-400 opacity-60 cursor-not-allowed'
                     : `cursor-move border-2 ${
                         image.display_position === 0
-                          ? 'border-amber-500 ring-2 ring-amber-200'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-amber-500 ring-2 ring-amber-200 dark:ring-amber-800'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
                       }`
                 } ${draggedIndex === index ? 'opacity-50' : ''}`}
               >
@@ -727,7 +180,7 @@ export default function ProductImageManager({
                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                   {isPendingDelete ? (
                     <button
-                      onClick={e => handleCancelDelete(e, image.id)}
+                      onClick={() => handleCancelDelete(image.id)}
                       className="bg-green-500 text-white px-3 py-2 rounded-full hover:bg-green-600 transition-colors text-sm font-medium"
                       title="取消刪除"
                     >
@@ -735,7 +188,7 @@ export default function ProductImageManager({
                     </button>
                   ) : (
                     <>
-                      {image.display_position !== 0 && (
+                      {image.display_position !== 0 && mode === 'database' && (
                         <button
                           onClick={() => handleSetPrimary(image.id)}
                           className="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -783,9 +236,9 @@ export default function ProductImageManager({
 
       {/* 空狀態 */}
       {images.length === 0 && !isUploading && (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
           <svg
-            className="w-16 h-16 mx-auto mb-4 text-gray-300"
+            className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
