@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
 import { inquiryApi } from '@/lib/api-client'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/formatters'
 import { FarmTourActivity } from '@/types/farmTour'
 import { ApiResponse } from '@/types/infrastructure.types'
@@ -241,9 +242,10 @@ export function QuickAddInquiryModal({
               value={formData.visit_date}
               onChange={e => handleInputChange('visit_date', e.target.value)}
               min={new Date().toISOString().split('T')[0]} // 最小日期為今天
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.visit_date ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               disabled={isSubmitting}
             />
             {errors.visit_date && <p className="text-red-600 text-sm mt-1">{errors.visit_date}</p>}
@@ -263,9 +265,10 @@ export function QuickAddInquiryModal({
               type="text"
               value={formData.customer_name}
               onChange={e => handleInputChange('customer_name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.customer_name ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               placeholder="請輸入客戶姓名"
               disabled={isSubmitting}
             />
@@ -281,9 +284,10 @@ export function QuickAddInquiryModal({
               type="email"
               value={formData.customer_email}
               onChange={e => handleInputChange('customer_email', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.customer_email ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               placeholder="example@email.com"
               disabled={isSubmitting}
             />
@@ -299,9 +303,10 @@ export function QuickAddInquiryModal({
               type="tel"
               value={formData.customer_phone}
               onChange={e => handleInputChange('customer_phone', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.customer_phone ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               placeholder="09xx-xxx-xxx"
               disabled={isSubmitting}
             />
@@ -316,9 +321,10 @@ export function QuickAddInquiryModal({
             <select
               value={formData.farm_tour_id}
               onChange={e => handleInputChange('farm_tour_id', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.farm_tour_id ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               disabled={isSubmitting}
             >
               <option value="">請選擇農場導覽活動</option>
@@ -348,9 +354,10 @@ export function QuickAddInquiryModal({
               max="50"
               value={formData.visitor_count}
               onChange={e => handleInputChange('visitor_count', parseInt(e.target.value) || 1)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.visitor_count ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               disabled={isSubmitting}
             />
             {errors.visitor_count && (
