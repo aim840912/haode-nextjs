@@ -8,6 +8,7 @@ import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import { logger } from '@/lib/logger'
 import { imageUrlValidator } from '@/lib/utils/image-url-validator'
 import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
+import { cn } from '@/lib/utils/cn'
 
 interface UploadedImage {
   id: string
@@ -576,12 +577,14 @@ export function ImageUploader({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-4', className)}>
       {/* 上傳區域 */}
       <div
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          dragActive ? 'border-amber-500 bg-amber-50' : 'border-gray-300 hover:border-gray-400'
-        } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
+        className={cn(
+          'relative border-2 border-dashed rounded-lg p-8 text-center transition-colors',
+          dragActive ? 'border-amber-500 bg-amber-50' : 'border-gray-300 hover:border-gray-400',
+          isUploading && 'pointer-events-none opacity-50'
+        )}
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
         onDragOver={handleDrag}
