@@ -72,7 +72,7 @@ export function useInquiryStatusFlow({
       'completed',
       'cancelled',
     ]
-    const currentStatusIndex = allStatuses.indexOf(inquiry.status)
+    const _currentStatusIndex = allStatuses.indexOf(inquiry.status)
 
     // 如果是已取消狀態，只顯示 pending 和 cancelled
     if (inquiry.status === 'cancelled') {

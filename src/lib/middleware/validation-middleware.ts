@@ -13,7 +13,6 @@ import { validateData, validateRequestData, validateSearchParams } from '@/lib/v
 import {
   ValidationConfig as BaseValidationConfig,
   ValidationResult as BaseValidationResult,
-  InferZodSchema,
 } from '@/types/infrastructure.types'
 
 // ============================================================================

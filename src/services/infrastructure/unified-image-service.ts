@@ -4,7 +4,7 @@
  */
 
 import { getModuleConfig, getModuleStoragePath, isValidModule } from '@/config/image-modules.config'
-import { supabase, getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import { validateImageFile, generateFileName } from '@/lib/utils/image-utils'
 import type { Database } from '@/types/database'
@@ -41,14 +41,14 @@ export class UnifiedImageService {
       return
     }
 
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
+    const Admin = getSupabaseAdmin()
+    if (!Admin) {
       throw new UnifiedImageError('Supabase admin client 未配置')
     }
 
     try {
       // 檢查 bucket 是否存在
-      const { data: buckets, error: listError } = await supabaseAdmin.storage.listBuckets()
+      const { data: buckets, error: listError } = await Admin.storage.listBuckets()
 
       // 診斷 bucket 列表資訊
       dbLogger.info('Storage buckets 檢查', {
@@ -73,12 +73,12 @@ export class UnifiedImageService {
           metadata: {
             targetBucket: bucket,
             existingBuckets: buckets?.map(b => b.name) || [],
-            adminClientExists: !!supabaseAdmin,
+            adminClientExists: !!Admin,
           },
         })
 
         // 建立 bucket
-        const { error } = await supabaseAdmin.storage.createBucket(bucket, {
+        const { error } = await Admin.storage.createBucket(bucket, {
           public: true,
           allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif'],
           fileSizeLimit: 10 * 1024 * 1024, // 10MB
@@ -120,7 +120,7 @@ export class UnifiedImageService {
           bucketName: bucket,
           errorType: error instanceof Error ? error.constructor.name : typeof error,
           errorMessage: error instanceof Error ? error.message : String(error),
-          hasAdminClient: !!supabaseAdmin,
+          hasAdminClient: !!Admin,
           operation: 'ensureBucketExists',
         },
       })
@@ -156,20 +156,20 @@ export class UnifiedImageService {
       await this.ensureBucketExists()
 
       const config = getModuleConfig(module)
-      const supabaseAdmin = getSupabaseAdmin()
+      const Admin = getSupabaseAdmin()
 
       // 診斷 admin client 狀態
       dbLogger.info('Admin client 狀態檢查', {
         module: 'UnifiedImageService',
         metadata: {
-          hasAdminClient: !!supabaseAdmin,
+          hasAdminClient: !!Admin,
           hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
           serviceKeyPrefix: process.env.SUPABASE_SERVICE_ROLE_KEY?.substring(0, 20) + '...',
           bucketName: this.MEDIA_BUCKET,
         },
       })
 
-      if (!supabaseAdmin) {
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
@@ -211,7 +211,7 @@ export class UnifiedImageService {
       })
 
       // 上傳到 Storage（使用 admin client）
-      const { data, error } = await supabaseAdmin.storage
+      const { data: _data, error } = await Admin.storage
         .from(this.MEDIA_BUCKET)
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -237,7 +237,7 @@ export class UnifiedImageService {
       }
 
       // 取得公開 URL（使用 admin client）
-      const { data: urlData } = supabaseAdmin.storage.from(this.MEDIA_BUCKET).getPublicUrl(filePath)
+      const { data: urlData } = Admin.storage.from(this.MEDIA_BUCKET).getPublicUrl(filePath)
 
       // 除錯：記錄 URL 資料
       dbLogger.info('公開 URL 取得結果', {
@@ -267,7 +267,7 @@ export class UnifiedImageService {
         },
       }
 
-      const { data: dbData, error: dbError } = await (supabaseAdmin as any)
+      const { data: dbData, error: dbError } = await (Admin as any)
         .from('images')
         .insert(imageRecord)
         .select()
@@ -343,12 +343,12 @@ export class UnifiedImageService {
     try {
       this.validateParams(module, entityId)
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await (Admin as any)
         .from('images')
         .select('*')
         .eq('module', module)
@@ -376,13 +376,13 @@ export class UnifiedImageService {
     imagePositions: Array<{ id: string; display_position: number }>
   ): Promise<void> {
     try {
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
       for (const { id, display_position } of imagePositions) {
-        const { error } = await (supabaseAdmin as any)
+        const { error } = await (Admin as any)
           .from('images')
           .update({
             display_position,
@@ -415,12 +415,12 @@ export class UnifiedImageService {
     updates: { alt_text?: string; metadata?: Record<string, any> }
   ): Promise<void> {
     try {
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
-      const { error } = await (supabaseAdmin as any)
+      const { error } = await (Admin as any)
         .from('images')
         .update({
           ...updates,
@@ -449,12 +449,12 @@ export class UnifiedImageService {
    */
   async getImageById(imageId: string): Promise<ImageRecord | null> {
     try {
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
-      const { data, error } = await (supabaseAdmin as any)
+      const { data, error } = await (Admin as any)
         .from('images')
         .select('*')
         .eq('id', imageId)
@@ -478,13 +478,13 @@ export class UnifiedImageService {
    */
   async deleteImage(imageId: string): Promise<void> {
     try {
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
       // 先查詢圖片記錄
-      const { data: imageData, error: fetchError } = await (supabaseAdmin as any)
+      const { data: imageData, error: fetchError } = await (Admin as any)
         .from('images')
         .select('file_path, module, entity_id')
         .eq('id', imageId)
@@ -499,10 +499,7 @@ export class UnifiedImageService {
       await this.deleteFromStorage(dbImageData.file_path)
 
       // 從資料庫刪除記錄
-      const { error: deleteError } = await (supabaseAdmin as any)
-        .from('images')
-        .delete()
-        .eq('id', imageId)
+      const { error: deleteError } = await (Admin as any).from('images').delete().eq('id', imageId)
 
       if (deleteError) {
         throw new UnifiedImageError('刪除圖片記錄失敗', deleteError)
@@ -531,8 +528,8 @@ export class UnifiedImageService {
     try {
       this.validateParams(module, entityId)
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         throw new UnifiedImageError('Supabase admin client 未配置')
       }
 
@@ -548,7 +545,7 @@ export class UnifiedImageService {
       await this.deleteBatchFromStorage(filePaths)
 
       // 從資料庫刪除記錄
-      const { error } = await (supabaseAdmin as any)
+      const { error } = await (Admin as any)
         .from('images')
         .delete()
         .eq('module', module)
@@ -576,12 +573,12 @@ export class UnifiedImageService {
    * 從 Storage 刪除單個檔案
    */
   private async deleteFromStorage(filePath: string): Promise<void> {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
+    const Admin = getSupabaseAdmin()
+    if (!Admin) {
       throw new UnifiedImageError('Supabase admin client 未配置')
     }
 
-    const { error } = await supabaseAdmin.storage.from(this.MEDIA_BUCKET).remove([filePath])
+    const { error } = await Admin.storage.from(this.MEDIA_BUCKET).remove([filePath])
 
     if (error) {
       throw new UnifiedImageError('從 Storage 刪除檔案失敗', error)
@@ -592,12 +589,12 @@ export class UnifiedImageService {
    * 從 Storage 批量刪除檔案
    */
   private async deleteBatchFromStorage(filePaths: string[]): Promise<void> {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
+    const Admin = getSupabaseAdmin()
+    if (!Admin) {
       throw new UnifiedImageError('Supabase admin client 未配置')
     }
 
-    const { error } = await supabaseAdmin.storage.from(this.MEDIA_BUCKET).remove(filePaths)
+    const { error } = await Admin.storage.from(this.MEDIA_BUCKET).remove(filePaths)
 
     if (error) {
       throw new UnifiedImageError('從 Storage 批量刪除檔案失敗', error)
@@ -608,14 +605,14 @@ export class UnifiedImageService {
    * 取得圖片的公開 URL
    */
   getImagePublicUrl(filePath: string): string {
-    const supabaseAdmin = getSupabaseAdmin()
-    if (!supabaseAdmin) {
+    const Admin = getSupabaseAdmin()
+    if (!Admin) {
       throw new UnifiedImageError('Supabase admin client 未配置')
     }
 
-    const { data } = supabaseAdmin.storage.from(this.MEDIA_BUCKET).getPublicUrl(filePath)
+    const { data: _data } = Admin.storage.from(this.MEDIA_BUCKET).getPublicUrl(filePath)
 
-    return data.publicUrl
+    return _data.publicUrl
   }
 
   /**
@@ -623,12 +620,12 @@ export class UnifiedImageService {
    */
   async checkImageExists(filePath: string): Promise<boolean> {
     try {
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
+      const Admin = getSupabaseAdmin()
+      if (!Admin) {
         return false
       }
 
-      const { data, error } = await supabaseAdmin.storage
+      const { data, error } = await Admin.storage
         .from(this.MEDIA_BUCKET)
         .list(filePath.substring(0, filePath.lastIndexOf('/')))
 

@@ -46,8 +46,8 @@ export function getDataStrategy(): DataStrategyConfig {
 
   const shouldUseJson = process.env.USE_SUPABASE === 'false' || !hasSupabaseConfig
   const isProduction = nodeEnv === 'production'
-  const explicitlyUseSupabase = useSupabase && hasSupabaseConfig
-  const autoUseSupabaseInProduction =
+  const _explicitlyUseSupabase = useSupabase && hasSupabaseConfig
+  const _autoUseSupabaseInProduction =
     isProduction && hasSupabaseConfig && process.env.USE_SUPABASE !== 'false'
 
   if (shouldUseJson) {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { Star, ShoppingCart, Eye, Share2 } from 'lucide-react'
+import { Star, ShoppingCart, Share2 } from 'lucide-react'
 import { UIverseButton } from '@/components/ui/buttons/UIverseButton'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'

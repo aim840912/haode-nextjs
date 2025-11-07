@@ -49,7 +49,7 @@ export function generateImageUrl(
   }
 
   // 本地圖片路徑
-  const baseFileName = filename.replace(/\.[^/.]+$/, '') // 移除副檔名
+  const _baseFileName = filename.replace(/\.[^/.]+$/, '') // 移除副檔名
   const extension = filename.split('.').pop()
 
   // 驗證副檔名是否有效
@@ -389,7 +389,7 @@ export function getImagePreviewUrl(file: File): Promise<string> {
 /**
  * 建立不同尺寸的響應式圖片srcSet
  */
-export function buildResponsiveImageSrcSet(baseUrl: string, productId: string): string {
+export function buildResponsiveImageSrcSet(baseUrl: string, _productId: string): string {
   const sizes = ['thumbnail', 'medium', 'large'] as const
   return sizes
     .map(size => {

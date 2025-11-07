@@ -1,8 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Product } from '@/types/product'
 import { cn } from '@/lib/utils/cn'
+import { Product } from '@/types/product'
 
 interface ProductTableActionsProps {
   product: Product
@@ -69,5 +69,3 @@ export function ProductTableActions({
     </div>
   )
 }
-
-export default ProductTableActions

@@ -9,7 +9,7 @@ import {
   INQUIRY_TYPE_COLORS,
 } from '@/types/inquiry'
 
-interface InquiryStats {
+interface InquiryStatsData {
   total: number
   unread: number
   unreplied: number
@@ -53,11 +53,11 @@ interface DetailedStats {
 }
 
 interface InquiryStatsProps {
-  stats: InquiryStats
+  stats: InquiryStatsData
   detailedStats: DetailedStats | null
 }
 
-export default function InquiryStatsComponent({ stats, detailedStats }: InquiryStatsProps) {
+export function InquiryStats({ stats, detailedStats }: InquiryStatsProps) {
   return (
     <>
       {/* 統計儀表板 */}

@@ -4,7 +4,7 @@
  */
 
 import { logger } from '@/lib/logger'
-import { InquiryWithItems, InquiryEmailData, EmailTemplate } from '@/types/inquiry'
+import { InquiryWithItems, EmailTemplate } from '@/types/inquiry'
 
 // Email 服務配置
 interface EmailConfig {

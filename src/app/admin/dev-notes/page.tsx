@@ -15,14 +15,7 @@ import {
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useDevNotesReducer } from '@/hooks/useDevNotesReducer'
 import { apiLogger } from '@/lib/logger'
-import {
-  DevNote,
-  DevNoteStats,
-  DevNoteType,
-  DevNoteStatus,
-  DevNotePriority,
-  DevNoteInput,
-} from '@/types/devNote'
+import { DevNote, DevNoteType, DevNoteStatus, DevNotePriority, DevNoteInput } from '@/types/devNote'
 
 export default function DevNotesPage() {
   const { state, actions } = useDevNotesReducer()

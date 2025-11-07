@@ -212,7 +212,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   <h2 className="text-xl font-bold text-gray-900">詢價商品</h2>
                 </div>
                 <div className="divide-y divide-gray-200">
-                  {inquiry.inquiry_items.map((item, index) => (
+                  {inquiry.inquiry_items.map((item, _index) => (
                     <div key={item.id} className="p-6">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">

@@ -19,7 +19,7 @@ import {
 
 function InquiryListPage() {
   const { user, isLoading: authLoading } = useAuth()
-  const { success, error: showError } = useToast()
+  const {} = useToast()
 
   // 狀態管理
   const [inquiries, setInquiries] = useState<InquiryWithItems[]>([])

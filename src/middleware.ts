@@ -278,7 +278,7 @@ export async function middleware(request: NextRequest) {
 
       // 如果沒有 token 或 token 無效，生成新的
       if (!existingToken || !/^[a-f0-9]{64}$/.test(existingToken)) {
-        const { token, headers } = CSRFTokenManager.createTokenResponse()
+        const { token: _token, headers } = CSRFTokenManager.createTokenResponse()
 
         headers.forEach((value, key) => {
           response.headers.set(key, value)

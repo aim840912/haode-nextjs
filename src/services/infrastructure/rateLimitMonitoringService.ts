@@ -10,7 +10,7 @@
 
 import { kv } from '@vercel/kv'
 import { dbLogger } from '@/lib/logger'
-import { AuditAction } from '@/types/audit'
+import {} from '@/types/audit'
 import { auditLogService } from './auditLogService'
 
 /**
@@ -170,7 +170,7 @@ export class RateLimitMonitoringService {
       if (count % 5 === 0) {
         // 每 5 次違反記錄一次
         await auditLogService.log({
-          action: 'unauthorized_access', // 使用有效的 AuditAction
+          action: 'unauthorized_access', // 使用有效的
           resource_type: 'rate_limiter',
           resource_id: ip,
           user_id: null,
@@ -287,7 +287,7 @@ export class RateLimitMonitoringService {
 
       // 記錄到審計日誌
       await auditLogService.log({
-        action: 'status_change', // 使用有效的 AuditAction，IP封鎖是狀態變更
+        action: 'status_change', // 使用有效的 ，IP封鎖是狀態變更
         resource_type: 'security',
         resource_id: ip,
         user_id: null,
@@ -372,7 +372,7 @@ export class RateLimitMonitoringService {
 
         // 記錄解封事件
         await auditLogService.log({
-          action: 'status_change', // 使用有效的 AuditAction，IP解封是狀態變更
+          action: 'status_change', // 使用有效的 ，IP解封是狀態變更
           resource_type: 'security',
           resource_id: ip,
           user_id: null,
@@ -480,7 +480,7 @@ export class RateLimitMonitoringService {
 
       // 記錄到審計日誌
       await auditLogService.log({
-        action: 'create', // 使用有效的 AuditAction，創建監控警報
+        action: 'create', // 使用有效的 ，創建監控警報
         resource_type: 'monitoring',
         resource_id: alertId,
         user_id: null,

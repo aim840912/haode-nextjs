@@ -341,7 +341,7 @@ export class ScheduleServiceSimple implements ScheduleService {
   }> {
     try {
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase.from('schedule').select('count').limit(1)
+      const { data: _data, error } = await supabase.from('schedule').select('count').limit(1)
 
       if (error) {
         return {

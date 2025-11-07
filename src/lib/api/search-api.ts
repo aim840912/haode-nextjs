@@ -5,7 +5,7 @@
 
 import { apiClient } from '@/lib/api-client'
 import { apiLogger } from '@/lib/logger'
-import type { SearchResponse, SearchParams, SearchFilters } from '@/types/search'
+import type { SearchResponse, SearchParams } from '@/types/search'
 import { handleApiError } from './common'
 
 /**

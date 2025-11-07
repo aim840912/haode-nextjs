@@ -310,7 +310,7 @@ export class OrderCommandService extends AbstractSupabaseService<Order, any, any
   /**
    * 計算稅費
    */
-  calculateTax(subtotal: number): number {
+  calculateTax(_subtotal: number): number {
     // 台灣目前食品類商品免營業稅
     // 這裡預留稅費計算邏輯
     return 0

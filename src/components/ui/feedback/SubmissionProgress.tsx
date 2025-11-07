@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { cn } from '@/lib/utils/cn'
 import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils/cn'
 
 export interface SubmissionStatus {
   isSubmitting: boolean

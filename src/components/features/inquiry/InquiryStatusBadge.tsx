@@ -1,7 +1,7 @@
 'use client'
 
-import { InquiryStatus, INQUIRY_STATUS_LABELS, INQUIRY_STATUS_COLORS } from '@/types/inquiry'
 import { cn } from '@/lib/utils/cn'
+import { InquiryStatus, INQUIRY_STATUS_LABELS, INQUIRY_STATUS_COLORS } from '@/types/inquiry'
 
 interface InquiryStatusBadgeProps {
   status: InquiryStatus

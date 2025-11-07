@@ -14,7 +14,6 @@ import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-inter
 import {
   supabase,
   getUserProfile,
-  signInUser,
   signInWithPhoneOrEmail,
   signOutUser,
   signUpUser,

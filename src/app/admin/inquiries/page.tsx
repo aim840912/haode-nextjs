@@ -14,11 +14,11 @@ import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
 
 // 新的 hooks 和元件
 import { AssignmentPanel } from './components/AssignmentPanel'
-import BulkActions from './components/BulkActions'
+import { BulkActions } from './components/BulkActions'
 import { InquiryDetailPanel } from './components/InquiryDetailPanel'
-import InquiryFilters from './components/InquiryFilters'
-import InquiryList from './components/InquiryList'
-import InquiryStatsComponent from './components/InquiryStats'
+import { InquiryFilters } from './components/InquiryFilters'
+import { InquiryList } from './components/InquiryList'
+import { InquiryStats } from './components/InquiryStats'
 import { QuickReplySection } from './components/QuickReplySection'
 import { useBatchOperations } from './hooks/useBatchOperations'
 import { useInquiriesData } from './hooks/useInquiriesData'
@@ -163,7 +163,7 @@ function AdminInquiriesPage() {
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 使用新的統計元件 */}
-          <InquiryStatsComponent stats={inquiryStats} detailedStats={detailedStats} />
+          <InquiryStats stats={inquiryStats} detailedStats={detailedStats} />
 
           {/* 使用新的批量操作元件 */}
           <BulkActions

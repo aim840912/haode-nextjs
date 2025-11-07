@@ -484,7 +484,7 @@ export class LocationServiceSimple implements LocationService {
   }> {
     try {
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase.from('locations').select('count').limit(1)
+      const { data: _data, error } = await supabase.from('locations').select('count').limit(1)
 
       if (error) {
         return {

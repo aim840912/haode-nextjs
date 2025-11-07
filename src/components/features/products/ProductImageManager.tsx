@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { useProductImageManager, PendingImageChanges } from '@/hooks/useProductImageManager'
-import { ProductImage } from '@/types/product'
 import { cn } from '@/lib/utils/cn'
+import { ProductImage } from '@/types/product'
 
 export type { PendingImageChanges } from '@/hooks/useProductImageManager'
 

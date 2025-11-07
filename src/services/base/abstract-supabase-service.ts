@@ -45,12 +45,12 @@ type DatabaseRecord = Record<string, unknown>
 /**
  * 查詢建構器回應類型
  */
-interface QueryResponse<T> {
+interface _QueryResponse<T> {
   data: T | null
   error: Error | null
 }
 
-interface QueryArrayResponse<T> {
+interface _QueryArrayResponse<T> {
   data: T[] | null
   error: Error | null
   count?: number | null
@@ -130,7 +130,7 @@ export abstract class AbstractSupabaseService<
   /**
    * 建立查詢建構器
    */
-  protected createQuery<TRecord = DatabaseRecord>(useAdmin: boolean = false) {
+  protected createQuery<_TRecord = DatabaseRecord>(useAdmin: boolean = false) {
     const client = this.getClient(useAdmin)
     const query = client.from(this.config.tableName)
 

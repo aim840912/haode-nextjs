@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { success, created } from '@/lib/api-response'
-import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
+import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { userInterestsService } from '@/services/core/user/userInterestsService'
 

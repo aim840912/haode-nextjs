@@ -1,9 +1,9 @@
 'use client'
 
-import { AlertTriangle, RefreshCw, AlertCircle, Wifi, WifiOff } from 'lucide-react'
-import { cn } from '@/lib/utils/cn'
+import { AlertTriangle, RefreshCw, AlertCircle, WifiOff } from 'lucide-react'
 import { LoadingError as LoadingErrorType } from '@/hooks/useLoadingState'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 import { LoadingSpinner } from './LoadingSpinner'
 
 interface LoadingErrorProps {

@@ -212,7 +212,7 @@ export class SchemaMonitor {
             // 資料表存在但查詢失敗
             schemaData.push({ table: tableName, error: error.message })
           }
-        } catch (tableError) {
+        } catch (_tableError) {
           // 忽略不存在的資料表
         }
       }

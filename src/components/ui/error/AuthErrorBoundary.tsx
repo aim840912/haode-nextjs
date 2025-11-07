@@ -259,5 +259,3 @@ export class AuthErrorBoundary extends Component<AuthErrorBoundaryProps, AuthErr
     return this.props.children
   }
 }
-
-export default AuthErrorBoundary

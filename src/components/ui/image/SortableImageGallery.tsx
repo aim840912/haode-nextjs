@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import {
   DndContext,
   closestCenter,
@@ -22,8 +21,8 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import { logger } from '@/lib/logger'
-import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { cn } from '@/lib/utils/cn'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 
 interface SortableImage {
   id: string

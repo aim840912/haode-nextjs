@@ -9,7 +9,6 @@ import {
   shouldUseSupabase,
   shouldFallbackToJson,
   shouldUseCache,
-  getStrategyInfo,
   DataStrategyConfig,
 } from '@/config/data-strategy'
 import { dbLogger } from '@/lib/logger'
@@ -187,7 +186,7 @@ export async function getProductService(): Promise<ProductService> {
 /**
  * 創建 JSON 服務實例
  */
-async function createJsonService(): Promise<ProductService> {
+async function _createJsonService(): Promise<ProductService> {
   // JSON 服務已廢棄，使用 v2 統一服務
   const { productService } = await import('../core/product/productService')
   return productService
@@ -235,7 +234,7 @@ export async function createCachedProductService(
 /**
  * 通用服務工廠函數
  */
-async function createService<T>(
+async function _createService<T>(
   serviceType: keyof Omit<typeof serviceInstances, 'product'>,
   supabaseServiceImport: () => Promise<{ [key: string]: T }>,
   jsonServiceCreator: () => Promise<T>,

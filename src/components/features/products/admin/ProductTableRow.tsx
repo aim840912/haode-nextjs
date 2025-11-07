@@ -1,9 +1,9 @@
 'use client'
 
 import { SafeImage } from '@/components/ui/image/OptimizedImage'
-import { Product } from '@/types/product'
-import ProductTableActions from './ProductTableActions'
 import { cn } from '@/lib/utils/cn'
+import { Product } from '@/types/product'
+import { ProductTableActions } from './ProductTableActions'
 
 interface ProductTableRowProps {
   product: Product
@@ -128,5 +128,3 @@ export function ProductTableRow({
     </tr>
   )
 }
-
-export default ProductTableRow

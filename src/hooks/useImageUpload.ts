@@ -93,7 +93,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}): UseImageUpl
 
   const [images, setImages] = useState<ImageFile[]>([])
   const [isCompressing, setIsCompressing] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
+  const [isUploading, _setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
 

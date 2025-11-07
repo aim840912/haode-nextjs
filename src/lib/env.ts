@@ -302,7 +302,7 @@ export function getEnvStatus() {
   // 檢查伺服器端變數（僅在伺服器端）
   if (typeof window === 'undefined') {
     try {
-      const server = getServerEnv()
+      const _server = getServerEnv()
       Object.keys(serverEnvSchema.shape).forEach(key => {
         const value = process.env[key]
         if (value) {

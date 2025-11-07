@@ -9,7 +9,7 @@ interface BulkActionsProps {
   onBatchDelete: () => void
 }
 
-export default function BulkActions({
+export function BulkActions({
   selectedCount,
   isBatchProcessing,
   onClearSelection,

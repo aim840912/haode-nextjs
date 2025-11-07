@@ -33,7 +33,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
 
 // 導入子 hooks
-import { InquiryStatsData, INQUIRY_STATS_CONSTANTS } from '@/lib/utils/inquiry-stats-utils'
+import { InquiryStatsData } from '@/lib/utils/inquiry-stats-utils'
 import { useInquiryStatsCache } from './useInquiryStatsCache'
 import { useInquiryStatsFetcher } from './useInquiryStatsFetcher'
 import { usePollingManager } from './usePollingManager'

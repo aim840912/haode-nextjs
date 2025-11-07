@@ -1,5 +1,5 @@
 export { ErrorBoundary, ComponentErrorBoundary } from './ErrorBoundary'
-export { default as AuthErrorBoundary } from './AuthErrorBoundary'
+export { AuthErrorBoundary } from './AuthErrorBoundary'
 export {
   ErrorHandler,
   useErrorHandler,

@@ -7,7 +7,6 @@
 
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { orderService } from '@/services/core/order'

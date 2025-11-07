@@ -6,7 +6,6 @@ import {
   fetchFarmTourCalendar,
   updateFarmTourVisitDate,
   type CalendarEvent,
-  type CalendarResponse,
   type CalendarStatistics,
 } from '@/lib/api/farm-tour-api'
 import { logger } from '@/lib/logger'

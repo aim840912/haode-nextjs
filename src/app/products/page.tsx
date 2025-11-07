@@ -40,7 +40,7 @@ function ProductsPage() {
   const { products, loading, refetch } = useProductsData()
   const { toggleInterest, isInterested } = useProductInterest()
   const { selectedProduct, openModal, closeModal, requestQuote } = useProductModal(products)
-  const { filters, setFilters, filteredProducts, availableCategories } = useProductFilter(products)
+  const { setFilters, filteredProducts, availableCategories } = useProductFilter(products)
 
   // 篩選處理函數
   const handleFilterChange = useCallback(

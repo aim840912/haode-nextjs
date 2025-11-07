@@ -4,7 +4,7 @@
  */
 
 import { logger } from '@/lib/logger'
-import { imageUrlValidator } from '@/lib/utils/image-url-validator'
+import {} from '@/lib/utils/image-url-validator'
 
 /**
  * 將相對圖片路徑轉換為完整的 Supabase Storage URL

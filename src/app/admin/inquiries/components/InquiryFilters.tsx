@@ -5,7 +5,7 @@ import {
   INQUIRY_TYPE_LABELS,
 } from '@/types/inquiry'
 
-interface InquiryStats {
+interface InquiryStatsData {
   total: number
   unread: number
   unreplied: number
@@ -14,13 +14,13 @@ interface InquiryStats {
 interface InquiryFiltersProps {
   statusFilter: InquiryStatus | 'all' | 'unread' | 'unreplied'
   typeFilter: InquiryType | 'all'
-  inquiryStats: InquiryStats
+  inquiryStats: InquiryStatsData
   inquiriesCount: number
   onStatusFilterChange: (filter: InquiryStatus | 'all' | 'unread' | 'unreplied') => void
   onTypeFilterChange: (filter: InquiryType | 'all') => void
 }
 
-export default function InquiryFilters({
+export function InquiryFilters({
   statusFilter,
   typeFilter,
   inquiryStats,

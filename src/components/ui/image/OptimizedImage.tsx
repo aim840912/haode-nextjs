@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
-import { cn } from '@/lib/utils/cn'
 import { useImageBlob } from '@/hooks/useImageBlob'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 import { handleImageError } from '@/lib/utils/image-utils'
 import { LoadingSpinner } from '../loading/LoadingSpinner'
 

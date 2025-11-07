@@ -23,7 +23,7 @@ interface InquiryListProps {
   onUpdateStatus: (inquiryId: string, status: InquiryStatus) => void
 }
 
-export default function InquiryList({
+export function InquiryList({
   inquiries,
   selectedInquiries,
   isUpdatingStatus,

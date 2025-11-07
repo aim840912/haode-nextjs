@@ -3,14 +3,12 @@
 import { useState, useRef, useEffect, useCallback, memo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils/cn'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { fetchUserInterests } from '@/lib/api/user-interests-api'
 import { logger } from '@/lib/logger'
-import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
-
+import { cn } from '@/lib/utils/cn'
 // SVG 圖示元件
 const UserIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -18,43 +16,44 @@ const UserIcon = ({ className }: { className?: string }) => (
   </svg>
 )
 
-const PackageIcon = ({ className }: { className?: string }) => (
+// 未來可能使用的圖示元件
+const _PackageIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z" />
   </svg>
 )
 
-const GalleryIcon = ({ className }: { className?: string }) => (
+const _GalleryIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
   </svg>
 )
 
-const FarmIcon = ({ className }: { className?: string }) => (
+const _FarmIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12,3L6,7.58V6H4V9.11L1,11.4L1.58,12.25L2,12L2,21H10C10,19.9 10.9,19 12,19C13.1,19 14,19.9 14,21H22V12L22.42,12.25L23,11.4L12,3M12,8.75A2.25,2.25 0 0,1 14.25,11A2.25,2.25 0 0,1 12,13.25A2.25,2.25 0 0,1 9.75,11A2.25,2.25 0 0,1 12,8.75Z" />
   </svg>
 )
 
-const LocationIcon = ({ className }: { className?: string }) => (
+const _LocationIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
   </svg>
 )
 
-const MonitoringIcon = ({ className }: { className?: string }) => (
+const _MonitoringIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
   </svg>
 )
 
-const AuditIcon = ({ className }: { className?: string }) => (
+const _AuditIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10.5V11C15.4,11 16,11.4 16,12V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V12C8,11.4 8.4,11 9,11V10.5C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10.5V11H13.8V10.5C13.8,8.7 12.8,8.2 12,8.2Z" />
   </svg>
 )
 
-const DashboardIcon = ({ className }: { className?: string }) => (
+const _DashboardIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
     <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" />
   </svg>
@@ -91,7 +90,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
   const router = useRouter()
   const { user, logout, isLoading } = useAuth()
   const { success, error: showError } = useToast()
-  const { stats, error: statsError, isRetrying } = useInquiryStatsContext()
+  const { error: _statsError } = useInquiryStatsContext()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [interestedCount, setInterestedCount] = useState(0)
@@ -388,4 +387,5 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
 
 // 使用 React.memo 來優化渲染效能
 // 當 isMobile prop 沒有變化時，避免不必要的重渲染
-export default memo(AuthButton)
+const AuthButtonMemoized = memo(AuthButton)
+export { AuthButtonMemoized as AuthButton }

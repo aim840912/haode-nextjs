@@ -6,9 +6,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { cn } from '@/lib/utils/cn'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
+import { cn } from '@/lib/utils/cn'
 import { shouldShowErrorInDevelopment } from '@/lib/utils/error-utils'
 
 interface InquiryNotificationBadgeProps {

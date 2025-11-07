@@ -466,7 +466,7 @@ export class SupabaseConnectionPool {
     this.schemaVersion = Date.now()
 
     // 標記所有連線為不健康，強制重建
-    for (const [id, connection] of this.connections) {
+    for (const [_id, connection] of this.connections) {
       connection.state = ConnectionState.UNHEALTHY
     }
 

@@ -115,7 +115,9 @@ export abstract class AbstractPooledService {
     if (usePool) {
       // 使用連線池的批次操作（共用連線）
       try {
-        const { ConnectionManager } = await import('@/lib/database/pooled-connection')
+        const { ConnectionManager: _ConnectionManager } = await import(
+          '@/lib/database/pooled-connection'
+        )
         const { getConnectionManager } = await import('@/lib/supabase/connection-factory')
 
         const manager = await getConnectionManager()

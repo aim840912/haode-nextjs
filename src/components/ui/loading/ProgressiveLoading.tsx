@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback, ReactNode, Suspense } from 'react'
-import { cn } from '@/lib/utils/cn'
 import { useLoadingState } from '@/hooks/useLoadingState'
+import { cn } from '@/lib/utils/cn'
 import { ComponentErrorBoundary } from '../error/ErrorBoundary'
-import { LoadingError, GenericError } from './LoadingError'
+import { LoadingError, GenericError } from './LoadingError' // GenericError 用於 errorComponent
 import { LoadingSkeleton } from './LoadingSkeleton'
 import { LoadingSpinner } from './LoadingSpinner'
 
@@ -98,7 +98,14 @@ export function DataLoading<T>({
   className = '',
 }: DataLoadingProps<T>) {
   const [data, setData] = useState<T | null>(null)
-  const { isLoading, error, shouldShowLoading, executeAsync, retry, reset } = useLoadingState({
+  const {
+    isLoading,
+    error,
+    shouldShowLoading,
+    executeAsync,
+    retry: _retry,
+    reset,
+  } = useLoadingState({
     showLoadingAfterMs: 200,
     maxRetries: 3,
   })

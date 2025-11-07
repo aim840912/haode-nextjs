@@ -5,14 +5,14 @@
  * 有助於 SEO 和使用者導航體驗
  */
 
-import Link from 'next/link'
 import { useMemo } from 'react'
+import Link from 'next/link'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 import {
   sanitizeStructuredData,
   validateStructuredData,
 } from '@/lib/utils/structured-data-sanitizer'
-import { logger } from '@/lib/logger'
-import { cn } from '@/lib/utils/cn'
 
 // ============================================================================
 // 類型定義

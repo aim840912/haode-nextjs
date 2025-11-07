@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils/cn'
 import { fetchSearchStats, type SearchStatsResponse } from '@/lib/api/search-api'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 
 interface PopularSearchesProps {
   onSearchSelect?: (query: string) => void

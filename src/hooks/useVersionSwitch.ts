@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
+import { useSearchParams, usePathname } from 'next/navigation'
 import { logger } from '@/lib/logger'
 
 export type VersionType = 'v1' | 'v2'
@@ -58,7 +58,6 @@ const DEFAULT_CONFIG: VersionConfig = {
 export function useVersionSwitch(config: Partial<VersionConfig> = {}): VersionSwitchResult {
   const mergedConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config])
   const searchParams = useSearchParams()
-  const router = useRouter()
   const pathname = usePathname()
 
   const [currentVersion, setCurrentVersion] = useState<VersionType>(mergedConfig.defaultVersion)

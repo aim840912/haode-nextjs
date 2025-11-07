@@ -6,8 +6,8 @@ import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useDebounce } from '@/hooks/useDebounce'
 import { searchContent } from '@/lib/api/search-api'
 import { logger } from '@/lib/logger'
-import { SearchResult } from '@/types/search'
 import { cn } from '@/lib/utils/cn'
+import { SearchResult } from '@/types/search'
 
 interface ExpandableSearchBarProps {
   placeholder?: string

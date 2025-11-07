@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { cn } from '@/lib/utils/cn'
 import { useSearchSuggestions } from '@/hooks/useSearchSuggestions'
+import { cn } from '@/lib/utils/cn'
 
 interface SearchInputProps {
   value: string

@@ -2,7 +2,7 @@
  * 訂單服務相關類型定義
  */
 
-import { OrderStatus, ShippingAddress } from '@/types/order'
+import { OrderStatus } from '@/types/order'
 
 /**
  * 資料庫訂單記錄類型

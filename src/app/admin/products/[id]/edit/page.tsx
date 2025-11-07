@@ -9,7 +9,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { BasicInfoSection } from './components/BasicInfoSection'
 import { PriceInventorySection } from './components/PriceInventorySection'
 import { useProductForm } from './hooks/useProductForm'
-import { useProductImageSync } from './hooks/useProductImageSync'
 
 const ProductImageManager = dynamic(
   () =>

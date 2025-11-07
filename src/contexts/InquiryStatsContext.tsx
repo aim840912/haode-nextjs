@@ -6,7 +6,7 @@
 
 'use client'
 
-import React, { createContext, useContext, useCallback, useRef } from 'react'
+import React, { createContext, useContext } from 'react'
 import { useInquiryStats, UseInquiryStatsReturn } from '@/hooks/useInquiryStats'
 
 type InquiryStatsContextType = UseInquiryStatsReturn

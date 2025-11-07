@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { cn } from '@/lib/utils/cn'
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils/cn'
 
 export type ValidatedInputType =
   | 'text'

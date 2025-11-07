@@ -10,20 +10,19 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import {} from '@/lib/database/supabase-server'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = () => getSupabaseAdmin()
+const _getAdmin = () => getSupabaseAdmin()
 import { FarmTourActivity } from '@/types/farmTour'
-import { UpdateDataObject } from '@/types/service.types'
 
 /**
  * 資料庫記錄類型
  */
-interface SupabaseFarmTourRecord {
+interface _SupabaseFarmTourRecord {
   id: string
   title: string
   start_month: number

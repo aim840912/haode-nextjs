@@ -102,5 +102,3 @@ export function ProductTableHeader({
     </div>
   )
 }
-
-export default ProductTableHeader

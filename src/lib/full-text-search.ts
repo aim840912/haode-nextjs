@@ -116,7 +116,7 @@ export class FullTextSearchService {
    */
   async searchProducts(query: string, config: SearchConfig = {}): Promise<PaginatedSearchResult> {
     const timer = dbLogger.timer('全文搜尋產品')
-    const startTime = Date.now()
+    const _startTime = Date.now()
 
     try {
       const {
@@ -129,7 +129,7 @@ export class FullTextSearchService {
       } = config
 
       // 建構全文搜尋查詢
-      const searchQuery = this.buildSearchQuery('products', query, {
+      const _searchQuery = this.buildSearchQuery('products', query, {
         language,
         enableRanking,
         enableHighlight,
@@ -256,7 +256,7 @@ export class FullTextSearchService {
     limit: number = 20
   ): Promise<PaginatedSearchResult> {
     const timer = dbLogger.timer('進階產品搜尋')
-    const startTime = Date.now()
+    const _startTime = Date.now()
 
     try {
       // 為了避免 Supabase 類型檢查問題，使用 any 類型斷言

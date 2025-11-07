@@ -27,7 +27,7 @@ export function useProductsData(): UseProductsDataReturn {
   const { executeWithErrorHandling } = useAsyncWithError()
 
   const fetchProducts = useCallback(
-    async (forceRefresh: boolean = false) => {
+    async (_forceRefresh: boolean = false) => {
       setLoading(true)
       setError(null)
 
