@@ -87,9 +87,9 @@ export function useProductForm(productId: string) {
             price: product.price || 0,
             priceUnit: product.priceUnit || '斤',
             unitQuantity: product.unitQuantity || 1,
-            salePrice: (product as any).salePrice || 0,
-            isOnSale: (product as any).isOnSale || false,
-            saleEndDate: (product as any).saleEndDate || '',
+            salePrice: product.originalPrice || 0,
+            isOnSale: product.isOnSale || false,
+            saleEndDate: product.saleEndDate || '',
             inventory: product.inventory || 0,
             isActive: product.isActive ?? true,
           })

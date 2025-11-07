@@ -22,7 +22,7 @@ export interface UseFormReturn<T> {
   handleChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
   handleBlur: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
   handleSubmit: (e?: React.FormEvent) => Promise<void>
-  setFieldValue: (field: keyof T, value: any) => void
+  setFieldValue: <K extends keyof T>(field: K, value: T[K]) => void
   setFieldError: (field: keyof T, error: string) => void
   setFieldTouched: (field: keyof T, touched: boolean) => void
   resetForm: () => void
@@ -43,7 +43,7 @@ export interface UseFormReturn<T> {
  *   const form = useForm<LoginForm>({
  *     initialValues: { email: '', password: '' },
  *     validate: (values) => {
- *       const errors: any = {}
+ *       const errors: Partial<Record<keyof LoginForm, string>> = {}
  *       if (!values.email) errors.email = 'Email is required'
  *       if (!values.password) errors.password = 'Password is required'
  *       return errors
@@ -69,7 +69,7 @@ export interface UseFormReturn<T> {
  * }
  * ```
  */
-export function useForm<T extends Record<string, any>>({
+export function useForm<T extends Record<string, unknown>>({
   initialValues,
   validate,
   onSubmit,
@@ -161,7 +161,7 @@ export function useForm<T extends Record<string, any>>({
   )
 
   // 設定單一欄位值
-  const setFieldValue = useCallback((field: keyof T, value: any) => {
+  const setFieldValue = useCallback(<K extends keyof T>(field: K, value: T[K]) => {
     setValues(prev => ({ ...prev, [field]: value }))
   }, [])
 
