@@ -1,3 +1,12 @@
+/**
+ * @api {delete} /api/admin-proxy/farm-tour/:id 代理：刪除農場體驗活動
+ * @apiName ProxyDeleteFarmTourActivity
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ * @apiParam {String} id 活動 ID
+ * @apiDescription 安全代理 API，驗證管理員身份後轉發到 /api/admin/farm-tour/:id
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { AuthorizationError } from '@/lib/errors'

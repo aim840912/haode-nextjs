@@ -1,3 +1,33 @@
+/**
+ * @api {get} /api/admin/products 取得所有產品（管理員）
+ * @apiName GetAllProductsAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ * @apiDescription 取得所有產品，包含未啟用的。需要 ADMIN_API_KEY
+ */
+
+/**
+ * @api {post} /api/admin/products 新增產品（管理員）
+ * @apiName CreateProductAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ */
+
+/**
+ * @api {put} /api/admin/products 更新產品（管理員）
+ * @apiName UpdateProductAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ */
+
+/**
+ * @api {delete} /api/admin/products 刪除產品（管理員）
+ * @apiName DeleteProductAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ * @apiQuery {String} id 產品 ID
+ */
+
 import { NextRequest } from 'next/server'
 import { success, created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
