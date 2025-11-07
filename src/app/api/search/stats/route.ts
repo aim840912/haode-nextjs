@@ -1,7 +1,99 @@
 /**
- * 搜尋統計 API
+ * @api {GET} /api/search/stats 取得搜尋統計
+ * @apiName GetSearchStats
+ * @apiGroup Search
+ * @apiVersion 1.0.0
  *
- * 提供搜尋統計數據，包含熱門搜尋關鍵字
+ * @apiDescription
+ * 取得搜尋統計數據（公開 API）。
+ * 提供熱門搜尋關鍵字、搜尋次數、平均執行時間等統計資訊。
+ * 支援自訂統計時間範圍和結果數量。
+ * 如果資料庫 RPC 函數不可用，會返回模擬數據以確保服務可用性。
+ *
+ * @apiPermission public
+ *
+ * @apiQuery {Number} [days=7] 統計過去幾天的數據（1-365）
+ * @apiQuery {Number} [limit=10] 返回的熱門搜尋數量（1-50）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 統計資料
+ * @apiSuccess {Object[]} data.popularSearches 熱門搜尋列表
+ * @apiSuccess {String} data.popularSearches.query 搜尋關鍵字
+ * @apiSuccess {Number} data.popularSearches.count 搜尋次數
+ * @apiSuccess {Number} data.popularSearches.avgExecutionTime 平均執行時間（毫秒）
+ * @apiSuccess {Number} data.popularSearches.avgResultCount 平均結果數量
+ * @apiSuccess {Object} data.period 統計時間範圍
+ * @apiSuccess {Number} data.period.daysBack 統計天數
+ * @apiSuccess {String} data.period.startDate 開始日期
+ * @apiSuccess {String} data.period.endDate 結束日期
+ * @apiSuccess {Object} data.summary 統計摘要
+ * @apiSuccess {Number} data.summary.totalSearches 總搜尋次數
+ * @apiSuccess {Number} data.summary.uniqueQueries 唯一查詢數
+ * @apiSuccess {Number} data.summary.averageExecutionTime 平均執行時間
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應（真實數據）:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "popularSearches": [
+ *       {
+ *         "query": "有機蔬菜",
+ *         "count": 45,
+ *         "avgExecutionTime": 28,
+ *         "avgResultCount": 12
+ *       },
+ *       {
+ *         "query": "高山茶葉",
+ *         "count": 32,
+ *         "avgExecutionTime": 22,
+ *         "avgResultCount": 8
+ *       }
+ *     ],
+ *     "period": {
+ *       "daysBack": 7,
+ *       "startDate": "2025-01-01T00:00:00Z",
+ *       "endDate": "2025-01-07T00:00:00Z"
+ *     },
+ *     "summary": {
+ *       "totalSearches": 147,
+ *       "uniqueQueries": 38,
+ *       "averageExecutionTime": 28.5
+ *     }
+ *   },
+ *   "message": "取得搜尋統計成功"
+ * }
+ *
+ * @apiSuccessExample {json} 成功回應（模擬數據）:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "popularSearches": [...],
+ *     "period": {...},
+ *     "summary": {...}
+ *   },
+ *   "message": "取得搜尋統計成功（模擬數據）"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 參數驗證失敗
+ *
+ * @apiErrorExample {json} 天數範圍錯誤:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "天數必須在 1-365 之間",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 結果數量錯誤:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "結果數量必須在 1-50 之間",
+ *   "code": "VALIDATION_ERROR"
+ * }
  */
 
 import { NextRequest } from 'next/server'
