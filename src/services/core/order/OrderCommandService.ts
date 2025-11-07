@@ -7,9 +7,14 @@ import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { AbstractSupabaseService } from '@/services/base/abstract-supabase-service'
 import { Order, OrderItem, OrderStatus, CreateOrderRequest, ShippingAddress } from '@/types/order'
+import type { CreateOrderDTO, UpdateOrderDTO } from '@/types/service-dto.types'
 import type { OrderQueryService } from './OrderQueryService'
 
-export class OrderCommandService extends AbstractSupabaseService<Order, any, any> {
+export class OrderCommandService extends AbstractSupabaseService<
+  Order,
+  CreateOrderDTO,
+  UpdateOrderDTO
+> {
   private readonly orderItemsTable = 'order_items'
 
   constructor() {

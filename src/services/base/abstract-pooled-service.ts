@@ -101,7 +101,7 @@ export abstract class AbstractPooledService {
    */
   protected async executeBatch<T>(
     operations: Array<{
-      operation: (client: SupabaseClient<Database>) => Promise<any>
+      operation: (client: SupabaseClient<Database>) => Promise<T>
       context?: { action?: string; metadata?: Record<string, unknown> }
     }>
   ): Promise<T[]> {
@@ -254,6 +254,17 @@ export abstract class AbstractPooledService {
 }
 
 /**
+ * 連線池統計資訊類型
+ */
+export interface PoolStats {
+  activeConnections?: number
+  idleConnections?: number
+  totalConnections?: number
+  waitingRequests?: number
+  [key: string]: unknown
+}
+
+/**
  * 連線池服務介面
  * 擴展現有服務介面以支援連線池功能
  */
@@ -261,7 +272,7 @@ export interface PooledService {
   /**
    * 取得連線池統計資訊
    */
-  getPoolStats?(): Promise<any>
+  getPoolStats?(): Promise<PoolStats>
 
   /**
    * 檢查是否使用連線池
