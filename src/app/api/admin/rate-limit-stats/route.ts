@@ -9,6 +9,36 @@ import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { getRateLimitStats } from '@/services/infrastructure/rateLimitMonitoringService'
 
+/**
+ * @api {GET} /api/admin/rate-limit-stats 取得 Rate Limiting 統計
+ * @apiName GetRateLimitStats
+ * @apiGroup Admin
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 取得 rate limiting 的統計和監控資料。
+ * 包含請求頻率、限制觸發次數、被封鎖的請求等資訊。
+ *
+ * @apiPermission admin
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data Rate limiting 統計資料
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "totalRequests": 50000,
+ *     "blockedRequests": 120,
+ *     "rateLimitHits": 150
+ *   },
+ *   "message": "Rate Limiting 統計數據取得成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 需要管理員權限
+ */
 async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {
   apiLogger.info('管理員查詢 Rate Limiting 統計', {
     metadata: {
