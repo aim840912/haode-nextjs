@@ -3,6 +3,103 @@
  * 提供審計日誌的統計資訊
  */
 
+/**
+ * @api {get} /api/audit-logs/stats 取得審計日誌統計
+ * @apiName GetAuditLogStats
+ * @apiGroup AuditLog
+ * @apiPermission user
+ *
+ * @apiDescription 取得審計日誌的統計資訊，支援多種統計類型。僅限管理員和稽核人員使用
+ *
+ * @apiQuery {Number} [days=30] 統計天數範圍（1-365）
+ * @apiQuery {String} [type=overview] 統計類型 (overview/users/resources/actions)
+ *
+ * @apiSuccess {String} message 回應訊息
+ * @apiSuccess {Object} data 統計資料
+ *
+ * @apiSuccess (overview) {Object} data.audit_stats 操作統計（按日期和操作類型）
+ * @apiSuccess (overview) {Object[]} data.user_stats 使用者活動統計（前 10 名）
+ * @apiSuccess (overview) {Object[]} data.resource_stats 資源存取統計（前 10 個）
+ * @apiSuccess (overview) {Object} data.summary 統計摘要
+ * @apiSuccess (overview) {Number} data.summary.total_actions 總操作數
+ * @apiSuccess (overview) {Number} data.summary.unique_users 獨立使用者數
+ * @apiSuccess (overview) {Object} data.summary.most_active_day 最活躍的日期
+ * @apiSuccess (overview) {Number} data.summary.sensitive_actions 敏感操作數（刪除、匯出、更新）
+ *
+ * @apiSuccess (users) {Object[]} data 使用者活動統計列表
+ * @apiSuccess (users) {String} data.user_id 使用者 ID
+ * @apiSuccess (users) {String} data.user_email 使用者 Email
+ * @apiSuccess (users) {String} data.user_name 使用者名稱
+ * @apiSuccess (users) {Number} data.action_count 操作次數
+ *
+ * @apiSuccess (resources) {Object[]} data 資源存取統計列表
+ * @apiSuccess (resources) {String} data.resource_type 資源類型
+ * @apiSuccess (resources) {String} data.resource_id 資源 ID
+ * @apiSuccess (resources) {Number} data.access_count 存取次數
+ *
+ * @apiSuccess (actions) {Object[]} data 操作統計列表
+ * @apiSuccess (actions) {String} data.action 操作類型
+ * @apiSuccess (actions) {String} data.date 日期
+ * @apiSuccess (actions) {Number} data.count 次數
+ *
+ * @apiSuccessExample {json} 綜合統計成功:
+ * {
+ *   "success": true,
+ *   "message": "取得審計統計成功",
+ *   "data": {
+ *     "audit_stats": [
+ *       {"action": "update", "date": "2025-01-07", "count": 45},
+ *       {"action": "create", "date": "2025-01-07", "count": 32}
+ *     ],
+ *     "user_stats": [
+ *       {
+ *         "user_id": "user_123",
+ *         "user_email": "admin@example.com",
+ *         "user_name": "管理員",
+ *         "action_count": 156
+ *       }
+ *     ],
+ *     "resource_stats": [
+ *       {
+ *         "resource_type": "product",
+ *         "resource_id": "prod_456",
+ *         "access_count": 89
+ *       }
+ *     ],
+ *     "summary": {
+ *       "total_actions": 1250,
+ *       "unique_users": 15,
+ *       "most_active_day": {
+ *         "date": "2025-01-07",
+ *         "count": 125
+ *       },
+ *       "sensitive_actions": 45
+ *     }
+ *   }
+ * }
+ *
+ * @apiError (400) ValidationError 查詢天數範圍無效或統計類型不支援
+ * @apiError (403) AuthorizationError 權限不足，僅限管理員和稽核人員
+ *
+ * @apiErrorExample {json} 天數範圍錯誤:
+ * {
+ *   "success": false,
+ *   "message": "查詢天數必須在 1-365 之間",
+ *   "error": {
+ *     "code": "VALIDATION_ERROR"
+ *   }
+ * }
+ *
+ * @apiErrorExample {json} 統計類型錯誤:
+ * {
+ *   "success": false,
+ *   "message": "不支援的統計類型",
+ *   "error": {
+ *     "code": "VALIDATION_ERROR"
+ *   }
+ * }
+ */
+
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
