@@ -1,3 +1,11 @@
+/**
+ * @api {post} /api/admin/locations/create-with-images 建立門市（含圖片）
+ * @apiName CreateLocationWithImages
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ * @apiDescription 事務式建立門市，支援 Base64 圖片上傳或已上傳圖片 URL
+ */
+
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { created } from '@/lib/api-response'

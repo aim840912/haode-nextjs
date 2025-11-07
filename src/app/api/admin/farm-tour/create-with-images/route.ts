@@ -1,3 +1,11 @@
+/**
+ * @api {post} /api/admin/farm-tour/create-with-images 建立農場體驗活動（含圖片）
+ * @apiName CreateFarmTourActivityWithImages
+ * @apiGroup AdminFarmTour
+ * @apiPermission admin
+ * @apiDescription 事務式建立農場體驗活動，支援 Base64 圖片上傳或已上傳圖片 URL
+ */
+
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { created } from '@/lib/api-response'

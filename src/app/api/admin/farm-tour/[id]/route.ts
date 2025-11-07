@@ -1,3 +1,12 @@
+/**
+ * @api {delete} /api/admin/farm-tour/:id 刪除農場體驗活動
+ * @apiName DeleteFarmTourActivity
+ * @apiGroup AdminFarmTour
+ * @apiPermission admin
+ * @apiDescription 刪除指定的農場體驗活動及其關聯圖片
+ * @apiParam {String} id 活動 ID
+ */
+
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'

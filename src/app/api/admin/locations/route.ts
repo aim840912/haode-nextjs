@@ -1,3 +1,32 @@
+/**
+ * @api {get} /api/admin/locations 取得所有地點
+ * @apiName GetAllLocations
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ */
+
+/**
+ * @api {post} /api/admin/locations 新增地點
+ * @apiName CreateLocation
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ */
+
+/**
+ * @api {put} /api/admin/locations 更新地點
+ * @apiName UpdateLocation
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ */
+
+/**
+ * @api {delete} /api/admin/locations 刪除地點
+ * @apiName DeleteLocation
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ * @apiQuery {String} id 地點 ID
+ */
+
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { success, created } from '@/lib/api-response'
