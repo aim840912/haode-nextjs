@@ -1,3 +1,46 @@
+/**
+ * @api {GET} /api/user/interests 取得使用者興趣清單
+ * @apiName GetUserInterests
+ * @apiGroup UserInterests
+ * @apiVersion 1.0.0
+ * @apiDescription 取得當前登入使用者的產品興趣清單
+ * @apiPermission user
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 回應資料
+ * @apiSuccess {String[]} data.interests 興趣產品 ID 列表
+ * @apiSuccessExample {json} 成功回應:
+ *   HTTP/1.1 200 OK
+ *   {"success": true, "data": {"interests": ["uuid1", "uuid2"]}, "message": "獲取興趣清單成功"}
+ */
+
+/**
+ * @api {POST} /api/user/interests 新增產品到興趣清單
+ * @apiName AddUserInterest
+ * @apiGroup UserInterests
+ * @apiVersion 1.0.0
+ * @apiDescription 將指定產品添加到使用者興趣清單
+ * @apiPermission user
+ * @apiBody {String} productId 產品 ID（必填）
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccessExample {json} 成功回應:
+ *   HTTP/1.1 201 Created
+ *   {"success": true, "data": {"userId": "uuid", "productId": "uuid", "action": "added"}, "message": "已加入興趣清單"}
+ */
+
+/**
+ * @api {DELETE} /api/user/interests 從興趣清單移除產品
+ * @apiName RemoveUserInterest
+ * @apiGroup UserInterests
+ * @apiVersion 1.0.0
+ * @apiDescription 從使用者興趣清單中移除指定產品
+ * @apiPermission user
+ * @apiBody {String} productId 產品 ID（必填）
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccessExample {json} 成功回應:
+ *   HTTP/1.1 200 OK
+ *   {"success": true, "data": {"userId": "uuid", "productId": "uuid", "action": "removed"}, "message": "已從興趣清單移除"}
+ */
+
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 import { success, created } from '@/lib/api-response'
@@ -5,7 +48,6 @@ import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { userInterestsService } from '@/services/core/user/userInterestsService'
 
-// 請求驗證架構
 const AddInterestSchema = z.object({
   productId: z.string().min(1, '產品ID不能為空'),
 })
@@ -14,9 +56,6 @@ const RemoveInterestSchema = z.object({
   productId: z.string().min(1, '產品ID不能為空'),
 })
 
-/**
- * 獲取使用者興趣清單
- */
 async function handleGET(req: NextRequest, user: User) {
   const interests = await userInterestsService.getUserInterests(user.id)
   return success({ interests }, '獲取興趣清單成功')
