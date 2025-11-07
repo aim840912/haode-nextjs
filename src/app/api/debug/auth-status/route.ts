@@ -1,3 +1,113 @@
+/**
+ * @api {get} /api/debug/auth-status 取得認證狀態（除錯用）
+ * @apiName GetAuthStatus
+ * @apiGroup Debug
+ * @apiPermission public
+ *
+ * @apiDescription 顯示當前的認證狀態、CSRF token 資訊和診斷建議。只在開發和測試環境啟用
+ *
+ * @apiSuccess {Object} authStatus 認證狀態資訊
+ * @apiSuccess {Object} authStatus.origin 來源驗證資訊
+ * @apiSuccess {String} authStatus.origin.value 請求來源
+ * @apiSuccess {Boolean} authStatus.origin.valid 來源是否有效
+ * @apiSuccess {Object} authStatus.csrf CSRF token 資訊
+ * @apiSuccess {Boolean} authStatus.csrf.hasHeaderToken 是否有標頭 token
+ * @apiSuccess {Boolean} authStatus.csrf.hasCookieToken 是否有 cookie token
+ * @apiSuccess {Boolean} authStatus.csrf.tokensMatch token 是否匹配
+ * @apiSuccess {Boolean} authStatus.csrf.validFormat token 格式是否有效
+ * @apiSuccess {Object[]} authStatus.cookies Cookie 列表
+ * @apiSuccess {Object} authStatus.environment 環境變數資訊
+ * @apiSuccess {Object} diagnostics 診斷資訊
+ * @apiSuccess {String[]} diagnostics.issues 發現的問題
+ * @apiSuccess {String[]} diagnostics.recommendations 建議解決方案
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * {
+ *   "authStatus": {
+ *     "origin": {
+ *       "value": "http://localhost:3000",
+ *       "valid": true,
+ *       "referer": "http://localhost:3000/admin",
+ *       "host": "localhost:3000"
+ *     },
+ *     "csrf": {
+ *       "hasHeaderToken": true,
+ *       "hasCookieToken": true,
+ *       "headerToken": "a1b2c3d4...",
+ *       "cookieToken": "a1b2c3d4...",
+ *       "tokensMatch": true,
+ *       "validFormat": true
+ *     },
+ *     "cookies": [
+ *       {"name": "csrf-token", "value": "a1b2c3d4..."}
+ *     ],
+ *     "environment": {
+ *       "NODE_ENV": "development",
+ *       "VERCEL": "not set"
+ *     }
+ *   },
+ *   "diagnostics": {
+ *     "issues": [],
+ *     "recommendations": []
+ *   },
+ *   "message": "Auth status retrieved successfully. This endpoint is for debugging only."
+ * }
+ *
+ * @apiError (404) NotFoundError 在生產環境中端點被停用
+ *
+ * @apiErrorExample {json} 生產環境錯誤:
+ * {
+ *   "success": false,
+ *   "message": "Debug endpoint is disabled in production",
+ *   "error": {
+ *     "code": "NOT_FOUND"
+ *   }
+ * }
+ */
+
+/**
+ * @api {post} /api/debug/auth-status 測試 CSRF 保護（除錯用）
+ * @apiName TestCSRFProtection
+ * @apiGroup Debug
+ * @apiPermission public
+ *
+ * @apiDescription 測試來源驗證和 CSRF token 驗證功能。只在開發和測試環境啟用
+ *
+ * @apiHeader {String} X-CSRF-Token CSRF token
+ * @apiHeader {String} Cookie 包含 csrf-token 的 cookie
+ *
+ * @apiSuccess {String} message 回應訊息
+ * @apiSuccess {Object} data 測試結果
+ * @apiSuccess {Object} data.testResults 測試結果詳情
+ * @apiSuccess {Object} data.testResults.originValidation 來源驗證結果
+ * @apiSuccess {Boolean} data.testResults.originValidation.passed 是否通過
+ * @apiSuccess {Object} data.testResults.csrfValidation CSRF 驗證結果
+ * @apiSuccess {Boolean} data.testResults.csrfValidation.passed 是否通過
+ * @apiSuccess {String} data.testResults.overallStatus 整體狀態 (PASS/FAIL)
+ *
+ * @apiSuccessExample {json} 測試通過:
+ * {
+ *   "success": true,
+ *   "message": "CSRF 保護測試完成",
+ *   "data": {
+ *     "testResults": {
+ *       "originValidation": {
+ *         "passed": true,
+ *         "origin": "http://localhost:3000"
+ *       },
+ *       "csrfValidation": {
+ *         "passed": true,
+ *         "reason": "Valid"
+ *       },
+ *       "overallStatus": "PASS"
+ *     },
+ *     "message": "CSRF protection test PASS"
+ *   }
+ * }
+ *
+ * @apiError (404) NotFoundError 在生產環境中端點被停用
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { success } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'

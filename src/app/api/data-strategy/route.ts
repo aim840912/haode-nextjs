@@ -1,3 +1,68 @@
+/**
+ * @api {get} /api/data-strategy 取得資料策略資訊
+ * @apiName GetDataStrategy
+ * @apiGroup System
+ * @apiPermission public
+ *
+ * @apiDescription 查詢當前資料策略配置、服務類型和健康狀態
+ *
+ * @apiSuccess {String} message 回應訊息
+ * @apiSuccess {Object} data 資料策略資訊
+ * @apiSuccess {String} data.timestamp 時間戳記
+ * @apiSuccess {Object} data.strategy 策略配置
+ * @apiSuccess {String} data.strategy.environment 環境 (development/production)
+ * @apiSuccess {Boolean} data.strategy.useSupabase 是否使用 Supabase
+ * @apiSuccess {Boolean} data.strategy.hasSupabaseConfig 是否有 Supabase 配置
+ * @apiSuccess {String} data.strategy.primaryDataSource 主要資料來源
+ * @apiSuccess {Boolean} data.strategy.cacheEnabled 是否啟用快取
+ * @apiSuccess {Boolean} data.strategy.fallbackEnabled 是否啟用降級模式
+ * @apiSuccess {Object} data.service 服務資訊
+ * @apiSuccess {String} data.service.type 服務類型 (supabase/mock/cache)
+ * @apiSuccess {String} data.service.status 健康狀態 (ok/error)
+ * @apiSuccess {Number} data.service.responseTime 回應時間（毫秒）
+ * @apiSuccess {String[]} data.recommendations 配置建議
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * {
+ *   "success": true,
+ *   "message": "資料策略查詢成功",
+ *   "data": {
+ *     "timestamp": "2025-01-07T10:30:00.000Z",
+ *     "strategy": {
+ *       "environment": "production",
+ *       "useSupabase": true,
+ *       "hasSupabaseConfig": true,
+ *       "primaryDataSource": "Supabase",
+ *       "cacheEnabled": true,
+ *       "fallbackEnabled": true
+ *     },
+ *     "service": {
+ *       "type": "supabase",
+ *       "status": "ok",
+ *       "responseTime": 45
+ *     },
+ *     "config": {
+ *       "useSupabase": true,
+ *       "useCache": true,
+ *       "useMock": false
+ *     },
+ *     "recommendations": [
+ *       "資料策略配置正常，運行良好！"
+ *     ]
+ *   }
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * {
+ *   "success": false,
+ *   "message": "資料策略查詢失敗",
+ *   "error": {
+ *     "code": "INTERNAL_SERVER_ERROR",
+ *     "details": "無法取得策略資訊"
+ *   }
+ * }
+ */
+
 // import { NextRequest } from 'next/server' // 未使用
 import { getStrategyInfo } from '@/config/data-strategy'
 import { success } from '@/lib/api-response'
