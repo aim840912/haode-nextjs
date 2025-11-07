@@ -1,3 +1,68 @@
+/**
+ * @api {GET} /api/auth/phone-to-email 根據手機號碼查詢電子郵件
+ * @apiName PhoneToEmail
+ * @apiGroup Authentication
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 根據手機號碼查詢對應的使用者電子郵件地址。
+ * 此 API 用於支援手機號碼登入功能，將手機號碼轉換為電子郵件以進行後續的認證流程。
+ *
+ * **安全考量**：
+ * - 實施速率限制以防止暴力破解
+ * - 使用統一錯誤訊息以避免帳號列舉攻擊
+ * - 記錄所有查詢請求以監控異常活動
+ * - 敏感資訊（手機號碼、郵件）僅記錄前綴部分
+ *
+ * @apiPermission public
+ *
+ * @apiQuery {String} phone 要查詢的手機號碼（台灣格式，09 開頭）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 查詢結果
+ * @apiSuccess {String} data.email 對應的電子郵件地址
+ * @apiSuccess {Boolean} data.exists 帳號是否存在（固定為 true）
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "email": "user@example.com",
+ *     "exists": true
+ *   },
+ *   "message": "查詢成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 手機號碼參數缺失或格式錯誤
+ * @apiError (錯誤 4xx) {Object} NotFoundError 找不到對應的帳號
+ *
+ * @apiErrorExample {json} 錯誤回應（缺少參數）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "缺少手機號碼參數",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（格式錯誤）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "無效的手機號碼格式",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（帳號不存在）:
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "success": false,
+ *   "error": "找不到對應的帳號",
+ *   "code": "NOT_FOUND"
+ * }
+ */
+
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
@@ -6,15 +71,6 @@ import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { normalizePhoneNumber, isPhoneNumber } from '@/lib/utils/auth-helpers'
 
-/**
- * 根據手機號碼查詢對應的電子郵件地址
- * 用於支援手機號碼登入功能
- *
- * 安全考量：
- * - 速率限制：防止暴力破解
- * - 統一錯誤訊息：避免帳號列舉攻擊
- * - 記錄查詢日誌：監控異常活動
- */
 async function handleGET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const phone = searchParams.get('phone')

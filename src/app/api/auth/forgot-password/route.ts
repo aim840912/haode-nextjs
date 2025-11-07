@@ -1,3 +1,60 @@
+/**
+ * @api {POST} /api/auth/forgot-password 發送密碼重設郵件
+ * @apiName ForgotPassword
+ * @apiGroup Authentication
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 處理忘記密碼請求，向使用者的電子郵件發送密碼重設連結。
+ * 實施速率限制（每小時最多 2 封郵件）以防止濫用。
+ * 基於安全考量，無論電子郵件是否存在，都會返回統一的成功訊息，以防止帳號列舉攻擊。
+ *
+ * @apiPermission public
+ *
+ * @apiBody {String} email 使用者註冊的電子郵件地址（必填）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 回應資料
+ * @apiSuccess {String} data.email 接收重設連結的電子郵件地址
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "email": "user@example.com"
+ *   },
+ *   "message": "如果此電子郵件已註冊，您將收到密碼重設連結"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 請求資料格式錯誤或驗證失敗
+ *
+ * @apiErrorExample {json} 錯誤回應（資料格式錯誤）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "請求資料格式錯誤",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（郵件未驗證）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "此電子郵件尚未完成驗證，請先確認您的電子郵件",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（速率限制）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "發送郵件過於頻繁，請稍後再試（每小時限制 2 封郵件）",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ */
+
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { supabase } from '@/lib/database/supabase-auth'
