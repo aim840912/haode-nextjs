@@ -64,8 +64,11 @@ export function useProductForm(productId: string) {
     try {
       const response = await fetch('/api/products/categories')
       if (response.ok) {
-        const data = await response.json()
-        setCategories(data)
+        const result = await response.json()
+        // 從標準化回應格式中提取 data 欄位
+        if (result.success && Array.isArray(result.data)) {
+          setCategories(result.data)
+        }
       }
     } catch {
       // 忽略分類載入錯誤

@@ -85,7 +85,7 @@ export const InterestButton = React.memo<InterestButtonProps>(
 
     // 圖標變體
     if (variant === 'icon') {
-      const iconStyles = size === 'sm' ? 'p-1' : size === 'lg' ? 'p-3' : 'p-2'
+      const iconStyles = 'p-3'
 
       return (
         <button

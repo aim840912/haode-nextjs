@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { Star, ShoppingCart, Share2 } from 'lucide-react'
-import { UIverseButton } from '@/components/ui/buttons/UIverseButton'
+import { Star, ShoppingCart, Heart } from 'lucide-react'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
+import { useToast } from '@/providers/ToastProvider'
 
 // 動態載入圖片元件以提升效能
 const ProductCardImage = dynamic(
@@ -14,7 +14,7 @@ const ProductCardImage = dynamic(
       default: mod.ProductCardImage,
     })),
   {
-    loading: () => <div className="h-64 bg-gray-100 rounded-t-xl animate-pulse"></div>,
+    loading: () => <div className="h-48 bg-gray-100 rounded-t-xl animate-pulse"></div>,
     ssr: false,
   }
 )
@@ -45,6 +45,7 @@ interface ProductCardProps {
  */
 export const ProductCard = React.memo<ProductCardProps>(
   ({ product, index, isInterested, onProductClick, onToggleInterest }) => {
+    const { addToast } = useToast()
     const [isHovered, setIsHovered] = useState(false)
     const [showQuickActions, setShowQuickActions] = useState(false)
 
@@ -78,7 +79,7 @@ export const ProductCard = React.memo<ProductCardProps>(
           } else {
             // 備援方案：複製連結到剪貼簿
             await navigator.clipboard.writeText(shareUrl)
-            alert('✓ 連結已複製到剪貼簿！')
+            addToast('連結已複製到剪貼簿！', 'success', 3000)
           }
         } catch (error) {
           // AbortError 是使用者取消分享，不需要顯示錯誤
@@ -89,7 +90,7 @@ export const ProductCard = React.memo<ProductCardProps>(
               metadata: { productId: product.id, productName: product.name },
             })
             // 最終備援：顯示連結讓使用者手動複製
-            alert(`請複製此連結分享：\n${shareUrl}`)
+            addToast(`請複製此連結分享：${shareUrl}`, 'info', 5000)
           }
         }
       } else {
@@ -137,40 +138,6 @@ export const ProductCard = React.memo<ProductCardProps>(
               <span className="truncate">特價</span>
             </div>
           )}
-
-          {/* 類別標籤 */}
-          <div className="inline-block bg-gray-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-md max-w-full">
-            <span className="truncate">{product.category}</span>
-          </div>
-        </div>
-
-        {/* 快速操作工具列 */}
-        <div
-          className={cn(
-            'absolute top-4 right-4 z-30 flex flex-col gap-2 sm:top-3 sm:right-3',
-            'transform transition-all duration-300',
-            showQuickActions ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-70'
-          )}
-        >
-          {/* 興趣按鈕 */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-full p-1 shadow-lg">
-            <InterestButton
-              productId={product.id}
-              productName={product.name}
-              isInterested={isInterested}
-              onToggle={onToggleInterest}
-              variant="icon"
-              size="sm"
-            />
-          </div>
-
-          {/* 分享 */}
-          <button
-            onClick={e => handleQuickAction('share', e)}
-            className="bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-colors duration-200"
-          >
-            <Share2 className="w-4 h-4 text-gray-700" />
-          </button>
         </div>
 
         {/* 產品圖片 */}
@@ -188,19 +155,19 @@ export const ProductCard = React.memo<ProductCardProps>(
         </div>
 
         {/* 產品資訊區域 */}
-        <div className="p-6 space-y-4">
+        <div className="p-3 space-y-2">
           {/* 產品名稱和評分 */}
           <div className="space-y-2">
-            <h3 className="text-lg font-bold text-gray-900 leading-tight group-hover:text-amber-900 transition-colors duration-300">
+            <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-amber-900 transition-colors duration-300">
               {product.name}
             </h3>
           </div>
 
           {/* 價格區域 */}
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {/* 現價 */}
-              <span className="text-2xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-gray-900">
                 NT$ {product.price}
                 {product.priceUnit && (
                   <span className="text-sm font-normal text-gray-600 ml-1">
@@ -227,57 +194,63 @@ export const ProductCard = React.memo<ProductCardProps>(
             </div>
           </div>
 
-          {/* 庫存資訊 */}
-          <div className="flex items-center gap-2 text-sm">
-            {(() => {
-              const availableStock = product.availableStock ?? product.inventory
-              const reservedStock = product.reservedStock ?? 0
-
-              if (availableStock > 0) {
-                return (
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-600 font-medium">
-                      ✓ 可購買: {availableStock} 件
-                    </span>
-                    {reservedStock > 0 && (
-                      <span className="text-xs text-amber-600">（保留中: {reservedStock}）</span>
-                    )}
-                  </div>
-                )
-              } else if (product.inventory > 0 && reservedStock > 0) {
-                return (
-                  <div className="flex flex-col gap-1">
-                    <span className="text-red-600 font-medium">⚠️ 庫存已被保留</span>
-                    <span className="text-xs text-gray-500">保留: {reservedStock} 件</span>
-                  </div>
-                )
-              } else {
-                return <span className="text-red-600 font-medium">✗ 暫時缺貨</span>
+          {/* 操作按鈕組 */}
+          <div>
+            {/* 主要操作按鈕 */}
+            <button
+              disabled={(product.availableStock ?? product.inventory) <= 0}
+              onClick={handleViewDetails}
+              className={cn(
+                'w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md',
+                (product.availableStock ?? product.inventory) <= 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              )}
+              aria-label={
+                (product.availableStock ?? product.inventory) > 0 ? '查看產品詳情' : '產品暫時缺貨'
               }
-            })()}
+            >
+              <span className="text-sm font-medium">
+                {(product.availableStock ?? product.inventory) > 0 ? '查看詳情' : '暫時缺貨'}
+              </span>
+            </button>
           </div>
 
-          {/* 操作按鈕組 */}
-          <div className="flex gap-3">
-            {/* 主要操作按鈕 - UIverse felipesntr 設計 */}
-            <div className="flex-1">
-              <UIverseButton
-                disabled={(product.availableStock ?? product.inventory) <= 0}
-                onClick={handleViewDetails}
-              >
-                {(product.availableStock ?? product.inventory) > 0 ? '查看詳情' : '暫時缺貨'}
-              </UIverseButton>
-            </div>
+          {/* 收藏和加入購物車按鈕行 */}
+          <div className="flex gap-2 justify-between pt-1">
+            {/* 收藏按鈕 */}
+            <button
+              onClick={e => {
+                e.stopPropagation()
+                onToggleInterest(product.id, product.name, e)
+              }}
+              className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 shadow-sm hover:shadow-md"
+              aria-label={isInterested ? '移除我的收藏' : '加入我的收藏'}
+            >
+              <Heart
+                className={cn(
+                  'w-4 h-4',
+                  isInterested ? 'fill-red-500 text-red-500' : 'text-gray-600'
+                )}
+              />
+              <span className="text-sm font-medium">{isInterested ? '已收藏' : '收藏'}</span>
+            </button>
 
-            {/* 快速購買按鈕 */}
-            {(product.availableStock ?? product.inventory) > 0 && (
-              <button
-                onClick={e => handleQuickAction('addtocart', e)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-800 p-3 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </button>
-            )}
+            {/* 加入購物車按鈕 */}
+            <button
+              onClick={e => handleQuickAction('addtocart', e)}
+              disabled={(product.availableStock ?? product.inventory) <= 0}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md',
+                (product.availableStock ?? product.inventory) <= 0
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              )}
+              aria-label="加入購物車"
+            >
+              <ShoppingCart className="w-4 h-4 text-gray-600" />
+              <span className="text-sm font-medium">加入購物車</span>
+            </button>
           </div>
         </div>
       </div>

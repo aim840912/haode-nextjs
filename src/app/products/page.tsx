@@ -86,10 +86,11 @@ function ProductsPage() {
         </div>
       </div>
 
-      {/* Header - 統一簡潔設計 */}
-      <div className="bg-white dark:bg-slate-800 py-4 border-b border-gray-200 dark:border-slate-700">
+      {/* Header - 包含標題和篩選條件 */}
+      <div className="bg-white dark:bg-slate-800 py-2 border-b border-gray-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+          {/* 標題列 */}
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-2">
             <div className="text-center lg:text-left">
               <h1 className="text-xl sm:text-2xl font-light text-amber-900 dark:text-amber-300 mb-1">
                 精選農產品
@@ -99,23 +100,24 @@ function ProductsPage() {
             {/* 管理員控制按鈕 */}
             <AdminControls onRefresh={handleRefresh} loading={loading} />
           </div>
+
+          {/* 篩選條件 - 整合到 Header 內 */}
+          <ProductFilter
+            onFilterChange={handleFilterChange}
+            availableCategories={availableCategories}
+            productCount={filteredProducts.length}
+            totalCount={products.length}
+            integrated={true}
+          />
         </div>
       </div>
 
       {/* Products Grid */}
-      <div className="max-w-7xl mx-auto px-6 pt-8 pb-16">
+      <div className="max-w-7xl mx-auto px-6 pb-16">
         {loading ? (
           <ProductsLoadingState />
         ) : (
           <>
-            {/* Product Filter */}
-            <ProductFilter
-              onFilterChange={handleFilterChange}
-              availableCategories={availableCategories}
-              productCount={filteredProducts.length}
-              totalCount={products.length}
-            />
-
             {/* Products Display - 電商精品風格 */}
             {products.length === 0 ? (
               <ProductsEmptyState type="no_data" />

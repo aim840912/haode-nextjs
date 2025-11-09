@@ -11,6 +11,7 @@ interface ProductFilterProps {
   availableCategories: string[]
   productCount: number
   totalCount: number
+  integrated?: boolean // 是否整合到 Header 內
 }
 
 export function ProductFilter({
@@ -18,6 +19,7 @@ export function ProductFilter({
   availableCategories,
   productCount,
   totalCount,
+  integrated = false,
 }: ProductFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
@@ -108,7 +110,15 @@ export function ProductFilter({
   }, [])
 
   return (
-    <div className={cn('bg-white rounded-lg shadow-lg mb-6', isExpanded ? 'p-6' : 'p-4')}>
+    <div
+      className={cn(
+        integrated
+          ? // 整合模式：使用分隔線，無背景、圓角、陰影
+            cn('border-t border-gray-200 dark:border-slate-600 pt-2', isExpanded && 'pb-2')
+          : // 獨立模式：卡片樣式
+            cn('bg-white rounded-lg shadow-lg mb-6', isExpanded ? 'p-6' : 'p-4')
+      )}
+    >
       {/* Toggle Button - 所有裝置都可使用 */}
       <div className={cn(isExpanded && 'mb-4')}>
         <button
