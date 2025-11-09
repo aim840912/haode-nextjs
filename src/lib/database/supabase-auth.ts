@@ -123,8 +123,14 @@ export function getSupabaseServer(): SupabaseClient<Database> {
 }
 
 // 管理員 Supabase 客戶端（具有更高權限） - 使用 getter 函數
-export function getSupabaseAdmin(): SupabaseClient<Database> | null {
-  return getAdminSupabaseClient()
+export function getSupabaseAdmin(): SupabaseClient<Database> {
+  const client = getAdminSupabaseClient()
+  if (!client) {
+    throw new Error(
+      'Supabase admin client not initialized. Check SUPABASE_SERVICE_ROLE_KEY environment variable.'
+    )
+  }
+  return client
 }
 
 // 使用 Proxy 實現延遲初始化的服務端客戶端 - 重導向至統一實作
