@@ -13,6 +13,7 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import {} from '@/lib/database/supabase-server'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
+import { ServiceSupabaseClient } from '@/types/service.types'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 // 類型斷言，解決 Supabase 重載問題
@@ -59,8 +60,12 @@ export class FarmTourService implements IFarmTourService {
   /**
    * 取得 Supabase 管理客戶端
    */
-  private getSupabaseClient() {
-    return getSupabaseAdmin()
+  private getSupabaseClient(): ServiceSupabaseClient {
+    const client = getSupabaseAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
   }
 
   /**

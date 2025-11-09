@@ -155,36 +155,9 @@ async function handleGET(request: NextRequest) {
     throw new ValidationError(`查詢參數驗證失敗: ${errorMessage}`)
   }
 
-  const { nocache } = result.data
-
   // 安全修復：公開 API 只返回已啟用的產品
   // 管理員應使用 /api/admin/products 獲取所有產品
-  let products: unknown[]
-
-  if (nocache) {
-    // 繞過快取，直接從資料庫獲取
-    apiLogger.debug('繞過快取，直接查詢資料庫', { metadata: { nocache: true } })
-
-    // 如果要繞過快取，我們需要直接使用基礎服務
-    const { getProductService } = await import('@/services/factory/serviceFactory')
-    const baseService = await getProductService()
-
-    // 如果是 CachedProductService，獲取其基礎服務
-    if ('baseService' in baseService && (baseService as { baseService?: unknown }).baseService) {
-      const cachedService = baseService as {
-        baseService: {
-          getProducts: () => Promise<unknown[]>
-        }
-      }
-      products = await cachedService.baseService.getProducts()
-    } else {
-      // 直接是基礎服務
-      products = await baseService.getProducts()
-    }
-  } else {
-    // 正常使用快取 - 只獲取已啟用的產品
-    products = await productService.getProducts()
-  }
+  const products = await productService.getProducts()
 
   const response = success(products, '產品清單取得成功')
 
@@ -192,11 +165,6 @@ async function handleGET(request: NextRequest) {
   response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate')
   response.headers.set('Pragma', 'no-cache')
   response.headers.set('Expires', '0')
-
-  // 如果是繞過快取的請求，在 header 中標記
-  if (nocache) {
-    response.headers.set('X-Cache-Bypassed', 'true')
-  }
 
   return response
 }
@@ -235,15 +203,7 @@ const handleGETWithError = withErrorHandler(handleGET, {
 // 導出 API 處理器
 export const GET = handleGETWithError
 // POST 需要管理員權限 - 使用組合函數：權限檢查 + 錯誤處理
-export const POST = withAdminAndError(
-  async req => {
-    const result = await handlePOST(req)
-    // 清除產品快取
-    try {
-      const { CachedProductService } = await import('@/services/core/product/cachedProductService')
-      await CachedProductService.clearGlobalCache()
-    } catch {}
-    return result
-  },
-  { module: 'PublicProductsAPI', enableAuditLog: true }
-)
+export const POST = withAdminAndError(handlePOST, {
+  module: 'PublicProductsAPI',
+  enableAuditLog: true,
+})

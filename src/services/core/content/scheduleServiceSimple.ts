@@ -11,10 +11,10 @@
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { ScheduleItem, ScheduleService } from '@/types/schedule'
-import { UpdateDataObject } from '@/types/service.types'
+import { UpdateDataObject, ServiceSupabaseClient } from '@/types/service.types'
 
 /**
  * 資料庫記錄類型
@@ -40,6 +40,17 @@ interface SupabaseScheduleRecord {
  */
 export class ScheduleServiceSimple implements ScheduleService {
   private readonly moduleName = 'ScheduleService'
+
+  /**
+   * 取得 Supabase Admin 客戶端
+   */
+  private getSupabaseAdminClient(): ServiceSupabaseClient {
+    const client = getSupabaseAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
+  }
 
   /**
    * 統一錯誤處理方法
@@ -157,10 +168,7 @@ export class ScheduleServiceSimple implements ScheduleService {
 
       const insertData = this.transformToInsertData(scheduleData)
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client not available')
-      }
+      const supabaseAdmin = this.getSupabaseAdminClient()
       const { data, error } = await supabaseAdmin
         .from('schedule')
         .insert([insertData])
@@ -218,10 +226,7 @@ export class ScheduleServiceSimple implements ScheduleService {
       if (scheduleData.weatherNote !== undefined)
         updateData.weather_note = scheduleData.weatherNote || null
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client not available')
-      }
+      const supabaseAdmin = this.getSupabaseAdminClient()
       const { data, error } = await supabaseAdmin
         .from('schedule')
         .update(updateData)
@@ -266,10 +271,7 @@ export class ScheduleServiceSimple implements ScheduleService {
         throw new ValidationError('排程 ID 不能為空')
       }
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client not available')
-      }
+      const supabaseAdmin = this.getSupabaseAdminClient()
       const { error } = await supabaseAdmin.from('schedule').delete().eq('id', id)
 
       if (error) {

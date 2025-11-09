@@ -5,13 +5,32 @@
 
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { inquiryApi } from '@/lib/api-client'
 import { logger } from '@/lib/logger'
 import { validatePhone } from '@/lib/utils/validation'
 import { CreateInquiryRequest, CreateInquiryItemRequest } from '@/types/inquiry'
+import { User } from '@/types/auth'
 import { useErrorTracking } from './useErrorTracking'
+
+/**
+ * 將 User 的地址物件轉換為單一字串格式
+ * 針對台灣地址優化格式：郵遞區號 + 城市 + 街道
+ */
+function formatAddressToString(address?: User['address']): string {
+  if (!address) return ''
+
+  const { country, city, street, postalCode } = address
+
+  // 台灣地址格式：郵遞區號 城市 街道
+  if (country === '台灣' || country === 'Taiwan' || country === 'TW') {
+    return [postalCode, city, street].filter(Boolean).join(' ')
+  }
+
+  // 預設格式：街道, 城市, 郵遞區號, 國家
+  return [street, city, postalCode, country].filter(Boolean).join(', ')
+}
 
 export interface InquiryFormData {
   customer_name: string
@@ -46,10 +65,32 @@ export interface InquiryFormState {
 const STORAGE_KEY = 'inquiry_form_autosave'
 const AUTOSAVE_DELAY = 2000 // 2秒後自動儲存
 
-export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
+export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>, user?: User | null) {
   const router = useRouter()
   const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { trackUserAction, trackError, trackFormSubmission } = useErrorTracking()
+
+  // 從 user 資料計算自動填充值
+  const autoFillData = useMemo(() => {
+    if (!user) return {}
+
+    logger.info('智慧預填：自動填充使用者資料', {
+      metadata: {
+        userId: user.id,
+        hasName: !!user.name,
+        hasEmail: !!user.email,
+        hasPhone: !!user.phone,
+        hasAddress: !!user.address,
+      },
+    })
+
+    return {
+      customer_name: user.name || '',
+      customer_email: user.email || '',
+      customer_phone: user.phone || '',
+      delivery_address: formatAddressToString(user.address),
+    }
+  }, [user])
 
   const [state, setState] = useState<InquiryFormState>({
     data: {
@@ -60,14 +101,15 @@ export function useEnhancedInquiryForm(initialData?: Partial<InquiryFormData>) {
       delivery_address: '',
       preferred_delivery_date: '',
       items: [],
-      ...initialData,
+      ...autoFillData, // 先填入自動填充資料
+      ...initialData, // initialData 可以覆蓋自動填充
     },
     validation: {},
     isSubmitting: false,
     isAutoSaving: false,
     submitError: null,
     submitSuccess: false,
-    isDirty: false,
+    isDirty: false, // 自動填充不算 dirty
   })
 
   // 載入自動儲存的資料（僅在客戶端）

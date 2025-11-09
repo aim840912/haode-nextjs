@@ -4,7 +4,7 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { ValidationError } from '@/lib/errors'
+import { ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { InquiryItem } from '@/types/inquiry'
 import { ServiceSupabaseClient } from '@/types/service.types'
@@ -21,7 +21,11 @@ export class InquiryInventoryService {
    * 取得 Supabase 客戶端
    */
   private getSupabaseClient(): ServiceSupabaseClient {
-    return getAdmin()!
+    const client = getAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
   }
 
   /**

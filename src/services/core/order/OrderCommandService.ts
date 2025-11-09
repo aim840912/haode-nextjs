@@ -3,28 +3,23 @@
  * 負責所有寫入操作（建立、更新、刪除）
  */
 
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
-import { AbstractSupabaseService } from '@/services/base/abstract-supabase-service'
 import { Order, OrderItem, OrderStatus, CreateOrderRequest, ShippingAddress } from '@/types/order'
-import type { CreateOrderDTO, UpdateOrderDTO } from '@/types/service-dto.types'
 import type { OrderQueryService } from './OrderQueryService'
 
-export class OrderCommandService extends AbstractSupabaseService<
-  Order,
-  CreateOrderDTO,
-  UpdateOrderDTO
-> {
-  private readonly orderItemsTable = 'order_items'
-
-  constructor() {
-    super({
-      tableName: 'orders',
-      useAdminClient: true,
-      enableCache: false,
-      enableAuditLog: true,
-    })
+const getAdmin = () => {
+  const client = getSupabaseAdmin()
+  if (!client) {
+    throw new Error('Supabase admin client not initialized')
   }
+  return client
+}
+
+export class OrderCommandService {
+  private readonly orderItemsTable = 'order_items'
+  private readonly tableName = 'orders'
 
   /**
    * 建立新訂單
@@ -97,15 +92,19 @@ export class OrderCommandService extends AbstractSupabaseService<
         notes: orderData.notes,
       }
 
-      const client = this.getClient(true)
+      const client = getAdmin()
       const { data: orderData_result, error: orderError } = await client
-        .from('orders')
+        .from(this.tableName)
         .insert([orderRecord])
         .select()
         .single()
 
       if (orderError) {
-        this.handleError(orderError, 'createOrder', { userId, orderNumber })
+        throw ErrorFactory.fromSupabaseError(orderError, {
+          module: 'OrderCommandService',
+          action: 'createOrder',
+          context: { userId, orderNumber },
+        })
       }
 
       // 建立訂單項目
@@ -121,8 +120,12 @@ export class OrderCommandService extends AbstractSupabaseService<
 
       if (itemsError) {
         // 回滾訂單
-        await client.from('orders').delete().eq('id', orderData_result.id)
-        this.handleError(itemsError, 'createOrder:items', { orderId: orderData_result.id })
+        await client.from(this.tableName).delete().eq('id', orderData_result.id)
+        throw ErrorFactory.fromSupabaseError(itemsError, {
+          module: 'OrderCommandService',
+          action: 'createOrder:items',
+          context: { orderId: orderData_result.id },
+        })
       }
 
       // 更新產品庫存
@@ -142,7 +145,11 @@ export class OrderCommandService extends AbstractSupabaseService<
       return order
     } catch (error) {
       timer.end()
-      this.handleError(error, 'createOrder', { userId })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderCommandService',
+        action: 'createOrder',
+        context: { userId },
+      })
     }
   }
 
@@ -188,7 +195,11 @@ export class OrderCommandService extends AbstractSupabaseService<
       })
     } catch (error) {
       timer.end()
-      this.handleError(error, 'cancelOrder', { orderId, userId })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderCommandService',
+        action: 'cancelOrder',
+        context: { orderId, userId },
+      })
     }
   }
 
@@ -203,17 +214,26 @@ export class OrderCommandService extends AbstractSupabaseService<
     const timer = dbLogger.timer('更新訂單狀態')
 
     try {
-      const updateData: Partial<Order> = {
+      const updateData: Record<string, any> = {
         status,
-        notes: notes ? notes : undefined,
+        notes: notes || undefined,
       }
 
       // 如果狀態是已送達，設定實際送達日期
       if (status === 'delivered') {
-        updateData.actualDeliveryDate = new Date().toISOString().split('T')[0]
+        updateData.actual_delivery_date = new Date().toISOString().split('T')[0]
       }
 
-      await this.update(orderId, updateData)
+      const client = getAdmin()
+      const { error } = await client.from(this.tableName).update(updateData).eq('id', orderId)
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderCommandService',
+          action: 'updateOrderStatus',
+          context: { orderId, status },
+        })
+      }
 
       timer.end({ metadata: { orderId, status, notes } })
 
@@ -224,7 +244,11 @@ export class OrderCommandService extends AbstractSupabaseService<
       })
     } catch (error) {
       timer.end()
-      this.handleError(error, 'updateOrderStatus', { orderId, status })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderCommandService',
+        action: 'updateOrderStatus',
+        context: { orderId, status },
+      })
     }
   }
 
@@ -239,14 +263,33 @@ export class OrderCommandService extends AbstractSupabaseService<
     const timer = dbLogger.timer('更新訂單')
 
     try {
-      await this.update(orderId, updates)
+      const client = getAdmin()
+      const { error: updateError } = await client
+        .from(this.tableName)
+        .update(updates)
+        .eq('id', orderId)
+
+      if (updateError) {
+        throw ErrorFactory.fromSupabaseError(updateError, {
+          module: 'OrderCommandService',
+          action: 'updateOrder:update',
+          context: { orderId },
+        })
+      }
 
       // 重新取得更新後的訂單
-      const client = this.getClient()
-      const { data, error } = await client.from('orders').select('*').eq('id', orderId).single()
+      const { data, error } = await client
+        .from(this.tableName)
+        .select('*')
+        .eq('id', orderId)
+        .single()
 
       if (error) {
-        this.handleError(error, 'updateOrder:fetch', { orderId })
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderCommandService',
+          action: 'updateOrder:fetch',
+          context: { orderId },
+        })
       }
 
       const order = this.orderFromDB(data as any)
@@ -262,7 +305,11 @@ export class OrderCommandService extends AbstractSupabaseService<
       return order
     } catch (error) {
       timer.end()
-      this.handleError(error, 'updateOrder', { orderId })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderCommandService',
+        action: 'updateOrder',
+        context: { orderId },
+      })
     }
   }
 
@@ -271,7 +318,7 @@ export class OrderCommandService extends AbstractSupabaseService<
    */
   async generateOrderNumber(): Promise<string> {
     try {
-      const client = this.getClient()
+      const client = getAdmin()
       const { data, error } = await client.rpc('generate_order_number')
 
       if (error) {
@@ -327,7 +374,7 @@ export class OrderCommandService extends AbstractSupabaseService<
   private async updateProductInventory(
     items: { productId: string; quantity: number }[]
   ): Promise<void> {
-    const client = this.getClient(true)
+    const client = getAdmin()
 
     for (const item of items) {
       const { error } = await client.rpc('update_product_inventory', {
@@ -349,7 +396,7 @@ export class OrderCommandService extends AbstractSupabaseService<
    * 恢復產品庫存
    */
   private async restoreProductInventory(items: OrderItem[]): Promise<void> {
-    const client = this.getClient(true)
+    const client = getAdmin()
 
     for (const item of items) {
       const { error } = await client.rpc('update_product_inventory', {

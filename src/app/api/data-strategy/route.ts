@@ -68,7 +68,7 @@ import { getStrategyInfo } from '@/config/data-strategy'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { getCurrentServiceType, healthCheck } from '@/services/factory/serviceFactory'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 
 async function handleGET() {
   apiLogger.info('開始查詢資料策略資訊', {
@@ -79,11 +79,29 @@ async function handleGET() {
   // 獲取策略資訊
   const strategyInfo = getStrategyInfo()
 
-  // 執行健康檢查
-  const health = await healthCheck()
+  // 簡化的健康檢查 - 直接測試 Supabase 連接
+  const startTime = Date.now()
+  let health: { status: string; responseTime: number; error?: string }
+  try {
+    const admin = getSupabaseAdmin()
+    if (!admin) {
+      throw new Error('Supabase admin client not initialized')
+    }
+    await admin.from('products').select('id').limit(1).single()
+    health = {
+      status: 'ok',
+      responseTime: Date.now() - startTime,
+    }
+  } catch (error) {
+    health = {
+      status: 'error',
+      responseTime: Date.now() - startTime,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
 
-  // 獲取當前服務類型
-  const currentService = getCurrentServiceType()
+  // 當前服務類型固定為 supabase (架構已簡化)
+  const currentService = 'supabase'
 
   const result = {
     timestamp: new Date().toISOString(),
@@ -127,7 +145,7 @@ export const GET = withErrorHandler(handleGET, {
 
 function generateRecommendations(
   strategyInfo: ReturnType<typeof getStrategyInfo>,
-  health: Awaited<ReturnType<typeof healthCheck>>
+  health: { status: string; responseTime: number; error?: string }
 ): string[] {
   const recommendations: string[] = []
 

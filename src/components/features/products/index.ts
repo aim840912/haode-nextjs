@@ -1,4 +1,3 @@
-export { ProductsTable } from './ProductsTable'
 export { ProductsSectionWithErrorBoundary } from './ProductsSection'
 export { ProductFilter } from './ProductFilter'
 export { ProductImageGallery } from './ProductImageGallery'

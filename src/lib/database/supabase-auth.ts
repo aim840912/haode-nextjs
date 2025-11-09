@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { authLogger } from '@/lib/logger'
 import { Database } from '@/types/database'
 
@@ -8,16 +8,16 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // 使用 globalThis 確保真正的全域單例
 declare global {
-  var __supabase_browser_client__: ReturnType<typeof createBrowserClient<Database>> | undefined
-  var __supabase_admin_client__: ReturnType<typeof createClient<Database>> | undefined
-  var __supabase_server_client_simple__: ReturnType<typeof createClient<Database>> | undefined
+  var __supabase_browser_client__: SupabaseClient<Database> | undefined
+  var __supabase_admin_client__: SupabaseClient<Database> | undefined
+  var __supabase_server_client_simple__: SupabaseClient<Database> | undefined
 }
 
 /**
  * 取得瀏覽器端 Supabase 客戶端 (真正的全域 Singleton)
  * 使用 globalThis 確保在開發模式下也只有一個實例
  */
-function getBrowserSupabaseClient() {
+function getBrowserSupabaseClient(): SupabaseClient<Database> {
   // 只在瀏覽器環境中運作
   if (typeof window === 'undefined') {
     throw new Error('getBrowserSupabaseClient should only be called in browser environment')
@@ -34,16 +34,14 @@ function getBrowserSupabaseClient() {
 }
 
 // 客戶端 Supabase client getter function - 延遲初始化
-export function getSupabaseClient() {
+export function getSupabaseClient(): SupabaseClient<Database> {
   return getBrowserSupabaseClient()
 }
 
 // 使用 Proxy 實現真正的延遲初始化，避免模組載入時立即執行
-export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Database>>, {
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
-    let client:
-      | ReturnType<typeof createBrowserClient<Database>>
-      | ReturnType<typeof createClient<Database>>
+    let client: SupabaseClient<Database>
 
     // 根據環境選擇正確的客戶端
     if (typeof window === 'undefined') {
@@ -71,7 +69,7 @@ export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Da
 /**
  * 取得管理員 Supabase 客戶端 (全域 Singleton)
  */
-function getAdminSupabaseClient() {
+function getAdminSupabaseClient(): SupabaseClient<Database> | null {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return null
   }
@@ -101,7 +99,7 @@ function getAdminSupabaseClient() {
 }
 
 // 服務端 Supabase 客戶端（用於 API routes） - 重建為通用客戶端
-export function getSupabaseServer() {
+export function getSupabaseServer(): SupabaseClient<Database> {
   // 在客戶端環境中，使用瀏覽器客戶端
   if (typeof window !== 'undefined') {
     return getBrowserSupabaseClient()
@@ -125,12 +123,12 @@ export function getSupabaseServer() {
 }
 
 // 管理員 Supabase 客戶端（具有更高權限） - 使用 getter 函數
-export function getSupabaseAdmin() {
+export function getSupabaseAdmin(): SupabaseClient<Database> | null {
   return getAdminSupabaseClient()
 }
 
 // 使用 Proxy 實現延遲初始化的服務端客戶端 - 重導向至統一實作
-export const supabaseServer = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+export const supabaseServer = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
     const client = getSupabaseServer()
     return client[prop as keyof typeof client]
@@ -138,7 +136,7 @@ export const supabaseServer = new Proxy({} as ReturnType<typeof createClient<Dat
 })
 
 // 使用 Proxy 實現延遲初始化的管理員客戶端
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+export const supabaseAdmin = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
     const client = getAdminSupabaseClient()
     return client && client[prop as keyof typeof client]

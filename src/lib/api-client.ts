@@ -540,8 +540,11 @@ export const inquiryApi = {
   // 獲取單一詢價單
   get: (id: string) => apiClient.get(`/api/inquiries/${id}`),
 
-  // 創建詢價單
+  // 創建詢價單（需認證）
   create: (data: CreateInquiryRequest) => apiClient.post('/api/inquiries', data),
+
+  // 創建訪客詢價單（無需認證）
+  createGuest: (data: CreateInquiryRequest) => apiClient.post('/api/inquiries/guest', data),
 
   // 更新詢價單
   update: (id: string, data: Record<string, unknown>) =>
@@ -552,4 +555,48 @@ export const inquiryApi = {
 
   // 獲取統計資料
   stats: () => apiClient.get('/api/inquiries/stats'),
+}
+
+/**
+ * 詢價範本 API 客戶端
+ */
+export const inquiryTemplateApi = {
+  // 列出範本
+  list: (params?: {
+    inquiry_type?: 'product' | 'farm_tour'
+    is_active?: boolean
+    is_favorite?: boolean
+    limit?: number
+    offset?: number
+    sort_by?: 'created_at' | 'updated_at' | 'usage_count' | 'name'
+    sort_order?: 'asc' | 'desc'
+  }) => {
+    const searchParams = new URLSearchParams()
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value))
+        }
+      })
+    }
+
+    const endpoint = `/api/inquiry-templates${searchParams.toString() ? `?${searchParams}` : ''}`
+    return apiClient.get(endpoint)
+  },
+
+  // 獲取單一範本
+  get: (id: string) => apiClient.get(`/api/inquiry-templates/${id}`),
+
+  // 建立範本
+  create: (data: Record<string, unknown>) => apiClient.post('/api/inquiry-templates', data),
+
+  // 更新範本
+  update: (id: string, data: Record<string, unknown>) =>
+    apiClient.put(`/api/inquiry-templates/${id}`, data),
+
+  // 刪除範本
+  delete: (id: string) => apiClient.delete(`/api/inquiry-templates/${id}`),
+
+  // 使用範本（取得表單資料）
+  use: (id: string) => apiClient.post(`/api/inquiry-templates/${id}/use`, {}),
 }

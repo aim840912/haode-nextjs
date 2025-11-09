@@ -15,7 +15,7 @@ declare global {
  * 正確處理 cookies 以進行認證
  * 每次請求都創建新實例以確保使用最新的 cookies
  */
-export async function createServerSupabaseClient() {
+export async function createServerSupabaseClient(): Promise<SupabaseClient<Database>> {
   const cookieStore = await cookies()
 
   return createServerClient<Database>(
@@ -66,7 +66,7 @@ export async function createServerSupabaseClient() {
  * 使用服務角色密鑰進行操作
  * 使用 globalThis 確保真正的全域單例
  */
-export function createServiceSupabaseClient() {
+export function createServiceSupabaseClient(): SupabaseClient<Database> {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required')
   }

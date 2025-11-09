@@ -3,24 +3,23 @@
  * 負責所有讀取操作
  */
 
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
-import { AbstractSupabaseService } from '@/services/base/abstract-supabase-service'
 import { Order, OrderItem, OrderSummary } from '@/types/order'
-import type { UpdateOrderDTO } from '@/types/service-dto.types'
 import type { OrderRecord, OrderItemRecord } from './types'
 
-export class OrderQueryService extends AbstractSupabaseService<Order, never, UpdateOrderDTO> {
-  private readonly orderItemsTable = 'order_items'
-
-  constructor() {
-    super({
-      tableName: 'orders',
-      useAdminClient: true,
-      enableCache: false,
-      enableAuditLog: true,
-    })
+const getAdmin = () => {
+  const client = getSupabaseAdmin()
+  if (!client) {
+    throw new Error('Supabase admin client not initialized')
   }
+  return client
+}
+
+export class OrderQueryService {
+  private readonly orderItemsTable = 'order_items'
+  private readonly tableName = 'orders'
 
   /**
    * 取得使用者的訂單列表（含分頁）
@@ -37,29 +36,39 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
     const timer = dbLogger.timer('取得使用者訂單')
 
     try {
+      const client = getAdmin()
+
       // 取得總數
-      const countQuery = this.createQuery()
-      const { count, error: countError } = await countQuery
+      const { count, error: countError } = await client
+        .from(this.tableName)
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId)
 
       if (countError) {
-        this.handleError(countError, 'getUserOrders:count', { userId, limit, offset })
+        throw ErrorFactory.fromSupabaseError(countError, {
+          module: 'OrderQueryService',
+          action: 'getUserOrders:count',
+          context: { userId, limit, offset },
+        })
       }
 
       // 取得訂單資料
-      const dataQuery = this.createQuery()
-      const { data: ordersData, error: dataError } = await dataQuery
+      const { data: ordersData, error: dataError } = await client
+        .from(this.tableName)
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
       if (dataError) {
-        this.handleError(dataError, 'getUserOrders:data', { userId, limit, offset })
+        throw ErrorFactory.fromSupabaseError(dataError, {
+          module: 'OrderQueryService',
+          action: 'getUserOrders:data',
+          context: { userId, limit, offset },
+        })
       }
 
-      const orders = (ordersData || []).map(record => this.orderFromDB(record as any))
+      const orders = (ordersData || []).map(record => this.orderFromDB(record as OrderRecord))
 
       // 載入每個訂單的項目
       for (const order of orders) {
@@ -74,7 +83,11 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
       }
     } catch (error) {
       timer.end()
-      this.handleError(error, 'getUserOrders', { userId, limit, offset })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderQueryService',
+        action: 'getUserOrders',
+        context: { userId, limit, offset },
+      })
     }
   }
 
@@ -89,8 +102,9 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
     const timer = dbLogger.timer('取得訂單詳情')
 
     try {
-      const query = this.createQuery()
-      const { data, error } = await query
+      const client = getAdmin()
+      const { data, error } = await client
+        .from(this.tableName)
         .select('*')
         .eq('id', orderId)
         .eq('user_id', userId)
@@ -101,17 +115,25 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
           timer.end()
           return null
         }
-        this.handleError(error, 'getOrderById', { orderId, userId })
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderQueryService',
+          action: 'getOrderById',
+          context: { orderId, userId },
+        })
       }
 
-      const order = this.orderFromDB(data as any)
+      const order = this.orderFromDB(data as OrderRecord)
       order.items = await this.getOrderItems(orderId)
 
       timer.end({ metadata: { orderId, userId, found: true } })
       return order
     } catch (error) {
       timer.end()
-      this.handleError(error, 'getOrderById', { orderId, userId })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderQueryService',
+        action: 'getOrderById',
+        context: { orderId, userId },
+      })
     }
   }
 
@@ -125,27 +147,56 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
     const timer = dbLogger.timer('取得所有訂單')
 
     try {
-      const result = await this.findAllPaginated({
-        page: Math.floor(offset / limit) + 1,
-        limit,
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-      })
+      const client = getAdmin()
+
+      // 取得總數
+      const { count, error: countError } = await client
+        .from(this.tableName)
+        .select('*', { count: 'exact', head: true })
+
+      if (countError) {
+        throw ErrorFactory.fromSupabaseError(countError, {
+          module: 'OrderQueryService',
+          action: 'getAllOrders:count',
+          context: { limit, offset },
+        })
+      }
+
+      // 取得訂單資料
+      const { data: ordersData, error: dataError } = await client
+        .from(this.tableName)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (dataError) {
+        throw ErrorFactory.fromSupabaseError(dataError, {
+          module: 'OrderQueryService',
+          action: 'getAllOrders:data',
+          context: { limit, offset },
+        })
+      }
+
+      const orders = (ordersData || []).map(record => this.orderFromDB(record as OrderRecord))
 
       // 為每個訂單載入項目
-      for (const order of result.items) {
+      for (const order of orders) {
         order.items = await this.getOrderItems(order.id)
       }
 
-      timer.end({ metadata: { orderCount: result.items.length, total: result.total } })
+      timer.end({ metadata: { orderCount: orders.length, total: count } })
 
       return {
-        orders: result.items,
-        total: result.total,
+        orders,
+        total: count || 0,
       }
     } catch (error) {
       timer.end()
-      this.handleError(error, 'getAllOrders', { limit, offset })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderQueryService',
+        action: 'getAllOrders',
+        context: { limit, offset },
+      })
     }
   }
 
@@ -156,11 +207,14 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
     const timer = dbLogger.timer('取得訂單統計')
 
     try {
-      const client = this.getClient()
+      const client = getAdmin()
       const { data, error } = await client.from('order_summary_view').select('*').single()
 
       if (error) {
-        this.handleError(error, 'getOrderSummary')
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderQueryService',
+          action: 'getOrderSummary',
+        })
       }
 
       timer.end()
@@ -174,7 +228,10 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
       }
     } catch (error) {
       timer.end()
-      this.handleError(error, 'getOrderSummary')
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderQueryService',
+        action: 'getOrderSummary',
+      })
     }
   }
 
@@ -182,7 +239,7 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
    * 取得訂單項目
    */
   async getOrderItems(orderId: string): Promise<OrderItem[]> {
-    const client = this.getClient()
+    const client = getAdmin()
     const { data, error } = await client
       .from(this.orderItemsTable)
       .select('*')
@@ -196,14 +253,14 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
       })
     }
 
-    return (data || []).map(item => this.orderItemFromDB(item as any))
+    return (data || []).map(item => this.orderItemFromDB(item as OrderItemRecord))
   }
 
   /**
    * 取得產品詳情（簡化版）
    */
   async getProductById(productId: string): Promise<any> {
-    const client = this.getClient()
+    const client = getAdmin()
     const { data, error } = await client
       .from('products')
       .select('*')
@@ -232,25 +289,37 @@ export class OrderQueryService extends AbstractSupabaseService<Order, never, Upd
     const timer = dbLogger.timer('根據 ID 取得訂單')
 
     try {
-      const query = this.createQuery()
-      const { data, error } = await query.select('*').eq('id', orderId).single()
+      const client = getAdmin()
+      const { data, error } = await client
+        .from(this.tableName)
+        .select('*')
+        .eq('id', orderId)
+        .single()
 
       if (error) {
         if (error.code === 'PGRST116') {
           timer.end()
           return null
         }
-        this.handleError(error, 'findById', { orderId })
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderQueryService',
+          action: 'findById',
+          context: { orderId },
+        })
       }
 
-      const order = this.orderFromDB(data as any)
+      const order = this.orderFromDB(data as OrderRecord)
       order.items = await this.getOrderItems(orderId)
 
       timer.end({ metadata: { orderId, found: true } })
       return order
     } catch (error) {
       timer.end()
-      this.handleError(error, 'findById', { orderId })
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderQueryService',
+        action: 'findById',
+        context: { orderId },
+      })
     }
   }
 

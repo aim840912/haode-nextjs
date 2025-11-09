@@ -237,7 +237,7 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
   // 共用樣式
   const baseClasses = isMobile
     ? 'px-2 py-1 text-xs font-medium rounded-full transition-all duration-200 border border-green-200'
-    : 'px-3 py-2 text-xs font-medium rounded-full transition-all duration-200 flex items-center space-x-1 border border-green-200 h-8'
+    : 'px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 flex items-center gap-1.5 border border-green-200 h-8'
 
   const loginClasses = 'text-green-900 bg-green-50 hover:bg-green-100'
 
@@ -292,7 +292,11 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
           )}
         >
           <UserIcon className="w-4 h-4" />
-          {isMobile ? <span className="sr-only">{user.name}</span> : <span>{user.name}</span>}
+          {isMobile ? (
+            <span className="sr-only">{user.name}</span>
+          ) : (
+            <span className="truncate max-w-[120px]">{user.name}</span>
+          )}
           <svg
             className={cn('w-4 h-4 transition-transform', isDropdownOpen && 'rotate-180')}
             fill="none"
@@ -368,10 +372,10 @@ function AuthButton({ isMobile = false }: AuthButtonProps) {
   // 客戶端已掛載且無用戶資料時，顯示登入連結
   return (
     <div className="relative">
-      <Link href="/login" className={cn(baseClasses, loginClasses, 'block')}>
+      <Link href="/login" className={cn(baseClasses, loginClasses)}>
         {isMobile ? (
           <>
-            <UserIcon className="w-4 h-4 inline mr-1" />
+            <UserIcon className="w-4 h-4 mr-1" />
             登入
           </>
         ) : (

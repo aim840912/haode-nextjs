@@ -4,7 +4,7 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import {
   InquiryWithItems,
@@ -55,7 +55,11 @@ export class InquiryCommandService {
    * 取得 Supabase 客戶端
    */
   private getSupabaseClient(): ServiceSupabaseClient {
-    return getAdmin()!
+    const client = getAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
   }
 
   /**

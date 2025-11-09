@@ -4,8 +4,9 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
+import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
+import { ServiceSupabaseClient } from '@/types/service.types'
 import type {
   SiteSetting,
   SiteSettingInput,
@@ -16,8 +17,12 @@ import type {
 export class SiteSettingsService {
   private readonly moduleName = 'SiteSettingsService'
 
-  private getSupabaseClient() {
-    return getSupabaseAdmin()
+  private getSupabaseClient(): ServiceSupabaseClient {
+    const client = getSupabaseAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
   }
 
   /**
