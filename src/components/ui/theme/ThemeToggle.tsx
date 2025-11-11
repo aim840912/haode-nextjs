@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { useTheme } from '@/contexts/ThemeContext'
 import type { Theme } from '@/types/theme'
 
@@ -7,19 +8,26 @@ import type { Theme } from '@/types/theme'
  * 主題切換按鈕元件
  *
  * 功能特色：
- * - 支援 light / dark / system 三種模式循環切換
+ * - 支援 light / dark 兩種模式切換
  * - 響應式設計（桌面版顯示文字，手機版僅圖標）
  * - 符合 Haude 專案的綠色農場風格
  * - 無障礙支援（aria-label）
+ * - 避免 hydration mismatch（使用 isMounted 確保客戶端渲染一致性）
  */
 export function ThemeToggle() {
   const { theme, effectiveTheme, setTheme } = useTheme()
+  const [isMounted, setIsMounted] = useState(false)
+
+  // 確保元件在客戶端 mount 後才顯示 localStorage 依賴的內容
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   /**
-   * 循環切換主題：light → dark → system → light
+   * 循環切換主題：light → dark → light
    */
   const toggleTheme = () => {
-    const nextTheme: Theme = theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light'
+    const nextTheme: Theme = theme === 'light' ? 'dark' : 'light'
     setTheme(nextTheme)
   }
 
@@ -27,7 +35,7 @@ export function ThemeToggle() {
    * 根據主題返回對應的圖標
    */
   const renderIcon = () => {
-    if (theme === 'light') {
+    if (theme === 'light' || effectiveTheme === 'light') {
       // 太陽圖標（淺色模式）
       return (
         <svg
@@ -45,7 +53,7 @@ export function ThemeToggle() {
           />
         </svg>
       )
-    } else if (theme === 'dark') {
+    } else {
       // 月亮圖標（深色模式）
       return (
         <svg
@@ -63,40 +71,23 @@ export function ThemeToggle() {
           />
         </svg>
       )
-    } else {
-      // 電腦/系統圖標（跟隨系統）
-      return (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-          />
-        </svg>
-      )
     }
   }
 
   /**
    * 主題名稱顯示
    */
-  const themeLabels: Record<Theme, string> = {
+  const themeLabels: Record<'light' | 'dark', string> = {
     light: '淺色',
     dark: '深色',
-    system: '系統',
   }
 
   /**
-   * 無障礙標籤（含當前實際主題資訊）
+   * 無障礙標籤和顯示文字
+   * 在 mount 前使用 effectiveTheme，避免 hydration mismatch
    */
-  const ariaLabel = `切換主題 (目前: ${themeLabels[theme]}${theme === 'system' ? ` - ${effectiveTheme === 'dark' ? '深色' : '淺色'}` : ''})`
+  const displayTheme = isMounted && (theme === 'light' || theme === 'dark') ? theme : effectiveTheme
+  const ariaLabel = `切換主題 (目前: ${themeLabels[displayTheme]})`
 
   return (
     <button
@@ -116,19 +107,16 @@ export function ThemeToggle() {
       "
       aria-label={ariaLabel}
       title={ariaLabel}
+      suppressHydrationWarning
     >
       {/* 圖標 */}
       {renderIcon()}
 
       {/* 文字標籤（桌面版顯示） */}
-      <span className="hidden sm:inline text-sm font-medium">{themeLabels[theme]}</span>
-
-      {/* 當前實際主題指示器（system 模式下顯示） */}
-      {theme === 'system' && (
-        <span className="hidden md:inline text-xs text-gray-500 dark:text-gray-400">
-          ({effectiveTheme === 'dark' ? '深色' : '淺色'})
-        </span>
-      )}
+      {/* suppressHydrationWarning: 主題相關內容在 SSR 和客戶端可能不同 */}
+      <span className="hidden sm:inline text-sm font-medium" suppressHydrationWarning>
+        {themeLabels[displayTheme]}
+      </span>
     </button>
   )
 }

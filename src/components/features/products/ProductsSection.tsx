@@ -141,7 +141,7 @@ function ProductsSection() {
           <p className="text-center text-gray-600 dark:text-gray-300 text-lg mb-16">
             精選來自梅山的優質農產品
           </p>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {Array.from({ length: 3 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
@@ -207,7 +207,7 @@ function ProductsSection() {
           <>
             <div
               className={cn(
-                'grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12',
+                'grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12',
                 isVisible ? 'animate-slide-up animation-delay-300' : 'opacity-0'
               )}
             >
@@ -227,7 +227,7 @@ function ProductsSection() {
                     )}
                   >
                     <div className="relative product-image-wrapper">
-                      <div className={cn(index === 0 ? 'h-[320px]' : 'h-[280px]', 'relative')}>
+                      <div className="relative aspect-[3/4]">
                         <SafeImage
                           src={product.productImages?.[0]?.storage_url || '/images/placeholder.jpg'}
                           alt={product.name || '產品圖片'}

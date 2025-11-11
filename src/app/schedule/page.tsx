@@ -172,26 +172,30 @@ export default function SchedulePage() {
                     <div className="flex items-start mb-4 text-gray-600 dark:text-gray-300">
                       <div>
                         <div className="font-medium">{schedule.location}</div>
-                        <div className="text-sm mt-1">{schedule.description}</div>
+                        {schedule.description && (
+                          <div className="text-sm mt-1">{schedule.description}</div>
+                        )}
                       </div>
                     </div>
 
                     {/* Products */}
-                    <div className="mb-4">
-                      <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        販售商品：
+                    {schedule.products && schedule.products.length > 0 && (
+                      <div className="mb-4">
+                        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          販售商品：
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {schedule.products.map((product, index) => (
+                            <span
+                              key={index}
+                              className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full text-sm"
+                            >
+                              {product}
+                            </span>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {schedule.products.map((product, index) => (
-                          <span
-                            key={index}
-                            className="bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-3 py-1 rounded-full text-sm"
-                          >
-                            {product}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+                    )}
 
                     {/* Special Offer */}
                     {schedule.specialOffer && (

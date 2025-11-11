@@ -23,7 +23,10 @@ export function ProductFormFields({
     <div className="space-y-6">
       {/* 產品名稱 */}
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="name"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           產品名稱 *
         </label>
         <input
@@ -31,8 +34,8 @@ export function ProductFormFields({
           id="name"
           value={formData.name}
           onChange={e => onFieldChange('name', e.target.value)}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-            fieldErrors.name ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+            fieldErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
           }`}
           placeholder="請輸入產品名稱"
         />
@@ -41,7 +44,10 @@ export function ProductFormFields({
 
       {/* 產品描述 */}
       <div>
-        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="description"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           產品描述 *
         </label>
         <textarea
@@ -49,8 +55,8 @@ export function ProductFormFields({
           value={formData.description}
           onChange={e => onFieldChange('description', e.target.value)}
           rows={4}
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-            fieldErrors.description ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+            fieldErrors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
           }`}
           placeholder="請輸入產品描述"
         />
@@ -63,7 +69,10 @@ export function ProductFormFields({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* 產品分類 */}
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             產品分類 *
           </label>
           <div className="relative">
@@ -73,8 +82,8 @@ export function ProductFormFields({
               list="category-options"
               value={formData.category}
               onChange={e => onFieldChange('category', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                fieldErrors.category ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                fieldErrors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               }`}
               placeholder="選擇現有分類或輸入新分類"
             />
@@ -100,7 +109,10 @@ export function ProductFormFields({
 
         {/* 價格 */}
         <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-2">
+          <label
+            htmlFor="price"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
             價格 *
           </label>
           <div className="flex">
@@ -110,15 +122,15 @@ export function ProductFormFields({
               value={formData.price}
               onChange={e => onFieldChange('price', parseInt(e.target.value) || 0)}
               min="0"
-              className={`flex-1 px-3 py-2 border rounded-l-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                fieldErrors.price ? 'border-red-500' : 'border-gray-300'
+              className={`flex-1 px-3 py-2 border rounded-l-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+                fieldErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               }`}
               placeholder="0"
             />
             <select
               value={formData.priceUnit}
               onChange={e => onFieldChange('priceUnit', e.target.value)}
-              className="px-3 py-2 border-t border-r border-b border-gray-300 rounded-r-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="px-3 py-2 border-t border-r border-b border-gray-300 dark:border-gray-600 rounded-r-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent"
             >
               {PRICE_UNITS.map(unit => (
                 <option key={unit} value={unit}>
@@ -133,7 +145,10 @@ export function ProductFormFields({
 
       {/* 庫存 */}
       <div>
-        <label htmlFor="inventory" className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="inventory"
+          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        >
           庫存數量 *
         </label>
         <input
@@ -142,8 +157,8 @@ export function ProductFormFields({
           value={formData.inventory}
           onChange={e => onFieldChange('inventory', parseInt(e.target.value) || 0)}
           min="0"
-          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-            fieldErrors.inventory ? 'border-red-500' : 'border-gray-300'
+          className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder:text-gray-500 dark:placeholder:text-gray-400 ${
+            fieldErrors.inventory ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
           }`}
           placeholder="請輸入庫存數量"
         />

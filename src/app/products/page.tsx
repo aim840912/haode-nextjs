@@ -126,8 +126,8 @@ function ProductsPage() {
             ) : (
               <div className="mt-8">
                 <div className="relative bg-gray-50 dark:bg-slate-800/50 rounded-xl p-8 border border-gray-200 dark:border-slate-700">
-                  {/* 簡潔風格網格布局 */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {/* 簡潔風格網格布局 - 緊湊型設計 */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5 gap-6">
                     {filteredProducts.map((product, index) => (
                       <ProductCard
                         key={`product-${product.id}`}

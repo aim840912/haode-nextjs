@@ -56,7 +56,8 @@ export default function LocationsPage() {
       {/* Hero Section - 統一簡潔設計 */}
       <div className="bg-white dark:bg-slate-800 py-2 border-b border-gray-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+          {/* 標題列 */}
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-2">
             <div className="text-center lg:text-left">
               <h1 className="text-xl sm:text-2xl font-light text-amber-900 dark:text-amber-300 mb-1">
                 門市據點
@@ -79,6 +80,30 @@ export default function LocationsPage() {
               </div>
             )}
           </div>
+
+          {/* Store Selection Tabs - 整合到 Header 內 */}
+          {storeLocations.length > 0 && (
+            <div className="border-t border-gray-200 dark:border-slate-600 pt-2 pb-1.5 flex flex-wrap justify-center gap-2">
+              {storeLocations.map(store => (
+                <button
+                  key={store.id}
+                  onClick={() => handleStoreSelect(store)}
+                  className={`flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all ${
+                    selectedStore?.id === store.id
+                      ? 'bg-amber-900 text-white'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {store.name}
+                  {store.isMain && (
+                    <span className="ml-2 text-xs bg-red-500 text-white px-2 py-0.5 rounded-full">
+                      總店
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -118,28 +143,6 @@ export default function LocationsPage() {
           </div>
         ) : (
           <>
-            {/* Store Selection Tabs */}
-            <div className="flex flex-wrap justify-center mb-12 bg-white dark:bg-slate-800 rounded-lg shadow-sm p-2">
-              {storeLocations.map(store => (
-                <button
-                  key={store.id}
-                  onClick={() => handleStoreSelect(store)}
-                  className={`px-6 py-3 rounded-lg font-medium transition-all m-1 ${
-                    selectedStore?.id === store.id
-                      ? 'bg-amber-900 text-white'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {store.name}
-                  {store.isMain && (
-                    <span className="ml-2 text-xs bg-red-500 text-white px-2 py-1 rounded-full">
-                      總店
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-
             {/* Selected Store Details - only show when we have a selected store */}
             {selectedStore && (
               <>
@@ -148,25 +151,15 @@ export default function LocationsPage() {
                   <div className="space-y-8">
                     <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
                       <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center">
-                          {isValidImageUrl(selectedStore.image) && (
-                            <AvatarSimpleImage
-                              src={getFullImageUrl(selectedStore.image)}
-                              alt={selectedStore.title}
-                              size="lg"
-                              className="mr-4 rounded-lg"
-                            />
+                        <div>
+                          <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-300">
+                            {selectedStore.title}
+                          </h2>
+                          {selectedStore.isMain && (
+                            <span className="inline-block mt-1 bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
+                              總店
+                            </span>
                           )}
-                          <div>
-                            <h2 className="text-2xl font-bold text-amber-900 dark:text-amber-300">
-                              {selectedStore.title}
-                            </h2>
-                            {selectedStore.isMain && (
-                              <span className="inline-block mt-1 bg-red-100 text-red-800 text-sm px-3 py-1 rounded-full">
-                                總店
-                              </span>
-                            )}
-                          </div>
                         </div>
                         {user && user.role === 'admin' && (
                           <Link
@@ -186,9 +179,11 @@ export default function LocationsPage() {
                             <p className="font-medium text-gray-800 dark:text-gray-200">
                               {selectedStore.address}
                             </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                              {selectedStore.landmark}
-                            </p>
+                            {selectedStore.landmark && (
+                              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                                {selectedStore.landmark}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -202,12 +197,14 @@ export default function LocationsPage() {
                           </a>
                         </div>
 
-                        <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700 dark:text-gray-300">
-                            LINE ID: {selectedStore.lineId}
-                          </span>
-                        </div>
+                        {selectedStore.lineId && (
+                          <div className="flex items-center">
+                            <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
+                            <span className="text-gray-700 dark:text-gray-300">
+                              LINE ID: {selectedStore.lineId}
+                            </span>
+                          </div>
+                        )}
 
                         <div className="flex items-center">
                           <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
@@ -215,25 +212,31 @@ export default function LocationsPage() {
                             <span className="text-gray-700 dark:text-gray-300">
                               營業時間: {selectedStore.hours}
                             </span>
-                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                              ({selectedStore.closedDays})
-                            </span>
+                            {selectedStore.closedDays && (
+                              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                                ({selectedStore.closedDays})
+                              </span>
+                            )}
                           </div>
                         </div>
 
-                        <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {selectedStore.parking}
-                          </span>
-                        </div>
+                        {selectedStore.parking && (
+                          <div className="flex items-center">
+                            <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
+                            <span className="text-gray-700 dark:text-gray-300">
+                              {selectedStore.parking}
+                            </span>
+                          </div>
+                        )}
 
-                        <div className="flex items-center">
-                          <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
-                          <span className="text-gray-700 dark:text-gray-300">
-                            {selectedStore.publicTransport}
-                          </span>
-                        </div>
+                        {selectedStore.publicTransport && (
+                          <div className="flex items-center">
+                            <span className="inline-block w-2 h-2 bg-amber-600 dark:bg-amber-400 rounded-full mr-3 flex-shrink-0"></span>
+                            <span className="text-gray-700 dark:text-gray-300">
+                              {selectedStore.publicTransport}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Buttons */}
@@ -254,32 +257,34 @@ export default function LocationsPage() {
                     </div>
 
                     {/* Store Features */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
-                      <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
-                        門市特色服務
-                      </h3>
-                      <div className="space-y-3">
-                        {selectedStore.features.map((feature, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center text-gray-700 dark:text-gray-300"
-                          >
-                            <svg
-                              className="mr-3 w-4 h-4 text-green-500 flex-shrink-0"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
+                    {selectedStore.features && selectedStore.features.length > 0 && (
+                      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
+                        <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
+                          門市特色服務
+                        </h3>
+                        <div className="space-y-3">
+                          {selectedStore.features.map((feature, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center text-gray-700 dark:text-gray-300"
                             >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                            <span>{feature}</span>
-                          </div>
-                        ))}
+                              <svg
+                                className="mr-3 w-4 h-4 text-green-500 flex-shrink-0"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              <span>{feature}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   {/* Map and Specialties */}
@@ -309,29 +314,33 @@ export default function LocationsPage() {
                           />
                         </div>
                       )}
-                      <div className="text-center mt-4">
-                        <p className="text-gray-600 dark:text-gray-300 text-sm">
-                          {selectedStore.landmark}
-                        </p>
-                      </div>
+                      {selectedStore.landmark && (
+                        <div className="text-center mt-4">
+                          <p className="text-gray-600 dark:text-gray-300 text-sm">
+                            {selectedStore.landmark}
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Store Specialties */}
-                    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
-                      <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
-                        主打商品
-                      </h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        {selectedStore.specialties.map((specialty, index) => (
-                          <div
-                            key={index}
-                            className="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-4 py-2 rounded-lg text-center font-medium"
-                          >
-                            {specialty}
-                          </div>
-                        ))}
+                    {selectedStore.specialties && selectedStore.specialties.length > 0 && (
+                      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
+                        <h3 className="text-xl font-bold text-amber-900 dark:text-amber-300 mb-4 flex items-center">
+                          主打商品
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          {selectedStore.specialties.map((specialty, index) => (
+                            <div
+                              key={index}
+                              className="bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-4 py-2 rounded-lg text-center font-medium"
+                            >
+                              {specialty}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 </div>
 

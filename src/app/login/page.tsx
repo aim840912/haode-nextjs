@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { AuthErrorBoundary } from '@/components/ui/error/AuthErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
+import { SocialLoginSection } from '@/components/auth/SocialLoginSection'
 import { logger } from '@/lib/logger'
 import { validateLoginInput, getLoginInputType } from '@/lib/utils/auth-helpers'
 
@@ -224,6 +225,11 @@ export default function LoginPage() {
                 {isLoading ? '登入中...' : '登入'}
               </button>
             </form>
+
+            {/* Social Login Section */}
+            <div className="mt-6">
+              <SocialLoginSection providers={['google', 'facebook']} redirectTo="/" />
+            </div>
 
             {/* Register Link */}
             <div className="mt-6 text-center">

@@ -20,7 +20,7 @@ export default function AddSchedule() {
   const [formData, setFormData] = useState({
     title: '',
     location: '',
-    date: '',
+    date: new Date().toISOString().split('T')[0],
     time: '',
     status: 'upcoming' as const,
     products: [] as string[],

@@ -109,8 +109,10 @@ export const ScheduleSchemas = {
   create: z.object({
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元'),
     location: StringSchemas.nonEmpty.max(200, '地點名稱不能超過 200 字元'),
-    date: DateSchemas.isoDate,
-    time: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, '時間格式應為 HH:mm'),
+    date: DateSchemas.dateString,
+    time: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/, '時間格式應為 HH:mm-HH:mm'),
     status: z.enum(['upcoming', 'ongoing', 'completed']).default('upcoming'),
     products: z.array(z.string()).default([]),
     description: z.string().max(1000, '行程描述不能超過 1000 字元'),
@@ -123,10 +125,10 @@ export const ScheduleSchemas = {
   update: z.object({
     title: StringSchemas.nonEmpty.max(100, '行程標題不能超過 100 字元').optional(),
     location: StringSchemas.nonEmpty.max(200, '地點名稱不能超過 200 字元').optional(),
-    date: DateSchemas.isoDate.optional(),
+    date: DateSchemas.dateString.optional(),
     time: z
       .string()
-      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, '時間格式應為 HH:mm')
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$/, '時間格式應為 HH:mm-HH:mm')
       .optional(),
     status: z.enum(['upcoming', 'ongoing', 'completed']).optional(),
     products: z.array(z.string()).optional(),

@@ -310,7 +310,7 @@ export function SimpleProductImage({
 export function ProductCardImage({
   product,
   className = '',
-  aspectRatio = 'aspect-square',
+  aspectRatio = 'aspect-[3/4]',
   priority = false,
   index = 0,
 }: {
@@ -328,13 +328,15 @@ export function ProductCardImage({
   // 直接設定 padding-bottom 確保容器有明確高度
   const paddingBottomMap: Record<string, string> = {
     'aspect-square': '100%', // 1:1
+    'aspect-[3/4]': '133.33%', // 3:4 (商品卡片預設 - momo 風格)
+    'aspect-[4/5]': '125%', // 4:5
     'aspect-video': '56.25%', // 16:9
     'aspect-[4/3]': '75%', // 4:3
     'aspect-[3/2]': '66.67%', // 3:2
     'aspect-[2/1]': '50%', // 2:1
   }
 
-  const paddingBottom = paddingBottomMap[aspectRatio] || '100%'
+  const paddingBottom = paddingBottomMap[aspectRatio] || '133.33%'
 
   // 智能懶載入：前6個產品（首屏可見）優先載入，其他懶載入
   const shouldPrioritize = priority || index < 6

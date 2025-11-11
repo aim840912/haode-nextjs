@@ -5,7 +5,7 @@
  * 提供類型安全的農場體驗活動編輯狀態管理
  */
 
-import { useReducer, useCallback } from 'react'
+import { useReducer, useMemo } from 'react'
 
 export interface FarmTourEditState {
   // 載入狀態
@@ -112,51 +112,55 @@ export function useFarmTourEditReducer() {
   const [state, dispatch] = useReducer(farmTourEditReducer, initialState)
 
   // 提供方便的 helper functions
-  const actions = {
-    setLoading: useCallback((loading: boolean) => {
-      dispatch({ type: 'SET_LOADING', payload: loading })
-    }, []),
+  // 使用 useMemo 確保 actions 物件只建立一次，避免無限循環
+  const actions = useMemo(
+    () => ({
+      setLoading: (loading: boolean) => {
+        dispatch({ type: 'SET_LOADING', payload: loading })
+      },
 
-    setInitialLoading: useCallback((loading: boolean) => {
-      dispatch({ type: 'SET_INITIAL_LOADING', payload: loading })
-    }, []),
+      setInitialLoading: (loading: boolean) => {
+        dispatch({ type: 'SET_INITIAL_LOADING', payload: loading })
+      },
 
-    setActivityId: useCallback((id: string) => {
-      dispatch({ type: 'SET_ACTIVITY_ID', payload: id })
-    }, []),
+      setActivityId: (id: string) => {
+        dispatch({ type: 'SET_ACTIVITY_ID', payload: id })
+      },
 
-    setUploadedImages: useCallback((images: string[]) => {
-      dispatch({ type: 'SET_UPLOADED_IMAGES', payload: images })
-    }, []),
+      setUploadedImages: (images: string[]) => {
+        dispatch({ type: 'SET_UPLOADED_IMAGES', payload: images })
+      },
 
-    setExistingImages: useCallback((images: string[]) => {
-      dispatch({ type: 'SET_EXISTING_IMAGES', payload: images })
-    }, []),
+      setExistingImages: (images: string[]) => {
+        dispatch({ type: 'SET_EXISTING_IMAGES', payload: images })
+      },
 
-    setImageDeleted: useCallback((deleted: boolean) => {
-      dispatch({ type: 'SET_IMAGE_DELETED', payload: deleted })
-    }, []),
+      setImageDeleted: (deleted: boolean) => {
+        dispatch({ type: 'SET_IMAGE_DELETED', payload: deleted })
+      },
 
-    addUploadedImage: useCallback((url: string) => {
-      dispatch({ type: 'ADD_UPLOADED_IMAGE', payload: url })
-    }, []),
+      addUploadedImage: (url: string) => {
+        dispatch({ type: 'ADD_UPLOADED_IMAGE', payload: url })
+      },
 
-    clearUploadedImages: useCallback(() => {
-      dispatch({ type: 'CLEAR_UPLOADED_IMAGES' })
-    }, []),
+      clearUploadedImages: () => {
+        dispatch({ type: 'CLEAR_UPLOADED_IMAGES' })
+      },
 
-    deleteExistingImage: useCallback(() => {
-      dispatch({ type: 'DELETE_EXISTING_IMAGE' })
-    }, []),
+      deleteExistingImage: () => {
+        dispatch({ type: 'DELETE_EXISTING_IMAGE' })
+      },
 
-    loadActivitySuccess: useCallback((id: string, image?: string) => {
-      dispatch({ type: 'LOAD_ACTIVITY_SUCCESS', payload: { id, image } })
-    }, []),
+      loadActivitySuccess: (id: string, image?: string) => {
+        dispatch({ type: 'LOAD_ACTIVITY_SUCCESS', payload: { id, image } })
+      },
 
-    reset: useCallback(() => {
-      dispatch({ type: 'RESET' })
-    }, []),
-  }
+      reset: () => {
+        dispatch({ type: 'RESET' })
+      },
+    }),
+    [] // 空依賴陣列，actions 物件只在初次渲染時建立
+  )
 
   return { state, actions, dispatch }
 }

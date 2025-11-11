@@ -112,3 +112,4 @@ supabase/.temp/
 # 臨時修復指南和設定文檔
 MCP_SETUP.md
 SCHEMA_REPAIR_GUIDE.md
+test-inquiry-templates-result.json

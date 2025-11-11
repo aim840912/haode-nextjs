@@ -14,7 +14,11 @@ const ProductCardImage = dynamic(
       default: mod.ProductCardImage,
     })),
   {
-    loading: () => <div className="h-48 bg-gray-100 rounded-t-xl animate-pulse"></div>,
+    loading: () => (
+      <div className="relative rounded-t-xl overflow-hidden">
+        <div className="pb-[133.33%] bg-gray-100 animate-pulse"></div>
+      </div>
+    ),
     ssr: false,
   }
 )
@@ -33,14 +37,13 @@ interface ProductCardProps {
 }
 
 /**
- * 產品卡片組件 - 電商精品風格
+ * 產品卡片組件 - momo 風格設計
  *
  * 特色：
- * - 奢華的漸變色彩設計
- * - 精緻的多層陰影系統
- * - 快速操作工具列
- * - 產品評級和標籤系統
- * - 高端購物體驗設計
+ * - 3:4 垂直圖片比例（符合商品攝影習慣）
+ * - 4 列桌面佈局（與 momo 一致）
+ * - 300px 卡片寬度（平衡視覺與資訊密度）
+ * - 簡潔的色彩設計和陰影系統
  * - 完整的響應式支援
  */
 export const ProductCard = React.memo<ProductCardProps>(
@@ -116,8 +119,8 @@ export const ProductCard = React.memo<ProductCardProps>(
           // 動畫效果
           'transition-all duration-300 ease-out',
           'hover:-translate-y-2 hover:scale-[1.01]',
-          // 響應式
-          'w-full max-w-sm mx-auto'
+          // 響應式 - momo 風格設計
+          'w-full max-w-[300px] mx-auto'
         )}
         onClick={handleCardClick}
         onMouseEnter={() => {
@@ -155,7 +158,7 @@ export const ProductCard = React.memo<ProductCardProps>(
         </div>
 
         {/* 產品資訊區域 */}
-        <div className="p-3 space-y-2">
+        <div className="p-2.5 space-y-2">
           {/* 產品名稱和評分 */}
           <div className="space-y-2">
             <h3 className="text-base font-bold text-gray-900 leading-tight group-hover:text-amber-900 transition-colors duration-300">
@@ -249,7 +252,7 @@ export const ProductCard = React.memo<ProductCardProps>(
               aria-label="加入購物車"
             >
               <ShoppingCart className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium">加入購物車</span>
+              <span className="text-sm font-medium">購物車</span>
             </button>
           </div>
         </div>

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
+import { SocialLoginSection } from '@/components/auth/SocialLoginSection'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import { validatePhone } from '@/lib/utils/validation'
@@ -476,6 +477,11 @@ export default function RegisterPage() {
               {isLoading ? '註冊中...' : '建立帳號'}
             </button>
           </form>
+
+          {/* Social Login Section */}
+          <div className="mt-6">
+            <SocialLoginSection providers={['google', 'facebook']} redirectTo="/" />
+          </div>
 
           {/* Login Link */}
           <div className="mt-6 text-center">
