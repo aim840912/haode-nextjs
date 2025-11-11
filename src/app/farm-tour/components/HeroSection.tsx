@@ -38,15 +38,6 @@ export function HeroSection({
       {/* 漸層遮罩確保文字可讀性 */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70 z-10"></div>
 
-      {/* 裝飾性浮動元素 */}
-      <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-green-400/10 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute bottom-20 right-10 w-40 h-40 bg-amber-400/10 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: '1s' }}
-        ></div>
-      </div>
-
       {/* Hero 內容 */}
       <div className="relative z-20 px-6">
         <div className="text-center max-w-7xl mx-auto mb-8">

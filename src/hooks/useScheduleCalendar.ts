@@ -21,6 +21,8 @@ export interface ScheduleCalendarStatistics {
   }
 }
 
+export type ScheduleStatus = 'all' | 'upcoming' | 'completed'
+
 export interface UseScheduleCalendarReturn {
   // 資料狀態
   events: ScheduleCalendarEvent[]
@@ -33,14 +35,16 @@ export interface UseScheduleCalendarReturn {
   refreshData: () => Promise<void>
 
   // 設定狀態
-  statusFilter: 'all' | 'upcoming' | 'ongoing' | 'completed'
-  setStatusFilter: (filter: 'all' | 'upcoming' | 'ongoing' | 'completed') => void
+  statusFilter: ScheduleStatus
+  setStatusFilter: (filter: ScheduleStatus) => void
 
   // 行事曆參考
   calendarRef: React.RefObject<FullCalendar | null>
 }
 
-export function useScheduleCalendar(): UseScheduleCalendarReturn {
+export function useScheduleCalendar(
+  initialStatusFilter: ScheduleStatus = 'all'
+): UseScheduleCalendarReturn {
   const calendarRef = useRef<FullCalendar | null>(null)
 
   // 狀態管理
@@ -49,9 +53,7 @@ export function useScheduleCalendar(): UseScheduleCalendarReturn {
   const [statistics, setStatistics] = useState<ScheduleCalendarStatistics | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'upcoming' | 'ongoing' | 'completed'>(
-    'all'
-  )
+  const [statusFilter, setStatusFilter] = useState<ScheduleStatus>(initialStatusFilter)
 
   // 更新過濾後的事件
   const updateFilteredEvents = useCallback(
@@ -129,14 +131,11 @@ export function useScheduleCalendar(): UseScheduleCalendarReturn {
   }, [fetchEvents])
 
   // 設定狀態過濾器並更新事件
-  const handleSetStatusFilter = useCallback(
-    (filter: 'all' | 'upcoming' | 'ongoing' | 'completed') => {
-      setStatusFilter(filter)
+  const handleSetStatusFilter = useCallback((filter: ScheduleStatus) => {
+    setStatusFilter(filter)
 
-      logger.debug(`更新狀態過濾器: ${filter}`)
-    },
-    []
-  )
+    logger.debug(`更新狀態過濾器: ${filter}`)
+  }, [])
 
   // 初始載入資料
   useEffect(() => {

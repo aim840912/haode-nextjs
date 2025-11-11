@@ -9,6 +9,7 @@ export interface UseScheduleReturn {
   filteredSchedule: ScheduleItem[]
   loading: boolean
   error: string | null
+  currentFilter: ScheduleStatus
   filterByStatus: (status: ScheduleStatus) => void
   refetch: () => Promise<void>
 }
@@ -22,6 +23,7 @@ export function useSchedule(): UseScheduleReturn {
   const [filteredSchedule, setFilteredSchedule] = useState<ScheduleItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentFilter, setCurrentFilter] = useState<ScheduleStatus>('all')
 
   const fetchSchedule = useCallback(async () => {
     setLoading(true)
@@ -64,6 +66,7 @@ export function useSchedule(): UseScheduleReturn {
   // 篩選行程狀態
   const filterByStatus = useCallback(
     (status: ScheduleStatus) => {
+      setCurrentFilter(status)
       if (status === 'all') {
         setFilteredSchedule(schedule)
       } else {
@@ -78,6 +81,7 @@ export function useSchedule(): UseScheduleReturn {
     filteredSchedule,
     loading,
     error,
+    currentFilter,
     filterByStatus,
     refetch: fetchSchedule,
   }

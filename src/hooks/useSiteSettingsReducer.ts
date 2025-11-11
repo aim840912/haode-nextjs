@@ -35,6 +35,22 @@ export interface SiteSettingsState {
   farmFaqs: string
   farmVisitInfo: string
   farmVisitNotes: string
+
+  // 首頁最新消息 - 當季推薦卡片
+  newsSeasonalRecommendationEnabled: string
+  newsSeasonalRecommendationTitle: string
+  newsSeasonalRecommendationIcon: string
+  newsSeasonalRecommendationDescription: string
+  newsSeasonalRecommendationLinkUrl: string
+  newsSeasonalRecommendationLinkText: string
+
+  // 首頁最新消息 - 農場活動卡片
+  newsFarmActivityEnabled: string
+  newsFarmActivityTitle: string
+  newsFarmActivityIcon: string
+  newsFarmActivityDescription: string
+  newsFarmActivityLinkUrl: string
+  newsFarmActivityLinkText: string
 }
 
 export type SiteSettingsAction =
@@ -74,6 +90,18 @@ const initialState: SiteSettingsState = {
   farmFaqs: '',
   farmVisitInfo: '',
   farmVisitNotes: '',
+  newsSeasonalRecommendationEnabled: '',
+  newsSeasonalRecommendationTitle: '',
+  newsSeasonalRecommendationIcon: '',
+  newsSeasonalRecommendationDescription: '',
+  newsSeasonalRecommendationLinkUrl: '',
+  newsSeasonalRecommendationLinkText: '',
+  newsFarmActivityEnabled: '',
+  newsFarmActivityTitle: '',
+  newsFarmActivityIcon: '',
+  newsFarmActivityDescription: '',
+  newsFarmActivityLinkUrl: '',
+  newsFarmActivityLinkText: '',
 }
 
 function siteSettingsReducer(
