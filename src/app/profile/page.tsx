@@ -84,7 +84,8 @@ function ProfilePageContent() {
         loadInterests()
       }
     }
-  }, [user, activeTab, loadOrders, loadInterests])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, activeTab])
 
   // 處理分頁切換
   const handleTabChange = (tab: string) => {

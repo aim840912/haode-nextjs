@@ -69,6 +69,15 @@ export function useInterests(
       // 使用 API 路由取得興趣清單
       const response = await fetch('/api/user/interests')
       if (!response.ok) {
+        // 401 認證失敗：靜默處理，避免觸發登出
+        if (response.status === 401) {
+          logger.warn('User interests API returned 401', {
+            metadata: { userId: user?.id, action: 'load_interests_auth_failed' },
+          })
+          setInterestedProducts([])
+          setInterestedProductsData([])
+          return
+        }
         throw new Error('Failed to fetch interests')
       }
 

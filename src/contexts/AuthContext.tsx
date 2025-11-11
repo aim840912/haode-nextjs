@@ -68,6 +68,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
       metadata: { reason, action: 'force_logout' },
     })
 
+    // 記錄登出原因到 localStorage（用於診斷）
+    try {
+      if (typeof window !== 'undefined') {
+        const logoutInfo = {
+          reason,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+        }
+        localStorage.setItem('last_logout_reason', JSON.stringify(logoutInfo))
+      }
+    } catch (storageError) {
+      // localStorage 可能被禁用，忽略錯誤
+      logger.debug('無法記錄登出原因到 localStorage', {
+        metadata: { error: String(storageError) },
+      })
+    }
+
     try {
       // 清除本地狀態
       setUser(null)
@@ -137,8 +155,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return false
     }
 
-    // 防止過於頻繁的驗證（至少間隔 30 秒）
-    if (now - validationRef.current.lastValidation < 30000) {
+    // 防止過於頻繁的驗證（至少間隔 60 秒）
+    if (now - validationRef.current.lastValidation < 60000) {
       logger.debug('跳過 session 驗證：間隔時間太短', {
         metadata: {
           action: 'skip_validation_too_frequent',
@@ -152,11 +170,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     validationRef.current.lastValidation = now
 
     try {
-      // 嘗試刷新 session 來驗證其有效性
+      // 檢查 session 有效性（使用 getSession 避免 "missing destination" 錯誤）
       const {
         data: { session },
         error,
-      } = await supabase.auth.refreshSession()
+      } = await supabase.auth.getSession()
 
       if (error || !session) {
         // Session 驗證失敗時，記錄錯誤但不立即登出
@@ -446,8 +464,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const now = Date.now()
       const lastProcessing = eventProcessingRef.current
 
-      // 防抖：相同事件在 1 秒內只處理一次
-      if (lastProcessing.lastEvent === event && now - lastProcessing.lastTime < 1000) {
+      // 防抖：相同事件在 3 秒內只處理一次
+      if (lastProcessing.lastEvent === event && now - lastProcessing.lastTime < 3000) {
         logger.debug('跳過重複的認證事件', {
           metadata: { event, skipped: true, action: 'duplicate_event_skip' },
         })
