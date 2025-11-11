@@ -162,13 +162,13 @@ export function Breadcrumbs({
 
               {/* 麵包屑項目 */}
               {item.current ? (
-                <span className="text-gray-800 font-medium" aria-current="page">
+                <span className="text-gray-800 dark:text-gray-200 font-medium" aria-current="page">
                   {item.name}
                 </span>
               ) : (
                 <Link
                   href={item.href!}
-                  className="text-amber-900 hover:text-amber-800 hover:underline transition-colors"
+                  className="text-amber-900 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline transition-colors"
                 >
                   {item.name}
                 </Link>
