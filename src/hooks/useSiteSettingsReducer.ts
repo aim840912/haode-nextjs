@@ -5,7 +5,7 @@
  * 提供類型安全的狀態管理和更新邏輯
  */
 
-import { useReducer, useCallback } from 'react'
+import { useReducer, useCallback, useMemo } from 'react'
 
 export interface SiteSettingsState {
   // UI 狀態
@@ -178,64 +178,65 @@ export function useSiteSettingsReducer() {
   const [state, dispatch] = useReducer(siteSettingsReducer, initialState)
 
   // 提供方便的 helper functions
-  const actions = {
-    setSaving: useCallback((saving: boolean) => {
-      dispatch({ type: 'SET_SAVING', payload: saving })
-    }, []),
+  // 使用 useMemo 確保 actions 物件引用穩定，避免無限重新渲染
+  const actions = useMemo(
+    () => ({
+      setSaving: (saving: boolean) => {
+        dispatch({ type: 'SET_SAVING', payload: saving })
+      },
 
-    showMessage: useCallback((type: 'success' | 'error', text: string) => {
-      dispatch({ type: 'SET_MESSAGE', payload: { type, text } })
-      setTimeout(() => {
+      showMessage: (type: 'success' | 'error', text: string) => {
+        dispatch({ type: 'SET_MESSAGE', payload: { type, text } })
+        setTimeout(() => {
+          dispatch({ type: 'CLEAR_MESSAGE' })
+        }, 5000)
+      },
+
+      clearMessage: () => {
         dispatch({ type: 'CLEAR_MESSAGE' })
-      }, 5000)
-    }, []),
+      },
 
-    clearMessage: useCallback(() => {
-      dispatch({ type: 'CLEAR_MESSAGE' })
-    }, []),
+      setHomeHeroImages: (images: string[]) => {
+        dispatch({ type: 'SET_HOME_HERO_IMAGES', payload: images })
+      },
 
-    setHomeHeroImages: useCallback((images: string[]) => {
-      dispatch({ type: 'SET_HOME_HERO_IMAGES', payload: images })
-    }, []),
+      addHomeHeroImage: (url: string) => {
+        dispatch({ type: 'ADD_HOME_HERO_IMAGE', payload: url })
+      },
 
-    addHomeHeroImage: useCallback((url: string) => {
-      dispatch({ type: 'ADD_HOME_HERO_IMAGE', payload: url })
-    }, []),
+      removeHomeHeroImage: (index: number) => {
+        dispatch({ type: 'REMOVE_HOME_HERO_IMAGE', payload: index })
+      },
 
-    removeHomeHeroImage: useCallback((index: number) => {
-      dispatch({ type: 'REMOVE_HOME_HERO_IMAGE', payload: index })
-    }, []),
+      setFarmTourHeroBg: (url: string) => {
+        dispatch({ type: 'SET_FARM_TOUR_HERO_BG', payload: url })
+      },
 
-    setFarmTourHeroBg: useCallback((url: string) => {
-      dispatch({ type: 'SET_FARM_TOUR_HERO_BG', payload: url })
-    }, []),
+      setFeatureCardImage: (index: 1 | 2 | 3 | 4, url: string) => {
+        dispatch({ type: 'SET_FEATURE_CARD_IMAGE', payload: { index, url } })
+      },
 
-    setFeatureCardImage: useCallback((index: 1 | 2 | 3 | 4, url: string) => {
-      dispatch({ type: 'SET_FEATURE_CARD_IMAGE', payload: { index, url } })
-    }, []),
-
-    setSeasonImage: useCallback(
-      (season: 'spring' | 'summer' | 'autumn' | 'winter', url: string) => {
+      setSeasonImage: (season: 'spring' | 'summer' | 'autumn' | 'winter', url: string) => {
         dispatch({ type: 'SET_SEASON_IMAGE', payload: { season, url } })
       },
-      []
-    ),
 
-    setFarmContent: useCallback(
-      (field: 'facilities' | 'faqs' | 'visitInfo' | 'visitNotes', value: string) => {
+      setFarmContent: (
+        field: 'facilities' | 'faqs' | 'visitInfo' | 'visitNotes',
+        value: string
+      ) => {
         dispatch({ type: 'SET_FARM_CONTENT', payload: { field, value } })
       },
-      []
-    ),
 
-    loadAllSettings: useCallback((settings: Partial<SiteSettingsState>) => {
-      dispatch({ type: 'LOAD_ALL_SETTINGS', payload: settings })
-    }, []),
+      loadAllSettings: (settings: Partial<SiteSettingsState>) => {
+        dispatch({ type: 'LOAD_ALL_SETTINGS', payload: settings })
+      },
 
-    reset: useCallback(() => {
-      dispatch({ type: 'RESET' })
-    }, []),
-  }
+      reset: () => {
+        dispatch({ type: 'RESET' })
+      },
+    }),
+    [] // 空依賴陣列，確保 actions 引用永不變化
+  )
 
   return { state, actions, dispatch }
 }

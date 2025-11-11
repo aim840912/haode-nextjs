@@ -21,25 +21,9 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">管理控制台</h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">豪德農場網站管理中心</p>
-              </div>
-              <div className="flex space-x-4">
-                <Link
-                  href="/admin/analytics"
-                  className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-                >
-                  網站分析
-                </Link>
-                <Link
-                  href="/"
-                  className="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  回到首頁
-                </Link>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">管理控制台</h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">豪德農場網站管理中心</p>
             </div>
           </div>
         </div>

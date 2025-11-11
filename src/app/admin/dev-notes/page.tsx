@@ -120,13 +120,13 @@ export default function DevNotesPage() {
           )}
 
           {/* 篩選器 */}
-          <div className="bg-white rounded-xl shadow-sm border p-4 mb-6">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border dark:border-slate-700 p-4 mb-6">
             <div className="flex items-center space-x-4">
-              <FunnelIcon className="w-5 h-5 text-gray-400" />
+              <FunnelIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               <select
                 value={state.typeFilter}
                 onChange={e => actions.setTypeFilter(e.target.value as DevNoteType | 'all')}
-                className="px-3 py-2 border rounded-lg"
+                className="px-3 py-2 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">所有類型</option>
                 <option value="bug">Bug</option>
@@ -138,7 +138,7 @@ export default function DevNotesPage() {
               <select
                 value={state.statusFilter}
                 onChange={e => actions.setStatusFilter(e.target.value as DevNoteStatus | 'all')}
-                className="px-3 py-2 border rounded-lg"
+                className="px-3 py-2 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">所有狀態</option>
                 <option value="pending">待處理</option>
@@ -150,7 +150,7 @@ export default function DevNotesPage() {
               <select
                 value={state.priorityFilter}
                 onChange={e => actions.setPriorityFilter(e.target.value as DevNotePriority | 'all')}
-                className="px-3 py-2 border rounded-lg"
+                className="px-3 py-2 border dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="all">所有優先級</option>
                 <option value="urgent">緊急</option>
@@ -164,9 +164,9 @@ export default function DevNotesPage() {
           {/* 列表 */}
           <div className="space-y-4">
             {state.loading ? (
-              <div className="text-center py-12">載入中...</div>
+              <div className="text-center py-12 text-gray-900 dark:text-gray-100">載入中...</div>
             ) : state.notes.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">暫無記錄</div>
+              <div className="text-center py-12 text-gray-500 dark:text-gray-400">暫無記錄</div>
             ) : (
               state.notes.map(note => <NoteCard key={note.id} note={note} onUpdate={loadData} />)
             )}
@@ -208,11 +208,11 @@ function StatCard({
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border p-6">
+    <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border dark:border-slate-700 p-6">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600 dark:text-gray-300">{title}</p>
-          <p className="text-3xl font-bold mt-2">{value}</p>
+          <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-gray-100">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
           <Icon className="w-8 h-8" />
@@ -278,9 +278,9 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-auto">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-gray-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">新增開發筆記</h2>
             <button
@@ -303,14 +303,14 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
           {/* 標題 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               標題 <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.title}
               onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="請輸入標題"
               disabled={submitting}
               required
@@ -319,12 +319,14 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
           {/* 描述 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              描述
+            </label>
             <textarea
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="請輸入詳細描述"
               disabled={submitting}
             />
@@ -333,13 +335,13 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
           {/* 類型、優先級、狀態 */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 類型 <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.type}
                 onChange={e => setFormData({ ...formData, type: e.target.value as DevNoteType })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 disabled={submitting}
               >
                 <option value="bug">Bug</option>
@@ -350,7 +352,7 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 優先級 <span className="text-red-500">*</span>
               </label>
               <select
@@ -358,7 +360,7 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
                 onChange={e =>
                   setFormData({ ...formData, priority: e.target.value as DevNotePriority })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 disabled={submitting}
               >
                 <option value="low">低</option>
@@ -369,13 +371,15 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">狀態</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                狀態
+              </label>
               <select
                 value={formData.status}
                 onChange={e =>
                   setFormData({ ...formData, status: e.target.value as DevNoteStatus })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 disabled={submitting}
               >
                 <option value="pending">待處理</option>
@@ -386,12 +390,14 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
 
           {/* 標籤 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">標籤 (逗號分隔)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              標籤 (逗號分隔)
+            </label>
             <input
               type="text"
               value={tagsInput}
               onChange={e => setTagsInput(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="例如: frontend, urgent, bug-fix"
               disabled={submitting}
             />
@@ -402,7 +408,7 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700"
               disabled={submitting}
             >
               取消
@@ -427,10 +433,10 @@ function NoteCard({ note, onUpdate }: { note: DevNote; onUpdate?: () => void }) 
   const [error, setError] = useState('')
 
   const cardBgColors: Record<DevNoteType, string> = {
-    bug: 'bg-red-100 border-red-400',
-    todo: 'bg-blue-100 border-blue-400',
-    feature: 'bg-purple-100 border-purple-400',
-    improvement: 'bg-green-100 border-green-400',
+    bug: 'bg-red-100 dark:bg-red-900/20 border-red-400 dark:border-red-800',
+    todo: 'bg-blue-100 dark:bg-blue-900/20 border-blue-400 dark:border-blue-800',
+    feature: 'bg-purple-100 dark:bg-purple-900/20 border-purple-400 dark:border-purple-800',
+    improvement: 'bg-green-100 dark:bg-green-900/20 border-green-400 dark:border-green-800',
   }
 
   const typeColors: Record<DevNoteType, string> = {
@@ -515,7 +521,7 @@ function NoteCard({ note, onUpdate }: { note: DevNote; onUpdate?: () => void }) 
             <p className="text-gray-600 dark:text-gray-300 text-sm">{note.description}</p>
           )}
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
-          <div className="mt-3 text-xs text-gray-500">
+          <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
             建立時間:{new Date(note.created_at).toLocaleString('zh-TW')}
           </div>
         </div>
