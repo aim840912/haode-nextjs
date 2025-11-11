@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 
-export default function HeaderSpacer() {
+export function HeaderSpacer() {
   // 由於 Header 已統一為固定高度（60px），我們可以簡化 HeaderSpacer
   const HEADER_HEIGHT = 60
 

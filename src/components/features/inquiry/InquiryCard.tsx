@@ -1,15 +1,16 @@
 'use client'
 
 import Link from 'next/link'
+import { formatDateTime } from '@/lib/utils/formatters'
 import { InquiryWithItems, InquiryUtils } from '@/types/inquiry'
-import InquiryStatusBadge from './InquiryStatusBadge'
+import { InquiryStatusBadge } from './InquiryStatusBadge'
 
 interface InquiryCardProps {
   inquiry: InquiryWithItems
   showActions?: boolean
 }
 
-export default function InquiryCard({ inquiry, showActions = true }: InquiryCardProps) {
+export function InquiryCard({ inquiry, showActions = true }: InquiryCardProps) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between">
@@ -20,15 +21,7 @@ export default function InquiryCard({ inquiry, showActions = true }: InquiryCard
               <h3 className="text-lg font-semibold text-gray-900 mb-1">
                 庫存查詢單 #{InquiryUtils.formatInquiryNumber(inquiry)}
               </h3>
-              <p className="text-sm text-gray-600">
-                {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
+              <p className="text-sm text-gray-600">{formatDateTime(inquiry.created_at)}</p>
             </div>
             <InquiryStatusBadge status={inquiry.status} />
           </div>

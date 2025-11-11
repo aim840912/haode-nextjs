@@ -6,15 +6,15 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
+import { fetchInquiryStats, type InquiryStatsData } from '@/lib/api/inquiries-api'
 import { logger } from '@/lib/logger'
+import { isRateLimitError, isNetworkError } from '@/lib/utils/error-utils'
 import {
   createCacheKey,
   formatUserFriendlyError,
   shouldShowErrorToUser,
   INQUIRY_STATS_CONSTANTS,
 } from '@/lib/utils/inquiry-stats-utils'
-import { isRateLimitError, isNetworkError } from '@/lib/utils/error-utils'
-import { fetchInquiryStats, type InquiryStatsData } from '@/lib/api/inquiries-api'
 
 // 全域請求去重機制
 interface PendingRequest {
@@ -55,7 +55,7 @@ export function useInquiryStatsFetcher(
   options: UseInquiryStatsFetcherOptions = {}
 ): UseInquiryStatsFetcherReturn {
   const {
-    endpoint = '/api/inquiries/stats',
+    endpoint: _endpoint = '/api/inquiries/stats',
     params = { timeframe: '30' },
     isDevelopment = process.env.NODE_ENV === 'development',
   } = options
@@ -79,7 +79,7 @@ export function useInquiryStatsFetcher(
    * 執行 API 請求
    */
   const executeRequest = useCallback(
-    async (signal?: AbortSignal): Promise<InquiryStatsData> => {
+    async (_signal?: AbortSignal): Promise<InquiryStatsData> => {
       const timeframe = parseInt(params.timeframe || '30', 10)
       return await fetchInquiryStats(timeframe)
     },

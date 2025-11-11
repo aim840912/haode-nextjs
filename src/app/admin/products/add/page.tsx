@@ -1,33 +1,36 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { logger } from '@/lib/logger'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { LockClosedIcon, BeakerIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { v4 as uuidv4 } from 'uuid'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { v4 as uuidv4 } from 'uuid'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
-import { LockClosedIcon, BeakerIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { logger } from '@/lib/logger'
 
 // Hooks
+import { ProductFormFields } from './components/ProductFormFields'
+import { SuccessOverlay } from './components/SuccessOverlay'
+import { UploadStatsPanel } from './components/UploadStatsPanel'
 import { useProductForm } from './hooks/useProductForm'
 import { useProductSubmit } from './hooks/useProductSubmit'
 
 // Components
-import { ProductFormFields } from './components/ProductFormFields'
-import { UploadStatsPanel } from './components/UploadStatsPanel'
-import { SuccessOverlay } from './components/SuccessOverlay'
 
 // 動態載入產品圖片管理器
 const ProductImageManager = dynamic(
-  () => import('@/components/features/products/ProductImageManager'),
+  () =>
+    import('@/components/features/products/ProductImageManager').then(
+      mod => mod.ProductImageManager
+    ),
   {
     loading: () => (
-      <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center animate-pulse">
-        <div className="flex items-center space-x-2 text-gray-500">
+      <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center animate-pulse">
+        <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
           <BeakerIcon className="w-5 h-5 animate-spin" />
           <span>載入圖片管理器...</span>
         </div>
@@ -149,13 +152,13 @@ function AddProductV2() {
   // 未登入
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
           <div className="flex justify-center mb-8">
-            <LockClosedIcon className="w-16 h-16 text-gray-400" />
+            <LockClosedIcon className="w-16 h-16 text-gray-400 dark:text-gray-500" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入</h1>
-          <p className="text-gray-600 mb-8">請登入後再訪問產品管理功能</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">需要登入</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">請登入後再訪問產品管理功能</p>
           <Link
             href="/admin/login"
             className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
@@ -170,10 +173,10 @@ function AddProductV2() {
   // CSRF 錯誤
   if (csrfError) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">安全驗證失敗</h1>
-          <p className="text-gray-600 mb-8">請重新整理頁面再試一次</p>
+          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">安全驗證失敗</h1>
+          <p className="text-gray-600 dark:text-gray-300 mb-8">請重新整理頁面再試一次</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
@@ -187,21 +190,21 @@ function AddProductV2() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* 導航欄 */}
-        <nav className="bg-white shadow-sm border-b">
+        <nav className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center space-x-4">
                 <Link
                   href="/admin/products"
-                  className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                  className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   <ArrowLeftIcon className="w-5 h-5 mr-2" />
                   返回產品列表
                 </Link>
-                <div className="h-6 w-px bg-gray-300" />
-                <h1 className="text-xl font-semibold text-gray-900">新增產品</h1>
+                <div className="h-6 w-px bg-gray-300 dark:border-slate-600" />
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">新增產品</h1>
               </div>
             </div>
           </div>
@@ -213,9 +216,9 @@ function AddProductV2() {
           <UploadStatsPanel stats={uploadStats} />
 
           {/* 產品表單 */}
-          <div className="bg-white rounded-lg shadow-sm border relative">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-lg font-medium text-gray-900">產品資訊</h2>
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border dark:border-slate-700 relative">
+            <div className="px-6 py-4 border-b dark:border-slate-700">
+              <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">產品資訊</h2>
             </div>
 
             {/* 成功狀態覆蓋層 */}
@@ -224,14 +227,14 @@ function AddProductV2() {
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {/* 成功/錯誤訊息 */}
               {submitSuccess && (
-                <div className="rounded-md bg-green-50 p-4">
-                  <div className="text-sm text-green-800">{submitSuccess}</div>
+                <div className="rounded-md bg-green-50 dark:bg-green-900/30 p-4">
+                  <div className="text-sm text-green-800 dark:text-green-400">{submitSuccess}</div>
                 </div>
               )}
 
               {submitError && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <div className="text-sm text-red-800">{submitError}</div>
+                <div className="rounded-md bg-red-50 dark:bg-red-900/30 p-4">
+                  <div className="text-sm text-red-800 dark:text-red-400">{submitError}</div>
                 </div>
               )}
 
@@ -245,11 +248,13 @@ function AddProductV2() {
 
               {/* 產品圖片管理 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">產品圖片 *</label>
-                <p className="text-xs text-gray-600 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  產品圖片 *
+                </label>
+                <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
                   支援批量上傳、拖放排序、設定主圖等功能。建議圖片尺寸為 800x800 像素以上。
                 </p>
-                <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                <div className="border border-gray-200 dark:border-slate-600 rounded-lg p-4 bg-white dark:bg-slate-700">
                   <ProductImageManager
                     productId={productId}
                     maxImages={10}
@@ -263,10 +268,10 @@ function AddProductV2() {
               </div>
 
               {/* 提交按鈕 */}
-              <div className="flex justify-end space-x-4 pt-6 border-t">
+              <div className="flex justify-end space-x-4 pt-6 border-t dark:border-slate-700">
                 <Link
                   href="/admin/products"
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
                 >
                   取消
                 </Link>

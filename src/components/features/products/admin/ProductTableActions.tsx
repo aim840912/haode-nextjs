@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils/cn'
 import { Product } from '@/types/product'
 
 interface ProductTableActionsProps {
@@ -44,11 +45,12 @@ export function ProductTableActions({
         <button
           onClick={() => onToggleActive(product.id, product.isActive)}
           disabled={isActionDisabled}
-          className={`inline-flex items-center px-3 py-1.5 border shadow-sm text-xs font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+          className={cn(
+            'inline-flex items-center px-3 py-1.5 border shadow-sm text-xs font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
             product.isActive
               ? 'border-red-300 text-red-700 bg-white hover:bg-red-50 focus:ring-red-500'
               : 'border-green-300 text-green-700 bg-white hover:bg-green-50 focus:ring-green-500'
-          }`}
+          )}
         >
           {product.isActive ? '下架' : '上架'}
         </button>
@@ -67,5 +69,3 @@ export function ProductTableActions({
     </div>
   )
 }
-
-export default ProductTableActions

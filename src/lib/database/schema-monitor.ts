@@ -1,6 +1,6 @@
-import { createServiceSupabaseClient } from './supabase-server'
 import { dbLogger } from '@/lib/logger'
 import { refreshConnectionPoolSchema } from '@/lib/supabase/connection-factory'
+import { createServiceSupabaseClient } from './supabase-server'
 
 /**
  * Schema 資料表資訊結構
@@ -212,7 +212,7 @@ export class SchemaMonitor {
             // 資料表存在但查詢失敗
             schemaData.push({ table: tableName, error: error.message })
           }
-        } catch (tableError) {
+        } catch (_tableError) {
           // 忽略不存在的資料表
         }
       }

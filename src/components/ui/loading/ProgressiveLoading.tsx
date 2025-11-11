@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback, ReactNode, Suspense } from 'react'
-import { LoadingSkeleton } from './LoadingSkeleton'
-import LoadingSpinner from './LoadingSpinner'
-import { LoadingError, GenericError } from './LoadingError'
 import { useLoadingState } from '@/hooks/useLoadingState'
+import { cn } from '@/lib/utils/cn'
 import { ComponentErrorBoundary } from '../error/ErrorBoundary'
+import { LoadingError, GenericError } from './LoadingError' // GenericError 用於 errorComponent
+import { LoadingSkeleton } from './LoadingSkeleton'
+import { LoadingSpinner } from './LoadingSpinner'
 
 interface ProgressiveLoadingProps {
   children: ReactNode
@@ -97,7 +98,14 @@ export function DataLoading<T>({
   className = '',
 }: DataLoadingProps<T>) {
   const [data, setData] = useState<T | null>(null)
-  const { isLoading, error, shouldShowLoading, executeAsync, retry, reset } = useLoadingState({
+  const {
+    isLoading,
+    error,
+    shouldShowLoading,
+    executeAsync,
+    retry: _retry,
+    reset,
+  } = useLoadingState({
     showLoadingAfterMs: 200,
     maxRetries: 3,
   })
@@ -202,7 +210,7 @@ export function ProgressiveImage({
   if (imageError) {
     return (
       <div
-        className={`bg-gray-200 flex items-center justify-center text-gray-500 ${className}`}
+        className={cn('bg-gray-200 flex items-center justify-center text-gray-500', className)}
         style={{ width, height }}
       >
         <span className="text-sm">載入失敗</span>
@@ -211,7 +219,7 @@ export function ProgressiveImage({
   }
 
   return (
-    <div className={`relative overflow-hidden ${className}`} style={{ width, height }}>
+    <div className={cn('relative overflow-hidden', className)} style={{ width, height }}>
       {/* 佔位圖或模糊背景 */}
       {!imageLoaded && (
         <div className="absolute inset-0">
@@ -238,9 +246,10 @@ export function ProgressiveImage({
       <img
         src={src}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${
+        className={cn(
+          'w-full h-full object-cover transition-opacity duration-300',
           showImage ? 'opacity-100' : 'opacity-0'
-        }`}
+        )}
         style={{ width, height }}
       />
     </div>

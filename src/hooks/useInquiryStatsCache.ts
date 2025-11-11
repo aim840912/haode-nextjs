@@ -106,7 +106,7 @@ export function useInquiryStatsCache(
       // 清除損壞的快取
       try {
         localStorage.removeItem(cacheKeyRef.current)
-      } catch (clearErr) {
+      } catch (_clearErr) {
         // 靜默處理清除錯誤
       }
 

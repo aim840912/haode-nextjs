@@ -6,12 +6,12 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
-import { orderService } from '@/services/core/order/orderService'
-import { z } from 'zod'
 import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { orderService } from '@/services/core/order'
 
 // 訂單更新的驗證 schema
 const UpdateOrderSchema = z.object({
@@ -20,7 +20,53 @@ const UpdateOrderSchema = z.object({
 })
 
 /**
- * GET /api/orders/[id] - 取得單一訂單詳情
+ * @api {GET} /api/orders/:id 取得單一訂單詳情
+ * @apiName GetOrderById
+ * @apiGroup Orders
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 取得當前登入使用者的特定訂單詳細資訊。
+ * 只能查看自己的訂單，系統會自動驗證訂單所有權。
+ *
+ * @apiPermission user
+ *
+ * @apiParam {String} id 訂單 ID (UUID)
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 訂單資料
+ * @apiSuccess {String} data.id 訂單 ID
+ * @apiSuccess {String} data.orderNumber 訂單編號
+ * @apiSuccess {String} data.status 訂單狀態
+ * @apiSuccess {Number} data.totalAmount 訂單總金額
+ * @apiSuccess {String} data.createdAt 建立時間
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "orderNumber": "ORD-20250107-001",
+ *     "status": "pending",
+ *     "totalAmount": 1500,
+ *     "createdAt": "2025-01-07T10:30:00Z"
+ *   },
+ *   "message": "取得訂單詳情成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 訂單 ID 格式錯誤
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或權限不足
+ * @apiError (錯誤 4xx) {Object} NotFoundError 訂單不存在或無權限查看
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "success": false,
+ *   "error": "訂單不存在或無權限查看",
+ *   "code": "NOT_FOUND"
+ * }
  */
 async function handleGET(req: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined
@@ -49,7 +95,45 @@ async function handleGET(req: NextRequest, user: User, context?: unknown) {
 }
 
 /**
- * PATCH /api/orders/[id] - 更新訂單
+ * @api {PATCH} /api/orders/:id 取消訂單
+ * @apiName CancelOrder
+ * @apiGroup Orders
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 更新訂單狀態，目前僅支援取消訂單操作。
+ * 使用者只能取消自己的訂單，並可選擇性提供取消原因。
+ *
+ * @apiPermission user
+ *
+ * @apiParam {String} id 訂單 ID (UUID)
+ *
+ * @apiBody {String="cancel"} action 操作類型（目前僅支援 "cancel"）
+ * @apiBody {String} [reason] 取消原因
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 回應資料（null）
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": null,
+ *   "message": "訂單已成功取消"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 資料驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或權限不足
+ * @apiError (錯誤 4xx) {Object} NotFoundError 訂單不存在或無權限操作
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "驗證失敗: action: 僅支援取消訂單操作",
+ *   "code": "VALIDATION_ERROR"
+ * }
  */
 async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined

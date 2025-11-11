@@ -3,17 +3,19 @@
 import { useState, useEffect } from 'react'
 // 使用 HTML 符號替代 lucide-react
 // import { X } from 'lucide-react'
-import { logger } from '@/lib/logger'
+import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
 import { inquiryApi } from '@/lib/api-client'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { formatDate } from '@/lib/utils/formatters'
+import { FarmTourActivity } from '@/types/farmTour'
+import { ApiResponse } from '@/types/infrastructure.types'
 import {
   CreateInquiryRequest,
   CreateInquiryItemRequest,
   InquiryType,
   InquiryWithItems,
 } from '@/types/inquiry'
-import { ApiResponse } from '@/types/infrastructure.types'
-import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
-import { FarmTourActivity } from '@/types/farmTour'
 
 interface QuickAddInquiryModalProps {
   isOpen: boolean
@@ -22,7 +24,7 @@ interface QuickAddInquiryModalProps {
   onSuccess?: (inquiryId: string) => void
 }
 
-export default function QuickAddInquiryModal({
+export function QuickAddInquiryModal({
   isOpen,
   onClose,
   selectedDate,
@@ -59,7 +61,7 @@ export default function QuickAddInquiryModal({
         visitor_count: 1,
         farm_tour_id: '',
         visit_date: defaultDate,
-        notes: selectedDate ? `預設預約日期：${selectedDate.toLocaleDateString('zh-TW')}` : '',
+        notes: selectedDate ? `預設預約日期：${formatDate(selectedDate, 'short')}` : '',
       })
       setErrors({})
     }
@@ -240,9 +242,10 @@ export default function QuickAddInquiryModal({
               value={formData.visit_date}
               onChange={e => handleInputChange('visit_date', e.target.value)}
               min={new Date().toISOString().split('T')[0]} // 最小日期為今天
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.visit_date ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               disabled={isSubmitting}
             />
             {errors.visit_date && <p className="text-red-600 text-sm mt-1">{errors.visit_date}</p>}
@@ -262,9 +265,10 @@ export default function QuickAddInquiryModal({
               type="text"
               value={formData.customer_name}
               onChange={e => handleInputChange('customer_name', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.customer_name ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               placeholder="請輸入客戶姓名"
               disabled={isSubmitting}
             />
@@ -280,9 +284,10 @@ export default function QuickAddInquiryModal({
               type="email"
               value={formData.customer_email}
               onChange={e => handleInputChange('customer_email', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.customer_email ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               placeholder="example@email.com"
               disabled={isSubmitting}
             />
@@ -298,9 +303,10 @@ export default function QuickAddInquiryModal({
               type="tel"
               value={formData.customer_phone}
               onChange={e => handleInputChange('customer_phone', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.customer_phone ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               placeholder="09xx-xxx-xxx"
               disabled={isSubmitting}
             />
@@ -315,9 +321,10 @@ export default function QuickAddInquiryModal({
             <select
               value={formData.farm_tour_id}
               onChange={e => handleInputChange('farm_tour_id', e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.farm_tour_id ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               disabled={isSubmitting}
             >
               <option value="">請選擇農場導覽活動</option>
@@ -347,9 +354,10 @@ export default function QuickAddInquiryModal({
               max="50"
               value={formData.visitor_count}
               onChange={e => handleInputChange('visitor_count', parseInt(e.target.value) || 1)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={cn(
+                'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500',
                 errors.visitor_count ? 'border-red-300' : 'border-gray-300'
-              }`}
+              )}
               disabled={isSubmitting}
             />
             {errors.visitor_count && (

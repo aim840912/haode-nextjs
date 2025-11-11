@@ -157,7 +157,7 @@ export default function DiagnosisPage() {
                   credentials: 'include',
                 })
                 addLog('✅ 測試資料已清理')
-              } catch (cleanupError) {
+              } catch (_cleanupError) {
                 addLog('⚠️ 測試資料清理失敗（無關緊要）')
               }
             }

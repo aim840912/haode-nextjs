@@ -17,7 +17,10 @@ export interface ScheduleItem {
 export interface ScheduleService {
   getSchedule(): Promise<ScheduleItem[]>
   addSchedule(schedule: Omit<ScheduleItem, 'id' | 'createdAt' | 'updatedAt'>): Promise<ScheduleItem>
-  updateSchedule(id: string, schedule: Partial<Omit<ScheduleItem, 'id' | 'createdAt' | 'updatedAt'>>): Promise<ScheduleItem>
+  updateSchedule(
+    id: string,
+    schedule: Partial<Omit<ScheduleItem, 'id' | 'createdAt' | 'updatedAt'>>
+  ): Promise<ScheduleItem>
   deleteSchedule(id: string): Promise<void>
   getScheduleById(id: string): Promise<ScheduleItem | null>
 }

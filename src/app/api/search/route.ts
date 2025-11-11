@@ -1,12 +1,96 @@
+/**
+ * @api {GET} /api/search 搜尋產品
+ * @apiName SearchProducts
+ * @apiGroup Search
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 搜尋產品（公開 API）。
+ * 支援關鍵字搜尋產品名稱、描述和分類。
+ * 結果依相關性排序並支援分頁。
+ * 會自動記錄搜尋查詢指標。
+ *
+ * @apiPermission public
+ *
+ * @apiQuery {String} q 搜尋關鍵字（必填，至少 1 個字元）
+ * @apiQuery {Number} [limit=20] 返回結果數量上限
+ * @apiQuery {Number} [offset=0] 分頁偏移量
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 搜尋結果
+ * @apiSuccess {Object[]} data.results 搜尋結果列表
+ * @apiSuccess {String} data.results.id 產品 ID
+ * @apiSuccess {String} data.results.title 產品名稱
+ * @apiSuccess {String} data.results.description 產品描述
+ * @apiSuccess {String} data.results.type 結果類型（固定為 "product"）
+ * @apiSuccess {String} data.results.url 產品 URL
+ * @apiSuccess {String} data.results.category 產品分類
+ * @apiSuccess {String} data.results.image 產品圖片 URL
+ * @apiSuccess {Number} data.results.price 產品價格
+ * @apiSuccess {Number} data.results.relevanceScore 相關性分數
+ * @apiSuccess {Number} data.total 總結果數
+ * @apiSuccess {String} data.query 搜尋關鍵字
+ * @apiSuccess {Number} data.processingTime 查詢處理時間（毫秒）
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應（有結果）:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "results": [
+ *       {
+ *         "id": "uuid",
+ *         "title": "有機草莓",
+ *         "description": "新鮮有機草莓",
+ *         "type": "product",
+ *         "url": "/products?productId=uuid",
+ *         "category": "季節水果",
+ *         "image": "https://storage.example.com/image.jpg",
+ *         "price": 300,
+ *         "relevanceScore": 15
+ *       }
+ *     ],
+ *     "total": 1,
+ *     "query": "草莓",
+ *     "processingTime": 45
+ *   },
+ *   "message": "搜尋完成"
+ * }
+ *
+ * @apiSuccessExample {json} 成功回應（無結果）:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "results": [],
+ *     "total": 0,
+ *     "query": "",
+ *     "processingTime": 2
+ *   },
+ *   "message": "搜尋完成"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 查詢參數驗證失敗
+ *
+ * @apiErrorExample {json} 驗證錯誤:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "查詢參數驗證失敗: q: 搜尋關鍵字為必填",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ */
+
 import { NextRequest } from 'next/server'
-import { getProductService } from '@/services/factory/serviceFactory'
-import { SearchResult, SearchResponse } from '@/types/search'
-import { Product } from '@/types/product'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { SearchSchemas } from '@/lib/validation'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { SearchSchemas } from '@/lib/validation'
+import { getProductService } from '@/services/factory/serviceFactory'
+import { Product } from '@/types/product'
+import { SearchResult, SearchResponse } from '@/types/search'
 
 async function handleGET(request: NextRequest) {
   const startTime = Date.now()

@@ -12,10 +12,10 @@ import {
   getAllKPIBaselines,
   getKPIBaselineByName,
 } from '@/config/kpi-baselines'
+import { logger } from '@/lib/logger'
 import { metrics } from '@/lib/metrics'
 import { ErrorStatsCollector } from '@/lib/middleware/error-handler'
 import { getRateLimitStats } from '@/services/infrastructure/rateLimitMonitoringService'
-import { logger } from '@/lib/logger'
 
 /**
  * KPI 測量結果

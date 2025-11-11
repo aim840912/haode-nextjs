@@ -6,13 +6,12 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
-import { orderService } from '@/services/core/order/orderService'
-import { OrderStatus } from '@/types/order'
-import { z } from 'zod'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { orderService } from '@/services/core/order'
 
 // 管理員訂單更新的驗證 schema
 const AdminUpdateOrderSchema = z.object({
@@ -33,7 +32,41 @@ const AdminUpdateOrderSchema = z.object({
 })
 
 /**
- * GET /api/admin/orders/[id] - 管理員取得單一訂單詳情
+ * @api {GET} /api/admin/orders/:id 取得訂單詳情（管理員）
+ * @apiName GetOrderByIdAdmin
+ * @apiGroup Admin
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 管理員查看任意訂單的詳細資訊。
+ * 不受訂單所有權限制，可查看所有使用者的訂單。
+ *
+ * @apiPermission admin
+ *
+ * @apiParam {String} id 訂單 ID (UUID)
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 訂單資料
+ * @apiSuccess {String} data.id 訂單 ID
+ * @apiSuccess {String} data.status 訂單狀態
+ * @apiSuccess {Object[]} data.items 訂單項目
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "status": "processing",
+ *     "items": [...]
+ *   },
+ *   "message": "取得訂單詳情成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 訂單 ID 無效
+ * @apiError (錯誤 4xx) {Object} NotFoundError 訂單不存在
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 需要管理員權限
  */
 async function handleGET(req: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined
@@ -66,7 +99,43 @@ async function handleGET(req: NextRequest, user: User, context?: unknown) {
 }
 
 /**
- * PATCH /api/admin/orders/[id] - 管理員更新訂單
+ * @api {PATCH} /api/admin/orders/:id 更新訂單（管理員）
+ * @apiName UpdateOrderAdmin
+ * @apiGroup Admin
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 管理員更新訂單狀態和資訊。
+ * 可更新訂單狀態、備註、物流追蹤號等。
+ *
+ * @apiPermission admin
+ *
+ * @apiParam {String} id 訂單 ID (UUID)
+ *
+ * @apiBody {String="pending","confirmed","processing","shipped","delivered","cancelled","refunded"} [status] 訂單狀態
+ * @apiBody {String} [notes] 備註
+ * @apiBody {String} [trackingNumber] 物流追蹤號
+ * @apiBody {String} [estimatedDeliveryDate] 預估送達日期
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 更新後的訂單資料
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "status": "shipped",
+ *     "trackingNumber": "1234567890"
+ *   },
+ *   "message": "訂單更新成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 資料驗證失敗
+ * @apiError (錯誤 4xx) {Object} NotFoundError 訂單不存在
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 需要管理員權限
  */
 async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined

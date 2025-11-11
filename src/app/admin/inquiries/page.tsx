@@ -1,27 +1,27 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/components/ui/feedback/Toast'
-import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { useQuickReplyTemplates } from '@/hooks/useQuickReplyTemplates'
-import { useInquiryWorkflow } from '@/hooks/useInquiryWorkflow'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
-import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { useToast } from '@/components/ui/feedback/Toast'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
+import { useCSRFToken } from '@/hooks/useCSRFToken'
+import { useInquiryWorkflow } from '@/hooks/useInquiryWorkflow'
+import { useQuickReplyTemplates } from '@/hooks/useQuickReplyTemplates'
+import { InquiryWithItems, InquiryStatus, InquiryType } from '@/types/inquiry'
 
 // 新的 hooks 和元件
-import { useInquiriesData } from './_hooks/useInquiriesData'
-import { useBatchOperations } from './_hooks/useBatchOperations'
-import InquiryStatsComponent from './_components/InquiryStats'
-import InquiryFilters from './_components/InquiryFilters'
-import BulkActions from './_components/BulkActions'
-import InquiryList from './_components/InquiryList'
-import { InquiryDetailPanel } from './_components/InquiryDetailPanel'
-import { QuickReplySection } from './_components/QuickReplySection'
-import { AssignmentPanel } from './_components/AssignmentPanel'
+import { AssignmentPanel } from './components/AssignmentPanel'
+import { BulkActions } from './components/BulkActions'
+import { InquiryDetailPanel } from './components/InquiryDetailPanel'
+import { InquiryFilters } from './components/InquiryFilters'
+import { InquiryList } from './components/InquiryList'
+import { InquiryStats } from './components/InquiryStats'
+import { QuickReplySection } from './components/QuickReplySection'
+import { useBatchOperations } from './hooks/useBatchOperations'
+import { useInquiriesData } from './hooks/useInquiriesData'
 
 function AdminInquiriesPage() {
   const { user } = useAuth()
@@ -110,10 +110,10 @@ function AdminInquiriesPage() {
   if (isLoading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24 flex items-center justify-center">
           <div className="text-center">
             <LoadingSpinner size="lg" />
-            <p className="mt-4 text-gray-600">載入詢問單管理...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">載入詢問單管理...</p>
           </div>
         </div>
       </AdminProtection>
@@ -123,17 +123,17 @@ function AdminInquiriesPage() {
   if (error) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 pt-24">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
           <div className="max-w-4xl mx-auto px-6 py-16">
             <div className="text-center">
-              <div className="mx-auto w-24 h-24 mb-8 text-red-500">
+              <div className="mx-auto w-24 h-24 mb-8 text-red-500 dark:text-red-400">
                 <ExclamationTriangleIcon className="w-full h-full" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">載入失敗</h1>
-              <p className="text-gray-600 mb-8">{error}</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">載入失敗</h1>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">{error}</p>
               <button
                 onClick={fetchInquiries}
-                className="bg-amber-900 text-white px-8 py-3 rounded-lg hover:bg-amber-800 transition-colors"
+                className="bg-amber-900 dark:bg-amber-800 text-white px-8 py-3 rounded-lg hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors"
               >
                 重新載入
               </button>
@@ -146,20 +146,24 @@ function AdminInquiriesPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">詢問單問答管理</h1>
-              <p className="text-gray-600 mt-2">管理所有客戶詢問單問答和回覆狀態</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+                詢問單問答管理
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
+                管理所有客戶詢問單問答和回覆狀態
+              </p>
             </div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 使用新的統計元件 */}
-          <InquiryStatsComponent stats={inquiryStats} detailedStats={detailedStats} />
+          <InquiryStats stats={inquiryStats} detailedStats={detailedStats} />
 
           {/* 使用新的批量操作元件 */}
           <BulkActions

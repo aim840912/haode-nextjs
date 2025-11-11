@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Product } from '@/types/product'
 import { useAsyncWithError } from '@/components/ui/error/ErrorHandler'
-import { logger } from '@/lib/logger'
 import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
+import { logger } from '@/lib/logger'
+import { Product } from '@/types/product'
 
 export interface UseProductsDataReturn {
   products: Product[]
@@ -27,7 +27,7 @@ export function useProductsData(): UseProductsDataReturn {
   const { executeWithErrorHandling } = useAsyncWithError()
 
   const fetchProducts = useCallback(
-    async (forceRefresh: boolean = false) => {
+    async (_forceRefresh: boolean = false) => {
       setLoading(true)
       setError(null)
 

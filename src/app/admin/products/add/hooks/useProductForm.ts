@@ -107,8 +107,8 @@ export function useProductForm(): UseProductFormReturn {
     if (!formData.description.trim()) {
       errors.description = '產品描述為必填'
       isValid = false
-    } else if (formData.description.length < 10) {
-      errors.description = '產品描述至少需要 10 個字元'
+    } else if (formData.description.length > 1000) {
+      errors.description = '產品描述不能超過 1000 個字元'
       isValid = false
     }
 

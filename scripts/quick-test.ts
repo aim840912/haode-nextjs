@@ -14,11 +14,11 @@ function loadEnvVars() {
       const fs = require('fs')
       const path = require('path')
       const envPath = path.join(process.cwd(), '.env.local')
-      
+
       if (fs.existsSync(envPath)) {
         const envContent = fs.readFileSync(envPath, 'utf8')
         const envLines = envContent.split('\n')
-        
+
         envLines.forEach((line: string) => {
           const trimmedLine = line.trim()
           if (trimmedLine && !trimmedLine.startsWith('#')) {
@@ -40,16 +40,16 @@ loadEnvVars()
 
 async function quickTest() {
   console.log('🔍 快速 Supabase 連線測試\n')
-  
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  
+
   console.log('📋 環境變數檢查:')
   console.log(`URL: ${url ? '✅' : '❌'} ${url?.substring(0, 50)}...`)
   console.log(`Anon Key: ${anonKey ? '✅' : '❌'} ${anonKey?.substring(0, 20)}...`)
   console.log(`Service Key: ${serviceKey ? '✅' : '❌'} ${serviceKey?.substring(0, 20)}...\n`)
-  
+
   if (!url || !anonKey || !serviceKey) {
     console.log('❌ 環境變數缺失，請檢查 .env.local 檔案')
     return
@@ -59,13 +59,10 @@ async function quickTest() {
   console.log('🔗 測試基本連線...')
   try {
     const supabase = createClient(url, anonKey)
-    
+
     // 簡單的健康檢查
-    const { data, error } = await supabase
-      .from('test_data')
-      .select('count')
-      .limit(1)
-    
+    const { data, error } = await supabase.from('test_data').select('count').limit(1)
+
     if (error) {
       if (error.code === '42P01') {
         console.log('⚠️ test_data 表格不存在，需要執行 SQL 初始化')
@@ -86,15 +83,12 @@ async function quickTest() {
     const supabaseAdmin = createClient(url, serviceKey, {
       auth: {
         autoRefreshToken: false,
-        persistSession: false
-      }
+        persistSession: false,
+      },
     })
-    
-    const { data, error } = await supabaseAdmin
-      .from('test_data')
-      .select('count')
-      .limit(1)
-    
+
+    const { data, error } = await supabaseAdmin.from('test_data').select('count').limit(1)
+
     if (error) {
       if (error.code === '42P01') {
         console.log('⚠️ test_data 表格不存在，需要執行 SQL 初始化')

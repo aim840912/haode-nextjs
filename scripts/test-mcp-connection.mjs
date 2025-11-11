@@ -60,19 +60,19 @@ if (fs.existsSync(mcpConfigPath)) {
 console.log('\n3️⃣ 測試 MCP Server 版本...')
 
 const versionProcess = spawn('npx', ['@supabase/mcp-server-supabase', '--version'], {
-  stdio: ['inherit', 'pipe', 'pipe']
+  stdio: ['inherit', 'pipe', 'pipe'],
 })
 
-versionProcess.stdout.on('data', (data) => {
+versionProcess.stdout.on('data', data => {
   const version = data.toString().trim()
   console.log('✅ MCP Server 版本:', version)
 })
 
-versionProcess.stderr.on('data', (data) => {
+versionProcess.stderr.on('data', data => {
   console.log('⚠️  版本檢查警告:', data.toString().trim())
 })
 
-versionProcess.on('close', (code) => {
+versionProcess.on('close', code => {
   if (code === 0) {
     console.log('\n4️⃣ 測試 MCP Server 啟動（5秒超時）...')
     testMcpServerStartup()
@@ -84,18 +84,22 @@ versionProcess.on('close', (code) => {
 
 function testMcpServerStartup() {
   // 設定環境變數並啟動 MCP Server
-  const mcpProcess = spawn('npx', [
-    '@supabase/mcp-server-supabase',
-    '--read-only',
-    '--project-ref=bxlrtcagsuoijjolgdzs',
-    '--features=database,docs'
-  ], {
-    env: {
-      ...process.env,
-      SUPABASE_ACCESS_TOKEN: 'sbp_5e3868ec81de0cbf77f283a5c52a79d28bb7d2de'
-    },
-    stdio: ['inherit', 'pipe', 'pipe']
-  })
+  const mcpProcess = spawn(
+    'npx',
+    [
+      '@supabase/mcp-server-supabase',
+      '--read-only',
+      '--project-ref=bxlrtcagsuoijjolgdzs',
+      '--features=database,docs',
+    ],
+    {
+      env: {
+        ...process.env,
+        SUPABASE_ACCESS_TOKEN: 'sbp_5e3868ec81de0cbf77f283a5c52a79d28bb7d2de',
+      },
+      stdio: ['inherit', 'pipe', 'pipe'],
+    }
+  )
 
   let hasOutput = false
   const timeout = setTimeout(() => {
@@ -106,12 +110,12 @@ function testMcpServerStartup() {
     mcpProcess.kill()
   }, 5000)
 
-  mcpProcess.stdout.on('data', (data) => {
+  mcpProcess.stdout.on('data', data => {
     hasOutput = true
     console.log('📤 MCP Server 輸出:', data.toString().trim())
   })
 
-  mcpProcess.stderr.on('data', (data) => {
+  mcpProcess.stderr.on('data', data => {
     const message = data.toString().trim()
     if (message.includes('error') || message.includes('Error')) {
       console.log('❌ MCP Server 錯誤:', message)
@@ -120,7 +124,7 @@ function testMcpServerStartup() {
     }
   })
 
-  mcpProcess.on('close', (code) => {
+  mcpProcess.on('close', code => {
     clearTimeout(timeout)
 
     if (code === 0 || code === null) {

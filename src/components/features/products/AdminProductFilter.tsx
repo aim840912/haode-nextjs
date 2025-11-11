@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { cn } from '@/lib/utils/cn'
 
 export interface AdminFilterState {
   search: string
@@ -29,7 +30,7 @@ interface AdminProductFilterProps {
   loading?: boolean
 }
 
-export default function AdminProductFilter({
+export function AdminProductFilter({
   onFilterChange,
   availableCategories,
   productCount,
@@ -98,16 +99,16 @@ export default function AdminProductFilter({
     showPriceRange
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg mb-6 ${isExpanded ? 'p-6' : 'p-4'}`}>
+    <div className={cn('bg-white rounded-lg shadow-lg mb-6', isExpanded ? 'p-6' : 'p-4')}>
       {/* Header */}
-      <div className={`flex items-center justify-between ${isExpanded ? 'mb-6' : ''}`}>
+      <div className={cn('flex items-center justify-between', isExpanded && 'mb-6')}>
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-semibold text-gray-900">產品篩選</h2>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="text-gray-500 hover:text-gray-700"
           >
-            <span className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+            <span className={cn('transform transition-transform', isExpanded && 'rotate-180')}>
               ▼
             </span>
           </button>
@@ -263,11 +264,12 @@ export default function AdminProductFilter({
               <label className="block text-sm font-medium text-gray-700">價格區間</label>
               <button
                 onClick={() => setShowPriceRange(!showPriceRange)}
-                className={`text-sm px-3 py-1 rounded ${
+                className={cn(
+                  'text-sm px-3 py-1 rounded',
                   showPriceRange
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                )}
               >
                 {showPriceRange ? '隱藏' : '設定價格區間'}
               </button>

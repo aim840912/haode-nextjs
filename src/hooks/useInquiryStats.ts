@@ -33,13 +33,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
 
 // 導入子 hooks
+import { InquiryStatsData } from '@/lib/utils/inquiry-stats-utils'
 import { useInquiryStatsCache } from './useInquiryStatsCache'
 import { useInquiryStatsFetcher } from './useInquiryStatsFetcher'
 import { usePollingManager } from './usePollingManager'
 import { useRetryManager } from './useRetryManager'
 
 // 導入類型和工具
-import { InquiryStatsData, INQUIRY_STATS_CONSTANTS } from '@/lib/utils/inquiry-stats-utils'
 
 /**
  * Hook 返回類型（保持向後相容）

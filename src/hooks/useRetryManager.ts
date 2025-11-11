@@ -8,16 +8,16 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import {
+  isRateLimitError,
+  isNetworkError,
+  getUserFriendlyErrorMessage,
+} from '@/lib/utils/error-utils'
+import {
   calculateRetryDelay,
   formatUserFriendlyError,
   shouldShowErrorToUser,
   INQUIRY_STATS_CONSTANTS,
 } from '@/lib/utils/inquiry-stats-utils'
-import {
-  isRateLimitError,
-  isNetworkError,
-  getUserFriendlyErrorMessage,
-} from '@/lib/utils/error-utils'
 
 export interface UseRetryManagerOptions {
   /** 最大重試次數 */

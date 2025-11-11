@@ -14,11 +14,11 @@ function loadEnvVars() {
     try {
       const fs = require('fs')
       const envPath = path.join(process.cwd(), '.env.local')
-      
+
       if (fs.existsSync(envPath)) {
         const envContent = fs.readFileSync(envPath, 'utf8')
         const envLines = envContent.split('\n')
-        
+
         envLines.forEach((line: string) => {
           const trimmedLine = line.trim()
           if (trimmedLine && !trimmedLine.startsWith('#')) {
@@ -53,8 +53,8 @@ async function updateProductsTable() {
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     auth: {
       autoRefreshToken: false,
-      persistSession: false
-    }
+      persistSession: false,
+    },
   })
 
   try {
@@ -75,7 +75,7 @@ async function updateProductsTable() {
                 RAISE NOTICE 'Emoji column already exists';
             END IF;
         END $$;
-      `
+      `,
     })
 
     if (emojiError) {
@@ -90,10 +90,7 @@ async function updateProductsTable() {
 
     // 檢查 stock 欄位
     console.log('📦 檢查 stock 欄位...')
-    const { error: stockError } = await supabaseAdmin
-      .from('products')
-      .select('stock')
-      .limit(1)
+    const { error: stockError } = await supabaseAdmin.from('products').select('stock').limit(1)
 
     if (stockError && stockError.message.includes('stock')) {
       console.log('🔧 stock 欄位不存在，建議手動執行 SQL')
@@ -104,7 +101,6 @@ async function updateProductsTable() {
     console.log('\n📝 建議執行以下 SQL 語句：')
     console.log('複製 sql/update-products-table.sql 的內容')
     console.log('在 Supabase Dashboard > SQL Editor 執行')
-
   } catch (error) {
     console.error('❌ 更新過程發生錯誤:', error)
   }

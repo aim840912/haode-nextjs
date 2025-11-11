@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import AdminProtection from '@/components/features/admin/AdminProtection'
 import {
   BugAntIcon,
   ClipboardDocumentListIcon,
@@ -13,79 +12,73 @@ import {
   CheckCircleIcon,
   ArrowUturnLeftIcon,
 } from '@heroicons/react/24/outline'
-import {
-  DevNote,
-  DevNoteStats,
-  DevNoteType,
-  DevNoteStatus,
-  DevNotePriority,
-  DevNoteInput,
-} from '@/types/devNote'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { useDevNotesReducer } from '@/hooks/useDevNotesReducer'
 import { apiLogger } from '@/lib/logger'
+import { DevNote, DevNoteType, DevNoteStatus, DevNotePriority, DevNoteInput } from '@/types/devNote'
 
 export default function DevNotesPage() {
-  const [notes, setNotes] = useState<DevNote[]>([])
-  const [stats, setStats] = useState<DevNoteStats | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  // 篩選狀態
-  const [typeFilter, setTypeFilter] = useState<DevNoteType | 'all'>('all')
-  const [statusFilter, setStatusFilter] = useState<DevNoteStatus | 'all'>('all')
-  const [priorityFilter, setPriorityFilter] = useState<DevNotePriority | 'all'>('all')
-
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const { state, actions } = useDevNotesReducer()
 
   useEffect(() => {
     loadData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter, statusFilter, priorityFilter])
+  }, [state.typeFilter, state.statusFilter, state.priorityFilter])
 
   const loadData = async () => {
-    setLoading(true)
+    actions.loadDataStart()
     try {
       // 載入統計
       const statsRes = await fetch('/api/admin/dev-notes/stats')
       const statsData = await statsRes.json()
-      setStats(statsData.data)
 
       // 載入列表
       const params = new URLSearchParams()
-      if (typeFilter !== 'all') params.set('type', typeFilter)
-      if (statusFilter !== 'all') params.set('status', statusFilter)
-      if (priorityFilter !== 'all') params.set('priority', priorityFilter)
+      if (state.typeFilter !== 'all') params.set('type', state.typeFilter)
+      if (state.statusFilter !== 'all') params.set('status', state.statusFilter)
+      if (state.priorityFilter !== 'all') params.set('priority', state.priorityFilter)
 
       const notesRes = await fetch(`/api/admin/dev-notes?${params}`)
       const notesData = await notesRes.json()
-      setNotes(notesData.data)
+
+      actions.loadDataSuccess(notesData.data, statsData.data)
     } catch (error) {
       apiLogger.error('開發筆記載入失敗', error as Error, {
         module: 'DevNotesPage',
         action: 'loadDevNotes',
-        metadata: { typeFilter, statusFilter, priorityFilter },
+        metadata: {
+          typeFilter: state.typeFilter,
+          statusFilter: state.statusFilter,
+          priorityFilter: state.priorityFilter,
+        },
       })
-    } finally {
-      setLoading(false)
+      actions.loadDataError()
     }
   }
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <Link href="/admin/dashboard" className="text-gray-600 hover:text-gray-900">
+                <Link
+                  href="/admin/dashboard"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100"
+                >
                   <ArrowLeftIcon className="w-6 h-6" />
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">開發筆記</h1>
-                  <p className="text-sm text-gray-600 mt-1">Bug 追蹤與待辦事項管理</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">開發筆記</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Bug 追蹤與待辦事項管理
+                  </p>
                 </div>
               </div>
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={() => actions.setShowCreateModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <PlusIcon className="w-5 h-5" />
@@ -97,24 +90,29 @@ export default function DevNotesPage() {
 
         <div className="max-w-7xl mx-auto px-6 py-8">
           {/* 統計卡片 */}
-          {stats && (
+          {state.stats && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <StatCard
                 title="總計"
-                value={stats.total}
+                value={state.stats.total}
                 icon={ClipboardDocumentListIcon}
                 color="blue"
               />
-              <StatCard title="進行中" value={stats.in_progress} icon={BugAntIcon} color="yellow" />
+              <StatCard
+                title="進行中"
+                value={state.stats.in_progress}
+                icon={BugAntIcon}
+                color="yellow"
+              />
               <StatCard
                 title="已完成"
-                value={stats.completed}
+                value={state.stats.completed}
                 icon={ClipboardDocumentListIcon}
                 color="green"
               />
               <StatCard
                 title="高優先級"
-                value={stats.by_priority.high + stats.by_priority.urgent}
+                value={state.stats.by_priority.high + state.stats.by_priority.urgent}
                 icon={BugAntIcon}
                 color="red"
               />
@@ -126,8 +124,8 @@ export default function DevNotesPage() {
             <div className="flex items-center space-x-4">
               <FunnelIcon className="w-5 h-5 text-gray-400" />
               <select
-                value={typeFilter}
-                onChange={e => setTypeFilter(e.target.value as DevNoteType | 'all')}
+                value={state.typeFilter}
+                onChange={e => actions.setTypeFilter(e.target.value as DevNoteType | 'all')}
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">所有類型</option>
@@ -138,8 +136,8 @@ export default function DevNotesPage() {
               </select>
 
               <select
-                value={statusFilter}
-                onChange={e => setStatusFilter(e.target.value as DevNoteStatus | 'all')}
+                value={state.statusFilter}
+                onChange={e => actions.setStatusFilter(e.target.value as DevNoteStatus | 'all')}
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">所有狀態</option>
@@ -150,8 +148,8 @@ export default function DevNotesPage() {
               </select>
 
               <select
-                value={priorityFilter}
-                onChange={e => setPriorityFilter(e.target.value as DevNotePriority | 'all')}
+                value={state.priorityFilter}
+                onChange={e => actions.setPriorityFilter(e.target.value as DevNotePriority | 'all')}
                 className="px-3 py-2 border rounded-lg"
               >
                 <option value="all">所有優先級</option>
@@ -165,23 +163,23 @@ export default function DevNotesPage() {
 
           {/* 列表 */}
           <div className="space-y-4">
-            {loading ? (
+            {state.loading ? (
               <div className="text-center py-12">載入中...</div>
-            ) : notes.length === 0 ? (
+            ) : state.notes.length === 0 ? (
               <div className="text-center py-12 text-gray-500">暫無記錄</div>
             ) : (
-              notes.map(note => <NoteCard key={note.id} note={note} onUpdate={loadData} />)
+              state.notes.map(note => <NoteCard key={note.id} note={note} onUpdate={loadData} />)
             )}
           </div>
         </div>
       </div>
 
       {/* 新增 Modal */}
-      {showCreateModal && (
+      {state.showCreateModal && (
         <CreateNoteModal
-          onClose={() => setShowCreateModal(false)}
+          onClose={() => actions.setShowCreateModal(false)}
           onSuccess={() => {
-            setShowCreateModal(false)
+            actions.setShowCreateModal(false)
             loadData()
           }}
         />
@@ -213,7 +211,7 @@ function StatCard({
     <div className="bg-white rounded-xl shadow-sm border p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm text-gray-600">{title}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">{title}</p>
           <p className="text-3xl font-bold mt-2">{value}</p>
         </div>
         <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
@@ -284,10 +282,10 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
         {/* Header */}
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">新增開發筆記</h2>
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">新增開發筆記</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
               disabled={submitting}
             >
               <XMarkIcon className="w-6 h-6" />
@@ -510,8 +508,12 @@ function NoteCard({ note, onUpdate }: { note: DevNote; onUpdate?: () => void }) 
               {note.status}
             </span>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">{note.title}</h3>
-          {note.description && <p className="text-gray-600 text-sm">{note.description}</p>}
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+            {note.title}
+          </h3>
+          {note.description && (
+            <p className="text-gray-600 dark:text-gray-300 text-sm">{note.description}</p>
+          )}
           {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
           <div className="mt-3 text-xs text-gray-500">
             建立時間:{new Date(note.created_at).toLocaleString('zh-TW')}

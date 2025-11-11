@@ -10,11 +10,11 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
-import { z } from 'zod'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { inquiryService } from '@/services/core/inquiry/inquiryService'
 import { InquiryStatus, InquiryType, InquiryUtils } from '@/types/inquiry'
 
@@ -272,8 +272,78 @@ class InquiryStatsCalculator {
 }
 
 /**
- * GET /api/inquiries/stats - 取得詢價統計資料
- * 權限：使用者登入（管理員看全部，使用者看自己的）
+ * @api {GET} /api/inquiries/stats 取得詢價統計資料
+ * @apiName GetInquiryStats
+ * @apiGroup InquiryStats
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 取得詢價單的統計資料和分析。
+ * - 一般使用者只能查看自己的詢價統計
+ * - 管理員可使用 admin_mode=true 查看全站統計
+ * - 支援自定義時間範圍和詳細程度
+ * - 提供狀態分佈、類型分佈、趨勢分析等多維度數據
+ *
+ * @apiPermission user
+ *
+ * @apiQuery {Number} [timeframe=30] 時間範圍（天數，最大 365）
+ * @apiQuery {String="summary","detailed","full"} [detail_level=summary] 詳細程度（僅管理員）
+ * @apiQuery {String="day","week","month","status","type"} [group_by=day] 分組方式（僅管理員）
+ * @apiQuery {Boolean} [admin_mode=false] 管理員模式（僅管理員可用）
+ * @apiQuery {String="pending","quoted","confirmed","completed","cancelled"} [status] 篩選特定狀態（僅管理員）
+ * @apiQuery {String="product","farm_tour"} [inquiry_type] 篩選詢價類型（僅管理員）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 統計資料
+ * @apiSuccess {Object} data.summary 基礎統計
+ * @apiSuccess {Number} data.summary.total_inquiries 總詢價數
+ * @apiSuccess {Number} data.summary.unread_count 未讀數
+ * @apiSuccess {Number} data.summary.unreplied_count 未回覆數
+ * @apiSuccess {Number} data.summary.completed_count 已完成數
+ * @apiSuccess {Number} data.summary.read_rate 已讀率（%）
+ * @apiSuccess {Number} data.summary.reply_rate 回覆率（%）
+ * @apiSuccess {Number} data.summary.avg_response_time_hours 平均回覆時間（小時）
+ * @apiSuccess {Object} data.timeframe 時間範圍資訊
+ * @apiSuccess {Object} [data.status_breakdown] 狀態分佈（detailed/full 模式）
+ * @apiSuccess {Object} [data.type_breakdown] 類型分佈（detailed/full 模式）
+ * @apiSuccess {Object[]} [data.trends] 趨勢資料（full 模式）
+ * @apiSuccess {Object[]} [data.recent_trends] 近期趨勢（summary 模式）
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應（summary 模式）:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "summary": {
+ *       "total_inquiries": 150,
+ *       "unread_count": 10,
+ *       "unreplied_count": 5,
+ *       "completed_count": 100,
+ *       "read_rate": 93,
+ *       "reply_rate": 97,
+ *       "avg_response_time_hours": 2.5
+ *     },
+ *     "timeframe": {
+ *       "days": 30,
+ *       "start_date": "2024-12-08",
+ *       "end_date": "2025-01-07"
+ *     },
+ *     "recent_trends": [...]
+ *   },
+ *   "message": "統計資料查詢成功 (150 筆詢價，處理時間 45ms)"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 查詢參數驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或權限不足
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "查詢參數驗證失敗: timeframe: 必須為正整數",
+ *   "code": "VALIDATION_ERROR"
+ * }
  */
 async function handleGET(request: NextRequest, user: User) {
   const startTime = Date.now()

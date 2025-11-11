@@ -59,7 +59,7 @@ export function HeroSection({
           </p>
           <p className="text-lg md:text-xl text-amber-300 font-medium drop-shadow-md flex items-center justify-center gap-2">
             <Sparkles className="w-5 h-5" />
-            季節限定體驗・親子同樂首選・嘉義梅山秘境
+            季節限定體驗・嘉義梅山秘境
           </p>
         </div>
 

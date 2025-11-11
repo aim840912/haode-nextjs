@@ -3,12 +3,20 @@
  * POST: 上傳圖片到 Supabase Storage
  */
 
+/**
+ * @api {post} /api/site-settings/upload-image 上傳網站設定圖片
+ * @apiName UploadSiteSettingImage
+ * @apiGroup SiteSettings
+ * @apiPermission admin
+ * @apiDescription 上傳網站設定圖片到 Supabase Storage（最大 5MB，支援 JPG/PNG/WebP/GIF）
+ */
+
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 
 /**
  * POST /api/site-settings/upload-image

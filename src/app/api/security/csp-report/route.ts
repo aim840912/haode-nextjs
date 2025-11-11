@@ -1,6 +1,45 @@
+/**
+ * @api {post} /api/security/csp-report 接收 CSP 違規報告
+ * @apiName ReportCSPViolation
+ * @apiGroup Security
+ * @apiPermission public
+ *
+ * @apiDescription 接收瀏覽器發送的 Content Security Policy 違規報告，並記錄到日誌系統。高風險違規會被標記為潛在攻擊
+ *
+ * @apiBody {Object} csp-report CSP 違規報告物件（由瀏覽器自動生成）
+ * @apiBody {String} csp-report.violated-directive 違反的 CSP 指令
+ * @apiBody {String} csp-report.blocked-uri 被阻止的 URI
+ * @apiBody {String} csp-report.document-uri 發生違規的頁面 URI
+ * @apiBody {String} [csp-report.source-file] 違規的來源檔案
+ * @apiBody {Number} [csp-report.line-number] 違規的行號
+ * @apiBody {Number} [csp-report.column-number] 違規的列號
+ * @apiBody {String} csp-report.original-policy 原始 CSP 政策
+ *
+ * @apiSuccess (204) {Empty} - 無內容（報告已成功接收）
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 204 No Content
+ *
+ * @apiExample {json} 請求範例:
+ * POST /api/security/csp-report
+ * {
+ *   "csp-report": {
+ *     "violated-directive": "script-src 'self'",
+ *     "blocked-uri": "https://malicious-site.com/script.js",
+ *     "document-uri": "https://example.com/page",
+ *     "source-file": "https://example.com/app.js",
+ *     "line-number": 42,
+ *     "column-number": 15,
+ *     "original-policy": "default-src 'self'; script-src 'self'"
+ *   }
+ * }
+ *
+ * @apiNote 此端點由瀏覽器自動呼叫，不需要手動發送請求。高風險違規（如 javascript:、data:text/html、eval）會被標記並記錄為潛在攻擊
+ */
+
 import { NextRequest } from 'next/server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * CSP 違規報告端點

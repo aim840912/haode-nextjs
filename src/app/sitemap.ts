@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
-import { adminProductService } from '@/services/core/product/productService'
 import { logger } from '@/lib/logger'
+import { adminProductService } from '@/services/core/product/productService'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://haode-nextjs.vercel.app/'

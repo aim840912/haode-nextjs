@@ -1,18 +1,123 @@
 /**
- * 庫存查詢 API 路由
- * 處理庫存查詢單的建立和查詢
- * 已整合統一權限中間件系統
+ * @api {GET} /api/inquiries 取得詢價單列表
+ * @apiName GetInquiries
+ * @apiGroup Inquiries
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 取得詢價單列表（需要使用者認證）。
+ * 一般使用者僅能查看自己的詢價單。
+ * 管理員可使用 admin=true 查詢參數查看所有詢價單。
+ *
+ * @apiPermission user
+ *
+ * @apiQuery {Boolean} [admin=false] 管理員模式（僅管理員可用）
+ * @apiQuery {Number} [page] 頁碼
+ * @apiQuery {Number} [limit] 每頁筆數
+ * @apiQuery {String} [status] 篩選狀態
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object[]|Object} data 詢價單列表或分頁資料
+ * @apiSuccess {String} data.id 詢價單 ID
+ * @apiSuccess {String} data.userId 使用者 ID
+ * @apiSuccess {String} data.inquiryType 詢價類型
+ * @apiSuccess {String} data.status 詢價狀態
+ * @apiSuccess {Object[]} data.items 詢價項目列表
+ * @apiSuccess {String} data.createdAt 建立時間
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": [
+ *     {
+ *       "id": "uuid",
+ *       "userId": "uuid",
+ *       "inquiryType": "product",
+ *       "status": "pending",
+ *       "items": [],
+ *       "createdAt": "2025-01-07T00:00:00Z"
+ *     }
+ *   ],
+ *   "message": "庫存查詢單清單取得成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 查詢參數驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或權限不足
+ * @apiError (錯誤 5xx) {Object} DatabaseError 資料庫查詢失敗
+ *
+ * @apiErrorExample {json} 驗證錯誤:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "查詢參數驗證失敗: status: 狀態值不正確",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ */
+
+/**
+ * @api {POST} /api/inquiries 建立詢價單
+ * @apiName CreateInquiry
+ * @apiGroup Inquiries
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 建立新詢價單（需要使用者認證）。
+ * 成功建立後會記錄業務指標和審計日誌。
+ *
+ * @apiPermission user
+ *
+ * @apiBody {String} inquiry_type 詢價類型
+ * @apiBody {Object[]} [items] 詢價項目列表
+ * @apiBody {String} items.productId 產品 ID
+ * @apiBody {Number} items.quantity 數量
+ * @apiBody {String} [contactName] 聯絡人姓名
+ * @apiBody {String} [contactPhone] 聯絡電話
+ * @apiBody {String} [contactEmail] 聯絡 Email
+ * @apiBody {String} [message] 詢價訊息
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 建立的詢價單資料
+ * @apiSuccess {String} data.id 詢價單 ID
+ * @apiSuccess {String} data.inquiryType 詢價類型
+ * @apiSuccess {String} data.status 詢價狀態
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 201 Created
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "uuid",
+ *     "inquiryType": "product",
+ *     "status": "pending"
+ *   },
+ *   "message": "詢價單建立成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 資料驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或權限不足
+ * @apiError (錯誤 5xx) {Object} DatabaseError 資料庫操作失敗
+ *
+ * @apiErrorExample {json} 驗證錯誤:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "資料驗證失敗: inquiry_type: 詢價類型為必填",
+ *   "code": "VALIDATION_ERROR"
+ * }
  */
 
 import { NextRequest } from 'next/server'
+import { success, created } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { InquirySchemas } from '@/lib/validation'
 import { inquiryService as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
-import { success, created } from '@/lib/api-response'
-import { apiLogger } from '@/lib/logger'
-import { InquirySchemas } from '@/lib/validation'
-import { ValidationError } from '@/lib/errors'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter

@@ -1,24 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { logger } from '@/lib/logger'
-import { useAuth } from '@/contexts/AuthContext'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
-import { AuditLog } from '@/types/audit'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { deleteAuditLog, batchDeleteAuditLogs } from '@/lib/api/audit-logs-api'
+import { logger } from '@/lib/logger'
+import { AuditLog } from '@/types/audit'
 
 // Hooks
-import { useAuditLogsData } from './hooks/useAuditLogsData'
-import { useAuditLogFilters } from './hooks/useAuditLogFilters'
 
 // Components
+import { AuditLogDetailModal } from './components/AuditLogDetailModal'
 import { AuditLogFilters } from './components/AuditLogFilters'
 import { AuditLogsTable } from './components/AuditLogsTable'
-import { AuditLogDetailModal } from './components/AuditLogDetailModal'
 import { DeleteConfirmModal } from './components/DeleteConfirmModal'
+import { useAuditLogFilters } from './hooks/useAuditLogFilters'
+import { useAuditLogsData } from './hooks/useAuditLogsData'
 
 function AuditLogsPage() {
   const { user } = useAuth()
@@ -99,7 +99,7 @@ function AuditLogsPage() {
   if (isLoading && auditLogs.length === 0) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
           <LoadingSpinner size="lg" />
         </div>
       </AdminProtection>
@@ -110,11 +110,11 @@ function AuditLogsPage() {
   if (error) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
           <div className="text-center">
             <div className="text-6xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">載入失敗</h2>
-            <p className="text-gray-600">{error}</p>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">載入失敗</h2>
+            <p className="text-gray-600 dark:text-gray-300">{error}</p>
           </div>
         </div>
       </AdminProtection>
@@ -123,12 +123,12 @@ function AuditLogsPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* 頁面標題 */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">審計日誌</h1>
-            <p className="text-gray-600 mt-2">查看和管理系統活動記錄</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">審計日誌</h1>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">查看和管理系統活動記錄</p>
           </div>
 
           {/* 篩選條件 */}

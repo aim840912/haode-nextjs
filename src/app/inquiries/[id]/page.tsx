@@ -1,13 +1,22 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
+import {
+  LockClosedIcon,
+  ClipboardDocumentListIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  ClockIcon,
+} from '@heroicons/react/24/outline'
+import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { logger } from '@/lib/logger'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { fetchInquiryById } from '@/lib/api/inquiries-api'
+import { logger } from '@/lib/logger'
+import { formatDateTime, formatDate } from '@/lib/utils/formatters'
 import {
   InquiryWithItems,
   INQUIRY_STATUS_LABELS,
@@ -16,14 +25,6 @@ import {
   INQUIRY_TYPE_COLORS,
   InquiryUtils,
 } from '@/types/inquiry'
-import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
-import {
-  LockClosedIcon,
-  ClipboardDocumentListIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline'
 
 interface InquiryDetailPageProps {
   params: Promise<{
@@ -191,15 +192,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
               >
                 {INQUIRY_STATUS_LABELS[inquiry.status]}
               </span>
-              <span className="text-gray-700">
-                {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </span>
+              <span className="text-gray-700">{formatDateTime(inquiry.created_at)}</span>
             </div>
           </div>
         </div>
@@ -219,7 +212,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                   <h2 className="text-xl font-bold text-gray-900">詢價商品</h2>
                 </div>
                 <div className="divide-y divide-gray-200">
-                  {inquiry.inquiry_items.map((item, index) => (
+                  {inquiry.inquiry_items.map((item, _index) => (
                     <div key={item.id} className="p-6">
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0 flex items-center justify-center">
@@ -278,14 +271,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                       <div>
                         <h4 className="text-sm font-medium text-gray-800 mb-2">預定參觀日期</h4>
                         <p className="text-lg text-gray-900">
-                          {inquiry.visit_date
-                            ? new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric',
-                                weekday: 'long',
-                              })
-                            : '未指定'}
+                          {inquiry.visit_date ? formatDate(inquiry.visit_date, 'full') : '未指定'}
                         </p>
                       </div>
                       <div>

@@ -1,6 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { Database } from '@/types/database'
 import { dbLogger } from '@/lib/logger'
+import { Database } from '@/types/database'
 
 /**
  * 連線池配置介面
@@ -466,7 +466,7 @@ export class SupabaseConnectionPool {
     this.schemaVersion = Date.now()
 
     // 標記所有連線為不健康，強制重建
-    for (const [id, connection] of this.connections) {
+    for (const [_id, connection] of this.connections) {
       connection.state = ConnectionState.UNHEALTHY
     }
 

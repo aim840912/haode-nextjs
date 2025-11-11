@@ -1,19 +1,48 @@
+/**
+ * @api {get} /api/admin/locations 取得所有地點
+ * @apiName GetAllLocations
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ */
+
+/**
+ * @api {post} /api/admin/locations 新增地點
+ * @apiName CreateLocation
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ */
+
+/**
+ * @api {put} /api/admin/locations 更新地點
+ * @apiName UpdateLocation
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ */
+
+/**
+ * @api {delete} /api/admin/locations 刪除地點
+ * @apiName DeleteLocation
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ * @apiQuery {String} id 地點 ID
+ */
+
 import { NextRequest } from 'next/server'
-import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { Database } from '@/types/database'
-import { LocationSchemas } from '@/lib/validation'
-import { ValidationError, NotFoundError } from '@/lib/errors'
-import { success, created } from '@/lib/api-response'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { apiLogger } from '@/lib/logger'
 import { z } from 'zod'
+import { success, created } from '@/lib/api-response'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { ValidationError, NotFoundError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
 import {
   checkAdminPermission,
   createAuthErrorResponse,
   checkRateLimit,
 } from '@/lib/middleware/admin-auth-middleware'
-import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { LocationSchemas } from '@/lib/validation'
 import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { Database } from '@/types/database'
 
 // 刪除參數 Schema
 const AdminLocationDeleteSchema = z.object({

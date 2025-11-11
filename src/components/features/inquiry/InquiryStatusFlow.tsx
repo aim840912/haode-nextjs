@@ -1,8 +1,5 @@
 'use client'
 
-import { InquiryWithItems } from '@/types/inquiry'
-import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
-import StatusStep from './StatusStep'
 import {
   LightBulbIcon,
   TruckIcon,
@@ -10,6 +7,11 @@ import {
   CheckIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
+import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
+import { cn } from '@/lib/utils/cn'
+import { formatDate } from '@/lib/utils/formatters'
+import { InquiryWithItems } from '@/types/inquiry'
+import { StatusStep } from './StatusStep'
 
 interface InquiryStatusFlowProps {
   inquiry: InquiryWithItems
@@ -21,7 +23,7 @@ interface InquiryStatusFlowProps {
   title?: string
 }
 
-export default function InquiryStatusFlow({
+export function InquiryStatusFlow({
   inquiry,
   layout = 'horizontal',
   showProgress = true,
@@ -45,7 +47,7 @@ export default function InquiryStatusFlow({
   })
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm ${className}`}>
+    <div className={cn('bg-white rounded-lg shadow-sm', className)}>
       {/* 標題區域 */}
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center justify-between">
@@ -55,9 +57,10 @@ export default function InquiryStatusFlow({
               <div className="text-right">
                 <div className="text-sm text-gray-600">完成進度</div>
                 <div
-                  className={`text-lg font-bold ${
+                  className={cn(
+                    'text-lg font-bold',
                     isCompleted ? 'text-green-600' : isCancelled ? 'text-red-600' : 'text-amber-600'
-                  }`}
+                  )}
                 >
                   {progressPercentage}%
                 </div>
@@ -84,13 +87,14 @@ export default function InquiryStatusFlow({
                     fill="none"
                     strokeDasharray={`${2 * Math.PI * 40}`}
                     strokeDashoffset={`${2 * Math.PI * 40 * (1 - progressPercentage / 100)}`}
-                    className={`transition-all duration-1000 ease-in-out ${
+                    className={cn(
+                      'transition-all duration-1000 ease-in-out',
                       isCompleted
                         ? 'text-green-500'
                         : isCancelled
                           ? 'text-red-500'
                           : 'text-amber-500'
-                    }`}
+                    )}
                     strokeLinecap="round"
                   />
                 </svg>
@@ -185,14 +189,7 @@ export default function InquiryStatusFlow({
             {inquiry.inquiry_type === 'farm_tour' && inquiry.visit_date && (
               <div className="bg-green-50 p-3 rounded-lg">
                 <h4 className="font-medium text-green-900 mb-1">預約日期</h4>
-                <p className="text-green-800">
-                  {new Date(inquiry.visit_date).toLocaleDateString('zh-TW', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    weekday: 'short',
-                  })}
-                </p>
+                <p className="text-green-800">{formatDate(inquiry.visit_date, 'full')}</p>
               </div>
             )}
           </div>

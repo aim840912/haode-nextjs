@@ -1,18 +1,34 @@
+/**
+ * @api {POST} /api/user/interests/toggle 切換產品興趣狀態
+ * @apiName ToggleUserInterest
+ * @apiGroup UserInterests
+ * @apiVersion 1.0.0
+ * @apiDescription 切換產品的興趣狀態（如果已存在則移除，否則添加）
+ * @apiPermission user
+ * @apiBody {String} productId 產品 ID（必填）
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 回應資料
+ * @apiSuccess {String} data.userId 使用者 ID
+ * @apiSuccess {String} data.productId 產品 ID
+ * @apiSuccess {String} data.action 執行的動作（added 或 removed）
+ * @apiSuccess {Boolean} data.wasInterested 切換前的狀態
+ * @apiSuccess {Boolean} data.nowInterested 切換後的狀態
+ * @apiSuccessExample {json} 成功回應（添加）:
+ *   HTTP/1.1 200 OK
+ *   {"success": true, "data": {"userId": "uuid", "productId": "uuid", "action": "added", "wasInterested": false, "nowInterested": true}, "message": "已加入興趣清單"}
+ */
+
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { z } from 'zod'
 import { success } from '@/lib/api-response'
 import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { userInterestsService } from '@/services/core/user/userInterestsService'
-import { z } from 'zod'
 
-// 請求驗證架構
 const ToggleInterestSchema = z.object({
   productId: z.string().min(1, '產品ID不能為空'),
 })
 
-/**
- * 切換產品興趣狀態（加入或移除）
- */
 async function handlePOST(req: NextRequest, user: User) {
   try {
     const body = await req.json()

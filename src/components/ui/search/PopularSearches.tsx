@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchSearchStats, type SearchStatsResponse } from '@/lib/api/search-api'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 
 interface PopularSearchesProps {
   onSearchSelect?: (query: string) => void
@@ -11,7 +12,7 @@ interface PopularSearchesProps {
   limit?: number
 }
 
-export default function PopularSearches({
+export function PopularSearches({
   onSearchSelect,
   className = '',
   showStats = false,
@@ -50,7 +51,7 @@ export default function PopularSearches({
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
+      <div className={cn('bg-white rounded-lg shadow-sm p-4', className)}>
         <div className="flex items-center gap-2 mb-3">
           <div className="animate-spin h-4 w-4 border-2 border-amber-600 border-t-transparent rounded-full"></div>
           <span className="text-sm text-gray-500">載入熱門搜尋中...</span>
@@ -61,7 +62,7 @@ export default function PopularSearches({
 
   if (error || !data || data.popularSearches.length === 0) {
     return (
-      <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
+      <div className={cn('bg-white rounded-lg shadow-sm p-4', className)}>
         <div className="flex items-center gap-2 mb-3">
           <svg
             className="w-4 h-4 text-gray-400"
@@ -84,7 +85,7 @@ export default function PopularSearches({
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
+    <div className={cn('bg-white rounded-lg shadow-sm p-4', className)}>
       <div className="flex items-center gap-2 mb-3">
         <svg
           className="w-4 h-4 text-amber-600"

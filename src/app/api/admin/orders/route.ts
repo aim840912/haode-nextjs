@@ -6,14 +6,53 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
-import { orderService } from '@/services/core/order/orderService'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { orderService } from '@/services/core/order'
 
 /**
- * GET /api/admin/orders - 取得所有訂單
+ * @api {GET} /api/admin/orders 取得所有訂單（管理員）
+ * @apiName GetAllOrders
+ * @apiGroup Admin
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 管理員查看所有訂單，支援分頁和篩選。
+ * 可依狀態、使用者 ID 進行篩選。
+ *
+ * @apiPermission admin
+ *
+ * @apiQuery {Number} [page=1] 頁碼
+ * @apiQuery {Number} [limit=20] 每頁筆數（最大 100）
+ * @apiQuery {String} [status] 篩選訂單狀態
+ * @apiQuery {String} [userId] 篩選特定使用者的訂單
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 回應資料
+ * @apiSuccess {Object[]} data.orders 訂單列表
+ * @apiSuccess {Object} data.pagination 分頁資訊
+ * @apiSuccess {Object} data.summary 訂單摘要統計
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "orders": [...],
+ *     "pagination": {
+ *       "page": 1,
+ *       "limit": 20,
+ *       "total": 150,
+ *       "totalPages": 8
+ *     },
+ *     "summary": {...}
+ *   },
+ *   "message": "取得所有訂單成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 需要管理員權限
  */
 async function handleGET(req: NextRequest, user: User) {
   const { searchParams } = new URL(req.url)

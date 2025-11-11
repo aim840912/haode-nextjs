@@ -4,15 +4,18 @@ import { Suspense } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 
-const ScheduleCalendar = dynamic(() => import('@/components/features/calendar/ScheduleCalendar'), {
-  loading: () => (
-    <div className="flex items-center justify-center py-16">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900"></div>
-      <span className="ml-3 text-gray-600">載入行事曆中...</span>
-    </div>
-  ),
-  ssr: false,
-})
+const ScheduleCalendar = dynamic(
+  () => import('@/components/features/calendar/ScheduleCalendar').then(mod => mod.ScheduleCalendar),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center py-16">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-900"></div>
+        <span className="ml-3 text-gray-600">載入行事曆中...</span>
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 import Head from 'next/head'
 

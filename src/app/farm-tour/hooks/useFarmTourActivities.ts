@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { logger } from '@/lib/logger'
 import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
+import { logger } from '@/lib/logger'
 import type { FarmTourActivity } from '@/types/farmTour'
 
 export interface UseFarmTourActivitiesReturn {

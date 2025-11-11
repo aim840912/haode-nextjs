@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
-import { base64ToBlobUrl, revokeBlobUrl } from '@/lib/utils/image-blob-utils'
 import { logger } from '@/lib/logger'
+import { base64ToBlobUrl, revokeBlobUrl } from '@/lib/utils/image-blob-utils'
 
 interface UseImageBlobOptions {
   fallbackSrc?: string

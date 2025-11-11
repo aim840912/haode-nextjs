@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { cn } from '@/lib/utils/cn'
 
 interface InterestButtonProps {
   /** 產品 ID */
@@ -66,14 +67,12 @@ export const InterestButton = React.memo<InterestButtonProps>(
 
     // 取得基礎樣式
     const getBaseStyles = () => {
-      const baseStyles =
-        'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50'
-
-      if (isDisabledDueToAuth) {
-        return `${baseStyles} opacity-60 cursor-not-allowed`
-      }
-
-      return `${baseStyles} cursor-pointer hover:scale-110 active:scale-95`
+      return cn(
+        'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50',
+        isDisabledDueToAuth
+          ? 'opacity-60 cursor-not-allowed'
+          : 'cursor-pointer hover:scale-110 active:scale-95'
+      )
     }
 
     // 取得提示文字
@@ -86,23 +85,33 @@ export const InterestButton = React.memo<InterestButtonProps>(
 
     // 圖標變體
     if (variant === 'icon') {
-      const iconStyles = size === 'sm' ? 'p-1' : size === 'lg' ? 'p-3' : 'p-2'
+      const iconStyles = 'p-3'
 
       return (
         <button
           onClick={handleClick}
           disabled={isDisabledDueToAuth}
-          className={`${getBaseStyles()} ${iconStyles} rounded-full hover:bg-red-50 ${className} ${isLoggedOut ? 'bg-gray-100' : ''}`}
+          className={cn(
+            getBaseStyles(),
+            iconStyles,
+            'rounded-full hover:bg-red-50',
+            isLoggedOut && 'bg-gray-100',
+            className
+          )}
           title={getTooltipText()}
           aria-label={getTooltipText()}
         >
           {isInterested ? (
-            <svg className={`${getIconSize()} text-red-500 fill-current`} viewBox="0 0 24 24">
+            <svg className={cn(getIconSize(), 'text-red-500 fill-current')} viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
           ) : (
             <svg
-              className={`${getIconSize()} ${isLoggedOut ? 'text-gray-300' : 'text-gray-400 hover:text-red-500'} transition-colors`}
+              className={cn(
+                getIconSize(),
+                isLoggedOut ? 'text-gray-300' : 'text-gray-400 hover:text-red-500',
+                'transition-colors'
+              )}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -142,13 +151,19 @@ export const InterestButton = React.memo<InterestButtonProps>(
       <button
         onClick={handleClick}
         disabled={isDisabledDueToAuth}
-        className={`${getBaseStyles()} ${getButtonSize()} ${buttonStyles} rounded-lg font-medium flex items-center justify-center gap-2 ${className}`}
+        className={cn(
+          getBaseStyles(),
+          getButtonSize(),
+          buttonStyles,
+          'rounded-lg font-medium flex items-center justify-center gap-2',
+          className
+        )}
         aria-label={getTooltipText()}
         title={getTooltipText()}
       >
         {isInterested ? (
           <>
-            <svg className={`${getIconSize()} text-red-500 fill-current`} viewBox="0 0 24 24">
+            <svg className={cn(getIconSize(), 'text-red-500 fill-current')} viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
             已收藏
@@ -156,7 +171,7 @@ export const InterestButton = React.memo<InterestButtonProps>(
         ) : (
           <>
             <svg
-              className={`${getIconSize()} ${isLoggedOut ? 'text-gray-300' : ''}`}
+              className={cn(getIconSize(), isLoggedOut && 'text-gray-300')}
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"

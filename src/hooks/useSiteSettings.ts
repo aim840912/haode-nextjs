@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import type { SiteSetting, SettingKey } from '@/types/siteSettings'
 import { fetchSiteSettingsByKeys } from '@/lib/api/site-settings-api'
+import type { SiteSetting, SettingKey } from '@/types/siteSettings'
 
 export function useSiteSettings(keys: (SettingKey | string)[]) {
   const [settings, setSettings] = useState<Record<string, SiteSetting>>({})

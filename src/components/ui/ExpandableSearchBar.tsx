@@ -4,9 +4,10 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useDebounce } from '@/hooks/useDebounce'
-import { SearchResult } from '@/types/search'
-import { logger } from '@/lib/logger'
 import { searchContent } from '@/lib/api/search-api'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { SearchResult } from '@/types/search'
 
 interface ExpandableSearchBarProps {
   placeholder?: string
@@ -182,7 +183,7 @@ export function ExpandableSearchBar({
   }
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div ref={containerRef} className={cn('relative', className)}>
       {/* 背景遮罩 (手機版展開時) */}
       {iconOnly && isExpanded && (
         <div
@@ -193,16 +194,17 @@ export function ExpandableSearchBar({
 
       {/* 桌面版展開時的容器 */}
       <div
-        className={`${
+        className={cn(
           iconOnly && isExpanded
             ? 'fixed lg:absolute right-4 lg:right-0 top-20 lg:top-1/2 lg:-translate-y-1/2 z-50 lg:w-96 w-[calc(100vw-2rem)]'
             : 'relative'
-        }`}
+        )}
       >
         <div
-          className={`relative transition-all duration-300 ease-out ${
+          className={cn(
+            'relative transition-all duration-300 ease-out',
             iconOnly && isExpanded ? 'w-full lg:w-96' : isExpanded ? 'w-full' : 'w-10'
-          }`}
+          )}
         >
           <input
             ref={inputRef}
@@ -212,9 +214,10 @@ export function ExpandableSearchBar({
             onKeyDown={handleKeyDown}
             onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
             placeholder={placeholder || '搜尋產品...'}
-            className={`w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all duration-300 text-gray-900 placeholder-gray-500 ${
+            className={cn(
+              'w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none transition-all duration-300 text-gray-900 placeholder-gray-500',
               iconOnly && isExpanded ? 'bg-white shadow-lg ring-1 ring-gray-200' : 'bg-white'
-            }`}
+            )}
           />
 
           {/* 搜尋圖示 */}
@@ -245,26 +248,31 @@ export function ExpandableSearchBar({
         {showDropdown && suggestions.length > 0 && isExpanded && (
           <div
             ref={dropdownRef}
-            className={`absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto backdrop-blur-sm animate-in slide-in-from-top-2 fade-in duration-200 ${
-              iconOnly ? 'w-full lg:w-96' : ''
-            }`}
+            className={cn(
+              'absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto backdrop-blur-sm animate-in slide-in-from-top-2 fade-in duration-200',
+              iconOnly && 'w-full lg:w-96'
+            )}
           >
             {suggestions.map((suggestion, index) => (
               <div
                 key={suggestion.id}
                 onClick={() => handleSelectSuggestion(suggestion)}
-                className={`px-4 py-3 cursor-pointer transition-all duration-200 ${
+                className={cn(
+                  'px-4 py-3 cursor-pointer transition-all duration-200',
                   index === selectedIndex
                     ? 'bg-amber-50 border-l-4 border-amber-500 shadow-sm'
-                    : 'hover:bg-gray-50 hover:shadow-sm'
-                } ${index > 0 ? 'border-t border-gray-100' : ''} first:rounded-t-lg last:rounded-b-lg`}
+                    : 'hover:bg-gray-50 hover:shadow-sm',
+                  index > 0 && 'border-t border-gray-100',
+                  'first:rounded-t-lg last:rounded-b-lg'
+                )}
               >
                 <div className="flex items-center gap-3">
                   {/* 類型圖示 */}
                   <div
-                    className={`flex-shrink-0 w-3 h-3 rounded-full shadow-sm ${
+                    className={cn(
+                      'flex-shrink-0 w-3 h-3 rounded-full shadow-sm',
                       suggestion.type === 'product' ? 'bg-blue-500' : 'bg-gray-500'
-                    }`}
+                    )}
                   />
 
                   {/* 內容 */}
@@ -284,11 +292,12 @@ export function ExpandableSearchBar({
                       </div>
                     )}
                     <div
-                      className={`text-xs font-medium px-2.5 py-1 rounded-full shadow-sm ${
+                      className={cn(
+                        'text-xs font-medium px-2.5 py-1 rounded-full shadow-sm',
                         suggestion.type === 'product'
                           ? 'bg-blue-100 text-blue-800 border border-blue-200'
                           : 'bg-gray-100 text-gray-800 border border-gray-200'
-                      }`}
+                      )}
                     >
                       {suggestion.type === 'product' ? '產品' : suggestion.type}
                     </div>

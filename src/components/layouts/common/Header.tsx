@@ -1,15 +1,16 @@
 'use client'
 
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
-import AuthButton from '@/components/ui/button/AuthButton'
-import SocialLinks from '@/components/features/social/SocialLinks'
+import { SocialLinks } from '@/components/features/social/SocialLinks'
+import { AuthButton } from '@/components/ui/button/AuthButton'
 import { ExpandableSearchBar } from '@/components/ui/ExpandableSearchBar'
+import { ThemeToggle } from '@/components/ui/theme/ThemeToggle'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 
-export default function Header() {
+export function Header() {
   const pathname = usePathname()
   const { user } = useAuth()
   const { stats } = useInquiryStatsContext()
@@ -108,7 +109,7 @@ export default function Header() {
   ]
 
   return (
-    <header className="fixed top-0 w-full backdrop-blur-lg z-50 bg-green-50/98 shadow-md min-h-[60px]">
+    <header className="fixed top-0 w-full backdrop-blur-lg z-50 bg-green-50/98 dark:bg-slate-900/98 shadow-md min-h-[60px]">
       <nav className="max-w-7xl mx-auto px-8 py-1">
         <div className="hidden lg:block">
           {/* Desktop Layout - 統一緊湊樣式 */}
@@ -118,10 +119,10 @@ export default function Header() {
               {/* 品牌標誌（緊湊版）*/}
               <Link href="/" className="flex items-center">
                 <div className="flex items-center gap-2 h-8">
-                  <div className="font-display text-green-900 tracking-tight text-2xl">
+                  <div className="font-display text-green-900 dark:text-green-300 tracking-tight text-2xl">
                     豪德製茶所
                   </div>
-                  <div className="text-green-700/70 font-inter font-medium tracking-wider text-[8px]">
+                  <div className="text-green-700/70 dark:text-green-400/70 font-inter font-medium tracking-wider text-[8px]">
                     HAUDE TEA
                   </div>
                 </div>
@@ -134,14 +135,14 @@ export default function Header() {
                     {item.isExternal ? (
                       <a href={item.href} className="block py-2 px-2">
                         <span
-                          className={`text-gray-700 hover:text-green-900 transition-colors duration-200 text-sm font-sans font-medium ${
-                            isActive(item.href) ? 'text-green-900' : ''
+                          className={`text-gray-700 dark:text-gray-300 hover:text-green-900 dark:hover:text-green-300 transition-colors duration-200 text-sm font-sans font-medium ${
+                            isActive(item.href) ? 'text-green-900 dark:text-green-300' : ''
                           }`}
                         >
                           {item.label}
                         </span>
                         <div
-                          className={`absolute bottom-0 left-0 h-0.5 bg-green-900 transition-all duration-300 ${
+                          className={`absolute bottom-0 left-0 h-0.5 bg-green-900 dark:bg-green-300 transition-all duration-300 ${
                             isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
                           }`}
                         ></div>
@@ -149,14 +150,14 @@ export default function Header() {
                     ) : (
                       <Link href={item.href} className="block py-2 px-2">
                         <span
-                          className={`text-gray-700 hover:text-green-900 transition-colors duration-200 text-sm font-sans font-medium ${
-                            isActive(item.href) ? 'text-green-900' : ''
+                          className={`text-gray-700 dark:text-gray-300 hover:text-green-900 dark:hover:text-green-300 transition-colors duration-200 text-sm font-sans font-medium ${
+                            isActive(item.href) ? 'text-green-900 dark:text-green-300' : ''
                           }`}
                         >
                           {item.label}
                         </span>
                         <div
-                          className={`absolute bottom-0 left-0 h-0.5 bg-green-900 transition-all duration-300 ${
+                          className={`absolute bottom-0 left-0 h-0.5 bg-green-900 dark:bg-green-300 transition-all duration-300 ${
                             isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
                           }`}
                         ></div>
@@ -172,6 +173,9 @@ export default function Header() {
               {/* 可展開搜尋欄 */}
               <ExpandableSearchBar iconOnly />
 
+              {/* 主題切換按鈕 */}
+              <ThemeToggle />
+
               {/* Social Links */}
               <SocialLinks size="sm" />
 
@@ -179,7 +183,7 @@ export default function Header() {
               {user?.role === 'admin' && (
                 <div className="relative" ref={desktopAdminMenuRef}>
                   <button
-                    className="w-10 h-10 flex items-center justify-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-colors duration-200 rounded-md"
+                    className="w-10 h-10 flex items-center justify-center text-green-800 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 hover:bg-green-50/50 dark:hover:bg-slate-700/50 transition-colors duration-200 rounded-md"
                     title="管理功能"
                     onClick={handleDesktopAdminMenuToggle}
                   >
@@ -342,8 +346,10 @@ export default function Header() {
             {/* Brand - 左側固定 */}
             <Link href="/" className="flex items-center flex-shrink-0">
               <div>
-                <div className="font-display text-green-900 tracking-tight text-xl">豪德製茶所</div>
-                <div className="text-green-700/70 font-inter font-medium tracking-wider text-[8px]">
+                <div className="font-display text-green-900 dark:text-green-300 tracking-tight text-xl">
+                  豪德製茶所
+                </div>
+                <div className="text-green-700/70 dark:text-green-400/70 font-inter font-medium tracking-wider text-[8px]">
                   HAUDE TEA
                 </div>
               </div>
@@ -354,12 +360,17 @@ export default function Header() {
               {/* 可展開搜尋欄 - Mobile */}
               <ExpandableSearchBar iconOnly />
 
+              {/* 主題切換按鈕 - Mobile */}
+              <ThemeToggle />
+
               {/* 管理員快速連結 - Mobile */}
               {user?.role === 'admin' && (
                 <div className="relative" ref={mobileAdminMenuRef}>
                   <button
-                    className={`flex items-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
-                      isMobileAdminMenuOpen ? 'bg-green-50 text-green-900' : ''
+                    className={`flex items-center text-green-800 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 hover:bg-green-50/50 dark:hover:bg-slate-700/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
+                      isMobileAdminMenuOpen
+                        ? 'bg-green-50 dark:bg-slate-700 text-green-900 dark:text-green-200'
+                        : ''
                     }`}
                     title="管理功能"
                     onClick={handleMobileAdminMenuToggle}

@@ -1,5 +1,5 @@
-import { InquiryStatus, InquiryType } from './inquiry'
 import { AuditAction, ResourceType, UserRole } from './audit'
+import { InquiryStatus, InquiryType } from './inquiry'
 
 // Supabase 標準 JSON 類型
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
@@ -564,9 +564,100 @@ export interface Database {
         }
         Relationships: []
       }
+      inquiry_templates: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          inquiry_type: 'product' | 'farm_tour'
+          customer_name: string | null
+          customer_email: string | null
+          customer_phone: string | null
+          delivery_address: string | null
+          preferred_delivery_date_pattern: string | null
+          notes: string | null
+          items: Json
+          activity_title: string | null
+          visit_date_pattern: string | null
+          visitor_count: string | null
+          is_active: boolean
+          is_favorite: boolean
+          usage_count: number
+          last_used_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          inquiry_type?: 'product' | 'farm_tour'
+          customer_name?: string | null
+          customer_email?: string | null
+          customer_phone?: string | null
+          delivery_address?: string | null
+          preferred_delivery_date_pattern?: string | null
+          notes?: string | null
+          items?: Json
+          activity_title?: string | null
+          visit_date_pattern?: string | null
+          visitor_count?: string | null
+          is_active?: boolean
+          is_favorite?: boolean
+          usage_count?: number
+          last_used_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          inquiry_type?: 'product' | 'farm_tour'
+          customer_name?: string | null
+          customer_email?: string | null
+          customer_phone?: string | null
+          delivery_address?: string | null
+          preferred_delivery_date_pattern?: string | null
+          notes?: string | null
+          items?: Json
+          activity_title?: string | null
+          visit_date_pattern?: string | null
+          visitor_count?: string | null
+          is_active?: boolean
+          is_favorite?: boolean
+          usage_count?: number
+          last_used_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'inquiry_templates_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      inquiry_templates_stats: {
+        Row: {
+          user_id: string
+          total_templates: number
+          active_templates: number
+          favorite_templates: number
+          total_usage_count: number
+          avg_usage_count: number
+          last_template_used_at: string | null
+          newest_template_created_at: string | null
+        }
+      }
     }
     Functions: {
       update_product_inventory: {

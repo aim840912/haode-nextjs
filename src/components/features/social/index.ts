@@ -1,1 +1,1 @@
-export { default as SocialLinks } from './SocialLinks'
+export { SocialLinks } from './SocialLinks'

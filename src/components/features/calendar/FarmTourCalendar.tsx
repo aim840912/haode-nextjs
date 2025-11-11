@@ -1,18 +1,20 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
-import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import listPlugin from '@fullcalendar/list'
+import FullCalendar from '@fullcalendar/react'
+import timeGridPlugin from '@fullcalendar/timegrid'
+import { useAuth } from '@/contexts/AuthContext'
+import { useFarmTourCalendar } from '@/hooks/useFarmTourCalendar'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { formatDate } from '@/lib/utils/formatters'
+import { INQUIRY_STATUS_LABELS, type InquiryStatus } from '@/types/inquiry'
+import { QuickAddInquiryModal } from './QuickAddInquiryModal'
 import type { EventClickArg, EventDropArg, DatesSetArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
-import { useFarmTourCalendar } from '@/hooks/useFarmTourCalendar'
-import { INQUIRY_STATUS_LABELS, type InquiryStatus } from '@/types/inquiry'
-import { useAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/logger'
-import QuickAddInquiryModal from './QuickAddInquiryModal'
 
 // 狀態過濾選項
 const statusOptions = [
@@ -32,7 +34,7 @@ interface FarmTourCalendarProps {
   onDateClick?: (date: Date) => void
 }
 
-export default function FarmTourCalendar({
+export function FarmTourCalendar({
   className = '',
   defaultView = 'dayGridMonth',
   height = 'auto',
@@ -129,7 +131,7 @@ export default function FarmTourCalendar({
       logger.debug('事件被拖放')
 
       // 確認操作
-      const confirmed = confirm(`確定要將此預約調整到 ${newDate.toLocaleDateString('zh-TW')} 嗎？`)
+      const confirmed = confirm(`確定要將此預約調整到 ${formatDate(newDate, 'short')} 嗎？`)
 
       if (!confirmed) {
         dropInfo.revert() // 恢復原位置
@@ -147,7 +149,7 @@ export default function FarmTourCalendar({
         const event = events.find(e => e.id === eventId)
         if (event) {
           alert(
-            `「${event.extendedProps.customer_name}」的預約時間已更新至 ${newDate.toLocaleDateString('zh-TW')}`
+            `「${event.extendedProps.customer_name}」的預約時間已更新至 ${formatDate(newDate, 'short')}`
           )
         }
       }
@@ -194,7 +196,7 @@ export default function FarmTourCalendar({
   )
 
   return (
-    <div className={`farm-tour-calendar ${className}`}>
+    <div className={cn('farm-tour-calendar', className)}>
       {/* 工具列 */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         {/* 狀態過濾器 */}
@@ -203,13 +205,14 @@ export default function FarmTourCalendar({
             <button
               key={option.value}
               onClick={() => handleStatusFilterChange(option.value)}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-all duration-200 ${
+              className={cn(
+                'px-3 py-1.5 text-sm rounded-lg border transition-all duration-200',
                 (statusFilter === 'all' && option.value === 'all') ||
-                (Array.isArray(statusFilter) &&
-                  statusFilter.includes(option.value as InquiryStatus))
+                  (Array.isArray(statusFilter) &&
+                    statusFilter.includes(option.value as InquiryStatus))
                   ? 'border-transparent text-white shadow-md'
                   : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
+              )}
               style={{
                 backgroundColor:
                   (statusFilter === 'all' && option.value === 'all') ||

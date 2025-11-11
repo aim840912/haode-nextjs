@@ -1,8 +1,9 @@
 import { useState, useCallback } from 'react'
-import { logger } from '@/lib/logger'
 import { useRouter } from 'next/navigation'
-import { ProductImage } from '@/types/product'
 import { createLocationWithImages } from '@/lib/api/admin-api'
+import { logger } from '@/lib/logger'
+import { validatePhone } from '@/lib/utils/validation'
+import { ProductImage } from '@/types/product'
 
 export interface LocationFormData {
   name: string
@@ -131,24 +132,10 @@ const validateField = (field: string, value: unknown): string => {
       return !stringValue.trim() ? '請輸入門市地址' : ''
     case 'phone':
       if (!stringValue.trim()) return '請輸入電話號碼'
-
-      // 台灣電話格式增強驗證 - 支援多種格式
-      // 1. 移除格式字元（空白、中線、括號）保留數字、加號、分機標記
-      const cleanPhone = stringValue.replace(/[\s\-()]/g, '')
-
-      // 2. 驗證主要號碼格式
-      // 支援格式：
-      // - 手機: 09xxxxxxxx, +8869xxxxxxxx
-      // - 市話: 0x-xxxxxxx (區碼2-3碼，號碼6-8碼)
-      // - 特殊: 0800xxxxxx, 0204xxxxxx, 070xxxxxxx
-      // - 分機: #123, ext.123, 轉123
-      const phoneRegex =
-        /^(\+?886)?0?(9\d{8}|[2-8]\d{7,8}|800\d{6}|204\d{6}|70\d{7})((?:#|ext\.?|轉)\d+)?$/i
-
-      if (!phoneRegex.test(cleanPhone)) {
-        return '電話格式不正確'
+      const result = validatePhone(stringValue)
+      if (!result.valid) {
+        return result.message || '請輸入有效的台灣電話號碼（手機或市話）'
       }
-
       return ''
     case 'hours':
       if (!stringValue.trim()) return '請輸入營業時間'

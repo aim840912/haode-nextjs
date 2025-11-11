@@ -10,10 +10,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { CSRFTokenManager, validateOrigin } from '@/lib/middleware/auth-middleware'
-import { rateLimiter } from '@/lib/rate-limiter'
 import { getRateLimitConfig, ANTI_DDOS_LIMIT } from '@/config/rate-limits'
 import { authLogger } from '@/lib/logger'
+import { CSRFTokenManager, validateOrigin } from '@/lib/middleware/auth-middleware'
+import { rateLimiter } from '@/lib/rate-limiter'
 
 /**
  * 需要 CSRF 保護的路徑模式
@@ -278,7 +278,7 @@ export async function middleware(request: NextRequest) {
 
       // 如果沒有 token 或 token 無效，生成新的
       if (!existingToken || !/^[a-f0-9]{64}$/.test(existingToken)) {
-        const { token, headers } = CSRFTokenManager.createTokenResponse()
+        const { token: _token, headers } = CSRFTokenManager.createTokenResponse()
 
         headers.forEach((value, key) => {
           response.headers.set(key, value)

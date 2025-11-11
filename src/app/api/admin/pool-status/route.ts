@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { getPoolStats } from '@/lib/supabase/connection-factory'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { getPoolStats } from '@/lib/supabase/connection-factory'
 
 // 連線池統計資料類型
 interface PoolStats {
@@ -16,8 +16,51 @@ interface PoolStats {
 }
 
 /**
- * 取得連線池狀態和統計資訊
- * 只有管理員可以存取
+ * @api {GET} /api/admin/pool-status 取得連線池詳細狀態
+ * @apiName GetPoolStatus
+ * @apiGroup Admin
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 取得連線池的詳細狀態和統計資訊，包含健康分數、效能指標和優化建議。
+ * 僅限管理員訪問。
+ *
+ * @apiPermission admin
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 連線池狀態
+ * @apiSuccess {Boolean} data.enabled 連線池是否啟用
+ * @apiSuccess {Object} data.stats 統計資料
+ * @apiSuccess {Number} data.stats.poolUtilization 使用率（%）
+ * @apiSuccess {Number} data.stats.averageAcquireTime 平均取得時間（ms）
+ * @apiSuccess {Number} data.stats.totalRequests 總請求數
+ * @apiSuccess {Object} data.analysis 分析結果
+ * @apiSuccess {Number} data.analysis.healthScore 健康分數 (0-100)
+ * @apiSuccess {String} data.analysis.utilizationLevel 使用率等級
+ * @apiSuccess {String[]} data.analysis.recommendations 優化建議
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "enabled": true,
+ *     "stats": {
+ *       "poolUtilization": 45,
+ *       "averageAcquireTime": 15.5,
+ *       "totalRequests": 1000
+ *     },
+ *     "analysis": {
+ *       "healthScore": 95,
+ *       "utilizationLevel": "normal",
+ *       "recommendations": ["連線池運行正常，無需調整"]
+ *     }
+ *   },
+ *   "message": "連線池狀態查詢成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 需要管理員權限
  */
 async function handleGET(_request: NextRequest, _user: User) {
   try {

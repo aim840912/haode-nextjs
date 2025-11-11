@@ -4,9 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { useDebounce } from '@/hooks/useDebounce'
-import { SearchResult } from '@/types/search'
-import { logger } from '@/lib/logger'
 import { searchContent } from '@/lib/api/search-api'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { SearchResult } from '@/types/search'
 
 interface SearchBarProps {
   placeholder?: string
@@ -141,7 +142,7 @@ export function SearchBar({
   }, [])
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={cn('relative', className)}>
       <div className="relative">
         <input
           ref={inputRef}
@@ -183,18 +184,21 @@ export function SearchBar({
             <div
               key={suggestion.id}
               onClick={() => handleSelectSuggestion(suggestion)}
-              className={`px-4 py-3 cursor-pointer transition-colors duration-150 ${
+              className={cn(
+                'px-4 py-3 cursor-pointer transition-colors duration-150',
                 index === selectedIndex
                   ? 'bg-green-50 border-l-4 border-green-500'
-                  : 'hover:bg-gray-50'
-              } ${index > 0 ? 'border-t border-gray-100' : ''}`}
+                  : 'hover:bg-gray-50',
+                index > 0 && 'border-t border-gray-100'
+              )}
             >
               <div className="flex items-center gap-3">
                 {/* 類型圖示 */}
                 <div
-                  className={`flex-shrink-0 w-2 h-2 rounded-full ${
+                  className={cn(
+                    'flex-shrink-0 w-2 h-2 rounded-full',
                     suggestion.type === 'product' ? 'bg-blue-500' : 'bg-gray-500'
-                  }`}
+                  )}
                 />
 
                 {/* 內容 */}
@@ -214,11 +218,12 @@ export function SearchBar({
                     </div>
                   )}
                   <div
-                    className={`text-xs px-2 py-1 rounded-full ${
+                    className={cn(
+                      'text-xs px-2 py-1 rounded-full',
                       suggestion.type === 'product'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-gray-100 text-gray-800'
-                    }`}
+                    )}
                   >
                     {suggestion.type === 'product' ? '產品' : suggestion.type}
                   </div>

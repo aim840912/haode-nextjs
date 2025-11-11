@@ -9,13 +9,13 @@
  * - 內建資料轉換和驗證
  */
 
-import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
-import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { Location, LocationService } from '@/types/location'
-import { UpdateDataObject } from '@/types/service.types'
+import { UpdateDataObject, ServiceSupabaseClient } from '@/types/service.types'
 
 /**
  * 資料庫記錄類型
@@ -49,6 +49,17 @@ interface SupabaseLocationRecord {
  */
 export class LocationServiceSimple implements LocationService {
   private readonly moduleName = 'LocationService'
+
+  /**
+   * 取得 Supabase Admin 客戶端
+   */
+  private getSupabaseAdminClient(): ServiceSupabaseClient {
+    const client = getSupabaseAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
+  }
 
   /**
    * 統一錯誤處理方法
@@ -242,10 +253,7 @@ export class LocationServiceSimple implements LocationService {
         metadata: { insertData },
       })
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client not available')
-      }
+      const supabaseAdmin = this.getSupabaseAdminClient()
 
       dbLogger.debug('使用 Supabase Admin 客戶端', {
         module: this.moduleName,
@@ -330,10 +338,7 @@ export class LocationServiceSimple implements LocationService {
       if (locationData.image !== undefined) updateData.image = locationData.image
       if (locationData.isMain !== undefined) updateData.is_main = locationData.isMain
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client not available')
-      }
+      const supabaseAdmin = this.getSupabaseAdminClient()
       const { data, error } = await supabaseAdmin
         .from('locations')
         .update(updateData)
@@ -409,10 +414,7 @@ export class LocationServiceSimple implements LocationService {
         })
       }
 
-      const supabaseAdmin = getSupabaseAdmin()
-      if (!supabaseAdmin) {
-        throw new Error('Supabase admin client not available')
-      }
+      const supabaseAdmin = this.getSupabaseAdminClient()
       const { error } = await supabaseAdmin.from('locations').delete().eq('id', id)
 
       if (error) {
@@ -484,7 +486,7 @@ export class LocationServiceSimple implements LocationService {
   }> {
     try {
       const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase.from('locations').select('count').limit(1)
+      const { data: _data, error } = await supabase.from('locations').select('count').limit(1)
 
       if (error) {
         return {

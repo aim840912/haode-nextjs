@@ -16,13 +16,13 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   horizontalListSortingStrategy,
+  useSortable,
 } from '@dnd-kit/sortable'
-import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import Image from 'next/image'
-import { logger } from '@/lib/logger'
-import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 
 interface SortableImage {
   id: string
@@ -60,11 +60,12 @@ function SortableImageItem({ image, onRemove }: SortableImageProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative group rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+      className={cn(
+        'relative group rounded-lg overflow-hidden border-2 transition-all duration-200',
         itemIsDragging
           ? 'border-amber-400 shadow-lg scale-105 z-10'
           : 'border-gray-200 hover:border-gray-300'
-      }`}
+      )}
       {...attributes}
     >
       {/* 拖拽手柄 */}
@@ -151,7 +152,7 @@ interface SortableImageGalleryProps {
   className?: string
 }
 
-export default function SortableImageGallery({
+export function SortableImageGallery({
   images,
   onImagesReorder,
   onImageRemove,
@@ -208,7 +209,7 @@ export default function SortableImageGallery({
 
   if (images.length === 0) {
     return (
-      <div className={`text-center py-8 text-gray-500 ${className}`}>
+      <div className={cn('text-center py-8 text-gray-500', className)}>
         <svg
           className="w-16 h-16 mx-auto mb-4 text-gray-300"
           fill="none"
@@ -231,18 +232,18 @@ export default function SortableImageGallery({
   const sortingStrategy =
     layout === 'list' ? verticalListSortingStrategy : horizontalListSortingStrategy
 
-  const gridClass =
-    layout === 'grid'
-      ? `grid gap-4 ${
-          maxColumns === 2
-            ? 'grid-cols-2'
-            : maxColumns === 3
-              ? 'grid-cols-2 md:grid-cols-3'
-              : maxColumns === 4
-                ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-                : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-5'
-        }`
-      : 'flex flex-col gap-4'
+  const gridClass = cn(
+    layout === 'grid' && 'grid gap-4',
+    layout === 'grid' && maxColumns === 2 && 'grid-cols-2',
+    layout === 'grid' && maxColumns === 3 && 'grid-cols-2 md:grid-cols-3',
+    layout === 'grid' && maxColumns === 4 && 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4',
+    layout === 'grid' &&
+      maxColumns !== 2 &&
+      maxColumns !== 3 &&
+      maxColumns !== 4 &&
+      'grid-cols-2 md:grid-cols-3 lg:grid-cols-5',
+    layout === 'list' && 'flex flex-col gap-4'
+  )
 
   return (
     <div className={className}>

@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server'
 import { redirect } from 'next/navigation'
+import { NextRequest } from 'next/server'
 import { type EmailOtpType } from '@supabase/supabase-js'
 import { supabase } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'

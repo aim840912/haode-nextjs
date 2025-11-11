@@ -9,21 +9,21 @@
  * - 內建資料轉換和驗證
  */
 
-import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { dbLogger } from '@/lib/logger'
+import {} from '@/lib/database/supabase-server'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
+import { ServiceSupabaseClient } from '@/types/service.types'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 // 類型斷言，解決 Supabase 重載問題
-const getAdmin = () => getSupabaseAdmin()
-import { UpdateDataObject } from '@/types/service.types'
+const _getAdmin = () => getSupabaseAdmin()
 import { FarmTourActivity } from '@/types/farmTour'
 
 /**
  * 資料庫記錄類型
  */
-interface SupabaseFarmTourRecord {
+interface _SupabaseFarmTourRecord {
   id: string
   title: string
   start_month: number
@@ -60,8 +60,12 @@ export class FarmTourService implements IFarmTourService {
   /**
    * 取得 Supabase 管理客戶端
    */
-  private getSupabaseClient() {
-    return getSupabaseAdmin()
+  private getSupabaseClient(): ServiceSupabaseClient {
+    const client = getSupabaseAdmin()
+    if (!client) {
+      throw new DatabaseError('Supabase admin client not initialized')
+    }
+    return client
   }
 
   /**

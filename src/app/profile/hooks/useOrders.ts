@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import type { Order } from '@/types/order'
 import type { User } from '@/types/auth'
+import type { Order } from '@/types/order'
 
 export interface UseOrdersReturn {
   orders: Order[]

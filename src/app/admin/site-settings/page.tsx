@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import AdminProtection from '@/components/features/admin/AdminProtection'
-import ImageUploader, { SingleImageUploader } from '@/components/features/products/ImageUploader'
 import { Save, RefreshCw, Home, Leaf, ArrowLeft } from 'lucide-react'
-import { SETTING_KEYS, type SettingType } from '@/types/siteSettings'
-import { fetchAllSiteSettings, upsertSiteSetting } from '@/lib/api/site-settings-api'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
+import { ImageUploader, SingleImageUploader } from '@/components/features/products/ImageUploader'
 import { useLoadingManager } from '@/hooks/useLoadingManager'
+import { useSiteSettingsReducer } from '@/hooks/useSiteSettingsReducer'
+import { fetchAllSiteSettings, upsertSiteSetting } from '@/lib/api/site-settings-api'
+import { SETTING_KEYS, type SettingType } from '@/types/siteSettings'
 
 interface UploadedImage {
   url?: string
@@ -47,30 +48,8 @@ function cleanImageUrl(url: string): string {
 }
 
 export default function SiteSettingsPage() {
-  const [saving, setSaving] = useState(false)
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-
-  const [homeHeroImages, setHomeHeroImages] = useState<string[]>([])
-  const [farmTourHeroBg, setFarmTourHeroBg] = useState<string>('')
-  const [featureCard1Image, setFeatureCard1Image] = useState<string>('')
-  const [featureCard2Image, setFeatureCard2Image] = useState<string>('')
-  const [featureCard3Image, setFeatureCard3Image] = useState<string>('')
-  const [featureCard4Image, setFeatureCard4Image] = useState<string>('')
-  const [seasonSpringImage, setSeasonSpringImage] = useState<string>('')
-  const [seasonSummerImage, setSeasonSummerImage] = useState<string>('')
-  const [seasonAutumnImage, setSeasonAutumnImage] = useState<string>('')
-  const [seasonWinterImage, setSeasonWinterImage] = useState<string>('')
-
-  // 農場導覽內容狀態
-  const [farmFacilities, setFarmFacilities] = useState<string>('')
-  const [farmFaqs, setFarmFaqs] = useState<string>('')
-  const [farmVisitInfo, setFarmVisitInfo] = useState<string>('')
-  const [farmVisitNotes, setFarmVisitNotes] = useState<string>('')
-
-  const showMessage = useCallback((type: 'success' | 'error', text: string) => {
-    setMessage({ type, text })
-    setTimeout(() => setMessage(null), 5000)
-  }, [])
+  // ✅ 使用 useReducer 替換 17 個 useState
+  const { state, actions } = useSiteSettingsReducer()
 
   // 使用 useLoadingManager 管理載入狀態
   const { isLoading: loading, execute } = useLoadingManager({
@@ -88,85 +67,96 @@ export default function SiteSettingsPage() {
           settingsMap[setting.key] = setting
         })
 
+        // 準備要載入的設定
+        const settingsToLoad: Record<string, any> = {}
+
+        // 首頁輪播圖片
         if (settingsMap[SETTING_KEYS.HOME_HERO_IMAGES]) {
           try {
             const images = JSON.parse(settingsMap[SETTING_KEYS.HOME_HERO_IMAGES].value)
             const cleanedImages = (Array.isArray(images) ? images : [])
               .map(cleanImageUrl)
               .filter(Boolean)
-            setHomeHeroImages(cleanedImages)
+            settingsToLoad.homeHeroImages = cleanedImages
           } catch {
-            setHomeHeroImages([])
+            settingsToLoad.homeHeroImages = []
           }
         }
 
+        // 農場導覽背景
         if (settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG]) {
-          const cleaned = cleanImageUrl(settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG].value)
-          setFarmTourHeroBg(cleaned)
+          settingsToLoad.farmTourHeroBg = cleanImageUrl(
+            settingsMap[SETTING_KEYS.FARM_TOUR_HERO_BG].value
+          )
         }
 
+        // 特色卡片圖片
         if (settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE]) {
-          setFeatureCard1Image(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE].value)
+          settingsToLoad.featureCard1Image = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE].value
           )
         }
         if (settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE]) {
-          setFeatureCard2Image(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE].value)
+          settingsToLoad.featureCard2Image = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE].value
           )
         }
         if (settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE]) {
-          setFeatureCard3Image(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE].value)
+          settingsToLoad.featureCard3Image = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE].value
           )
         }
         if (settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE]) {
-          setFeatureCard4Image(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE].value)
+          settingsToLoad.featureCard4Image = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE].value
           )
         }
 
+        // 季節圖片
         if (settingsMap[SETTING_KEYS.HOME_SEASON_SPRING_IMAGE]) {
-          setSeasonSpringImage(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_SEASON_SPRING_IMAGE].value)
+          settingsToLoad.seasonSpringImage = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_SEASON_SPRING_IMAGE].value
           )
         }
         if (settingsMap[SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE]) {
-          setSeasonSummerImage(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE].value)
+          settingsToLoad.seasonSummerImage = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE].value
           )
         }
         if (settingsMap[SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE]) {
-          setSeasonAutumnImage(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE].value)
+          settingsToLoad.seasonAutumnImage = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE].value
           )
         }
         if (settingsMap[SETTING_KEYS.HOME_SEASON_WINTER_IMAGE]) {
-          setSeasonWinterImage(
-            cleanImageUrl(settingsMap[SETTING_KEYS.HOME_SEASON_WINTER_IMAGE].value)
+          settingsToLoad.seasonWinterImage = cleanImageUrl(
+            settingsMap[SETTING_KEYS.HOME_SEASON_WINTER_IMAGE].value
           )
         }
 
         // 載入農場導覽內容
         if (settingsMap[SETTING_KEYS.FARM_TOUR_FACILITIES]) {
-          setFarmFacilities(settingsMap[SETTING_KEYS.FARM_TOUR_FACILITIES].value)
+          settingsToLoad.farmFacilities = settingsMap[SETTING_KEYS.FARM_TOUR_FACILITIES].value
         }
         if (settingsMap[SETTING_KEYS.FARM_TOUR_FAQS]) {
-          setFarmFaqs(settingsMap[SETTING_KEYS.FARM_TOUR_FAQS].value)
+          settingsToLoad.farmFaqs = settingsMap[SETTING_KEYS.FARM_TOUR_FAQS].value
         }
         if (settingsMap[SETTING_KEYS.FARM_TOUR_VISIT_INFO]) {
-          setFarmVisitInfo(settingsMap[SETTING_KEYS.FARM_TOUR_VISIT_INFO].value)
+          settingsToLoad.farmVisitInfo = settingsMap[SETTING_KEYS.FARM_TOUR_VISIT_INFO].value
         }
         if (settingsMap[SETTING_KEYS.FARM_TOUR_VISIT_NOTES]) {
-          setFarmVisitNotes(settingsMap[SETTING_KEYS.FARM_TOUR_VISIT_NOTES].value)
+          settingsToLoad.farmVisitNotes = settingsMap[SETTING_KEYS.FARM_TOUR_VISIT_NOTES].value
         }
+
+        // 一次性載入所有設定
+        actions.loadAllSettings(settingsToLoad)
       },
       {
         logAction: 'loadSettings',
-        onError: err => showMessage('error', err.message),
+        onError: err => actions.showMessage('error', err.message),
       }
     )
-  }, [execute, showMessage])
+  }, [execute, actions])
 
   useEffect(() => {
     loadSettings()
@@ -177,97 +167,98 @@ export default function SiteSettingsPage() {
     const newUrls = images
       .map(img => img.url || img.preview || img.storage_url)
       .filter(Boolean) as string[]
-    setHomeHeroImages(prev => [...prev, ...newUrls])
+
+    newUrls.forEach(url => actions.addHomeHeroImage(url))
   }
 
   const handleRemoveHomeHeroImage = (index: number) => {
-    setHomeHeroImages(prev => prev.filter((_, i) => i !== index))
+    actions.removeHomeHeroImage(index)
   }
 
   const handleFarmTourBgUpload = (image: UploadedImage) => {
     // 從上傳的圖片中提取 URL
     const imageUrl = image.url || image.preview || image.storage_url
     if (imageUrl) {
-      setFarmTourHeroBg(imageUrl)
+      actions.setFarmTourHeroBg(imageUrl)
     }
   }
 
   const handleFarmTourBgDelete = () => {
-    setFarmTourHeroBg('')
+    actions.setFarmTourHeroBg('')
   }
 
   const handleSave = async () => {
-    setSaving(true)
+    actions.setSaving(true)
     try {
       const updates: Array<{ key: string; value: string; type: SettingType }> = [
         {
           key: SETTING_KEYS.HOME_HERO_IMAGES,
-          value: JSON.stringify(homeHeroImages),
+          value: JSON.stringify(state.homeHeroImages),
           type: 'json' as SettingType,
         },
         {
           key: SETTING_KEYS.FARM_TOUR_HERO_BG,
-          value: farmTourHeroBg,
+          value: state.farmTourHeroBg,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE,
-          value: featureCard1Image,
+          value: state.featureCard1Image,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE,
-          value: featureCard2Image,
+          value: state.featureCard2Image,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE,
-          value: featureCard3Image,
+          value: state.featureCard3Image,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE,
-          value: featureCard4Image,
+          value: state.featureCard4Image,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_SEASON_SPRING_IMAGE,
-          value: seasonSpringImage,
+          value: state.seasonSpringImage,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE,
-          value: seasonSummerImage,
+          value: state.seasonSummerImage,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE,
-          value: seasonAutumnImage,
+          value: state.seasonAutumnImage,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.HOME_SEASON_WINTER_IMAGE,
-          value: seasonWinterImage,
+          value: state.seasonWinterImage,
           type: 'string' as SettingType,
         },
         {
           key: SETTING_KEYS.FARM_TOUR_FACILITIES,
-          value: farmFacilities,
+          value: state.farmFacilities,
           type: 'json' as SettingType,
         },
         {
           key: SETTING_KEYS.FARM_TOUR_FAQS,
-          value: farmFaqs,
+          value: state.farmFaqs,
           type: 'json' as SettingType,
         },
         {
           key: SETTING_KEYS.FARM_TOUR_VISIT_INFO,
-          value: farmVisitInfo,
+          value: state.farmVisitInfo,
           type: 'json' as SettingType,
         },
         {
           key: SETTING_KEYS.FARM_TOUR_VISIT_NOTES,
-          value: farmVisitNotes,
+          value: state.farmVisitNotes,
           type: 'json' as SettingType,
         },
       ].filter(update => update.value && update.value.trim() !== '' && update.value !== '[]')
@@ -276,22 +267,22 @@ export default function SiteSettingsPage() {
         await upsertSiteSetting(update.key, { value: update.value, type: update.type })
       }
 
-      showMessage('success', '設定已成功儲存')
+      actions.showMessage('success', '設定已成功儲存')
       await loadSettings()
     } catch (err) {
-      showMessage('error', err instanceof Error ? err.message : '儲存失敗')
+      actions.showMessage('error', err instanceof Error ? err.message : '儲存失敗')
     } finally {
-      setSaving(false)
+      actions.setSaving(false)
     }
   }
 
   if (loading) {
     return (
       <AdminProtection>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
           <div className="text-center">
             <RefreshCw className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">載入設定中...</p>
+            <p className="text-gray-600 dark:text-gray-300">載入設定中...</p>
           </div>
         </div>
       </AdminProtection>
@@ -300,39 +291,43 @@ export default function SiteSettingsPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <Link
                   href="/admin/dashboard"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
                   <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">網站設定管理</h1>
-                  <p className="text-sm text-gray-600 mt-1">管理首頁和農場體驗頁的圖片</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    網站設定管理
+                  </h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    管理首頁和農場體驗頁的圖片
+                  </p>
                 </div>
               </div>
               <div className="flex space-x-3">
                 <button
                   onClick={loadSettings}
-                  disabled={saving}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center space-x-2"
+                  disabled={state.saving}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center space-x-2"
                 >
                   <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
                   <span>重新載入</span>
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving}
+                  disabled={state.saving}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
                 >
                   <Save className="w-5 h-5" />
-                  <span>{saving ? '儲存中...' : '儲存變更'}</span>
+                  <span>{state.saving ? '儲存中...' : '儲存變更'}</span>
                 </button>
               </div>
             </div>
@@ -340,16 +335,16 @@ export default function SiteSettingsPage() {
         </div>
 
         {/* Message */}
-        {message && (
+        {state.message && (
           <div className="max-w-7xl mx-auto px-6 pt-4">
             <div
               className={`rounded-lg p-4 ${
-                message.type === 'success'
+                state.message.type === 'success'
                   ? 'bg-green-50 border border-green-200 text-green-800'
                   : 'bg-red-50 border border-red-200 text-red-800'
               }`}
             >
-              {message.text}
+              {state.message.text}
             </div>
           </div>
         )}
@@ -357,10 +352,10 @@ export default function SiteSettingsPage() {
         {/* Content */}
         <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
           {/* 首頁設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Home className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">首頁輪播圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">首頁輪播圖片</h2>
             </div>
 
             <div className="space-y-6">
@@ -368,21 +363,21 @@ export default function SiteSettingsPage() {
                 productId="home-hero"
                 module="site-settings"
                 onUploadSuccess={handleAddHomeHeroImage}
-                onUploadError={error => showMessage('error', error)}
+                onUploadError={error => actions.showMessage('error', error)}
                 maxFiles={10}
                 allowMultiple={true}
                 generateMultipleSizes={false}
                 enableCompression={true}
-                initialImages={homeHeroImages}
+                initialImages={state.homeHeroImages}
                 onDeleteInitialImage={url => {
-                  const index = homeHeroImages.indexOf(url)
+                  const index = state.homeHeroImages.indexOf(url)
                   if (index > -1) {
                     handleRemoveHomeHeroImage(index)
                   }
                 }}
               />
 
-              {homeHeroImages.length === 0 && (
+              {state.homeHeroImages.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                   <p>尚未新增任何輪播圖片</p>
                   <p className="text-sm mt-1">建議新增 3-5 張圖片，支援拖放上傳</p>
@@ -392,37 +387,43 @@ export default function SiteSettingsPage() {
           </section>
 
           {/* 農場體驗頁設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-green-600" />
-              <h2 className="text-xl font-bold text-gray-900">農場體驗頁面背景圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                農場體驗頁面背景圖片
+              </h2>
             </div>
 
             <SingleImageUploader
               productId="farm-tour-hero-bg"
               module="site-settings"
-              initialImage={farmTourHeroBg}
+              initialImage={state.farmTourHeroBg}
               onUploadSuccess={handleFarmTourBgUpload}
-              onUploadError={error => showMessage('error', error)}
+              onUploadError={error => actions.showMessage('error', error)}
               onDelete={handleFarmTourBgDelete}
               enableDelete={true}
             />
 
-            {farmTourHeroBg && (
+            {state.farmTourHeroBg && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">當前圖片路徑：</p>
-                <p className="text-sm text-gray-800 break-all mt-1">{farmTourHeroBg}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">當前圖片路徑：</p>
+                <p className="text-sm text-gray-800 break-all mt-1">{state.farmTourHeroBg}</p>
               </div>
             )}
           </section>
 
           {/* 農場特色卡片背面圖片設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-blue-600" />
-              <h2 className="text-xl font-bold text-gray-900">農場特色卡片背面圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                農場特色卡片背面圖片
+              </h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">管理首頁「農場特色」區域翻轉卡片背面的圖片</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              管理首頁「農場特色」區域翻轉卡片背面的圖片
+            </p>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* 自然農法卡片 */}
@@ -431,13 +432,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="feature-card-1"
                   module="site-settings"
-                  initialImage={featureCard1Image}
+                  initialImage={state.featureCard1Image}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setFeatureCard1Image(imageUrl)
+                    if (imageUrl) actions.setFeatureCardImage(1, imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setFeatureCard1Image('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setFeatureCardImage(1, '')}
                   enableDelete={true}
                 />
               </div>
@@ -448,13 +449,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="feature-card-2"
                   module="site-settings"
-                  initialImage={featureCard2Image}
+                  initialImage={state.featureCard2Image}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setFeatureCard2Image(imageUrl)
+                    if (imageUrl) actions.setFeatureCardImage(2, imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setFeatureCard2Image('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setFeatureCardImage(2, '')}
                   enableDelete={true}
                 />
               </div>
@@ -465,13 +466,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="feature-card-3"
                   module="site-settings"
-                  initialImage={featureCard3Image}
+                  initialImage={state.featureCard3Image}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setFeatureCard3Image(imageUrl)
+                    if (imageUrl) actions.setFeatureCardImage(3, imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setFeatureCard3Image('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setFeatureCardImage(3, '')}
                   enableDelete={true}
                 />
               </div>
@@ -482,13 +483,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="feature-card-4"
                   module="site-settings"
-                  initialImage={featureCard4Image}
+                  initialImage={state.featureCard4Image}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setFeatureCard4Image(imageUrl)
+                    if (imageUrl) actions.setFeatureCardImage(4, imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setFeatureCard4Image('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setFeatureCardImage(4, '')}
                   enableDelete={true}
                 />
               </div>
@@ -496,12 +497,14 @@ export default function SiteSettingsPage() {
           </section>
 
           {/* 四季體驗圖片設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-purple-600" />
-              <h2 className="text-xl font-bold text-gray-900">四季體驗圖片</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">四季體驗圖片</h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">管理首頁「四季體驗」區域的季節圖片</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
+              管理首頁「四季體驗」區域的季節圖片
+            </p>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* 春季賞花圖片 */}
@@ -510,13 +513,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="season-spring"
                   module="site-settings"
-                  initialImage={seasonSpringImage}
+                  initialImage={state.seasonSpringImage}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setSeasonSpringImage(imageUrl)
+                    if (imageUrl) actions.setSeasonImage('spring', imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setSeasonSpringImage('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setSeasonImage('spring', '')}
                   enableDelete={true}
                 />
               </div>
@@ -527,13 +530,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="season-summer"
                   module="site-settings"
-                  initialImage={seasonSummerImage}
+                  initialImage={state.seasonSummerImage}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setSeasonSummerImage(imageUrl)
+                    if (imageUrl) actions.setSeasonImage('summer', imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setSeasonSummerImage('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setSeasonImage('summer', '')}
                   enableDelete={true}
                 />
               </div>
@@ -544,13 +547,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="season-autumn"
                   module="site-settings"
-                  initialImage={seasonAutumnImage}
+                  initialImage={state.seasonAutumnImage}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setSeasonAutumnImage(imageUrl)
+                    if (imageUrl) actions.setSeasonImage('autumn', imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setSeasonAutumnImage('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setSeasonImage('autumn', '')}
                   enableDelete={true}
                 />
               </div>
@@ -561,13 +564,13 @@ export default function SiteSettingsPage() {
                 <SingleImageUploader
                   productId="season-winter"
                   module="site-settings"
-                  initialImage={seasonWinterImage}
+                  initialImage={state.seasonWinterImage}
                   onUploadSuccess={image => {
                     const imageUrl = image.url || image.preview || image.storage_url
-                    if (imageUrl) setSeasonWinterImage(imageUrl)
+                    if (imageUrl) actions.setSeasonImage('winter', imageUrl)
                   }}
-                  onUploadError={error => showMessage('error', error)}
-                  onDelete={() => setSeasonWinterImage('')}
+                  onUploadError={error => actions.showMessage('error', error)}
+                  onDelete={() => actions.setSeasonImage('winter', '')}
                   enableDelete={true}
                 />
               </div>
@@ -575,12 +578,14 @@ export default function SiteSettingsPage() {
           </section>
 
           {/* 農場導覽內容設定 */}
-          <section className="bg-white rounded-xl shadow-sm border p-6">
+          <section className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <Leaf className="w-6 h-6 text-orange-600" />
-              <h2 className="text-xl font-bold text-gray-900">農場導覽內容管理</h2>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                農場導覽內容管理
+              </h2>
             </div>
-            <p className="text-sm text-gray-600 mb-6">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
               管理農場體驗頁面的設施、常見問題、參觀資訊等內容（JSON 格式）
             </p>
 
@@ -592,8 +597,8 @@ export default function SiteSettingsPage() {
                   設施陣列，每個設施包含 name, description, features 欄位
                 </p>
                 <textarea
-                  value={farmFacilities}
-                  onChange={e => setFarmFacilities(e.target.value)}
+                  value={state.farmFacilities}
+                  onChange={e => actions.setFarmContent('facilities', e.target.value)}
                   className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder='[{"name":"品茶亭","description":"傳統竹造涼亭","features":["茶藝設備","山景視野"]}]'
                 />
@@ -606,8 +611,8 @@ export default function SiteSettingsPage() {
                   FAQ 陣列，每個問題包含 question, answer, icon (clock/car/users/banknote) 欄位
                 </p>
                 <textarea
-                  value={farmFaqs}
-                  onChange={e => setFarmFaqs(e.target.value)}
+                  value={state.farmFaqs}
+                  onChange={e => actions.setFarmContent('faqs', e.target.value)}
                   className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder='[{"question":"農場的開放時間是？","answer":"週二至週日...","icon":"clock"}]'
                 />
@@ -620,8 +625,8 @@ export default function SiteSettingsPage() {
                   包含 address, opening_hours, transportation, contact 欄位的物件
                 </p>
                 <textarea
-                  value={farmVisitInfo}
-                  onChange={e => setFarmVisitInfo(e.target.value)}
+                  value={state.farmVisitInfo}
+                  onChange={e => actions.setFarmContent('visitInfo', e.target.value)}
                   className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder='{"address":"嘉義縣梅山鄉...","opening_hours":{...},"transportation":[...],"contact":{...}}'
                 />
@@ -634,8 +639,8 @@ export default function SiteSettingsPage() {
                   包含 important, recommended_items, special_services 三個陣列欄位的物件
                 </p>
                 <textarea
-                  value={farmVisitNotes}
-                  onChange={e => setFarmVisitNotes(e.target.value)}
+                  value={state.farmVisitNotes}
+                  onChange={e => actions.setFarmContent('visitNotes', e.target.value)}
                   className="w-full h-48 px-4 py-3 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder='{"important":[...],"recommended_items":[...],"special_services":[...]}'
                 />

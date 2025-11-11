@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Product } from '@/types/product'
-import { logger } from '@/lib/logger'
-import { AdminFilterState } from '../../AdminProductFilter'
 import { fetchAdminProducts } from '@/lib/api/admin-api'
+import { logger } from '@/lib/logger'
+import { Product } from '@/types/product'
+import { AdminFilterState } from '../../AdminProductFilter'
 
 interface UseProductsDataReturn {
   products: Product[]

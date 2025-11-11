@@ -28,7 +28,7 @@ interface TailwindGreenButtonProps {
  * - 平滑的過渡動畫
  * - 支援禁用狀態
  */
-export const TailwindGreenButton: React.FC<TailwindGreenButtonProps> = ({
+export function TailwindGreenButton({
   children,
   onClick,
   disabled = false,
@@ -36,7 +36,7 @@ export const TailwindGreenButton: React.FC<TailwindGreenButtonProps> = ({
   type = 'button',
   'aria-label': ariaLabel,
   ...props
-}) => {
+}: TailwindGreenButtonProps) {
   return (
     <button
       type={type}

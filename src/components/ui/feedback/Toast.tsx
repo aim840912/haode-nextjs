@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react'
+import { cn } from '@/lib/utils/cn'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info' | 'loading'
 
@@ -205,17 +206,17 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
     switch (toast.type) {
       case 'success':
-        return `${baseStyles} bg-green-50 border-l-4 border-green-500`
+        return cn(baseStyles, 'bg-green-50 border-l-4 border-green-500')
       case 'error':
-        return `${baseStyles} bg-red-50 border-l-4 border-red-500`
+        return cn(baseStyles, 'bg-red-50 border-l-4 border-red-500')
       case 'warning':
-        return `${baseStyles} bg-yellow-50 border-l-4 border-yellow-500`
+        return cn(baseStyles, 'bg-yellow-50 border-l-4 border-yellow-500')
       case 'info':
-        return `${baseStyles} bg-blue-50 border-l-4 border-blue-500`
+        return cn(baseStyles, 'bg-blue-50 border-l-4 border-blue-500')
       case 'loading':
-        return `${baseStyles} bg-amber-50 border-l-4 border-amber-500`
+        return cn(baseStyles, 'bg-amber-50 border-l-4 border-amber-500')
       default:
-        return `${baseStyles} bg-gray-50 border-l-4 border-gray-500`
+        return cn(baseStyles, 'bg-gray-50 border-l-4 border-gray-500')
     }
   }
 
@@ -259,7 +260,10 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
     <div className={getToastStyles()}>
       <div className="flex items-start space-x-3">
         <div
-          className={`flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full font-bold text-sm ${getIconStyles()}`}
+          className={cn(
+            'flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full font-bold text-sm',
+            getIconStyles()
+          )}
         >
           {getIcon()}
         </div>
@@ -285,11 +289,12 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
                 <button
                   key={index}
                   onClick={action.onClick}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                  className={cn(
+                    'px-3 py-1 text-xs font-medium rounded-md transition-colors',
                     action.variant === 'primary'
                       ? 'bg-amber-600 text-white hover:bg-amber-700'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
+                  )}
                 >
                   {action.label}
                 </button>

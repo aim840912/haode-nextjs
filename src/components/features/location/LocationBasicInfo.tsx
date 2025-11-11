@@ -1,4 +1,5 @@
 import { LocationFormData, FieldErrors } from '@/hooks/location/useLocationForm'
+import { cn } from '@/lib/utils/cn'
 
 interface LocationBasicInfoProps {
   formData: LocationFormData
@@ -27,11 +28,12 @@ export const LocationBasicInfo = ({
             onChange={onInputChange}
             onBlur={() => onFieldBlur('name')}
             required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+            className={cn(
+              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900',
               fieldErrors.name
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 focus:ring-amber-500'
-            }`}
+            )}
             placeholder="例：總店"
           />
           {fieldErrors.name && <p className="mt-1 text-sm text-red-600">{fieldErrors.name}</p>}
@@ -46,11 +48,12 @@ export const LocationBasicInfo = ({
             onChange={onInputChange}
             onBlur={() => onFieldBlur('title')}
             required
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+            className={cn(
+              'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900',
               fieldErrors.title
                 ? 'border-red-500 focus:ring-red-500'
                 : 'border-gray-300 focus:ring-amber-500'
-            }`}
+            )}
             placeholder="例：豪德製茶所總店"
           />
           {fieldErrors.title && <p className="mt-1 text-sm text-red-600">{fieldErrors.title}</p>}
@@ -66,11 +69,12 @@ export const LocationBasicInfo = ({
           onChange={onInputChange}
           onBlur={() => onFieldBlur('address')}
           required
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 ${
+          className={cn(
+            'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900',
             fieldErrors.address
               ? 'border-red-500 focus:ring-red-500'
               : 'border-gray-300 focus:ring-amber-500'
-          }`}
+          )}
           placeholder="完整地址"
         />
         {fieldErrors.address && <p className="mt-1 text-sm text-red-600">{fieldErrors.address}</p>}

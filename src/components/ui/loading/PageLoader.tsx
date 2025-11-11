@@ -1,8 +1,7 @@
 'use client'
-
-import { ComponentType } from 'react'
-import LoadingSpinner from './LoadingSpinner'
+import { cn } from '@/lib/utils/cn'
 import { LoadingSkeleton, ProductCardSkeleton, ListItemSkeleton } from './LoadingSkeleton'
+import { LoadingSpinner } from './LoadingSpinner'
 
 export interface PageLoaderProps {
   /**
@@ -50,7 +49,7 @@ export interface PageLoaderProps {
  * }
  * ```
  */
-export default function PageLoader({
+export function PageLoader({
   type = 'skeleton',
   message = '載入中...',
   showProgress = false,
@@ -58,7 +57,7 @@ export default function PageLoader({
   itemCount = 3,
   minHeight = 'min-h-screen',
 }: PageLoaderProps) {
-  const baseClasses = `${minHeight} bg-gray-50 flex items-center justify-center ${className}`
+  const baseClasses = cn(minHeight, 'bg-gray-50 flex items-center justify-center', className)
 
   const renderContent = () => {
     switch (type) {

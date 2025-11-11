@@ -1,11 +1,13 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import listPlugin from '@fullcalendar/list'
+import FullCalendar from '@fullcalendar/react'
 import { useScheduleCalendar, type ScheduleCalendarEvent } from '@/hooks/useScheduleCalendar'
 import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { formatDate } from '@/lib/utils/formatters'
 
 // 狀態過濾選項 - 客戶版本
 const statusOptions = [
@@ -21,7 +23,7 @@ interface ScheduleCalendarProps {
   height?: string | number
 }
 
-export default function ScheduleCalendar({
+export function ScheduleCalendar({
   className = '',
   defaultView = 'dayGridMonth',
   height = 'auto',
@@ -67,7 +69,7 @@ export default function ScheduleCalendar({
   const formatDateTime = (dateTimeStr: string) => {
     const date = new Date(dateTimeStr)
     return {
-      date: date.toLocaleDateString('zh-TW'),
+      date: formatDate(date, 'short'),
       time: date.toLocaleTimeString('zh-TW', {
         hour: '2-digit',
         minute: '2-digit',
@@ -77,7 +79,7 @@ export default function ScheduleCalendar({
   }
 
   return (
-    <div className={`schedule-calendar ${className}`}>
+    <div className={cn('schedule-calendar', className)}>
       {/* 工具列 */}
       <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         {/* 狀態過濾器 */}
@@ -86,11 +88,12 @@ export default function ScheduleCalendar({
             <button
               key={option.value}
               onClick={() => handleStatusFilterChange(option.value)}
-              className={`px-3 py-1.5 text-sm rounded-lg border transition-all duration-200 ${
+              className={cn(
+                'px-3 py-1.5 text-sm rounded-lg border transition-all duration-200',
                 statusFilter === option.value
                   ? 'border-transparent text-white shadow-md'
                   : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              }`}
+              )}
               style={{
                 backgroundColor: statusFilter === option.value ? option.color : 'transparent',
               }}

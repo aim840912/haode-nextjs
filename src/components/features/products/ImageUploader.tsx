@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { logger } from '@/lib/logger'
-import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
-import { imageUrlValidator } from '@/lib/utils/image-url-validator'
-import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import Image from 'next/image'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
-import SortableImageGallery from '@/components/ui/image/SortableImageGallery'
+import { SortableImageGallery } from '@/components/ui/image/SortableImageGallery'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { imageUrlValidator } from '@/lib/utils/image-url-validator'
+import { validateImageFile, compressImage, getImagePreviewUrl } from '@/lib/utils/image-utils'
 
 interface UploadedImage {
   id: string
@@ -70,7 +71,7 @@ interface ImageUploaderProps {
   onDeleteInitialImage?: (imageUrl: string) => void
 }
 
-export default function ImageUploader({
+export function ImageUploader({
   productId,
   onUploadSuccess,
   onUploadError,
@@ -94,8 +95,8 @@ export default function ImageUploader({
   const [uploadProgress, setUploadProgress] = useState(0)
   const [previewImages, setPreviewImages] = useState<UploadedImage[]>([])
   const [dragActive, setDragActive] = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>(
+  const [_errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [_uploadStatus, _setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>(
     'idle'
   )
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -147,7 +148,7 @@ export default function ImageUploader({
         } else {
           const errorMsg = `檔案「${file.name}」驗證失敗: ${validation.error || '未知錯誤'}`
           setErrorMessage(errorMsg)
-          setUploadStatus('error')
+          _setUploadStatus('error')
           onUploadError?.(errorMsg)
         }
       }
@@ -158,7 +159,7 @@ export default function ImageUploader({
       if (previewImages.length + validFiles.length > maxFiles) {
         const errorMsg = `檔案數量超過限制：最多只能上傳 ${maxFiles} 個檔案，目前已有 ${previewImages.length} 個，新增 ${validFiles.length} 個`
         setErrorMessage(errorMsg)
-        setUploadStatus('error')
+        _setUploadStatus('error')
         onUploadError?.(errorMsg)
         return
       }
@@ -166,7 +167,7 @@ export default function ImageUploader({
       setIsUploading(true)
       setUploadProgress(0)
       setErrorMessage(null)
-      setUploadStatus('uploading')
+      _setUploadStatus('uploading')
 
       try {
         const newImages: UploadedImage[] = []
@@ -397,7 +398,7 @@ export default function ImageUploader({
           }
         }
 
-        setUploadStatus('success')
+        _setUploadStatus('success')
         onUploadSuccess?.(newImages)
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : '未知錯誤'
@@ -422,7 +423,7 @@ export default function ImageUploader({
         })
 
         setErrorMessage(detailedError)
-        setUploadStatus('error')
+        _setUploadStatus('error')
         onUploadError?.(detailedError)
       } finally {
         setIsUploading(false)
@@ -576,12 +577,14 @@ export default function ImageUploader({
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-4', className)}>
       {/* 上傳區域 */}
       <div
-        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          dragActive ? 'border-amber-500 bg-amber-50' : 'border-gray-300 hover:border-gray-400'
-        } ${isUploading ? 'pointer-events-none opacity-50' : ''}`}
+        className={cn(
+          'relative border-2 border-dashed rounded-lg p-8 text-center transition-colors',
+          dragActive ? 'border-amber-500 bg-amber-50' : 'border-gray-300 hover:border-gray-400',
+          isUploading && 'pointer-events-none opacity-50'
+        )}
         onDragEnter={handleDragIn}
         onDragLeave={handleDragOut}
         onDragOver={handleDrag}

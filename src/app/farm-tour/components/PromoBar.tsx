@@ -24,7 +24,7 @@ export function PromoBar({ show, onClose }: PromoBarProps) {
             <PartyPopper className="w-5 h-5" />
             季節限定
           </span>
-          <span className="text-sm md:text-base">紅肉李採果體驗 7 折優惠中！僅剩 15 個名額</span>
+          <span className="text-sm md:text-base">紅肉李採果體驗 7 折優惠中！</span>
         </div>
         <button onClick={onClose} className="text-white hover:text-gray-200 text-xl">
           ×

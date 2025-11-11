@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { useInquiries } from '@/hooks/useInquiries'
+import { formatDateTime } from '@/lib/utils/formatters'
 import {
   InquiryStatus,
   InquiryType,
@@ -183,13 +184,7 @@ function InquiriesPage() {
                           詢問單 #{InquiryUtils.formatInquiryNumber(inquiry)}
                         </h3>
                         <p className="text-sm text-gray-600">
-                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatDateTime(inquiry.created_at)}
                         </p>
                       </div>
                     </div>

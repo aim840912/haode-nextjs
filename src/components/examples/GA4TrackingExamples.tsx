@@ -178,7 +178,7 @@ export function SocialShareExample() {
 }
 
 // 整合範例組件
-export default function GA4TrackingExamples() {
+export function GA4TrackingExamples() {
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
       <h3 className="text-lg font-medium text-gray-900 mb-4">🔧 GA4 追蹤使用範例</h3>

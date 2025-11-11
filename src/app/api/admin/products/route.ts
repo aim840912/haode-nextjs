@@ -1,19 +1,49 @@
+/**
+ * @api {get} /api/admin/products 取得所有產品（管理員）
+ * @apiName GetAllProductsAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ * @apiDescription 取得所有產品，包含未啟用的。需要 ADMIN_API_KEY
+ */
+
+/**
+ * @api {post} /api/admin/products 新增產品（管理員）
+ * @apiName CreateProductAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ */
+
+/**
+ * @api {put} /api/admin/products 更新產品（管理員）
+ * @apiName UpdateProductAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ */
+
+/**
+ * @api {delete} /api/admin/products 刪除產品（管理員）
+ * @apiName DeleteProductAdmin
+ * @apiGroup AdminProducts
+ * @apiPermission admin
+ * @apiQuery {String} id 產品 ID
+ */
+
 import { NextRequest } from 'next/server'
+import { success, created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { Product } from '@/types/product'
+import { ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
 import {
   checkAdminPermission,
   createAuthErrorResponse,
 } from '@/lib/middleware/admin-auth-middleware'
-import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
-import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
-import { adminProductService } from '@/services/core/product/productService'
-import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
+import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { AdminProductSchemas } from '@/lib/validation'
-import { ValidationError } from '@/lib/errors'
-import { success, created } from '@/lib/api-response'
+import { adminProductService } from '@/services/core/product/productService'
+import { SupabaseAuditLogService } from '@/services/infrastructure/auditLogService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { Product } from '@/types/product'
 
 // 資料轉換函數：將資料庫格式轉換為前端格式
 function transformFromDB(dbProduct: Record<string, unknown>): Product {

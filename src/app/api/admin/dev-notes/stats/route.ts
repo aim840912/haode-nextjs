@@ -1,7 +1,15 @@
+/**
+ * @api {get} /api/admin/dev-notes/stats 取得開發備忘錄統計
+ * @apiName GetDevNoteStats
+ * @apiGroup AdminDevNotes
+ * @apiPermission admin
+ * @apiDescription 取得開發備忘錄的統計資訊，包括總數、狀態分布、類型分布和優先級分布
+ */
+
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { DevNoteStats, DevNoteType, DevNoteStatus, DevNotePriority } from '@/types/devNote'
 
 interface NoteData {

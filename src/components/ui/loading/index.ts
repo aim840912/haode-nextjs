@@ -1,5 +1,5 @@
 export {
-  default as LoadingSpinner,
+  LoadingSpinner,
   LoadingOverlay,
   LoadingButton,
   LoadingCard,
@@ -9,3 +9,12 @@ export { LoadingSkeleton } from './LoadingSkeleton'
 export { LoadingError } from './LoadingError'
 export { LoadingManager } from './LoadingManager'
 export { ProgressiveLoading } from './ProgressiveLoading'
+export {
+  PageLoader,
+  ProductPageLoader,
+  MomentsPageLoader,
+  LocationsPageLoader,
+  FarmTourPageLoader,
+  AdminPageLoader,
+  DetailPageLoader,
+} from './PageLoader'

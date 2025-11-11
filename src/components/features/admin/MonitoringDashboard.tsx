@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { logger } from '@/lib/logger'
 import {
   ChartBarIcon,
   ClockIcon,
@@ -20,6 +19,7 @@ import {
   BeakerIcon,
   CpuChipIcon,
 } from '@heroicons/react/24/outline'
+import { logger } from '@/lib/logger'
 
 interface BusinessMetrics {
   userActions: {
@@ -68,7 +68,7 @@ interface PerformanceStats {
   requestsByHour: Array<{ hour: string; count: number }>
 }
 
-export default function MonitoringDashboard() {
+export function MonitoringDashboard() {
   const [metrics, setMetrics] = useState<BusinessMetrics>({
     userActions: {
       pageViews: 0,

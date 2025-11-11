@@ -3,8 +3,8 @@
  * 處理相對路徑轉完整 URL，避免資料庫 VARCHAR(10) 限制
  */
 
-import { imageUrlValidator } from '@/lib/utils/image-url-validator'
 import { logger } from '@/lib/logger'
+import {} from '@/lib/utils/image-url-validator'
 
 /**
  * 將相對圖片路徑轉換為完整的 Supabase Storage URL
@@ -168,15 +168,3 @@ export function generateImageSrcSet(baseUrl: string, sizes: number[] = [400, 800
     .map(width => `${addImageUrlParams(fullUrl, { width: width.toString() })} ${width}w`)
     .join(', ')
 }
-
-// 預設導出常用函數
-const imageUrlUtils = {
-  getFullImageUrl,
-  getRelativeImagePath,
-  extractStoragePathFromUrl,
-  isValidImageUrl,
-  addImageUrlParams,
-  generateImageSrcSet,
-}
-
-export default imageUrlUtils

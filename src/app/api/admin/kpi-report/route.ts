@@ -4,11 +4,44 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
 import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
 
+/**
+ * @api {GET} /api/admin/kpi-report 取得 KPI 監控報告
+ * @apiName GetKPIReport
+ * @apiGroup Admin
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 生成關鍵性能指標（KPI）監控報告。
+ * 包含系統健康分數、效能指標、警報資訊等。
+ *
+ * @apiPermission admin
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data KPI 報告資料
+ * @apiSuccess {Object[]} data.measurements 指標測量資料
+ * @apiSuccess {Object[]} data.alerts 警報列表
+ * @apiSuccess {Number} data.overallHealthScore 整體健康分數
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "measurements": [...],
+ *     "alerts": [],
+ *     "overallHealthScore": 95
+ *   },
+ *   "message": "KPI 監控報告取得成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 需要管理員權限
+ */
 async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {
   apiLogger.info('管理員查詢 KPI 報告', {
     metadata: {

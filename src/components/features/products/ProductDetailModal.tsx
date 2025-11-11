@@ -1,19 +1,22 @@
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
+import { X, Plus, Minus, ShoppingCart, Share2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
-import { X, Plus, Minus, ShoppingCart, Share2, Zap } from 'lucide-react'
+import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
 import { useAuth } from '@/contexts/AuthContext'
+import { useModalAnimation, useEscapeKey, useFocusTrap } from '@/hooks/useModalAnimation'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
-import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
-import { useModalAnimation, useEscapeKey, useFocusTrap } from '@/hooks/useModalAnimation'
-import { cn } from '@/lib/utils'
-import { logger } from '@/lib/logger'
 
 // 動態載入圖片畫廊
 const ProductImageGallery = dynamic(
-  () => import('@/components/features/products/ProductImageGallery'),
+  () =>
+    import('@/components/features/products/ProductImageGallery').then(
+      mod => mod.ProductImageGallery
+    ),
   {
     loading: () => <div className="h-64 bg-gray-100 rounded-lg animate-pulse"></div>,
     ssr: false,
@@ -199,13 +202,6 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
               {/* 產品圖片畫廊 - 左側 現代簡潔設計 */}
               <div className="relative bg-gray-50 md:rounded-l-2xl overflow-hidden border-r border-gray-100">
                 <div className="p-6 md:p-8">
-                  {/* 頂部分類標籤 */}
-                  <div>
-                    <span className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
-                      {product.category}
-                    </span>
-                  </div>
-
                   {/* 圖片容器 - 現代簡潔設計 */}
                   <div className="mb-6">
                     <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200">
@@ -221,7 +217,7 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
 
                   {/* 底部區域 - 縮圖預覽 */}
                   <div>
-                    {galleryProduct.productImages && galleryProduct.productImages.length > 1 ? (
+                    {galleryProduct.productImages && galleryProduct.productImages.length > 1 && (
                       // 多張圖片：顯示縮圖預覽
                       <div className="flex space-x-3 overflow-x-auto pb-2 justify-center">
                         {galleryProduct.productImages.map((image, index) => (
@@ -234,14 +230,14 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                                 handleImageChange(index)
                               }
                             }}
-                            className={`relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden
-                              transition-all duration-200 hover:scale-105
-                              focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
-                              ${
-                                currentImageIndex === index
-                                  ? 'ring-2 ring-gray-400 shadow-md'
-                                  : 'ring-1 ring-gray-300 hover:ring-gray-400'
-                              }`}
+                            className={cn(
+                              'relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden',
+                              'transition-all duration-200 hover:scale-105',
+                              'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400',
+                              currentImageIndex === index
+                                ? 'ring-2 ring-gray-400 shadow-md'
+                                : 'ring-1 ring-gray-300 hover:ring-gray-400'
+                            )}
                             aria-label={`切換到圖片 ${index + 1}，共 ${galleryProduct.productImages.length} 張`}
                             aria-pressed={currentImageIndex === index}
                             tabIndex={0}
@@ -255,13 +251,6 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
                             />
                           </button>
                         ))}
-                      </div>
-                    ) : (
-                      // 單張或無圖片：顯示產地標籤
-                      <div className="text-center">
-                        <span className="inline-flex items-center px-3 py-1 bg-green-50 text-green-700 text-sm font-medium rounded-full border border-green-200">
-                          產地直送 • 新鮮保證
-                        </span>
                       </div>
                     )}
                   </div>
@@ -297,37 +286,6 @@ export const ProductDetailModal = React.memo<ProductDetailModalProps>(
 
                 {/* 產品基本資訊 */}
                 <div className="space-y-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                      <Zap className="w-3 h-3 mr-1" />
-                      熱門商品
-                    </span>
-                    {(() => {
-                      const availableStock = product.availableStock ?? product.inventory
-                      const reservedStock = product.reservedStock ?? 0
-
-                      if (availableStock > 0) {
-                        return (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            現貨 ({availableStock} 件可購買)
-                          </span>
-                        )
-                      } else if (product.inventory > 0 && reservedStock > 0) {
-                        return (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                            庫存已保留 ({reservedStock} 件)
-                          </span>
-                        )
-                      } else {
-                        return (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                            缺貨中
-                          </span>
-                        )
-                      }
-                    })()}
-                  </div>
-
                   <h2
                     id="modal-title"
                     className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight"

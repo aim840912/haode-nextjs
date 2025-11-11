@@ -12,9 +12,8 @@
  * 未來可擴展：Sentry, LogRocket, Rollbar 等
  */
 
-import { LogContext } from './logger'
-import { logger } from './logger'
 import { Transaction } from '@/types/api.types'
+import { LogContext, logger } from './logger'
 
 /**
  * 錯誤追蹤提供者介面
@@ -297,7 +296,7 @@ export function finishTransaction(transaction: Transaction | null): void {
 /**
  * 清空錯誤追蹤佇列（在應用關閉前）
  */
-export async function flushErrorTracking(timeout: number = 5000): Promise<boolean> {
+export async function flushErrorTracking(_timeout: number = 5000): Promise<boolean> {
   try {
     // 內建錯誤追蹤不需要特別的 flush 操作
     // 未來可以在這裡添加其他提供者的 flush 邏輯

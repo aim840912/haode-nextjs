@@ -1,12 +1,12 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { Product } from '@/types/product'
+import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { useToast } from '@/components/ui/feedback/Toast'
-import { logger } from '@/lib/logger'
 import { deleteProduct, updateProduct } from '@/lib/api/products-api'
+import { logger } from '@/lib/logger'
+import { Product } from '@/types/product'
 
 interface UseProductActionsProps {
   products: Product[]

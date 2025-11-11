@@ -1,9 +1,75 @@
+/**
+ * @api {POST} /api/auth/update-password 更新使用者密碼
+ * @apiName UpdatePassword
+ * @apiGroup Authentication
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 更新已登入使用者的密碼。
+ * 成功更新後會自動登出使用者，要求使用新密碼重新登入以確保安全。
+ * 實施基本的密碼強度檢查（長度、常見弱密碼等）。
+ *
+ * @apiPermission user
+ *
+ * @apiBody {String} password 新密碼（必填，6-128 個字元）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 回應資料
+ * @apiSuccess {String} data.message 操作訊息
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "message": "密碼更新成功，請重新登入"
+ *   },
+ *   "message": "密碼已成功更新，為了您的安全，請使用新密碼重新登入"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 請求資料格式錯誤或驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或會話過期
+ *
+ * @apiErrorExample {json} 錯誤回應（密碼為空）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "密碼不能為空",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（密碼過短）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "密碼至少需要 6 個字元",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（弱密碼）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "請選擇更安全的密碼",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（相同密碼）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "新密碼不能與目前密碼相同",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ */
+
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { ValidationError } from '@/lib/errors'
 import { supabase } from '@/lib/database/supabase-auth'
+import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 
 async function handlePOST(request: NextRequest, user: User) {
   apiLogger.info('開始處理密碼更新請求', {

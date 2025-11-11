@@ -1,14 +1,15 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { Product } from '@/types/product'
-import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
-import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
-import { SafeImage } from '@/components/ui/image/OptimizedImage'
-import { logger } from '@/lib/logger'
 import { Award, Sparkles, TrendingUp, Leaf, ShoppingBag } from 'lucide-react'
+import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
+import { SafeImage } from '@/components/ui/image/OptimizedImage'
+import { ProductCardSkeleton } from '@/components/ui/loading/LoadingSkeleton'
 import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
+import { Product } from '@/types/product'
 
 function ProductsSection() {
   const [products, setProducts] = useState<Product[]>([])
@@ -90,26 +91,26 @@ function ProductsSection() {
         {
           icon: <Leaf className="w-3 h-3" />,
           text: '有機認證',
-          color: 'bg-green-100 text-green-700',
+          color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
         },
         {
           icon: <ShoppingBag className="w-3 h-3" />,
           text: '新鮮直送',
-          color: 'bg-blue-100 text-blue-700',
+          color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
         },
       ],
       [
         {
           icon: <Leaf className="w-3 h-3" />,
           text: '當季精選',
-          color: 'bg-amber-100 text-amber-700',
+          color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
         },
       ],
       [
         {
           icon: <Leaf className="w-3 h-3" />,
           text: '產地直送',
-          color: 'bg-purple-100 text-purple-700',
+          color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
         },
       ],
     ]
@@ -126,7 +127,7 @@ function ProductsSection() {
       <section
         id="products"
         ref={sectionRef}
-        className="py-20 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white relative overflow-hidden"
+        className="py-20 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white dark:from-slate-900 dark:via-amber-900/10 dark:to-slate-900 relative overflow-hidden"
       >
         <div className="absolute top-20 right-10 w-72 h-72 bg-amber-200/20 rounded-full blur-3xl animate-float"></div>
         <div
@@ -134,11 +135,13 @@ function ProductsSection() {
           style={{ animationDelay: '1.5s' }}
         ></div>
         <div className="max-w-7xl mx-auto relative z-10">
-          <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 mb-4 tracking-wider">
+          <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 dark:text-amber-300 mb-4 tracking-wider">
             經典產品
           </h2>
-          <p className="text-center text-gray-600 text-lg mb-16">精選來自梅山的優質農產品</p>
-          <div className="grid md:grid-cols-3 gap-8">
+          <p className="text-center text-gray-600 dark:text-gray-300 text-lg mb-16">
+            精選來自梅山的優質農產品
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {Array.from({ length: 3 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
@@ -153,19 +156,19 @@ function ProductsSection() {
       <section
         id="products"
         ref={sectionRef}
-        className="py-20 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white"
+        className="py-20 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white dark:from-slate-900 dark:via-amber-900/10 dark:to-slate-900"
       >
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 mb-16 tracking-wider">
+          <h2 className="text-5xl md:text-6xl font-bold text-center text-amber-900 dark:text-amber-300 mb-16 tracking-wider">
             經典產品
           </h2>
           <div className="text-center">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-              <div className="text-red-600 mb-4">載入產品時發生錯誤</div>
-              <p className="text-sm text-red-700 mb-4">{error}</p>
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg p-6 max-w-md mx-auto">
+              <div className="text-red-600 dark:text-red-400 mb-4">載入產品時發生錯誤</div>
+              <p className="text-sm text-red-700 dark:text-red-300 mb-4">{error}</p>
               <button
                 onClick={handleRetry}
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 dark:hover:bg-red-600 transition-colors"
               >
                 重新載入
               </button>
@@ -180,7 +183,7 @@ function ProductsSection() {
     <section
       id="products"
       ref={sectionRef}
-      className="py-24 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white relative overflow-hidden"
+      className="py-24 px-6 bg-gradient-to-b from-white via-amber-50/30 to-white dark:from-slate-900 dark:via-amber-900/10 dark:to-slate-900 relative overflow-hidden"
     >
       <div className="absolute top-20 right-10 w-72 h-72 bg-amber-200/20 rounded-full blur-3xl animate-float"></div>
       <div
@@ -189,13 +192,13 @@ function ProductsSection() {
       ></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className={`text-center mb-16 ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
-          <h2 className="text-5xl md:text-6xl font-bold text-amber-900 mb-4 tracking-wider">
+        <div className={cn('text-center mb-16', isVisible ? 'animate-fade-in' : 'opacity-0')}>
+          <h2 className="text-5xl md:text-6xl font-bold text-amber-900 dark:text-amber-300 mb-4 tracking-wider">
             經典產品
           </h2>
-          <p className="text-gray-600 text-lg mb-2">精選來自梅山的優質農產品</p>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-            <Leaf className="w-4 h-4 text-green-600" />
+          <p className="text-gray-600 dark:text-gray-300 text-lg mb-2">精選來自梅山的優質農產品</p>
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <Leaf className="w-4 h-4 text-green-600 dark:text-green-400" />
             <span>100% 有機無毒栽培</span>
           </div>
         </div>
@@ -203,9 +206,10 @@ function ProductsSection() {
         {products.length > 0 ? (
           <>
             <div
-              className={`grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12 ${
+              className={cn(
+                'grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-12',
                 isVisible ? 'animate-slide-up animation-delay-300' : 'opacity-0'
-              }`}
+              )}
             >
               {products.map((product, index) => {
                 const badge = getProductBadge(index, product)
@@ -216,12 +220,14 @@ function ProductsSection() {
                   <Link
                     key={product.id}
                     href={`/products?productId=${product.id}`}
-                    className={`group bg-white rounded-2xl overflow-hidden product-card-enhanced gradient-border shadow-lg hover:shadow-2xl flex flex-col cursor-pointer ${animationClass} ${
-                      index === 0 ? 'md:col-span-2 lg:col-span-1' : ''
-                    }`}
+                    className={cn(
+                      'group bg-white dark:bg-slate-800 rounded-2xl overflow-hidden product-card-enhanced gradient-border shadow-lg hover:shadow-2xl dark:shadow-slate-700/50 flex flex-col cursor-pointer',
+                      animationClass,
+                      index === 0 && 'md:col-span-2 lg:col-span-1'
+                    )}
                   >
                     <div className="relative product-image-wrapper">
-                      <div className={`${index === 0 ? 'h-[320px]' : 'h-[280px]'} relative`}>
+                      <div className="relative aspect-[3/4]">
                         <SafeImage
                           src={product.productImages?.[0]?.storage_url || '/images/placeholder.jpg'}
                           alt={product.name || '產品圖片'}
@@ -235,7 +241,11 @@ function ProductsSection() {
 
                       {badge && (
                         <div
-                          className={`absolute top-4 left-4 ${badge.bgColor} text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5 ${badge.animation}`}
+                          className={cn(
+                            'absolute top-4 left-4 text-white px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg flex items-center gap-1.5',
+                            badge.bgColor,
+                            badge.animation
+                          )}
                         >
                           {badge.icon}
                           <span>{badge.text}</span>
@@ -251,17 +261,17 @@ function ProductsSection() {
 
                     <div className="p-6 flex flex-col flex-grow">
                       <div className="mb-3">
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-amber-900 transition-colors line-clamp-2">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2 group-hover:text-amber-900 dark:group-hover:text-amber-300 transition-colors line-clamp-2">
                           {product.name}
                         </h3>
                         {product.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2 mb-3 description-fade">
+                          <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-3 description-fade">
                             {product.description}
                           </p>
                         )}
                         <div className="flex flex-wrap gap-2">
                           {features.map((feature, idx) => (
-                            <span key={idx} className={`feature-icon-badge ${feature.color}`}>
+                            <span key={idx} className={cn('feature-icon-badge', feature.color)}>
                               {feature.icon}
                               <span>{feature.text}</span>
                             </span>
@@ -271,14 +281,16 @@ function ProductsSection() {
 
                       <div className="mt-auto">
                         <div className="flex items-baseline gap-2 mb-4">
-                          <span className="text-3xl font-bold text-amber-900 price-emphasis">
+                          <span className="text-3xl font-bold text-amber-900 dark:text-amber-300 price-emphasis">
                             NT$ {product.price}
                           </span>
                           {product.priceUnit && (
-                            <span className="text-sm text-gray-500">/ {product.priceUnit}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">
+                              / {product.priceUnit}
+                            </span>
                           )}
                           {product.originalPrice && product.originalPrice > product.price && (
-                            <span className="text-sm text-gray-400 line-through ml-2">
+                            <span className="text-sm text-gray-400 dark:text-gray-500 line-through ml-2">
                               NT$ {product.originalPrice}
                             </span>
                           )}
@@ -308,7 +320,10 @@ function ProductsSection() {
             </div>
 
             <div
-              className={`text-center ${isVisible ? 'animate-scale-in animation-delay-450' : 'opacity-0'}`}
+              className={cn(
+                'text-center',
+                isVisible ? 'animate-scale-in animation-delay-450' : 'opacity-0'
+              )}
             >
               <Link
                 href="/products"
@@ -333,11 +348,11 @@ function ProductsSection() {
             </div>
           </>
         ) : (
-          <div className="text-center text-gray-600 py-12">
-            <div className="bg-gray-50 rounded-2xl p-12 max-w-md mx-auto">
-              <ShoppingBag className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <div className="text-center text-gray-600 dark:text-gray-300 py-12">
+            <div className="bg-gray-50 dark:bg-slate-800 rounded-2xl p-12 max-w-md mx-auto">
+              <ShoppingBag className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
               <p className="text-lg mb-2">目前沒有上架的產品</p>
-              <p className="text-sm text-gray-500">請稍後再來查看</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">請稍後再來查看</p>
             </div>
           </div>
         )}
@@ -346,7 +361,7 @@ function ProductsSection() {
   )
 }
 
-export default function ProductsSectionWithErrorBoundary() {
+export function ProductsSectionWithErrorBoundary() {
   return (
     <ComponentErrorBoundary>
       <ProductsSection />

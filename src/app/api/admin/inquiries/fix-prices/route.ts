@@ -3,11 +3,19 @@
  * 僅供管理員使用的一次性修復工具
  */
 
+/**
+ * @api {post} /api/admin/inquiries/fix-prices 修復詢價單價格
+ * @apiName FixInquiryPrices
+ * @apiGroup AdminInquiries
+ * @apiPermission admin
+ * @apiDescription 批量修復 unit_price 為 null 的詢價項目，從產品表取得當前價格並更新
+ */
+
 import { NextRequest } from 'next/server'
-import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
-import { dbLogger } from '@/lib/logger'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
+import { dbLogger } from '@/lib/logger'
+import { withAdminAndError } from '@/lib/middleware/api-middleware'
 
 interface FixResult {
   total_items: number

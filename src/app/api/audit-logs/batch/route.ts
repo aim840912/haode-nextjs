@@ -3,17 +3,83 @@
  * 處理審計日誌的批量刪除和清理操作
  */
 
+/**
+ * @api {post} /api/audit-logs/batch 批量操作審計日誌
+ * @apiName BatchAuditLogs
+ * @apiGroup AuditLog
+ * @apiPermission admin
+ *
+ * @apiDescription 批量刪除或清理審計日誌。支援按 ID、條件篩選或清理舊日誌。僅限管理員使用
+ *
+ * @apiBody {String} operation 操作類型 (delete_by_ids/delete_by_filters/cleanup_old)
+ * @apiBody {String[]} [ids] 日誌 ID 陣列（當 operation=delete_by_ids 時必填，最多 100 筆）
+ * @apiBody {Object} [filters] 篩選條件（當 operation=delete_by_filters 或 cleanup_old 時使用）
+ * @apiBody {String} [filters.start_date] 開始日期（ISO 8601 格式）
+ * @apiBody {String} [filters.end_date] 結束日期（ISO 8601 格式）
+ * @apiBody {String} [filters.user_email] 使用者 Email
+ * @apiBody {String} [filters.action] 操作類型
+ * @apiBody {String} [filters.resource_type] 資源類型
+ * @apiBody {Number} [filters.days=365] 保留天數（當 operation=cleanup_old 時）
+ *
+ * @apiSuccess {String} message 回應訊息
+ * @apiSuccess {Object} data 操作結果
+ * @apiSuccess {Number} data.deleted_count 刪除筆數
+ * @apiSuccess {Number} [data.days_kept] 保留天數（cleanup_old 操作）
+ *
+ * @apiSuccessExample {json} 按 ID 刪除成功:
+ * {
+ *   "success": true,
+ *   "message": "成功刪除 5 筆審計日誌",
+ *   "data": {
+ *     "deleted_count": 5
+ *   }
+ * }
+ *
+ * @apiSuccessExample {json} 清理舊日誌成功:
+ * {
+ *   "success": true,
+ *   "message": "成功清理 120 筆舊審計日誌（保留最近 365 天）",
+ *   "data": {
+ *     "deleted_count": 120,
+ *     "days_kept": 365
+ *   }
+ * }
+ *
+ * @apiError (400) ValidationError 參數驗證失敗
+ * @apiError (403) AuthorizationError 權限不足，僅限管理員
+ *
+ * @apiErrorExample {json} 參數錯誤:
+ * {
+ *   "success": false,
+ *   "message": "delete_by_ids 操作需要提供 ids 陣列",
+ *   "error": {
+ *     "code": "VALIDATION_ERROR"
+ *   }
+ * }
+ *
+ * @apiErrorExample {json} 筆數限制:
+ * {
+ *   "success": false,
+ *   "message": "單次最多只能刪除 100 筆記錄",
+ *   "error": {
+ *     "code": "VALIDATION_ERROR"
+ *   }
+ * }
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
+import { success, error as errorResponse } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { auditLogService } from '@/services/infrastructure/auditLogService'
+import { ValidationError, AuthorizationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
-import { success, error as errorResponse } from '@/lib/api-response'
-import { ValidationError, AuthorizationError } from '@/lib/errors'
-import type { Database } from '@/types/database'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
-import type { SupabaseClient as RealSupabaseClient } from '@supabase/supabase-js'
+import { auditLogService } from '@/services/infrastructure/auditLogService'
 import type { AuditAction, ResourceType } from '@/types/audit'
+import type { Database } from '@/types/database'
+import type {
+  User as SupabaseUser,
+  SupabaseClient as RealSupabaseClient,
+} from '@supabase/supabase-js'
 
 // 型別定義
 type ProfileRow = Database['public']['Tables']['profiles']['Row']

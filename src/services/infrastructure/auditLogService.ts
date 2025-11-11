@@ -475,6 +475,3 @@ export class AuditLogger {
     })
   }
 }
-
-// 匯出預設審計日誌服務
-export default auditLogService

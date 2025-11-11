@@ -11,9 +11,8 @@
  */
 
 import { NextRequest } from 'next/server'
-import { getCurrentUser } from '@/lib/database/supabase-server'
-import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { error } from '@/lib/api-response'
+import { getCurrentUser, createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from './error-handler'
 

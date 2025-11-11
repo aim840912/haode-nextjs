@@ -259,5 +259,3 @@ export const imageUrlValidator = {
   adaptForEnvironment: adaptUrlForEnvironment,
   clean: cleanImageUrl,
 }
-
-export default imageUrlValidator

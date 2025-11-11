@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils/cn'
 
 interface WeekdaySelectorProps {
   /** 已選擇的星期陣列，例如：["週一", "週三"] */
@@ -26,7 +27,7 @@ const SPECIAL_OPTIONS = {
  * 提供多選星期的介面，支援特殊選項（全年無休、不定期公休）
  * 具有互斥邏輯：選擇「全年無休」會清除其他選項
  */
-export default function WeekdaySelector({ value, onChange, className = '' }: WeekdaySelectorProps) {
+export function WeekdaySelector({ value, onChange, className = '' }: WeekdaySelectorProps) {
   const [selectedDays, setSelectedDays] = useState<string[]>(value)
 
   // 同步外部 value 變更
@@ -65,10 +66,16 @@ export default function WeekdaySelector({ value, onChange, className = '' }: Wee
       'px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2'
 
     if (isSelected(day)) {
-      return `${baseClass} bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500 shadow-md`
+      return cn(
+        baseClass,
+        'bg-amber-500 text-white hover:bg-amber-600 focus:ring-amber-500 shadow-md'
+      )
     }
 
-    return `${baseClass} bg-white border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 focus:ring-amber-500`
+    return cn(
+      baseClass,
+      'bg-white border-2 border-gray-300 text-gray-700 hover:border-amber-500 hover:text-amber-600 focus:ring-amber-500'
+    )
   }
 
   // 格式化顯示文字
@@ -141,7 +148,7 @@ export default function WeekdaySelector({ value, onChange, className = '' }: Wee
       {/* 已選擇提示 */}
       <div className="mt-3 text-sm text-gray-600">
         <span className="font-medium">已選擇：</span>
-        <span className={selectedDays.length > 0 ? 'text-amber-700' : 'text-gray-500'}>
+        <span className={cn(selectedDays.length > 0 ? 'text-amber-700' : 'text-gray-500')}>
           {getDisplayText()}
         </span>
       </div>

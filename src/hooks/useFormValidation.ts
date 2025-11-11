@@ -69,7 +69,7 @@ const debounceTimeout: { [key: string]: NodeJS.Timeout } = {}
  * - 觸摸狀態追蹤
  * - 完整的錯誤狀態管理
  */
-export function useFormValidation<T extends Record<string, any>>({
+export function useFormValidation<T extends Record<string, unknown>>({
   initialValues,
   validationRules,
   mode = 'onBlur',

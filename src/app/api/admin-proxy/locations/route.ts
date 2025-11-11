@@ -1,7 +1,36 @@
+/**
+ * @api {get} /api/admin-proxy/locations 代理：取得所有地點
+ * @apiName ProxyGetLocations
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ */
+
+/**
+ * @api {post} /api/admin-proxy/locations 代理：新增地點
+ * @apiName ProxyCreateLocation
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ */
+
+/**
+ * @api {put} /api/admin-proxy/locations 代理：更新地點
+ * @apiName ProxyUpdateLocation
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ */
+
+/**
+ * @api {delete} /api/admin-proxy/locations 代理：刪除地點
+ * @apiName ProxyDeleteLocation
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ * @apiQuery {String} id 地點 ID
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, ValidationError } from '@/lib/errors'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * Admin Proxy API for Locations

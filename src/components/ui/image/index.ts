@@ -1,3 +1,8 @@
-export { default as OptimizedImage, SafeImage } from './OptimizedImage'
-export { default as ImageDebugger } from './ImageDebugger'
-export { default as SortableImageGallery } from './SortableImageGallery'
+export {
+  OptimizedImage,
+  SafeImage,
+  SimpleImage,
+  ResponsiveImage,
+  AvatarImage,
+} from './OptimizedImage'
+export { SortableImageGallery } from './SortableImageGallery'

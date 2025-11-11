@@ -1,18 +1,88 @@
 /**
- * 農場參觀預約詢問 API 路由
- * 處理農場參觀預約詢問的建立
+ * @api {POST} /api/farm-tour/inquiry 建立農場體驗預約詢問
+ * @apiName CreateFarmTourInquiry
+ * @apiGroup FarmTour
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 建立新的農場體驗活動預約詢問單。
+ * 需要使用者登入，並實施速率限制（15 分鐘內最多 5 次請求）。
+ * 成功建立後會自動記錄審計日誌。
+ *
+ * @apiPermission user
+ *
+ * @apiBody {String} customer_name 客戶姓名（必填）
+ * @apiBody {String} customer_email 客戶電子郵件（必填）
+ * @apiBody {String} [customer_phone] 客戶電話
+ * @apiBody {String} activity_title 活動標題（必填）
+ * @apiBody {String} visit_date 參觀日期（ISO 8601 格式，必填）
+ * @apiBody {String} visitor_count 參觀人數（必填）
+ * @apiBody {String} [notes] 備註說明
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 建立的詢問單資料
+ * @apiSuccess {String} data.id 詢問單 ID
+ * @apiSuccess {String} data.customer_name 客戶姓名
+ * @apiSuccess {String} data.customer_email 客戶電子郵件
+ * @apiSuccess {String} data.inquiry_type 詢問類型（固定為 farm_tour）
+ * @apiSuccess {String} data.activity_title 活動標題
+ * @apiSuccess {String} data.visit_date 參觀日期
+ * @apiSuccess {String} data.visitor_count 參觀人數
+ * @apiSuccess {String} data.status 詢問狀態（初始為 pending）
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 201 Created
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "customer_name": "王小明",
+ *     "customer_email": "wang@example.com",
+ *     "customer_phone": "0912345678",
+ *     "inquiry_type": "farm_tour",
+ *     "activity_title": "草莓採摘體驗",
+ *     "visit_date": "2025-01-15T10:00:00Z",
+ *     "visitor_count": "10",
+ *     "notes": "希望安排上午場次",
+ *     "status": "pending",
+ *     "created_at": "2025-01-07T00:00:00Z"
+ *   },
+ *   "message": "農場參觀預約詢問已成功提交，我們將盡快與您聯繫"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 請求資料格式錯誤或驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或會話過期
+ * @apiError (錯誤 4xx) {Object} RateLimitError 超過速率限制（15 分鐘內最多 5 次）
+ * @apiError (錯誤 5xx) {Object} DatabaseError 資料庫操作失敗
+ *
+ * @apiErrorExample {json} 錯誤回應（驗證失敗）:
+ * HTTP/1.1 400 Bad Request
+ * {
+ *   "success": false,
+ *   "error": "資料驗證失敗: customer_name: 客戶姓名為必填",
+ *   "code": "VALIDATION_ERROR"
+ * }
+ *
+ * @apiErrorExample {json} 錯誤回應（速率限制）:
+ * HTTP/1.1 429 Too Many Requests
+ * {
+ *   "success": false,
+ *   "error": "農場參觀預約提交過於頻繁，請等待 15 分鐘後重試",
+ *   "code": "RATE_LIMIT_EXCEEDED"
+ * }
  */
 
 import { NextRequest } from 'next/server'
+import { created } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
 import { inquiryService } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
-import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
-import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
-import { created } from '@/lib/api-response'
-import { apiLogger } from '@/lib/logger'
 
 // 農場參觀預約詢問的資料介面
 interface FarmTourInquiryRequest {

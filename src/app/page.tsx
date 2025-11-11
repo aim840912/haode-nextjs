@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { FarmStructuredData } from '@/components/features/seo/StructuredData'
-import ProductsSection from '@/components/features/products/ProductsSection'
 import {
   Sprout,
   ShieldCheck,
@@ -17,6 +15,8 @@ import {
   Phone,
   PartyPopper,
 } from 'lucide-react'
+import { ProductsSectionWithErrorBoundary as ProductsSection } from '@/components/features/products/ProductsSection'
+import { FarmStructuredData } from '@/components/features/seo/StructuredData'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
 import { SETTING_KEYS } from '@/types/siteSettings'
 
@@ -194,7 +194,7 @@ export default function Home() {
         <section
           id="features"
           data-animate
-          className="min-h-screen flex items-center py-20 px-6 bg-gradient-to-b from-white via-green-50/50 to-white relative overflow-hidden"
+          className="min-h-screen flex items-center py-20 px-6 bg-gradient-to-b from-white via-green-50/50 to-white dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 relative overflow-hidden"
         >
           {/* 背景裝飾元素 */}
           <div className="absolute inset-0 pointer-events-none">
@@ -207,14 +207,14 @@ export default function Home() {
 
           <div className="max-w-7xl mx-auto relative z-10">
             <h2
-              className={`text-5xl md:text-6xl font-bold text-center text-green-900 mb-6 tracking-wider ${
+              className={`text-5xl md:text-6xl font-bold text-center text-green-900 dark:text-green-300 mb-6 tracking-wider ${
                 visibleSections.has('features') ? 'animate-fade-in' : 'opacity-0'
               }`}
             >
               農場特色
             </h2>
             <p
-              className={`text-center text-gray-600 text-lg mb-16 max-w-2xl mx-auto ${
+              className={`text-center text-gray-600 dark:text-gray-300 text-lg mb-16 max-w-2xl mx-auto ${
                 visibleSections.has('features')
                   ? 'animate-fade-in animation-delay-150'
                   : 'opacity-0'
@@ -237,32 +237,32 @@ export default function Home() {
                   title: '自然農法',
                   desc: '有機無毒栽培',
                   color: 'from-green-400 to-emerald-500',
-                  bgColor: 'bg-green-50',
-                  iconColor: 'text-green-600',
+                  bgColor: 'bg-green-50 dark:bg-green-900/30',
+                  iconColor: 'text-green-600 dark:text-green-400',
                 },
                 {
                   Icon: ShieldCheck,
                   title: '品質認證',
                   desc: '嚴格品質把關',
                   color: 'from-blue-400 to-cyan-500',
-                  bgColor: 'bg-blue-50',
-                  iconColor: 'text-blue-600',
+                  bgColor: 'bg-blue-50 dark:bg-blue-900/30',
+                  iconColor: 'text-blue-600 dark:text-blue-400',
                 },
                 {
                   Icon: Users,
                   title: '農場體驗',
                   desc: '四季活動豐富',
                   color: 'from-green-400 to-emerald-500',
-                  bgColor: 'bg-green-50',
-                  iconColor: 'text-green-600',
+                  bgColor: 'bg-green-50 dark:bg-green-900/30',
+                  iconColor: 'text-green-600 dark:text-green-400',
                 },
                 {
                   Icon: Recycle,
                   title: '永續經營',
                   desc: '生態平衡共生',
                   color: 'from-purple-400 to-pink-500',
-                  bgColor: 'bg-purple-50',
-                  iconColor: 'text-purple-600',
+                  bgColor: 'bg-purple-50 dark:bg-purple-900/30',
+                  iconColor: 'text-purple-600 dark:text-purple-400',
                 },
               ].map((feature, index) => (
                 <div
@@ -285,8 +285,10 @@ export default function Home() {
                           strokeWidth={1.5}
                         />
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-800 mb-2">{feature.title}</h3>
-                      <p className="text-gray-600">{feature.desc}</p>
+                      <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300">{feature.desc}</p>
                     </div>
                     {/* 背面 */}
                     <div
@@ -314,7 +316,9 @@ export default function Home() {
                   : 'opacity-0'
               }`}
             >
-              <h3 className="text-3xl font-bold text-center text-green-900 mb-8">四季體驗</h3>
+              <h3 className="text-3xl font-bold text-center text-green-900 dark:text-green-300 mb-8">
+                四季體驗
+              </h3>
 
               {/* 季節切換按鈕 */}
               <div className="flex justify-center gap-4 mb-10 flex-wrap">
@@ -330,7 +334,7 @@ export default function Home() {
                     className={`flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${
                       activeSeason === index
                         ? `bg-${season.color}-600 text-white shadow-lg scale-110 animate-pulse-glow`
-                        : `bg-white text-gray-700 hover:bg-${season.color}-50 border border-${season.color}-200`
+                        : `bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 hover:bg-${season.color}-50 dark:hover:bg-${season.color}-900/30 border border-${season.color}-200 dark:border-${season.color}-700`
                     }`}
                   >
                     <season.Icon className="w-5 h-5" strokeWidth={2} />
@@ -371,14 +375,14 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="glass-card rounded-2xl p-8">
-                    <h4 className="text-2xl font-bold text-green-900 mb-4">
+                  <div className="glass-card rounded-2xl p-8 dark:bg-slate-800/50 dark:backdrop-blur-md">
+                    <h4 className="text-2xl font-bold text-green-900 dark:text-green-300 mb-4">
                       {activeSeason === 0 && '春季賞花'}
                       {activeSeason === 1 && '夏日採果'}
                       {activeSeason === 2 && '秋收體驗'}
                       {activeSeason === 3 && '冬日品茶'}
                     </h4>
-                    <p className="text-gray-700 mb-6 leading-relaxed">
+                    <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
                       {activeSeason === 0 &&
                         '春暖花開時節，農場百花齊放。漫步在花海之中，感受大自然的生命力。最佳賞花期：3-4月'}
                       {activeSeason === 1 &&
@@ -393,15 +397,15 @@ export default function Home() {
                         <>
                           <li className="flex items-start">
                             <span className="text-green-500 mr-2">✓</span>
-                            <span className="text-gray-600">賞花導覽解說</span>
+                            <span className="text-gray-600 dark:text-gray-300">賞花導覽解說</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-green-500 mr-2">✓</span>
-                            <span className="text-gray-600">攝影景點推薦</span>
+                            <span className="text-gray-600 dark:text-gray-300">攝影景點推薦</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-green-500 mr-2">✓</span>
-                            <span className="text-gray-600">花卉知識介紹</span>
+                            <span className="text-gray-600 dark:text-gray-300">花卉知識介紹</span>
                           </li>
                         </>
                       )}
@@ -409,15 +413,15 @@ export default function Home() {
                         <>
                           <li className="flex items-start">
                             <span className="text-red-500 mr-2">✓</span>
-                            <span className="text-gray-600">專人採果教學</span>
+                            <span className="text-gray-600 dark:text-gray-300">專人採果教學</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-red-500 mr-2">✓</span>
-                            <span className="text-gray-600">現場試吃品嚐</span>
+                            <span className="text-gray-600 dark:text-gray-300">現場試吃品嚐</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-red-500 mr-2">✓</span>
-                            <span className="text-gray-600">採果籃免費提供</span>
+                            <span className="text-gray-600 dark:text-gray-300">採果籃免費提供</span>
                           </li>
                         </>
                       )}
@@ -425,15 +429,17 @@ export default function Home() {
                         <>
                           <li className="flex items-start">
                             <span className="text-orange-500 mr-2">✓</span>
-                            <span className="text-gray-600">收成體驗活動</span>
+                            <span className="text-gray-600 dark:text-gray-300">收成體驗活動</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-orange-500 mr-2">✓</span>
-                            <span className="text-gray-600">農業知識講座</span>
+                            <span className="text-gray-600 dark:text-gray-300">農業知識講座</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-orange-500 mr-2">✓</span>
-                            <span className="text-gray-600">農產品 DIY 製作</span>
+                            <span className="text-gray-600 dark:text-gray-300">
+                              農產品 DIY 製作
+                            </span>
                           </li>
                         </>
                       )}
@@ -441,15 +447,15 @@ export default function Home() {
                         <>
                           <li className="flex items-start">
                             <span className="text-green-500 mr-2">✓</span>
-                            <span className="text-gray-600">茶道文化體驗</span>
+                            <span className="text-gray-600 dark:text-gray-300">茶道文化體驗</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-green-500 mr-2">✓</span>
-                            <span className="text-gray-600">品茶技巧教學</span>
+                            <span className="text-gray-600 dark:text-gray-300">品茶技巧教學</span>
                           </li>
                           <li className="flex items-start">
                             <span className="text-green-500 mr-2">✓</span>
-                            <span className="text-gray-600">茶葉製程介紹</span>
+                            <span className="text-gray-600 dark:text-gray-300">茶葉製程介紹</span>
                           </li>
                         </>
                       )}
@@ -490,19 +496,19 @@ export default function Home() {
         <section
           id="news"
           data-animate
-          className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white"
+          className="py-20 px-6 bg-gradient-to-b from-gray-50 to-white dark:from-slate-800 dark:to-slate-900"
         >
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <h2
-                className={`text-4xl md:text-5xl font-bold text-green-900 mb-4 ${
+                className={`text-4xl md:text-5xl font-bold text-green-900 dark:text-green-300 mb-4 ${
                   visibleSections.has('news') ? 'animate-fade-in' : 'opacity-0'
                 }`}
               >
                 最新消息
               </h2>
               <p
-                className={`text-gray-600 text-lg ${
+                className={`text-gray-600 dark:text-gray-300 text-lg ${
                   visibleSections.has('news') ? 'animate-fade-in animation-delay-150' : 'opacity-0'
                 }`}
               >
@@ -516,34 +522,44 @@ export default function Home() {
               }`}
             >
               {/* 當季推薦 */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <Sprout className="w-10 h-10 mr-3 text-green-600" strokeWidth={2} />
-                  <h3 className="text-2xl font-bold text-green-900">當季推薦</h3>
+                  <Sprout
+                    className="w-10 h-10 mr-3 text-green-600 dark:text-green-400"
+                    strokeWidth={2}
+                  />
+                  <h3 className="text-2xl font-bold text-green-900 dark:text-green-300">
+                    當季推薦
+                  </h3>
                 </div>
-                <p className="text-green-800 mb-6 text-lg">
+                <p className="text-green-800 dark:text-green-200 mb-6 text-lg">
                   春季特選紅肉李正在盛產中！果肉飽滿、甜度高，限量供應中
                 </p>
                 <Link
                   href="/products"
-                  className="inline-flex items-center text-green-700 hover:text-green-900 font-medium"
+                  className="inline-flex items-center text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 font-medium"
                 >
                   查看產品 →
                 </Link>
               </div>
 
               {/* 農場活動 */}
-              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/30 rounded-2xl p-8 hover:shadow-xl transition-all duration-300">
                 <div className="flex items-center mb-4">
-                  <PartyPopper className="w-10 h-10 mr-3 text-green-600" strokeWidth={2} />
-                  <h3 className="text-2xl font-bold text-green-900">農場活動</h3>
+                  <PartyPopper
+                    className="w-10 h-10 mr-3 text-green-600 dark:text-green-400"
+                    strokeWidth={2}
+                  />
+                  <h3 className="text-2xl font-bold text-green-900 dark:text-green-300">
+                    農場活動
+                  </h3>
                 </div>
-                <p className="text-green-800 mb-6 text-lg">
+                <p className="text-green-800 dark:text-green-200 mb-6 text-lg">
                   週末採果體驗活動熱烈報名中！帶孩子來體驗親手採摘的樂趣
                 </p>
                 <Link
                   href="/farm-tour"
-                  className="inline-flex items-center text-green-700 hover:text-green-900 font-medium"
+                  className="inline-flex items-center text-green-700 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 font-medium"
                 >
                   立即預約 →
                 </Link>
@@ -566,12 +582,16 @@ export default function Home() {
               </div>
 
               {/* 聯絡我們 */}
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-100 rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-800/30 rounded-2xl p-8 text-center hover:shadow-xl transition-all duration-300">
                 <div className="flex justify-center mb-4">
-                  <Phone className="w-12 h-12 text-blue-600" strokeWidth={2} />
+                  <Phone className="w-12 h-12 text-blue-600 dark:text-blue-400" strokeWidth={2} />
                 </div>
-                <h3 className="text-2xl font-bold text-blue-900 mb-4">聯絡我們</h3>
-                <p className="text-blue-800 mb-6 text-lg">有任何問題或需求，歡迎隨時與我們聯繫</p>
+                <h3 className="text-2xl font-bold text-blue-900 dark:text-blue-300 mb-4">
+                  聯絡我們
+                </h3>
+                <p className="text-blue-800 dark:text-blue-200 mb-6 text-lg">
+                  有任何問題或需求，歡迎隨時與我們聯繫
+                </p>
                 <Link
                   href="/contact"
                   prefetch={true}

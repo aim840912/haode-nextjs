@@ -1,5 +1,4 @@
 /**
- * 輪詢管理 Hook
  * 負責智能輪詢、頁面可見性檢測和使用者活動追蹤
  */
 
@@ -11,7 +10,6 @@ import {
   InquiryStatsData,
   calculateDynamicPollingInterval,
   PollingConfig,
-  INQUIRY_STATS_CONSTANTS,
 } from '@/lib/utils/inquiry-stats-utils'
 
 export interface UsePollingManagerOptions {

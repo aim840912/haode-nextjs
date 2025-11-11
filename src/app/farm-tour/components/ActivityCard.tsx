@@ -1,6 +1,6 @@
-import type { FarmTourActivity } from '@/types/farmTour'
 import Image from 'next/image'
-import { Calendar, Banknote, Users2, Check, Flame, Zap } from 'lucide-react'
+import { Calendar, Users2, Check, Flame, Zap } from 'lucide-react'
+import type { FarmTourActivity } from '@/types/farmTour'
 
 interface ActivityCardProps {
   activity: FarmTourActivity
@@ -61,12 +61,6 @@ export function ActivityCard({ activity, index, onBookingClick }: ActivityCardPr
               <Calendar className="w-4 h-4" />
               {activity.start_month}月 - {activity.end_month}月
             </span>
-            {Number(activity.price) > 0 && (
-              <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-sm font-bold backdrop-blur-sm flex items-center gap-1">
-                <Banknote className="w-4 h-4" />
-                NT$ {activity.price}
-              </span>
-            )}
             <span className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm flex items-center gap-1">
               <Users2 className="w-4 h-4" />
               親子同樂

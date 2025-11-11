@@ -9,19 +9,19 @@ import {
   useRef,
   ReactNode,
 } from 'react'
-import { User, LoginRequest, RegisterRequest } from '@/types/auth'
+import { Session } from '@supabase/supabase-js'
+import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-interests-api'
 import {
   supabase,
   getUserProfile,
-  signInUser,
   signInWithPhoneOrEmail,
+  signInWithProvider,
   signOutUser,
   signUpUser,
   updateProfile as updateUserProfile,
 } from '@/lib/database/supabase-auth'
-import { Session } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
-import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-interests-api'
+import { User, LoginRequest, RegisterRequest } from '@/types/auth'
 
 interface AuthContextType {
   user: User | null
@@ -30,6 +30,7 @@ interface AuthContextType {
   register: (userData: RegisterRequest) => Promise<void>
   logout: () => Promise<void>
   updateProfile: (updates: Partial<User>) => Promise<void>
+  signInWithProvider: typeof signInWithProvider
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -158,19 +159,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } = await supabase.auth.refreshSession()
 
       if (error || !session) {
-        logger.warn('Session 驗證失敗，執行登出', {
+        // Session 驗證失敗時，記錄錯誤但不立即登出
+        // 允許下次驗證時重試，避免因暫時性網路問題導致登出
+        logger.warn('Session 驗證失敗，將在下次驗證時重試', {
           metadata: {
-            action: 'session_validation_failed',
+            action: 'session_validation_failed_will_retry',
             error: error?.message,
             hasSession: !!session,
             userId: user.id,
+            errorType: error?.name,
           },
         })
 
-        // 只有當 user 仍然存在時才執行 force logout
-        if (user && user.id) {
-          handleForceLogout('session_validation_failed')
-        }
+        // 不執行 handleForceLogout，只返回 false
+        // 如果問題持續存在，後續驗證會繼續記錄
         return false
       }
 
@@ -179,21 +181,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
       })
       return true
     } catch (error) {
-      logger.error('Session 驗證時發生錯誤', error as Error, {
-        metadata: { action: 'session_validation_error', userId: user.id },
+      // Session 驗證發生例外時，記錄錯誤但不立即登出
+      // 這可能是暫時性的網路問題或 API 延遲
+      logger.error('Session 驗證時發生錯誤，將在下次驗證時重試', error as Error, {
+        metadata: {
+          action: 'session_validation_error_will_retry',
+          userId: user.id,
+          errorName: (error as Error).name,
+        },
       })
 
-      // 只有當 user 仍然存在時才執行 force logout
-      if (user && user.id) {
-        handleForceLogout('session_validation_error')
-      }
+      // 不執行 handleForceLogout，允許後續重試
       return false
     } finally {
       validationRef.current.isValidating = false
     }
   }, [user, handleForceLogout])
 
-  // 設定定期 session 驗證（每 5 分鐘檢查一次）
+  // 設定定期 session 驗證（每 15 分鐘檢查一次）
+  // 降低驗證頻率可減少因網路問題導致的驗證失敗
   useEffect(() => {
     if (!user || !user.id) return
 
@@ -201,8 +207,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       () => {
         validateSession()
       },
-      5 * 60 * 1000
-    ) // 5 分鐘
+      15 * 60 * 1000
+    ) // 15 分鐘
 
     return () => clearInterval(interval)
     // validateSession 已包含 user 依賴，因此 user 變化時會重新創建 interval
@@ -464,10 +470,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       if (event === 'TOKEN_REFRESHED' && !session) {
-        logger.warn('Token refresh failed, forcing logout', {
-          metadata: { action: 'token_refresh_failed' },
+        // Token refresh 失敗時，先嘗試重新取得 session，而不是立即登出
+        logger.warn('Token refresh 返回空 session，嘗試重新取得', {
+          metadata: { action: 'token_refresh_empty_session' },
         })
-        handleForceLogout('token_refresh_failed')
+
+        try {
+          const {
+            data: { session: retrySession },
+            error: retryError,
+          } = await supabase.auth.getSession()
+
+          if (retryError) {
+            logger.error('重新取得 session 時發生錯誤', retryError as Error, {
+              metadata: { action: 'retry_get_session_error' },
+            })
+            handleForceLogout('token_refresh_failed_after_retry')
+            return
+          }
+
+          if (!retrySession) {
+            logger.warn('重試後仍無法取得 session，執行登出', {
+              metadata: { action: 'token_refresh_failed_after_retry' },
+            })
+            handleForceLogout('token_refresh_failed_after_retry')
+            return
+          }
+
+          // 重試成功，更新 auth state
+          logger.info('重新取得 session 成功', {
+            metadata: { action: 'retry_get_session_success' },
+          })
+          handleAuthStateChange(retrySession)
+        } catch (error) {
+          logger.error('重試取得 session 時發生例外', error as Error, {
+            metadata: { action: 'retry_get_session_exception' },
+          })
+          handleForceLogout('token_refresh_exception')
+        }
         return
       }
 
@@ -480,20 +520,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
             error,
           } = await supabase.auth.getUser()
           if (error || !user) {
-            logger.warn('初始 session 無效，清理狀態', {
+            // 如果是嚴重的認證錯誤（如 refresh token 過期），才強制登出
+            if (error && isRefreshTokenError(error)) {
+              logger.warn('初始 session 包含無效的 refresh token，清理狀態', {
+                metadata: {
+                  action: 'invalid_initial_session_force_logout',
+                  error: error?.message,
+                },
+              })
+              handleForceLogout('invalid_initial_session')
+              return
+            }
+
+            // 其他錯誤只記錄，不強制登出
+            logger.warn('初始 session 驗證失敗，將在後續驗證時重試', {
               metadata: {
-                action: 'invalid_initial_session',
+                action: 'invalid_initial_session_will_retry',
                 error: error?.message,
               },
             })
-            handleForceLogout('invalid_initial_session')
             return
           }
         } catch (error) {
-          logger.error('驗證初始 session 時發生錯誤', error as Error, {
-            metadata: { action: 'session_validation_error' },
+          // 驗證過程中的例外，記錄但不強制登出
+          logger.error('驗證初始 session 時發生錯誤，將在後續驗證時重試', error as Error, {
+            metadata: {
+              action: 'session_validation_error_will_retry',
+              errorName: (error as Error).name,
+            },
           })
-          handleForceLogout('session_validation_error')
           return
         }
       }
@@ -679,6 +734,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     register,
     logout,
     updateProfile,
+    signInWithProvider,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

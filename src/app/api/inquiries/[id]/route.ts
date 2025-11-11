@@ -5,23 +5,79 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { success } from '@/lib/api-response'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
+import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { InquirySchemas, CommonValidations } from '@/lib/validation'
 import { inquiryService as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
-import { InquiryUtils } from '@/types/inquiry'
-import { success } from '@/lib/api-response'
-import { apiLogger } from '@/lib/logger'
-import { InquirySchemas, CommonValidations } from '@/lib/validation'
-import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import type { Database } from '@/types/database'
+import { InquiryUtils } from '@/types/inquiry'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 // 使用統一的詢問服務適配器
 const inquiryService = inquiryServiceAdapter
 
 /**
- * GET /api/inquiries/[id] - 取得特定庫存查詢單
+ * @api {GET} /api/inquiries/:id 取得單一詢價單
+ * @apiName GetInquiryById
+ * @apiGroup Inquiries
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 取得特定詢價單的詳細資訊。
+ * - 一般使用者只能查看自己的詢價單
+ * - 管理員可以使用 admin=true 查看所有詢價單
+ * - 管理員查看時會自動標記為已讀
+ *
+ * @apiPermission user
+ *
+ * @apiParam {String} id 詢價單 ID (UUID)
+ *
+ * @apiQuery {Boolean} [admin=false] 管理員模式（僅管理員可用）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 詢價單資料
+ * @apiSuccess {String} data.id 詢價單 ID
+ * @apiSuccess {String} data.customer_name 客戶姓名
+ * @apiSuccess {String} data.customer_email 客戶 Email
+ * @apiSuccess {String} data.status 詢價單狀態
+ * @apiSuccess {Boolean} data.is_read 是否已讀
+ * @apiSuccess {Boolean} data.is_replied 是否已回覆
+ * @apiSuccess {Number} data.total_estimated_amount 總預估金額
+ * @apiSuccess {Object[]} data.inquiry_items 詢價項目列表
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "customer_name": "王小明",
+ *     "customer_email": "wang@example.com",
+ *     "status": "pending",
+ *     "is_read": true,
+ *     "is_replied": false,
+ *     "total_estimated_amount": 15000,
+ *     "inquiry_items": [...]
+ *   },
+ *   "message": "查詢成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 參數驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 未登入或權限不足
+ * @apiError (錯誤 4xx) {Object} NotFoundError 詢價單不存在
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 404 Not Found
+ * {
+ *   "success": false,
+ *   "error": "找不到庫存查詢單",
+ *   "code": "NOT_FOUND"
+ * }
  */
 async function handleGET(request: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined
@@ -123,7 +179,57 @@ async function handleGET(request: NextRequest, user: User, context?: unknown) {
 }
 
 /**
- * PUT /api/inquiries/[id] - 更新庫存查詢單
+ * @api {PUT} /api/inquiries/:id 更新詢價單
+ * @apiName UpdateInquiry
+ * @apiGroup Inquiries
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 更新詢價單資訊。
+ * - 一般使用者可更新客戶資訊、備註、配送地址
+ * - 管理員可額外更新狀態、讀取/回覆標記
+ * - 狀態更新需驗證狀態轉換規則
+ *
+ * @apiPermission user
+ *
+ * @apiParam {String} id 詢價單 ID (UUID)
+ *
+ * @apiBody {String} [customer_name] 客戶姓名
+ * @apiBody {String} [customer_email] 客戶 Email
+ * @apiBody {String} [notes] 備註
+ * @apiBody {String} [delivery_address] 配送地址
+ * @apiBody {String="pending","quoted","confirmed","completed","cancelled"} [status] 狀態（僅管理員）
+ * @apiBody {Boolean} [is_read] 是否已讀（僅管理員）
+ * @apiBody {Boolean} [is_replied] 是否已回覆（僅管理員）
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 更新後的詢價單資料
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "status": "quoted",
+ *     "customer_name": "王小明",
+ *     "updated_at": "2025-01-07T10:30:00Z"
+ *   },
+ *   "message": "詢問單更新成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 資料驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 權限不足（狀態更新需管理員）
+ * @apiError (錯誤 4xx) {Object} NotFoundError 詢價單不存在
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 403 Forbidden
+ * {
+ *   "success": false,
+ *   "error": "只有管理員可以更新庫存查詢單狀態",
+ *   "code": "AUTHORIZATION_ERROR"
+ * }
  */
 async function handlePUT(request: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined
@@ -271,7 +377,45 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
 }
 
 /**
- * DELETE /api/inquiries/[id] - 刪除詢問單（僅管理員）
+ * @api {DELETE} /api/inquiries/:id 刪除詢價單
+ * @apiName DeleteInquiry
+ * @apiGroup Inquiries
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 刪除指定的詢價單。
+ * 僅限管理員操作，刪除時會記錄完整的審計日誌。
+ *
+ * @apiPermission admin
+ *
+ * @apiParam {String} id 詢價單 ID (UUID)
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 刪除結果
+ * @apiSuccess {String} data.id 已刪除的詢價單 ID
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000"
+ *   },
+ *   "message": "詢問單刪除成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 參數驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 權限不足（需要管理員）
+ * @apiError (錯誤 4xx) {Object} NotFoundError 詢價單不存在
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 403 Forbidden
+ * {
+ *   "success": false,
+ *   "error": "只有管理員可以刪除詢問單",
+ *   "code": "AUTHORIZATION_ERROR"
+ * }
  */
 async function handleDELETE(request: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined
@@ -346,7 +490,57 @@ async function handleDELETE(request: NextRequest, user: User, context?: unknown)
 }
 
 /**
- * PATCH /api/inquiries/[id] - 快速更新詢問單讀取/回覆狀態（僅管理員）
+ * @api {PATCH} /api/inquiries/:id 快速更新詢價單狀態
+ * @apiName PatchInquiryStatus
+ * @apiGroup Inquiries
+ * @apiVersion 1.0.0
+ *
+ * @apiDescription
+ * 快速更新詢價單的讀取/回覆狀態。
+ * 僅限管理員操作，適用於批次標記已讀或已回覆。
+ * 更新時會自動設定對應的時間戳記。
+ *
+ * @apiPermission admin
+ *
+ * @apiParam {String} id 詢價單 ID (UUID)
+ *
+ * @apiBody {Boolean} [is_read] 是否已讀
+ * @apiBody {Boolean} [is_replied] 是否已回覆
+ * @apiBody {String="pending","quoted","confirmed","completed","cancelled"} [status] 詢價單狀態
+ *
+ * @apiSuccess {Boolean} success 請求是否成功
+ * @apiSuccess {Object} data 更新後的詢價單資料
+ * @apiSuccess {Boolean} data.is_read 是否已讀
+ * @apiSuccess {Boolean} data.is_replied 是否已回覆
+ * @apiSuccess {String} [data.read_at] 讀取時間
+ * @apiSuccess {String} [data.replied_at] 回覆時間
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * HTTP/1.1 200 OK
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "id": "550e8400-e29b-41d4-a716-446655440000",
+ *     "is_read": true,
+ *     "is_replied": true,
+ *     "read_at": "2025-01-07T10:30:00Z",
+ *     "replied_at": "2025-01-07T10:35:00Z"
+ *   },
+ *   "message": "詢問單更新成功"
+ * }
+ *
+ * @apiError (錯誤 4xx) {Object} ValidationError 資料驗證失敗
+ * @apiError (錯誤 4xx) {Object} AuthorizationError 權限不足（需要管理員）
+ * @apiError (錯誤 4xx) {Object} NotFoundError 詢價單不存在
+ *
+ * @apiErrorExample {json} 錯誤回應:
+ * HTTP/1.1 403 Forbidden
+ * {
+ *   "success": false,
+ *   "error": "只有管理員可以更新庫存查詢單狀態",
+ *   "code": "AUTHORIZATION_ERROR"
+ * }
  */
 async function handlePATCH(request: NextRequest, user: User, context?: unknown) {
   const routeContext = context as { params: Promise<{ id: string }> } | undefined

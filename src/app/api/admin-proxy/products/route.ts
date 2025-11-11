@@ -1,8 +1,38 @@
+/**
+ * @api {get} /api/admin-proxy/products 代理：取得所有產品
+ * @apiName ProxyGetProducts
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ * @apiDescription 安全代理 API，驗證管理員身份後轉發到 /api/admin/products
+ */
+
+/**
+ * @api {post} /api/admin-proxy/products 代理：新增產品
+ * @apiName ProxyCreateProduct
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ */
+
+/**
+ * @api {put} /api/admin-proxy/products 代理：更新產品
+ * @apiName ProxyUpdateProduct
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ */
+
+/**
+ * @api {delete} /api/admin-proxy/products 代理：刪除產品
+ * @apiName ProxyDeleteProduct
+ * @apiGroup AdminProxy
+ * @apiPermission admin
+ * @apiQuery {String} id 產品 ID
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/database/supabase-server'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * Admin Proxy API for Products

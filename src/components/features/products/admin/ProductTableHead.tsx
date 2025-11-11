@@ -30,5 +30,3 @@ export function ProductTableHead() {
     </thead>
   )
 }
-
-export default ProductTableHead

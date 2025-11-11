@@ -5,13 +5,14 @@
  * 有助於 SEO 和使用者導航體驗
  */
 
+import { useMemo } from 'react'
 import Link from 'next/link'
-import { FC, useMemo } from 'react'
+import { logger } from '@/lib/logger'
+import { cn } from '@/lib/utils/cn'
 import {
   sanitizeStructuredData,
   validateStructuredData,
 } from '@/lib/utils/structured-data-sanitizer'
-import { logger } from '@/lib/logger'
 
 // ============================================================================
 // 類型定義
@@ -59,7 +60,7 @@ interface BreadcrumbStructuredDataProps {
  * - JSON-LD 資料放在 <script type="application/ld+json"> 中，不會被執行為 JavaScript
  * - 這是 Google、Schema.org 推薦的 SEO 標準做法
  */
-const BreadcrumbStructuredData: FC<BreadcrumbStructuredDataProps> = ({ items, baseUrl }) => {
+function BreadcrumbStructuredData({ items, baseUrl }: BreadcrumbStructuredDataProps) {
   const structuredData = useMemo(() => {
     const itemListElement = items.map((item, index) => ({
       '@type': 'ListItem',
@@ -103,14 +104,14 @@ const BreadcrumbStructuredData: FC<BreadcrumbStructuredDataProps> = ({ items, ba
 // 主要 Breadcrumbs 組件
 // ============================================================================
 
-const Breadcrumbs: FC<BreadcrumbsProps> = ({
+export function Breadcrumbs({
   items,
   className = '',
   separator = '/',
   showHome = true,
   enableStructuredData = true,
   baseUrl = 'https://haode-nextjs.vercel.app',
-}) => {
+}: BreadcrumbsProps) {
   // 準備最終的麵包屑項目列表
   const finalItems = useMemo(() => {
     const result: BreadcrumbItem[] = []
@@ -148,7 +149,7 @@ const Breadcrumbs: FC<BreadcrumbsProps> = ({
       {enableStructuredData && <BreadcrumbStructuredData items={finalItems} baseUrl={baseUrl} />}
 
       {/* 可見的麵包屑導航 */}
-      <nav className={`text-sm text-gray-600 ${className}`} aria-label="麵包屑導航">
+      <nav className={cn('text-sm text-gray-600', className)} aria-label="麵包屑導航">
         <ol className="flex items-center space-x-2">
           {finalItems.map((item, index) => (
             <li key={index} className="flex items-center">
@@ -335,4 +336,4 @@ export const BreadcrumbVariants = {
 // 導出
 // ============================================================================
 
-export default Breadcrumbs
+// Breadcrumbs 已在上方使用 named export 導出

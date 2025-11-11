@@ -5,11 +5,115 @@
  * 使用 double-submit cookie pattern 來防止 CSRF 攻擊
  */
 
+/**
+ * @api {get} /api/csrf-token 取得 CSRF Token
+ * @apiName GetCSRFToken
+ * @apiGroup Security
+ * @apiPermission public
+ *
+ * @apiDescription 生成新的 CSRF token 並設置為 cookie。如果已有有效 token 且不強制刷新，則返回現有 token
+ *
+ * @apiQuery {Boolean} [refresh=false] 是否強制刷新現有的 token
+ *
+ * @apiSuccess {Boolean} success 是否成功
+ * @apiSuccess {String} message 回應訊息
+ * @apiSuccess {String} token CSRF token 值
+ * @apiSuccess {String} [expires] Token 過期時間（ISO 8601 格式）
+ *
+ * @apiHeader {String} X-CSRF-Token 回應標頭中包含的 token 值
+ * @apiHeader {String} Set-Cookie 設置 csrf-token cookie
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * {
+ *   "success": true,
+ *   "message": "已生成新的 CSRF token",
+ *   "token": "a1b2c3d4e5f6...",
+ *   "expires": "2025-01-08T10:30:00.000Z"
+ * }
+ *
+ * @apiError (403) AuthorizationError 無效的請求來源
+ *
+ * @apiErrorExample {json} 來源驗證失敗:
+ * {
+ *   "success": false,
+ *   "message": "無效的請求來源",
+ *   "error": {
+ *     "code": "AUTHORIZATION_ERROR"
+ *   }
+ * }
+ */
+
+/**
+ * @api {post} /api/csrf-token 驗證 CSRF Token
+ * @apiName ValidateCSRFToken
+ * @apiGroup Security
+ * @apiPermission public
+ *
+ * @apiDescription 驗證現有的 CSRF token，主要用於測試和調試
+ *
+ * @apiHeader {String} X-CSRF-Token 需要驗證的 CSRF token
+ * @apiHeader {String} Cookie 包含 csrf-token 的 cookie
+ *
+ * @apiSuccess {Boolean} success 是否成功
+ * @apiSuccess {String} message 回應訊息
+ * @apiSuccess {String} token 驗證通過的 token 值
+ *
+ * @apiSuccessExample {json} 驗證成功:
+ * {
+ *   "success": true,
+ *   "message": "CSRF token 驗證成功",
+ *   "token": "a1b2c3d4e5f6..."
+ * }
+ *
+ * @apiError (403) AuthorizationError CSRF token 驗證失敗或來源無效
+ *
+ * @apiErrorExample {json} 驗證失敗:
+ * {
+ *   "success": false,
+ *   "message": "CSRF token 驗證失敗",
+ *   "error": {
+ *     "code": "AUTHORIZATION_ERROR",
+ *     "reason": "Token mismatch"
+ *   }
+ * }
+ */
+
+/**
+ * @api {delete} /api/csrf-token 清除 CSRF Token
+ * @apiName DeleteCSRFToken
+ * @apiGroup Security
+ * @apiPermission public
+ *
+ * @apiDescription 清除 CSRF token（登出時使用）
+ *
+ * @apiSuccess {Boolean} success 是否成功
+ * @apiSuccess {String} message 回應訊息
+ *
+ * @apiHeader {String} Set-Cookie 設置過期的 csrf-token cookie 以清除它
+ *
+ * @apiSuccessExample {json} 成功回應:
+ * {
+ *   "success": true,
+ *   "message": "CSRF token 已清除"
+ * }
+ *
+ * @apiError (403) AuthorizationError 無效的請求來源
+ *
+ * @apiErrorExample {json} 來源驗證失敗:
+ * {
+ *   "success": false,
+ *   "message": "無效的請求來源",
+ *   "error": {
+ *     "code": "AUTHORIZATION_ERROR"
+ *   }
+ * }
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
-import { CSRFTokenManager, validateOrigin } from '@/lib/middleware/auth-middleware'
-import { apiLogger } from '@/lib/logger'
-import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AuthorizationError, MethodNotAllowedError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { CSRFTokenManager, validateOrigin } from '@/lib/middleware/auth-middleware'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 /**
  * GET /api/csrf-token

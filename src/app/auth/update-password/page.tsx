@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui/feedback/Toast'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 
 export default function UpdatePasswordPage() {
   const [password, setPassword] = useState('')
@@ -127,10 +127,10 @@ export default function UpdatePasswordPage() {
   // 載入中狀態
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
         <div className="text-center">
           <LoadingSpinner size="lg" />
-          <p className="mt-4 text-gray-600">載入中...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">載入中...</p>
         </div>
       </div>
     )
@@ -144,33 +144,39 @@ export default function UpdatePasswordPage() {
   // 成功頁面
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
           <div className="text-center">
             <Link href="/" className="inline-block mb-6">
-              <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
-              <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
+              <div className="text-3xl font-bold text-amber-900 dark:text-amber-300 tracking-tight">
+                豪德製茶所
+              </div>
+              <div className="text-sm text-amber-700/70 dark:text-amber-400/70 font-medium tracking-wider">
+                HAUDE TEA
+              </div>
             </Link>
             <div className="text-6xl mb-4">✅</div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">密碼更新成功</h2>
-            <p className="text-gray-600">您的新密碼已設定完成</p>
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              密碼更新成功
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300">您的新密碼已設定完成</p>
           </div>
 
           {/* Success Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
             <div className="text-center space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
                 <div className="flex items-center justify-center mb-2">
-                  <span className="text-green-500 text-2xl">🎉</span>
+                  <span className="text-green-500 dark:text-green-400 text-2xl">🎉</span>
                 </div>
-                <p className="text-green-800 font-medium">密碼已成功更新</p>
-                <p className="text-green-700 text-sm">您將自動跳轉至登入頁面</p>
+                <p className="text-green-800 dark:text-green-300 font-medium">密碼已成功更新</p>
+                <p className="text-green-700 dark:text-green-400 text-sm">您將自動跳轉至登入頁面</p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
-                <h3 className="font-medium text-blue-900 mb-2">安全提醒：</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
+              <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 text-left">
+                <h3 className="font-medium text-blue-900 dark:text-blue-300 mb-2">安全提醒：</h3>
+                <ul className="text-sm text-blue-800 dark:text-blue-400 space-y-1">
                   <li>• 請使用新密碼重新登入</li>
                   <li>• 建議定期更換密碼</li>
                   <li>• 不要與他人分享您的密碼</li>
@@ -183,7 +189,7 @@ export default function UpdatePasswordPage() {
             <div className="mt-6">
               <Link
                 href="/login"
-                className="block w-full text-center bg-amber-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors"
+                className="block w-full text-center bg-amber-900 dark:bg-amber-800 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 dark:hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors"
               >
                 立即登入
               </Link>
@@ -192,7 +198,10 @@ export default function UpdatePasswordPage() {
 
           {/* Back to Home */}
           <div className="text-center">
-            <Link href="/" className="text-sm text-gray-500 hover:text-amber-600 transition-colors">
+            <Link
+              href="/"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
               ← 返回首頁
             </Link>
           </div>
@@ -202,37 +211,48 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-block mb-6">
-            <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
-            <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
+            <div className="text-3xl font-bold text-amber-900 dark:text-amber-300 tracking-tight">
+              豪德製茶所
+            </div>
+            <div className="text-sm text-amber-700/70 dark:text-amber-400/70 font-medium tracking-wider">
+              HAUDE TEA
+            </div>
           </Link>
           <div className="text-6xl mb-4">🔐</div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2">設定新密碼</h2>
-          <p className="text-gray-600">請為您的帳號設定一個安全的新密碼</p>
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+            設定新密碼
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300">請為您的帳號設定一個安全的新密碼</p>
         </div>
 
         {/* Form */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-600 text-sm">{error}</p>
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+              <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
             </div>
           )}
 
           {/* User Info */}
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <h3 className="text-sm font-medium text-blue-800 mb-1">設定密碼給</h3>
-            <p className="text-blue-700 text-sm font-medium">{user?.email}</p>
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+            <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
+              設定密碼給
+            </h3>
+            <p className="text-blue-700 dark:text-blue-400 text-sm font-medium">{user?.email}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 新密碼
               </label>
               <input
@@ -242,7 +262,7 @@ export default function UpdatePasswordPage() {
                 required
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                 placeholder="請輸入新密碼（至少 6 個字元）"
               />
 
@@ -253,10 +273,10 @@ export default function UpdatePasswordPage() {
                     <div
                       className={`h-2 w-full rounded-full ${
                         passwordStrength.strength === 'strong'
-                          ? 'bg-green-200'
+                          ? 'bg-green-200 dark:bg-green-800'
                           : passwordStrength.strength === 'medium'
-                            ? 'bg-yellow-200'
-                            : 'bg-red-200'
+                            ? 'bg-yellow-200 dark:bg-yellow-800'
+                            : 'bg-red-200 dark:bg-red-800'
                       }`}
                     >
                       <div
@@ -273,10 +293,10 @@ export default function UpdatePasswordPage() {
                   <p
                     className={`text-xs mt-1 ${
                       passwordStrength.strength === 'strong'
-                        ? 'text-green-600'
+                        ? 'text-green-600 dark:text-green-400'
                         : passwordStrength.strength === 'medium'
-                          ? 'text-yellow-600'
-                          : 'text-red-600'
+                          ? 'text-yellow-600 dark:text-yellow-400'
+                          : 'text-red-600 dark:text-red-400'
                     }`}
                   >
                     {passwordStrength.message}
@@ -289,7 +309,7 @@ export default function UpdatePasswordPage() {
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 確認新密碼
               </label>
@@ -300,7 +320,7 @@ export default function UpdatePasswordPage() {
                 required
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                 placeholder="請再次輸入新密碼"
               />
 
@@ -309,7 +329,9 @@ export default function UpdatePasswordPage() {
                 <div className="mt-2">
                   <p
                     className={`text-xs ${
-                      password === confirmPassword ? 'text-green-600' : 'text-red-600'
+                      password === confirmPassword
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
                     }`}
                   >
                     {password === confirmPassword ? '✓ 密碼一致' : '✗ 密碼不一致'}
@@ -322,16 +344,18 @@ export default function UpdatePasswordPage() {
             <button
               type="submit"
               disabled={isLoading || !password || !confirmPassword || password !== confirmPassword}
-              className="w-full bg-amber-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-amber-900 dark:bg-amber-800 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 dark:hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? '更新中...' : '更新密碼'}
             </button>
           </form>
 
           {/* Security Tips */}
-          <div className="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-800 mb-2">密碼安全建議</h3>
-            <ul className="text-xs text-gray-600 space-y-1">
+          <div className="mt-6 bg-gray-50 dark:bg-slate-700 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-2">
+              密碼安全建議
+            </h3>
+            <ul className="text-xs text-gray-600 dark:text-gray-300 space-y-1">
               <li>• 至少 8 個字元，包含大小寫字母、數字和特殊符號</li>
               <li>• 避免使用個人資訊（生日、姓名等）</li>
               <li>• 不要重複使用其他網站的密碼</li>
@@ -341,7 +365,10 @@ export default function UpdatePasswordPage() {
 
         {/* Back to Home */}
         <div className="text-center">
-          <Link href="/" className="text-sm text-gray-500 hover:text-amber-600 transition-colors">
+          <Link
+            href="/"
+            className="text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+          >
             ← 返回首頁
           </Link>
         </div>

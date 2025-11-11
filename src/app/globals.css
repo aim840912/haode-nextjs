@@ -1,8 +1,121 @@
 @import 'tailwindcss';
 
+/* 啟用 class-based 深色模式 (Tailwind v4 語法) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ===== Light Mode Variables ===== */
 :root {
+  /* 基礎色彩 */
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 主色調（綠色農場風格） */
+  --primary-green: #14532d; /* green-900 */
+  --primary-green-hover: #15803d; /* green-700 */
+  --primary-green-light: #f0fdf4; /* green-50 */
+  --primary-green-bg: #dcfce7; /* green-100 */
+
+  /* 卡片與面板 */
+  --card-bg: #ffffff;
+  --card-bg-secondary: #f9fafb; /* gray-50 */
+  --card-border: #e5e7eb; /* gray-200 */
+  --card-shadow: rgba(0, 0, 0, 0.1);
+
+  /* 文字顏色 */
+  --text-primary: #111827; /* gray-900 */
+  --text-secondary: #6b7280; /* gray-500 */
+  --text-tertiary: #9ca3af; /* gray-400 */
+
+  /* 輸入框 */
+  --input-bg: #ffffff;
+  --input-border: #d1d5db; /* gray-300 */
+  --input-border-focus: #14532d; /* green-900 */
+  --input-text: #111827; /* gray-900 */
+
+  /* 按鈕 */
+  --button-bg: #14532d; /* green-900 */
+  --button-bg-hover: #15803d; /* green-700 */
+  --button-text: #ffffff;
+
+  /* 狀態顏色 */
+  --success-bg: #dcfce7; /* green-100 */
+  --success-text: #166534; /* green-800 */
+  --error-bg: #fee2e2; /* red-100 */
+  --error-text: #991b1b; /* red-800 */
+  --warning-bg: #fef3c7; /* yellow-100 */
+  --warning-text: #92400e; /* yellow-800 */
+
+  /* 分隔線 */
+  --divider: #e5e7eb; /* gray-200 */
+
+  /* Hover 效果 */
+  --hover-bg: #f3f4f6; /* gray-100 */
+}
+
+/* ===== Dark Mode Variables ===== */
+.dark {
+  /* 基礎色彩 */
+  --background: #0f172a; /* slate-900 */
+  --foreground: #f1f5f9; /* slate-100 */
+
+  /* 主色調（亮綠色，提高對比度） */
+  --primary-green: #86efac; /* green-300 */
+  --primary-green-hover: #4ade80; /* green-400 */
+  --primary-green-light: #14532d; /* green-900 */
+  --primary-green-bg: #16a34a; /* green-600 */
+
+  /* 卡片與面板 */
+  --card-bg: #1e293b; /* slate-800 */
+  --card-bg-secondary: #334155; /* slate-700 */
+  --card-border: #475569; /* slate-600 */
+  --card-shadow: rgba(0, 0, 0, 0.3);
+
+  /* 文字顏色 */
+  --text-primary: #f1f5f9; /* slate-100 */
+  --text-secondary: #94a3b8; /* slate-400 */
+  --text-tertiary: #64748b; /* slate-500 */
+
+  /* 輸入框 */
+  --input-bg: #1e293b; /* slate-800 */
+  --input-border: #475569; /* slate-600 */
+  --input-border-focus: #86efac; /* green-300 */
+  --input-text: #f1f5f9; /* slate-100 */
+
+  /* 按鈕 */
+  --button-bg: #16a34a; /* green-600 */
+  --button-bg-hover: #22c55e; /* green-500 */
+  --button-text: #ffffff;
+
+  /* 狀態顏色 */
+  --success-bg: #14532d; /* green-900 */
+  --success-text: #86efac; /* green-300 */
+  --error-bg: #7f1d1d; /* red-900 */
+  --error-text: #fca5a5; /* red-300 */
+  --warning-bg: #78350f; /* yellow-900 */
+  --warning-text: #fcd34d; /* yellow-300 */
+
+  /* 分隔線 */
+  --divider: #334155; /* slate-700 */
+
+  /* Hover 效果 */
+  --hover-bg: #334155; /* slate-700 */
+}
+
+/* ===== System Preference Support ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    /* 當系統偏好深色且未手動設定 .light 時，套用深色變數 */
+    --background: #0f172a;
+    --foreground: #f1f5f9;
+    --primary-green: #86efac;
+    --primary-green-hover: #4ade80;
+    --card-bg: #1e293b;
+    --card-bg-secondary: #334155;
+    --card-border: #475569;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+  }
 }
 
 @theme inline {
@@ -11,16 +124,6 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
-
-/* 暫時註解暗色主題以避免 iPad 顯示問題 */
-/*
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-*/
 
 body {
   background: var(--background);

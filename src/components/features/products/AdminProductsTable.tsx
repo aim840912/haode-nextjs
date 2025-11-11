@@ -1,6 +1,6 @@
 'use client'
 
-import UnifiedProductsTable from './UnifiedProductsTable'
+import { UnifiedProductsTable } from './UnifiedProductsTable'
 
 interface AdminProductsTableProps {
   onDelete?: (id: string) => void
@@ -14,7 +14,7 @@ interface AdminProductsTableProps {
  * 現在使用統一的 UnifiedProductsTable 實作
  * 保持原有 API 以確保向後相容性
  */
-export default function AdminProductsTable({
+export function AdminProductsTable({
   onDelete,
   onToggleActive,
   refreshTrigger,

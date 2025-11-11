@@ -1,11 +1,19 @@
+/**
+ * @api {post} /api/admin/locations/create-with-images 建立門市（含圖片）
+ * @apiName CreateLocationWithImages
+ * @apiGroup AdminLocations
+ * @apiPermission admin
+ * @apiDescription 事務式建立門市，支援 Base64 圖片上傳或已上傳圖片 URL
+ */
+
 import { NextRequest } from 'next/server'
-import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
-import { ValidationError } from '@/lib/errors'
-import { created } from '@/lib/api-response'
-import { apiLogger } from '@/lib/logger'
-import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { z } from 'zod'
+import { created } from '@/lib/api-response'
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
+import { ValidationError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 
 const LocationWithImagesSchema = z.object({
   location: z.object({

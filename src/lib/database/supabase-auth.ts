@@ -1,23 +1,24 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/types/database'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { authLogger } from '@/lib/logger'
+import { Database } from '@/types/database'
+import { OAuthProvider, OAuthSignInOptions } from '@/types/oauth'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 // 使用 globalThis 確保真正的全域單例
 declare global {
-  var __supabase_browser_client__: ReturnType<typeof createBrowserClient<Database>> | undefined
-  var __supabase_admin_client__: ReturnType<typeof createClient<Database>> | undefined
-  var __supabase_server_client_simple__: ReturnType<typeof createClient<Database>> | undefined
+  var __supabase_browser_client__: SupabaseClient<Database> | undefined
+  var __supabase_admin_client__: SupabaseClient<Database> | undefined
+  var __supabase_server_client_simple__: SupabaseClient<Database> | undefined
 }
 
 /**
  * 取得瀏覽器端 Supabase 客戶端 (真正的全域 Singleton)
  * 使用 globalThis 確保在開發模式下也只有一個實例
  */
-function getBrowserSupabaseClient() {
+function getBrowserSupabaseClient(): SupabaseClient<Database> {
   // 只在瀏覽器環境中運作
   if (typeof window === 'undefined') {
     throw new Error('getBrowserSupabaseClient should only be called in browser environment')
@@ -26,7 +27,54 @@ function getBrowserSupabaseClient() {
   if (!globalThis.__supabase_browser_client__) {
     globalThis.__supabase_browser_client__ = createBrowserClient<Database>(
       supabaseUrl,
-      supabaseAnonKey
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            // 解析所有 cookies
+            return document.cookie.split('; ').reduce(
+              (cookies, cookie) => {
+                const [name, ...rest] = cookie.split('=')
+                if (name) {
+                  cookies.push({
+                    name,
+                    value: decodeURIComponent(rest.join('=')),
+                  })
+                }
+                return cookies
+              },
+              [] as { name: string; value: string }[]
+            )
+          },
+          setAll(cookiesToSet) {
+            // 設置所有 cookies
+            cookiesToSet.forEach(({ name, value, options }) => {
+              let cookieString = `${name}=${encodeURIComponent(value)}`
+
+              // 添加 cookie 選項
+              if (options?.maxAge) {
+                cookieString += `; max-age=${options.maxAge}`
+              }
+              if (options?.path) {
+                cookieString += `; path=${options.path}`
+              } else {
+                cookieString += '; path=/'
+              }
+              if (options?.domain) {
+                cookieString += `; domain=${options.domain}`
+              }
+              if (options?.sameSite) {
+                cookieString += `; samesite=${options.sameSite}`
+              }
+              if (options?.secure) {
+                cookieString += '; secure'
+              }
+
+              document.cookie = cookieString
+            })
+          },
+        },
+      }
     )
   }
 
@@ -34,16 +82,14 @@ function getBrowserSupabaseClient() {
 }
 
 // 客戶端 Supabase client getter function - 延遲初始化
-export function getSupabaseClient() {
+export function getSupabaseClient(): SupabaseClient<Database> {
   return getBrowserSupabaseClient()
 }
 
 // 使用 Proxy 實現真正的延遲初始化，避免模組載入時立即執行
-export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Database>>, {
+export const supabase = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
-    let client:
-      | ReturnType<typeof createBrowserClient<Database>>
-      | ReturnType<typeof createClient<Database>>
+    let client: SupabaseClient<Database>
 
     // 根據環境選擇正確的客戶端
     if (typeof window === 'undefined') {
@@ -71,7 +117,7 @@ export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient<Da
 /**
  * 取得管理員 Supabase 客戶端 (全域 Singleton)
  */
-function getAdminSupabaseClient() {
+function getAdminSupabaseClient(): SupabaseClient<Database> | null {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return null
   }
@@ -101,7 +147,7 @@ function getAdminSupabaseClient() {
 }
 
 // 服務端 Supabase 客戶端（用於 API routes） - 重建為通用客戶端
-export function getSupabaseServer() {
+export function getSupabaseServer(): SupabaseClient<Database> {
   // 在客戶端環境中，使用瀏覽器客戶端
   if (typeof window !== 'undefined') {
     return getBrowserSupabaseClient()
@@ -125,12 +171,18 @@ export function getSupabaseServer() {
 }
 
 // 管理員 Supabase 客戶端（具有更高權限） - 使用 getter 函數
-export function getSupabaseAdmin() {
-  return getAdminSupabaseClient()
+export function getSupabaseAdmin(): SupabaseClient<Database> {
+  const client = getAdminSupabaseClient()
+  if (!client) {
+    throw new Error(
+      'Supabase admin client not initialized. Check SUPABASE_SERVICE_ROLE_KEY environment variable.'
+    )
+  }
+  return client
 }
 
 // 使用 Proxy 實現延遲初始化的服務端客戶端 - 重導向至統一實作
-export const supabaseServer = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+export const supabaseServer = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
     const client = getSupabaseServer()
     return client[prop as keyof typeof client]
@@ -138,7 +190,7 @@ export const supabaseServer = new Proxy({} as ReturnType<typeof createClient<Dat
 })
 
 // 使用 Proxy 實現延遲初始化的管理員客戶端
-export const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient<Database>>, {
+export const supabaseAdmin = new Proxy({} as SupabaseClient<Database>, {
   get(target, prop) {
     const client = getAdminSupabaseClient()
     return client && client[prop as keyof typeof client]
@@ -491,4 +543,122 @@ export function clearAllClientCaches() {
   globalThis.__supabase_browser_client__ = undefined
   globalThis.__supabase_admin_client__ = undefined
   globalThis.__supabase_server_client_simple__ = undefined
+}
+
+/**
+ * 使用 OAuth Provider 登入
+ * @param provider - OAuth 提供者（google, facebook, line）
+ * @param options - 登入選項
+ */
+export async function signInWithProvider(
+  provider: OAuthProvider,
+  options?: OAuthSignInOptions
+): Promise<{ error: Error | null }> {
+  const supabaseClient = getBrowserSupabaseClient()
+
+  // LINE 尚未被 Supabase 原生支援，暫時返回錯誤
+  if (provider === 'line') {
+    const error = new Error('LINE Login 尚未支援')
+    authLogger.error('LINE Login 尚未支援', error, {
+      module: 'SupabaseAuth',
+      action: 'signInWithProvider',
+      metadata: { provider },
+    })
+    return { error }
+  }
+
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: provider as 'google' | 'facebook',
+    options: {
+      redirectTo: options?.redirectTo || `${window.location.origin}/auth/callback`,
+      scopes: options?.scopes,
+    },
+  })
+
+  if (error) {
+    authLogger.error('OAuth 登入失敗', new Error(error.message), {
+      module: 'SupabaseAuth',
+      action: 'signInWithProvider',
+      metadata: {
+        provider,
+        error: error.message,
+      },
+    })
+  }
+
+  return { error }
+}
+
+/**
+ * 同步 OAuth 使用者 Profile 到 profiles 表
+ * 在 OAuth 登入後自動建立或更新使用者資料
+ */
+export async function syncOAuthProfile(userId: string): Promise<void> {
+  const supabaseClient = getSupabaseServer()
+
+  // 取得使用者資訊
+  const { data: userData, error: userError } = await supabaseClient.auth.admin.getUserById(userId)
+
+  if (userError || !userData?.user) {
+    authLogger.error('取得使用者資訊失敗', new Error(userError?.message || '未知錯誤'), {
+      module: 'SupabaseAuth',
+      action: 'syncOAuthProfile',
+      metadata: {
+        userId,
+        error: userError?.message,
+      },
+    })
+    return
+  }
+
+  const user = userData.user
+  const metadata = user.user_metadata as Record<string, any>
+  const provider = user.app_metadata.provider as OAuthProvider
+
+  // 檢查 profile 是否已存在
+  const { data: existingProfile } = await supabaseClient
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .single()
+
+  const profileData = {
+    id: userId,
+    email: user.email!,
+    name: metadata.full_name || metadata.name || user.email?.split('@')[0] || '使用者',
+    avatar_url: metadata.avatar_url || metadata.picture,
+    oauth_provider: provider,
+    updated_at: new Date().toISOString(),
+  }
+
+  try {
+    if (existingProfile) {
+      // 更新現有 profile
+      await (supabaseClient as any).from('profiles').update(profileData).eq('id', userId)
+    } else {
+      // 建立新 profile
+      await (supabaseClient as any)
+        .from('profiles')
+        .insert({ ...profileData, created_at: new Date().toISOString() })
+    }
+
+    authLogger.info('OAuth Profile 同步成功', {
+      module: 'SupabaseAuth',
+      action: 'syncOAuthProfile',
+      metadata: {
+        userId,
+        provider,
+        isNewProfile: !existingProfile,
+      },
+    })
+  } catch (error) {
+    authLogger.error('OAuth Profile 同步失敗', error as Error, {
+      module: 'SupabaseAuth',
+      action: 'syncOAuthProfile',
+      metadata: {
+        userId,
+        provider,
+      },
+    })
+  }
 }

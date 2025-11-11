@@ -1,8 +1,8 @@
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
-import OptimizedImage from '@/components/ui/image/OptimizedImage'
 import Link from 'next/link'
-import type { Product } from '@/types/product'
 import { Heart } from 'lucide-react'
+import { OptimizedImage } from '@/components/ui/image/OptimizedImage'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import type { Product } from '@/types/product'
 
 interface InterestsTabProps {
   products: Product[]

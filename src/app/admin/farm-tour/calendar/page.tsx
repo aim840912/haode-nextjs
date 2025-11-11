@@ -1,24 +1,27 @@
 'use client'
 
 // import { useState } from 'react';
+import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
-import AdminProtection from '@/components/features/admin/AdminProtection'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { logger } from '@/lib/logger'
 
 // 動態導入 FarmTourCalendar 以減少初始 Bundle 大小
-const FarmTourCalendar = dynamic(() => import('@/components/features/calendar/FarmTourCalendar'), {
-  loading: () => (
-    <div className="flex items-center justify-center h-96 bg-white rounded-lg shadow-md">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">載入行事曆中...</p>
+const FarmTourCalendar = dynamic(
+  () => import('@/components/features/calendar/FarmTourCalendar').then(mod => mod.FarmTourCalendar),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center h-96 bg-white dark:bg-slate-800 rounded-lg shadow-md">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">載入行事曆中...</p>
+        </div>
       </div>
-    </div>
-  ),
-  ssr: false,
-})
+    ),
+    ssr: false,
+  }
+)
 
 export default function FarmTourCalendarPage() {
   const router = useRouter()
@@ -39,13 +42,15 @@ export default function FarmTourCalendarPage() {
 
   return (
     <AdminProtection>
-      <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* 頁面標題 */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">農場導覽預約行事曆</h1>
-              <p className="text-gray-600">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                農場導覽預約行事曆
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
                 視覺化管理所有農場導覽預約，支援拖放調整時間和快速新增預約
               </p>
             </div>
@@ -54,7 +59,7 @@ export default function FarmTourCalendarPage() {
             <div className="flex gap-3">
               <Link
                 href="/admin/farm-tour"
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm"
+                className="px-4 py-2 bg-amber-600 dark:bg-amber-700 text-white rounded-lg hover:bg-amber-700 dark:hover:bg-amber-600 transition-colors text-sm"
               >
                 活動管理
               </Link>
@@ -63,12 +68,12 @@ export default function FarmTourCalendarPage() {
 
           {/* 功能說明卡片 */}
           <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-600">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-blue-600"
+                      className="w-5 h-5 text-blue-600 dark:text-blue-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -83,18 +88,18 @@ export default function FarmTourCalendarPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">多視圖切換</h3>
-                  <p className="text-sm text-gray-600">月、週、日、列表視圖</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">多視圖切換</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">月、週、日、列表視圖</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-600">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-green-600"
+                      className="w-5 h-5 text-green-600 dark:text-green-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -109,18 +114,18 @@ export default function FarmTourCalendarPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">狀態標記</h3>
-                  <p className="text-sm text-gray-600">顏色區分不同狀態</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">狀態標記</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">顏色區分不同狀態</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-slate-600">
               <div className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
                     <svg
-                      className="w-5 h-5 text-purple-600"
+                      className="w-5 h-5 text-purple-600 dark:text-purple-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -135,15 +140,15 @@ export default function FarmTourCalendarPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">拖放操作</h3>
-                  <p className="text-sm text-gray-600">直接調整預約時間</p>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">拖放操作</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">直接調整預約時間</p>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 行事曆組件 */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-600 p-6">
             <FarmTourCalendar
               defaultView="dayGridMonth"
               height={700}
@@ -154,10 +159,10 @@ export default function FarmTourCalendarPage() {
           </div>
 
           {/* 使用提示 */}
-          <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+          <div className="mt-8 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-6">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
-                <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-blue-600 dark:bg-blue-700 rounded-full flex items-center justify-center">
                   <svg
                     className="w-4 h-4 text-white"
                     fill="none"
@@ -174,8 +179,8 @@ export default function FarmTourCalendarPage() {
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-blue-900 mb-2">使用提示</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2">使用提示</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-800 dark:text-blue-300">
                   <ul className="space-y-1">
                     <li>• 點擊預約事件可查看詳細資訊並跳轉到詢問單</li>
                     <li>• 拖放預約事件可直接調整參觀日期</li>

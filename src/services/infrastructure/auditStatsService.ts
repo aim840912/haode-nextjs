@@ -6,6 +6,7 @@
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { dbLogger } from '@/lib/logger'
+import { ResourceType, AuditAction, AuditTypeGuards } from '@/types/audit'
 import {
   AuditStatsService,
   FormattedAuditStats,
@@ -18,7 +19,6 @@ import {
   StatsTransformer,
   // StatsQueryResult, // 未使用
 } from '@/types/audit-stats'
-import { ResourceType, AuditAction, AuditTypeGuards } from '@/types/audit'
 
 // 統計資料轉換工具類別
 class StatsTransformerImpl implements StatsTransformer {

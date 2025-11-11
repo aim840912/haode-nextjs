@@ -6,6 +6,7 @@ import {
   ExclamationCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
+import { cn } from '@/lib/utils/cn'
 
 export type ValidatedInputType =
   | 'text'
@@ -117,7 +118,11 @@ export function ValidatedInput({
     default: 'border-gray-300 focus:ring-green-500 focus:border-transparent',
   }
 
-  const baseClasses = `w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-all duration-200 ${stateClasses[inputState]} ${className}`
+  const baseClasses = cn(
+    'w-full px-3 py-2 border rounded-lg focus:ring-2 focus:outline-none transition-all duration-200',
+    stateClasses[inputState],
+    className
+  )
 
   // 處理值變化
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -239,7 +244,7 @@ export function ValidatedInput({
         )}
 
         {/* 輸入框 */}
-        <div className={prefix ? 'pl-8' : suffix ? 'pr-12' : ''}>{renderInput()}</div>
+        <div className={cn(prefix && 'pl-8', suffix && 'pr-12')}>{renderInput()}</div>
 
         {/* 狀態圖標和後綴 */}
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
@@ -301,13 +306,14 @@ export function ValidatedInput({
           {/* 字數統計 */}
           {showCharCount && maxLength && type !== 'number' && (
             <span
-              className={`text-sm ${
+              className={cn(
+                'text-sm',
                 String(internalValue).length > maxLength * 0.9
                   ? 'text-red-500'
                   : String(internalValue).length > maxLength * 0.7
                     ? 'text-yellow-500'
                     : 'text-gray-400'
-              }`}
+              )}
             >
               {String(internalValue).length}/{maxLength}
             </span>

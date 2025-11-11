@@ -1,7 +1,8 @@
-import LoadingSpinner from '@/components/ui/loading/LoadingSpinner'
 import Link from 'next/link'
-import type { Order } from '@/types/order'
 import { Package } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
+import { formatDate } from '@/lib/utils/formatters'
+import type { Order } from '@/types/order'
 
 interface OrdersTabProps {
   orders: Order[]
@@ -72,7 +73,7 @@ export function OrdersTab({
               <div>
                 <p className="text-sm text-gray-600">訂單編號：{order.id}</p>
                 <p className="text-sm text-gray-600">
-                  訂單日期：{new Date(order.createdAt).toLocaleDateString('zh-TW')}
+                  訂單日期：{formatDate(order.createdAt, 'short')}
                 </p>
               </div>
               <span

@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { AuthErrorBoundary } from '@/components/ui/error/AuthErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
-import AuthErrorBoundary from '@/components/ui/error/AuthErrorBoundary'
+import { useAuth } from '@/contexts/AuthContext'
+import { SocialLoginSection } from '@/components/auth/SocialLoginSection'
 import { logger } from '@/lib/logger'
 import { validateLoginInput, getLoginInputType } from '@/lib/utils/auth-helpers'
 
@@ -99,30 +100,40 @@ export default function LoginPage() {
 
   return (
     <AuthErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 flex items-center justify-center py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full space-y-8">
           {/* Header */}
           <div className="text-center">
             <Link href="/" className="inline-block mb-6">
-              <div className="text-3xl font-bold text-amber-900 tracking-tight">豪德製茶所</div>
-              <div className="text-sm text-amber-700/70 font-medium tracking-wider">HAUDE TEA</div>
+              <div className="text-3xl font-bold text-amber-900 dark:text-amber-300 tracking-tight">
+                豪德製茶所
+              </div>
+              <div className="text-sm text-amber-700/70 dark:text-amber-400/70 font-medium tracking-wider">
+                HAUDE TEA
+              </div>
             </Link>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-2">歡迎回來</h2>
-            <p className="text-gray-600">登入您的帳號以繼續</p>
+            <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-2">
+              歡迎回來
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300">登入您的帳號以繼續</p>
           </div>
 
           {/* Login Form */}
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8">
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{error}</p>
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg">
+                <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
               </div>
             )}
 
             {/* 新用戶提示 */}
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <h3 className="text-sm font-medium text-blue-800 mb-2">歡迎加入</h3>
-              <div className="text-xs text-blue-700">首次使用請先註冊帳號，即可享受完整的體驗</div>
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg">
+              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">
+                歡迎加入
+              </h3>
+              <div className="text-xs text-blue-700 dark:text-blue-400">
+                首次使用請先註冊帳號，即可享受完整的體驗
+              </div>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -130,7 +141,7 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="loginInput"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
                   手機號碼或電子郵件
                 </label>
@@ -142,17 +153,17 @@ export default function LoginPage() {
                     required
                     value={loginInput}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500 ${
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700 ${
                       loginInput && inputType === 'invalid'
-                        ? 'border-red-300 bg-red-50'
-                        : 'border-gray-300'
+                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20'
+                        : 'border-gray-300 dark:border-slate-600'
                     }`}
                     placeholder="請輸入手機號碼或電子郵件"
                   />
                   {/* 輸入類型指示器 */}
                   {loginInput && inputType !== 'invalid' && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded inline-flex items-center">
+                      <span className="text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-1 rounded inline-flex items-center">
                         {inputType === 'email' ? (
                           // Email SVG 圖示
                           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -170,14 +181,17 @@ export default function LoginPage() {
                   )}
                 </div>
                 {/* 輸入提示 */}
-                <div className="mt-1 text-xs text-gray-500">
+                <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   支援格式：example@email.com 或 09xx-xxx-xxx
                 </div>
               </div>
 
               {/* Password Input */}
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                >
                   密碼
                 </label>
                 <input
@@ -187,7 +201,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 placeholder-gray-500"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 dark:bg-slate-700"
                   placeholder="請輸入您的密碼"
                 />
               </div>
@@ -196,7 +210,7 @@ export default function LoginPage() {
               <div className="flex items-center justify-end">
                 <Link
                   href="/forgot-password"
-                  className="text-sm text-amber-600 hover:text-amber-800 transition-colors"
+                  className="text-sm text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 transition-colors"
                 >
                   忘記密碼？
                 </Link>
@@ -206,19 +220,24 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-amber-900 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-amber-900 dark:bg-amber-800 text-white py-3 px-4 rounded-lg font-semibold hover:bg-amber-800 dark:hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? '登入中...' : '登入'}
               </button>
             </form>
 
+            {/* Social Login Section */}
+            <div className="mt-6">
+              <SocialLoginSection providers={['google', 'facebook']} redirectTo="/" />
+            </div>
+
             {/* Register Link */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 還沒有帳號？{' '}
                 <Link
                   href="/register"
-                  className="text-amber-600 hover:text-amber-800 font-medium transition-colors"
+                  className="text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 font-medium transition-colors"
                 >
                   立即註冊
                 </Link>
@@ -228,7 +247,10 @@ export default function LoginPage() {
 
           {/* Back to Home */}
           <div className="text-center">
-            <Link href="/" className="text-sm text-gray-500 hover:text-amber-600 transition-colors">
+            <Link
+              href="/"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+            >
               ← 返回首頁
             </Link>
           </div>

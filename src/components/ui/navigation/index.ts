@@ -1,2 +1,9 @@
-export { default as Breadcrumbs } from './Breadcrumbs'
-export { default as HeaderSpacer } from './HeaderSpacer'
+export {
+  Breadcrumbs,
+  createProductBreadcrumbs,
+  createScheduleBreadcrumbs,
+  createLocationsBreadcrumbs,
+  createFarmTourBreadcrumbs,
+} from './Breadcrumbs'
+export type { BreadcrumbItem, BreadcrumbsProps } from './Breadcrumbs'
+export { HeaderSpacer } from './HeaderSpacer'

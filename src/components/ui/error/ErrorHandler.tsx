@@ -1,8 +1,9 @@
 'use client'
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
-import { useAsyncLoading } from '../loading/LoadingManager'
+import { cn } from '@/lib/utils/cn'
 import { AsyncOperation } from '@/types/infrastructure.types'
+import { useAsyncLoading } from '../loading/LoadingManager'
 
 // 錯誤類型定義
 export enum ErrorType {
@@ -332,10 +333,10 @@ function ErrorToast({ error, onDismiss, onRetry }: ErrorToastProps) {
 
   return (
     <div
-      className={`
-      border rounded-lg p-4 shadow-lg transition-all duration-300
-      ${getErrorColor(error.type)}
-    `}
+      className={cn(
+        'border rounded-lg p-4 shadow-lg transition-all duration-300',
+        getErrorColor(error.type)
+      )}
     >
       <div className="flex items-start space-x-3">
         <span className="text-xl">{getErrorIcon(error.type)}</span>
