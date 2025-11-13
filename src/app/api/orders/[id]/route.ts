@@ -11,6 +11,7 @@ import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { orderQueryService } from '@/services/core/order/OrderQueryService'
 import { orderService } from '@/services/core/order'
 
 // 訂單更新的驗證 schema
@@ -85,7 +86,7 @@ async function handleGET(req: NextRequest, user: User, context?: unknown) {
     metadata: { orderId: id, userId: user.id },
   })
 
-  const order = await orderService.getOrderById(id, user.id)
+  const order = await orderQueryService.getOrderById(id, user.id)
 
   if (!order) {
     throw new NotFoundError('訂單不存在或無權限查看')

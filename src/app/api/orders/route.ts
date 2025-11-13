@@ -162,6 +162,7 @@ import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
+import { orderQueryService } from '@/services/core/order/OrderQueryService'
 import { orderService } from '@/services/core/order'
 import { CreateOrderRequest } from '@/types/order'
 
@@ -203,7 +204,7 @@ async function handleGET(req: NextRequest, user: User) {
     metadata: { userId: user.id, page, limit },
   })
 
-  const result = await orderService.getUserOrders(user.id, limit, offset)
+  const result = await orderQueryService.getUserOrders(user.id, limit, offset)
 
   return success(
     {

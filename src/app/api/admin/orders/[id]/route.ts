@@ -11,7 +11,8 @@ import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
-import { orderService } from '@/services/core/order'
+import { orderQueryService } from '@/services/core/order/OrderQueryService'
+import { orderCommandService } from '@/services/core/order/OrderCommandService'
 
 // 管理員訂單更新的驗證 schema
 const AdminUpdateOrderSchema = z.object({
@@ -86,14 +87,14 @@ async function handleGET(req: NextRequest, user: User, context?: unknown) {
   })
 
   // 管理員可以查看任何使用者的訂單，所以先取得訂單再驗證
-  const order = await orderService.findById(id)
+  const order = await orderQueryService.findById(id)
 
   if (!order) {
     throw new NotFoundError('訂單不存在')
   }
 
   // 載入訂單項目
-  const orderWithItems = await orderService.getOrderById(id, order.userId)
+  const orderWithItems = await orderQueryService.getOrderById(id, order.userId)
 
   return success(orderWithItems, '取得訂單詳情成功')
 }
@@ -167,14 +168,14 @@ async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
   const updates = validation.data
 
   // 檢查訂單是否存在
-  const existingOrder = await orderService.findById(id)
+  const existingOrder = await orderQueryService.findById(id)
   if (!existingOrder) {
     throw new NotFoundError('訂單不存在')
   }
 
   // 更新訂單狀態
   if (updates.status) {
-    await orderService.updateOrderStatus(id, updates.status, updates.notes)
+    await orderCommandService.updateOrderStatus(id, updates.status, updates.notes)
   }
 
   // 更新其他欄位
@@ -194,11 +195,11 @@ async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
   }
 
   if (Object.keys(otherUpdates).length > 0) {
-    await orderService.update(id, otherUpdates)
+    await orderCommandService.updateOrder(id, otherUpdates)
   }
 
   // 取得更新後的訂單
-  const updatedOrder = await orderService.getOrderById(id, existingOrder.userId)
+  const updatedOrder = await orderQueryService.getOrderById(id, existingOrder.userId)
 
   apiLogger.info('管理員更新訂單成功', {
     module: 'AdminOrderAPI',
