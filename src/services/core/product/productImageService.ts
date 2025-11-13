@@ -44,13 +44,13 @@ export class ProductImageService {
       storage_url: row.storage_url,
       file_path: row.file_path,
       alt_text: row.alt_text || undefined,
-      display_position: row.display_position,
+      display_position: row.display_position ?? 0,
       size: row.size as 'thumbnail' | 'medium' | 'large',
       width: metadata.width || undefined,
       height: metadata.height || undefined,
       file_size: metadata.file_size || undefined,
-      created_at: row.created_at,
-      updated_at: row.updated_at,
+      created_at: row.created_at || new Date().toISOString(),
+      updated_at: row.updated_at || new Date().toISOString(),
       module: row.module,
     }
   }

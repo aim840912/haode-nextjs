@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { Order, OrderItem, OrderStatus, CreateOrderRequest, ShippingAddress } from '@/types/order'
+import { orderFromDB, orderItemFromDB } from './orderMappers'
 import { OrderQueryService } from './OrderQueryService'
 
 const getAdmin = () => {
@@ -83,7 +84,7 @@ export class OrderCommandService {
         shipping_fee: shippingFee,
         tax,
         total_amount: totalAmount,
-        shipping_address: orderData.shippingAddress,
+        shipping_address: orderData.shippingAddress as any,
         payment_method: orderData.paymentMethod,
         payment_status: 'pending',
         notes: orderData.notes,
@@ -92,7 +93,7 @@ export class OrderCommandService {
       const client = getAdmin()
       const { data: orderData_result, error: orderError } = await client
         .from(this.tableName)
-        .insert([orderRecord])
+        .insert([orderRecord] as any)
         .select()
         .single()
 
@@ -106,13 +107,20 @@ export class OrderCommandService {
 
       // 建立訂單項目
       const orderItemsWithOrderId = orderItems.map(item => ({
-        ...item,
         order_id: orderData_result.id,
+        product_id: item.productId,
+        product_name: item.productName,
+        product_image: item.productImage,
+        quantity: item.quantity,
+        unit_price: item.unitPrice,
+        price_unit: item.priceUnit,
+        unit_quantity: item.unitQuantity,
+        subtotal: item.subtotal,
       }))
 
       const { data: itemsData, error: itemsError } = await client
         .from(this.orderItemsTable)
-        .insert(orderItemsWithOrderId)
+        .insert(orderItemsWithOrderId as any)
         .select()
 
       if (itemsError) {
@@ -128,8 +136,8 @@ export class OrderCommandService {
       // 更新產品庫存
       await this.updateProductInventory(orderData.items)
 
-      const order = this.orderFromDB(orderData_result as any)
-      order.items = itemsData.map(item => this.orderItemFromDB(item as any))
+      const order = orderFromDB(orderData_result as any)
+      order.items = itemsData.map(item => orderItemFromDB(item as any))
 
       timer.end({ metadata: { orderId: order.id, orderNumber, totalAmount } })
 
@@ -285,7 +293,7 @@ export class OrderCommandService {
         })
       }
 
-      const order = this.orderFromDB(data as any)
+      const order = orderFromDB(data as any)
 
       timer.end({ metadata: { orderId } })
 
@@ -371,8 +379,8 @@ export class OrderCommandService {
 
     for (const item of items) {
       const { error } = await client.rpc('update_product_inventory', {
-        product_id: item.productId,
-        quantity_change: -item.quantity, // 減少庫存
+        p_product_id: item.productId,
+        p_quantity_change: -item.quantity, // 減少庫存
       })
 
       if (error) {
@@ -393,8 +401,8 @@ export class OrderCommandService {
 
     for (const item of items) {
       const { error } = await client.rpc('update_product_inventory', {
-        product_id: item.productId,
-        quantity_change: item.quantity, // 增加庫存
+        p_product_id: item.productId,
+        p_quantity_change: item.quantity, // 增加庫存
       })
 
       if (error) {
@@ -404,48 +412,6 @@ export class OrderCommandService {
           metadata: { productId: item.productId, quantity: item.quantity },
         })
       }
-    }
-  }
-
-  // 資料轉換方法
-  private orderFromDB(record: any): Order {
-    return {
-      id: record.id,
-      orderNumber: record.order_number,
-      userId: record.user_id,
-      status: record.status,
-      items: [],
-      subtotal: Number(record.subtotal),
-      shippingFee: Number(record.shipping_fee),
-      tax: Number(record.tax),
-      totalAmount: Number(record.total_amount),
-      shippingAddress: record.shipping_address as any,
-      paymentMethod: record.payment_method,
-      paymentStatus: record.payment_status as any,
-      paymentId: record.payment_id,
-      notes: record.notes,
-      estimatedDeliveryDate: record.estimated_delivery_date,
-      actualDeliveryDate: record.actual_delivery_date,
-      trackingNumber: record.tracking_number,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
-    }
-  }
-
-  private orderItemFromDB(record: any): OrderItem {
-    return {
-      id: record.id,
-      orderId: record.order_id,
-      productId: record.product_id,
-      productName: record.product_name,
-      productImage: record.product_image,
-      quantity: record.quantity,
-      unitPrice: Number(record.unit_price),
-      priceUnit: record.price_unit,
-      unitQuantity: record.unit_quantity,
-      subtotal: Number(record.subtotal),
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
     }
   }
 }

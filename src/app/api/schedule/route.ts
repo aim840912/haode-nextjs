@@ -125,7 +125,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { ScheduleSchemas } from '@/lib/validation'
-import { getScheduleService } from '@/services/factory/serviceFactory'
+import { scheduleServiceSimple } from '@/services/factory/serviceFactory'
 
 async function handleGET(request: NextRequest) {
   // 解析查詢參數
@@ -144,7 +144,7 @@ async function handleGET(request: NextRequest) {
     metadata: { params: result.data },
   })
 
-  const scheduleService = await getScheduleService()
+  const scheduleService = scheduleServiceSimple
   const schedule = await scheduleService.getSchedule()
   return success(schedule, '查詢成功')
 }
@@ -173,7 +173,7 @@ async function handlePOST(request: NextRequest) {
     },
   })
 
-  const scheduleService = await getScheduleService()
+  const scheduleService = scheduleServiceSimple
   const scheduleItem = await scheduleService.addSchedule(result.data)
   return created(scheduleItem, '行程創建成功')
 }

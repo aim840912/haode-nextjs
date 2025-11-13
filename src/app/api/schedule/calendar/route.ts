@@ -51,7 +51,7 @@
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { getScheduleService } from '@/services/factory/serviceFactory'
+import { scheduleServiceSimple } from '@/services/factory/serviceFactory'
 
 interface ScheduleCalendarEvent {
   id: string
@@ -72,7 +72,7 @@ interface ScheduleCalendarEvent {
 }
 
 async function handleGET() {
-  const scheduleService = await getScheduleService()
+  const scheduleService = scheduleServiceSimple
   const scheduleItems = await scheduleService.getSchedule()
 
   // 將 ScheduleItem 轉換為 FullCalendar 事件格式

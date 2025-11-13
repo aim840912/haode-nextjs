@@ -46,6 +46,7 @@ export function TemplateSelector({
 
   // 處理選擇範本
   const handleSelectTemplate = async (template: InquiryTemplate) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const formData = await useTemplate(template.id)
     if (formData) {
       onTemplateSelected(formData)

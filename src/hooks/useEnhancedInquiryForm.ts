@@ -10,8 +10,8 @@ import { useRouter } from 'next/navigation'
 import { inquiryApi } from '@/lib/api-client'
 import { logger } from '@/lib/logger'
 import { validatePhone } from '@/lib/utils/validation'
-import { CreateInquiryRequest, CreateInquiryItemRequest } from '@/types/inquiry'
 import { User } from '@/types/auth'
+import { CreateInquiryRequest, CreateInquiryItemRequest } from '@/types/inquiry'
 import { useErrorTracking } from './useErrorTracking'
 
 /**

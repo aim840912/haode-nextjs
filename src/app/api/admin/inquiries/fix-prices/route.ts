@@ -16,6 +16,11 @@ import { success } from '@/lib/api-response'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
 import { dbLogger } from '@/lib/logger'
 import { withAdminAndError } from '@/lib/middleware/api-middleware'
+import { Database } from '@/types/database'
+
+type InquiryItem = Database['public']['Tables']['inquiry_items']['Row']
+type InquiryItemUpdate = Database['public']['Tables']['inquiry_items']['Update']
+type Product = Database['public']['Tables']['products']['Row']
 
 interface FixResult {
   total_items: number
@@ -49,10 +54,15 @@ async function handlePOST(_request: NextRequest): Promise<Response> {
     })
 
     // 1. 查詢所有 unit_price 為 null 的詢價項目
-    const { data: inquiryItems, error: queryError } = await supabase
+    const itemsQuery = await supabase
       .from('inquiry_items')
       .select('id, product_id, product_name, unit_price, quantity')
       .is('unit_price', null)
+
+    const inquiryItems = itemsQuery.data as
+      | Pick<InquiryItem, 'id' | 'product_id' | 'product_name' | 'unit_price' | 'quantity'>[]
+      | null
+    const queryError = itemsQuery.error
 
     if (queryError) {
       throw queryError
@@ -75,11 +85,14 @@ async function handlePOST(_request: NextRequest): Promise<Response> {
     for (const item of inquiryItems) {
       try {
         // 查詢產品當前價格
-        const { data: product, error: productError } = await supabase
+        const productQuery = await supabase
           .from('products')
           .select('price')
           .eq('id', item.product_id)
           .single()
+
+        const product = productQuery.data as Pick<Product, 'price'> | null
+        const productError = productQuery.error
 
         const detail: FixResult['details'][0] = {
           inquiry_item_id: item.id,
@@ -108,12 +121,14 @@ async function handlePOST(_request: NextRequest): Promise<Response> {
         detail.new_price = product.price
         const totalPrice = product.price * item.quantity
 
+        const updateData: InquiryItemUpdate = {
+          unit_price: product.price,
+          total_price: totalPrice,
+        }
+
         const { error: updateError } = await supabase
           .from('inquiry_items')
-          .update({
-            unit_price: product.price,
-            total_price: totalPrice,
-          })
+          .update(updateData as any)
           .eq('id', item.id)
 
         if (updateError) {

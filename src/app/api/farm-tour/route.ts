@@ -115,10 +115,9 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { FarmTourActivitySchemas } from '@/lib/validation'
-import { getFarmTourService } from '@/services/factory/serviceFactory'
+import { farmTourService } from '@/services/factory/serviceFactory'
 
 async function handleGET() {
-  const farmTourService = await getFarmTourService()
   const activities = await farmTourService.getAll()
 
   apiLogger.info('農場體驗活動清單查詢成功', {
@@ -151,8 +150,7 @@ async function handlePOST(request: NextRequest) {
     },
   })
 
-  const farmTourService = await getFarmTourService()
-  const newActivity = await farmTourService.create(result.data)
+  const newActivity = await farmTourService.create(result.data as any)
 
   return created(newActivity, '農場體驗活動建立成功')
 }

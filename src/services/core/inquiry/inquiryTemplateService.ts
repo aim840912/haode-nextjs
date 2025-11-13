@@ -6,6 +6,7 @@
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ErrorFactory, NotFoundError, ValidationError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
+import { Database } from '@/types/database'
 import {
   InquiryTemplate,
   CreateInquiryTemplateRequest,
@@ -16,7 +17,6 @@ import {
   InquiryTemplateItem,
 } from '@/types/inquiry-template'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
-import { Database } from '@/types/database'
 
 const getAdmin = () => getSupabaseAdmin()
 
@@ -79,12 +79,12 @@ export class InquiryTemplateService {
       activity_title: record.activity_title || undefined,
       visit_date_pattern: record.visit_date_pattern as any,
       visitor_count: record.visitor_count || undefined,
-      is_active: record.is_active,
-      is_favorite: record.is_favorite,
-      usage_count: record.usage_count,
+      is_active: record.is_active ?? false,
+      is_favorite: record.is_favorite ?? false,
+      usage_count: record.usage_count ?? 0,
       last_used_at: record.last_used_at || undefined,
-      created_at: record.created_at,
-      updated_at: record.updated_at,
+      created_at: record.created_at || new Date().toISOString(),
+      updated_at: record.updated_at || new Date().toISOString(),
     }
   }
 
@@ -237,7 +237,7 @@ export class InquiryTemplateService {
 
       const { data: created, error } = await client
         .from('inquiry_templates')
-        .insert([templateData])
+        .insert([templateData] as any)
         .select()
         .single()
 
@@ -444,7 +444,17 @@ export class InquiryTemplateService {
         metadata: { userId },
       })
 
-      return data
+      // 轉換 null 值為預設值
+      return {
+        user_id: data.user_id || userId,
+        total_templates: data.total_templates ?? 0,
+        active_templates: data.active_templates ?? 0,
+        favorite_templates: data.favorite_templates ?? 0,
+        total_usage_count: data.total_usage_count ?? 0,
+        avg_usage_count: data.avg_usage_count ?? 0,
+        last_template_used_at: data.last_template_used_at || undefined,
+        newest_template_created_at: data.newest_template_created_at || undefined,
+      }
     } catch (error) {
       this.handleError(error, 'getTemplateStats', { userId })
     }

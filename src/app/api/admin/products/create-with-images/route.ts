@@ -197,7 +197,6 @@ async function handlePOST(request: NextRequest, user: User) {
     },
   })
 
-  // @ts-expect-error - Supabase RPC 函數未在類型定義中，但在資料庫中已定義
   const result = await supabase.rpc('create_product_with_images', {
     product_data: product,
     images_data: processedImages,

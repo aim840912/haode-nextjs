@@ -3,9 +3,9 @@ import dynamic from 'next/dynamic'
 import { Star, ShoppingCart, Heart } from 'lucide-react'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/providers/ToastProvider'
 import { Product } from '@/types/product'
 import { InterestButton } from './InterestButton'
-import { useToast } from '@/providers/ToastProvider'
 
 // 動態載入圖片元件以提升效能
 const ProductCardImage = dynamic(

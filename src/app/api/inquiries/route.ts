@@ -116,8 +116,8 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { InquirySchemas } from '@/lib/validation'
-import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
 import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
+import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 
 // GET /api/inquiries - 取得庫存查詢單清單

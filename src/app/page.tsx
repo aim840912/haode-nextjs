@@ -19,9 +19,9 @@ import {
   Sparkles,
   Calendar,
 } from 'lucide-react'
+import { NextMarketScheduleCard } from '@/components/features/home/NextMarketScheduleCard'
 import { ProductsSectionWithErrorBoundary as ProductsSection } from '@/components/features/products/ProductsSection'
 import { FarmStructuredData } from '@/components/features/seo/StructuredData'
-import { NextMarketScheduleCard } from '@/components/features/home/NextMarketScheduleCard'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
 import { SETTING_KEYS } from '@/types/siteSettings'
 

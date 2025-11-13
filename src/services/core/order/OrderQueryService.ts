@@ -7,6 +7,7 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { Order, OrderItem, OrderSummary } from '@/types/order'
+import { orderFromDB, orderItemFromDB } from './orderMappers'
 import type { OrderRecord, OrderItemRecord } from './types'
 
 const getAdmin = () => {
@@ -68,11 +69,15 @@ export class OrderQueryService {
         })
       }
 
-      const orders = (ordersData || []).map(record => this.orderFromDB(record as OrderRecord))
+      const orders = (ordersData || []).map(record => orderFromDB(record as OrderRecord))
 
-      // 載入每個訂單的項目
+      // 批次載入所有訂單的項目（解決 N+1 問題）
+      const orderIds = orders.map(order => order.id)
+      const itemsByOrderId = await this.getOrderItemsBatch(orderIds)
+
+      // 將項目關聯到對應的訂單
       for (const order of orders) {
-        order.items = await this.getOrderItems(order.id)
+        order.items = itemsByOrderId.get(order.id) || []
       }
 
       timer.end({ metadata: { userId, orderCount: orders.length, total: count } })
@@ -122,7 +127,7 @@ export class OrderQueryService {
         })
       }
 
-      const order = this.orderFromDB(data as OrderRecord)
+      const order = orderFromDB(data as OrderRecord)
       order.items = await this.getOrderItems(orderId)
 
       timer.end({ metadata: { orderId, userId, found: true } })
@@ -177,11 +182,15 @@ export class OrderQueryService {
         })
       }
 
-      const orders = (ordersData || []).map(record => this.orderFromDB(record as OrderRecord))
+      const orders = (ordersData || []).map(record => orderFromDB(record as OrderRecord))
 
-      // 為每個訂單載入項目
+      // 批次載入所有訂單的項目（解決 N+1 問題）
+      const orderIds = orders.map(order => order.id)
+      const itemsByOrderId = await this.getOrderItemsBatch(orderIds)
+
+      // 將項目關聯到對應的訂單
       for (const order of orders) {
-        order.items = await this.getOrderItems(order.id)
+        order.items = itemsByOrderId.get(order.id) || []
       }
 
       timer.end({ metadata: { orderCount: orders.length, total: count } })
@@ -253,7 +262,44 @@ export class OrderQueryService {
       })
     }
 
-    return (data || []).map(item => this.orderItemFromDB(item as OrderItemRecord))
+    return (data || []).map(item => orderItemFromDB(item as OrderItemRecord))
+  }
+
+  /**
+   * 批次取得多個訂單的項目（解決 N+1 查詢問題）
+   * @private
+   */
+  private async getOrderItemsBatch(orderIds: string[]): Promise<Map<string, OrderItem[]>> {
+    if (orderIds.length === 0) {
+      return new Map()
+    }
+
+    const client = getAdmin()
+    const { data, error } = await client
+      .from(this.orderItemsTable)
+      .select('*')
+      .in('order_id', orderIds)
+
+    if (error) {
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderQueryService',
+        action: 'getOrderItemsBatch',
+        context: { orderIds },
+      })
+    }
+
+    // 將項目按 order_id 分組
+    const itemsByOrderId = new Map<string, OrderItem[]>()
+    for (const record of data || []) {
+      const item = orderItemFromDB(record as OrderItemRecord)
+      const orderId = record.order_id
+      if (!itemsByOrderId.has(orderId)) {
+        itemsByOrderId.set(orderId, [])
+      }
+      itemsByOrderId.get(orderId)!.push(item)
+    }
+
+    return itemsByOrderId
   }
 
   /**
@@ -308,7 +354,7 @@ export class OrderQueryService {
         })
       }
 
-      const order = this.orderFromDB(data as OrderRecord)
+      const order = orderFromDB(data as OrderRecord)
       order.items = await this.getOrderItems(orderId)
 
       timer.end({ metadata: { orderId, found: true } })
@@ -320,48 +366,6 @@ export class OrderQueryService {
         action: 'findById',
         context: { orderId },
       })
-    }
-  }
-
-  // 資料轉換方法
-  private orderFromDB(record: OrderRecord): Order {
-    return {
-      id: record.id,
-      orderNumber: record.order_number,
-      userId: record.user_id,
-      status: record.status,
-      items: [], // 將由其他方法載入
-      subtotal: Number(record.subtotal),
-      shippingFee: Number(record.shipping_fee),
-      tax: Number(record.tax),
-      totalAmount: Number(record.total_amount),
-      shippingAddress: record.shipping_address as any,
-      paymentMethod: record.payment_method,
-      paymentStatus: record.payment_status as any,
-      paymentId: record.payment_id,
-      notes: record.notes,
-      estimatedDeliveryDate: record.estimated_delivery_date,
-      actualDeliveryDate: record.actual_delivery_date,
-      trackingNumber: record.tracking_number,
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
-    }
-  }
-
-  private orderItemFromDB(record: OrderItemRecord): OrderItem {
-    return {
-      id: record.id,
-      orderId: record.order_id,
-      productId: record.product_id,
-      productName: record.product_name,
-      productImage: record.product_image,
-      quantity: record.quantity,
-      unitPrice: Number(record.unit_price),
-      priceUnit: record.price_unit,
-      unitQuantity: record.unit_quantity,
-      subtotal: Number(record.subtotal),
-      createdAt: record.created_at,
-      updatedAt: record.updated_at,
     }
   }
 }

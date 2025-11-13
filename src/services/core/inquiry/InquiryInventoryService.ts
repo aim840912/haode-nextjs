@@ -11,6 +11,13 @@ import { ServiceSupabaseClient } from '@/types/service.types'
 
 const getAdmin = () => getSupabaseAdmin()
 
+// RPC 返回值類型定義
+interface InventoryRpcResponse {
+  success: boolean
+  available_stock?: number
+  error?: string
+}
+
 /**
  * 詢問單庫存管理服務
  */
@@ -38,10 +45,12 @@ export class InquiryInventoryService {
 
     try {
       for (const item of items) {
-        const { data, error } = await client.rpc('reserve_product_inventory', {
+        const { data: rpcData, error } = await client.rpc('reserve_product_inventory', {
           p_product_id: item.product_id,
           p_quantity: item.quantity,
         })
+
+        const data = rpcData as InventoryRpcResponse | null
 
         if (error) {
           dbLogger.error('保留庫存 RPC 失敗', error, {
@@ -101,10 +110,12 @@ export class InquiryInventoryService {
 
     for (const item of items) {
       try {
-        const { data, error } = await client.rpc('release_reserved_inventory', {
+        const { data: rpcData, error } = await client.rpc('release_reserved_inventory', {
           p_product_id: item.product_id,
           p_quantity: item.quantity,
         })
+
+        const data = rpcData as InventoryRpcResponse | null
 
         if (error) {
           dbLogger.error('釋放保留庫存失敗', error, {
@@ -153,10 +164,12 @@ export class InquiryInventoryService {
     const client = this.getSupabaseClient()
 
     for (const item of items) {
-      const { data, error } = await client.rpc('finalize_reserved_inventory', {
+      const { data: rpcData, error } = await client.rpc('finalize_reserved_inventory', {
         p_product_id: item.product_id,
         p_quantity: item.quantity,
       })
+
+      const data = rpcData as InventoryRpcResponse | null
 
       if (error) {
         dbLogger.error('完成保留庫存失敗', error, {

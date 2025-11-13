@@ -43,7 +43,9 @@ interface _SupabaseFarmTourRecord {
 interface IFarmTourService {
   getAll(): Promise<FarmTourActivity[]>
   getById(id: string): Promise<FarmTourActivity | null>
-  create(data: Omit<FarmTourActivity, 'id' | 'createdAt' | 'updatedAt'>): Promise<FarmTourActivity>
+  create(
+    data: Omit<FarmTourActivity, 'createdAt' | 'updatedAt'> & { id?: string }
+  ): Promise<FarmTourActivity>
   update(
     id: string,
     data: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>

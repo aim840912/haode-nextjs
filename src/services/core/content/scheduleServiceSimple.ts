@@ -24,11 +24,11 @@ interface SupabaseScheduleRecord {
   title: string
   location: string
   date: string
-  time: string
-  status: 'upcoming' | 'ongoing' | 'completed'
-  products: string[]
-  description: string
-  contact: string
+  time: string | null
+  status: string | null
+  products: unknown // Json type from database
+  description: string | null
+  contact: string | null
   special_offer: string | null
   weather_note: string | null
   created_at: string
@@ -71,16 +71,22 @@ export class ScheduleServiceSimple implements ScheduleService {
    * 轉換資料庫記錄為 ScheduleItem
    */
   private transformToScheduleItem(record: SupabaseScheduleRecord): ScheduleItem {
+    // 處理 status，確保是有效值
+    let status: 'upcoming' | 'ongoing' | 'completed' = 'upcoming'
+    if (record.status === 'ongoing' || record.status === 'completed') {
+      status = record.status
+    }
+
     return {
       id: record.id,
       title: record.title,
       location: record.location,
       date: record.date,
-      time: record.time,
-      status: record.status,
-      products: record.products,
-      description: record.description,
-      contact: record.contact,
+      time: record.time || '',
+      status: status,
+      products: Array.isArray(record.products) ? (record.products as string[]) : [],
+      description: record.description || '',
+      contact: record.contact || '',
       specialOffer: record.special_offer || undefined,
       weatherNote: record.weather_note || undefined,
       createdAt: record.created_at,

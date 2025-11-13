@@ -115,13 +115,13 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
       ;(data || []).forEach(log => {
         const key = `${log.action}-${log.resource_type}-${log.user_role || 'unknown'}`
-        const date = new Date(log.created_at).toISOString().split('T')[0]
+        const date = new Date(log.created_at || new Date()).toISOString().split('T')[0]
 
         if (!statsMap.has(key)) {
           statsMap.set(key, {
-            action: log.action,
-            resource_type: log.resource_type,
-            user_role: log.user_role || undefined,
+            action: AuditTypeGuards.toAuditAction(log.action) || 'view',
+            resource_type: AuditTypeGuards.toResourceType(log.resource_type) || 'inquiry',
+            user_role: AuditTypeGuards.toUserRole(log.user_role),
             count: 0,
             unique_users: 0,
             date: date,
@@ -198,13 +198,13 @@ export class SupabaseAuditStatsService implements AuditStatsService {
             user_id: userId,
             user_email: log.user_email,
             user_name: log.user_name || undefined,
-            user_role: log.user_role || undefined,
+            user_role: AuditTypeGuards.toUserRole(log.user_role),
             total_actions: 0,
             view_count: 0,
             update_count: 0,
             delete_count: 0,
-            last_activity: log.created_at,
-            first_activity: log.created_at,
+            last_activity: log.created_at || new Date().toISOString(),
+            first_activity: log.created_at || new Date().toISOString(),
           })
         }
 
@@ -221,11 +221,12 @@ export class SupabaseAuditStatsService implements AuditStatsService {
         }
 
         // 更新時間
-        if (log.created_at > userStat.last_activity) {
-          userStat.last_activity = log.created_at
+        const createdAt = log.created_at || new Date().toISOString()
+        if (createdAt > userStat.last_activity) {
+          userStat.last_activity = createdAt
         }
-        if (log.created_at < userStat.first_activity) {
-          userStat.first_activity = log.created_at
+        if (createdAt < userStat.first_activity) {
+          userStat.first_activity = createdAt
         }
       })
 
@@ -294,13 +295,13 @@ export class SupabaseAuditStatsService implements AuditStatsService {
 
         if (!resourceStatsMap.has(resourceKey)) {
           resourceStatsMap.set(resourceKey, {
-            resource_type: log.resource_type,
+            resource_type: AuditTypeGuards.toResourceType(log.resource_type) || 'inquiry',
             resource_id: log.resource_id,
             access_count: 0,
             unique_users: 0,
             actions_performed: [],
-            last_accessed: log.created_at,
-            first_accessed: log.created_at,
+            last_accessed: log.created_at || new Date().toISOString(),
+            first_accessed: log.created_at || new Date().toISOString(),
           })
         }
 
@@ -308,16 +309,18 @@ export class SupabaseAuditStatsService implements AuditStatsService {
         resourceStat.access_count++
 
         // 記錄執行的動作（去重）
-        if (!resourceStat.actions_performed.includes(log.action)) {
-          resourceStat.actions_performed.push(log.action)
+        const action = AuditTypeGuards.toAuditAction(log.action) || 'view'
+        if (!resourceStat.actions_performed.includes(action)) {
+          resourceStat.actions_performed.push(action)
         }
 
         // 更新時間
-        if (log.created_at > resourceStat.last_accessed) {
-          resourceStat.last_accessed = log.created_at
+        const createdAt = log.created_at || new Date().toISOString()
+        if (createdAt > resourceStat.last_accessed) {
+          resourceStat.last_accessed = createdAt
         }
-        if (log.created_at < resourceStat.first_accessed) {
-          resourceStat.first_accessed = log.created_at
+        if (createdAt < resourceStat.first_accessed) {
+          resourceStat.first_accessed = createdAt
         }
       })
 

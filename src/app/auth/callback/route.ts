@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { syncOAuthProfile } from '@/lib/database/supabase-auth'
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 import { apiLogger } from '@/lib/logger'
 
 /**

@@ -88,7 +88,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { SearchSchemas } from '@/lib/validation'
-import { getProductService } from '@/services/factory/serviceFactory'
+import { productService } from '@/services/factory/serviceFactory'
 import { Product } from '@/types/product'
 import { SearchResult, SearchResponse } from '@/types/search'
 
@@ -122,7 +122,7 @@ async function handleGET(request: NextRequest) {
   }
 
   // 搜尋產品
-  const products = await (await getProductService()).searchProducts(query)
+  const products = await productService.searchProducts(query)
 
   // 轉換為統一的搜尋結果格式
   const productResults: SearchResult[] = products.map((product: Product) => ({

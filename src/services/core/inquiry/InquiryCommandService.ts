@@ -24,12 +24,12 @@ const getAdmin = () => getSupabaseAdmin()
  */
 interface SupabaseInquiryRecord {
   id: string
-  user_id: string
+  user_id: string | null
   customer_name: string
   customer_email: string
   customer_phone: string | null
-  status: string
-  inquiry_type: string
+  status: string | null
+  inquiry_type: string | null
   notes: string | null
   total_estimated_amount: number | null
   delivery_address: string | null
@@ -42,8 +42,8 @@ interface SupabaseInquiryRecord {
   is_replied: boolean
   replied_at: string | null
   replied_by: string | null
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
   inquiry_items?: InquiryItem[]
 }
 
@@ -126,12 +126,12 @@ export class InquiryCommandService {
 
     return {
       id: parsedRecord.id,
-      user_id: parsedRecord.user_id,
+      user_id: parsedRecord.user_id || '',
       customer_name: parsedRecord.customer_name,
       customer_email: parsedRecord.customer_email,
       customer_phone: parsedRecord.customer_phone || undefined,
-      status: parsedRecord.status as any,
-      inquiry_type: parsedRecord.inquiry_type as any,
+      status: (parsedRecord.status || 'pending') as any,
+      inquiry_type: (parsedRecord.inquiry_type || 'product') as any,
       notes: parsedRecord.notes || undefined,
       total_estimated_amount: parsedRecord.total_estimated_amount || undefined,
       delivery_address: parsedRecord.delivery_address || undefined,
@@ -144,8 +144,8 @@ export class InquiryCommandService {
       is_replied: parsedRecord.is_replied,
       replied_at: parsedRecord.replied_at || undefined,
       replied_by: parsedRecord.replied_by || undefined,
-      created_at: parsedRecord.created_at,
-      updated_at: parsedRecord.updated_at,
+      created_at: parsedRecord.created_at || new Date().toISOString(),
+      updated_at: parsedRecord.updated_at || new Date().toISOString(),
       inquiry_items: parsedRecord.inquiry_items || [],
     }
   }

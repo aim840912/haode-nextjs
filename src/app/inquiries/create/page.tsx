@@ -2,10 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { TemplateSelector } from '@/components/inquiry/TemplateSelector'
 import { useAuth } from '@/contexts/AuthContext'
 import { useEnhancedInquiryForm } from '@/hooks/useEnhancedInquiryForm'
 import { useInquiryTemplates } from '@/hooks/useInquiryTemplates'
-import { TemplateSelector } from '@/components/inquiry/TemplateSelector'
 import { logger } from '@/lib/logger'
 import { CreateInquiryItemRequest } from '@/types/inquiry'
 import { InquiryFormDataFromTemplate } from '@/types/inquiry-template'
@@ -62,6 +62,7 @@ function InquiryFormContent() {
   // 從 URL 載入範本
   useEffect(() => {
     if (templateId && user) {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
       useTemplate(templateId).then(formData => {
         if (formData) {
           handleTemplateSelected(formData)

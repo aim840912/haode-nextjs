@@ -120,7 +120,7 @@ import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
 import { ValidationError } from '@/lib/errors'
 import { cacheLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { getProductService } from '@/services/factory/serviceFactory'
+import { productService } from '@/services/factory/serviceFactory'
 
 async function handleGET(request: Request) {
   const url = new URL(request.url)
@@ -132,7 +132,6 @@ async function handleGET(request: Request) {
   const unifiedMetrics = UnifiedCacheManager.getMetrics()
 
   // 獲取服務實例並檢查快取統計
-  const productService = await getProductService()
   let serviceStats: { unified?: unknown } | null = null
 
   // 檢查是否是快取服務
@@ -193,7 +192,6 @@ async function handlePOST(request: Request) {
 
   if (action === 'clear') {
     // 清除快取
-    const productService = await getProductService()
 
     if ('clearCache' in productService && typeof productService.clearCache === 'function') {
       await (productService as { clearCache: () => Promise<void> }).clearCache()
@@ -219,7 +217,6 @@ async function handlePOST(request: Request) {
       {
         key: 'products:list',
         fetcher: async () => {
-          const productService = await getProductService()
           return productService.getProducts()
         },
         options: { ttl: 600, tags: ['products', 'product-list'] },
@@ -227,7 +224,6 @@ async function handlePOST(request: Request) {
       {
         key: 'products:all',
         fetcher: async () => {
-          const productService = await getProductService()
           return productService.getAllProducts
             ? productService.getAllProducts()
             : productService.getProducts()

@@ -66,9 +66,9 @@
 // import { NextRequest } from 'next/server' // 未使用
 import { getStrategyInfo } from '@/config/data-strategy'
 import { success } from '@/lib/api-response'
+import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 
 async function handleGET() {
   apiLogger.info('開始查詢資料策略資訊', {

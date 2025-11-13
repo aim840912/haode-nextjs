@@ -145,11 +145,10 @@ import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { getFarmTourService } from '@/services/factory/serviceFactory'
+import { farmTourService } from '@/services/factory/serviceFactory'
 
 async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const farmTourService = await getFarmTourService()
   const activity = await farmTourService.getById(id)
 
   if (!activity) {
@@ -168,7 +167,6 @@ export const GET = withErrorHandler(handleGET, {
 async function handlePUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const body = await request.json()
-  const farmTourService = await getFarmTourService()
   const updatedActivity = await farmTourService.update(id, body)
 
   if (!updatedActivity) {
@@ -186,7 +184,6 @@ export const PUT = withErrorHandler(handlePUT, {
 // DELETE - 刪除活動
 async function handleDELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const farmTourService = await getFarmTourService()
   const result = await farmTourService.delete(id)
 
   if (!result) {

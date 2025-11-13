@@ -1,7 +1,7 @@
 'use client'
 
-import { OAuthProvider } from '@/types/oauth'
 import { GoogleIcon, LineIcon, FacebookIcon } from '@/components/ui/icons/SocialIcons'
+import { OAuthProvider } from '@/types/oauth'
 
 interface SocialLoginButtonProps {
   provider: OAuthProvider

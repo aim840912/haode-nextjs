@@ -1,12 +1,12 @@
 'use client'
 
+import { useCallback, useEffect } from 'react'
+import dynamic from 'next/dynamic'
+import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Breadcrumbs, createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { useAuth } from '@/contexts/AuthContext'
 import { useSchedule } from '@/hooks/useSchedule'
 import { formatDate } from '@/lib/utils/formatters'
-import { useSearchParams, useRouter, usePathname } from 'next/navigation'
-import { useCallback, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 
 // Dynamic import for ScheduleCalendar to avoid SSR issues
 const ScheduleCalendar = dynamic(
@@ -230,7 +230,7 @@ export default function SchedulePage() {
         {/* 條件渲染：卡片視圖 或 行事曆視圖 */}
         {viewMode === 'calendar' ? (
           <ScheduleCalendar
-            statusFilter={currentFilter}
+            statusFilter={currentFilter === 'all' ? undefined : (currentFilter as any)}
             onStatusFilterChange={handleFilterChange}
             hideStatusFilter={true}
           />

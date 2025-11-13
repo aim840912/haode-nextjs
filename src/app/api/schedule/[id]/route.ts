@@ -59,7 +59,7 @@ import { ValidationError, NotFoundError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { ScheduleSchemas, CommonValidations } from '@/lib/validation'
-import { getScheduleService } from '@/services/factory/serviceFactory'
+import { scheduleServiceSimple } from '@/services/factory/serviceFactory'
 
 async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -77,7 +77,7 @@ async function handleGET(request: NextRequest, { params }: { params: Promise<{ i
     metadata: { scheduleId: id },
   })
 
-  const scheduleService = await getScheduleService()
+  const scheduleService = scheduleServiceSimple
   const scheduleItem = await scheduleService.getScheduleById(id)
   if (!scheduleItem) {
     throw new NotFoundError('行程不存在')
@@ -119,7 +119,7 @@ async function handlePUT(request: NextRequest, { params }: { params: Promise<{ i
     },
   })
 
-  const scheduleService = await getScheduleService()
+  const scheduleService = scheduleServiceSimple
   const scheduleItem = await scheduleService.updateSchedule(id, result.data)
 
   return success(scheduleItem, '行程更新成功')
@@ -144,7 +144,7 @@ async function handleDELETE(request: NextRequest, { params }: { params: Promise<
     metadata: { scheduleId: id },
   })
 
-  const scheduleService = await getScheduleService()
+  const scheduleService = scheduleServiceSimple
   await scheduleService.deleteSchedule(id)
 
   return success({ id }, '行程刪除成功')

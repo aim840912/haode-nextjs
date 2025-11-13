@@ -4,8 +4,8 @@
  */
 
 import { NextRequest } from 'next/server'
-import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { success } from '@/lib/api-response'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { inquiryTemplateService } from '@/services/core/inquiry/inquiryTemplateService'
 
 /**

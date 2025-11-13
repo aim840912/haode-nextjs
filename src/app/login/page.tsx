@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { SocialLoginSection } from '@/components/auth/SocialLoginSection'
 import { AuthErrorBoundary } from '@/components/ui/error/AuthErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
-import { SocialLoginSection } from '@/components/auth/SocialLoginSection'
 import { logger } from '@/lib/logger'
 import { validateLoginInput, getLoginInputType } from '@/lib/utils/auth-helpers'
 
