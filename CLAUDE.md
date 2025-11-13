@@ -372,6 +372,7 @@ npm run type-check && npm run lint
 - **整合 logger 系統**: 所有錯誤自動記錄到適當的日誌級別 (apiLogger)
 - **包含除錯上下文**: 每個錯誤都有追蹤 ID 和詳細上下文
 - **永不默默吐掉例外** - 所有例外都應適當處理和記錄
+- **依賴 Sentry 做錯誤監控**: 已移除自建的 ErrorStatsCollector,錯誤統計和分析由 Sentry 提供
 
 **可用的錯誤類型**：
 
@@ -436,6 +437,112 @@ async function handleGET(
 
 export const GET = withAuthAndError(handleGET, { module: 'ProductAPI' })
 ```
+
+### Service 層架構 (CQRS 模式)
+
+**專案採用簡化的 CQRS 架構** - 分離查詢(Query)和命令(Command)操作
+
+**核心原則**:
+- **QueryService**: 處理所有讀取操作 (GET)，不修改資料
+- **CommandService**: 處理所有寫入操作 (POST/PUT/PATCH/DELETE)，可修改資料
+- **直接使用子服務**: API 路由直接調用 QueryService/CommandService，**不使用 coordinator 層**
+
+**範例架構**:
+
+```typescript
+// src/services/core/order/OrderQueryService.ts
+export class OrderQueryService {
+  async getOrderById(orderId: string, userId: string): Promise<Order> {
+    // 查詢邏輯
+  }
+
+  async getUserOrders(userId: string, limit: number, offset: number) {
+    // 查詢邏輯
+  }
+}
+
+export const orderQueryService = new OrderQueryService()
+
+// src/services/core/order/OrderCommandService.ts
+export class OrderCommandService {
+  async createOrder(userId: string, data: CreateOrderRequest): Promise<Order> {
+    // 如果需要查詢,內部創建 QueryService 實例
+    const queryService = new OrderQueryService()
+    const product = await queryService.getProductById(productId)
+
+    // 建立訂單邏輯
+  }
+
+  async cancelOrder(orderId: string, userId: string, reason?: string): Promise<void> {
+    // 取消訂單邏輯
+  }
+}
+
+export const orderCommandService = new OrderCommandService()
+```
+
+**API 使用範例**:
+
+```typescript
+// src/app/api/orders/route.ts
+import { orderQueryService } from '@/services/core/order/OrderQueryService'
+import { orderCommandService } from '@/services/core/order/OrderCommandService'
+import { withAuthAndError } from '@/lib/middleware/api-middleware'
+
+// GET - 使用 QueryService
+async function handleGET(req: NextRequest, user: User) {
+  const orders = await orderQueryService.getUserOrders(user.id, 20, 0)
+  return success(orders, '取得訂單列表成功')
+}
+
+// POST - 使用 CommandService
+async function handlePOST(req: NextRequest, user: User) {
+  const data = await req.json()
+  const order = await orderCommandService.createOrder(user.id, data)
+  return created(order, '訂單建立成功')
+}
+
+export const GET = withAuthAndError(handleGET, { module: 'OrderAPI' })
+export const POST = withAuthAndError(handlePOST, { module: 'OrderAPI', enableAuditLog: true })
+```
+
+**重要**:
+- ❌ **不要**建立 coordinator 層 (如 orderService.ts)
+- ❌ **不要**用依賴注入傳遞 QueryService 到 CommandService
+- ✅ **直接**從 API 調用 QueryService/CommandService
+- ✅ CommandService 需要查詢時,**內部創建** QueryService 實例
+
+### 審計日誌策略
+
+**專案審計日誌策略** - 僅記錄資料變更操作
+
+**記錄策略**:
+- ✅ **記錄**: POST/PUT/PATCH/DELETE (變更操作)
+- ❌ **不記錄**: GET (查詢操作)
+- ✅ **啟用**: 在中間件選項中設定 `enableAuditLog: true`
+
+**範例**:
+
+```typescript
+// ✅ 正確：變更操作啟用審計
+export const POST = withAuthAndError(handlePOST, {
+  module: 'OrderAPI',
+  enableAuditLog: true  // 記錄建立訂單
+})
+
+export const PATCH = withAdminAndError(handlePATCH, {
+  module: 'AdminOrderAPI',
+  enableAuditLog: true  // 記錄管理員更新
+})
+
+// ✅ 正確：查詢操作不啟用審計
+export const GET = withAuthAndError(handleGET, {
+  module: 'OrderAPI'
+  // 不設定 enableAuditLog
+})
+```
+
+**理由**: GET 請求頻繁且不修改資料,記錄審計會增加資料庫負載而沒有實際價值。
 
 ### API 開發完成檢查清單
 
@@ -566,10 +673,19 @@ npx depcheck
    - 理由：emoji 在不同平台顯示不一致、無法精確控制樣式、影響無障礙體驗
 
 3. **使用 SVG 圖示**
-   - 使用 inline SVG 或圖示庫（如 Heroicons）
+   - 使用 inline SVG 或圖示庫（**使用 lucide-react**，已移除 @heroicons/react）
    - 確保 SVG 支援深色模式（使用 `currentColor`）
    - 提供適當的 `aria-label` 以支援無障礙
    - SVG 應具有適當的尺寸類別（如 `w-6 h-6`）
+
+   ```typescript
+   // ✅ 正確：使用 lucide-react
+   import { Check, X, Search } from 'lucide-react'
+
+   <Check className="w-5 h-5 text-green-600" />
+   <X className="w-5 h-5 text-red-600" />
+   <Search className="w-5 h-5" />
+   ```
 
 **範例**：
 
