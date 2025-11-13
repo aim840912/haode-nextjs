@@ -14,8 +14,8 @@ import {
   InquiryItem,
 } from '@/types/inquiry'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
-import { InquiryQueryService } from './InquiryQueryService'
 import { InquiryInventoryService } from './InquiryInventoryService'
+import { InquiryQueryService } from './InquiryQueryService'
 
 const getAdmin = () => getSupabaseAdmin()
 

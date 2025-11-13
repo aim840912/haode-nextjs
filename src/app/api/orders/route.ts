@@ -162,8 +162,8 @@ import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
-import { orderQueryService } from '@/services/core/order/OrderQueryService'
 import { orderCommandService } from '@/services/core/order/OrderCommandService'
+import { orderQueryService } from '@/services/core/order/OrderQueryService'
 import { CreateOrderRequest } from '@/types/order'
 
 // 建立訂單的驗證 schema

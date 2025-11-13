@@ -11,8 +11,8 @@ import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
-import { orderQueryService } from '@/services/core/order/OrderQueryService'
 import { orderCommandService } from '@/services/core/order/OrderCommandService'
+import { orderQueryService } from '@/services/core/order/OrderQueryService'
 
 // 管理員訂單更新的驗證 schema
 const AdminUpdateOrderSchema = z.object({
