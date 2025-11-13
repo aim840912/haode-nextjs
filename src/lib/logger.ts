@@ -122,22 +122,9 @@ class Logger {
   }
 
   private getLevelEmoji(level: LogLevel): string {
-    if (!this.isDevelopment) return '' // 生產環境不使用表情符號
-
-    switch (level) {
-      case LogLevel.DEBUG:
-        return '🐛'
-      case LogLevel.INFO:
-        return '📝'
-      case LogLevel.WARN:
-        return '⚠️'
-      case LogLevel.ERROR:
-        return '❌'
-      case LogLevel.FATAL:
-        return '💀'
-      default:
-        return '📄'
-    }
+    if (!this.isDevelopment) return ''
+    const emojis = ['🐛', '📝', '⚠️', '❌', '💀']
+    return emojis[level] || '📄'
   }
 
   private log(level: LogLevel, message: string, context?: LogContext, error?: Error): void {
@@ -307,12 +294,11 @@ class LogTimer {
     private label: string
   ) {
     this.startTime = performance.now()
-    this.logger.debug(`⏱️ 計時開始: ${label}`)
   }
 
   end(context?: LogContext): number {
     const duration = performance.now() - this.startTime
-    this.logger.info(`⏱️ 計時結束: ${this.label} - ${duration.toFixed(2)}ms`, context)
+    this.logger.info(`⏱️ ${this.label}: ${duration.toFixed(2)}ms`, context)
     return duration
   }
 }
@@ -325,15 +311,3 @@ export const apiLogger = logger.child({ module: 'API' })
 export const dbLogger = logger.child({ module: 'Database' })
 export const cacheLogger = logger.child({ module: 'Cache' })
 export const authLogger = logger.child({ module: 'Auth' })
-
-// 方便的工具函數
-export const logApiRequest = (method: string, path: string, userId?: string) => {
-  return apiLogger.timer(`${method} ${path}`).end({ userId, action: 'request' })
-}
-
-export const logDbQuery = (table: string, operation: string) => {
-  return dbLogger.timer(`${operation}:${table}`)
-}
-
-// console.log 已全面替換為統一 logger 系統
-// 開發環境已完成遷移，移除 console 覆寫機制
