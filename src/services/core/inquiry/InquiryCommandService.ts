@@ -14,6 +14,8 @@ import {
   InquiryItem,
 } from '@/types/inquiry'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
+import { InquiryQueryService } from './InquiryQueryService'
+import { InquiryInventoryService } from './InquiryInventoryService'
 
 const getAdmin = () => getSupabaseAdmin()
 
@@ -333,12 +335,12 @@ export class InquiryCommandService {
   async updateInquiry(
     userId: string,
     inquiryId: string,
-    data: UpdateInquiryRequest,
-    getInquiryById: (userId: string, inquiryId: string) => Promise<InquiryWithItems | null>
+    data: UpdateInquiryRequest
   ): Promise<InquiryWithItems> {
     try {
-      // 檢查所有權
-      const existing = await getInquiryById(userId, inquiryId)
+      // 建立 QueryService 檢查所有權
+      const queryService = new InquiryQueryService()
+      const existing = await queryService.getInquiryById(userId, inquiryId)
       if (!existing) {
         throw new NotFoundError('詢問單不存在或無權限修改')
       }
@@ -385,21 +387,16 @@ export class InquiryCommandService {
   /**
    * 更新詢問單狀態
    */
-  async updateInquiryStatus(
-    inquiryId: string,
-    status: InquiryStatus,
-    getInquiryByIdForAdmin: (inquiryId: string) => Promise<InquiryWithItems | null>,
-    inventoryService: {
-      reserveInventory: (inquiryId: string, items: InquiryItem[]) => Promise<void>
-      releaseInventory: (items: InquiryItem[]) => Promise<void>
-      finalizeInventory: (items: InquiryItem[]) => Promise<void>
-    }
-  ): Promise<InquiryWithItems> {
+  async updateInquiryStatus(inquiryId: string, status: InquiryStatus): Promise<InquiryWithItems> {
     try {
       const client = this.getSupabaseClient()
 
+      // 建立 QueryService 和 InventoryService
+      const queryService = new InquiryQueryService()
+      const inventoryService = new InquiryInventoryService()
+
       // 先取得詢問單資訊（含前一個狀態）
-      const inquiry = await getInquiryByIdForAdmin(inquiryId)
+      const inquiry = await queryService.getInquiryByIdForAdmin(inquiryId)
       if (!inquiry) {
         throw new NotFoundError('詢問單不存在')
       }

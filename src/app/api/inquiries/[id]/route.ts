@@ -13,14 +13,10 @@ import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { InquirySchemas, CommonValidations } from '@/lib/validation'
 import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
 import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
-import { inquiryService as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import type { Database } from '@/types/database'
 import { InquiryUtils } from '@/types/inquiry'
 import type { SupabaseClient } from '@supabase/supabase-js'
-
-// 使用統一的詢問服務適配器（暫時保留以支援複雜方法）
-const inquiryService = inquiryServiceAdapter
 
 /**
  * @api {GET} /api/inquiries/:id 取得單一詢價單
@@ -123,7 +119,7 @@ async function handleGET(request: NextRequest, user: User, context?: unknown) {
   let inquiry
   if (isAdmin && adminMode) {
     // 管理員可以查看任何庫存查詢單
-    inquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
+    inquiry = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
   } else {
     // 一般使用者只能查看自己的庫存查詢單
     inquiry = await inquiryQueryService.getInquiryById(user.id, inquiryId)
@@ -270,7 +266,7 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
   // 如果有狀態更新，驗證狀態轉換
   if (result.data.status && isAdmin) {
     // 先取得當前庫存查詢單
-    const currentInquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
+    const currentInquiry = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
     if (!currentInquiry) {
       throw new NotFoundError('找不到庫存查詢單')
     }
@@ -288,7 +284,10 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
     }
 
     // 管理員更新狀態
-    const updatedInquiry = await inquiryService.updateInquiryStatus(inquiryId, result.data.status)
+    const updatedInquiry = await inquiryCommandService.updateInquiryStatus(
+      inquiryId,
+      result.data.status
+    )
 
     // 記錄詢問單狀態變更的審計日誌
     AuditLogger.logInquiryStatusChange(
@@ -322,7 +321,7 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
   }
 
   // 一般使用者更新詢問單
-  const updatedInquiry = await inquiryService.updateInquiry(user.id, inquiryId, result.data)
+  const updatedInquiry = await inquiryCommandService.updateInquiry(user.id, inquiryId, result.data)
 
   // 記錄詢問單更新的審計日誌
   AuditLogger.logInquiryUpdate(
@@ -434,7 +433,7 @@ async function handleDELETE(request: NextRequest, user: User, context?: unknown)
   })
 
   // 先取得詢問單資料（用於審計日誌）
-  const inquiryToDelete = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
+  const inquiryToDelete = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
   if (!inquiryToDelete) {
     throw new NotFoundError('找不到庫存查詢單')
   }
@@ -593,7 +592,7 @@ async function handlePATCH(request: NextRequest, user: User, context?: unknown) 
   }
 
   // 先取得當前詢問單資料
-  const currentInquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
+  const currentInquiry = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
   if (!currentInquiry) {
     throw new NotFoundError('找不到庫存查詢單')
   }
