@@ -12,7 +12,7 @@ import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/err
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { orderQueryService } from '@/services/core/order/OrderQueryService'
-import { orderService } from '@/services/core/order'
+import { orderCommandService } from '@/services/core/order/OrderCommandService'
 
 // 訂單更新的驗證 schema
 const UpdateOrderSchema = z.object({
@@ -166,7 +166,7 @@ async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
   const { action, reason } = validation.data
 
   if (action === 'cancel') {
-    await orderService.cancelOrder(id, user.id, reason)
+    await orderCommandService.cancelOrder(id, user.id, reason)
 
     apiLogger.info('取消訂單成功', {
       module: 'OrderAPI',

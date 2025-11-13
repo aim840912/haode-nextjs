@@ -7,7 +7,7 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { Order, OrderItem, OrderStatus, CreateOrderRequest, ShippingAddress } from '@/types/order'
-import type { OrderQueryService } from './OrderQueryService'
+import { OrderQueryService } from './OrderQueryService'
 
 const getAdmin = () => {
   const client = getSupabaseAdmin()
@@ -24,16 +24,13 @@ export class OrderCommandService {
   /**
    * 建立新訂單
    */
-  async createOrder(
-    userId: string,
-    orderData: CreateOrderRequest,
-    queryService: OrderQueryService
-  ): Promise<Order> {
+  async createOrder(userId: string, orderData: CreateOrderRequest): Promise<Order> {
     if (!userId || !orderData.items || orderData.items.length === 0) {
       throw new ValidationError('使用者 ID 和訂單項目不能為空')
     }
 
     const timer = dbLogger.timer('建立訂單')
+    const queryService = new OrderQueryService()
 
     try {
       // 生成訂單編號
@@ -156,12 +153,7 @@ export class OrderCommandService {
   /**
    * 取消訂單
    */
-  async cancelOrder(
-    orderId: string,
-    userId: string,
-    queryService: OrderQueryService,
-    reason?: string
-  ): Promise<void> {
+  async cancelOrder(orderId: string, userId: string, reason?: string): Promise<void> {
     if (!orderId || !userId) {
       throw new ValidationError('訂單 ID 和使用者 ID 不能為空')
     }
@@ -170,6 +162,7 @@ export class OrderCommandService {
 
     try {
       // 檢查訂單是否存在且屬於該使用者
+      const queryService = new OrderQueryService()
       const order = await queryService.getOrderById(orderId, userId)
       if (!order) {
         throw new NotFoundError('訂單不存在或無權限')
@@ -456,3 +449,6 @@ export class OrderCommandService {
     }
   }
 }
+
+// 建立並匯出服務實例
+export const orderCommandService = new OrderCommandService()

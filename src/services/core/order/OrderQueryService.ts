@@ -365,3 +365,6 @@ export class OrderQueryService {
     }
   }
 }
+
+// 建立並匯出服務實例
+export const orderQueryService = new OrderQueryService()
