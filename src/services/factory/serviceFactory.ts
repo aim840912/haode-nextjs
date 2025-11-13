@@ -10,9 +10,12 @@ export { productService } from '../core/product/productService'
 export type { ProductService } from '@/types/product'
 
 // 訂單相關服務
-export { orderService, OrderService } from '../core/order/orderService'
+export { orderQueryService } from '../core/order/OrderQueryService'
+export { orderCommandService } from '../core/order/OrderCommandService'
 
 // 詢價單相關服務
+export { inquiryQueryService } from '../core/inquiry/InquiryQueryService'
+export { inquiryCommandService } from '../core/inquiry/InquiryCommandService'
 export { inquiryTemplateService } from '../core/inquiry/inquiryTemplateService'
 
 // 內容相關服務
