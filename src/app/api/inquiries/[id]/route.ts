@@ -152,29 +152,6 @@ async function handleGET(request: NextRequest, user: User, context?: unknown) {
     }
   }
 
-  // 記錄庫存查詢單查看的審計日誌
-  AuditLogger.logInquiryView(
-    user.id,
-    user.email || 'unknown@email.com',
-    profile?.name,
-    profile?.role,
-    inquiryId,
-    {
-      customer_name: inquiry.customer_name,
-      customer_email: inquiry.customer_email,
-      status: inquiry.status,
-      admin_mode: isAdmin && adminMode,
-      marked_as_read: isAdmin && adminMode && !inquiry.is_read,
-    },
-    request
-  ).catch(error => {
-    apiLogger.warn('審計日誌記錄失敗', {
-      module: 'AuditLog',
-      action: 'logInquiryView',
-      metadata: { error: (error as Error).message },
-    })
-  })
-
   return success(inquiry, '查詢成功')
 }
 

@@ -326,31 +326,6 @@ export const auditLogService = new SupabaseAuditLogService()
 
 // 審計日誌輔助函數
 export class AuditLogger {
-  // 記錄詢問單查看
-  static async logInquiryView(
-    userId: string | null,
-    userEmail: string,
-    userName: string | undefined,
-    userRole: string | undefined,
-    inquiryId: string,
-    inquiryDetails?: Record<string, unknown>,
-    request?: Request
-  ): Promise<void> {
-    await auditLogService.log({
-      user_id: userId,
-      user_email: userEmail,
-      user_name: userName,
-      user_role: AuditTypeGuards.toUserRole(userRole),
-      action: 'view',
-      resource_type: 'inquiry',
-      resource_id: inquiryId,
-      resource_details: inquiryDetails,
-      ip_address:
-        request?.headers.get('x-forwarded-for') || request?.headers.get('x-real-ip') || undefined,
-      user_agent: request?.headers.get('user-agent') || undefined,
-    })
-  }
-
   // 記錄詢問單建立
   static async logInquiryCreate(
     userId: string | null,
