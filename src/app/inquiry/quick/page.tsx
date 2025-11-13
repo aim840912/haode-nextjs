@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuickInquiryForm } from '@/hooks/useQuickInquiryForm'
-import { logger } from '@/lib/logger'
 
 /**
  * 極簡快速詢價頁面（內部元件）

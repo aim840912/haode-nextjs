@@ -5,7 +5,7 @@
  */
 
 import Image from 'next/image'
-import { Flame, Zap, Calendar, Users2, Check } from 'lucide-react'
+import { Calendar, Check } from 'lucide-react'
 import type { FarmTourActivity } from '@/types/farmTour'
 
 interface ActivitiesSectionProps {
@@ -38,7 +38,7 @@ export function ActivitiesSection({
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
-          {activities.map((activity, index) => (
+          {activities.map(activity => (
             <div
               key={activity.id}
               onClick={activity.available ? () => onActivityClick(activity) : undefined}

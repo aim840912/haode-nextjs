@@ -130,7 +130,6 @@
 import { NextRequest } from 'next/server'
 import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
-import { apiLogger } from '@/lib/logger'
 import { withAdminAndError } from '@/lib/middleware/api-middleware'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { PublicProductSchemas } from '@/lib/validation'

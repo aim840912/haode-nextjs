@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Zap, Circle, Users2, Calendar, Banknote, Info } from 'lucide-react'
+import { Circle, Users2, Calendar, Banknote, Info } from 'lucide-react'
 import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import type { User } from '@/types/auth'
