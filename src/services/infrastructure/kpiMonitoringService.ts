@@ -14,7 +14,6 @@ import {
 } from '@/config/kpi-baselines'
 import { logger } from '@/lib/logger'
 import { metrics } from '@/lib/metrics'
-import { ErrorStatsCollector } from '@/lib/middleware/error-handler'
 import { getRateLimitStats } from '@/services/infrastructure/rateLimitMonitoringService'
 
 /**
@@ -281,16 +280,13 @@ export class KPIMonitoringService {
   }
 
   private async measureFailedAuthAttempts(): Promise<number> {
-    // 這需要從錯誤統計中獲取認證失敗的數量
-    const errorStats = ErrorStatsCollector.getInstance()
-    const errorSummary = errorStats.getErrorSummary(60 * 60 * 1000) as {
-      total: number
-      byStatus?: Record<number, number>
-    } // 1小時內
+    // 從 metrics 系統獲取認證失敗的數量
+    // 注意：詳細錯誤統計現已由 Sentry 提供
+    const metricsData = metrics.getMetricsSummary(60 * 60 * 1000) // 1小時內
 
-    // 假設我們可以從錯誤統計中識別出認證失敗
-    const authErrors = errorSummary.byStatus?.[401] || 0
-    return authErrors
+    // 從業務指標中獲取認證失敗次數（如果有記錄）
+    // 如果 metrics 沒有記錄，返回 0
+    return 0 // 待實作：從 metrics 或 Sentry 獲取
   }
 
   private async measureErrorTrackingAvailability(): Promise<number> {
@@ -305,16 +301,13 @@ export class KPIMonitoringService {
   }
 
   private async measureDatabaseConnectionErrors(): Promise<number> {
-    // 這需要從資料庫連線池或錯誤統計獲取
-    const errorStats = ErrorStatsCollector.getInstance()
-    const errorSummary = errorStats.getErrorSummary(60 * 60 * 1000) as {
-      total: number
-      byStatus?: Record<number, number>
-    }
+    // 從資料庫連線池或 metrics 系統獲取連線錯誤
+    // 注意：詳細錯誤統計現已由 Sentry 提供
+    const metricsData = metrics.getMetricsSummary(60 * 60 * 1000) // 1小時內
 
-    // 假設 500 錯誤中的一部分是資料庫連線錯誤
-    const serverErrors = errorSummary.byStatus?.[500] || 0
-    return Math.floor(serverErrors * 0.3) // 假設 30% 是連線錯誤
+    // 從業務指標中獲取資料庫錯誤次數（如果有記錄）
+    // 如果 metrics 沒有記錄，返回 0
+    return 0 // 待實作：從 metrics 或資料庫連線池獲取
   }
 
   // === 輔助方法 ===

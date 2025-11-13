@@ -98,35 +98,6 @@ export interface PoolStatsResponse {
 }
 
 /**
- * 錯誤統計回應
- */
-export interface ErrorStatsResponse {
-  timeRange: string
-  timestamp: string
-  errorStats: {
-    totalErrors: number
-    errorRate: number
-    criticalErrors: number
-    recentErrors: Array<{
-      timestamp: string
-      module: string
-      message: string
-      severity: string
-    }>
-  }
-  systemStats: {
-    uptime: number
-    errorsByModule: Record<string, number>
-    errorTrend: string
-  }
-  insights: {
-    description: string
-    provider: string
-    features: string[]
-  }
-}
-
-/**
  * 速率限制統計回應
  */
 export interface RateLimitStatsResponse {
@@ -242,35 +213,6 @@ export async function fetchPoolStats(): Promise<PoolStatsResponse> {
     return result.data
   } catch (error) {
     handleApiError(error, 'fetchPoolStats', 'AdminAPI')
-  }
-}
-
-/**
- * 取得錯誤統計（管理員）
- * @param timeRange - 時間範圍（1h, 24h, 7d）
- * @returns 錯誤統計資料
- */
-export async function fetchErrorStats(
-  timeRange: '1h' | '24h' | '7d' = '24h'
-): Promise<ErrorStatsResponse> {
-  try {
-    const params = new URLSearchParams({ timeRange })
-    const result = await apiClient.get<ErrorStatsResponse>(`/api/admin/error-stats?${params}`)
-
-    if (!result.success || !result.data) {
-      throw new Error(result.message || '取得錯誤統計失敗')
-    }
-
-    apiLogger.info('錯誤統計取得成功', {
-      metadata: {
-        timeRange,
-        totalErrors: result.data.errorStats.totalErrors,
-      },
-    })
-
-    return result.data
-  } catch (error) {
-    handleApiError(error, 'fetchErrorStats', 'AdminAPI')
   }
 }
 

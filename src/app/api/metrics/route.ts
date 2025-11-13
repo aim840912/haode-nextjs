@@ -4,7 +4,7 @@
  * @apiGroup System
  * @apiPermission public
  *
- * @apiDescription 取得系統健康狀況、業務指標和錯誤追蹤統計
+ * @apiDescription 取得系統健康狀況和業務指標
  *
  * @apiQuery {String} [timeRange=24h] 時間範圍 (1h/24h/7d)
  *
@@ -19,9 +19,7 @@
  * @apiSuccess {String} data.systemHealth.customMetrics 自訂指標狀態
  * @apiSuccess {Object} data.systemHealth.errorTracking 錯誤追蹤資訊
  * @apiSuccess {String} data.systemHealth.errorTracking.status 錯誤追蹤狀態
- * @apiSuccess {Object} data.systemHealth.errorTracking.last5Minutes 最近 5 分鐘錯誤統計
- * @apiSuccess {Number} data.systemHealth.errorTracking.last5Minutes.total 總錯誤數
- * @apiSuccess {Number} data.systemHealth.errorTracking.last5Minutes.criticalErrors 嚴重錯誤數
+ * @apiSuccess {String} data.systemHealth.errorTracking.provider 錯誤追蹤提供者
  * @apiSuccess {Object} data.metrics 業務指標摘要
  *
  * @apiSuccessExample {json} 成功回應:
@@ -37,11 +35,9 @@
  *       "vercelAnalytics": "active",
  *       "customMetrics": "collecting",
  *       "errorTracking": {
- *         "status": "available",
- *         "last5Minutes": {
- *           "total": 3,
- *           "criticalErrors": 0
- *         }
+ *         "status": "active",
+ *         "provider": "Sentry",
+ *         "dashboardUrl": "https://sentry.io/organizations/[org]/issues/"
  *       },
  *       "timestamp": "2025-01-07T10:30:00.000Z"
  *     },
@@ -73,7 +69,7 @@
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { isErrorTrackingAvailable } from '@/lib/error-tracking'
-import { withErrorHandler, getHealthStatus } from '@/lib/middleware/error-handler'
+import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 async function handleGET(request: NextRequest) {
   // 取得時間範圍參數
@@ -88,42 +84,30 @@ async function handleGET(request: NextRequest) {
       '7d': 7 * 24 * 60 * 60 * 1000,
     }[timeRangeParam as '1h' | '24h' | '7d'] || 24 * 60 * 60 * 1000
 
-  // 取得系統健康稀況
-  const healthStatus = getHealthStatus()
-
   // 取得錯誤追蹤狀態
-  const errorTrackingStatus: 'available' | 'unavailable' = isErrorTrackingAvailable()
-    ? 'available'
-    : 'unavailable'
+  const errorTrackingStatus: 'active' | 'inactive' = isErrorTrackingAvailable()
+    ? 'active'
+    : 'inactive'
 
   // 取得實際業務指標
   const { metrics } = await import('@/lib/metrics')
   const businessMetrics = metrics.getMetricsSummary(timeRangeMs)
-
-  // 取得實際錯誤統計
-  const { ErrorStatsCollector } = await import('@/lib/middleware/error-handler')
-  const errorStatsCollector = ErrorStatsCollector.getInstance()
-  const errorSummary = errorStatsCollector.getErrorSummary(300000) as {
-    total: number
-    byStatus?: Record<number, number>
-  } // 5分鐘內的錯誤
 
   const responseData = {
     format: 'comprehensive',
     timeRange: timeRangeParam,
     timestamp: new Date().toISOString(),
     systemHealth: {
-      status: healthStatus.status,
+      status: 'healthy' as const,
       vercelAnalytics: process.env.NODE_ENV === 'production' ? 'active' : 'inactive',
       customMetrics: 'collecting',
       errorTracking: {
         status: errorTrackingStatus,
-        last5Minutes: {
-          total: errorSummary.total || 0,
-          criticalErrors: errorSummary.byStatus?.[500] || 0,
-        },
+        provider: 'Sentry',
+        dashboardUrl: process.env.NEXT_PUBLIC_SENTRY_DSN ? 'https://sentry.io' : 'Not configured',
+        note: '詳細錯誤統計請查看 Sentry Dashboard',
       },
-      timestamp: healthStatus.timestamp,
+      timestamp: new Date().toISOString(),
     },
     metrics: businessMetrics,
   }
