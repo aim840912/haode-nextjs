@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  DocumentTextIcon,
-  ChatBubbleLeftRightIcon,
-  CheckCircleIcon,
-  CheckBadgeIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline'
+import { FileText, MessageSquare, CheckCircle, BadgeCheck, XCircleIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { formatDateTime } from '@/lib/utils/formatters'
 import { InquiryStatus, INQUIRY_STATUS_LABELS } from '@/types/inquiry'
@@ -34,10 +28,10 @@ export function StatusStep({
 }: StatusStepProps) {
   // 狀態圖標對應
   const statusIcons = {
-    pending: <DocumentTextIcon className="w-5 h-5" />,
-    quoted: <ChatBubbleLeftRightIcon className="w-5 h-5" />,
-    confirmed: <CheckCircleIcon className="w-5 h-5" />,
-    completed: <CheckBadgeIcon className="w-5 h-5" />,
+    pending: <FileText className="w-5 h-5" />,
+    quoted: <MessageSquare className="w-5 h-5" />,
+    confirmed: <CheckCircle className="w-5 h-5" />,
+    completed: <BadgeCheck className="w-5 h-5" />,
     cancelled: <XCircleIcon className="w-5 h-5" />,
   }
 

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Search, X } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { searchContent } from '@/lib/api/search-api'
 import { logger } from '@/lib/logger'
@@ -156,7 +156,7 @@ export function SearchBar({
         />
 
         {/* 搜尋圖示 */}
-        <MagnifyingGlassIcon
+        <Search
           className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer"
           onClick={handleSearch}
         />
@@ -166,7 +166,7 @@ export function SearchBar({
           {isLoading ? (
             <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
           ) : query ? (
-            <XMarkIcon
+            <X
               className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600"
               onClick={handleClear}
             />

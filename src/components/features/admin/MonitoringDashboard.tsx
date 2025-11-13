@@ -2,23 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import {
-  ChartBarIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  UserGroupIcon,
-  EyeIcon,
-  MagnifyingGlassIcon,
-  PhoneIcon,
-  ArrowPathIcon,
+  BarChart3,
+  Clock,
+  AlertTriangle,
+  Users,
+  Eye,
+  Search,
+  Phone,
+  RotateCw,
   XCircleIcon,
-  BugAntIcon,
-  ExclamationCircleIcon,
-  ShieldExclamationIcon,
-  ShieldCheckIcon,
-  BoltIcon,
-  BeakerIcon,
-  CpuChipIcon,
-} from '@heroicons/react/24/outline'
+  Bug,
+  AlertCircle,
+  ShieldAlert,
+  ShieldCheck,
+  Zap,
+  FlaskConical,
+  Cpu,
+} from 'lucide-react'
 import { logger } from '@/lib/logger'
 
 interface BusinessMetrics {
@@ -207,7 +207,7 @@ export function MonitoringDashboard() {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6">
         <div className="flex items-center">
-          <ExclamationTriangleIcon className="h-5 w-5 text-red-400 mr-2" />
+          <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
           <h3 className="text-sm font-medium text-red-800">載入失敗</h3>
         </div>
         <div className="mt-2 text-sm text-red-700">{error}</div>
@@ -225,7 +225,7 @@ export function MonitoringDashboard() {
               <p className="text-sm font-medium text-gray-600">頁面瀏覽</p>
               <p className="text-2xl font-bold text-gray-900">{metrics.userActions.pageViews}</p>
             </div>
-            <EyeIcon className="h-8 w-8 text-blue-500" />
+            <Eye className="h-8 w-8 text-blue-500" />
           </div>
         </div>
 
@@ -235,7 +235,7 @@ export function MonitoringDashboard() {
               <p className="text-sm font-medium text-gray-600">產品查看</p>
               <p className="text-2xl font-bold text-gray-900">{metrics.userActions.productViews}</p>
             </div>
-            <MagnifyingGlassIcon className="h-8 w-8 text-green-500" />
+            <Search className="h-8 w-8 text-green-500" />
           </div>
         </div>
 
@@ -247,7 +247,7 @@ export function MonitoringDashboard() {
                 {metrics.userActions.inquirySubmissions}
               </p>
             </div>
-            <PhoneIcon className="h-8 w-8 text-amber-500" />
+            <Phone className="h-8 w-8 text-amber-500" />
           </div>
         </div>
 
@@ -257,7 +257,7 @@ export function MonitoringDashboard() {
               <p className="text-sm font-medium text-gray-600">活躍用戶</p>
               <p className="text-2xl font-bold text-gray-900">{metrics.performance.activeUsers}</p>
             </div>
-            <UserGroupIcon className="h-8 w-8 text-purple-500" />
+            <Users className="h-8 w-8 text-purple-500" />
           </div>
         </div>
       </div>
@@ -267,7 +267,7 @@ export function MonitoringDashboard() {
         <div className="bg-white rounded-lg shadow border">
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <BugAntIcon className="h-5 w-5 text-red-500 mr-2" />
+              <Bug className="h-5 w-5 text-red-500 mr-2" />
               錯誤監控
             </h2>
           </div>
@@ -275,7 +275,7 @@ export function MonitoringDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <ExclamationCircleIcon className="h-8 w-8 text-red-600" />
+                  <AlertCircle className="h-8 w-8 text-red-600" />
                   <div>
                     <p className="text-sm text-red-600 font-medium">總錯誤數</p>
                     <p className="text-2xl font-bold text-red-700">{errorStats.totalErrors}</p>
@@ -285,7 +285,7 @@ export function MonitoringDashboard() {
 
               <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <ShieldExclamationIcon className="h-8 w-8 text-yellow-600" />
+                  <ShieldAlert className="h-8 w-8 text-yellow-600" />
                   <div>
                     <p className="text-sm text-yellow-600 font-medium">錯誤率</p>
                     <p className="text-2xl font-bold text-yellow-700">
@@ -316,7 +316,7 @@ export function MonitoringDashboard() {
         <div className="bg-white rounded-lg shadow border">
           <div className="px-6 py-4 border-b">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <BoltIcon className="h-5 w-5 text-blue-500 mr-2" />
+              <Zap className="h-5 w-5 text-blue-500 mr-2" />
               效能監控
             </h2>
           </div>
@@ -324,7 +324,7 @@ export function MonitoringDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <ClockIcon className="h-8 w-8 text-blue-600" />
+                  <Clock className="h-8 w-8 text-blue-600" />
                   <div>
                     <p className="text-sm text-blue-600 font-medium">平均回應時間</p>
                     <p className="text-2xl font-bold text-blue-700">
@@ -336,7 +336,7 @@ export function MonitoringDashboard() {
 
               <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <ArrowPathIcon className="h-8 w-8 text-green-600" />
+                  <RotateCw className="h-8 w-8 text-green-600" />
                   <div>
                     <p className="text-sm text-green-600 font-medium">總請求數</p>
                     <p className="text-2xl font-bold text-green-700">
@@ -348,7 +348,7 @@ export function MonitoringDashboard() {
 
               <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <ChartBarIcon className="h-8 w-8 text-purple-600" />
+                  <BarChart3 className="h-8 w-8 text-purple-600" />
                   <div>
                     <p className="text-sm text-purple-600 font-medium">限制率</p>
                     <p className="text-2xl font-bold text-purple-700">
@@ -370,7 +370,7 @@ export function MonitoringDashboard() {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <ChartBarIcon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+              <BarChart3 className="h-8 w-8 text-blue-600 mx-auto mb-2" />
               <p className="text-xl font-bold text-blue-900">Vercel Analytics</p>
               <p className="text-blue-600 text-sm">網站流量分析</p>
               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
@@ -379,7 +379,7 @@ export function MonitoringDashboard() {
             </div>
 
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <ShieldCheckIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
+              <ShieldCheck className="h-8 w-8 text-green-600 mx-auto mb-2" />
               <p className="text-xl font-bold text-green-900">安全監控</p>
               <p className="text-green-600 text-sm">系統安全狀態</p>
               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
@@ -388,7 +388,7 @@ export function MonitoringDashboard() {
             </div>
 
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <CpuChipIcon className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+              <Cpu className="h-8 w-8 text-purple-600 mx-auto mb-2" />
               <p className="text-xl font-bold text-purple-900">系統效能</p>
               <p className="text-purple-600 text-sm">伺服器運行狀態</p>
               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
@@ -397,7 +397,7 @@ export function MonitoringDashboard() {
             </div>
 
             <div className="text-center p-4 bg-amber-50 rounded-lg">
-              <BeakerIcon className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+              <FlaskConical className="h-8 w-8 text-amber-600 mx-auto mb-2" />
               <p className="text-xl font-bold text-amber-900">測試環境</p>
               <p className="text-amber-600 text-sm">開發測試狀態</p>
               <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-2">

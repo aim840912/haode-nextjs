@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { ClipboardList } from 'lucide-react'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
@@ -244,7 +244,7 @@ function InquiryListPage() {
         {filteredInquiries.length === 0 ? (
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-12 text-center">
             <div className="mb-8 flex justify-center">
-              <ClipboardDocumentListIcon className="h-16 w-16 text-gray-400 dark:text-gray-500" />
+              <ClipboardList className="h-16 w-16 text-gray-400 dark:text-gray-500" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
               {statusFilter === 'all'

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Search, X } from 'lucide-react'
 import { useDebounce } from '@/hooks/useDebounce'
 import { searchContent } from '@/lib/api/search-api'
 import { logger } from '@/lib/logger'
@@ -177,7 +177,7 @@ export function ExpandableSearchBar({
         className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-amber-900 transition-all duration-200 rounded-full hover:bg-gray-100 hover:scale-110 active:scale-95"
         aria-label="開啟搜尋"
       >
-        <MagnifyingGlassIcon className="w-5 h-5 transition-transform duration-200" />
+        <Search className="w-5 h-5 transition-transform duration-200" />
       </button>
     )
   }
@@ -221,7 +221,7 @@ export function ExpandableSearchBar({
           />
 
           {/* 搜尋圖示 */}
-          <MagnifyingGlassIcon
+          <Search
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer"
             onClick={handleSearch}
           />
@@ -231,12 +231,12 @@ export function ExpandableSearchBar({
             {isLoading ? (
               <div className="w-5 h-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin shadow-sm" />
             ) : iconOnly && isExpanded ? (
-              <XMarkIcon
+              <X
                 className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 hover:scale-110 transition-all duration-200 rounded-full hover:bg-gray-100 p-0.5"
                 onClick={handleCollapse}
               />
             ) : query ? (
-              <XMarkIcon
+              <X
                 className="w-5 h-5 text-gray-400 cursor-pointer hover:text-gray-600 hover:scale-110 transition-all duration-200 rounded-full hover:bg-gray-100 p-0.5"
                 onClick={handleClear}
               />

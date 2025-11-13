@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { AlertTriangle } from 'lucide-react'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
@@ -127,7 +127,7 @@ function AdminInquiriesPage() {
           <div className="max-w-4xl mx-auto px-6 py-16">
             <div className="text-center">
               <div className="mx-auto w-24 h-24 mb-8 text-red-500 dark:text-red-400">
-                <ExclamationTriangleIcon className="w-full h-full" />
+                <AlertTriangle className="w-full h-full" />
               </div>
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">載入失敗</h1>
               <p className="text-gray-600 dark:text-gray-300 mb-8">{error}</p>

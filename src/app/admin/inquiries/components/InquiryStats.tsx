@@ -1,4 +1,4 @@
-import { ChartBarIcon, EyeIcon, ChatBubbleLeftIcon, BoltIcon } from '@heroicons/react/24/outline'
+import { BarChart3, Eye, MessageCircle, Zap } from 'lucide-react'
 import { formatDate } from '@/lib/utils/formatters'
 import {
   InquiryStatus,
@@ -67,7 +67,7 @@ export function InquiryStats({ stats, detailedStats }: InquiryStatsProps) {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                <ChartBarIcon className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
@@ -91,7 +91,7 @@ export function InquiryStats({ stats, detailedStats }: InquiryStatsProps) {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                <EyeIcon className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />
+                <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
@@ -122,7 +122,7 @@ export function InquiryStats({ stats, detailedStats }: InquiryStatsProps) {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
-                <ChatBubbleLeftIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 dark:text-red-400" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">
@@ -153,7 +153,7 @@ export function InquiryStats({ stats, detailedStats }: InquiryStatsProps) {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
-                <BoltIcon className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
+                <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 dark:text-green-400" />
               </div>
             </div>
             <div className="ml-3 sm:ml-4 min-w-0 flex-1">

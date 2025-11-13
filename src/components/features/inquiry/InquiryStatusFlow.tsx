@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  LightBulbIcon,
-  TruckIcon,
-  SparklesIcon,
-  CheckIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline'
+import { Lightbulb, Truck, SparklesIcon, Check, X } from 'lucide-react'
 import { useInquiryStatusFlow } from '@/hooks/useInquiryStatusFlow'
 import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/formatters'
@@ -100,9 +94,9 @@ export function InquiryStatusFlow({
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
                   {isCompleted ? (
-                    <CheckIcon className="w-4 h-4 text-green-600" />
+                    <Check className="w-4 h-4 text-green-600" />
                   ) : isCancelled ? (
-                    <XMarkIcon className="w-4 h-4 text-red-600" />
+                    <X className="w-4 h-4 text-red-600" />
                   ) : (
                     <span className="text-xs font-bold text-gray-600">{progressPercentage}%</span>
                   )}
@@ -200,14 +194,14 @@ export function InquiryStatusFlow({
       <div className="px-6 pb-6">
         <div className="text-xs text-gray-500 space-y-1">
           <p className="flex items-center gap-2">
-            <LightBulbIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+            <Lightbulb className="w-4 h-4 text-amber-500 flex-shrink-0" />
             <span>
               <strong>提示</strong>：我們會在每個階段主動通知您處理進度
             </span>
           </p>
           {inquiry.inquiry_type === 'product' && (
             <p className="flex items-center gap-2">
-              <TruckIcon className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <Truck className="w-4 h-4 text-blue-500 flex-shrink-0" />
               <span>
                 <strong>配送</strong>：確認訂單後，商品將在 3-5 個工作天內配送
               </span>

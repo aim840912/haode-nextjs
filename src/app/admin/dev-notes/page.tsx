@@ -2,16 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import {
-  BugAntIcon,
-  ClipboardDocumentListIcon,
-  PlusIcon,
-  FunnelIcon,
-  ArrowLeftIcon,
-  XMarkIcon,
-  CheckCircleIcon,
-  ArrowUturnLeftIcon,
-} from '@heroicons/react/24/outline'
+import { Bug, ClipboardList, Plus, Filter, ArrowLeft, X, CheckCircle, Undo2 } from 'lucide-react'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useDevNotesReducer } from '@/hooks/useDevNotesReducer'
 import { apiLogger } from '@/lib/logger'
@@ -68,7 +59,7 @@ export default function DevNotesPage() {
                   href="/admin/dashboard"
                   className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100"
                 >
-                  <ArrowLeftIcon className="w-6 h-6" />
+                  <ArrowLeft className="w-6 h-6" />
                 </Link>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">開發筆記</h1>
@@ -81,7 +72,7 @@ export default function DevNotesPage() {
                 onClick={() => actions.setShowCreateModal(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                <PlusIcon className="w-5 h-5" />
+                <Plus className="w-5 h-5" />
                 <span>新增筆記</span>
               </button>
             </div>
@@ -92,28 +83,18 @@ export default function DevNotesPage() {
           {/* 統計卡片 */}
           {state.stats && (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <StatCard
-                title="總計"
-                value={state.stats.total}
-                icon={ClipboardDocumentListIcon}
-                color="blue"
-              />
-              <StatCard
-                title="進行中"
-                value={state.stats.in_progress}
-                icon={BugAntIcon}
-                color="yellow"
-              />
+              <StatCard title="總計" value={state.stats.total} icon={ClipboardList} color="blue" />
+              <StatCard title="進行中" value={state.stats.in_progress} icon={Bug} color="yellow" />
               <StatCard
                 title="已完成"
                 value={state.stats.completed}
-                icon={ClipboardDocumentListIcon}
+                icon={ClipboardList}
                 color="green"
               />
               <StatCard
                 title="高優先級"
                 value={state.stats.by_priority.high + state.stats.by_priority.urgent}
-                icon={BugAntIcon}
+                icon={Bug}
                 color="red"
               />
             </div>
@@ -122,7 +103,7 @@ export default function DevNotesPage() {
           {/* 篩選器 */}
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border dark:border-slate-700 p-4 mb-6">
             <div className="flex items-center space-x-4">
-              <FunnelIcon className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <Filter className="w-5 h-5 text-gray-400 dark:text-gray-500" />
               <select
                 value={state.typeFilter}
                 onChange={e => actions.setTypeFilter(e.target.value as DevNoteType | 'all')}
@@ -288,7 +269,7 @@ function CreateNoteModal({ onClose, onSuccess }: { onClose: () => void; onSucces
               className="text-gray-400 hover:text-gray-600 dark:text-gray-300"
               disabled={submitting}
             >
-              <XMarkIcon className="w-6 h-6" />
+              <X className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -539,12 +520,12 @@ function NoteCard({ note, onUpdate }: { note: DevNote; onUpdate?: () => void }) 
           >
             {note.status === 'completed' ? (
               <>
-                <ArrowUturnLeftIcon className="w-4 h-4" />
+                <Undo2 className="w-4 h-4" />
                 <span>{completing ? '處理中...' : '取消完成'}</span>
               </>
             ) : (
               <>
-                <CheckCircleIcon className="w-4 h-4" />
+                <CheckCircle className="w-4 h-4" />
                 <span>{completing ? '處理中...' : '標記為完成'}</span>
               </>
             )}

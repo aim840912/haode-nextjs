@@ -1,11 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import {
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline'
+import { CheckCircle, AlertTriangle, RotateCw } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export interface SubmissionStatus {
@@ -63,7 +59,7 @@ export function SubmissionProgress({
   const getStatusDisplay = () => {
     if (status.errors && status.errors.length > 0) {
       return {
-        icon: <ExclamationTriangleIcon className="w-5 h-5" />,
+        icon: <AlertTriangle className="w-5 h-5" />,
         color: 'text-red-600',
         bgColor: 'bg-red-50',
         borderColor: 'border-red-200',
@@ -73,7 +69,7 @@ export function SubmissionProgress({
 
     if (status.isComplete) {
       return {
-        icon: <CheckCircleIcon className="w-5 h-5" />,
+        icon: <CheckCircle className="w-5 h-5" />,
         color: 'text-green-600',
         bgColor: 'bg-green-50',
         borderColor: 'border-green-200',
@@ -82,7 +78,7 @@ export function SubmissionProgress({
     }
 
     return {
-      icon: <ArrowPathIcon className="w-5 h-5 animate-spin" />,
+      icon: <RotateCw className="w-5 h-5 animate-spin" />,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
@@ -231,7 +227,7 @@ export function SimpleSubmissionStatus({
       {isSubmitting && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-center">
-            <ArrowPathIcon className="w-5 h-5 text-blue-600 animate-spin mr-3" />
+            <RotateCw className="w-5 h-5 text-blue-600 animate-spin mr-3" />
             <span className="text-blue-800">正在提交，請稍候...</span>
           </div>
         </div>
@@ -240,7 +236,7 @@ export function SimpleSubmissionStatus({
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <div className="flex items-center">
-            <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-3" />
+            <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
             <span className="text-red-800">{error}</span>
           </div>
         </div>
@@ -249,7 +245,7 @@ export function SimpleSubmissionStatus({
       {success && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center">
-            <CheckCircleIcon className="w-5 h-5 text-green-600 mr-3" />
+            <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
             <span className="text-green-800">{success}</span>
           </div>
         </div>

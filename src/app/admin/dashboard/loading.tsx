@@ -1,4 +1,4 @@
-import { ClockIcon } from '@heroicons/react/24/outline'
+import { Clock } from 'lucide-react'
 
 export default function DashboardLoading() {
   return (
@@ -6,7 +6,7 @@ export default function DashboardLoading() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <ClockIcon className="h-12 w-12 text-gray-400 animate-pulse" />
+            <Clock className="h-12 w-12 text-gray-400 animate-pulse" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">載入管理控台...</h1>
           <p className="text-gray-600">請稍候，正在載入儀表板資料</p>

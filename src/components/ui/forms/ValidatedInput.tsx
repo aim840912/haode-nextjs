@@ -1,11 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/24/outline'
+import { CheckCircle, AlertCircle, Info } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 
 export type ValidatedInputType =
@@ -157,9 +153,9 @@ export function ValidatedInput({
   const StatusIcon = () => {
     switch (inputState) {
       case 'error':
-        return <ExclamationCircleIcon className="w-5 h-5 text-red-500" />
+        return <AlertCircle className="w-5 h-5 text-red-500" />
       case 'success':
-        return <CheckCircleIcon className="w-5 h-5 text-green-500" />
+        return <CheckCircle className="w-5 h-5 text-green-500" />
       case 'validating':
         return (
           <div className="w-5 h-5">
@@ -181,7 +177,7 @@ export function ValidatedInput({
           </div>
         )
       case 'warning':
-        return <InformationCircleIcon className="w-5 h-5 text-yellow-500" />
+        return <Info className="w-5 h-5 text-yellow-500" />
       default:
         return null
     }
@@ -274,7 +270,7 @@ export function ValidatedInput({
         {/* 錯誤訊息 */}
         {error && (
           <p id={`${id}-error`} className="text-sm text-red-600 flex items-center" role="alert">
-            <ExclamationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+            <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
             {error}
           </p>
         )}
@@ -282,7 +278,7 @@ export function ValidatedInput({
         {/* 警告訊息 */}
         {warning && !error && (
           <p id={`${id}-warning`} className="text-sm text-yellow-600 flex items-center">
-            <InformationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+            <Info className="w-4 h-4 mr-1 flex-shrink-0" />
             {warning}
           </p>
         )}
@@ -290,7 +286,7 @@ export function ValidatedInput({
         {/* 成功訊息 */}
         {success && !error && !warning && (
           <p id={`${id}-success`} className="text-sm text-green-600 flex items-center">
-            <CheckCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+            <CheckCircle className="w-4 h-4 mr-1 flex-shrink-0" />
             {success}
           </p>
         )}

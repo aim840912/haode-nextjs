@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LockClosedIcon, BeakerIcon, ArrowLeftIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { Lock, FlaskConical, ArrowLeft, Check } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
@@ -31,7 +31,7 @@ const ProductImageManager = dynamic(
     loading: () => (
       <div className="h-32 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center animate-pulse">
         <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
-          <BeakerIcon className="w-5 h-5 animate-spin" />
+          <FlaskConical className="w-5 h-5 animate-spin" />
           <span>載入圖片管理器...</span>
         </div>
       </div>
@@ -155,7 +155,7 @@ function AddProductV2() {
       <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
           <div className="flex justify-center mb-8">
-            <LockClosedIcon className="w-16 h-16 text-gray-400 dark:text-gray-500" />
+            <Lock className="w-16 h-16 text-gray-400 dark:text-gray-500" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">需要登入</h1>
           <p className="text-gray-600 dark:text-gray-300 mb-8">請登入後再訪問產品管理功能</p>
@@ -200,7 +200,7 @@ function AddProductV2() {
                   href="/admin/products"
                   className="flex items-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                 >
-                  <ArrowLeftIcon className="w-5 h-5 mr-2" />
+                  <ArrowLeft className="w-5 h-5 mr-2" />
                   返回產品列表
                 </Link>
                 <div className="h-6 w-px bg-gray-300 dark:border-slate-600" />
@@ -286,17 +286,17 @@ function AddProductV2() {
                 >
                   {submitStatus === 'submitting' ? (
                     <>
-                      <BeakerIcon className="w-5 h-5 animate-spin" />
+                      <FlaskConical className="w-5 h-5 animate-spin" />
                       <span>建立中...</span>
                     </>
                   ) : submitStatus === 'success' ? (
                     <>
-                      <CheckIcon className="w-5 h-5" />
+                      <Check className="w-5 h-5" />
                       <span>已建立</span>
                     </>
                   ) : (
                     <>
-                      <CheckIcon className="w-5 h-5" />
+                      <Check className="w-5 h-5" />
                       <span>建立產品</span>
                     </>
                   )}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { ChartBarIcon } from '@heroicons/react/24/outline'
+import { BarChart3 } from 'lucide-react'
 import { GA4TrackingExamples } from '@/components/examples/GA4TrackingExamples'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { checkGAStatus } from '@/lib/analytics'
@@ -138,7 +138,7 @@ export default function AnalyticsPage() {
                   className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors group"
                 >
                   <div className="flex items-center space-x-3">
-                    <ChartBarIcon className="w-8 h-8 text-blue-600" />
+                    <BarChart3 className="w-8 h-8 text-blue-600" />
                     <div>
                       <h3 className="font-medium text-gray-900 group-hover:text-blue-900">
                         Google Analytics

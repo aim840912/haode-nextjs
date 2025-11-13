@@ -1,4 +1,4 @@
-import { ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { ClipboardList } from 'lucide-react'
 import { formatDate } from '@/lib/utils/formatters'
 import {
   InquiryWithItems,
@@ -40,7 +40,7 @@ export function InquiryList({
     return (
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-8 sm:p-12 text-center">
         <div className="mx-auto w-16 h-16 sm:w-24 sm:h-24 mb-6 sm:mb-8 text-gray-400 dark:text-gray-500">
-          <ClipboardDocumentListIcon className="w-full h-full" />
+          <ClipboardList className="w-full h-full" />
         </div>
         <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">
           {statusFilter === 'all' && '還沒有詢問單'}

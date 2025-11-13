@@ -2,16 +2,16 @@
 
 import Link from 'next/link'
 import {
-  ChartBarIcon,
-  CubeIcon,
-  ArchiveBoxIcon,
-  ChatBubbleLeftRightIcon,
-  TruckIcon,
-  LinkIcon,
-  CircleStackIcon,
-  Cog6ToothIcon,
-  BugAntIcon,
-} from '@heroicons/react/24/outline'
+  BarChart3,
+  Box,
+  Archive,
+  MessageSquare,
+  Truck,
+  Link2 as LinkIcon,
+  Database,
+  Settings,
+  Bug,
+} from 'lucide-react'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
 export default function AdminDashboard() {
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                    <ChartBarIcon className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                    <BarChart3 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg group-hover:bg-green-200 dark:group-hover:bg-green-900/50 transition-colors">
-                    <CubeIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
+                    <Box className="h-8 w-8 text-green-600 dark:text-green-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg group-hover:bg-amber-200 dark:group-hover:bg-amber-900/50 transition-colors">
-                    <ArchiveBoxIcon className="h-8 w-8 text-amber-600 dark:text-amber-400" />
+                    <Archive className="h-8 w-8 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -89,7 +89,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg group-hover:bg-purple-200 dark:group-hover:bg-purple-900/50 transition-colors">
-                    <ChatBubbleLeftRightIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                    <MessageSquare className="h-8 w-8 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg group-hover:bg-emerald-200 dark:group-hover:bg-emerald-900/50 transition-colors">
-                    <TruckIcon className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                    <Truck className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -123,7 +123,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/50 transition-colors">
-                    <Cog6ToothIcon className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                    <Settings className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -140,7 +140,7 @@ export default function AdminDashboard() {
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
                   <div className="p-3 bg-rose-100 dark:bg-rose-900/30 rounded-lg group-hover:bg-rose-200 dark:group-hover:bg-rose-900/50 transition-colors">
-                    <BugAntIcon className="h-8 w-8 text-rose-600 dark:text-rose-400" />
+                    <Bug className="h-8 w-8 text-rose-600 dark:text-rose-400" />
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -197,7 +197,7 @@ export default function AdminDashboard() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-2 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
-                <ChartBarIcon className="h-4 w-4" />
+                <BarChart3 className="h-4 w-4" />
                 <span>Google Analytics 控制台</span>
                 <span className="text-xs">↗</span>
               </a>
@@ -207,7 +207,7 @@ export default function AdminDashboard() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center space-x-2 text-blue-700 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
               >
-                <CircleStackIcon className="h-4 w-4" />
+                <Database className="h-4 w-4" />
                 <span>Supabase 資料庫</span>
                 <span className="text-xs">↗</span>
               </a>

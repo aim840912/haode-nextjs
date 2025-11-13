@@ -1,4 +1,4 @@
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { X } from 'lucide-react'
 import { InquiryStatusFlowCompact } from '@/components/features/inquiry/InquiryStatusFlow'
 import {
   InquiryWithItems,
@@ -40,7 +40,7 @@ export function InquiryDetailPanel({
             onClick={onClose}
             className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
-            <XMarkIcon className="w-6 h-6" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 

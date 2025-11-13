@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { ExclamationTriangleIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
+import { AlertTriangle, RotateCw } from 'lucide-react'
 import { logger } from '@/lib/logger'
 
 export default function DashboardError({
@@ -24,7 +24,7 @@ export default function DashboardError({
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="text-center">
           <div className="flex justify-center mb-4">
-            <ExclamationTriangleIcon className="h-16 w-16 text-red-500" />
+            <AlertTriangle className="h-16 w-16 text-red-500" />
           </div>
 
           <h1 className="text-3xl font-bold text-gray-900 mb-4">載入管理控台時發生錯誤</h1>
@@ -53,7 +53,7 @@ export default function DashboardError({
               onClick={reset}
               className="inline-flex items-center space-x-2 bg-amber-900 text-white px-6 py-3 rounded-lg hover:bg-amber-800 transition-colors"
             >
-              <ArrowPathIcon className="h-5 w-5" />
+              <RotateCw className="h-5 w-5" />
               <span>重新載入</span>
             </button>
 

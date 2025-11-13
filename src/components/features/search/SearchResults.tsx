@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { Search, SlidersHorizontal } from 'lucide-react'
 import { searchContent } from '@/lib/api/search-api'
 import { SearchResult, SearchResponse, SearchFilters } from '@/types/search'
 
@@ -117,7 +117,7 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
   if (!query.trim()) {
     return (
       <div className="text-center py-12">
-        <MagnifyingGlassIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+        <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <p className="text-gray-500">請輸入搜尋關鍵字</p>
       </div>
     )
@@ -144,7 +144,7 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
           onClick={() => setShowFilters(!showFilters)}
           className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:border-gray-400 transition-colors"
         >
-          <AdjustmentsHorizontalIcon className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4" />
           篩選
         </button>
       </div>
@@ -264,7 +264,7 @@ export function SearchResults({ query, filters, onFiltersChange }: SearchResults
       {/* 無結果 */}
       {!isLoading && !error && results.length === 0 && searchResponse && (
         <div className="text-center py-12">
-          <MagnifyingGlassIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <Search className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">沒有找到相關結果</h3>
           <p className="text-gray-500 mb-6">請嘗試使用不同的關鍵字或調整篩選條件</p>
           <div className="text-sm text-gray-600">

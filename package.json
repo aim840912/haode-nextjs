@@ -59,7 +59,6 @@
     "@fullcalendar/list": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
-    "@heroicons/react": "^2.2.0",
     "@next/third-parties": "^15.5.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.55.0",

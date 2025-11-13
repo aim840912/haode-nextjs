@@ -3,13 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import {
-  LockClosedIcon,
-  ClipboardDocumentListIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  ClockIcon,
-} from '@heroicons/react/24/outline'
+import { Lock, ClipboardList, Phone, Mail, Clock } from 'lucide-react'
 import { InquiryStatusFlowDetailed } from '@/components/features/inquiry/InquiryStatusFlow'
 import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
@@ -99,7 +93,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="flex justify-center mb-8">
-              <LockClosedIcon className="w-20 h-20 text-gray-400" />
+              <Lock className="w-20 h-20 text-gray-400" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">需要登入才能查看詢問單</h1>
             <p className="text-gray-600 mb-8">請先登入您的帳戶！</p>
@@ -150,7 +144,7 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
         <div className="max-w-4xl mx-auto px-6 py-16">
           <div className="text-center">
             <div className="flex justify-center mb-8">
-              <ClipboardDocumentListIcon className="w-20 h-20 text-gray-400" />
+              <ClipboardList className="w-20 h-20 text-gray-400" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">找不到詢問單</h1>
             <p className="text-gray-600 mb-8">這個詢問單可能已被刪除或您沒有權限查看</p>
@@ -454,15 +448,15 @@ function InquiryDetailPage({ params }: InquiryDetailPageProps) {
                 <h3 className="font-semibold text-gray-900 mb-3">需要協助？</h3>
                 <div className="text-sm text-gray-700 space-y-2">
                   <p className="flex items-center">
-                    <PhoneIcon className="w-5 h-5 text-amber-600 mr-2" />
+                    <Phone className="w-5 h-5 text-amber-600 mr-2" />
                     客服電話：0800-123-456
                   </p>
                   <p className="flex items-center">
-                    <EnvelopeIcon className="w-5 h-5 text-amber-600 mr-2" />
+                    <Mail className="w-5 h-5 text-amber-600 mr-2" />
                     客服信箱：service@example.com
                   </p>
                   <p className="flex items-center">
-                    <ClockIcon className="w-5 h-5 text-amber-600 mr-2" />
+                    <Clock className="w-5 h-5 text-amber-600 mr-2" />
                     服務時間：週一至週五 9:00-18:00
                   </p>
                 </div>
