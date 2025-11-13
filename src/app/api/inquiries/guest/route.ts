@@ -49,13 +49,10 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { InquirySchemas } from '@/lib/validation'
-import { inquiryService as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryService'
+import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
 
 // 訪客詢價使用的系統 user_id（全零 UUID）
 const GUEST_USER_ID = '00000000-0000-0000-0000-000000000000'
-
-// 使用統一的詢問服務適配器
-const inquiryService = inquiryServiceAdapter
 
 // POST /api/inquiries/guest - 建立訪客詢價單
 async function handlePOST(request: NextRequest) {
@@ -105,7 +102,7 @@ async function handlePOST(request: NextRequest) {
   }
 
   // 使用特殊的訪客 user_id 建立詢價單
-  const inquiry = await inquiryService.createInquiry(GUEST_USER_ID, inquiryData)
+  const inquiry = await inquiryCommandService.createInquiry(GUEST_USER_ID, inquiryData)
 
   apiLogger.info('訪客詢價單建立成功', {
     metadata: {

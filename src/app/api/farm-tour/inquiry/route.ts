@@ -80,7 +80,7 @@ import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { withRateLimit, IdentifierStrategy } from '@/lib/rate-limiter'
-import { inquiryService } from '@/services/core/inquiry/inquiryService'
+import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import { CreateInquiryRequest, InquiryUtils } from '@/types/inquiry'
 
@@ -134,7 +134,7 @@ async function handlePOST(request: NextRequest, user: User) {
   }
 
   // 建立詢問單
-  const inquiry = await inquiryService.createInquiry(user.id, inquiryData)
+  const inquiry = await inquiryCommandService.createInquiry(user.id, inquiryData)
 
   // 記錄農場參觀預約詢問建立的審計日誌
   AuditLogger.logInquiryCreate(

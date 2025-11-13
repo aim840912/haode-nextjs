@@ -11,13 +11,15 @@ import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { InquirySchemas, CommonValidations } from '@/lib/validation'
+import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
+import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
 import { inquiryService as inquiryServiceAdapter } from '@/services/core/inquiry/inquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import type { Database } from '@/types/database'
 import { InquiryUtils } from '@/types/inquiry'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-// 使用統一的詢問服務適配器
+// 使用統一的詢問服務適配器（暫時保留以支援複雜方法）
 const inquiryService = inquiryServiceAdapter
 
 /**
@@ -124,7 +126,7 @@ async function handleGET(request: NextRequest, user: User, context?: unknown) {
     inquiry = await inquiryServiceAdapter.getInquiryByIdForAdmin(inquiryId)
   } else {
     // 一般使用者只能查看自己的庫存查詢單
-    inquiry = await inquiryService.getInquiryById(user.id, inquiryId)
+    inquiry = await inquiryQueryService.getInquiryById(user.id, inquiryId)
   }
 
   if (!inquiry) {
@@ -314,7 +316,7 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
   }
 
   // 取得更新前的詢問單資料（用於審計日誌）
-  const previousInquiry = await inquiryService.getInquiryById(user.id, inquiryId)
+  const previousInquiry = await inquiryQueryService.getInquiryById(user.id, inquiryId)
   if (!previousInquiry) {
     throw new NotFoundError('找不到庫存查詢單')
   }
@@ -438,7 +440,7 @@ async function handleDELETE(request: NextRequest, user: User, context?: unknown)
   }
 
   // 刪除詢問單
-  await inquiryService.deleteInquiry(inquiryId)
+  await inquiryCommandService.deleteInquiry(inquiryId)
 
   // 記錄詢問單刪除的審計日誌
   AuditLogger.logInquiryDelete(
