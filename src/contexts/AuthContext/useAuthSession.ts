@@ -1,53 +1,14 @@
-'use client'
-
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  ReactNode,
-} from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { syncLocalInterests as syncInterestsToCloud } from '@/lib/api/user-interests-api'
-import {
-  supabase,
-  getUserProfile,
-  signInWithPhoneOrEmail,
-  signInWithProvider,
-  signOutUser,
-  signUpUser,
-  updateProfile as updateUserProfile,
-} from '@/lib/database/supabase-auth'
+import { supabase, getUserProfile } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
-import { User, LoginRequest, RegisterRequest } from '@/types/auth'
+import { User } from '@/types/auth'
 
-interface AuthContextType {
-  user: User | null
-  isLoading: boolean
-  login: (credentials: LoginRequest) => Promise<void>
-  register: (userData: RegisterRequest) => Promise<void>
-  logout: () => Promise<void>
-  updateProfile: (updates: Partial<User>) => Promise<void>
-  signInWithProvider: typeof signInWithProvider
+interface UseAuthSessionOptions {
+  onInterestsSync: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
-
-interface AuthProviderProps {
-  children: ReactNode
-}
-
-export function AuthProvider({ children }: AuthProviderProps) {
+export function useAuthSession({ onInterestsSync }: UseAuthSessionOptions) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -214,77 +175,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       validationRef.current.isValidating = false
     }
-  }, [user, handleForceLogout])
-
-  // 設定定期 session 驗證（每 15 分鐘檢查一次）
-  // 降低驗證頻率可減少因網路問題導致的驗證失敗
-  useEffect(() => {
-    if (!user || !user.id) return
-
-    const interval = setInterval(
-      () => {
-        validateSession()
-      },
-      15 * 60 * 1000
-    ) // 15 分鐘
-
-    return () => clearInterval(interval)
-    // validateSession 已包含 user 依賴，因此 user 變化時會重新創建 interval
-  }, [validateSession, user])
-
-  // 本地儲存工具函數
-  const getLocalInterests = (): string[] => {
-    try {
-      if (typeof localStorage === 'undefined') {
-        return []
-      }
-      const saved = localStorage.getItem('interestedProducts')
-      return saved ? JSON.parse(saved) : []
-    } catch (error) {
-      logger.error('取得本地興趣清單失敗', error as Error, {
-        metadata: { action: 'get_local_interests' },
-      })
-      return []
-    }
-  }
-
-  const clearLocalInterests = (): void => {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.removeItem('interestedProducts')
-        // 觸發事件通知其他元件更新
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('interestedProductsUpdated'))
-        }
-      }
-    } catch (error) {
-      logger.error('清除本地興趣清單失敗', error as Error, {
-        metadata: { action: 'clear_local_interests' },
-      })
-    }
-  }
-
-  // 同步使用者興趣清單
-  const syncUserInterests = useCallback(async () => {
-    try {
-      // 取得本地興趣清單
-      const localInterests = getLocalInterests()
-
-      // 同步到雲端並取得合併後的清單（使用 API 呼叫）
-      const mergedInterests = await syncInterestsToCloud(localInterests)
-
-      // 清除本地儲存，改用雲端資料
-      clearLocalInterests()
-
-      logger.debug('User interests synced', {
-        metadata: { count: mergedInterests.length, action: 'sync_interests' },
-      })
-    } catch (error) {
-      logger.error('Error syncing user interests', error as Error, {
-        metadata: { action: 'sync_interests' },
-      })
-    }
-  }, [])
+  }, [user])
 
   // 處理認證狀態變化
   const handleAuthStateChange = useCallback(
@@ -308,7 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               setUser(userData)
 
               // 同步興趣清單（登入成功後）
-              await syncUserInterests()
+              await onInterestsSync()
             } else {
               // 如果找不到 profile，建立基本使用者資訊
               logger.warn('Profile not found, creating basic user info', {
@@ -325,7 +216,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
               setUser(basicUser)
 
               // 同步興趣清單（登入成功後）
-              await syncUserInterests()
+              await onInterestsSync()
             }
           } catch (error) {
             // 檢查是否為認證相關錯誤
@@ -352,7 +243,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setUser(basicUser)
 
             // 同步興趣清單（登入成功後）
-            await syncUserInterests()
+            await onInterestsSync()
           }
         } else {
           setUser(null)
@@ -371,8 +262,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false)
       }
     },
-    [isRefreshTokenError, handleForceLogout, syncUserInterests]
+    [isRefreshTokenError, handleForceLogout, onInterestsSync]
   )
+
+  // 設定定期 session 驗證（每 15 分鐘檢查一次）
+  useEffect(() => {
+    if (!user || !user.id) return
+
+    const interval = setInterval(
+      () => {
+        validateSession()
+      },
+      15 * 60 * 1000
+    ) // 15 分鐘
+
+    return () => clearInterval(interval)
+  }, [validateSession, user])
 
   // 監聽 Supabase 認證狀態變化
   useEffect(() => {
@@ -577,183 +482,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => subscription.unsubscribe()
   }, [handleAuthStateChange, isRefreshTokenError, handleForceLogout])
 
-  const login = async (credentials: LoginRequest): Promise<void> => {
-    setIsLoading(true)
-
-    try {
-      // 使用新的雙重輸入登入函數
-      await signInWithPhoneOrEmail(
-        credentials.identifier,
-        credentials.password,
-        credentials.inputType
-      )
-      // 認證狀態變化會由 onAuthStateChange 處理
-    } catch (error) {
-      setIsLoading(false)
-      throw error
-    }
-  }
-
-  const register = async (userData: RegisterRequest): Promise<void> => {
-    setIsLoading(true)
-
-    try {
-      await signUpUser(userData.email, userData.password, userData.name, userData.phone)
-
-      // 主動載入 profile 資料以確保完整性
-      // 避免時間競爭問題導致註冊後 phone 等資料不顯示
-      if (userData.phone) {
-        try {
-          // 等待一點時間讓資料庫觸發器執行
-          await new Promise(resolve => setTimeout(resolve, 1500))
-
-          // 取得當前 session
-          const {
-            data: { session },
-          } = await supabase.auth.getSession()
-
-          if (session?.user) {
-            // 主動從資料庫取得 profile 資料
-            const profile = await getUserProfile(session.user.id)
-
-            if (profile) {
-              const userData: User = {
-                id: profile.id,
-                email: session.user.email!,
-                name: profile.name,
-                phone: profile.phone || undefined,
-                address: profile.address || undefined,
-                role: profile.role,
-                createdAt: profile.created_at,
-                updatedAt: profile.updated_at,
-              }
-              setUser(userData)
-
-              logger.info('註冊後 Profile 資料已載入', {
-                metadata: { hasPhone: !!profile.phone, action: 'register_profile_loaded' },
-              })
-            }
-          }
-        } catch (profileError) {
-          // 載入 profile 失敗不影響註冊流程，會由 onAuthStateChange 處理
-          logger.warn('註冊後主動載入 profile 失敗', {
-            metadata: { error: String(profileError), action: 'register_profile_load_failed' },
-          })
-        }
-      }
-
-      // 認證狀態變化也會由 onAuthStateChange 處理（雙重保險）
-    } catch (error) {
-      setIsLoading(false)
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const logout = async () => {
-    try {
-      // 立即清除使用者狀態，避免在登出過程中查詢 profile
-      setUser(null)
-      setIsLoading(false)
-
-      // 清除瀏覽器儲存中的認證資料
-      if (typeof window !== 'undefined') {
-        // 清除所有 Supabase 相關的 localStorage 項目
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('sb-') || key.includes('supabase')) {
-            localStorage.removeItem(key)
-          }
-        })
-      }
-
-      // 嘗試登出，但不依賴其成功
-      await signOutUser()
-
-      logger.info('登出完成', {
-        metadata: { action: 'logout_success' },
-      })
-    } catch (error) {
-      // 檢查是否為預期的錯誤（session 已失效等）
-      const err = error as { message?: string; status?: number }
-      const isExpectedError =
-        err.message?.includes('Invalid Refresh Token') ||
-        err.message?.includes('refresh_token_not_found') ||
-        err.message?.includes('Auth session missing') ||
-        err.status === 403 ||
-        err.status === 401
-
-      if (isExpectedError) {
-        logger.info('Session 已失效，登出目標已達成', {
-          metadata: {
-            action: 'logout_session_expired',
-            errorMessage: err.message,
-          },
-        })
-      } else {
-        logger.error('登出時發生未預期錯誤', error as Error, {
-          metadata: { action: 'logout_unexpected_error' },
-        })
-        // 即使有錯誤，也不要重新拋出，因為本地狀態已清除
-      }
-
-      // 確保狀態已清除（防護措施）
-      setUser(null)
-      setIsLoading(false)
-
-      // 強制清除瀏覽器儲存（防護措施）
-      if (typeof window !== 'undefined') {
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('sb-') || key.includes('supabase')) {
-            localStorage.removeItem(key)
-          }
-        })
-      }
-    }
-  }
-
-  const updateProfile = async (updates: Partial<User>): Promise<void> => {
-    if (!user) {
-      throw new Error('未登入')
-    }
-
-    setIsLoading(true)
-
-    try {
-      const updatedProfile = await updateUserProfile(user.id, {
-        name: updates.name,
-        phone: updates.phone,
-        address: updates.address,
-        role: updates.role,
-      })
-
-      if (updatedProfile) {
-        const updatedUser: User = {
-          ...user,
-          name: updatedProfile.name,
-          phone: updatedProfile.phone || undefined,
-          address: updatedProfile.address || undefined,
-          role: updatedProfile.role,
-          updatedAt: updatedProfile.updated_at,
-        }
-        setUser(updatedUser)
-      }
-    } catch (error) {
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const value: AuthContextType = {
+  return {
     user,
     isLoading,
-    login,
-    register,
-    logout,
-    updateProfile,
-    signInWithProvider,
+    setUser,
+    setIsLoading,
   }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
