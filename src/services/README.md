@@ -1,7 +1,7 @@
 # 服務層架構指南
 
-> 最後更新：2025-10-01
-> 版本：v3.0
+> 最後更新：2025-11-14
+> 版本：v4.0
 
 ## 📋 目錄結構
 
@@ -13,20 +13,27 @@ src/services/
 │   └── abstract-pooled-service.ts    # 連線池抽象層
 ├── core/                          # 核心業務服務
 │   ├── product/
-│   │   ├── productService.ts      # 標準實作
-│   │   ├── pooledProductService.ts  # 連線池版本
-│   │   └── cachedProductService.ts  # 快取版本
+│   │   └── productService.ts      # 產品服務
 │   ├── inquiry/
-│   │   ├── inquiryService.ts      # 使用抽象層
-│   │   ├── inquiryServiceSimple.ts  # 直接實作版本
-│   │   └── inquiryServiceAdapter.ts # 向後相容適配器
-│   └── order/
-│       └── orderService.ts        # 使用抽象層
-├── infrastructure/                # 基礎設施服務
-│   ├── auditLogService.ts
-│   └── email-service.ts
-└── factory/
-    └── serviceFactory.ts          # 服務工廠
+│   │   ├── InquiryQueryService.ts    # 詢價查詢服務 (CQRS)
+│   │   ├── InquiryCommandService.ts  # 詢價命令服務 (CQRS)
+│   │   └── inquiryTemplateService.ts # 詢價範本服務
+│   ├── order/
+│   │   ├── OrderQueryService.ts      # 訂單查詢服務 (CQRS)
+│   │   └── OrderCommandService.ts    # 訂單命令服務 (CQRS)
+│   ├── content/
+│   │   ├── farmTourService.ts        # 農場體驗服務
+│   │   ├── scheduleServiceSimple.ts  # 市集排程服務
+│   │   └── locationServiceSimple.ts  # 地點服務
+│   └── user/
+│       └── userInterestsService.ts   # 使用者興趣服務
+└── infrastructure/                # 基礎設施服務
+    ├── auditLogService.ts
+    ├── email-service.ts
+    └── monitoring/                # 監控服務
+        ├── rateLimitMonitoringService.ts
+        ├── kpiMonitoringService.ts
+        └── auditStatsService.ts
 ```
 
 ## 🏗 架構原則
@@ -36,12 +43,14 @@ src/services/
 2. **簡單優於複雜** - 避免過度設計
 3. **統一優於混亂** - 統一錯誤處理和日誌記錄
 
-### 設計決策（2025-10-01）
-經過深入分析，我們採用**混合架構策略**：
+### 設計決策（2025-11-14）
+經過深入分析和持續優化，我們採用**實用主義架構策略**：
 - ✅ 保留但不強制使用抽象層（使用率 10.7%）
 - ✅ 移除完全未使用的 AbstractJsonService（654行）
+- ✅ **移除 Service Factory 間接層**（29行，直接從服務檔案 import）
+- ✅ 採用 CQRS 模式分離查詢和命令（Order、Inquiry 服務）
 - ✅ 規範 Simple/Adapter 命名約定
-- ✅ 統一錯誤處理（ErrorFactory）和日誌系統（dbLogger）
+- ✅ 統一錯誤處理（ErrorFactory）和日誌系統（apiLogger/dbLogger）
 
 ## 📝 命名規範
 

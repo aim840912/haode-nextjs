@@ -190,7 +190,7 @@ import { getModuleConfig, isValidModule } from '@/config/image-modules.config'
 import { success, created } from '@/lib/api-response'
 import { ValidationError, AuthorizationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
-import { requireAuth, User } from '@/lib/middleware/api-middleware'
+import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 
@@ -291,79 +291,71 @@ async function handlePOST(request: NextRequest, user: User) {
     },
   })
 
-  try {
-    if (generateMultipleSizes && config.generateSizes.length > 1) {
-      // 上傳多個尺寸
-      const results = await unifiedImageService.uploadMultipleSizes(
-        file,
+  if (generateMultipleSizes && config.generateSizes.length > 1) {
+    // 上傳多個尺寸
+    const results = await unifiedImageService.uploadMultipleSizes(
+      file,
+      module,
+      entityId,
+      display_position
+    )
+
+    // 如果有 alt_text，更新第一個圖片的替代文字
+    if (alt_text && results.length > 0) {
+      await unifiedImageService.updateImageInfo(results[0].id, { alt_text })
+    }
+
+    apiLogger.info('多尺寸圖片上傳完成', {
+      module: 'UnifiedImageAPI',
+      metadata: {
         module,
         entityId,
-        display_position
-      )
+        uploadCount: results.length,
+        sizes: results.map(r => r.size),
+      },
+    })
 
-      // 如果有 alt_text，更新第一個圖片的替代文字
-      if (alt_text && results.length > 0) {
-        await unifiedImageService.updateImageInfo(results[0].id, { alt_text })
-      }
+    return created(
+      {
+        multiple: true,
+        images: results,
+        uploadCount: results.length,
+      },
+      '多尺寸圖片上傳成功'
+    )
+  } else {
+    // 單一尺寸上傳
+    const result = await unifiedImageService.uploadImage(
+      file,
+      module,
+      entityId,
+      size,
+      display_position
+    )
 
-      apiLogger.info('多尺寸圖片上傳完成', {
-        module: 'UnifiedImageAPI',
-        metadata: {
-          module,
-          entityId,
-          uploadCount: results.length,
-          sizes: results.map(r => r.size),
-        },
-      })
+    // 如果有 alt_text，更新圖片的替代文字
+    if (alt_text) {
+      await unifiedImageService.updateImageInfo(result.id, { alt_text })
+    }
 
-      return created(
-        {
-          multiple: true,
-          images: results,
-          uploadCount: results.length,
-        },
-        '多尺寸圖片上傳成功'
-      )
-    } else {
-      // 單一尺寸上傳
-      const result = await unifiedImageService.uploadImage(
-        file,
+    apiLogger.info('單一尺寸圖片上傳完成', {
+      module: 'UnifiedImageAPI',
+      metadata: {
         module,
         entityId,
         size,
-        display_position
-      )
-
-      // 如果有 alt_text，更新圖片的替代文字
-      if (alt_text) {
-        await unifiedImageService.updateImageInfo(result.id, { alt_text })
-      }
-
-      apiLogger.info('單一尺寸圖片上傳完成', {
-        module: 'UnifiedImageAPI',
-        metadata: {
-          module,
-          entityId,
-          size,
-          imageId: result.id,
-          url: result.url,
-        },
-      })
-
-      return created(
-        {
-          multiple: false,
-          image: result,
-        },
-        '圖片上傳成功'
-      )
-    }
-  } catch (error) {
-    apiLogger.error('圖片上傳失敗', error as Error, {
-      module: 'UnifiedImageAPI',
-      metadata: { module, entityId, fileName: file.name },
+        imageId: result.id,
+        url: result.url,
+      },
     })
-    throw error
+
+    return created(
+      {
+        multiple: false,
+        image: result,
+      },
+      '圖片上傳成功'
+    )
   }
 }
 
@@ -398,34 +390,26 @@ async function handleGET(request: NextRequest) {
     metadata: { module, entityId },
   })
 
-  try {
-    const images = await unifiedImageService.getImages(module, entityId)
+  const images = await unifiedImageService.getImages(module, entityId)
 
-    apiLogger.info('圖片列表查詢完成', {
-      module: 'UnifiedImageAPI',
-      metadata: {
-        module,
-        entityId,
-        imageCount: images.length,
-      },
-    })
+  apiLogger.info('圖片列表查詢完成', {
+    module: 'UnifiedImageAPI',
+    metadata: {
+      module,
+      entityId,
+      imageCount: images.length,
+    },
+  })
 
-    return success(
-      {
-        images,
-        count: images.length,
-        module,
-        entityId,
-      },
-      '圖片列表取得成功'
-    )
-  } catch (error) {
-    apiLogger.error('查詢圖片列表失敗', error as Error, {
-      module: 'UnifiedImageAPI',
-      metadata: { module, entityId },
-    })
-    throw error
-  }
+  return success(
+    {
+      images,
+      count: images.length,
+      module,
+      entityId,
+    },
+    '圖片列表取得成功'
+  )
 }
 
 /**
@@ -541,61 +525,34 @@ async function handleDELETE(request: NextRequest, user: User) {
     metadata: { imageId, userId: user?.id },
   })
 
-  try {
-    // 先取得圖片資訊以檢查模組
-    const imageInfo = await unifiedImageService.getImageById(imageId)
-    if (!imageInfo) {
-      throw new ValidationError(`圖片不存在: ${imageId}`)
-    }
-
-    // 權限檢查：產品和網站設定模組需要管理員權限
-    if (
-      (imageInfo.module === 'products' || imageInfo.module === 'site-settings') &&
-      !user.isAdmin
-    ) {
-      throw new AuthorizationError(
-        `${imageInfo.module === 'products' ? '產品' : '網站設定'}圖片刪除需要管理員權限`
-      )
-    }
-
-    await unifiedImageService.deleteImage(imageId)
-
-    apiLogger.info('圖片刪除完成', {
-      module: 'UnifiedImageAPI',
-      metadata: { imageId },
-    })
-
-    return success(
-      {
-        imageId,
-        deleted: true,
-      },
-      '圖片刪除成功'
-    )
-  } catch (error) {
-    apiLogger.error('圖片刪除失敗', error as Error, {
-      module: 'UnifiedImageAPI',
-      metadata: { imageId },
-    })
-    throw error
+  // 先取得圖片資訊以檢查模組
+  const imageInfo = await unifiedImageService.getImageById(imageId)
+  if (!imageInfo) {
+    throw new ValidationError(`圖片不存在: ${imageId}`)
   }
+
+  // 權限檢查：產品和網站設定模組需要管理員權限
+  if ((imageInfo.module === 'products' || imageInfo.module === 'site-settings') && !user.isAdmin) {
+    throw new AuthorizationError(
+      `${imageInfo.module === 'products' ? '產品' : '網站設定'}圖片刪除需要管理員權限`
+    )
+  }
+
+  await unifiedImageService.deleteImage(imageId)
+
+  apiLogger.info('圖片刪除完成', {
+    module: 'UnifiedImageAPI',
+    metadata: { imageId },
+  })
+
+  return success(
+    {
+      imageId,
+      deleted: true,
+    },
+    '圖片刪除成功'
+  )
 }
-
-// 整合認證和錯誤處理中間件
-const handlePOSTWithAuth = requireAuth(handlePOST)
-
-const handleGETWithError = withErrorHandler(handleGET, {
-  module: 'UnifiedImageAPI',
-  enableAuditLog: false, // GET 請求通常不需要審計日誌
-})
-
-const handlePATCHWithError = withErrorHandler(handlePATCH, {
-  module: 'UnifiedImageAPI',
-  enableAuditLog: true, // 更新操作需要審計日誌
-})
-
-// 整合認證和錯誤處理中間件
-const handleDELETEWithAuth = requireAuth(handleDELETE)
 
 /**
  * OPTIONS - CORS 預檢請求處理
@@ -612,8 +569,23 @@ export async function OPTIONS(_request: NextRequest) {
   })
 }
 
-// 導出 API 處理器
-export const POST = handlePOSTWithAuth
-export const GET = handleGETWithError
-export const PATCH = handlePATCHWithError
-export const DELETE = handleDELETEWithAuth
+// 導出 API 處理器 - 使用統一中間件組合
+export const POST = withAuthAndError(handlePOST, {
+  module: 'UnifiedImageAPI',
+  enableAuditLog: true,
+})
+
+export const GET = withErrorHandler(handleGET, {
+  module: 'UnifiedImageAPI',
+  enableAuditLog: false,
+})
+
+export const PATCH = withErrorHandler(handlePATCH, {
+  module: 'UnifiedImageAPI',
+  enableAuditLog: true,
+})
+
+export const DELETE = withAuthAndError(handleDELETE, {
+  module: 'UnifiedImageAPI',
+  enableAuditLog: true,
+})

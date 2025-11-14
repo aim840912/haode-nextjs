@@ -125,7 +125,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { ScheduleSchemas } from '@/lib/validation'
-import { scheduleServiceSimple } from '@/services/factory/serviceFactory'
+import { scheduleServiceSimple } from '@/services/core/content/scheduleServiceSimple'
 
 async function handleGET(request: NextRequest) {
   // 解析查詢參數

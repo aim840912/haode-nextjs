@@ -120,7 +120,7 @@ import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
 import { ValidationError } from '@/lib/errors'
 import { cacheLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { productService } from '@/services/factory/serviceFactory'
+import { productService } from '@/services/core/product/productService'
 
 async function handleGET(request: Request) {
   const url = new URL(request.url)

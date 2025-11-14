@@ -170,7 +170,7 @@ import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
-import { requireAdmin, User } from '@/lib/middleware/api-middleware'
+import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { AdminProductSchemas, CommonValidations } from '@/lib/validation'
 import { productService } from '@/services/core/product/productService'
@@ -331,15 +331,13 @@ export const GET = withErrorHandler(handleGET, {
   enableAuditLog: false,
 })
 
-// PUT 和 DELETE 需要管理員權限
-const handlePUTWithAuth = requireAdmin(handlePUT)
-export const PUT = withErrorHandler(handlePUTWithAuth, {
+// PUT 和 DELETE 需要管理員權限 - 使用統一中間件組合
+export const PUT = withAdminAndError(handlePUT, {
   module: 'ProductAPI',
   enableAuditLog: true,
 })
 
-const handleDELETEWithAuth = requireAdmin(handleDELETE)
-export const DELETE = withErrorHandler(handleDELETEWithAuth, {
+export const DELETE = withAdminAndError(handleDELETE, {
   module: 'ProductAPI',
   enableAuditLog: true,
 })

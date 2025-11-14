@@ -145,7 +145,7 @@ import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { NotFoundError } from '@/lib/errors'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { farmTourService } from '@/services/factory/serviceFactory'
+import { farmTourService } from '@/services/core/content/farmTourService'
 
 async function handleGET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

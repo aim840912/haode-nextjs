@@ -51,7 +51,7 @@
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { scheduleServiceSimple } from '@/services/factory/serviceFactory'
+import { scheduleServiceSimple } from '@/services/core/content/scheduleServiceSimple'
 
 interface ScheduleCalendarEvent {
   id: string

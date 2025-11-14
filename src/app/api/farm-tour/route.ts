@@ -115,7 +115,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { FarmTourActivitySchemas } from '@/lib/validation'
-import { farmTourService } from '@/services/factory/serviceFactory'
+import { farmTourService } from '@/services/core/content/farmTourService'
 
 async function handleGET() {
   const activities = await farmTourService.getAll()

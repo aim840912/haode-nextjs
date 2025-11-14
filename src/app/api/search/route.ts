@@ -88,7 +88,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 import { SearchSchemas } from '@/lib/validation'
-import { productService } from '@/services/factory/serviceFactory'
+import { productService } from '@/services/core/product/productService'
 import { Product } from '@/types/product'
 import { SearchResult, SearchResponse } from '@/types/search'
 
