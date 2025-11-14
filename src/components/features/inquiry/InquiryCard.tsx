@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import { formatDateTime } from '@/lib/utils/formatters'
 import { InquiryWithItems, InquiryUtils } from '@/types/inquiry'

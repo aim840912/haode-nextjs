@@ -1,5 +1,3 @@
-'use client'
-
 import { FileText, MessageSquare, CheckCircle, BadgeCheck, XCircleIcon } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { formatDateTime } from '@/lib/utils/formatters'
