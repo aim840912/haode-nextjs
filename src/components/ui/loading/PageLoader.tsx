@@ -1,4 +1,3 @@
-'use client'
 import { cn } from '@/lib/utils/cn'
 import { LoadingSkeleton, ProductCardSkeleton, ListItemSkeleton } from './LoadingSkeleton'
 import { LoadingSpinner } from './LoadingSpinner'
