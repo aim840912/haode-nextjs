@@ -168,6 +168,7 @@
 
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
+import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
 import { ValidationError, NotFoundError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
@@ -244,8 +245,7 @@ async function handlePUT(request: NextRequest, user: User & { isAdmin: true }, c
 
   // 手動清除產品相關的快取
   try {
-    const { CacheManager } = await import('@/lib/cache/cache-server')
-    await CacheManager.deletePattern('products:*')
+    await UnifiedCacheManager.deletePattern('products:*')
   } catch (cacheError) {
     apiLogger.warn('清除快取失敗', {
       metadata: { errorMessage: (cacheError as Error).message },
@@ -303,8 +303,7 @@ async function handleDELETE(
 
   // 手動清除產品相關的快取
   try {
-    const { CacheManager } = await import('@/lib/cache/cache-server')
-    await CacheManager.deletePattern('products:*')
+    await UnifiedCacheManager.deletePattern('products:*')
   } catch (cacheError) {
     apiLogger.warn('清除快取失敗', {
       metadata: { errorMessage: (cacheError as Error).message },

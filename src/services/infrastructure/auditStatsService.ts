@@ -1,5 +1,9 @@
 /**
- * 審計統計服務實作
+ * 審計統計服務實作（內部實作）
+ *
+ * ⚠️ 此檔案為內部實作，由 AuditCollector 使用
+ * 外部請使用：import { auditCollector } from '@/services/infrastructure/monitoring'
+ *
  * 專門處理審計統計查詢和資料轉換
  * 從 auditLogService 分離出來，實現單一職責原則
  */

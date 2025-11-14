@@ -1,7 +1,7 @@
 # 服務層架構指南
 
 > 最後更新：2025-11-14
-> 版本：v4.0
+> 版本：v4.1
 
 ## 📋 目錄結構
 
@@ -30,10 +30,22 @@ src/services/
 └── infrastructure/                # 基礎設施服務
     ├── auditLogService.ts
     ├── email-service.ts
-    └── monitoring/                # 監控服務
-        ├── rateLimitMonitoringService.ts
-        ├── kpiMonitoringService.ts
-        └── auditStatsService.ts
+    ├── monitoring/                # 統一監控服務
+    │   ├── types/                 # 監控類型定義
+    │   │   ├── monitoring-types.ts        # 核心監控類型
+    │   │   ├── rate-limit-collector.ts    # Rate Limit Collector 類型
+    │   │   ├── kpi-collector.ts           # KPI Collector 類型
+    │   │   └── audit-collector.ts         # Audit Collector 類型
+    │   ├── collectors/            # Collector 實作
+    │   │   ├── RateLimitCollectorImpl.ts  # Rate Limit 指標收集器
+    │   │   ├── KPICollectorImpl.ts        # KPI 指標收集器
+    │   │   ├── AuditCollectorImpl.ts      # 審計指標收集器
+    │   │   └── index.ts
+    │   ├── MonitoringServiceImpl.ts       # 統一監控服務實作
+    │   └── index.ts               # 統一導出入口
+    ├── rateLimitMonitoringService.ts  # (內部) Rate Limit 監控實作
+    ├── kpiMonitoringService.ts        # (內部) KPI 監控實作
+    └── auditStatsService.ts            # (內部) 審計統計實作
 ```
 
 ## 🏗 架構原則
@@ -317,6 +329,129 @@ export const GET = withErrorHandler(async (req: NextRequest) => {
    }, { module: 'ProductAPI' })
    ```
 
+## 📊 監控服務架構
+
+### 設計原則
+採用 **Collector 模式** 實現統一的監控服務架構：
+- ✅ **統一介面**：所有 Collector 實作 `MetricsCollector` 介面
+- ✅ **職責分離**：每個 Collector 負責特定類型的指標收集
+- ✅ **可擴展性**：輕鬆新增新的 Collector 而不影響現有功能
+- ✅ **統一入口**：透過 `MonitoringService` 統一管理和協調
+
+### 架構層次
+
+```
+API Routes (外部使用層)
+    ↓
+MonitoringService (統一協調層)
+    ↓
+Collectors (指標收集層)
+    ├── RateLimitCollector
+    ├── KPICollector
+    └── AuditCollector
+    ↓
+Legacy Services (內部實作層)
+    ├── rateLimitMonitoringService
+    ├── kpiMonitoringService
+    └── auditStatsService
+```
+
+### 使用方式
+
+#### ✅ 推薦：使用 Collector
+```typescript
+// API Route 中使用 Collector
+import { rateLimitCollector, kpiCollector, auditCollector } from '@/services/infrastructure/monitoring'
+
+// 1. Rate Limit 統計
+const stats = await rateLimitCollector.getRateLimitStats()
+
+// 2. KPI 報告
+const report = await kpiCollector.generateKPIReport()
+
+// 3. 審計統計
+const auditStats = await auditCollector.getAuditStats({ days: 30 })
+```
+
+#### ✅ 進階：使用 MonitoringService
+```typescript
+// 統一監控入口
+import { monitoringService } from '@/services/infrastructure/monitoring'
+
+// 收集所有指標
+const allMetrics = await monitoringService.collectAllMetrics()
+
+// 生成摘要報告
+const report = await monitoringService.generateReport('summary', { days: 7 })
+
+// 取得活躍警報
+const alerts = await monitoringService.getAlerts()
+```
+
+#### ❌ 不推薦：直接使用舊服務
+```typescript
+// ❌ 避免直接使用內部實作
+import { getRateLimitStats } from '@/services/infrastructure/rateLimitMonitoringService'
+import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
+
+// 這些檔案已標記為內部使用，應透過 Collector 存取
+```
+
+### 可用的 Collectors
+
+#### 1. RateLimitCollector
+```typescript
+import { rateLimitCollector } from '@/services/infrastructure/monitoring'
+
+// 取得 Rate Limit 統計
+const stats = await rateLimitCollector.getRateLimitStats()
+
+// 取得被封鎖的 IP 列表
+const blockedIPs = await rateLimitCollector.getBlockedIPs()
+
+// 檢查 IP 是否被封鎖
+const blockInfo = await rateLimitCollector.checkIPBlock('1.2.3.4')
+```
+
+#### 2. KPICollector
+```typescript
+import { kpiCollector } from '@/services/infrastructure/monitoring'
+
+// 生成完整 KPI 報告
+const report = await kpiCollector.generateKPIReport()
+
+// 測量特定 KPI
+const measurement = await kpiCollector.measureKPI('api_response_time_avg')
+
+// 取得 KPI 歷史
+const history = await kpiCollector.getKPIHistory('api_error_rate', 100)
+```
+
+#### 3. AuditCollector
+```typescript
+import { auditCollector } from '@/services/infrastructure/monitoring'
+
+// 取得審計統計
+const stats = await auditCollector.getAuditStats({ days: 30 })
+
+// 取得使用者活動統計
+const userStats = await auditCollector.getUserActivityStats({ days: 7 })
+
+// 取得資源存取統計
+const resourceStats = await auditCollector.getResourceAccessStats({ days: 7 })
+```
+
+### 監控服務優勢
+
+| 特性 | 舊架構 (3個獨立服務) | 新架構 (Collector 模式) |
+|------|---------------------|----------------------|
+| 程式碼重用 | 低（重複邏輯） | 高（統一介面） |
+| 可維護性 | 中（分散管理） | 高（集中協調） |
+| 擴展性 | 低（需修改多處） | 高（註冊新 Collector） |
+| 一致性 | 低（各自實作） | 高（統一規範） |
+| 警報管理 | 無 | 有（統一警報系統） |
+| 健康評分 | 無 | 有（自動計算） |
+
 ## 🔄 服務升級路徑
 
 ### 階段 1: 統一入口 (已完成)
@@ -388,8 +523,10 @@ grep -r "apiLogger" src/app/api --include="*.ts"
 ---
 
 **變更記錄**：
-- 2025-10-01: 服務層架構統一（移除未使用的 AbstractJsonService，規範命名約定）
+- 2025-11-14 v4.1: 監控服務架構重構（Collector 模式，統一監控入口）
+- 2025-11-14 v4.0: 移除 Service Factory 間接層
+- 2025-10-01 v3.0: 服務層架構統一（移除未使用的 AbstractJsonService，規範命名約定）
 - 2024-09-25: 產品服務層重構
 
-**版本**: v3.0
-**最後更新**: 2025-10-01
+**版本**: v4.1
+**最後更新**: 2025-11-14

@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
-import { generateKPIReport } from '@/services/infrastructure/kpiMonitoringService'
+import { kpiCollector } from '@/services/infrastructure/monitoring'
 
 /**
  * @api {GET} /api/admin/kpi-report 取得 KPI 監控報告
@@ -50,8 +50,8 @@ async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {
     },
   })
 
-  // 生成 KPI 監控報告
-  const report = await generateKPIReport()
+  // 生成 KPI 監控報告（使用新的 Collector）
+  const report = await kpiCollector.generateKPIReport()
 
   apiLogger.info('KPI 報告生成完成', {
     metadata: {
