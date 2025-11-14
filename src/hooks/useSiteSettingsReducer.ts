@@ -174,12 +174,28 @@ function siteSettingsReducer(
   }
 }
 
+// 導出 actions 物件的類型，供其他元件使用
+export type SiteSettingsActions = {
+  setSaving: (saving: boolean) => void
+  showMessage: (type: 'success' | 'error', text: string) => void
+  clearMessage: () => void
+  setHomeHeroImages: (images: string[]) => void
+  addHomeHeroImage: (url: string) => void
+  removeHomeHeroImage: (index: number) => void
+  setFarmTourHeroBg: (url: string) => void
+  setFeatureCardImage: (index: 1 | 2 | 3 | 4, url: string) => void
+  setSeasonImage: (season: 'spring' | 'summer' | 'autumn' | 'winter', url: string) => void
+  setFarmContent: (field: 'facilities' | 'faqs' | 'visitInfo' | 'visitNotes', value: string) => void
+  loadAllSettings: (settings: Partial<SiteSettingsState>) => void
+  reset: () => void
+}
+
 export function useSiteSettingsReducer() {
   const [state, dispatch] = useReducer(siteSettingsReducer, initialState)
 
   // 提供方便的 helper functions
   // 使用 useMemo 確保 actions 物件引用穩定，避免無限重新渲染
-  const actions = useMemo(
+  const actions = useMemo<SiteSettingsActions>(
     () => ({
       setSaving: (saving: boolean) => {
         dispatch({ type: 'SET_SAVING', payload: saving })
