@@ -6,13 +6,13 @@ import { useRouter } from 'next/navigation'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
 // Hooks
-import { AdditionalInfoSection } from './components/AdditionalInfoSection'
-import { BasicInfoSection } from './components/BasicInfoSection'
+import { AdditionalInfoSection } from '@/components/features/admin/forms/schedule/AdditionalInfoSection'
+import { BasicInfoSection } from '@/components/features/admin/forms/schedule/BasicInfoSection'
 
 // Components
-import { DateTimeSection } from './components/DateTimeSection'
-import { ProductsSection } from './components/ProductsSection'
-import { SchedulePreview } from './components/SchedulePreview'
+import { DateTimeSection } from '@/components/features/admin/forms/schedule/DateTimeSection'
+import { ProductsSection } from '@/components/features/admin/forms/schedule/ProductsSection'
+import { SchedulePreview } from '@/components/features/admin/forms/schedule/SchedulePreview'
 import { useScheduleForm } from '@/hooks/forms/useScheduleForm'
 import { useScheduleFormSubmit } from '@/hooks/forms/useScheduleFormSubmit'
 import { useScheduleFormValidation } from '@/hooks/forms/useScheduleFormValidation'
