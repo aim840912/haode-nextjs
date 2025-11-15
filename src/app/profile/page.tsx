@@ -10,11 +10,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { InterestsTab } from './components/InterestsTab'
 import { OrdersTab } from './components/OrdersTab'
 import { ProfileTab } from './components/ProfileTab'
-import { useInterests } from './hooks/useInterests'
-import { useOrders } from './hooks/useOrders'
+import { useInterests } from '@/hooks/profile/useInterests'
+import { useOrders } from '@/hooks/profile/useOrders'
 
 // Components
-import { useProfileForm } from './hooks/useProfileForm'
+import { useProfileForm } from '@/hooks/profile/useProfileForm'
 
 // 載入頁面元件
 function ProfilePageLoading() {

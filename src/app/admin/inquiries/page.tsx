@@ -20,8 +20,8 @@ import { InquiryFilters } from './components/InquiryFilters'
 import { InquiryList } from './components/InquiryList'
 import { InquiryStats } from './components/InquiryStats'
 import { QuickReplySection } from './components/QuickReplySection'
-import { useBatchOperations } from './hooks/useBatchOperations'
-import { useInquiriesData } from './hooks/useInquiriesData'
+import { useBatchOperations } from '@/hooks/admin/useBatchOperations'
+import { useInquiriesData } from '@/hooks/admin/useInquiriesData'
 
 function AdminInquiriesPage() {
   const { user } = useAuth()

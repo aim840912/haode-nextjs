@@ -16,8 +16,8 @@ import { logger } from '@/lib/logger'
 import { ProductFormFields } from './components/ProductFormFields'
 import { SuccessOverlay } from './components/SuccessOverlay'
 import { UploadStatsPanel } from './components/UploadStatsPanel'
-import { useProductForm } from './hooks/useProductForm'
-import { useProductSubmit } from './hooks/useProductSubmit'
+import { useProductForm } from '@/hooks/forms/useProductAddForm'
+import { useProductSubmit } from '@/hooks/forms/useProductSubmit'
 
 // Components
 

@@ -5,7 +5,7 @@ import { getSupabaseClient } from '@/lib/database/supabase-auth'
 import { logger } from '@/lib/logger'
 import type { User } from '@/types/auth'
 import type { FarmTourActivity } from '@/types/farmTour'
-import type { FarmTourFormData, FarmTourFormErrors } from '../hooks/useFarmTourForm'
+import type { FarmTourFormData, FarmTourFormErrors } from '@/hooks/farm-tour/useFarmTourForm'
 
 interface BookingModalProps {
   activity: FarmTourActivity

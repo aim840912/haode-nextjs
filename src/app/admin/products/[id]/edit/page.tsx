@@ -8,7 +8,7 @@ import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
 import { BasicInfoSection } from './components/BasicInfoSection'
 import { PriceInventorySection } from './components/PriceInventorySection'
-import { useProductForm } from './hooks/useProductForm'
+import { useProductForm } from '@/hooks/forms/useProductEditForm'
 
 const ProductImageManager = dynamic(
   () =>

@@ -13,9 +13,9 @@ import { BasicInfoSection } from './components/BasicInfoSection'
 import { DateTimeSection } from './components/DateTimeSection'
 import { ProductsSection } from './components/ProductsSection'
 import { SchedulePreview } from './components/SchedulePreview'
-import { useScheduleForm } from './hooks/useScheduleForm'
-import { useScheduleFormSubmit } from './hooks/useScheduleFormSubmit'
-import { useScheduleFormValidation } from './hooks/useScheduleFormValidation'
+import { useScheduleForm } from '@/hooks/forms/useScheduleForm'
+import { useScheduleFormSubmit } from '@/hooks/forms/useScheduleFormSubmit'
+import { useScheduleFormValidation } from '@/hooks/forms/useScheduleFormValidation'
 
 export default function EditSchedule({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter()

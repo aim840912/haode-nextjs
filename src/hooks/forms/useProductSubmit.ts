@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { logger } from '@/lib/logger'
-import type { ProductFormData } from './useProductForm'
+import type { ProductFormData } from './useProductAddForm'
 
 export type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error'
 

@@ -9,9 +9,9 @@ import { FeaturesSection } from './components/FeaturesSection'
 import { ImageUploadSection } from './components/ImageUploadSection'
 import { SpecialtiesSection } from './components/SpecialtiesSection'
 import { TransportSection } from './components/TransportSection'
-import { useLocationForm } from './hooks/useLocationForm'
-import { useLocationFormSubmit } from './hooks/useLocationFormSubmit'
-import { useLocationFormValidation } from './hooks/useLocationFormValidation'
+import { useLocationForm } from '@/hooks/forms/useLocationForm'
+import { useLocationFormSubmit } from '@/hooks/forms/useLocationFormSubmit'
+import { useLocationFormValidation } from '@/hooks/forms/useLocationFormValidation'
 
 export default function EditLocation({ params }: { params: Promise<{ id: string }> }) {
   const [locationId, setLocationId] = useState<string>('')

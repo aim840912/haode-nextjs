@@ -1,6 +1,6 @@
 import { LoadingButton } from '@/components/ui/loading/LoadingSpinner'
 import type { User } from '@/types/auth'
-import type { ProfileFormData } from '../hooks/useProfileForm'
+import type { ProfileFormData } from '@/hooks/profile/useProfileForm'
 
 interface ProfileTabProps {
   user: User

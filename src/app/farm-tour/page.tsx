@@ -21,8 +21,8 @@ import { FloatingCTA } from './components/FloatingCTA'
 import { HeroSection } from './components/HeroSection'
 import { InfoSection } from './components/InfoSection'
 import { TrustSection } from './components/TrustSection'
-import { useFarmTourActivities } from './hooks/useFarmTourActivities'
-import { useFarmTourForm } from './hooks/useFarmTourForm'
+import { useFarmTourActivities } from '@/hooks/farm-tour/useFarmTourActivities'
+import { useFarmTourForm } from '@/hooks/farm-tour/useFarmTourForm'
 
 // 預設農場設施（向下相容）
 const DEFAULT_FACILITIES: FacilityItem[] = [

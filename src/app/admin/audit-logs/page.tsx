@@ -17,8 +17,8 @@ import { AuditLogDetailModal } from './components/AuditLogDetailModal'
 import { AuditLogFilters } from './components/AuditLogFilters'
 import { AuditLogsTable } from './components/AuditLogsTable'
 import { DeleteConfirmModal } from './components/DeleteConfirmModal'
-import { useAuditLogFilters } from './hooks/useAuditLogFilters'
-import { useAuditLogsData } from './hooks/useAuditLogsData'
+import { useAuditLogFilters } from '@/hooks/admin/useAuditLogFilters'
+import { useAuditLogsData } from '@/hooks/admin/useAuditLogsData'
 
 function AuditLogsPage() {
   const { user } = useAuth()

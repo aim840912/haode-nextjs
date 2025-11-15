@@ -1,4 +1,4 @@
-import type { ProductFormData, ProductFormErrors } from '../hooks/useProductForm'
+import type { ProductFormData, ProductFormErrors } from '@/hooks/forms/useProductAddForm'
 
 interface ProductFormFieldsProps {
   formData: ProductFormData
