@@ -88,3 +88,39 @@ export function orderItemFromDB(record: OrderItemRecord | any): OrderItem {
     updatedAt: record.updated_at,
   }
 }
+
+/**
+ * 生成訂單編號
+ */
+export async function generateOrderNumber(): Promise<string> {
+  const { getSupabaseAdmin } = await import('@/lib/database/supabase-auth')
+  const { ErrorFactory } = await import('@/lib/errors')
+
+  const getAdmin = () => {
+    const client = getSupabaseAdmin()
+    if (!client) {
+      throw new Error('Supabase admin client not initialized')
+    }
+    return client
+  }
+
+  try {
+    const client = getAdmin()
+    const { data, error } = await client.rpc('generate_order_number')
+
+    if (error) {
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'orderMappers',
+        action: 'generateOrderNumber',
+      })
+    }
+
+    return data
+  } catch (error) {
+    const { ErrorFactory: EF } = await import('@/lib/errors')
+    throw EF.fromSupabaseError(error, {
+      module: 'orderMappers',
+      action: 'generateOrderNumber',
+    })
+  }
+}
