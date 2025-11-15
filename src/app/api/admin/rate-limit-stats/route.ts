@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
-import { rateLimitCollector } from '@/services/infrastructure/monitoring'
+import { getRateLimitStats } from '@/lib/monitoring'
 
 /**
  * @api {GET} /api/admin/rate-limit-stats 取得 Rate Limiting 統計
@@ -47,8 +47,8 @@ async function handleGET(request: NextRequest, user: User & { isAdmin: true }) {
     },
   })
 
-  // 取得 rate limiting 統計數據（使用新的 Collector）
-  const stats = await rateLimitCollector.getRateLimitStats()
+  // 取得 rate limiting 統計數據
+  const stats = await getRateLimitStats()
 
   return success(stats, 'Rate Limiting 統計數據取得成功')
 }

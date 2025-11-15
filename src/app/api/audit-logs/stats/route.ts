@@ -107,7 +107,7 @@ import { ValidationError, MethodNotAllowedError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError } from '@/lib/middleware/api-middleware'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { auditCollector } from '@/services/infrastructure/monitoring'
+import { getAuditStats, getUserActivityStats, getResourceAccessStats } from '@/lib/monitoring'
 
 // GET /api/audit-logs/stats - 取得審計日誌統計
 async function handleGET(request: NextRequest, user: { id: string; role?: string }) {
@@ -156,11 +156,11 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
 
   switch (statsType) {
     case 'overview':
-      // 綜合統計（使用新的 Collector）
+      // 綜合統計
       const [auditStats, userStats, resourceStats] = await Promise.all([
-        auditCollector.getAuditStats({ days }),
-        auditCollector.getUserActivityStats({ days }),
-        auditCollector.getResourceAccessStats({ days }),
+        getAuditStats({ days }),
+        getUserActivityStats({ days }),
+        getResourceAccessStats({ days }),
       ])
 
       stats = {
@@ -182,18 +182,18 @@ async function handleGET(request: NextRequest, user: { id: string; role?: string
       break
 
     case 'users':
-      // 使用者活動統計（使用新的 Collector）
-      stats = await auditCollector.getUserActivityStats({ days })
+      // 使用者活動統計
+      stats = await getUserActivityStats({ days })
       break
 
     case 'resources':
-      // 資源存取統計（使用新的 Collector）
-      stats = await auditCollector.getResourceAccessStats({ days })
+      // 資源存取統計
+      stats = await getResourceAccessStats({ days })
       break
 
     case 'actions':
-      // 動作統計（使用新的 Collector）
-      stats = await auditCollector.getAuditStats({ days })
+      // 動作統計
+      stats = await getAuditStats({ days })
       break
 
     default:
