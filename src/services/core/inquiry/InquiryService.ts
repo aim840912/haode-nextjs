@@ -1,6 +1,6 @@
 /**
- * 詢問單命令服務
- * 負責所有寫入操作（CQRS - Command）
+ * 統一詢問單服務
+ * 整合查詢和命令操作
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
@@ -10,12 +10,13 @@ import {
   InquiryWithItems,
   CreateInquiryRequest,
   UpdateInquiryRequest,
+  InquiryQueryParams,
+  InquiryStats,
   InquiryStatus,
   InquiryItem,
 } from '@/types/inquiry'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 import { InquiryInventoryService } from './InquiryInventoryService'
-import { InquiryQueryService } from './InquiryQueryService'
 
 const getAdmin = () => getSupabaseAdmin()
 
@@ -48,10 +49,10 @@ interface SupabaseInquiryRecord {
 }
 
 /**
- * 詢問單命令服務
+ * 統一詢問單服務
  */
-export class InquiryCommandService {
-  private readonly moduleName = 'InquiryCommandService'
+export class InquiryService {
+  private readonly moduleName = 'InquiryService'
 
   /**
    * 取得 Supabase 客戶端
@@ -68,7 +69,7 @@ export class InquiryCommandService {
    * 處理錯誤
    */
   private handleError(error: unknown, operation: string, context?: ServiceErrorContext): never {
-    dbLogger.error(`詢問命令服務 ${operation} 操作失敗`, error as Error, {
+    dbLogger.error(`詢問服務 ${operation} 操作失敗`, error as Error, {
       module: this.moduleName,
       action: operation,
       metadata: context,
@@ -167,6 +168,67 @@ export class InquiryCommandService {
   }
 
   /**
+   * 應用查詢參數到 Supabase 查詢構建器
+   */
+  private applyQueryParams(query: any, params?: InquiryQueryParams): any {
+    if (!params) return query
+
+    // 狀態篩選
+    if (params.status) {
+      query = query.eq('status', params.status)
+    }
+
+    // 類型篩選
+    if (params.inquiry_type) {
+      query = query.eq('inquiry_type', params.inquiry_type)
+    }
+
+    // Email 搜尋
+    if (params.customer_email) {
+      query = query.ilike('customer_email', `%${params.customer_email}%`)
+    }
+
+    // 日期範圍
+    if (params.start_date) {
+      query = query.gte('created_at', params.start_date)
+    }
+    if (params.end_date) {
+      query = query.lte('created_at', params.end_date)
+    }
+
+    // 讀取/回覆狀態
+    if (params.is_read !== undefined) {
+      query = query.eq('is_read', params.is_read)
+    }
+    if (params.is_replied !== undefined) {
+      query = query.eq('is_replied', params.is_replied)
+    }
+
+    // 特殊篩選
+    if (params.unread_only) {
+      query = query.eq('is_read', false)
+    }
+    if (params.unreplied_only) {
+      query = query.eq('is_replied', false)
+    }
+
+    // 排序
+    const sortBy = params.sort_by || 'created_at'
+    const sortOrder = params.sort_order || 'desc'
+    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
+
+    // 分頁
+    if (params.limit) {
+      query = query.limit(params.limit)
+    }
+    if (params.offset) {
+      query = query.range(params.offset, params.offset + (params.limit || 10) - 1)
+    }
+
+    return query
+  }
+
+  /**
    * 驗證建立詢問單請求
    */
   private validateCreateInquiryRequest(data: CreateInquiryRequest): void {
@@ -234,7 +296,160 @@ export class InquiryCommandService {
     return total > 0 ? total : null
   }
 
-  // === 使用者端命令方法 ===
+  // =================================================================
+  // 查詢方法（Query Operations）
+  // =================================================================
+
+  /**
+   * 取得使用者的詢問單列表
+   */
+  async getUserInquiries(userId: string, params?: InquiryQueryParams): Promise<InquiryWithItems[]> {
+    try {
+      const client = this.getSupabaseClient()
+      let query = client
+        .from('inquiries')
+        .select(
+          `
+          *,
+          inquiry_items (*)
+        `
+        )
+        .eq('user_id', userId)
+
+      // 應用查詢參數
+      query = this.applyQueryParams(query, params)
+
+      const { data, error } = await query
+
+      if (error) {
+        this.handleError(error, 'getUserInquiries', { userId, params })
+      }
+
+      const result = (data || []).map(record =>
+        this.transformFromDB(record as unknown as SupabaseInquiryRecord)
+      )
+
+      dbLogger.info('取得使用者詢問單列表成功', {
+        module: this.moduleName,
+        action: 'getUserInquiries',
+        metadata: { userId, count: result.length },
+      })
+
+      return result
+    } catch (error) {
+      this.handleError(error, 'getUserInquiries', { userId, params })
+    }
+  }
+
+  /**
+   * 取得使用者的特定詢問單
+   */
+  async getInquiryById(userId: string, inquiryId: string): Promise<InquiryWithItems | null> {
+    try {
+      const client = this.getSupabaseClient()
+      const { data, error } = await client
+        .from('inquiries')
+        .select(
+          `
+          *,
+          inquiry_items (*)
+        `
+        )
+        .eq('id', inquiryId)
+        .eq('user_id', userId)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null
+        }
+        this.handleError(error, 'getInquiryById', { userId, inquiryId })
+      }
+
+      return data ? this.transformFromDB(data as unknown as SupabaseInquiryRecord) : null
+    } catch (error) {
+      this.handleError(error, 'getInquiryById', { userId, inquiryId })
+    }
+  }
+
+  /**
+   * 取得所有詢問單（管理員）
+   */
+  async getAllInquiries(params?: InquiryQueryParams): Promise<InquiryWithItems[]> {
+    try {
+      const client = this.getSupabaseClient()
+      let query = client.from('inquiries').select(`
+          *,
+          inquiry_items (*)
+        `)
+
+      // 應用查詢參數
+      query = this.applyQueryParams(query, params)
+
+      const { data, error } = await query
+
+      if (error) {
+        this.handleError(error, 'getAllInquiries', { params })
+      }
+
+      return (data || []).map((record: unknown) =>
+        this.transformFromDB(record as SupabaseInquiryRecord)
+      )
+    } catch (error) {
+      this.handleError(error, 'getAllInquiries', { params })
+    }
+  }
+
+  /**
+   * 取得特定詢問單（管理員）
+   */
+  async getInquiryByIdForAdmin(inquiryId: string): Promise<InquiryWithItems | null> {
+    try {
+      const client = this.getSupabaseClient()
+      const { data, error } = await client
+        .from('inquiries')
+        .select(
+          `
+          *,
+          inquiry_items (*)
+        `
+        )
+        .eq('id', inquiryId)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null
+        }
+        this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
+      }
+
+      return data ? this.transformFromDB(data as unknown as SupabaseInquiryRecord) : null
+    } catch (error) {
+      this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
+    }
+  }
+
+  /**
+   * 取得詢問單統計資料
+   */
+  async getInquiryStats(): Promise<InquiryStats[]> {
+    try {
+      // inquiry_stats 表不存在，返回空陣列
+      dbLogger.warn('getInquiryStats - 佔位實作：inquiry_stats 表不存在', {
+        module: this.moduleName,
+        action: 'getInquiryStats',
+      })
+
+      return [] as InquiryStats[]
+    } catch (error) {
+      this.handleError(error, 'getInquiryStats')
+    }
+  }
+
+  // =================================================================
+  // 命令方法（Command Operations）
+  // =================================================================
 
   /**
    * 建立詢問單
@@ -338,9 +553,8 @@ export class InquiryCommandService {
     data: UpdateInquiryRequest
   ): Promise<InquiryWithItems> {
     try {
-      // 建立 QueryService 檢查所有權
-      const queryService = new InquiryQueryService()
-      const existing = await queryService.getInquiryById(userId, inquiryId)
+      // 檢查所有權
+      const existing = await this.getInquiryById(userId, inquiryId)
       if (!existing) {
         throw new NotFoundError('詢問單不存在或無權限修改')
       }
@@ -382,8 +596,6 @@ export class InquiryCommandService {
     }
   }
 
-  // === 管理員端命令方法 ===
-
   /**
    * 更新詢問單狀態
    */
@@ -391,12 +603,11 @@ export class InquiryCommandService {
     try {
       const client = this.getSupabaseClient()
 
-      // 建立 QueryService 和 InventoryService
-      const queryService = new InquiryQueryService()
+      // 建立 InventoryService
       const inventoryService = new InquiryInventoryService()
 
       // 先取得詢問單資訊（含前一個狀態）
-      const inquiry = await queryService.getInquiryByIdForAdmin(inquiryId)
+      const inquiry = await this.getInquiryByIdForAdmin(inquiryId)
       if (!inquiry) {
         throw new NotFoundError('詢問單不存在')
       }
@@ -487,4 +698,4 @@ export class InquiryCommandService {
 }
 
 // 建立並匯出服務實例
-export const inquiryCommandService = new InquiryCommandService()
+export const inquiryService = new InquiryService()

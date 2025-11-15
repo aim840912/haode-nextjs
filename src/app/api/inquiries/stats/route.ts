@@ -15,7 +15,7 @@ import { success } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
-import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
+import { inquiryService } from '@/services/core/inquiry/InquiryService'
 import { InquiryStatus, InquiryType, InquiryUtils } from '@/types/inquiry'
 
 // 統計資料介面定義
@@ -390,7 +390,7 @@ async function handleGET(request: NextRequest, user: User) {
   let inquiries
   if (user.isAdmin && 'admin_mode' in params && params.admin_mode) {
     // 管理員模式：查詢所有詢價
-    inquiries = await inquiryQueryService.getAllInquiries({
+    inquiries = await inquiryService.getAllInquiries({
       start_date: startDate.toISOString(),
       end_date: endDate.toISOString(),
       status: 'status' in params ? (params as { status: InquiryStatus }).status : undefined,
@@ -401,7 +401,7 @@ async function handleGET(request: NextRequest, user: User) {
     })
   } else {
     // 一般使用者模式：只查詢自己的詢價
-    inquiries = await inquiryQueryService.getUserInquiries(user.id, {
+    inquiries = await inquiryService.getUserInquiries(user.id, {
       start_date: startDate.toISOString(),
       end_date: endDate.toISOString(),
     })

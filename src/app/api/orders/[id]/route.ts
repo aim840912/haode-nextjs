@@ -11,8 +11,7 @@ import { success } from '@/lib/api-response'
 import { ValidationError, NotFoundError, MethodNotAllowedError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
-import { orderCommandService } from '@/services/core/order/OrderCommandService'
-import { orderQueryService } from '@/services/core/order/OrderQueryService'
+import { orderService } from '@/services/core/order/OrderService'
 
 // 訂單更新的驗證 schema
 const UpdateOrderSchema = z.object({
@@ -86,7 +85,7 @@ async function handleGET(req: NextRequest, user: User, context?: unknown) {
     metadata: { orderId: id, userId: user.id },
   })
 
-  const order = await orderQueryService.getOrderById(id, user.id)
+  const order = await orderService.getOrderById(id, user.id)
 
   if (!order) {
     throw new NotFoundError('訂單不存在或無權限查看')
@@ -166,7 +165,7 @@ async function handlePATCH(req: NextRequest, user: User, context?: unknown) {
   const { action, reason } = validation.data
 
   if (action === 'cancel') {
-    await orderCommandService.cancelOrder(id, user.id, reason)
+    await orderService.cancelOrder(id, user.id, reason)
 
     apiLogger.info('取消訂單成功', {
       module: 'OrderAPI',

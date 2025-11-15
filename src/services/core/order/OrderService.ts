@@ -1,14 +1,21 @@
 /**
- * 訂單命令服務
- * 負責所有寫入操作（建立、更新、刪除）
+ * 訂單服務
+ * 整合查詢和命令操作
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
-import { Order, OrderItem, OrderStatus, CreateOrderRequest, ShippingAddress } from '@/types/order'
+import {
+  Order,
+  OrderItem,
+  OrderStatus,
+  OrderSummary,
+  CreateOrderRequest,
+  ShippingAddress,
+} from '@/types/order'
 import { orderFromDB, orderItemFromDB } from './orderMappers'
-import { OrderQueryService } from './OrderQueryService'
+import type { OrderRecord, OrderItemRecord } from './types'
 
 const getAdmin = () => {
   const client = getSupabaseAdmin()
@@ -18,9 +25,323 @@ const getAdmin = () => {
   return client
 }
 
-export class OrderCommandService {
+export class OrderService {
   private readonly orderItemsTable = 'order_items'
   private readonly tableName = 'orders'
+
+  // ==================== 查詢方法 (Query) ====================
+
+  /**
+   * 取得使用者的訂單列表（含分頁）
+   */
+  async getUserOrders(
+    userId: string,
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<{ orders: Order[]; total: number }> {
+    if (!userId) {
+      throw new ValidationError('使用者 ID 不能為空')
+    }
+
+    const timer = dbLogger.timer('取得使用者訂單')
+
+    try {
+      const client = getAdmin()
+
+      // 取得總數
+      const { count, error: countError } = await client
+        .from(this.tableName)
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+
+      if (countError) {
+        throw ErrorFactory.fromSupabaseError(countError, {
+          module: 'OrderService',
+          action: 'getUserOrders:count',
+          context: { userId, limit, offset },
+        })
+      }
+
+      // 取得訂單資料
+      const { data: ordersData, error: dataError } = await client
+        .from(this.tableName)
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (dataError) {
+        throw ErrorFactory.fromSupabaseError(dataError, {
+          module: 'OrderService',
+          action: 'getUserOrders:data',
+          context: { userId, limit, offset },
+        })
+      }
+
+      const orders = (ordersData || []).map(record => orderFromDB(record as OrderRecord))
+
+      // 批次載入所有訂單的項目（解決 N+1 問題）
+      const orderIds = orders.map(order => order.id)
+      const itemsByOrderId = await this.getOrderItemsBatch(orderIds)
+
+      // 將項目關聯到對應的訂單
+      for (const order of orders) {
+        order.items = itemsByOrderId.get(order.id) || []
+      }
+
+      timer.end({ metadata: { userId, orderCount: orders.length, total: count } })
+
+      return {
+        orders,
+        total: count || 0,
+      }
+    } catch (error) {
+      timer.end()
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getUserOrders',
+        context: { userId, limit, offset },
+      })
+    }
+  }
+
+  /**
+   * 取得單一訂單詳情（含驗證使用者權限）
+   */
+  async getOrderById(orderId: string, userId: string): Promise<Order | null> {
+    if (!orderId || !userId) {
+      throw new ValidationError('訂單 ID 和使用者 ID 不能為空')
+    }
+
+    const timer = dbLogger.timer('取得訂單詳情')
+
+    try {
+      const client = getAdmin()
+      const { data, error } = await client
+        .from(this.tableName)
+        .select('*')
+        .eq('id', orderId)
+        .eq('user_id', userId)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          timer.end()
+          return null
+        }
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderService',
+          action: 'getOrderById',
+          context: { orderId, userId },
+        })
+      }
+
+      const order = orderFromDB(data as OrderRecord)
+      order.items = await this.getOrderItems(orderId)
+
+      timer.end({ metadata: { orderId, userId, found: true } })
+      return order
+    } catch (error) {
+      timer.end()
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getOrderById',
+        context: { orderId, userId },
+      })
+    }
+  }
+
+  /**
+   * 管理員：取得所有訂單
+   */
+  async getAllOrders(
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<{ orders: Order[]; total: number }> {
+    const timer = dbLogger.timer('取得所有訂單')
+
+    try {
+      const client = getAdmin()
+
+      // 取得總數
+      const { count, error: countError } = await client
+        .from(this.tableName)
+        .select('*', { count: 'exact', head: true })
+
+      if (countError) {
+        throw ErrorFactory.fromSupabaseError(countError, {
+          module: 'OrderService',
+          action: 'getAllOrders:count',
+          context: { limit, offset },
+        })
+      }
+
+      // 取得訂單資料
+      const { data: ordersData, error: dataError } = await client
+        .from(this.tableName)
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      if (dataError) {
+        throw ErrorFactory.fromSupabaseError(dataError, {
+          module: 'OrderService',
+          action: 'getAllOrders:data',
+          context: { limit, offset },
+        })
+      }
+
+      const orders = (ordersData || []).map(record => orderFromDB(record as OrderRecord))
+
+      // 批次載入所有訂單的項目（解決 N+1 問題）
+      const orderIds = orders.map(order => order.id)
+      const itemsByOrderId = await this.getOrderItemsBatch(orderIds)
+
+      // 將項目關聯到對應的訂單
+      for (const order of orders) {
+        order.items = itemsByOrderId.get(order.id) || []
+      }
+
+      timer.end({ metadata: { orderCount: orders.length, total: count } })
+
+      return {
+        orders,
+        total: count || 0,
+      }
+    } catch (error) {
+      timer.end()
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getAllOrders',
+        context: { limit, offset },
+      })
+    }
+  }
+
+  /**
+   * 取得訂單統計
+   */
+  async getOrderSummary(): Promise<OrderSummary> {
+    const timer = dbLogger.timer('取得訂單統計')
+
+    try {
+      const client = getAdmin()
+      const { data, error } = await client.from('order_summary_view').select('*').single()
+
+      if (error) {
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderService',
+          action: 'getOrderSummary',
+        })
+      }
+
+      timer.end()
+
+      return {
+        totalOrders: data.total_orders || 0,
+        totalAmount: Number(data.total_amount || 0),
+        pendingOrders: data.pending_orders || 0,
+        processingOrders: data.processing_orders || 0,
+        deliveredOrders: data.delivered_orders || 0,
+      }
+    } catch (error) {
+      timer.end()
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getOrderSummary',
+      })
+    }
+  }
+
+  /**
+   * 取得訂單項目
+   */
+  async getOrderItems(orderId: string): Promise<OrderItem[]> {
+    const client = getAdmin()
+    const { data, error } = await client
+      .from(this.orderItemsTable)
+      .select('*')
+      .eq('order_id', orderId)
+
+    if (error) {
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getOrderItems',
+        context: { orderId },
+      })
+    }
+
+    return (data || []).map(item => orderItemFromDB(item as OrderItemRecord))
+  }
+
+  /**
+   * 取得產品詳情（簡化版）
+   */
+  async getProductById(productId: string): Promise<any> {
+    const client = getAdmin()
+    const { data, error } = await client
+      .from('products')
+      .select('*')
+      .eq('id', productId)
+      .eq('is_active', true)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return null
+      }
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getProductById',
+        context: { productId },
+      })
+    }
+
+    return data
+  }
+
+  /**
+   * 根據 ID 取得訂單（管理員用，不驗證使用者）
+   */
+  async findById(orderId: string): Promise<Order | null> {
+    const timer = dbLogger.timer('根據 ID 取得訂單')
+
+    try {
+      const client = getAdmin()
+      const { data, error } = await client
+        .from(this.tableName)
+        .select('*')
+        .eq('id', orderId)
+        .single()
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          timer.end()
+          return null
+        }
+        throw ErrorFactory.fromSupabaseError(error, {
+          module: 'OrderService',
+          action: 'findById',
+          context: { orderId },
+        })
+      }
+
+      const order = orderFromDB(data as OrderRecord)
+      order.items = await this.getOrderItems(orderId)
+
+      timer.end({ metadata: { orderId, found: true } })
+      return order
+    } catch (error) {
+      timer.end()
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'findById',
+        context: { orderId },
+      })
+    }
+  }
+
+  // ==================== 命令方法 (Command) ====================
 
   /**
    * 建立新訂單
@@ -31,7 +352,6 @@ export class OrderCommandService {
     }
 
     const timer = dbLogger.timer('建立訂單')
-    const queryService = new OrderQueryService()
 
     try {
       // 生成訂單編號
@@ -43,7 +363,7 @@ export class OrderCommandService {
 
       // 驗證產品並計算金額
       for (const item of orderData.items) {
-        const product = await queryService.getProductById(item.productId)
+        const product = await this.getProductById(item.productId)
         if (!product) {
           throw new NotFoundError(`產品不存在: ${item.productId}`)
         }
@@ -99,7 +419,7 @@ export class OrderCommandService {
 
       if (orderError) {
         throw ErrorFactory.fromSupabaseError(orderError, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'createOrder',
           context: { userId, orderNumber },
         })
@@ -127,7 +447,7 @@ export class OrderCommandService {
         // 回滾訂單
         await client.from(this.tableName).delete().eq('id', orderData_result.id)
         throw ErrorFactory.fromSupabaseError(itemsError, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'createOrder:items',
           context: { orderId: orderData_result.id },
         })
@@ -142,7 +462,7 @@ export class OrderCommandService {
       timer.end({ metadata: { orderId: order.id, orderNumber, totalAmount } })
 
       dbLogger.info('建立訂單成功', {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'createOrder',
         metadata: { orderId: order.id, userId, orderNumber, totalAmount },
       })
@@ -151,7 +471,7 @@ export class OrderCommandService {
     } catch (error) {
       timer.end()
       throw ErrorFactory.fromSupabaseError(error, {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'createOrder',
         context: { userId },
       })
@@ -170,8 +490,7 @@ export class OrderCommandService {
 
     try {
       // 檢查訂單是否存在且屬於該使用者
-      const queryService = new OrderQueryService()
-      const order = await queryService.getOrderById(orderId, userId)
+      const order = await this.getOrderById(orderId, userId)
       if (!order) {
         throw new NotFoundError('訂單不存在或無權限')
       }
@@ -190,14 +509,14 @@ export class OrderCommandService {
       timer.end({ metadata: { orderId, userId } })
 
       dbLogger.info('取消訂單成功', {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'cancelOrder',
         metadata: { orderId, userId, reason },
       })
     } catch (error) {
       timer.end()
       throw ErrorFactory.fromSupabaseError(error, {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'cancelOrder',
         context: { orderId, userId },
       })
@@ -230,7 +549,7 @@ export class OrderCommandService {
 
       if (error) {
         throw ErrorFactory.fromSupabaseError(error, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'updateOrderStatus',
           context: { orderId, status },
         })
@@ -239,14 +558,14 @@ export class OrderCommandService {
       timer.end({ metadata: { orderId, status, notes } })
 
       dbLogger.info('更新訂單狀態成功', {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'updateOrderStatus',
         metadata: { orderId, status, notes },
       })
     } catch (error) {
       timer.end()
       throw ErrorFactory.fromSupabaseError(error, {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'updateOrderStatus',
         context: { orderId, status },
       })
@@ -272,7 +591,7 @@ export class OrderCommandService {
 
       if (updateError) {
         throw ErrorFactory.fromSupabaseError(updateError, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'updateOrder:update',
           context: { orderId },
         })
@@ -287,7 +606,7 @@ export class OrderCommandService {
 
       if (error) {
         throw ErrorFactory.fromSupabaseError(error, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'updateOrder:fetch',
           context: { orderId },
         })
@@ -298,7 +617,7 @@ export class OrderCommandService {
       timer.end({ metadata: { orderId } })
 
       dbLogger.info('更新訂單成功', {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'updateOrder',
         metadata: { orderId, updates: Object.keys(updates) },
       })
@@ -307,11 +626,49 @@ export class OrderCommandService {
     } catch (error) {
       timer.end()
       throw ErrorFactory.fromSupabaseError(error, {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'updateOrder',
         context: { orderId },
       })
     }
+  }
+
+  // ==================== 輔助方法 (Private) ====================
+
+  /**
+   * 批次取得多個訂單的項目（解決 N+1 查詢問題）
+   */
+  private async getOrderItemsBatch(orderIds: string[]): Promise<Map<string, OrderItem[]>> {
+    if (orderIds.length === 0) {
+      return new Map()
+    }
+
+    const client = getAdmin()
+    const { data, error } = await client
+      .from(this.orderItemsTable)
+      .select('*')
+      .in('order_id', orderIds)
+
+    if (error) {
+      throw ErrorFactory.fromSupabaseError(error, {
+        module: 'OrderService',
+        action: 'getOrderItemsBatch',
+        context: { orderIds },
+      })
+    }
+
+    // 將項目按 order_id 分組
+    const itemsByOrderId = new Map<string, OrderItem[]>()
+    for (const record of data || []) {
+      const item = orderItemFromDB(record as OrderItemRecord)
+      const orderId = record.order_id
+      if (!itemsByOrderId.has(orderId)) {
+        itemsByOrderId.set(orderId, [])
+      }
+      itemsByOrderId.get(orderId)!.push(item)
+    }
+
+    return itemsByOrderId
   }
 
   /**
@@ -324,7 +681,7 @@ export class OrderCommandService {
 
       if (error) {
         throw ErrorFactory.fromSupabaseError(error, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'generateOrderNumber',
         })
       }
@@ -332,7 +689,7 @@ export class OrderCommandService {
       return data
     } catch (error) {
       throw ErrorFactory.fromSupabaseError(error, {
-        module: 'OrderCommandService',
+        module: 'OrderService',
         action: 'generateOrderNumber',
       })
     }
@@ -385,7 +742,7 @@ export class OrderCommandService {
 
       if (error) {
         dbLogger.error('更新產品庫存失敗', error, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'updateProductInventory',
           metadata: { productId: item.productId, quantity: item.quantity },
         })
@@ -407,7 +764,7 @@ export class OrderCommandService {
 
       if (error) {
         dbLogger.error('恢復產品庫存失敗', error, {
-          module: 'OrderCommandService',
+          module: 'OrderService',
           action: 'restoreProductInventory',
           metadata: { productId: item.productId, quantity: item.quantity },
         })
@@ -417,4 +774,4 @@ export class OrderCommandService {
 }
 
 // 建立並匯出服務實例
-export const orderCommandService = new OrderCommandService()
+export const orderService = new OrderService()

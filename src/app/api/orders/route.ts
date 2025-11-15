@@ -162,8 +162,7 @@ import { success, created } from '@/lib/api-response'
 import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
-import { orderCommandService } from '@/services/core/order/OrderCommandService'
-import { orderQueryService } from '@/services/core/order/OrderQueryService'
+import { orderService } from '@/services/core/order/OrderService'
 import { CreateOrderRequest } from '@/types/order'
 
 // 建立訂單的驗證 schema
@@ -204,7 +203,7 @@ async function handleGET(req: NextRequest, user: User) {
     metadata: { userId: user.id, page, limit },
   })
 
-  const result = await orderQueryService.getUserOrders(user.id, limit, offset)
+  const result = await orderService.getUserOrders(user.id, limit, offset)
 
   return success(
     {
@@ -244,7 +243,7 @@ async function handlePOST(req: NextRequest, user: User) {
   }
 
   const orderData: CreateOrderRequest = validation.data
-  const order = await orderCommandService.createOrder(user.id, orderData)
+  const order = await orderService.createOrder(user.id, orderData)
 
   apiLogger.info('建立訂單成功', {
     module: 'OrdersAPI',

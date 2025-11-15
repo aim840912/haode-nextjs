@@ -116,8 +116,7 @@ import { ValidationError } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { InquirySchemas } from '@/lib/validation'
-import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
-import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
+import { inquiryService } from '@/services/core/inquiry/InquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 
 // GET /api/inquiries - 取得庫存查詢單清單
@@ -158,9 +157,9 @@ async function handleGET(request: NextRequest, user: User) {
   // 取得庫存查詢單清單
   let inquiries
   if (isAdmin && adminMode) {
-    inquiries = await inquiryQueryService.getAllInquiries(result.data)
+    inquiries = await inquiryService.getAllInquiries(result.data)
   } else {
-    inquiries = await inquiryQueryService.getUserInquiries(user.id, result.data)
+    inquiries = await inquiryService.getUserInquiries(user.id, result.data)
   }
 
   return success(inquiries, '庫存查詢單清單取得成功')
@@ -197,7 +196,7 @@ async function handlePOST(request: NextRequest, user: User) {
   })
 
   // 建立庫存查詢單
-  const inquiry = await inquiryCommandService.createInquiry(user.id, result.data)
+  const inquiry = await inquiryService.createInquiry(user.id, result.data)
 
   // 記錄詢問提交指標
   const { recordInquirySubmit } = await import('@/lib/metrics')

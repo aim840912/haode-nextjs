@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { apiLogger } from '@/lib/logger'
 import { withAdminAndError, User } from '@/lib/middleware/api-middleware'
-import { orderQueryService } from '@/services/core/order/OrderQueryService'
+import { orderService } from '@/services/core/order/OrderService'
 
 /**
  * @api {GET} /api/admin/orders 取得所有訂單（管理員）
@@ -68,7 +68,7 @@ async function handleGET(req: NextRequest, user: User) {
     metadata: { adminId: user.id, page, limit, status, userId },
   })
 
-  const result = await orderQueryService.getAllOrders(limit, offset)
+  const result = await orderService.getAllOrders(limit, offset)
 
   // 如果有篩選條件，這裡可以進一步過濾
   let filteredOrders = result.orders
@@ -90,7 +90,7 @@ async function handleGET(req: NextRequest, user: User) {
         hasNext: offset + limit < result.total,
         hasPrev: page > 1,
       },
-      summary: await orderQueryService.getOrderSummary(),
+      summary: await orderService.getOrderSummary(),
     },
     '取得所有訂單成功'
   )

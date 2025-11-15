@@ -438,20 +438,22 @@ async function handleGET(
 export const GET = withAuthAndError(handleGET, { module: 'ProductAPI' })
 ```
 
-### Service 層架構 (CQRS 模式)
+### Service 層架構 (統一服務模式)
 
-**專案採用簡化的 CQRS 架構** - 分離查詢(Query)和命令(Command)操作
+**專案採用統一服務架構** - 每個領域使用單一 Service 類別,整合查詢和命令操作
 
 **核心原則**:
-- **QueryService**: 處理所有讀取操作 (GET)，不修改資料
-- **CommandService**: 處理所有寫入操作 (POST/PUT/PATCH/DELETE)，可修改資料
-- **直接使用子服務**: API 路由直接調用 QueryService/CommandService，**不使用 coordinator 層**
+- **單一 Service 類別**: 每個領域只有一個 Service 類別 (例如: OrderService, InquiryService)
+- **整合操作**: 同時包含讀取 (Query) 和寫入 (Command) 操作
+- **職責分離**: 使用註解或方法分組區分查詢和命令操作,但保持在同一類別中
 
 **範例架構**:
 
 ```typescript
-// src/services/core/order/OrderQueryService.ts
-export class OrderQueryService {
+// src/services/core/order/OrderService.ts
+export class OrderService {
+  // === 查詢方法（Query Operations） ===
+
   async getOrderById(orderId: string, userId: string): Promise<Order> {
     // 查詢邏輯
   }
@@ -459,18 +461,14 @@ export class OrderQueryService {
   async getUserOrders(userId: string, limit: number, offset: number) {
     // 查詢邏輯
   }
-}
 
-export const orderQueryService = new OrderQueryService()
+  // === 命令方法（Command Operations） ===
 
-// src/services/core/order/OrderCommandService.ts
-export class OrderCommandService {
   async createOrder(userId: string, data: CreateOrderRequest): Promise<Order> {
-    // 如果需要查詢,內部創建 QueryService 實例
-    const queryService = new OrderQueryService()
-    const product = await queryService.getProductById(productId)
+    // 建立訂單邏輯 (可直接調用內部查詢方法)
+    const product = await this.getProductById(productId)
 
-    // 建立訂單邏輯
+    // 建立訂單
   }
 
   async cancelOrder(orderId: string, userId: string, reason?: string): Promise<void> {
@@ -478,27 +476,26 @@ export class OrderCommandService {
   }
 }
 
-export const orderCommandService = new OrderCommandService()
+export const orderService = new OrderService()
 ```
 
 **API 使用範例**:
 
 ```typescript
 // src/app/api/orders/route.ts
-import { orderQueryService } from '@/services/core/order/OrderQueryService'
-import { orderCommandService } from '@/services/core/order/OrderCommandService'
+import { orderService } from '@/services/core/order/OrderService'
 import { withAuthAndError } from '@/lib/middleware/api-middleware'
 
-// GET - 使用 QueryService
+// GET - 使用查詢方法
 async function handleGET(req: NextRequest, user: User) {
-  const orders = await orderQueryService.getUserOrders(user.id, 20, 0)
+  const orders = await orderService.getUserOrders(user.id, 20, 0)
   return success(orders, '取得訂單列表成功')
 }
 
-// POST - 使用 CommandService
+// POST - 使用命令方法
 async function handlePOST(req: NextRequest, user: User) {
   const data = await req.json()
-  const order = await orderCommandService.createOrder(user.id, data)
+  const order = await orderService.createOrder(user.id, data)
   return created(order, '訂單建立成功')
 }
 
@@ -507,10 +504,10 @@ export const POST = withAuthAndError(handlePOST, { module: 'OrderAPI', enableAud
 ```
 
 **重要**:
-- ❌ **不要**建立 coordinator 層 (如 orderService.ts)
-- ❌ **不要**用依賴注入傳遞 QueryService 到 CommandService
-- ✅ **直接**從 API 調用 QueryService/CommandService
-- ✅ CommandService 需要查詢時,**內部創建** QueryService 實例
+- ✅ **使用統一服務**: 每個領域只有一個 Service 類別
+- ✅ **內部方法調用**: 命令方法可直接調用同類別的查詢方法 (使用 `this.`)
+- ❌ **不要建立**分離的 QueryService 和 CommandService
+- ❌ **不要建立** coordinator 層來組合服務
 
 ### 審計日誌策略
 

@@ -10,8 +10,7 @@ import { ValidationError, NotFoundError, AuthorizationError } from '@/lib/errors
 import { apiLogger } from '@/lib/logger'
 import { withAuthAndError, User } from '@/lib/middleware/api-middleware'
 import { InquirySchemas } from '@/lib/validation'
-import { inquiryCommandService } from '@/services/core/inquiry/InquiryCommandService'
-import { inquiryQueryService } from '@/services/core/inquiry/InquiryQueryService'
+import { inquiryService } from '@/services/core/inquiry/InquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import type { Database } from '@/types/database'
 import { InquiryUtils } from '@/types/inquiry'
@@ -37,8 +36,8 @@ async function handleGET(request: NextRequest, user: User, context?: unknown) {
   // 取得庫存查詢單
   const inquiry =
     isAdmin && adminMode
-      ? await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
-      : await inquiryQueryService.getInquiryById(user.id, inquiryId)
+      ? await inquiryService.getInquiryByIdForAdmin(inquiryId)
+      : await inquiryService.getInquiryById(user.id, inquiryId)
 
   if (!inquiry) {
     throw new NotFoundError('找不到庫存查詢單')
@@ -97,7 +96,7 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
 
   // 管理員更新狀態
   if (result.data.status && isAdmin) {
-    const currentInquiry = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
+    const currentInquiry = await inquiryService.getInquiryByIdForAdmin(inquiryId)
     if (!currentInquiry) throw new NotFoundError('找不到庫存查詢單')
 
     if (!InquiryUtils.isValidStatusTransition(currentInquiry.status, result.data.status)) {
@@ -111,10 +110,7 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
       )
     }
 
-    const updatedInquiry = await inquiryCommandService.updateInquiryStatus(
-      inquiryId,
-      result.data.status
-    )
+    const updatedInquiry = await inquiryService.updateInquiryStatus(inquiryId, result.data.status)
 
     await logAuditWithErrorHandling(
       AuditLogger.logInquiryStatusChange(
@@ -138,10 +134,10 @@ async function handlePUT(request: NextRequest, user: User, context?: unknown) {
   }
 
   // 一般使用者更新
-  const previousInquiry = await inquiryQueryService.getInquiryById(user.id, inquiryId)
+  const previousInquiry = await inquiryService.getInquiryById(user.id, inquiryId)
   if (!previousInquiry) throw new NotFoundError('找不到庫存查詢單')
 
-  const updatedInquiry = await inquiryCommandService.updateInquiry(user.id, inquiryId, result.data)
+  const updatedInquiry = await inquiryService.updateInquiry(user.id, inquiryId, result.data)
 
   await logAuditWithErrorHandling(
     AuditLogger.logInquiryUpdate(
@@ -187,10 +183,10 @@ async function handleDELETE(request: NextRequest, user: User, context?: unknown)
     metadata: { userId: user.id, inquiryId, adminUser: name },
   })
 
-  const inquiryToDelete = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
+  const inquiryToDelete = await inquiryService.getInquiryByIdForAdmin(inquiryId)
   if (!inquiryToDelete) throw new NotFoundError('找不到庫存查詢單')
 
-  await inquiryCommandService.deleteInquiry(inquiryId)
+  await inquiryService.deleteInquiry(inquiryId)
 
   await logAuditWithErrorHandling(
     AuditLogger.logInquiryDelete(
@@ -262,7 +258,7 @@ async function handlePATCH(request: NextRequest, user: User, context?: unknown) 
     updateData.status = result.data.status
   }
 
-  const currentInquiry = await inquiryQueryService.getInquiryByIdForAdmin(inquiryId)
+  const currentInquiry = await inquiryService.getInquiryByIdForAdmin(inquiryId)
   if (!currentInquiry) throw new NotFoundError('找不到庫存查詢單')
 
   // 執行更新
