@@ -302,23 +302,40 @@ export async function middleware(request: NextRequest) {
 /**
  * 中間件配置
  * 定義哪些路徑需要經過中間件處理
+ *
+ * 優化策略：只匹配需要安全保護的路徑
+ * - API routes: 需要 rate limiting 和 CSRF 保護
+ * - 認證相關頁面: login, register, profile 等
+ * - 管理員頁面: /admin/*
+ *
+ * 排除公開頁面以減少 Function Invocations：
+ * - 首頁 (/)
+ * - 產品列表 (/products)
+ * - 地點列表 (/locations)
+ * - 農場導覽 (/farm-tour)
+ * - 行程表 (/schedule)
+ * - 搜尋頁 (/search)
  */
 export const config = {
   matcher: [
-    /*
-     * 匹配所有請求路徑，除了：
-     * - api/csrf-token (避免循環)
-     * - _next/static (靜態檔案)
-     * - _next/image (圖片優化)
-     * - favicon.ico (網站圖示)
-     */
-    {
-      source: '/((?!_next/static|_next/image|favicon.ico|images/|css/|js/).*)',
-      missing: [
-        { type: 'header', key: 'next-router-prefetch' },
-        { type: 'header', key: 'purpose', value: 'prefetch' },
-      ],
-    },
+    // API routes - 需要 rate limiting 和 CSRF 保護
+    '/api/:path*',
+
+    // 認證相關頁面 - 需要 CSRF token 設置
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/verify-email',
+    '/auth/:path*',
+
+    // 用戶功能頁面 - 需要認證和 CSRF 保護
+    '/profile',
+    '/inquiries/:path*',
+    '/inquiry/:path*',
+    '/orders/:path*',
+
+    // 管理員頁面 - 需要完整安全保護
+    '/admin/:path*',
   ],
 }
 
