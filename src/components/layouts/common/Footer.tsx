@@ -1,5 +1,3 @@
-'use client'
-
 import Link from 'next/link'
 import { SocialLinks } from '@/components/features/social/SocialLinks'
 
