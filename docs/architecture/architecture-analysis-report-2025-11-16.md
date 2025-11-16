@@ -11,24 +11,24 @@
 
 | 指標 | 數值 | 評級 |
 |------|------|------|
-| **總檔案數** | 499 個 (.ts/.tsx) | 🟢 正常 |
-| **總程式碼行數** | 100,734 行 | 🟡 偏高 |
-| **目錄深度** | 最深 6 層 | 🟡 偏深 |
-| **npm 套件數** | 58 個 | 🟢 精簡 |
+| **總檔案數** | 521 個 (.ts/.tsx) | 🟢 正常 |
+| **總程式碼行數** | 104,938 行 | 🟡 偏高 |
+| **目錄深度** | 最深 6 層 | 🟡 可改進 |
+| **npm 套件數** | 650 個 | 🟡 偏多 |
 | **API Routes** | 68 個 | 🟡 偏多 |
-| **服務層檔案** | 20 個 | 🟢 適中 |
-| **Components** | 93 個 | 🟢 適中 |
-| **Pages** | 44 個 | 🟢 適中 |
+| **服務層檔案** | 32 個 | 🟢 適中 |
+| **Components** | 95 個 | 🟢 正常 |
+| **Pages** | 44 個 | 🟢 正常 |
 
 ### 超大檔案警報 (>500行)
 
-- **src/services/core/order/OrderService.ts** - 777 行 🔴
+- **src/services/core/order/OrderService.test.ts** - 962 行 🔴
 - **src/services/core/inquiry/InquiryService.ts** - 701 行 🔴
 - **src/lib/database/supabase-auth.ts** - 664 行 🔴
 - **src/app/admin/schedule/add/page.tsx** - 664 行 🔴
 - **src/services/infrastructure/unified-image-service.ts** - 645 行 🔴
 - **src/lib/cache/unified-cache-manager.ts** - 641 行 🔴
-- **src/components/layouts/common/Header.tsx** - 610 行 🔴
+- **src/services/core/content/locationServiceSimple.test.ts** - 606 行 🔴
 - **src/services/core/product/productImageService.ts** - 605 行 🔴
 - **src/lib/api-client.ts** - 602 行 🔴
 - **src/lib/storage/BlobURLManager.ts** - 597 行 🔴
@@ -69,9 +69,9 @@
 ### 3. Components 架構
 
 **實施情況**:
-- Total Components: 93 個
-- Client Components: 59 個 (63%)
-- Server Components: 34 個 (37%)
+- Total Components: 95 個
+- Client Components: 60 個 (63%)
+- Server Components: 35 個 (37%)
 
 **評估**:
 - 🔴 **Client Components 過多**: 63% vs Next.js 建議 20-30%
@@ -97,9 +97,10 @@
 
 | 項目 | 本專案 | 建議 | 評級 |
 |------|--------|------|------|
-| **單元測試** | 6 個 (1.2% 覆蓋率) | > 50% 覆蓋率 | 🔴 嚴重缺失 |
-| **整合測試** | 0 個 | 關鍵路徑 | 🔴 缺失 |
-| **E2E 測試** | Playwright 配置 | 核心功能 | 🟡 已配置 |
+| **測試檔案數** | 10 個 | > 50% 覆蓋率 | 🔴 極低 |
+| **測試覆蓋率** | ~2% (10/521) | > 50% | 🔴 嚴重不足 |
+| **單元測試** | 有基礎 | 核心功能必須 | 🟡 需擴充 |
+| **整合測試** | 部分 | 關鍵路徑 | 🟡 需擴充 |
 
 ---
 
@@ -109,9 +110,9 @@
 
 #### 1. 測試覆蓋極低
 - **影響**: 重構風險極高,無法驗證功能正確性
-- **範圍**: 全專案 (499 個檔案, 僅 6 個測試 → 1.2% 覆蓋率)
-- **優先級**: P0
-- **建議**: 至少為核心服務和 API 添加測試
+- **範圍**: 全專案 (521 個檔案, 僅 10 個測試 → 2% 覆蓋率)
+- **優先級**: **P0 - 最高優先級**
+- **建議**: 至少為核心服務和 API 添加測試，目標達到 30% 覆蓋率
 - **成本**: 2-3 週
 
 #### 2. 超大檔案 (10 個 >500行)
@@ -122,9 +123,9 @@
 
 #### 3. Client Components 比例過高
 - **影響**: 效能較差,SEO 受影響,Bundle 大小增加
-- **範圍**: 59/93 元件 (63%)
-- **優先級**: P1
-- **建議**: 優先轉換為 Server Components
+- **範圍**: 60/95 元件 (63%)
+- **優先級**: **P0 - 最高優先級**
+- **建議**: 優先轉換純展示元件為 Server Components
 - **成本**: 2-3 週
 
 #### 4. 安全漏洞
@@ -162,11 +163,11 @@
 
 **拆分策略**:
 
-1. **OrderService.ts (777行)**
-   - OrderService.ts (核心業務邏輯, ~300行)
-   - OrderValidation.ts (驗證邏輯, ~150行)
-   - OrderHelpers.ts (輔助函數, ~150行)
-   - types/order.ts (類型定義, ~100行)
+1. **OrderService.test.ts (962行)** - 測試檔案
+   - OrderService.create.test.ts (建立訂單測試, ~250行)
+   - OrderService.update.test.ts (更新訂單測試, ~250行)
+   - OrderService.delete.test.ts (刪除訂單測試, ~200行)
+   - OrderService.query.test.ts (查詢訂單測試, ~250行)
 
 2. **InquiryService.ts (701行)**
    - InquiryService.ts (核心業務邏輯, ~280行)
@@ -174,11 +175,10 @@
    - InquiryHelpers.ts (輔助函數, ~150行)
    - types/inquiry.ts (類型定義, ~100行)
 
-3. **Header.tsx (610行)**
-   - Header.tsx (主結構, ~100行)
-   - Navigation.tsx (導航列, ~150行)
-   - UserMenu.tsx (使用者選單, ~200行)
-   - MobileMenu.tsx (移動版選單, ~160行)
+3. **locationServiceSimple.test.ts (606行)** - 測試檔案
+   - locationServiceSimple.query.test.ts (查詢測試, ~200行)
+   - locationServiceSimple.create.test.ts (建立測試, ~200行)
+   - locationServiceSimple.update.test.ts (更新測試, ~200行)
 
 **預期收益**:
 - 📉 平均檔案大小: 650 行 → 200-250 行
@@ -188,7 +188,7 @@
 
 #### 1.2 建立核心測試覆蓋
 
-**目標**: 達成 30% 測試覆蓋率 (~150 個測試檔案)
+**目標**: 達成 30% 測試覆蓋率 (~156 個測試檔案，從現有 10 個增加到 156 個）
 
 **優先級**:
 
@@ -216,7 +216,7 @@
    - services/infrastructure/*.test.ts
 
 **預期收益**:
-- 📈 測試覆蓋率: 1.2% → 30%
+- 📈 測試覆蓋率: 2% → 30% (+28%)
 - 📈 重構信心: +60%
 - 📉 Bug 率: -40%
 - 📈 程式碼品質: +45%
@@ -477,17 +477,17 @@ export async function createInquiry(data: InquiryFormData) {
 
 #### 測試覆蓋率
 ```
-當前: 1.2% (6 個測試檔案)
-階段一後: 30% (~150 個測試檔案)
-階段二後: 60% (~300 個測試檔案)
-目標達成: +58.8%
+當前: 2% (10 個測試檔案)
+階段一後: 30% (~156 個測試檔案)
+階段二後: 60% (~313 個測試檔案)
+目標達成: +58%
 ```
 
 #### 檔案大小
 ```
-當前: 最大 777 行
+當前: 最大 962 行
 階段一後: 最大 300 行
-改善: -61%
+改善: -69%
 ```
 
 #### Components 分布
@@ -632,10 +632,10 @@ export async function createInquiry(data: InquiryFormData) {
    - 依賴管理良好
 
 2. **🔴 關鍵問題**
-   - 測試覆蓋率極低 (1.2%)
-   - 超大檔案影響可維護性 (10 個 >500行)
+   - 測試覆蓋率極低 (2%)
+   - 超大檔案影響可維護性 (10 個 >500行，最大 962 行)
    - Client Components 比例過高 (63%)
-   - 安全漏洞需修復 (8 個)
+   - npm 套件數偏多 (650 個)
 
 3. **🎯 優化機會**
    - 建立測試基礎 (ROI: ⭐⭐⭐⭐⭐)
@@ -664,9 +664,9 @@ export async function createInquiry(data: InquiryFormData) {
 ### 最終建議
 
 **立即執行**:
-- 安全漏洞修復 (1-2 天)
-- 拆分超大檔案 (1-2 週)
-- 建立核心測試 (2-3 週)
+- 拆分測試檔案 (1 週) - OrderService.test.ts, locationServiceSimple.test.ts
+- 拆分超大檔案 (1-2 週) - InquiryService.ts 等
+- 建立核心測試 (2-3 週) - 目標 30% 覆蓋率
 
 **短期執行 (1-2 個月)**:
 - Client → Server Components (首批)
