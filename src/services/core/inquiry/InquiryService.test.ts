@@ -3,6 +3,35 @@ import type { CreateInquiryRequest, UpdateInquiryRequest } from '@/types/inquiry
 import { InquiryService } from './InquiryService'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 
+// Use vi.hoisted() to ensure mock variables are available before hoisting
+const {
+  mockReserveInventory,
+  mockFinalizeInventory,
+  mockReleaseInventory,
+  MockInquiryInventoryService,
+} = vi.hoisted(() => {
+  const mockReserveInventory = vi.fn()
+  const mockFinalizeInventory = vi.fn()
+  const mockReleaseInventory = vi.fn()
+
+  class MockInquiryInventoryService {
+    reserveInventory = mockReserveInventory
+    finalizeInventory = mockFinalizeInventory
+    releaseInventory = mockReleaseInventory
+  }
+
+  return {
+    mockReserveInventory,
+    mockFinalizeInventory,
+    mockReleaseInventory,
+    MockInquiryInventoryService,
+  }
+})
+
+vi.mock('./InquiryInventoryService', () => ({
+  InquiryInventoryService: MockInquiryInventoryService,
+}))
+
 // Mock Supabase admin client - 整合 Query 和 Command 所需的所有 Mock
 const mockSingle = vi.fn()
 const mockIn = vi.fn()
@@ -16,19 +45,6 @@ const mockInsert = vi.fn()
 const mockUpdate = vi.fn()
 const mockDelete = vi.fn()
 const mockFrom = vi.fn()
-
-// Mock InquiryInventoryService
-const mockReserveInventory = vi.fn()
-const mockFinalizeInventory = vi.fn()
-const mockReleaseInventory = vi.fn()
-
-vi.mock('./InquiryInventoryService', () => ({
-  InquiryInventoryService: vi.fn().mockImplementation(() => ({
-    reserveInventory: mockReserveInventory,
-    finalizeInventory: mockFinalizeInventory,
-    releaseInventory: mockReleaseInventory,
-  })),
-}))
 
 // 設定動態鏈式調用結構
 const mockInsertSelectChain = {
