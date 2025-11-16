@@ -122,6 +122,7 @@ export interface InquiryQueryParams {
   status?: InquiryStatus
   inquiry_type?: InquiryType
   customer_email?: string
+  user_id?: string
   start_date?: string
   end_date?: string
   limit?: number

@@ -250,6 +250,7 @@ describe('FarmTourService', () => {
 
     it('應該拋出 ValidationError 當標題為空', async () => {
       const invalidActivity = {
+        id: 'test-id',
         title: '',
         start_month: 5,
         end_month: 9,
@@ -265,6 +266,7 @@ describe('FarmTourService', () => {
 
     it('應該拋出 ValidationError 當標題只有空白', async () => {
       const invalidActivity = {
+        id: 'test-id',
         title: '   ',
         start_month: 5,
         end_month: 9,
@@ -311,6 +313,7 @@ describe('FarmTourService', () => {
 
     it('應該拋出錯誤當資料庫插入失敗', async () => {
       const newActivity = {
+        id: 'test-id',
         title: '測試活動',
         start_month: 1,
         end_month: 12,

@@ -45,10 +45,14 @@ describe('API Middleware', () => {
       const mockCurrentUser = {
         id: 'user-123',
         email: 'test@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2024-01-01T00:00:00Z',
       }
 
       // Mock getCurrentUser 返回認證用戶
-      vi.mocked(getCurrentUser).mockResolvedValue(mockCurrentUser)
+      vi.mocked(getCurrentUser).mockResolvedValue(mockCurrentUser as any)
 
       // Mock Supabase profile query (getUserWithAdminCheck 內部使用)
       mockSingle.mockResolvedValue({
@@ -82,9 +86,13 @@ describe('API Middleware', () => {
       const mockCurrentUser = {
         id: 'user-123',
         email: 'test@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2024-01-01T00:00:00Z',
       }
 
-      vi.mocked(getCurrentUser).mockResolvedValue(mockCurrentUser)
+      vi.mocked(getCurrentUser).mockResolvedValue(mockCurrentUser as any)
 
       // Mock Supabase profile query 返回非管理員
       mockSingle.mockResolvedValue({
@@ -110,9 +118,13 @@ describe('API Middleware', () => {
       const mockCurrentUser = {
         id: 'admin-123',
         email: 'admin@example.com',
+        app_metadata: {},
+        user_metadata: {},
+        aud: 'authenticated',
+        created_at: '2024-01-01T00:00:00Z',
       }
 
-      vi.mocked(getCurrentUser).mockResolvedValue(mockCurrentUser)
+      vi.mocked(getCurrentUser).mockResolvedValue(mockCurrentUser as any)
 
       // Mock Supabase profile query 返回管理員
       mockSingle.mockResolvedValue({
