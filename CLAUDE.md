@@ -559,6 +559,164 @@ API 開發完成後，**必須**執行 API 檢查：
 
 **詳細檢查項目和標準**：請參考 `.claude/commands/api-check.md`
 
+### Server Actions 開發規範
+
+**專案已實施 Server Actions 架構** - 用於資料變更操作的現代化替代方案
+
+#### 何時使用 Server Actions
+
+✅ **適合使用 Server Actions**:
+- 表單提交 (建立、更新、刪除資源)
+- 需要認證的操作
+- 需要審計日誌的行為
+- 互動式操作 (按鈕點擊、切換狀態)
+
+❌ **不適合使用 Server Actions** (保留 API Routes):
+- 純查詢操作 (GET) → 使用 Server Components 或 API Routes
+- 公開 API (外部系統調用) → 使用 API Routes
+- Webhook 回調 → 使用 API Routes
+- 檔案下載或串流 → 使用 API Routes
+
+#### 基礎設施工具
+
+從 `@/lib/server` 匯入所有 Server-only 工具:
+
+```typescript
+import {
+  // 認證
+  requireAuth,      // 需要登入用戶
+  requireAdmin,     // 需要管理員
+
+  // 回應格式
+  success,          // 成功回應
+  error,            // 錯誤回應
+  validationError,  // 驗證錯誤
+
+  // 審計日誌
+  logCreate,        // 記錄建立
+  logUpdate,        // 記錄更新
+  logDelete,        // 記錄刪除
+  logStatusChange,  // 記錄狀態變更
+} from '@/lib/server'
+```
+
+#### Server Action 標準模式
+
+```typescript
+/**
+ * Action 簡要說明
+ *
+ * @param data - 參數說明
+ * @returns ActionResponse 包含操作結果
+ *
+ * @example
+ * ```tsx
+ * // 完整使用範例
+ * const result = await myAction(data)
+ * if (result.success) {
+ *   toast.success(result.message)
+ * }
+ * ```
+ */
+export async function myAction(data: unknown) {
+  try {
+    // 1. 認證檢查
+    const user = await requireAuth()
+
+    // 2. 驗證輸入資料
+    const result = MySchema.safeParse(data)
+    if (!result.success) {
+      return validationError(result.error)
+    }
+
+    // 3. 記錄操作 (可選)
+    apiLogger.info('操作描述', {
+      metadata: { userId: user.id, /* ... */ },
+    })
+
+    // 4. 執行業務邏輯
+    const resource = await service.operation(user.id, result.data)
+
+    // 5. 審計日誌 (關鍵操作)
+    await logCreate(user, 'resource', resource.id, {
+      newData: { /* 關鍵欄位 */ },
+    })
+
+    // 6. Revalidation - 清除快取
+    revalidatePath('/resources')
+    revalidatePath(`/resources/${resource.id}`)
+
+    // 7. 返回成功回應
+    return success(resource, '操作成功')
+  } catch (err) {
+    return error(err)
+  }
+}
+```
+
+#### 檔案組織
+
+```
+src/app/actions/
+├── user-interests.ts    # 用戶興趣相關
+├── inquiries.ts         # 詢價單相關
+├── orders.ts            # 訂單相關
+└── index.ts             # 統一匯出
+```
+
+#### 客戶端使用
+
+```tsx
+'use client'
+
+import { useTransition } from 'react'
+import { myAction } from '@/app/actions'
+
+function MyComponent() {
+  const [isPending, startTransition] = useTransition()
+
+  const handleClick = async () => {
+    startTransition(async () => {
+      const result = await myAction(data)
+
+      if (result.success) {
+        toast.success(result.message)
+        // result.data 有完整型別
+      } else {
+        toast.error(result.error.message)
+      }
+    })
+  }
+
+  return (
+    <button onClick={handleClick} disabled={isPending}>
+      {isPending ? '處理中...' : '提交'}
+    </button>
+  )
+}
+```
+
+#### 最佳實踐
+
+1. **始終使用 try-catch** - 確保錯誤被正確處理
+2. **輸入驗證** - 使用 Zod `safeParse()` 而非 `parse()`
+3. **認證在最前面** - 第一步就檢查 `requireAuth()`
+4. **明確的 Revalidation** - 清除所有相關路徑
+5. **審計關鍵操作** - Create/Update/Delete 都要記錄
+6. **詳細的 JSDoc** - 包含使用範例
+
+#### 與 API Routes 的差異
+
+| 項目 | API Routes | Server Actions |
+|------|-----------|----------------|
+| 認證 | `withAuthAndError()` | `await requireAuth()` |
+| 驗證錯誤 | `throw ValidationError()` | `return validationError()` |
+| 成功回應 | `return success()` | `return success()` |
+| 快取控制 | Response headers | `revalidatePath()` |
+| 審計日誌 | `enableAuditLog: true` | `await logCreate()` 手動調用 |
+
+**完整指南**: 請參考 `docs/SERVER_ACTIONS_GUIDE.md`
+
 ---
 
 ## 💎 程式碼品質標準
