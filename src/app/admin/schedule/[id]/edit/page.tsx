@@ -5,14 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
-// Hooks
-import { AdditionalInfoSection } from '@/components/features/admin/forms/schedule/AdditionalInfoSection'
-import { BasicInfoSection } from '@/components/features/admin/forms/schedule/BasicInfoSection'
-
-// Components
-import { DateTimeSection } from '@/components/features/admin/forms/schedule/DateTimeSection'
-import { ProductsSection } from '@/components/features/admin/forms/schedule/ProductsSection'
-import { SchedulePreview } from '@/components/features/admin/forms/schedule/SchedulePreview'
+// Form Components
+import { AdditionalInfoSection } from '@/components/admin/schedule-form/AdditionalInfoSection'
+import { BasicInfoSection } from '@/components/admin/schedule-form/BasicInfoSection'
+import { DateTimeSection } from '@/components/admin/schedule-form/DateTimeSection'
+import { ProductsSection } from '@/components/admin/schedule-form/ProductsSection'
+import { SchedulePreview } from '@/components/admin/schedule-form/SchedulePreview'
 import { useScheduleForm } from '@/hooks/forms/useScheduleForm'
 import { useScheduleFormSubmit } from '@/hooks/forms/useScheduleFormSubmit'
 import { useScheduleFormValidation } from '@/hooks/forms/useScheduleFormValidation'

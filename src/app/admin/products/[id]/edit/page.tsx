@@ -6,8 +6,8 @@ import Link from 'next/link'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
-import { BasicInfoSection } from '@/components/features/admin/forms/product/BasicInfoSection'
-import { PriceInventorySection } from '@/components/features/admin/forms/product/PriceInventorySection'
+import { BasicInfoSection } from '@/components/admin/product-form/BasicInfoSection'
+import { PriceInventorySection } from '@/components/admin/product-form/PriceInventorySection'
 import { useProductForm } from '@/hooks/forms/useProductEditForm'
 
 const ProductImageManager = dynamic(
