@@ -4,7 +4,7 @@
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
-import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
+import { ErrorFactory, NotFoundError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import {
   InquiryWithItems,
@@ -17,36 +17,11 @@ import {
 } from '@/types/inquiry'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
 import { InquiryInventoryService } from './InquiryInventoryService'
+import { validateCreateInquiryRequest, calculateTotalAmount } from './inquiry-validation'
+import { transformFromDB, serializeFarmTourData, applyQueryParams } from './inquiry-helpers'
+import { SupabaseInquiryRecord } from './types'
 
 const getAdmin = () => getSupabaseAdmin()
-
-/**
- * 資料庫記錄類型
- */
-interface SupabaseInquiryRecord {
-  id: string
-  user_id: string | null
-  customer_name: string
-  customer_email: string
-  customer_phone: string | null
-  status: string | null
-  inquiry_type: string | null
-  notes: string | null
-  total_estimated_amount: number | null
-  delivery_address: string | null
-  preferred_delivery_date: string | null
-  activity_title: string | null
-  visit_date: string | null
-  visitor_count: string | null
-  is_read: boolean
-  read_at: string | null
-  is_replied: boolean
-  replied_at: string | null
-  replied_by: string | null
-  created_at: string | null
-  updated_at: string | null
-  inquiry_items?: InquiryItem[]
-}
 
 /**
  * 統一詢問單服務
@@ -86,216 +61,6 @@ export class InquiryService {
     throw error instanceof Error ? error : new Error(`${operation} 操作失敗`)
   }
 
-  /**
-   * 解析農場參觀資料
-   */
-  private parseFarmTourDataFromNotes(record: SupabaseInquiryRecord): SupabaseInquiryRecord {
-    if (!record.notes || !record.notes.startsWith('FARM_TOUR_DATA:')) {
-      return record
-    }
-
-    try {
-      const jsonData = record.notes.substring('FARM_TOUR_DATA:'.length)
-      const farmTourData = JSON.parse(jsonData)
-
-      return {
-        ...record,
-        inquiry_type: 'farm_tour',
-        activity_title: farmTourData.activity_title,
-        visit_date: farmTourData.visit_date,
-        visitor_count: farmTourData.visitor_count,
-        notes: farmTourData.original_notes,
-      }
-    } catch (error) {
-      dbLogger.warn('無法解析農場參觀資料', {
-        module: this.moduleName,
-        action: 'parseFarmTourData',
-        metadata: {
-          error: error instanceof Error ? error.message : String(error),
-          notes: record.notes,
-        },
-      })
-      return record
-    }
-  }
-
-  /**
-   * 轉換資料庫記錄為實體
-   */
-  private transformFromDB(record: SupabaseInquiryRecord): InquiryWithItems {
-    const parsedRecord = this.parseFarmTourDataFromNotes(record)
-
-    return {
-      id: parsedRecord.id,
-      user_id: parsedRecord.user_id || '',
-      customer_name: parsedRecord.customer_name,
-      customer_email: parsedRecord.customer_email,
-      customer_phone: parsedRecord.customer_phone || undefined,
-      status: (parsedRecord.status || 'pending') as any,
-      inquiry_type: (parsedRecord.inquiry_type || 'product') as any,
-      notes: parsedRecord.notes || undefined,
-      total_estimated_amount: parsedRecord.total_estimated_amount || undefined,
-      delivery_address: parsedRecord.delivery_address || undefined,
-      preferred_delivery_date: parsedRecord.preferred_delivery_date || undefined,
-      activity_title: parsedRecord.activity_title || undefined,
-      visit_date: parsedRecord.visit_date || undefined,
-      visitor_count: parsedRecord.visitor_count || undefined,
-      is_read: parsedRecord.is_read,
-      read_at: parsedRecord.read_at || undefined,
-      is_replied: parsedRecord.is_replied,
-      replied_at: parsedRecord.replied_at || undefined,
-      replied_by: parsedRecord.replied_by || undefined,
-      created_at: parsedRecord.created_at || new Date().toISOString(),
-      updated_at: parsedRecord.updated_at || new Date().toISOString(),
-      inquiry_items: parsedRecord.inquiry_items || [],
-    }
-  }
-
-  /**
-   * 序列化農場參觀資料到 notes
-   */
-  private serializeFarmTourData(data: CreateInquiryRequest | UpdateInquiryRequest): string | null {
-    if ('inquiry_type' in data && data.inquiry_type === 'farm_tour') {
-      const farmTourData = {
-        activity_title: data.activity_title,
-        visit_date: data.visit_date,
-        visitor_count: data.visitor_count,
-        original_notes: data.notes || '',
-      }
-      return `FARM_TOUR_DATA:${JSON.stringify(farmTourData)}`
-    }
-    return data.notes || null
-  }
-
-  /**
-   * 應用查詢參數到 Supabase 查詢構建器
-   */
-  private applyQueryParams(query: any, params?: InquiryQueryParams): any {
-    if (!params) return query
-
-    // 狀態篩選
-    if (params.status) {
-      query = query.eq('status', params.status)
-    }
-
-    // 類型篩選
-    if (params.inquiry_type) {
-      query = query.eq('inquiry_type', params.inquiry_type)
-    }
-
-    // Email 搜尋
-    if (params.customer_email) {
-      query = query.ilike('customer_email', `%${params.customer_email}%`)
-    }
-
-    // 日期範圍
-    if (params.start_date) {
-      query = query.gte('created_at', params.start_date)
-    }
-    if (params.end_date) {
-      query = query.lte('created_at', params.end_date)
-    }
-
-    // 讀取/回覆狀態
-    if (params.is_read !== undefined) {
-      query = query.eq('is_read', params.is_read)
-    }
-    if (params.is_replied !== undefined) {
-      query = query.eq('is_replied', params.is_replied)
-    }
-
-    // 特殊篩選
-    if (params.unread_only) {
-      query = query.eq('is_read', false)
-    }
-    if (params.unreplied_only) {
-      query = query.eq('is_replied', false)
-    }
-
-    // 排序
-    const sortBy = params.sort_by || 'created_at'
-    const sortOrder = params.sort_order || 'desc'
-    query = query.order(sortBy, { ascending: sortOrder === 'asc' })
-
-    // 分頁
-    if (params.limit) {
-      query = query.limit(params.limit)
-    }
-    if (params.offset) {
-      query = query.range(params.offset, params.offset + (params.limit || 10) - 1)
-    }
-
-    return query
-  }
-
-  /**
-   * 驗證建立詢問單請求
-   */
-  private validateCreateInquiryRequest(data: CreateInquiryRequest): void {
-    if (!data.customer_name?.trim()) {
-      throw new ValidationError('客戶姓名不能為空')
-    }
-
-    if (!data.customer_email?.trim()) {
-      throw new ValidationError('客戶Email不能為空')
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.customer_email)) {
-      throw new ValidationError('Email格式不正確')
-    }
-
-    if (!data.inquiry_type) {
-      throw new ValidationError('詢問類型不能為空')
-    }
-
-    // 驗證產品詢價特定欄位
-    if (data.inquiry_type === 'product') {
-      if (!data.items || data.items.length === 0) {
-        throw new ValidationError('產品詢價必須包含至少一個項目')
-      }
-
-      data.items.forEach((item, index) => {
-        if (!item.product_id?.trim()) {
-          throw new ValidationError(`第 ${index + 1} 項產品ID不能為空`)
-        }
-        if (!item.product_name?.trim()) {
-          throw new ValidationError(`第 ${index + 1} 項產品名稱不能為空`)
-        }
-        if (!item.quantity || item.quantity <= 0) {
-          throw new ValidationError(`第 ${index + 1} 項產品數量必須大於0`)
-        }
-      })
-    }
-
-    // 驗證農場參觀特定欄位
-    if (data.inquiry_type === 'farm_tour') {
-      if (!data.activity_title?.trim()) {
-        throw new ValidationError('活動標題不能為空')
-      }
-      if (!data.visit_date?.trim()) {
-        throw new ValidationError('參觀日期不能為空')
-      }
-      if (!data.visitor_count?.trim()) {
-        throw new ValidationError('參觀人數不能為空')
-      }
-    }
-  }
-
-  /**
-   * 計算總金額
-   */
-  private calculateTotalAmount(data: CreateInquiryRequest): number | null {
-    if (data.inquiry_type !== 'product' || !data.items) {
-      return null
-    }
-
-    const total = data.items.reduce((sum, item) => {
-      return sum + (item.unit_price || 0) * item.quantity
-    }, 0)
-
-    return total > 0 ? total : null
-  }
-
   // =================================================================
   // 查詢方法（Query Operations）
   // =================================================================
@@ -317,7 +82,7 @@ export class InquiryService {
         .eq('user_id', userId)
 
       // 應用查詢參數
-      query = this.applyQueryParams(query, params)
+      query = applyQueryParams(query, params)
 
       const { data, error } = await query
 
@@ -326,7 +91,7 @@ export class InquiryService {
       }
 
       const result = (data || []).map(record =>
-        this.transformFromDB(record as unknown as SupabaseInquiryRecord)
+        transformFromDB(record as unknown as SupabaseInquiryRecord)
       )
 
       dbLogger.info('取得使用者詢問單列表成功', {
@@ -366,7 +131,7 @@ export class InquiryService {
         this.handleError(error, 'getInquiryById', { userId, inquiryId })
       }
 
-      return data ? this.transformFromDB(data as unknown as SupabaseInquiryRecord) : null
+      return data ? transformFromDB(data as unknown as SupabaseInquiryRecord) : null
     } catch (error) {
       this.handleError(error, 'getInquiryById', { userId, inquiryId })
     }
@@ -384,7 +149,7 @@ export class InquiryService {
         `)
 
       // 應用查詢參數
-      query = this.applyQueryParams(query, params)
+      query = applyQueryParams(query, params)
 
       const { data, error } = await query
 
@@ -392,9 +157,7 @@ export class InquiryService {
         this.handleError(error, 'getAllInquiries', { params })
       }
 
-      return (data || []).map((record: unknown) =>
-        this.transformFromDB(record as SupabaseInquiryRecord)
-      )
+      return (data || []).map((record: unknown) => transformFromDB(record as SupabaseInquiryRecord))
     } catch (error) {
       this.handleError(error, 'getAllInquiries', { params })
     }
@@ -424,7 +187,7 @@ export class InquiryService {
         this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
       }
 
-      return data ? this.transformFromDB(data as unknown as SupabaseInquiryRecord) : null
+      return data ? transformFromDB(data as unknown as SupabaseInquiryRecord) : null
     } catch (error) {
       this.handleError(error, 'getInquiryByIdForAdmin', { inquiryId })
     }
@@ -457,10 +220,10 @@ export class InquiryService {
   async createInquiry(userId: string, data: CreateInquiryRequest): Promise<InquiryWithItems> {
     try {
       // 驗證資料
-      this.validateCreateInquiryRequest(data)
+      validateCreateInquiryRequest(data)
 
       // 計算總金額
-      const totalEstimatedAmount = this.calculateTotalAmount(data)
+      const totalEstimatedAmount = calculateTotalAmount(data)
 
       // 準備主記錄資料
       const inquiryData = {
@@ -469,7 +232,7 @@ export class InquiryService {
         customer_email: data.customer_email,
         customer_phone: data.customer_phone || null,
         inquiry_type: data.inquiry_type,
-        notes: this.serializeFarmTourData(data),
+        notes: serializeFarmTourData(data),
         delivery_address: data.delivery_address || null,
         preferred_delivery_date: data.preferred_delivery_date || null,
         total_estimated_amount: totalEstimatedAmount,
@@ -522,7 +285,7 @@ export class InquiryService {
         inquiryItems = (items as InquiryItem[]) || []
       }
 
-      const result = this.transformFromDB({
+      const result = transformFromDB({
         ...inquiry,
         inquiry_items: inquiryItems,
       })
@@ -562,7 +325,7 @@ export class InquiryService {
       const client = this.getSupabaseClient()
       const updateData: UpdateDataObject = {
         ...data,
-        notes: this.serializeFarmTourData(data),
+        notes: serializeFarmTourData(data),
       }
 
       const { data: updated, error } = await client
@@ -582,7 +345,7 @@ export class InquiryService {
         this.handleError(error, 'updateInquiry', { userId, inquiryId, data })
       }
 
-      const result = this.transformFromDB(updated as unknown as SupabaseInquiryRecord)
+      const result = transformFromDB(updated as unknown as SupabaseInquiryRecord)
 
       dbLogger.info('詢問單更新成功', {
         module: this.moduleName,
@@ -668,7 +431,7 @@ export class InquiryService {
         this.handleError(error, 'updateInquiryStatus', { inquiryId, status })
       }
 
-      return this.transformFromDB(updated as unknown as SupabaseInquiryRecord)
+      return transformFromDB(updated as unknown as SupabaseInquiryRecord)
     } catch (error) {
       this.handleError(error, 'updateInquiryStatus', { inquiryId, status })
     }
