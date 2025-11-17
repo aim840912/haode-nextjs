@@ -26,9 +26,9 @@
 
 ### 已修改檔案 (7 個)
 
-#### 1. `docs/architecture/architecture-analysis-report-2025-11-16.md`
-- **變更**: +516 行
-- **說明**: 更新優化進度記錄，標記所有 10 個檔案為已完成
+#### 1. `docs/architecture/OPTIMIZATION_HISTORY.md`
+- **變更**: 更新檔案引用
+- **說明**: 更新優化歷史記錄，反映階段一 100% 完成
 
 #### 2. `src/lib/api-client.ts`
 - **變更**: -369 行 (602 → 233 行)

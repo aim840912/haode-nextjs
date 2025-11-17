@@ -278,10 +278,9 @@ src/services/core/content/__tests__/
 
 ## 📚 相關文件
 
-- **架構分析報告**: `docs/architecture/architecture-analysis-report-2025-11-16.md`
-- **優化歷史**: `docs/optimization/OPTIMIZATION_HISTORY.md`
-- **變更摘要**: `docs/pull-requests/CHANGES.md`
-- **測試報告**: `docs/pull-requests/TEST_REPORT.md`
+- **優化歷史**: `docs/architecture/OPTIMIZATION_HISTORY.md` - 完整的優化記錄和成果
+- **變更摘要**: `docs/pull-requests/CHANGES.md` - 詳細變更列表
+- **測試報告**: `docs/pull-requests/TEST_REPORT.md` - 測試覆蓋和品質報告
 
 ---
 

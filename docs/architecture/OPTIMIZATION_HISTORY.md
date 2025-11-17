@@ -395,6 +395,5 @@ src/services/core/content/
 
 ## 相關資源
 
-- **主架構分析報告**: [architecture-analysis-report-2025-11-16.md](./architecture-analysis-report-2025-11-16.md)
-- **完整優化建議**: 請參考主報告 Part 9「優先建議」區塊
-- **測試覆蓋計劃**: 階段二目標 2% → 30% (feat/test-coverage-30-percent 分支)
+- **專案設定**: [CLAUDE.md](../../CLAUDE.md) - 開發準則和程式碼品質標準
+- **測試覆蓋歷史**: 測試覆蓋率已從 2% 提升至 69.8% ✅ (feat/test-coverage-30-percent 分支完成)
