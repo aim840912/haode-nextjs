@@ -113,7 +113,6 @@ import {
 import { clearServiceClientCache, refreshServiceClient } from '@/lib/database/supabase-server'
 import { apiLogger } from '@/lib/logger'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
-import { refreshConnectionPoolSchema } from '@/lib/supabase/connection-factory'
 
 async function handlePOST(req: NextRequest): Promise<NextResponse> {
   const body = await req.json()
@@ -139,25 +138,12 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
         results.adminClient = '已清除管理員客戶端快取'
         break
 
-      case 'pool':
-        await refreshConnectionPoolSchema()
-        results.connectionPool = '已重新整理連線池 schema'
-        break
-
       case 'all':
       default:
         // 清除所有 Supabase 客戶端快取
         clearAllClientCaches()
         clearServiceClientCache()
         results.allClients = '已清除所有客戶端快取'
-
-        // 重新整理連線池（如果啟用）
-        try {
-          await refreshConnectionPoolSchema()
-          results.connectionPool = '已重新整理連線池 schema'
-        } catch (poolError) {
-          results.connectionPool = `連線池重新整理失敗: ${(poolError as Error).message}`
-        }
         break
     }
 
@@ -220,12 +206,11 @@ async function handlePOST(req: NextRequest): Promise<NextResponse> {
 async function handleGET(): Promise<NextResponse> {
   return success(
     {
-      availableOperations: ['all', 'service', 'admin', 'pool'],
+      availableOperations: ['all', 'service', 'admin'],
       description: {
         all: '清除所有快取（推薦）',
         service: '清除服務客戶端快取',
         admin: '清除管理員客戶端快取',
-        pool: '重新整理連線池 schema',
       },
       usage: 'POST { "operation": "all" }',
     },
