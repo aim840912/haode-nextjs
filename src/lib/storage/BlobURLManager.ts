@@ -11,6 +11,19 @@
  */
 
 import { logger } from '@/lib/logger'
+import {
+  createURL as createBlobURL,
+  revokeURL as revokeBlobURL,
+  addReference,
+  removeReference,
+  revokeGroup as revokeGroupURLs,
+} from './blob/blob-lifecycle'
+import { getStats, getTotalMemoryUsage } from './blob/blob-stats'
+import { cleanup, startAutoCleanup, stopAutoCleanup } from './blob/blob-cleanup'
+
+// ============================================================
+// Types & Interfaces (Re-export)
+// ============================================================
 
 export interface BlobURLInfo {
   url: string
@@ -64,18 +77,15 @@ export interface BlobURLCleanupResult {
   strategy: 'age_based' | 'memory_pressure' | 'reference_based' | 'comprehensive'
 }
 
+// ============================================================
+// BlobURLManager Implementation
+// ============================================================
+
 export class BlobURLManager {
   private static instance: BlobURLManager
   private urlMap = new Map<string, BlobURLInfo>()
   private groupMap = new Map<string, Set<string>>()
   private cleanupTimer: NodeJS.Timeout | null = null
-
-  // 配置常數
-  private readonly DEFAULT_MAX_AGE = 30 * 60 * 1000 // 30分鐘
-  private readonly DEFAULT_MAX_MEMORY = 100 * 1024 * 1024 // 100MB
-  private readonly DEFAULT_UNUSED_AGE = 5 * 60 * 1000 // 5分鐘
-  private readonly CLEANUP_INTERVAL = 2 * 60 * 1000 // 2分鐘檢查一次
-  private readonly MEMORY_PRESSURE_THRESHOLD = 0.8 // 80% 記憶體使用率觸發積極清理
 
   /**
    * 單例模式
@@ -88,7 +98,7 @@ export class BlobURLManager {
   }
 
   constructor() {
-    this.startAutoCleanup()
+    this.cleanupTimer = startAutoCleanup(this.urlMap, this.groupMap)
 
     // 監聽頁面卸載事件，確保清理所有 URL
     if (typeof window !== 'undefined') {
@@ -97,6 +107,10 @@ export class BlobURLManager {
       })
     }
   }
+
+  // ============================================================
+  // Lifecycle Methods (delegate to blob-lifecycle.ts)
+  // ============================================================
 
   /**
    * 建立 Blob URL 並自動管理
@@ -109,163 +123,40 @@ export class BlobURLManager {
       ttl?: number // time to live in ms
     }
   ): string {
-    try {
-      const url = URL.createObjectURL(blob)
-      const now = Date.now()
-
-      const info: BlobURLInfo = {
-        url,
-        blob,
-        createdAt: now,
-        lastAccessedAt: now,
-        refCount: 1,
-        group: options?.group,
-        metadata: {
-          fileSize: blob.size,
-          mimeType: blob.type,
-          ...options?.metadata,
-        },
-      }
-
-      this.urlMap.set(url, info)
-
-      // 群組管理
-      if (options?.group) {
-        if (!this.groupMap.has(options.group)) {
-          this.groupMap.set(options.group, new Set())
-        }
-        this.groupMap.get(options.group)!.add(url)
-      }
-
-      // 自動 TTL 清理
-      if (options?.ttl) {
-        setTimeout(() => {
-          this.revokeURL(url)
-        }, options.ttl)
-      }
-
-      logger.info('Blob URL 已建立', {
-        metadata: {
-          url: url.substring(0, 50) + '...',
-          size: blob.size,
-          group: options?.group,
-          type: blob.type,
-        },
-      })
-
-      return url
-    } catch (error) {
-      logger.error('Blob URL 建立失敗', error as Error, {
-        metadata: {
-          blobSize: blob.size,
-          blobType: blob.type,
-          group: options?.group,
-        },
-      })
-      throw error
-    }
+    return createBlobURL(blob, this.urlMap, this.groupMap, options)
   }
 
   /**
    * 增加引用計數
    */
   addReference(url: string): boolean {
-    const info = this.urlMap.get(url)
-    if (info) {
-      info.refCount++
-      info.lastAccessedAt = Date.now()
-      return true
-    }
-    return false
+    return addReference(url, this.urlMap)
   }
 
   /**
    * 減少引用計數
    */
   removeReference(url: string): boolean {
-    const info = this.urlMap.get(url)
-    if (info) {
-      info.refCount = Math.max(0, info.refCount - 1)
-      if (info.refCount === 0) {
-        // 延遲清理，給一個緩衝時間
-        setTimeout(() => {
-          const currentInfo = this.urlMap.get(url)
-          if (currentInfo && currentInfo.refCount === 0) {
-            this.revokeURL(url)
-          }
-        }, 1000) // 1秒緩衝
-      }
-      return true
-    }
-    return false
+    return removeReference(url, this.urlMap, this.groupMap)
   }
 
   /**
    * 撤銷特定 URL
    */
   revokeURL(url: string): boolean {
-    try {
-      const info = this.urlMap.get(url)
-      if (!info) {
-        return false
-      }
-
-      // 從瀏覽器中撤銷
-      URL.revokeObjectURL(url)
-
-      // 從群組中移除
-      if (info.group && this.groupMap.has(info.group)) {
-        this.groupMap.get(info.group)!.delete(url)
-
-        // 清理空群組
-        if (this.groupMap.get(info.group)!.size === 0) {
-          this.groupMap.delete(info.group)
-        }
-      }
-
-      // 從主映射中移除
-      this.urlMap.delete(url)
-
-      logger.debug('Blob URL 已撤銷', {
-        metadata: {
-          url: url.substring(0, 50) + '...',
-          size: info.metadata?.fileSize || 0,
-          group: info.group,
-          age: Date.now() - info.createdAt,
-        },
-      })
-
-      return true
-    } catch (error) {
-      logger.error('Blob URL 撤銷失敗', error as Error, {
-        metadata: { url: url.substring(0, 50) + '...' },
-      })
-      return false
-    }
+    return revokeBlobURL(url, this.urlMap, this.groupMap)
   }
 
   /**
    * 撤銷整個群組的 URL
    */
   revokeGroup(group: string): number {
-    const urls = this.groupMap.get(group)
-    if (!urls) {
-      return 0
-    }
-
-    let revokedCount = 0
-    for (const url of Array.from(urls)) {
-      if (this.revokeURL(url)) {
-        revokedCount++
-      }
-    }
-
-    logger.info('群組 Blob URL 已批次撤銷', {
-      metadata: { group, revokedCount },
-    })
-
-    return revokedCount
+    return revokeGroupURLs(group, this.urlMap, this.groupMap)
   }
+
+  // ============================================================
+  // Query Methods
+  // ============================================================
 
   /**
    * 檢查 URL 是否存在並更新存取時間
@@ -298,227 +189,29 @@ export class BlobURLManager {
   }
 
   /**
-   * 智慧清理
-   */
-  async cleanup(options?: BlobURLCleanupOptions): Promise<BlobURLCleanupResult> {
-    const timer = logger.timer('Blob URL 清理')
-    const config = {
-      maxAge: options?.maxAge || this.DEFAULT_MAX_AGE,
-      maxMemoryUsage: options?.maxMemoryUsage || this.DEFAULT_MAX_MEMORY,
-      maxUnusedAge: options?.maxUnusedAge || this.DEFAULT_UNUSED_AGE,
-      preserveGroups: options?.preserveGroups || [],
-      dryRun: options?.dryRun || false,
-    }
-
-    const result: BlobURLCleanupResult = {
-      cleanedUrls: 0,
-      reclaimedMemory: 0,
-      errors: [],
-      preservedUrls: 0,
-      strategy: 'comprehensive',
-    }
-
-    const now = Date.now()
-    const currentMemoryUsage = this.getTotalMemoryUsage()
-    const urlsToClean: string[] = []
-
-    try {
-      // 1. 年齡基礎清理
-      for (const [url, info] of this.urlMap) {
-        const age = now - info.createdAt
-        const unusedAge = now - info.lastAccessedAt
-        const isProtected = config.preserveGroups.includes(info.group || '')
-
-        // 保護特定群組
-        if (isProtected) {
-          result.preservedUrls++
-          continue
-        }
-
-        // 清理條件
-        const shouldClean =
-          age > config.maxAge || // 超過最大年齡
-          (info.refCount === 0 && unusedAge > config.maxUnusedAge) || // 未使用且過期
-          (currentMemoryUsage > config.maxMemoryUsage && info.refCount === 0) // 記憶體壓力下的未引用項目
-
-        if (shouldClean) {
-          urlsToClean.push(url)
-        }
-      }
-
-      // 2. 記憶體壓力下的積極清理
-      if (currentMemoryUsage > config.maxMemoryUsage * this.MEMORY_PRESSURE_THRESHOLD) {
-        result.strategy = 'memory_pressure'
-
-        // 按最後存取時間排序，優先清理最久未使用的
-        const sortedUrls = Array.from(this.urlMap.entries())
-          .filter(([url]) => !urlsToClean.includes(url))
-          .filter(([, info]) => info.refCount === 0)
-          .sort(([, a], [, b]) => a.lastAccessedAt - b.lastAccessedAt)
-
-        for (const [url] of sortedUrls) {
-          if (currentMemoryUsage - result.reclaimedMemory <= config.maxMemoryUsage) {
-            break
-          }
-          urlsToClean.push(url)
-        }
-      }
-
-      // 3. 執行清理
-      if (!config.dryRun) {
-        for (const url of urlsToClean) {
-          const info = this.urlMap.get(url)
-          if (info) {
-            result.reclaimedMemory += info.metadata?.fileSize || 0
-
-            if (this.revokeURL(url)) {
-              result.cleanedUrls++
-            } else {
-              result.errors.push(`撤銷失敗: ${url.substring(0, 30)}...`)
-            }
-          }
-        }
-      } else {
-        // 乾跑模式：只統計
-        for (const url of urlsToClean) {
-          const info = this.urlMap.get(url)
-          if (info) {
-            result.cleanedUrls++
-            result.reclaimedMemory += info.metadata?.fileSize || 0
-          }
-        }
-      }
-
-      const duration = timer.end({
-        metadata: {
-          strategy: result.strategy,
-          cleanedUrls: result.cleanedUrls,
-          reclaimedMemory: result.reclaimedMemory,
-          preservedUrls: result.preservedUrls,
-          dryRun: config.dryRun,
-        },
-      })
-
-      logger.info('Blob URL 清理完成', {
-        metadata: {
-          ...result,
-          duration,
-          memoryBefore: currentMemoryUsage,
-          memoryAfter: currentMemoryUsage - result.reclaimedMemory,
-        },
-      })
-
-      return result
-    } catch (error) {
-      timer.end()
-      logger.error('Blob URL 清理失敗', error as Error)
-      result.errors.push(`清理過程發生錯誤: ${String(error)}`)
-      return result
-    }
-  }
-
-  /**
-   * 取得統計資訊
+   * 取得統計資訊 (delegate to blob-stats.ts)
    */
   getStats(): BlobURLStats {
-    const stats: BlobURLStats = {
-      totalUrls: this.urlMap.size,
-      totalMemoryUsage: 0,
-      groupStats: {},
-      oldestUrl: null,
-      largestBlob: null,
-    }
-
-    const now = Date.now()
-    let oldestAge = 0
-    let largestSize = 0
-
-    // 計算統計資料
-    for (const [url, info] of this.urlMap) {
-      const size = info.metadata?.fileSize || 0
-      const age = now - info.createdAt
-
-      stats.totalMemoryUsage += size
-
-      // 群組統計
-      const group = info.group || 'ungrouped'
-      if (!stats.groupStats[group]) {
-        stats.groupStats[group] = {
-          count: 0,
-          memoryUsage: 0,
-          avgAge: 0,
-        }
-      }
-
-      stats.groupStats[group].count++
-      stats.groupStats[group].memoryUsage += size
-      stats.groupStats[group].avgAge += age
-
-      // 最舊 URL
-      if (age > oldestAge) {
-        oldestAge = age
-        stats.oldestUrl = { url: url.substring(0, 50) + '...', age }
-      }
-
-      // 最大 Blob
-      if (size > largestSize) {
-        largestSize = size
-        stats.largestBlob = { url: url.substring(0, 50) + '...', size }
-      }
-    }
-
-    // 計算平均年齡
-    for (const group of Object.keys(stats.groupStats)) {
-      const groupStat = stats.groupStats[group]
-      if (groupStat.count > 0) {
-        groupStat.avgAge = Math.floor(groupStat.avgAge / groupStat.count)
-      }
-    }
-
-    return stats
+    return getStats(this.urlMap)
   }
 
+  // ============================================================
+  // Cleanup Methods (delegate to blob-cleanup.ts)
+  // ============================================================
+
   /**
-   * 取得總記憶體使用量
+   * 智慧清理 (delegate to blob-cleanup.ts)
    */
-  private getTotalMemoryUsage(): number {
-    let total = 0
-    for (const info of this.urlMap.values()) {
-      total += info.metadata?.fileSize || 0
-    }
-    return total
+  async cleanup(options?: BlobURLCleanupOptions): Promise<BlobURLCleanupResult> {
+    return cleanup(this.urlMap, this.groupMap, options)
   }
 
   /**
-   * 啟動自動清理
-   */
-  private startAutoCleanup(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer)
-    }
-
-    this.cleanupTimer = setInterval(async () => {
-      try {
-        await this.cleanup()
-      } catch (error) {
-        logger.error('自動清理失敗', error as Error)
-      }
-    }, this.CLEANUP_INTERVAL)
-
-    logger.info('Blob URL 自動清理已啟動', {
-      metadata: { interval: this.CLEANUP_INTERVAL },
-    })
-  }
-
-  /**
-   * 停止自動清理
+   * 停止自動清理 (delegate to blob-cleanup.ts)
    */
   stopAutoCleanup(): void {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer)
-      this.cleanupTimer = null
-      logger.info('Blob URL 自動清理已停止')
-    }
+    stopAutoCleanup(this.cleanupTimer)
+    this.cleanupTimer = null
   }
 
   /**
@@ -570,28 +263,8 @@ export function revokeManagedBlobURL(url: string): boolean {
   return blobURLManager.revokeURL(url)
 }
 
-/**
- * 便捷函數：群組化 Blob URL 管理
- */
-export class BlobURLGroup {
-  constructor(private groupName: string) {}
+// ============================================================
+// Convenience Exports (backward compatible)
+// ============================================================
 
-  create(blob: Blob, metadata?: BlobURLInfo['metadata']): string {
-    return blobURLManager.createURL(blob, {
-      group: this.groupName,
-      metadata,
-    })
-  }
-
-  revokeAll(): number {
-    return blobURLManager.revokeGroup(this.groupName)
-  }
-
-  getAll(): string[] {
-    return blobURLManager.getGroupURLs(this.groupName)
-  }
-
-  getCount(): number {
-    return this.getAll().length
-  }
-}
+export { BlobURLGroup } from './blob/blob-group'

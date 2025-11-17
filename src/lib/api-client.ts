@@ -1,7 +1,7 @@
 /**
  * 統一 API 客戶端
  *
- * 提供全站統一的 API 調用接口，自動處理：
+ * 提供全站統一的 API 調用接口,自動處理:
  * - CSRF token 管理
  * - 錯誤處理和重試
  * - 請求/響應攔截
@@ -10,75 +10,18 @@
 
 'use client'
 
-import { apiLogger } from '@/lib/logger'
 import { ApiResponse, ApiRequestOptions, ApiRequestData } from '@/types/infrastructure.types'
-import { CreateInquiryRequest } from '@/types/inquiry'
+import {
+  prepareHeaders as prepareHeadersCore,
+  getCSRFTokenFromCookie,
+} from './api/core/api-headers'
+import { executeWithRetry } from './api/core/api-retry'
 
-/**
- * 從 cookie 中獲取 CSRF token
- */
-function getCSRFTokenFromCookie(): string | null {
-  if (typeof document === 'undefined') return null
+// 重新導出錯誤類別 (向後相容)
+export { ApiError, CSRFError, RateLimitError } from './api/core/api-errors'
 
-  const cookies = document.cookie.split(';')
-  const csrfCookie = cookies.find(cookie => cookie.trim().startsWith('csrf-token='))
-
-  return csrfCookie ? csrfCookie.split('=')[1] : null
-}
-
-// API 請求選項和響應類型現在從 infrastructure.types.ts 匯入
-
-/**
- * API 錯誤類
- */
-export class ApiError extends Error {
-  public status: number
-  public code?: string
-  public details?: string
-
-  constructor(message: string, status: number, code?: string, details?: string) {
-    super(message)
-    this.name = 'ApiError'
-    this.status = status
-    this.code = code
-    this.details = details
-  }
-}
-
-/**
- * CSRF 錯誤類
- */
-export class CSRFError extends ApiError {
-  constructor(message: string = 'CSRF token validation failed') {
-    super(message, 403, 'CSRF_TOKEN_INVALID')
-    this.name = 'CSRFError'
-  }
-}
-
-/**
- * Rate Limit 錯誤類
- */
-export class RateLimitError extends ApiError {
-  public retryAfter: number
-  public limit: number
-  public remaining: number
-  public resetTime: number
-
-  constructor(
-    message: string = 'Rate limit exceeded',
-    retryAfter: number = 60,
-    limit: number = 0,
-    remaining: number = 0,
-    resetTime: number = 0
-  ) {
-    super(message, 429, 'RATE_LIMIT_EXCEEDED')
-    this.name = 'RateLimitError'
-    this.retryAfter = retryAfter
-    this.limit = limit
-    this.remaining = remaining
-    this.resetTime = resetTime
-  }
-}
+// 重新導出 React Hook (向後相容)
+export { useApiCall } from './api/hooks/useApiCall'
 
 /**
  * 統一 API 客戶端類
@@ -98,208 +41,6 @@ class ApiClient {
   }
 
   /**
-   * 準備請求標頭
-   */
-  private prepareHeaders(headers: HeadersInit = {}, skipCSRF = false, method = 'GET'): HeadersInit {
-    const preparedHeaders: Record<string, string> = {
-      'Content-Type': 'application/json',
-      ...Object.fromEntries(
-        headers instanceof Headers
-          ? headers.entries()
-          : Array.isArray(headers)
-            ? headers
-            : Object.entries(headers)
-      ),
-    }
-
-    // 為寫入操作添加 CSRF token
-    if (!skipCSRF && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())) {
-      const csrfToken = getCSRFTokenFromCookie()
-      if (csrfToken) {
-        preparedHeaders['X-CSRF-Token'] = csrfToken
-      } else {
-        apiLogger.warn('No CSRF token available for write operation', {
-          module: 'api-client',
-          action: 'prepareHeaders',
-          metadata: { method, endpoint: 'unknown' },
-        })
-      }
-    }
-
-    return preparedHeaders
-  }
-
-  /**
-   * 創建帶超時的 fetch
-   */
-  private async fetchWithTimeout(
-    url: string,
-    options: RequestInit,
-    timeout: number
-  ): Promise<Response> {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), timeout)
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: options.signal || controller.signal,
-      })
-
-      clearTimeout(timeoutId)
-      return response
-    } catch (error) {
-      clearTimeout(timeoutId)
-      throw error
-    }
-  }
-
-  /**
-   * 處理 API 錯誤
-   */
-  private async handleApiError(response: Response): Promise<never> {
-    let errorData: {
-      error?: string | { message?: string; code?: string; type?: string }
-      code?: string
-      details?: string
-    }
-
-    try {
-      errorData = await response.json()
-    } catch {
-      errorData = { error: `HTTP ${response.status}: ${response.statusText}` }
-    }
-
-    // 正確處理錯誤訊息：伺服器可能返回物件或字串格式
-    const message =
-      typeof errorData.error === 'object' && errorData.error?.message
-        ? errorData.error.message
-        : typeof errorData.error === 'string'
-          ? errorData.error
-          : `Request failed with status ${response.status}`
-    const code =
-      typeof errorData.error === 'object' && errorData.error?.code
-        ? errorData.error.code
-        : errorData.code
-    const details = errorData.details
-
-    // 特殊處理 CSRF 錯誤
-    if (response.status === 403 && (code === 'CSRF_TOKEN_INVALID' || code === 'INVALID_ORIGIN')) {
-      throw new CSRFError(message)
-    }
-
-    // 特殊處理 Rate Limit 錯誤
-    if (response.status === 429) {
-      const retryAfter = parseInt(response.headers.get('Retry-After') || '60')
-      const limit = parseInt(response.headers.get('X-RateLimit-Limit') || '0')
-      const remaining = parseInt(response.headers.get('X-RateLimit-Remaining') || '0')
-      const resetTime = parseInt(response.headers.get('X-RateLimit-Reset') || '0')
-
-      throw new RateLimitError(message, retryAfter, limit, remaining, resetTime)
-    }
-
-    throw new ApiError(message, response.status, code, details)
-  }
-
-  /**
-   * 執行帶重試的請求
-   */
-  private async executeWithRetry<T>(
-    url: string,
-    options: ApiRequestOptions
-  ): Promise<ApiResponse<T>> {
-    const {
-      skipCSRF = false,
-      retries = this.defaultRetries,
-      retryDelay = this.defaultRetryDelay,
-      timeout = this.defaultTimeout,
-      rateLimitRetry = true,
-      maxRetryWait = 60000, // 預設最多等待 60 秒
-      ...fetchOptions
-    } = options
-
-    const method = fetchOptions.method || 'GET'
-    let lastError: Error
-
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const headers = this.prepareHeaders(fetchOptions.headers, skipCSRF, method)
-
-        const response = await this.fetchWithTimeout(
-          url,
-          {
-            ...fetchOptions,
-            headers,
-          },
-          timeout
-        )
-
-        if (!response.ok) {
-          await this.handleApiError(response)
-        }
-
-        const data = await response.json()
-        return data as ApiResponse<T>
-      } catch (error) {
-        lastError = error as Error
-
-        // 不重試的錯誤類型（客戶端錯誤）
-        if (
-          error instanceof CSRFError ||
-          (error instanceof ApiError && [400, 401, 403, 404, 422].includes(error.status))
-        ) {
-          throw error
-        }
-
-        // 特殊處理 Rate Limit 錯誤
-        if (error instanceof RateLimitError) {
-          // 檢查是否啟用了 rate limit 重試
-          if (rateLimitRetry && attempt < retries) {
-            const waitTime = Math.min(error.retryAfter * 1000, maxRetryWait)
-            apiLogger.warn('Rate limit exceeded, retrying after delay', {
-              module: 'api-client',
-              action: 'executeWithRetry',
-              metadata: {
-                attempt: attempt + 1,
-                maxAttempts: retries + 1,
-                waitTime,
-                rateLimitInfo: {
-                  limit: error.limit,
-                  remaining: error.remaining,
-                  resetTime: new Date(error.resetTime * 1000).toLocaleTimeString(),
-                },
-              },
-            })
-            await new Promise(resolve => setTimeout(resolve, waitTime))
-            continue
-          }
-          // 如果不啟用重試或重試次數用完，拋出錯誤
-          throw error
-        }
-
-        // 其他錯誤的重試邏輯（網路錯誤、5xx 錯誤等）
-        if (attempt < retries) {
-          apiLogger.warn('API request failed, retrying', {
-            module: 'api-client',
-            action: 'executeWithRetry',
-            metadata: {
-              attempt: attempt + 1,
-              maxAttempts: retries + 1,
-              error: (error as Error).message,
-              url,
-            },
-          })
-          const exponentialBackoff = retryDelay * Math.pow(2, attempt)
-          await new Promise(resolve => setTimeout(resolve, exponentialBackoff))
-          continue
-        }
-      }
-    }
-
-    throw lastError!
-  }
-
-  /**
    * GET 請求
    */
   async get<T = unknown>(
@@ -307,10 +48,17 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return this.executeWithRetry<T>(url, {
-      ...options,
-      method: 'GET',
-    })
+    return executeWithRetry<T>(
+      url,
+      {
+        ...options,
+        method: 'GET',
+      },
+      prepareHeadersCore,
+      this.defaultRetries,
+      this.defaultRetryDelay,
+      this.defaultTimeout
+    )
   }
 
   /**
@@ -322,11 +70,18 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return this.executeWithRetry<T>(url, {
-      ...options,
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    })
+    return executeWithRetry<T>(
+      url,
+      {
+        ...options,
+        method: 'POST',
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      prepareHeadersCore,
+      this.defaultRetries,
+      this.defaultRetryDelay,
+      this.defaultTimeout
+    )
   }
 
   /**
@@ -338,11 +93,18 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return this.executeWithRetry<T>(url, {
-      ...options,
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    })
+    return executeWithRetry<T>(
+      url,
+      {
+        ...options,
+        method: 'PUT',
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      prepareHeadersCore,
+      this.defaultRetries,
+      this.defaultRetryDelay,
+      this.defaultTimeout
+    )
   }
 
   /**
@@ -354,11 +116,18 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return this.executeWithRetry<T>(url, {
-      ...options,
-      method: 'PATCH',
-      body: data ? JSON.stringify(data) : undefined,
-    })
+    return executeWithRetry<T>(
+      url,
+      {
+        ...options,
+        method: 'PATCH',
+        body: data ? JSON.stringify(data) : undefined,
+      },
+      prepareHeadersCore,
+      this.defaultRetries,
+      this.defaultRetryDelay,
+      this.defaultTimeout
+    )
   }
 
   /**
@@ -369,10 +138,17 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return this.executeWithRetry<T>(url, {
-      ...options,
-      method: 'DELETE',
-    })
+    return executeWithRetry<T>(
+      url,
+      {
+        ...options,
+        method: 'DELETE',
+      },
+      prepareHeadersCore,
+      this.defaultRetries,
+      this.defaultRetryDelay,
+      this.defaultTimeout
+    )
   }
 
   /**
@@ -397,19 +173,26 @@ class ApiClient {
       }
     }
 
-    return this.executeWithRetry<T>(url, {
-      ...otherOptions,
-      method: 'POST',
-      headers,
-      body:
-        file instanceof File
-          ? (() => {
-              const formData = new FormData()
-              formData.append('file', file)
-              return formData
-            })()
-          : file,
-    })
+    return executeWithRetry<T>(
+      url,
+      {
+        ...otherOptions,
+        method: 'POST',
+        headers,
+        body:
+          file instanceof File
+            ? (() => {
+                const formData = new FormData()
+                formData.append('file', file)
+                return formData
+              })()
+            : file,
+      },
+      prepareHeadersCore,
+      this.defaultRetries,
+      this.defaultRetryDelay,
+      this.defaultTimeout
+    )
   }
 }
 
@@ -442,161 +225,15 @@ export const api = {
   ) => apiClient.upload<T>(endpoint, file, options),
 }
 
-/**
- * React Hook 用於 API 調用
- */
-import { useState, useCallback } from 'react'
+// 導入並注入 apiClient 實例到端點模組
+import { setApiClient as setInquiryApiClient, inquiryApi } from './api/endpoints/inquiry-api'
+import {
+  setApiClient as setInquiryTemplateApiClient,
+  inquiryTemplateApi,
+} from './api/endpoints/inquiry-template-api'
 
-interface UseApiCallState<T> {
-  data: T | null
-  loading: boolean
-  error: string | null
-}
+setInquiryApiClient(apiClient)
+setInquiryTemplateApiClient(apiClient)
 
-export function useApiCall<T = unknown>() {
-  const [state, setState] = useState<UseApiCallState<T>>({
-    data: null,
-    loading: false,
-    error: null,
-  })
-
-  const execute = useCallback(
-    async <R = T>(apiCall: () => Promise<ApiResponse<R>>): Promise<R | null> => {
-      setState(prev => ({ ...prev, loading: true, error: null }))
-
-      try {
-        const response = await apiCall()
-
-        if (response.success && response.data) {
-          setState({
-            data: response.data as T,
-            loading: false,
-            error: null,
-          })
-          return response.data
-        } else {
-          const error = response.error || '請求失敗'
-          setState({
-            data: null,
-            loading: false,
-            error,
-          })
-          return null
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-        setState({
-          data: null,
-          loading: false,
-          error: errorMessage,
-        })
-        return null
-      }
-    },
-    []
-  )
-
-  const reset = useCallback(() => {
-    setState({
-      data: null,
-      loading: false,
-      error: null,
-    })
-  }, [])
-
-  return {
-    ...state,
-    execute,
-    reset,
-  }
-}
-
-/**
- * 詢價 API 客戶端
- */
-export const inquiryApi = {
-  // 列出詢價單
-  list: (params?: {
-    status?: string
-    search?: string
-    sort_by?: string
-    sort_order?: 'asc' | 'desc'
-    page?: number
-    limit?: number
-  }) => {
-    const searchParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          searchParams.append(key, String(value))
-        }
-      })
-    }
-
-    const endpoint = `/api/inquiries${searchParams.toString() ? `?${searchParams}` : ''}`
-    return apiClient.get(endpoint)
-  },
-
-  // 獲取單一詢價單
-  get: (id: string) => apiClient.get(`/api/inquiries/${id}`),
-
-  // 創建詢價單（需認證）
-  create: (data: CreateInquiryRequest) => apiClient.post('/api/inquiries', data),
-
-  // 創建訪客詢價單（無需認證）
-  createGuest: (data: CreateInquiryRequest) => apiClient.post('/api/inquiries/guest', data),
-
-  // 更新詢價單
-  update: (id: string, data: Record<string, unknown>) =>
-    apiClient.put(`/api/inquiries/${id}`, data),
-
-  // 刪除詢價單
-  delete: (id: string) => apiClient.delete(`/api/inquiries/${id}`),
-
-  // 獲取統計資料
-  stats: () => apiClient.get('/api/inquiries/stats'),
-}
-
-/**
- * 詢價範本 API 客戶端
- */
-export const inquiryTemplateApi = {
-  // 列出範本
-  list: (params?: {
-    inquiry_type?: 'product' | 'farm_tour'
-    is_active?: boolean
-    is_favorite?: boolean
-    limit?: number
-    offset?: number
-    sort_by?: 'created_at' | 'updated_at' | 'usage_count' | 'name'
-    sort_order?: 'asc' | 'desc'
-  }) => {
-    const searchParams = new URLSearchParams()
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value))
-        }
-      })
-    }
-
-    const endpoint = `/api/inquiry-templates${searchParams.toString() ? `?${searchParams}` : ''}`
-    return apiClient.get(endpoint)
-  },
-
-  // 獲取單一範本
-  get: (id: string) => apiClient.get(`/api/inquiry-templates/${id}`),
-
-  // 建立範本
-  create: (data: Record<string, unknown>) => apiClient.post('/api/inquiry-templates', data),
-
-  // 更新範本
-  update: (id: string, data: Record<string, unknown>) =>
-    apiClient.put(`/api/inquiry-templates/${id}`, data),
-
-  // 刪除範本
-  delete: (id: string) => apiClient.delete(`/api/inquiry-templates/${id}`),
-
-  // 使用範本（取得表單資料）
-  use: (id: string) => apiClient.post(`/api/inquiry-templates/${id}/use`, {}),
-}
+// 重新導出端點 API (向後相容)
+export { inquiryApi, inquiryTemplateApi }
