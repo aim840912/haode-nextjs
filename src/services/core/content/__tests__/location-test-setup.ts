@@ -11,19 +11,8 @@ import type { Location } from '@/types/location'
 // Mock Setup (vi.hoisted for Vitest 4.0 compatibility)
 // ============================================================================
 
-export const {
-  mockSupabaseClient,
-  mockSupabaseAdminClient,
-  mockFrom,
-  mockSelect,
-  mockEq,
-  mockSingle,
-  mockOrder,
-  mockInsert,
-  mockUpdate,
-  mockDelete,
-  mockLimit,
-} = vi.hoisted(() => {
+// 使用 vi.hoisted 建立 mocks（必須先儲存到變數再解構導出）
+const hoistedMocks = vi.hoisted(() => {
   const mockSingle = vi.fn()
   const mockEq = vi.fn()
   const mockSelect = vi.fn()
@@ -59,6 +48,21 @@ export const {
     mockLimit,
   }
 })
+
+// 解構並導出（Vitest 4.0 要求分兩步驟）
+export const {
+  mockSupabaseClient,
+  mockSupabaseAdminClient,
+  mockFrom,
+  mockSelect,
+  mockEq,
+  mockSingle,
+  mockOrder,
+  mockInsert,
+  mockUpdate,
+  mockDelete,
+  mockLimit,
+} = hoistedMocks
 
 /**
  * 初始化所有 Mocks

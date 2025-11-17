@@ -165,6 +165,17 @@ export class OrderService {
           })
         }
 
+        // 處理空數據，返回預設值 0
+        if (!data) {
+          return {
+            totalOrders: 0,
+            totalAmount: 0,
+            pendingOrders: 0,
+            processingOrders: 0,
+            deliveredOrders: 0,
+          }
+        }
+
         return {
           totalOrders: data.total_orders || 0,
           totalAmount: Number(data.total_amount || 0),

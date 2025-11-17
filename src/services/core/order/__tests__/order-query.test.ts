@@ -12,17 +12,107 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ValidationError } from '@/lib/errors'
 import { OrderService } from '../OrderService'
-import {
-  mockFrom,
-  mockSingle,
-  mockRange,
-  mockIn,
-  resetAllMocks,
-  initializeTestMocks,
-} from './test-setup'
 
-// 初始化所有 Mocks
-initializeTestMocks()
+// ============================================================================
+// Mock Setup (vi.hoisted for Vitest 4.0 compatibility)
+// ============================================================================
+
+// 使用 vi.hoisted 建立 mocks
+const hoistedMocks = vi.hoisted(() => {
+  const mockSingle = vi.fn()
+  const mockIn = vi.fn()
+  const mockRange = vi.fn()
+  const mockOrder = vi.fn()
+  const mockEq = vi.fn()
+  const mockSelect = vi.fn()
+  const mockRpc = vi.fn()
+  const mockUpdate = vi.fn()
+  const mockInsert = vi.fn()
+  const mockDelete = vi.fn()
+  const mockFrom = vi.fn()
+
+  const mockSupabaseClient = {
+    from: mockFrom,
+    rpc: mockRpc,
+  }
+
+  return {
+    mockSingle,
+    mockIn,
+    mockRange,
+    mockOrder,
+    mockEq,
+    mockSelect,
+    mockRpc,
+    mockUpdate,
+    mockInsert,
+    mockDelete,
+    mockFrom,
+    mockSupabaseClient,
+  }
+})
+
+const {
+  mockSingle,
+  mockIn,
+  mockRange,
+  mockOrder,
+  mockEq,
+  mockSelect,
+  mockFrom,
+  mockSupabaseClient,
+} = hoistedMocks
+
+// Vi.mock 必須在同一檔案中才能正確 hoist
+vi.mock('@/lib/database/supabase-auth', () => ({
+  getSupabaseAdmin: vi.fn(() => hoistedMocks.mockSupabaseClient),
+}))
+
+vi.mock('@/lib/logger', () => ({
+  dbLogger: {
+    timer: vi.fn(() => ({
+      end: vi.fn(),
+    })),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  },
+}))
+
+// ============================================================================
+// Mock Chain Setup
+// ============================================================================
+
+function setupMockChains() {
+  mockSelect.mockReturnValue({
+    eq: mockEq,
+    single: mockSingle,
+    in: mockIn,
+    order: mockOrder,
+  })
+
+  mockEq.mockReturnValue({
+    single: mockSingle,
+    order: mockOrder,
+    eq: mockEq,
+  })
+
+  mockOrder.mockReturnValue({
+    range: mockRange,
+  })
+
+  mockFrom.mockReturnValue({
+    select: mockSelect,
+  })
+}
+
+function resetAllMocks() {
+  vi.clearAllMocks()
+  mockFrom.mockReturnValue({
+    select: mockSelect,
+  })
+  setupMockChains()
+}
 
 describe('OrderService - 查詢操作', () => {
   let service: OrderService

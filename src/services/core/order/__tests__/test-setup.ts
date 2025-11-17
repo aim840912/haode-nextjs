@@ -6,18 +6,60 @@
 
 import { vi } from 'vitest'
 
-// Mock Supabase admin client - 整合 Query 和 Command 所需的所有 Mock
-export const mockSingle = vi.fn()
-export const mockIn = vi.fn()
-export const mockRange = vi.fn()
-export const mockOrder = vi.fn()
-export const mockEq = vi.fn()
-export const mockSelect = vi.fn()
-export const mockRpc = vi.fn()
-export const mockUpdate = vi.fn()
-export const mockInsert = vi.fn()
-export const mockDelete = vi.fn()
-export const mockFrom = vi.fn()
+// ============================================================================
+// Mock Setup (vi.hoisted for Vitest 4.0 compatibility)
+// ============================================================================
+
+// 使用 vi.hoisted 建立 mocks（必須先儲存到變數再解構導出）
+const hoistedMocks = vi.hoisted(() => {
+  const mockSingle = vi.fn()
+  const mockIn = vi.fn()
+  const mockRange = vi.fn()
+  const mockOrder = vi.fn()
+  const mockEq = vi.fn()
+  const mockSelect = vi.fn()
+  const mockRpc = vi.fn()
+  const mockUpdate = vi.fn()
+  const mockInsert = vi.fn()
+  const mockDelete = vi.fn()
+  const mockFrom = vi.fn()
+
+  const mockSupabaseClient = {
+    from: mockFrom,
+    rpc: mockRpc,
+  }
+
+  return {
+    mockSingle,
+    mockIn,
+    mockRange,
+    mockOrder,
+    mockEq,
+    mockSelect,
+    mockRpc,
+    mockUpdate,
+    mockInsert,
+    mockDelete,
+    mockFrom,
+    mockSupabaseClient,
+  }
+})
+
+// 解構並導出（Vitest 4.0 要求分兩步驟）
+export const {
+  mockSingle,
+  mockIn,
+  mockRange,
+  mockOrder,
+  mockEq,
+  mockSelect,
+  mockRpc,
+  mockUpdate,
+  mockInsert,
+  mockDelete,
+  mockFrom,
+  mockSupabaseClient,
+} = hoistedMocks
 
 /**
  * 設定 Mock 鏈式調用結構
@@ -68,13 +110,28 @@ export function setupMockChains() {
   })
 }
 
-/**
- * 建立 Mock Supabase Client
- */
-export const mockSupabaseClient = {
-  from: mockFrom,
-  rpc: mockRpc,
-}
+// ============================================================================
+// Vi.mock calls at module top-level (required for Vitest 4.0)
+// ============================================================================
+
+vi.mock('@/lib/database/supabase-auth', () => ({
+  getSupabaseAdmin: vi.fn(() => hoistedMocks.mockSupabaseClient),
+}))
+
+vi.mock('@/lib/logger', () => ({
+  dbLogger: {
+    timer: vi.fn(() => ({
+      end: vi.fn(),
+    })),
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  },
+}))
+
+// ============================================================================
+// Reset Helper
+// ============================================================================
 
 /**
  * 重置所有 Mocks
@@ -91,38 +148,4 @@ export function resetAllMocks() {
   })
 
   setupMockChains()
-}
-
-/**
- * Mock Supabase Auth 模組
- */
-export function mockSupabaseAuth() {
-  vi.mock('@/lib/database/supabase-auth', () => ({
-    getSupabaseAdmin: vi.fn(() => mockSupabaseClient),
-  }))
-}
-
-/**
- * Mock Logger 模組
- */
-export function mockLogger() {
-  vi.mock('@/lib/logger', () => ({
-    dbLogger: {
-      timer: vi.fn(() => ({
-        end: vi.fn(),
-      })),
-      error: vi.fn(),
-      warn: vi.fn(),
-      info: vi.fn(),
-    },
-  }))
-}
-
-/**
- * 初始化所有測試 Mocks
- */
-export function initializeTestMocks() {
-  setupMockChains()
-  mockSupabaseAuth()
-  mockLogger()
 }
