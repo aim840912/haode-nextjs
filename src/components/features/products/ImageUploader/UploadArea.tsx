@@ -1,3 +1,5 @@
+'use client'
+
 import { useRef, useCallback, useState } from 'react'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { cn } from '@/lib/utils/cn'

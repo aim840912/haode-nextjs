@@ -811,6 +811,88 @@ npx depcheck
 - 使用現有的測試工具/助手
 - 測試應該是確定性的
 
+### Client/Server Components 規範
+
+**Next.js App Router 專案必須正確區分 Client 和 Server Components**
+
+#### 何時必須使用 'use client'
+
+✅ **必須標記為 Client Component**:
+- 使用 React Hooks (`useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`, `useContext`)
+- 使用瀏覽器 API (`window`, `localStorage`, `navigator`)
+- 使用事件處理器 (`onClick`, `onChange`, `onSubmit`)
+- 使用 Custom Hooks (如 `useToast`, `useAuth`, `useModal`)
+- 使用第三方客戶端函式庫 (動畫、圖表、表單驗證)
+
+#### 何時應保持為 Server Component
+
+❌ **不需要 'use client'**:
+- 純展示型元件（只接收 props 和渲染內容）
+- 資料獲取元件（使用 `async/await` 直接查詢資料庫或 API）
+- 靜態內容元件（文字、圖片、連結）
+- Layout 元件（除非需要互動功能）
+
+#### 開發檢查清單
+
+**建立新元件時**:
+1. ✅ 預設為 Server Component（不加 'use client'）
+2. ✅ 只在需要時才添加 'use client'
+3. ✅ 考慮將互動邏輯拆分到子元件
+
+**重構現有元件時**:
+1. ✅ 檢查是否使用 React Hooks → 需要 'use client'
+2. ✅ 檢查是否純展示 → 可移除 'use client'
+3. ✅ 檢查子元件是否可獨立為 Client Component
+
+#### 常見錯誤
+
+🔴 **缺少 'use client' 會導致**:
+```
+Error: useState only works in Client Components
+Error: Event handlers cannot be passed to Client Components
+```
+
+🟡 **不必要的 'use client' 會導致**:
+- 增加客戶端 bundle 大小
+- 降低初始載入效能
+- 失去 Server Components 的 SEO 優勢
+
+#### 最佳實踐範例
+
+```typescript
+// ❌ 錯誤：父元件不需要 'use client'
+'use client'
+
+export function NewsSection() {
+  return (
+    <section>
+      <NextMarketScheduleCard /> {/* 只有這個需要客戶端 */}
+    </section>
+  )
+}
+
+// ✅ 正確：只有子元件標記 'use client'
+export function NewsSection() {
+  return (
+    <section>
+      <NextMarketScheduleCard /> {/* 子元件內部有 'use client' */}
+    </section>
+  )
+}
+```
+
+```typescript
+// ✅ 正確：使用 hooks 必須標記
+'use client'
+
+import { useState } from 'react'
+
+export function ProductCard() {
+  const [isHovered, setIsHovered] = useState(false)
+  return <div onMouseEnter={() => setIsHovered(true)}>...</div>
+}
+```
+
 ---
 
 ## 🎨 UI/UX 設計規範
