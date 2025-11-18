@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (6/21 已完成, 28.6%)
+**狀態**: 🔄 進行中 (7/21 已完成, 33.3%)
 
 #### 目標
 
@@ -699,7 +699,7 @@ open coverage/index.html
 **中優先級** (300-400 行):
 5. ✅ `AuthButton.tsx` (395 行) → 已拆分為 6 個模組 (完成於 2025-01-18, Commit: af66710)
 6. ✅ `FarmTourCalendar.tsx` (395 行) → 已拆分為 2 個子元件 (完成於 2025-01-18, Commit: 5bec8b5)
-7. `LoadingManager.tsx` (373 行)
+7. ✅ `LoadingManager.tsx` (373 行) → 已拆分為 8 個模組 (完成於 2025-01-18, Commit: c1a4d31)
 8. `ErrorHandler.tsx` (372 行)
 9. ✅ `ProductImageGallery.tsx` (368 行) → 已拆分為 5 個模組 (完成於 2025-01-18, Commit: 4a44793)
 
@@ -982,6 +982,64 @@ ProductDetailModal/
 - 所有子元件使用 React.memo
 - 正確的 User 類型匯入（從 @/types/auth）
 - 符合專案 import 慣例
+
+**向後兼容**:
+- 舊 import 路徑仍可使用
+- 零破壞性變更
+
+---
+
+**P1-1.7: LoadingManager 拆分** ✅ (2025-01-18, Commit: c1a4d31)
+
+**拆分結果**:
+- 主檔案 (LoadingManager.tsx): 373 → 41 行 (89% 縮減)
+- 新增 8 個模組:
+  1. types.ts - 型別定義 (130 行)
+  2. LoadingManager.tsx - Provider 核心邏輯 (170 行)
+  3. useLoading.ts - Context Hook (15 行)
+  4. useAsyncLoading.ts - 非同步操作 Hook (50 行)
+  5. LoadingIndicator.tsx - 載入指示器元件 (60 行)
+  6. LoadingWrapper.tsx - 條件式包裝器元件 (40 行)
+  7. PageLoading.tsx - 頁面級載入元件 (70 行)
+  8. index.ts - 統一匯出 (35 行)
+
+**LoadingManager Provider**:
+- 智慧載入顯示（延遲顯示避免閃爍）
+- 多任務並行管理
+- 優先級處理（高/普通/低）
+- 自動超時處理
+
+**useAsyncLoading Hook**:
+- 自動管理非同步操作載入狀態
+- 進度追蹤支援
+- 簡化載入狀態管理
+
+**LoadingIndicator 元件**:
+- 旋轉載入動畫
+- 訊息顯示
+- 進度條（可選）
+
+**LoadingWrapper 元件**:
+- 條件式渲染（載入中/正常內容）
+- 智慧載入支援
+- 自訂 fallback
+
+**PageLoading 元件**:
+- 全螢幕載入畫面
+- 模擬進度條
+- 適用於頁面初始載入
+
+**測試驗證**:
+- ✅ TypeScript 檢查通過
+- ✅ ESLint 檢查通過
+- ✅ Next.js 建置成功（12.5s）
+- ✅ 無執行時錯誤
+
+**技術改進**:
+- 業務邏輯與 UI 完全分離
+- 所有元件使用 React.memo
+- Context + Hooks 模式清晰
+- 完整的 TypeScript 型別定義
 
 **向後兼容**:
 - 舊 import 路徑仍可使用
