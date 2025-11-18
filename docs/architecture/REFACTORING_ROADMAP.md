@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (2/21 已完成)
+**狀態**: 🔄 進行中 (3/21 已完成)
 
 #### 目標
 
@@ -694,7 +694,7 @@ open coverage/index.html
 1. ✅ `ProductDetailModal.tsx` (521 行) → 已拆分為 6 個子元件 (完成於 2025-01-18, Commit: bcce198)
 2. `OptimizedImage.tsx` (469 行) → 拆分邏輯和展示層
 3. ✅ `MonitoringDashboard.tsx` (412 行) → 已拆分為 8 個子元件 (完成於 2025-01-18, Commit: d7fc0cd)
-4. `QuickAddInquiryModal.tsx` (409 行) → 拆分表單區塊
+4. ✅ `QuickAddInquiryModal.tsx` (409 行) → 已拆分為 4 個模組 (完成於 2025-01-18, Commit: 3404b11)
 
 **中優先級** (300-400 行):
 5. `AuthButton.tsx` (395 行)
@@ -816,6 +816,38 @@ ProductDetailModal/
 - 邏輯與 UI 分離 (useMockMetrics hook)
 - 建立通用 MetricCard 消除重複程式碼
 - 預留 API 替換接口（修改 hook 即可）
+
+---
+
+**P1-1.3: QuickAddInquiryModal 拆分** ✅ (2025-01-18, Commit: 3404b11)
+
+**拆分結果**:
+- 主元件: 410 → 182 行 (56% 縮減)
+- 新增 4 個模組:
+  1. types.ts - 型別定義集中管理 (57 行)
+  2. useQuickInquiryForm.ts - 業務邏輯 Hook (244 行)
+  3. FormField.tsx - 通用表單欄位元件 (167 行)
+  4. index.tsx - 主元件 (182 行)
+
+**FormField 通用元件**:
+- 支援 7 種輸入類型 (text/email/tel/number/date/select/textarea)
+- 統一錯誤顯示和樣式
+- React.memo 效能優化
+- 可重用於其他 20+ 表單元件
+
+**業務邏輯分離**:
+- useQuickInquiryForm hook 包含表單狀態管理、驗證、提交邏輯
+- 可獨立測試業務邏輯
+- 主元件職責簡化為 UI 編排
+
+**測試驗證**:
+- ✅ TypeScript 類型檢查通過
+- ✅ ESLint 檢查通過（修復 import order）
+- ✅ Build 建置成功
+
+**向後兼容**:
+- 舊 import 路徑仍可使用（轉發匯出）
+- 無需修改其他檔案的 import 語句
 
 ---
 
