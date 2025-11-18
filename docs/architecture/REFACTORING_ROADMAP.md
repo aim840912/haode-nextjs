@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (7/21 已完成, 33.3%)
+**狀態**: 🔄 進行中 (8/21 已完成, 38.1%)
 
 #### 目標
 
@@ -700,7 +700,7 @@ open coverage/index.html
 5. ✅ `AuthButton.tsx` (395 行) → 已拆分為 6 個模組 (完成於 2025-01-18, Commit: af66710)
 6. ✅ `FarmTourCalendar.tsx` (395 行) → 已拆分為 2 個子元件 (完成於 2025-01-18, Commit: 5bec8b5)
 7. ✅ `LoadingManager.tsx` (373 行) → 已拆分為 8 個模組 (完成於 2025-01-18, Commit: c1a4d31)
-8. `ErrorHandler.tsx` (372 行)
+8. ✅ `ErrorHandler.tsx` (372 行) → 已拆分為 8 個模組 (完成於 2025-01-18, Commit: 9cb5557)
 9. ✅ `ProductImageGallery.tsx` (368 行) → 已拆分為 5 個模組 (完成於 2025-01-18, Commit: 4a44793)
 
 #### 拆分範例: ProductDetailModal
