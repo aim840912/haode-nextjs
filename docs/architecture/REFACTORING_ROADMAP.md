@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (10/21 已完成, 47.6%)
+**狀態**: 🔄 進行中 (11/21 已完成, 52.4%)
 
 #### 目標
 
@@ -704,6 +704,7 @@ open coverage/index.html
 9. ✅ `ProductImageGallery.tsx` (368 行) → 已拆分為 5 個模組 (完成於 2025-01-18, Commit: 4a44793)
 10. ✅ `ProgressiveLoading.tsx` (345 行) → 已拆分為 5 個模組 (完成於 2025-01-18, Commit: 4a33737)
 11. ✅ `Breadcrumbs.tsx` (341 行) → 已拆分為 6 個模組 (完成於 2025-01-18, Commit: c76d836)
+12. ✅ `ScheduleCalendar.tsx` (337 行) → 已拆分為 6 個模組 (完成於 2025-01-18, Commit: b811bbd)
 
 #### 拆分範例: ProductDetailModal
 
