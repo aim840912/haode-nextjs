@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (5/21 已完成, 23.8%)
+**狀態**: 🔄 進行中 (6/21 已完成, 28.6%)
 
 #### 目標
 
@@ -697,11 +697,11 @@ open coverage/index.html
 4. ✅ `QuickAddInquiryModal.tsx` (409 行) → 已拆分為 4 個模組 (完成於 2025-01-18, Commit: 3404b11)
 
 **中優先級** (300-400 行):
-5. `AuthButton.tsx` (395 行)
-6. ✅ `FarmTourCalendar.tsx` (395 行) → 已拆分為 2 個子元件 (完成於 2025-01-18)
+5. ✅ `AuthButton.tsx` (395 行) → 已拆分為 6 個模組 (完成於 2025-01-18, Commit: af66710)
+6. ✅ `FarmTourCalendar.tsx` (395 行) → 已拆分為 2 個子元件 (完成於 2025-01-18, Commit: 5bec8b5)
 7. `LoadingManager.tsx` (373 行)
 8. `ErrorHandler.tsx` (372 行)
-9. ✅ `ProductImageGallery.tsx` (368 行) → 已拆分為 5 個模組 (完成於 2025-01-18)
+9. ✅ `ProductImageGallery.tsx` (368 行) → 已拆分為 5 個模組 (完成於 2025-01-18, Commit: 4a44793)
 
 #### 拆分範例: ProductDetailModal
 
@@ -934,6 +934,58 @@ ProductDetailModal/
 **向後兼容**:
 - 舊 import 路徑仍可使用
 - SimpleProductImage 和 ProductCardImage 保留在原檔案
+
+---
+
+**P1-1.6: AuthButton 拆分** ✅ (2025-01-18, Commit: af66710)
+
+**拆分結果**:
+- 主元件 (AuthButton.tsx): 395 → 18 行 (95% 縮減)
+- 新增 6 個模組:
+  1. icons.tsx - SVG 圖示 (53 行)
+  2. types.ts - 型別定義 (56 行)
+  3. useAuthButton.ts - 業務邏輯 Hook (172 行)
+  4. UserDropdownMenu.tsx - 下拉選單 UI (89 行)
+  5. AuthButtonStates.tsx - 載入/初始/登入狀態元件 (82 行)
+  6. index.tsx - 主元件 (95 行)
+
+**圖示優化**:
+- 保留 5 個使用中圖示: UserIcon, LogoutIcon, HeartIcon, InquiryIcon, ChevronDownIcon
+- 移除 6 個未使用圖示: PackageIcon, GalleryIcon, FarmIcon, LocationIcon, MonitoringIcon, AuditIcon, DashboardIcon
+
+**useAuthButton Hook**:
+- 用戶認證狀態管理
+- 興趣產品數量載入（API + localStorage）
+- 登出處理（含 session 失效容錯）
+- 下拉選單狀態管理（點擊外部關閉）
+- 客戶端掛載狀態（避免 hydration 錯誤）
+
+**UserDropdownMenu 元件**:
+- 用戶資訊顯示（email）
+- 4 個選單項目：個人資料、詢問單、興趣產品、登出
+- 興趣數量徽章（動態更新）
+- 響應式設計（mobile/desktop）
+
+**AuthButtonStates 元件**:
+- LoadingState - 載入中狀態
+- InitialState - SSR 初始狀態（suppressHydrationWarning）
+- LoginLink - 登入連結
+
+**測試驗證**:
+- ✅ TypeScript 類型檢查通過
+- ✅ ESLint 檢查通過
+- ✅ Next.js 建置成功（14.3s）
+- ✅ 無執行時錯誤
+
+**技術改進**:
+- 業務邏輯與 UI 完全分離
+- 所有子元件使用 React.memo
+- 正確的 User 類型匯入（從 @/types/auth）
+- 符合專案 import 慣例
+
+**向後兼容**:
+- 舊 import 路徑仍可使用
+- 零破壞性變更
 
 ---
 
