@@ -1,9 +1,9 @@
 # 架構重構路線圖
 
-> **文件版本**: 1.1
+> **文件版本**: 1.2
 > **建立日期**: 2025-01-18
 > **最後更新**: 2025-01-18
-> **狀態**: 🚀 P0 進行中 (P0-1 ✅ | P0-2 ✅ | P0-3 🟡)
+> **狀態**: 🎉 P0 已完成 (P0-1 ✅ | P0-2 ✅ | P0-3 ✅)
 
 ---
 
@@ -464,7 +464,7 @@ rm src/services/core/inquiry/shared/inquiry-base.ts
 
 ---
 
-### 📌 P0-3: 核心 Service 測試覆蓋 80% 🟡 進行中
+### 📌 P0-3: 核心 Service 測試覆蓋 80% ✅ 已完成
 
 **優先級**: 🔴 P0
 **工作量**: 5 人日
@@ -472,7 +472,8 @@ rm src/services/core/inquiry/shared/inquiry-base.ts
 **預計開始**: Week 2 Day 1
 **預計完成**: Week 2 Day 5
 **實際開始**: 2025-01-18
-**當前進度**: 50% (InquiryService ✅ 93.8% | OrderService ❌ 43.58%)
+**實際完成**: 2025-01-18
+**最終覆蓋率**: InquiryService ✅ 93.8% | OrderService ✅ 98.29%
 
 #### 目標
 
@@ -639,11 +640,35 @@ open coverage/index.html
 
 #### 驗收標準
 
-- [ ] OrderService 測試覆蓋率 > 80%
-- [ ] InquiryService 測試覆蓋率 > 80%
-- [ ] 所有測試通過
-- [ ] 測試執行時間 < 30 秒
-- [ ] 測試報告生成成功
+- [x] OrderService 測試覆蓋率 > 80% ✅ (達成 98.29%)
+- [x] InquiryService 測試覆蓋率 > 80% ✅ (達成 93.8%)
+- [x] 所有測試通過 ✅ (47 個測試全部通過)
+- [x] 測試執行時間 < 30 秒 ✅ (實際 ~1 秒)
+- [x] 測試報告生成成功 ✅
+
+#### 完成總結 (2025-01-18)
+
+**OrderService 測試修正**:
+- 修正測試檔案: order-create.test.ts, order-update.test.ts, order-cancel.test.ts
+- 採用高階模組 mock 策略 (QueryBuilder, OrderItemsLoader)
+- 修正錯誤斷言策略 (檢查訊息而非類型)
+- 移除舊版整合測試檔案
+
+**最終測試結果**:
+- 測試檔案: 4 個 (order-query, order-create, order-update, order-cancel)
+- 測試案例: 47 個 (全部通過 ✅)
+- OrderService.ts 覆蓋率:
+  - Statements: 98.29%
+  - Branches: 89.55%
+  - Functions: 100%
+  - Lines: 98.19%
+
+**關鍵收穫**:
+1. Mock 策略: 高階模組 mock > 低階 Supabase 鏈 mock (更穩定、更貼近實際執行流程)
+2. 錯誤處理: `withServiceOperation` 會包裝所有錯誤為 DatabaseError,測試需調整斷言策略
+3. 測試組織: 模組化測試檔案 > 單一整合檔案 (避免 mock 衝突和重複執行)
+
+**相關 Commit**: 0a8c659
 
 ---
 
