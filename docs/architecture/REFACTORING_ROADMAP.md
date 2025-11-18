@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (18/21 已完成, 85.7%)
+**狀態**: 🔄 進行中 (19/21 已完成, 90.5%)
 
 #### 目標
 
@@ -711,6 +711,7 @@ open coverage/index.html
 16. ✅ `LoadingError.tsx` (321 行) → 已拆分為 7 個模組 (完成於 2025-01-19, Commit: b49fe07)
 17. ✅ `ValidatedInput.tsx` (321 行) → 已拆分為 13 個模組 (完成於 2025-01-19, Commit: 3eceb04)
 18. ✅ `Toast.tsx` (319 行) → 已拆分為 12 個模組 (完成於 2025-01-19, Commit: 495fb63)
+19. ✅ `ProductsSection.tsx` (318 行) → 已拆分為 15 個模組 (完成於 2025-01-19, Commit: d1a003d)
 
 #### 拆分範例: ProductDetailModal
 
@@ -1307,6 +1308,81 @@ ProductDetailModal/
 - 舊 import 路徑完全兼容（轉發匯出）
 - ToastProvider 和 useToast 保持可用
 - 所有 API 不變
+
+---
+
+**P1-1.19: ProductsSection 拆分** ✅ (2025-01-19, Commit: d1a003d)
+
+**拆分結果**:
+- 主檔案 (ProductsSection.tsx): 318 → 14 行 (95.6% 縮減)
+- 新增 15 個模組:
+  1. types.ts - 型別定義 (18 行)
+  2. hooks/useProductsData.ts - 產品資料獲取 Hook (46 行)
+  3. hooks/useVisibility.ts - 可見性偵測 Hook (31 行)
+  4. utils/productBadge.tsx - 徽章生成工具 (35 行)
+  5. utils/productFeatures.tsx - 特色生成工具 (38 行)
+  6. components/SectionHeader.tsx - 區段標題 (24 行)
+  7. components/LoadingState.tsx - 載入狀態 (24 行)
+  8. components/ErrorState.tsx - 錯誤狀態 (34 行)
+  9. components/EmptyState.tsx - 空狀態 (18 行)
+  10. components/ProductDiscount.tsx - 折扣標籤 (26 行)
+  11. components/ProductPrice.tsx - 價格顯示 (27 行)
+  12. components/ProductCard.tsx - 產品卡片 (71 行)
+  13. components/ViewAllButton.tsx - 查看所有按鈕 (34 行)
+  14. components/ProductsSection.tsx - 主元件（簡化版）(58 行)
+  15. index.ts - 統一匯出 (5 行)
+
+**拆分策略**: 狀態視圖與卡片分離
+- 抽取資料獲取和可見性偵測 Hooks
+- 抽取徽章和特色生成工具函數
+- 分離狀態視圖元件（Loading, Error, Empty, Header）
+- 分離產品卡片元件（Card, Discount, Price）
+- 保持完整的動畫和互動效果
+
+**useProductsData Hook**:
+- 自動獲取產品資料（取前 3 個上架產品）
+- 錯誤處理和自動重試機制
+- 載入狀態管理
+- 整合 logger 記錄錯誤
+
+**useVisibility Hook**:
+- Intersection Observer 實作
+- 偵測區段可見性（threshold: 0.1）
+- 觸發動畫效果（fade-in, slide-up）
+- 自動清理 observer
+
+**工具函數**:
+- `getProductBadge()`: 根據索引和產品狀態生成徽章（熱銷/優惠/人氣）
+- `getProductFeatures()`: 根據索引生成產品特色標籤
+
+**狀態視圖元件**:
+- **LoadingState**: 顯示 3 個產品卡片骨架
+- **ErrorState**: 錯誤訊息 + 重試按鈕
+- **EmptyState**: 空狀態提示
+- **SectionHeader**: 區段標題 + 副標題 + 有機認證標記
+
+**產品卡片元件**:
+- **ProductCard**: 完整產品卡片（圖片 + 資訊 + 按鈕）
+- **ProductDiscount**: 折扣標籤（計算折扣百分比）
+- **ProductPrice**: 價格顯示（含原價劃線）
+- **ViewAllButton**: 查看所有商品按鈕
+
+**測試驗證**:
+- ✅ TypeScript 檢查通過
+- ✅ Next.js 建置成功
+- ✅ 無執行時錯誤
+
+**技術亮點**:
+- 所有 UI 元件使用 React.memo 優化效能
+- Intersection Observer 動畫觸發機制
+- 自動資料獲取和重試
+- 多種狀態視圖（載入/錯誤/空/正常）
+- 產品徽章動態生成（3 種類型 × 動畫）
+
+**向後兼容**:
+- 舊 import 路徑完全兼容（轉發匯出）
+- ProductsSectionWithErrorBoundary 保持可用
+- 所有行為不變
 
 ---
 
