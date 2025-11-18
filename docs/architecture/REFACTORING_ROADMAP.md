@@ -678,9 +678,11 @@ open coverage/index.html
 
 **優先級**: 🟡 P1
 **工作量**: 5-7 人日
-**負責人**: [待指派]
+**負責人**: Claude
 **預計開始**: Week 3
 **預計完成**: Week 5
+**實際開始**: 2025-01-18
+**狀態**: 🔄 進行中 (1/21 已完成)
 
 #### 目標
 
@@ -689,7 +691,7 @@ open coverage/index.html
 #### 拆分清單
 
 **高優先級** (> 400 行):
-1. `ProductDetailModal.tsx` (521 行) → 拆分為 3-4 個子元件
+1. ✅ `ProductDetailModal.tsx` (521 行) → 已拆分為 6 個子元件 (完成於 2025-01-18, Commit: bcce198)
 2. `OptimizedImage.tsx` (469 行) → 拆分邏輯和展示層
 3. `MonitoringDashboard.tsx` (412 行) → 拆分各個監控區塊
 4. `QuickAddInquiryModal.tsx` (409 行) → 拆分表單區塊
@@ -755,6 +757,33 @@ ProductDetailModal/
 - [ ] TypeScript 編譯通過
 - [ ] 視覺無變化
 - [ ] 效能無降低
+
+#### 完成項目
+
+**P1-1.1: ProductDetailModal 拆分** ✅ (2025-01-18, Commit: bcce198)
+
+**拆分結果**:
+- 主元件: 522 → 248 行 (52% 縮減)
+- 新增 6 個子元件:
+  1. types.ts - 共享型別定義
+  2. ProductFeaturesList.tsx - 產品特色展示 (46 行)
+  3. ProductSpecificationsList.tsx - 產品規格展示 (41 行)
+  4. ProductModalHeader.tsx - 標題和價格顯示 (88 行)
+  5. ProductQuantitySelector.tsx - 數量選擇器 (99 行)
+  6. ProductModalActions.tsx - 操作按鈕群組 (166 行)
+
+**測試驗證**:
+- ✅ TypeScript 類型檢查通過
+- ✅ ESLint 檢查通過
+- ✅ Build 建置成功
+- ✅ Playwright 自動化測試通過 (Modal 開關、數量選擇、圖片切換、分享功能)
+- ✅ 無 Console 錯誤
+
+**技術改進**:
+- 所有子元件使用 React.memo 優化效能
+- 統一使用 types.ts 確保型別安全
+- 修復 onRequestQuote 型別支援同步/非同步
+- 修復 ESLint import/order 警告
 
 ---
 
