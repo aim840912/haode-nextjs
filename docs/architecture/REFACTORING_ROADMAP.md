@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (1/21 已完成)
+**狀態**: 🔄 進行中 (2/21 已完成)
 
 #### 目標
 
@@ -693,7 +693,7 @@ open coverage/index.html
 **高優先級** (> 400 行):
 1. ✅ `ProductDetailModal.tsx` (521 行) → 已拆分為 6 個子元件 (完成於 2025-01-18, Commit: bcce198)
 2. `OptimizedImage.tsx` (469 行) → 拆分邏輯和展示層
-3. `MonitoringDashboard.tsx` (412 行) → 拆分各個監控區塊
+3. ✅ `MonitoringDashboard.tsx` (412 行) → 已拆分為 8 個子元件 (完成於 2025-01-18, Commit: d7fc0cd)
 4. `QuickAddInquiryModal.tsx` (409 行) → 拆分表單區塊
 
 **中優先級** (300-400 行):
@@ -784,6 +784,38 @@ ProductDetailModal/
 - 統一使用 types.ts 確保型別安全
 - 修復 onRequestQuote 型別支援同步/非同步
 - 修復 ESLint import/order 警告
+
+---
+
+**P1-1.2: MonitoringDashboard 拆分** ✅ (2025-01-18, Commit: d7fc0cd)
+
+**拆分結果**:
+- 主元件: 412 → 70 行 (83% 縮減)
+- 新增 8 個子元件:
+  1. types.ts - 集中型別定義 (52 行)
+  2. MetricCard.tsx - 可重用指標卡片元件 (40 行)
+  3. LoadingState.tsx - 載入狀態元件 (15 行)
+  4. ErrorState.tsx - 錯誤狀態元件 (20 行)
+  5. ErrorMetricsSection.tsx - 錯誤監控區塊 (68 行)
+  6. PerformanceMetricsSection.tsx - 效能監控區塊 (74 行)
+  7. SystemStatusSection.tsx - 系統狀態區塊 (63 行)
+  8. useMockMetrics.ts - 資料載入 Hook (151 行)
+
+**設計規範修正**:
+- ✅ 移除 6 處禁用的 bg-gradient-to-r 類別
+- ✅ 改用純色背景 (bg-{color}-50) + 邊框 (border-{color}-100)
+- ✅ 符合專案 UI/UX 設計規範
+
+**測試驗證**:
+- ✅ TypeScript 類型檢查通過
+- ✅ ESLint 檢查通過（修復 import order 問題）
+- ✅ Build 建置成功
+
+**技術改進**:
+- 所有子元件使用 React.memo 減少重新渲染
+- 邏輯與 UI 分離 (useMockMetrics hook)
+- 建立通用 MetricCard 消除重複程式碼
+- 預留 API 替換接口（修改 hook 即可）
 
 ---
 
