@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (16/21 已完成, 76.2%)
+**狀態**: 🔄 進行中 (17/21 已完成, 81.0%)
 
 #### 目標
 
@@ -1174,6 +1174,71 @@ ProductDetailModal/
 **向後兼容**:
 - 舊 import 路徑完全兼容（轉發匯出）
 - 所有 7 個導出元件保持可用
+- 零破壞性變更
+
+---
+
+**P1-1.17: ValidatedInput 拆分** ✅ (2025-01-19, Commit: 3eceb04)
+
+**拆分結果**:
+- 主檔案 (ValidatedInput.tsx): 321 → 5 行 (98.4% 縮減)
+- 新增 13 個模組:
+  1. types.ts - 型別定義和介面 (71 行)
+  2. utils/getInputState.ts - 狀態計算邏輯 (17 行)
+  3. utils/getStateClasses.ts - 樣式映射邏輯 (24 行)
+  4. hooks/useValidatedInputState.ts - 狀態管理 Hook (30 行)
+  5. hooks/useSuggestions.ts - 建議列表邏輯 (56 行)
+  6. components/InputLabel.tsx - 標籤元件 (23 行)
+  7. components/InputField.tsx - 輸入框元件 (60 行)
+  8. components/StatusIcon.tsx - 狀態圖示元件 (43 行)
+  9. components/SuggestionsList.tsx - 建議列表元件 (33 行)
+  10. components/ValidationMessages.tsx - 驗證訊息元件 (56 行)
+  11. components/CharacterCount.tsx - 字數統計元件 (35 行)
+  12. components/ValidatedInput.tsx - 主元件（簡化版）(137 行)
+  13. index.ts - 統一匯出 (9 行)
+
+**拆分策略**: UI 與邏輯分離
+- 抽取狀態管理和建議列表邏輯到獨立 Hooks
+- 將 UI 元件拆分為單一職責的小型元件
+- 分離工具函數（狀態計算、樣式映射）
+- 保持完整的無障礙支援和驗證功能
+
+**useValidatedInputState Hook**:
+- 管理內部值狀態（支援受控/非受控模式）
+- 處理 text 和 number 類型轉換
+- 整合 onChange 事件處理
+
+**useSuggestions Hook**:
+- 建議列表顯示/隱藏邏輯
+- 延遲隱藏機制（避免點擊建議時列表提前消失）
+- 整合 onFocus/onBlur/onSuggestionSelect 回調
+
+**UI 元件**:
+- **InputLabel**: 必填標記 (required) 顯示
+- **InputField**: 支援 input 和 textarea,包含 ARIA 屬性
+- **StatusIcon**: 驗證中旋轉圖示、成功/錯誤/警告圖示
+- **SuggestionsList**: 建議列表懸浮顯示
+- **ValidationMessages**: 錯誤/警告/成功/幫助訊息顯示
+- **CharacterCount**: 字數統計（支援 text/textarea/email 類型）
+
+**工具函數**:
+- `getInputState()`: 根據 error/warning/success/isValidating 計算狀態
+- `getStateClasses()`: 根據狀態映射到 Tailwind 樣式類別
+
+**測試驗證**:
+- ✅ TypeScript 檢查通過
+- ✅ Next.js 建置成功
+- ✅ 無執行時錯誤
+
+**技術亮點**:
+- 所有 UI 元件使用 React.memo 優化效能
+- 完整的無障礙支援 (aria-invalid, aria-describedby)
+- 支援 8 種輸入類型（text/textarea/number/email/tel/url/password）
+- 前綴/後綴顯示、字數限制、建議列表等進階功能
+
+**向後兼容**:
+- 舊 import 路徑完全兼容（轉發匯出）
+- 所有 Props 保持不變
 - 零破壞性變更
 
 ---
