@@ -851,7 +851,7 @@ ProductDetailModal/
 
 ---
 
-**P1-1.4: FarmTourCalendar 拆分** ✅ (2025-01-18, Commit: [pending])
+**P1-1.4: FarmTourCalendar 拆分** ✅ (2025-01-18, Commit: 5bec8b5)
 
 **拆分結果**:
 - 主元件: 395 → 323 行 (18% 縮減)
