@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (15/21 已完成, 71.4%)
+**狀態**: 🔄 進行中 (16/21 已完成, 76.2%)
 
 #### 目標
 
@@ -692,7 +692,7 @@ open coverage/index.html
 
 **高優先級** (> 400 行):
 1. ✅ `ProductDetailModal.tsx` (521 行) → 已拆分為 6 個子元件 (完成於 2025-01-18, Commit: bcce198)
-2. `OptimizedImage.tsx` (469 行) → 拆分邏輯和展示層
+2. ✅ `OptimizedImage.tsx` (469 行) → 已拆分為 12 個模組 (完成於 2025-01-19, Commit: 16dff0d)
 3. ✅ `MonitoringDashboard.tsx` (412 行) → 已拆分為 8 個子元件 (完成於 2025-01-18, Commit: d7fc0cd)
 4. ✅ `QuickAddInquiryModal.tsx` (409 行) → 已拆分為 4 個模組 (完成於 2025-01-18, Commit: 3404b11)
 
@@ -1111,6 +1111,69 @@ ProductDetailModal/
 
 **向後兼容**:
 - 舊 import 路徑完全兼容（轉發匯出）
+- 零破壞性變更
+
+---
+
+**P1-1.2: OptimizedImage 拆分** ✅ (2025-01-19, Commit: 16dff0d)
+
+**拆分結果**:
+- 主檔案 (OptimizedImage.tsx): 469 → 13 行 (97.2% 縮減)
+- 新增 12 個模組:
+  1. types.ts - 型別定義和常量 (73 行)
+  2. hooks/useImageValidation.ts - 圖片 URL 驗證邏輯 (48 行)
+  3. hooks/useImageLazyLoad.ts - Intersection Observer 懶加載 (50 行)
+  4. hooks/useImageErrorHandling.ts - 錯誤處理和 fallback 邏輯 (73 行)
+  5. components/OptimizedImage.tsx - 主元件（簡化版）(193 行)
+  6. components/ImageLoadingState.tsx - 載入狀態顯示 (23 行)
+  7. components/ImageErrorState.tsx - 錯誤狀態顯示 (34 行)
+  8. components/ResponsiveImage.tsx - 響應式圖片變體 (38 行)
+  9. components/AvatarImage.tsx - 頭像圖片變體 (26 行)
+  10. compatibility/SafeImage.tsx - SafeImage 兼容別名 (10 行)
+  11. compatibility/SimpleImage.tsx - SimpleImage 系列兼容別名 (65 行)
+  12. index.ts - 統一匯出 (15 行)
+
+**拆分策略**: 邏輯層次分離
+- 抽取圖片驗證、懶加載、錯誤處理邏輯到獨立 Hooks
+- 將載入/錯誤狀態顯示分離為獨立元件
+- 分離 ResponsiveImage 和 AvatarImage 變體
+- 保留向後兼容別名（SafeImage, SimpleImage 系列）
+
+**useImageValidation Hook**:
+- `isValidImageSrc()` - 驗證圖片 URL 是否有效
+- `needsCrossOrigin()` - 判斷是否需要 CORS
+- `isBase64OrBlob()` - 判斷圖片類型
+
+**useImageLazyLoad Hook**:
+- Intersection Observer 實作
+- 支援自訂 threshold 和 rootMargin
+- 提前 200px 開始載入，提供平滑體驗
+
+**useImageErrorHandling Hook**:
+- 多層 fallback 邏輯（SafeImage 模式）
+- 自動重置錯誤狀態
+- 安全 src 驗證
+
+**變體元件**:
+- **ResponsiveImage**: 使用 padding-bottom 技巧確保高度，支援多種 aspect-ratio
+- **AvatarImage**: 圓形頭像，支援 sm/md/lg/xl 四種尺寸
+- **SafeImage**: 啟用多層 fallback 的兼容別名
+- **SimpleImage 系列**: 啟用錯誤詳情顯示的兼容別名
+
+**測試驗證**:
+- ✅ TypeScript 檢查通過
+- ✅ Next.js 建置成功
+- ✅ 無執行時錯誤
+
+**技術修正**:
+- 修復布林型別錯誤：使用 Boolean() 包裝 && 表達式
+- 所有元件使用 React.memo 優化效能
+- 保持完整的 Next.js Image 優化功能
+- 支援 base64、Blob URL、普通 URL 三種圖片源
+
+**向後兼容**:
+- 舊 import 路徑完全兼容（轉發匯出）
+- 所有 7 個導出元件保持可用
 - 零破壞性變更
 
 ---
