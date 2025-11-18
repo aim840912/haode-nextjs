@@ -889,7 +889,7 @@ ProductDetailModal/
 
 ---
 
-**P1-1.5: ProductImageGallery 拆分** ✅ (2025-01-18, Commit: [pending])
+**P1-1.5: ProductImageGallery 拆分** ✅ (2025-01-18, Commit: 4a44793)
 
 **拆分結果**:
 - 主元件 (ProductImageGallery): 264 → 76 行 (71% 縮減)
