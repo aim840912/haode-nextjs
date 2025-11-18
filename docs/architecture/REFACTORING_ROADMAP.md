@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (4/21 已完成, 19.0%)
+**狀態**: 🔄 進行中 (5/21 已完成, 23.8%)
 
 #### 目標
 
@@ -701,7 +701,7 @@ open coverage/index.html
 6. ✅ `FarmTourCalendar.tsx` (395 行) → 已拆分為 2 個子元件 (完成於 2025-01-18)
 7. `LoadingManager.tsx` (373 行)
 8. `ErrorHandler.tsx` (372 行)
-9. `ProductImageGallery.tsx` (368 行)
+9. ✅ `ProductImageGallery.tsx` (368 行) → 已拆分為 5 個模組 (完成於 2025-01-18)
 
 #### 拆分範例: ProductDetailModal
 
@@ -886,6 +886,54 @@ ProductDetailModal/
 - 所有子元件使用 React.memo
 - 統一 props interface 定義
 - 符合 import/order ESLint 規則
+
+---
+
+**P1-1.5: ProductImageGallery 拆分** ✅ (2025-01-18, Commit: [pending])
+
+**拆分結果**:
+- 主元件 (ProductImageGallery): 264 → 76 行 (71% 縮減)
+- 新增 5 個模組:
+  1. types.ts - 型別定義 (77 行)
+  2. useImageGallery.ts - 業務邏輯 Hook (90 行)
+  3. MainImageDisplay.tsx - 主圖展示元件 (166 行)
+  4. ImageThumbnails.tsx - 縮圖導航元件 (45 行)
+  5. index.tsx - 主元件 (76 行)
+
+**MainImageDisplay 元件**:
+- 主圖顯示 + 載入動畫
+- 前後導航按鈕（hover 顯示）
+- 圖片指示器（圓點）
+- 圖片計數器（右上角）
+- 支援 elegant-frame 風格
+
+**ImageThumbnails 元件**:
+- 縮圖導航列
+- 當前圖片高亮
+- Hover 放大效果
+- OptimizedImage 整合
+
+**useImageGallery Hook**:
+- 圖片數據處理和預載入
+- 自動輪播邏輯
+- 導航控制（上一張/下一張/指定索引）
+- 載入狀態管理
+
+**測試驗證**:
+- ✅ TypeScript 類型檢查通過
+- ✅ ESLint 檢查通過
+- ✅ Dev Server 編譯成功
+- ✅ 無執行時錯誤
+
+**技術改進**:
+- 業務邏輯與 UI 完全分離
+- 所有子元件使用 React.memo
+- 可重用的圖片輪播邏輯
+- 保留 SimpleProductImage 和 ProductCardImage
+
+**向後兼容**:
+- 舊 import 路徑仍可使用
+- SimpleProductImage 和 ProductCardImage 保留在原檔案
 
 ---
 
