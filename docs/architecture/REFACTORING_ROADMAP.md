@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (3/21 已完成)
+**狀態**: 🔄 進行中 (4/21 已完成, 19.0%)
 
 #### 目標
 
@@ -698,7 +698,7 @@ open coverage/index.html
 
 **中優先級** (300-400 行):
 5. `AuthButton.tsx` (395 行)
-6. `FarmTourCalendar.tsx` (395 行)
+6. ✅ `FarmTourCalendar.tsx` (395 行) → 已拆分為 2 個子元件 (完成於 2025-01-18)
 7. `LoadingManager.tsx` (373 行)
 8. `ErrorHandler.tsx` (372 行)
 9. `ProductImageGallery.tsx` (368 行)
@@ -848,6 +848,44 @@ ProductDetailModal/
 **向後兼容**:
 - 舊 import 路徑仍可使用（轉發匯出）
 - 無需修改其他檔案的 import 語句
+
+---
+
+**P1-1.4: FarmTourCalendar 拆分** ✅ (2025-01-18, Commit: [pending])
+
+**拆分結果**:
+- 主元件: 395 → 323 行 (18% 縮減)
+- 新增 2 個子元件:
+  1. CalendarToolbar.tsx - 工具列元件 (118 行)
+  2. CalendarStatistics.tsx - 統計資訊元件 (70 行)
+
+**輕量拆分策略**:
+- 元件已使用 useFarmTourCalendar hook 分離業務邏輯
+- 僅拆分純 UI 元件（工具列和統計）
+- FullCalendar 配置保留在主元件（高度耦合）
+
+**CalendarToolbar 元件**:
+- 包含狀態過濾按鈕群組（6 個狀態）
+- 整合統計數量顯示
+- 重新整理和新增預約按鈕
+- React.memo 效能優化
+
+**CalendarStatistics 元件**:
+- 響應式網格佈局（2/3/6 欄）
+- 總預約數 + 各狀態細分統計
+- 狀態顏色視覺化
+- 自動隱藏（loading 或無資料時）
+
+**測試驗證**:
+- ✅ TypeScript 類型檢查通過
+- ✅ ESLint 檢查通過（修復 import order）
+- ✅ Dev Server 編譯成功
+- ✅ 無執行時錯誤
+
+**技術改進**:
+- 所有子元件使用 React.memo
+- 統一 props interface 定義
+- 符合 import/order ESLint 規則
 
 ---
 

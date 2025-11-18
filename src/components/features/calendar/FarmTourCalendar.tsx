@@ -12,19 +12,12 @@ import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/formatters'
 import { INQUIRY_STATUS_LABELS, type InquiryStatus } from '@/types/inquiry'
+import { CalendarStatisticsDisplay } from './farm-tour-calendar/CalendarStatistics'
+import { CalendarToolbar } from './farm-tour-calendar/CalendarToolbar'
 import { QuickAddInquiryModal } from './QuickAddInquiryModal'
-import type { EventClickArg, EventDropArg, DatesSetArg } from '@fullcalendar/core'
-import type { DateClickArg } from '@fullcalendar/interaction'
 
-// 狀態過濾選項
-const statusOptions = [
-  { value: 'all', label: '全部狀態', color: '#6B7280' },
-  { value: 'pending', label: INQUIRY_STATUS_LABELS.pending, color: '#9CA3AF' },
-  { value: 'quoted', label: INQUIRY_STATUS_LABELS.quoted, color: '#3B82F6' },
-  { value: 'confirmed', label: INQUIRY_STATUS_LABELS.confirmed, color: '#10B981' },
-  { value: 'completed', label: INQUIRY_STATUS_LABELS.completed, color: '#8B5CF6' },
-  { value: 'cancelled', label: INQUIRY_STATUS_LABELS.cancelled, color: '#EF4444' },
-]
+import type { DatesSetArg, EventClickArg, EventDropArg } from '@fullcalendar/core'
+import type { DateClickArg } from '@fullcalendar/interaction'
 
 interface FarmTourCalendarProps {
   className?: string
@@ -198,65 +191,22 @@ export function FarmTourCalendar({
   return (
     <div className={cn('farm-tour-calendar', className)}>
       {/* 工具列 */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        {/* 狀態過濾器 */}
-        <div className="flex flex-wrap gap-2">
-          {statusOptions.map(option => (
-            <button
-              key={option.value}
-              onClick={() => handleStatusFilterChange(option.value)}
-              className={cn(
-                'px-3 py-1.5 text-sm rounded-lg border transition-all duration-200',
-                (statusFilter === 'all' && option.value === 'all') ||
-                  (Array.isArray(statusFilter) &&
-                    statusFilter.includes(option.value as InquiryStatus))
-                  ? 'border-transparent text-white shadow-md'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
-              )}
-              style={{
-                backgroundColor:
-                  (statusFilter === 'all' && option.value === 'all') ||
-                  (Array.isArray(statusFilter) &&
-                    statusFilter.includes(option.value as InquiryStatus))
-                    ? option.color
-                    : 'transparent',
-              }}
-            >
-              {option.label}
-              {statistics && (
-                <span className="ml-1 text-xs">
-                  {option.value === 'all'
-                    ? `(${statistics.total})`
-                    : `(${statistics.byStatus[option.value as InquiryStatus] || 0})`}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {/* 操作按鈕 */}
-        <div className="flex gap-2">
-          <button
-            onClick={refreshData}
-            disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors text-sm"
-          >
-            {loading ? '載入中...' : '重新整理'}
-          </button>
-
-          {user?.role === 'admin' && (
-            <button
-              onClick={() => {
-                setSelectedDateForQuickAdd(null) // 不預設日期，讓使用者自己選擇
+      <CalendarToolbar
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        onRefresh={refreshData}
+        onAddInquiry={
+          user?.role === 'admin'
+            ? () => {
+                setSelectedDateForQuickAdd(null)
                 setShowQuickAddModal(true)
-              }}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-            >
-              新增預約
-            </button>
-          )}
-        </div>
-      </div>
+              }
+            : undefined
+        }
+        isAdmin={user?.role === 'admin'}
+        loading={loading}
+        statistics={statistics}
+      />
 
       {/* 錯誤顯示 */}
       {error && (
@@ -277,29 +227,7 @@ export function FarmTourCalendar({
       )}
 
       {/* 統計資訊 */}
-      {statistics && !loading && (
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-            <div>
-              <div className="text-2xl font-bold text-gray-900">{statistics.total}</div>
-              <div className="text-sm text-gray-600">總預約</div>
-            </div>
-            {Object.entries(statistics.byStatus).map(([status, count]) => (
-              <div key={status}>
-                <div
-                  className="text-lg font-semibold"
-                  style={{ color: statusOptions.find(opt => opt.value === status)?.color }}
-                >
-                  {count}
-                </div>
-                <div className="text-xs text-gray-600">
-                  {INQUIRY_STATUS_LABELS[status as InquiryStatus]}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <CalendarStatisticsDisplay statistics={statistics} loading={loading} />
 
       {/* 行事曆 */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
