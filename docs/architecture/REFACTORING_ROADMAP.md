@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (17/21 已完成, 81.0%)
+**狀態**: 🔄 進行中 (18/21 已完成, 85.7%)
 
 #### 目標
 
@@ -709,6 +709,8 @@ open coverage/index.html
 14. ✅ `SortableImageGallery.tsx` (326 行) → 已拆分為 7 個模組 (完成於 2025-01-18, Commit: 41908db)
 15. ✅ `ExpandableSearchBar.tsx` (325 行) → 已拆分為 8 個模組 (完成於 2025-01-18, Commit: 22c3a5f)
 16. ✅ `LoadingError.tsx` (321 行) → 已拆分為 7 個模組 (完成於 2025-01-19, Commit: b49fe07)
+17. ✅ `ValidatedInput.tsx` (321 行) → 已拆分為 13 個模組 (完成於 2025-01-19, Commit: 3eceb04)
+18. ✅ `Toast.tsx` (319 行) → 已拆分為 12 個模組 (完成於 2025-01-19, Commit: 495fb63)
 
 #### 拆分範例: ProductDetailModal
 
@@ -1240,6 +1242,71 @@ ProductDetailModal/
 - 舊 import 路徑完全兼容（轉發匯出）
 - 所有 Props 保持不變
 - 零破壞性變更
+
+---
+
+**P1-1.18: Toast 拆分** ✅ (2025-01-19, Commit: 495fb63)
+
+**拆分結果**:
+- 主檔案 (Toast.tsx): 319 → 5 行 (98.4% 縮減)
+- 新增 12 個模組:
+  1. types.ts - 型別定義 (43 行)
+  2. utils/positionUtils.ts - 位置管理工具 (37 行)
+  3. utils/styleUtils.ts - 樣式生成工具 (49 行)
+  4. context/ToastContext.tsx - Context Provider (112 行)
+  5. hooks/useToast.ts - useToast Hook (14 行)
+  6. components/ToastIcon.tsx - 圖示元件 (47 行)
+  7. components/ToastProgressBar.tsx - 進度條元件 (20 行)
+  8. components/ToastActionButtons.tsx - 操作按鈕元件 (34 行)
+  9. components/ToastCloseButton.tsx - 關閉按鈕元件 (21 行)
+  10. components/ToastItem.tsx - Toast 項目元件 (42 行)
+  11. components/ToastContainer.tsx - Toast 容器元件 (32 行)
+  12. index.ts - 統一匯出 (12 行)
+
+**拆分策略**: Provider 與 UI 分離
+- 分離 Context Provider 和 Hook
+- 抽取位置管理和樣式生成工具函數
+- 分離 UI 元件（Icon, ProgressBar, ActionButtons, CloseButton, Item, Container）
+- 保持完整的 Toast 通知功能
+
+**ToastContext Provider**:
+- 管理 Toast 狀態陣列（最多 5 個）
+- 自動移除機制（持久化/loading Toast 除外）
+- 提供便利方法（success, error, warning, info, loading）
+- 支援 updateToast 動態更新進度
+
+**位置管理工具**:
+- `getPositionClasses()`: 6 種位置的 CSS 類別映射
+- `groupToastsByPosition()`: 依位置分組 Toast
+
+**樣式生成工具**:
+- `getToastStyles()`: 根據類型返回樣式類別
+- `getIconStyles()`: 根據類型返回圖示顏色
+
+**UI 元件**:
+- **ToastIcon**: 5 種類型圖示（success/error/warning/info/loading）
+- **ToastProgressBar**: loading toast 進度條顯示
+- **ToastActionButtons**: 操作按鈕（primary/secondary）
+- **ToastCloseButton**: 關閉按鈕（loading toast 不顯示）
+- **ToastItem**: 完整的 Toast 項目（整合所有子元件）
+- **ToastContainer**: 依位置分組渲染 Toast
+
+**測試驗證**:
+- ✅ TypeScript 檢查通過
+- ✅ Next.js 建置成功
+- ✅ 無執行時錯誤
+
+**技術亮點**:
+- 所有 UI 元件使用 React.memo 優化效能
+- 支援 6 種位置（top/bottom × left/center/right）
+- 進度條支援（0-100%）
+- 操作按鈕支援（可自訂回調）
+- 自動清理機制（避免 Toast 堆積）
+
+**向後兼容**:
+- 舊 import 路徑完全兼容（轉發匯出）
+- ToastProvider 和 useToast 保持可用
+- 所有 API 不變
 
 ---
 
