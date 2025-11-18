@@ -682,7 +682,7 @@ open coverage/index.html
 **預計開始**: Week 3
 **預計完成**: Week 5
 **實際開始**: 2025-01-18
-**狀態**: 🔄 進行中 (14/21 已完成, 66.7%)
+**狀態**: 🔄 進行中 (15/21 已完成, 71.4%)
 
 #### 目標
 
@@ -708,6 +708,7 @@ open coverage/index.html
 13. ✅ `ProductFilter.tsx` (331 行) → 已拆分為 7 個模組 (完成於 2025-01-18, Commit: ef789fd)
 14. ✅ `SortableImageGallery.tsx` (326 行) → 已拆分為 7 個模組 (完成於 2025-01-18, Commit: 41908db)
 15. ✅ `ExpandableSearchBar.tsx` (325 行) → 已拆分為 8 個模組 (完成於 2025-01-18, Commit: 22c3a5f)
+16. ✅ `LoadingError.tsx` (321 行) → 已拆分為 7 個模組 (完成於 2025-01-19, Commit: b49fe07)
 
 #### 拆分範例: ProductDetailModal
 
@@ -1049,6 +1050,67 @@ ProductDetailModal/
 
 **向後兼容**:
 - 舊 import 路徑仍可使用
+- 零破壞性變更
+
+---
+
+**P1-1.16: LoadingError 拆分** ✅ (2025-01-19, Commit: b49fe07)
+
+**拆分結果**:
+- 主檔案 (LoadingError.tsx): 321 → 5 行 (98.4% 縮減)
+- 新增 7 個模組:
+  1. types.ts - 型別定義 (25 行)
+  2. error-messages.tsx - 錯誤訊息與圖示生成 (45 行)
+  3. InlineErrorView.tsx - Inline 錯誤顯示變體 (47 行)
+  4. CardErrorView.tsx - Card 錯誤顯示變體 (69 行)
+  5. FullscreenErrorView.tsx - 全螢幕錯誤顯示變體 (83 行)
+  6. LoadingError.tsx - 主元件 + 便利元件 (140 行)
+  7. index.ts - 統一匯出 (7 行)
+
+**拆分策略**: 變體與工具函數分離
+- 將 3 種錯誤顯示變體（inline/card/fullscreen）分離為獨立元件
+- 抽取錯誤訊息生成邏輯到工具函數
+- 保留便利元件（NetworkError, TimeoutError, GenericError）
+
+**InlineErrorView 元件**:
+- 輕量級行內錯誤顯示
+- 圖示 + 標題 + 訊息 + 重試按鈕
+- 適用於表單欄位或小型區塊
+
+**CardErrorView 元件**:
+- 卡片式錯誤顯示
+- 包含錯誤詳情展開功能
+- 重試 + 重新整理頁面按鈕
+- 適用於獨立區塊或模組
+
+**FullscreenErrorView 元件**:
+- 全螢幕錯誤頁面
+- 重試 + 重新整理 + 返回上一頁按鈕
+- 錯誤詳情可展開查看
+- 適用於頁面級錯誤
+
+**error-messages 工具函數**:
+- `getErrorIcon()` - 根據錯誤類型返回對應圖示
+- `getErrorTitle()` - 生成錯誤標題
+- `getErrorMessage()` - 生成用戶友好的錯誤訊息
+
+**便利元件**:
+- `NetworkError` - 網路連線錯誤快速元件
+- `TimeoutError` - 逾時錯誤快速元件
+- `GenericError` - 一般錯誤快速元件
+
+**測試驗證**:
+- ✅ TypeScript 檢查通過
+- ✅ Next.js 建置成功
+- ✅ 無執行時錯誤
+
+**技術修正**:
+- 修復 JSX 語法錯誤：error-messages.ts → .tsx
+- 修復 JSX.Element 命名空間錯誤：使用 React.ReactElement
+- 所有元件使用 React.memo 優化效能
+
+**向後兼容**:
+- 舊 import 路徑完全兼容（轉發匯出）
 - 零破壞性變更
 
 ---
