@@ -1,412 +1,69 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import {
-  BarChart3,
-  Clock,
-  AlertTriangle,
-  Users,
-  Eye,
-  Search,
-  Phone,
-  RotateCw,
-  XCircleIcon,
-  Bug,
-  AlertCircle,
-  ShieldAlert,
-  ShieldCheck,
-  Zap,
-  FlaskConical,
-  Cpu,
-} from 'lucide-react'
-import { logger } from '@/lib/logger'
+import { Eye, Search, Phone, Users } from 'lucide-react'
+import { ErrorMetricsSection } from './monitoring/ErrorMetricsSection'
+import { ErrorState } from './monitoring/ErrorState'
+import { LoadingState } from './monitoring/LoadingState'
+import { MetricCard } from './monitoring/MetricCard'
+import { PerformanceMetricsSection } from './monitoring/PerformanceMetricsSection'
+import { SystemStatusSection } from './monitoring/SystemStatusSection'
+import { useMockMetrics } from './monitoring/useMockMetrics'
 
-interface BusinessMetrics {
-  userActions: {
-    pageViews: number
-    productViews: number
-    inquirySubmissions: number
-    searchQueries: number
-  }
-  business: {
-    newProducts: number
-    totalInquiries: number
-    farmTourBookings: number
-  }
-  performance: {
-    apiResponseTime: number[]
-    errorRate: number
-    activeUsers: number
-  }
-  content: {
-    popularProducts: Array<{ id: string; views: number }>
-    searchTerms: Array<{ term: string; count: number }>
-    inquiryCategories: Array<{ category: string; count: number }>
-  }
-}
-
-interface ErrorStats {
-  totalErrors: number
-  errorRate: number
-  criticalErrors: number
-  errorsByStatus: Record<string, number>
-  topPatterns: Array<{ pattern: string; count: number }>
-  recentErrors: Array<{
-    message: string
-    timestamp: string
-    level: string
-    count: number
-  }>
-}
-
-interface PerformanceStats {
-  avgResponseTime: number
-  maxResponseTime: number
-  minResponseTime: number
-  totalRequests: number
-  limitRate: number
-  requestsByHour: Array<{ hour: string; count: number }>
-}
-
+/**
+ * 監控儀表板主元件
+ *
+ * 顯示業務指標、錯誤監控、效能監控和系統狀態
+ *
+ * **重構說明**:
+ * - 原始 412 行縮減為 ~60 行主元件
+ * - 拆分為 8 個獨立子元件/hook
+ * - 修正設計規範違規（移除所有 bg-gradient）
+ * - 邏輯與 UI 分離（useMockMetrics hook）
+ */
 export function MonitoringDashboard() {
-  const [metrics, setMetrics] = useState<BusinessMetrics>({
-    userActions: {
-      pageViews: 0,
-      productViews: 0,
-      inquirySubmissions: 0,
-      searchQueries: 0,
-    },
-    business: {
-      newProducts: 0,
-      totalInquiries: 0,
-      farmTourBookings: 0,
-    },
-    performance: {
-      apiResponseTime: [],
-      errorRate: 0,
-      activeUsers: 0,
-    },
-    content: {
-      popularProducts: [],
-      searchTerms: [],
-      inquiryCategories: [],
-    },
-  })
+  const { metrics, errorStats, performanceStats, isLoading, error } = useMockMetrics()
 
-  const [errorStats, setErrorStats] = useState<ErrorStats | null>(null)
-  const [performanceStats, setPerformanceStats] = useState<PerformanceStats | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  // 模擬數據載入
-  useEffect(() => {
-    const loadMetrics = async () => {
-      try {
-        setIsLoading(true)
-
-        // 模擬 API 調用延遲
-        await new Promise(resolve => setTimeout(resolve, 1000))
-
-        // 設置模擬數據
-        setMetrics({
-          userActions: {
-            pageViews: Math.floor(Math.random() * 1000) + 500,
-            productViews: Math.floor(Math.random() * 300) + 150,
-            inquirySubmissions: Math.floor(Math.random() * 50) + 20,
-            searchQueries: Math.floor(Math.random() * 200) + 80,
-          },
-          business: {
-            newProducts: Math.floor(Math.random() * 10) + 5,
-            totalInquiries: Math.floor(Math.random() * 100) + 50,
-            farmTourBookings: Math.floor(Math.random() * 20) + 10,
-          },
-          performance: {
-            apiResponseTime: Array(10)
-              .fill(0)
-              .map(() => Math.random() * 500 + 100),
-            errorRate: Math.random() * 5,
-            activeUsers: Math.floor(Math.random() * 50) + 20,
-          },
-          content: {
-            popularProducts: [
-              { id: 'product1', views: Math.floor(Math.random() * 100) + 50 },
-              { id: 'product2', views: Math.floor(Math.random() * 80) + 40 },
-            ],
-            searchTerms: [
-              { term: '農產品', count: Math.floor(Math.random() * 50) + 25 },
-              { term: '有機蔬菜', count: Math.floor(Math.random() * 40) + 20 },
-            ],
-            inquiryCategories: [
-              { category: '產品詢價', count: Math.floor(Math.random() * 30) + 15 },
-              { category: '農場導覽', count: Math.floor(Math.random() * 20) + 10 },
-            ],
-          },
-        })
-
-        setErrorStats({
-          totalErrors: Math.floor(Math.random() * 20),
-          errorRate: Math.random() * 2,
-          criticalErrors: Math.floor(Math.random() * 3),
-          errorsByStatus: {
-            '404': Math.floor(Math.random() * 10),
-            '500': Math.floor(Math.random() * 5),
-          },
-          topPatterns: [
-            { pattern: 'Database connection timeout', count: 3 },
-            { pattern: 'Invalid request format', count: 2 },
-          ],
-          recentErrors: [
-            {
-              message: '資料庫連接逾時',
-              timestamp: new Date().toISOString(),
-              level: 'error',
-              count: 1,
-            },
-          ],
-        })
-
-        setPerformanceStats({
-          avgResponseTime: Math.random() * 200 + 100,
-          maxResponseTime: Math.random() * 500 + 300,
-          minResponseTime: Math.random() * 50 + 20,
-          totalRequests: Math.floor(Math.random() * 1000) + 500,
-          limitRate: Math.random() * 10,
-          requestsByHour: Array(24)
-            .fill(0)
-            .map((_, i) => ({
-              hour: `${i}:00`,
-              count: Math.floor(Math.random() * 100),
-            })),
-        })
-
-        logger.info('監控數據載入成功')
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : '載入監控數據失敗'
-        setError(errorMessage)
-        logger.error('載入監控數據失敗', err as Error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadMetrics()
-  }, [])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">載入監控數據中...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-        <div className="flex items-center">
-          <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
-          <h3 className="text-sm font-medium text-red-800">載入失敗</h3>
-        </div>
-        <div className="mt-2 text-sm text-red-700">{error}</div>
-      </div>
-    )
-  }
+  if (isLoading) return <LoadingState />
+  if (error) return <ErrorState error={error} />
 
   return (
     <div className="space-y-6">
-      {/* 業務指標概覽 */}
+      {/* 業務指標概覽 - 使用統一的 MetricCard */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">頁面瀏覽</p>
-              <p className="text-2xl font-bold text-gray-900">{metrics.userActions.pageViews}</p>
-            </div>
-            <Eye className="h-8 w-8 text-blue-500" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">產品查看</p>
-              <p className="text-2xl font-bold text-gray-900">{metrics.userActions.productViews}</p>
-            </div>
-            <Search className="h-8 w-8 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">詢價提交</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {metrics.userActions.inquirySubmissions}
-              </p>
-            </div>
-            <Phone className="h-8 w-8 text-amber-500" />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow border p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">活躍用戶</p>
-              <p className="text-2xl font-bold text-gray-900">{metrics.performance.activeUsers}</p>
-            </div>
-            <Users className="h-8 w-8 text-purple-500" />
-          </div>
-        </div>
+        <MetricCard
+          label="頁面瀏覽"
+          value={metrics.userActions.pageViews}
+          icon={Eye}
+          iconColor="blue"
+        />
+        <MetricCard
+          label="產品查看"
+          value={metrics.userActions.productViews}
+          icon={Search}
+          iconColor="green"
+        />
+        <MetricCard
+          label="詢價提交"
+          value={metrics.userActions.inquirySubmissions}
+          icon={Phone}
+          iconColor="amber"
+        />
+        <MetricCard
+          label="活躍用戶"
+          value={metrics.performance.activeUsers}
+          icon={Users}
+          iconColor="purple"
+        />
       </div>
 
       {/* 錯誤監控 */}
-      {errorStats && (
-        <div className="bg-white rounded-lg shadow border">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Bug className="h-5 w-5 text-red-500 mr-2" />
-              錯誤監控
-            </h2>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="h-8 w-8 text-red-600" />
-                  <div>
-                    <p className="text-sm text-red-600 font-medium">總錯誤數</p>
-                    <p className="text-2xl font-bold text-red-700">{errorStats.totalErrors}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <ShieldAlert className="h-8 w-8 text-yellow-600" />
-                  <div>
-                    <p className="text-sm text-yellow-600 font-medium">錯誤率</p>
-                    <p className="text-2xl font-bold text-yellow-700">
-                      {errorStats.errorRate.toFixed(2)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <XCircleIcon className="h-8 w-8 text-orange-600" />
-                  <div>
-                    <p className="text-sm text-orange-600 font-medium">嚴重錯誤</p>
-                    <p className="text-2xl font-bold text-orange-700">
-                      {errorStats.criticalErrors}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {errorStats && <ErrorMetricsSection errorStats={errorStats} />}
 
       {/* 效能監控 */}
-      {performanceStats && (
-        <div className="bg-white rounded-lg shadow border">
-          <div className="px-6 py-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <Zap className="h-5 w-5 text-blue-500 mr-2" />
-              效能監控
-            </h2>
-          </div>
-          <div className="p-6 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Clock className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">平均回應時間</p>
-                    <p className="text-2xl font-bold text-blue-700">
-                      {performanceStats.avgResponseTime.toFixed(0)}ms
-                    </p>
-                  </div>
-                </div>
-              </div>
+      {performanceStats && <PerformanceMetricsSection performanceStats={performanceStats} />}
 
-              <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <RotateCw className="h-8 w-8 text-green-600" />
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">總請求數</p>
-                    <p className="text-2xl font-bold text-green-700">
-                      {performanceStats.totalRequests}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <BarChart3 className="h-8 w-8 text-purple-600" />
-                  <div>
-                    <p className="text-sm text-purple-600 font-medium">限制率</p>
-                    <p className="text-2xl font-bold text-purple-700">
-                      {performanceStats.limitRate.toFixed(2)}%
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 系統狀態指示 */}
-      <div className="bg-white rounded-lg shadow border">
-        <div className="px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">系統狀態</h2>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <BarChart3 className="h-8 w-8 text-blue-600 mx-auto mb-2" />
-              <p className="text-xl font-bold text-blue-900">Vercel Analytics</p>
-              <p className="text-blue-600 text-sm">網站流量分析</p>
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
-                已啟用
-              </span>
-            </div>
-
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <ShieldCheck className="h-8 w-8 text-green-600 mx-auto mb-2" />
-              <p className="text-xl font-bold text-green-900">安全監控</p>
-              <p className="text-green-600 text-sm">系統安全狀態</p>
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
-                正常運行
-              </span>
-            </div>
-
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <Cpu className="h-8 w-8 text-purple-600 mx-auto mb-2" />
-              <p className="text-xl font-bold text-purple-900">系統效能</p>
-              <p className="text-purple-600 text-sm">伺服器運行狀態</p>
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800 mt-2">
-                良好
-              </span>
-            </div>
-
-            <div className="text-center p-4 bg-amber-50 rounded-lg">
-              <FlaskConical className="h-8 w-8 text-amber-600 mx-auto mb-2" />
-              <p className="text-xl font-bold text-amber-900">測試環境</p>
-              <p className="text-amber-600 text-sm">開發測試狀態</p>
-              <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800 mt-2">
-                待完成
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 系統狀態 */}
+      <SystemStatusSection />
     </div>
   )
 }
