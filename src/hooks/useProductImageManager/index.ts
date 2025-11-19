@@ -11,6 +11,12 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { useCSRFTokenValue } from '@/hooks/useCSRFToken'
 import { logger } from '@/lib/logger'
 import { ProductImage } from '@/types/product'
+import {
+  validateFileSize,
+  cleanupAllBlobUrls,
+  revokeBlobUrl as revokeSingleBlobUrl,
+} from './imageUtils'
+import { uploadInEditMode, uploadInMemoryMode, uploadToDatabaseMode } from './uploadStrategies'
 
 export interface PendingImageChanges {
   deletedIds: string[]
@@ -77,18 +83,12 @@ export function useProductImageManager(
 
   // 清理單一 Blob URL
   const revokeBlobUrl = useCallback((url: string) => {
-    if (url.startsWith('blob:')) {
-      URL.revokeObjectURL(url)
-      blobUrlsRef.current.delete(url)
-    }
+    revokeSingleBlobUrl(url, blobUrlsRef.current)
   }, [])
 
   // 清理所有 Blob URLs
   const cleanup = useCallback(() => {
-    blobUrlsRef.current.forEach(url => {
-      URL.revokeObjectURL(url)
-    })
-    blobUrlsRef.current.clear()
+    cleanupAllBlobUrls(blobUrlsRef.current)
   }, [])
 
   // 載入圖片（database/edit 模式）
@@ -181,12 +181,9 @@ export function useProductImageManager(
         setError(null)
 
         // 檢查檔案大小
-        const oversizedFiles = Array.from(files).filter(file => file.size > 5 * 1024 * 1024)
-        if (oversizedFiles.length > 0) {
-          const fileNames = oversizedFiles
-            .map(f => `${f.name} (${(f.size / 1024 / 1024).toFixed(1)}MB)`)
-            .join(', ')
-          setError(`以下檔案過大，請選擇小於 5MB 的圖片：${fileNames}`)
+        const validation = validateFileSize(files)
+        if (!validation.isValid) {
+          setError(validation.error!)
           setIsUploading(false)
           return
         }
@@ -200,130 +197,27 @@ export function useProductImageManager(
           },
         })
 
-        // Edit 模式：只在記憶體中處理
+        const uploadContext = {
+          files,
+          productId,
+          images,
+          blobUrlTracker: blobUrlsRef.current,
+          csrfToken,
+          onImagesChange,
+          setPendingUploads,
+          loadImages,
+        }
+
+        // 根據模式選擇上傳策略
         if (mode === 'edit') {
-          const newImages = Array.from(files).map((file, index) => {
-            const previewUrl = URL.createObjectURL(file)
-            blobUrlsRef.current.add(previewUrl)
-
-            return {
-              id: `pending-${Date.now()}-${index}`,
-              entity_id: productId,
-              storage_url: previewUrl,
-              file_path: `pending/${file.name}`,
-              alt_text: file.name.replace(/\.[^/.]+$/, '') || `產品圖片 ${index + 1}`,
-              display_position: images.length + index,
-              size: 'medium' as const,
-              width: undefined,
-              height: undefined,
-              file_size: file.size,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              module: 'products',
-              _originalFile: file,
-            }
-          })
-
-          const updatedImages = [...images, ...newImages]
+          const updatedImages = await uploadInEditMode(uploadContext)
           setImages(updatedImages)
-          onImagesChange?.(updatedImages)
-          setPendingUploads(prev => [...prev, ...Array.from(files)])
-
-          logger.info('圖片新增完成（編輯模式）', {
-            metadata: {
-              context: 'useProductImageManager',
-              productId,
-              uploadCount: files.length,
-            },
-          })
-
-          return
-        }
-
-        // Memory 模式：只在記憶體中處理
-        if (mode === 'memory') {
-          const newImages = Array.from(files).map((file, index) => {
-            const previewUrl = URL.createObjectURL(file)
-            blobUrlsRef.current.add(previewUrl)
-
-            return {
-              id: `temp-${Date.now()}-${index}`,
-              entity_id: productId,
-              storage_url: previewUrl,
-              file_path: `temp/${file.name}`,
-              alt_text: file.name.replace(/\.[^/.]+$/, '') || `產品圖片 ${index + 1}`,
-              display_position: images.length + index,
-              size: 'medium' as const,
-              width: undefined,
-              height: undefined,
-              file_size: file.size,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              module: 'products',
-              _originalFile: file,
-            }
-          })
-
-          const updatedImages = [...images, ...newImages]
+        } else if (mode === 'memory') {
+          const updatedImages = await uploadInMemoryMode(uploadContext)
           setImages(updatedImages)
-          onImagesChange?.(updatedImages)
-
-          logger.info('圖片上傳完成（記憶體模式）', {
-            metadata: {
-              context: 'useProductImageManager',
-              productId,
-              uploadCount: files.length,
-            },
-          })
-
-          return
+        } else {
+          await uploadToDatabaseMode(uploadContext)
         }
-
-        // Database 模式：實際上傳到 Supabase
-        const uploadPromises = Array.from(files).map(async (file, index) => {
-          const formData = new FormData()
-          formData.append('file', file)
-          formData.append('module', 'products')
-          formData.append('entityId', productId)
-          formData.append('size', 'medium')
-          formData.append('display_position', String(images.length + index))
-          formData.append('alt_text', file.name.replace(/\.[^/.]+$/, ''))
-
-          const headers: HeadersInit = {}
-          if (csrfToken) {
-            headers['X-CSRF-Token'] = csrfToken
-          }
-
-          const uploadResponse = await fetch('/api/upload/unified', {
-            method: 'POST',
-            headers,
-            body: formData,
-          })
-
-          if (!uploadResponse.ok) {
-            const errorData = await uploadResponse.json()
-            throw new Error(errorData.message || '上傳檔案失敗')
-          }
-
-          const uploadResult = await uploadResponse.json()
-          if (!uploadResult.success || !uploadResult.data.image) {
-            throw new Error('上傳回應格式不正確')
-          }
-
-          return uploadResult.data.image
-        })
-
-        await Promise.all(uploadPromises)
-
-        logger.info('產品圖片上傳完成（資料庫模式）', {
-          metadata: {
-            context: 'useProductImageManager',
-            productId,
-            uploadCount: files.length,
-          },
-        })
-
-        await loadImages()
       } catch (err) {
         const errorMsg = err instanceof Error ? err.message : '上傳失敗'
         setError(errorMsg)
