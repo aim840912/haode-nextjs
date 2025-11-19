@@ -1,80 +1,40 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { TimePickerChinese } from '@/components/ui/form/TimePickerChinese'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
-import { logger } from '@/lib/logger'
 import { formatDate } from '@/lib/utils/formatters'
-import { validatePhone } from '@/lib/utils/validation'
+import { useScheduleForm } from './_components/useScheduleForm'
+import { formatTimeRange } from './_components/validation'
 
 export default function AddSchedule() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
   const { user, isLoading } = useAuth()
-  const [newProduct, setNewProduct] = useState('')
 
-  const [formData, setFormData] = useState({
-    title: '',
-    location: '',
-    date: new Date().toISOString().split('T')[0],
-    time: '',
-    status: 'upcoming' as const,
-    products: [] as string[],
-    description: '',
-    contact: '0912-345-678',
-    specialOffer: '',
-    weatherNote: '',
-  })
+  // 使用專案既有的表單 Hook
+  const {
+    loading,
+    formData,
+    timeRange,
+    newProduct,
+    submitError,
+    submitSuccess,
+    fieldErrors,
+    setNewProduct,
+    handleSubmit,
+    handleInputChange,
+    handleTimeChange,
+    handleAddProduct,
+    handleRemoveProduct,
+  } = useScheduleForm()
 
-  const [timeRange, setTimeRange] = useState({
-    startTime: '18:00', // 預設下午 6 點（夜市通常開始時間）
-    endTime: '22:00', // 預設晚上 10 點（夜市通常結束時間）
-  })
-
-  // 錯誤狀態管理
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState({
-    title: '',
-    location: '',
-    date: '',
-    time: '',
-    contact: '',
-  })
-
-  // 驗證函數
-  const validateField = (field: string, value: unknown) => {
-    const stringValue = String(value)
-    switch (field) {
-      case 'title':
-        return !stringValue.trim() ? '請輸入市集/夜市名稱' : ''
-      case 'location':
-        return !stringValue.trim() ? '請輸入詳細地址' : ''
-      case 'date':
-        return !stringValue ? '請選擇日期' : ''
-      case 'time':
-        const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
-        return !formattedTime ? '請選擇開始時間和結束時間' : ''
-      case 'contact':
-        if (!stringValue.trim()) return '請輸入聯絡電話'
-        const result = validatePhone(stringValue)
-        if (!result.valid) {
-          return result.message || '請輸入有效的台灣電話號碼（手機或市話）'
-        }
-        return ''
-      default:
-        return ''
+  // 處理商品新增的 Enter 鍵事件
+  const handleProductKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      handleAddProduct()
     }
-  }
-
-  // Format start and end times into time range string
-  const formatTimeRange = (startTime: string, endTime: string) => {
-    if (!startTime || !endTime) return ''
-    return `${startTime}-${endTime}`
   }
 
   // 載入中狀態
@@ -91,7 +51,21 @@ export default function AddSchedule() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-slate-900 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
-          <div className="text-6xl mb-8">🔒</div>
+          <div className="w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-lg flex items-center justify-center mx-auto mb-8">
+            <svg
+              className="w-8 h-8 text-gray-600 dark:text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">需要登入</h1>
           <p className="text-gray-600 dark:text-gray-300 mb-8">此頁面需要管理員權限才能存取</p>
           <div className="space-x-4">
@@ -111,121 +85,6 @@ export default function AddSchedule() {
         </div>
       </div>
     )
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setSubmitError(null)
-    setSubmitSuccess(null)
-
-    try {
-      const formattedTime = formatTimeRange(timeRange.startTime, timeRange.endTime)
-
-      // 欄位級驗證
-      const newFieldErrors = {
-        title: validateField('title', formData.title),
-        location: validateField('location', formData.location),
-        date: validateField('date', formData.date),
-        time: validateField('time', formattedTime),
-        contact: validateField('contact', formData.contact),
-      }
-
-      setFieldErrors(newFieldErrors)
-
-      // 檢查是否有任何錯誤
-      const hasErrors = Object.values(newFieldErrors).some(error => error !== '')
-      if (hasErrors) {
-        setSubmitError('請修正表單中的錯誤後再提交')
-        setLoading(false)
-        return
-      }
-
-      const submitData = {
-        ...formData,
-        time: formattedTime,
-      }
-
-      const response = await fetch('/api/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
-      })
-
-      if (response.ok) {
-        setSubmitSuccess('行程新增成功！正在跳轉...')
-        setTimeout(() => {
-          router.push('/admin/schedule')
-        }, 1500)
-      } else {
-        const errorData = await response.json()
-        const errorMessage = errorData.error?.message || '未知錯誤'
-        setSubmitError(`新增失敗: ${errorMessage}`)
-      }
-    } catch (error) {
-      logger.error(
-        'Error adding schedule:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      setSubmitError('網路連線錯誤，請檢查網路後再試')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
-
-    // 清除對應欄位錯誤
-    if (fieldErrors[name as keyof typeof fieldErrors]) {
-      const error = validateField(name, value)
-      setFieldErrors(prev => ({ ...prev, [name]: error }))
-    }
-  }
-
-  const handleTimeChange = (timeType: 'startTime' | 'endTime', value: string) => {
-    setTimeRange(prev => {
-      const newTimeRange = { ...prev, [timeType]: value }
-
-      // 清除時間錯誤
-      if (fieldErrors.time) {
-        const formattedTime = formatTimeRange(newTimeRange.startTime, newTimeRange.endTime)
-        const error = validateField('time', formattedTime)
-        setFieldErrors(prevErrors => ({ ...prevErrors, time: error }))
-      }
-
-      return newTimeRange
-    })
-  }
-
-  const handleAddProduct = () => {
-    if (newProduct.trim() && !formData.products.includes(newProduct.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        products: [...prev.products, newProduct.trim()],
-      }))
-      setNewProduct('')
-    }
-  }
-
-  const handleRemoveProduct = (productToRemove: string) => {
-    setFormData(prev => ({
-      ...prev,
-      products: prev.products.filter(p => p !== productToRemove),
-    }))
-  }
-
-  const handleProductKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleAddProduct()
-    }
   }
 
   const marketSuggestions = [
@@ -311,10 +170,6 @@ export default function AddSchedule() {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                onBlur={() => {
-                  const error = validateField('title', formData.title)
-                  setFieldErrors(prev => ({ ...prev, title: error }))
-                }}
                 required
                 list="market-suggestions"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
@@ -345,8 +200,8 @@ export default function AddSchedule() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700"
               >
                 <option value="upcoming">即將到來</option>
-                <option value="ongoing">進行中</option>
                 <option value="completed">已結束</option>
+                <option value="cancelled">已取消</option>
               </select>
             </div>
           </div>
@@ -361,10 +216,6 @@ export default function AddSchedule() {
               name="location"
               value={formData.location}
               onChange={handleInputChange}
-              onBlur={() => {
-                const error = validateField('location', formData.location)
-                setFieldErrors(prev => ({ ...prev, location: error }))
-              }}
               required
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                 fieldErrors.location
@@ -389,10 +240,6 @@ export default function AddSchedule() {
                 name="date"
                 value={formData.date}
                 onChange={handleInputChange}
-                onBlur={() => {
-                  const error = validateField('date', formData.date)
-                  setFieldErrors(prev => ({ ...prev, date: error }))
-                }}
                 required
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                   fieldErrors.date
@@ -502,7 +349,7 @@ export default function AddSchedule() {
                       {product}
                       <button
                         type="button"
-                        onClick={() => handleRemoveProduct(product)}
+                        onClick={() => handleRemoveProduct(index)}
                         className="ml-1 text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
                       >
                         ×
@@ -530,10 +377,6 @@ export default function AddSchedule() {
                 name="contact"
                 value={formData.contact}
                 onChange={handleInputChange}
-                onBlur={() => {
-                  const error = validateField('contact', formData.contact)
-                  setFieldErrors(prev => ({ ...prev, contact: error }))
-                }}
                 required
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 text-gray-900 dark:text-gray-100 bg-white dark:bg-slate-700 ${
                   fieldErrors.contact
@@ -589,16 +432,16 @@ export default function AddSchedule() {
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     formData.status === 'upcoming'
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                      : formData.status === 'ongoing'
-                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                      : formData.status === 'completed'
+                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
                   }`}
                 >
                   {formData.status === 'upcoming'
                     ? '即將到來'
-                    : formData.status === 'ongoing'
-                      ? '進行中'
-                      : '已結束'}
+                    : formData.status === 'completed'
+                      ? '已結束'
+                      : '已取消'}
                 </span>
               </div>
 
