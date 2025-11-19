@@ -28,9 +28,11 @@ const hoistedMocks = vi.hoisted(() => {
   const mockDelete = vi.fn()
   const mockOrder = vi.fn()
   const mockFrom = vi.fn()
+  const mockRpc = vi.fn()
 
   const mockSupabaseClient = {
     from: mockFrom,
+    rpc: mockRpc,
   }
 
   return {
@@ -43,6 +45,7 @@ const hoistedMocks = vi.hoisted(() => {
     mockDelete,
     mockOrder,
     mockFrom,
+    mockRpc,
     mockSupabaseClient,
   }
 })
@@ -57,6 +60,7 @@ export const {
   mockDelete,
   mockOrder,
   mockFrom,
+  mockRpc,
   mockSupabaseClient,
 } = hoistedMocks
 
@@ -777,52 +781,52 @@ describe('ProductImageService', () => {
         { id: 'image-3', position: 1 },
       ]
 
-      const mockUpdateChain = {
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({
-              data: null,
-              error: null,
-            }),
-          }),
-        }),
-      }
-
-      mockUpdate.mockReturnValue(mockUpdateChain)
+      // Mock rpc 調用
+      mockRpc.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      })
 
       // Act
       await ProductImageService.reorderImages(MOCK_PRODUCT_ID, imageOrders)
 
       // Assert
-      expect(mockUpdate).toHaveBeenCalledTimes(3)
-      expect(mockUpdate).toHaveBeenCalledWith({ display_position: 2 })
-      expect(mockUpdate).toHaveBeenCalledWith({ display_position: 0 })
-      expect(mockUpdate).toHaveBeenCalledWith({ display_position: 1 })
+      expect(mockRpc).toHaveBeenCalledWith('batch_update_image_positions', {
+        p_product_id: MOCK_PRODUCT_ID,
+        p_updates: {
+          'image-1': 2,
+          'image-2': 0,
+          'image-3': 1,
+        },
+      })
     })
 
     it('應該處理空的排序列表', async () => {
+      // Mock rpc 調用
+      mockRpc.mockResolvedValueOnce({
+        data: null,
+        error: null,
+      })
+
       // Act
       await ProductImageService.reorderImages(MOCK_PRODUCT_ID, [])
 
-      // Assert
-      expect(mockUpdate).not.toHaveBeenCalled()
+      // Assert - 空列表仍會調用 rpc,只是 updates 為空物件
+      expect(mockRpc).toHaveBeenCalledWith('batch_update_image_positions', {
+        p_product_id: MOCK_PRODUCT_ID,
+        p_updates: {},
+      })
     })
 
     it('應該處理排序時的資料庫錯誤', async () => {
       // Arrange
       const imageOrders = [{ id: 'image-1', position: 0 }]
 
-      const mockUpdateChain = {
-        eq: vi.fn().mockReturnValue({
-          eq: vi.fn().mockReturnValue({
-            eq: vi.fn().mockResolvedValue({
-              data: null,
-              error: { code: '500', message: 'Database error' },
-            }),
-          }),
-        }),
-      }
-      mockUpdate.mockReturnValueOnce(mockUpdateChain)
+      // Mock rpc 返回錯誤
+      mockRpc.mockResolvedValueOnce({
+        data: null,
+        error: { code: '500', message: 'Database error' },
+      })
 
       // Act & Assert
       await expect(

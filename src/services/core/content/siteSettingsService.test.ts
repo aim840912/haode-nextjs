@@ -347,7 +347,7 @@ describe('SiteSettingsService', () => {
         value: 'new_value',
       }
 
-      // Mock getByKey 返回 null
+      // Mock getByKey 返回 null (使用 mockReturnValue 而非 mockReturnValueOnce)
       const mockGetByKeyChain = {
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
@@ -357,7 +357,7 @@ describe('SiteSettingsService', () => {
         }),
       }
 
-      mockSelect.mockReturnValueOnce(mockGetByKeyChain)
+      mockSelect.mockReturnValue(mockGetByKeyChain)
 
       await expect(service.update('non_existent_key', updateData)).rejects.toThrow(NotFoundError)
       await expect(service.update('non_existent_key', updateData)).rejects.toThrow(
@@ -478,7 +478,7 @@ describe('SiteSettingsService', () => {
     })
 
     it('應該在設定不存在時拋出 NotFoundError', async () => {
-      // Mock getByKey 返回 null
+      // Mock getByKey 返回 null (使用 mockReturnValue 而非 mockReturnValueOnce)
       const mockGetByKeyChain = {
         eq: vi.fn().mockReturnValue({
           single: vi.fn().mockResolvedValue({
@@ -488,7 +488,7 @@ describe('SiteSettingsService', () => {
         }),
       }
 
-      mockSelect.mockReturnValueOnce(mockGetByKeyChain)
+      mockSelect.mockReturnValue(mockGetByKeyChain)
 
       await expect(service.delete('non_existent_key')).rejects.toThrow(NotFoundError)
       await expect(service.delete('non_existent_key')).rejects.toThrow(

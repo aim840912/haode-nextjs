@@ -365,7 +365,7 @@ describe('InquiryTemplateService', () => {
         name: '更新範本',
       }
 
-      // Mock getTemplate 返回 null
+      // Mock getTemplate 返回 null (使用 mockReturnValue 而非 mockReturnValueOnce)
       const mockGetTemplateChain = {
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -377,7 +377,7 @@ describe('InquiryTemplateService', () => {
         }),
       }
 
-      mockSelect.mockReturnValueOnce(mockGetTemplateChain)
+      mockSelect.mockReturnValue(mockGetTemplateChain)
 
       await expect(service.updateTemplate('non-existent', 'user-123', updateData)).rejects.toThrow(
         NotFoundError
@@ -423,7 +423,7 @@ describe('InquiryTemplateService', () => {
     })
 
     it('應該在範本不存在時拋出 NotFoundError', async () => {
-      // Mock getTemplate 返回 null
+      // Mock getTemplate 返回 null (使用 mockReturnValue 而非 mockReturnValueOnce)
       const mockGetTemplateChain = {
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -435,7 +435,7 @@ describe('InquiryTemplateService', () => {
         }),
       }
 
-      mockSelect.mockReturnValueOnce(mockGetTemplateChain)
+      mockSelect.mockReturnValue(mockGetTemplateChain)
 
       await expect(service.deleteTemplate('non-existent', 'user-123')).rejects.toThrow(
         NotFoundError
@@ -490,7 +490,7 @@ describe('InquiryTemplateService', () => {
     })
 
     it('應該在範本不存在時拋出 NotFoundError', async () => {
-      // Mock getTemplate 返回 null
+      // Mock getTemplate 返回 null (使用 mockReturnValue 而非 mockReturnValueOnce)
       const mockGetTemplateChain = {
         eq: vi.fn().mockReturnValue({
           eq: vi.fn().mockReturnValue({
@@ -502,7 +502,7 @@ describe('InquiryTemplateService', () => {
         }),
       }
 
-      mockSelect.mockReturnValueOnce(mockGetTemplateChain)
+      mockSelect.mockReturnValue(mockGetTemplateChain)
 
       await expect(service.useTemplate('non-existent', 'user-123')).rejects.toThrow(NotFoundError)
       await expect(service.useTemplate('non-existent', 'user-123')).rejects.toThrow(
