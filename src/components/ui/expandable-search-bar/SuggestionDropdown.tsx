@@ -7,7 +7,7 @@ import { SuggestionDropdownProps } from './types'
 export function SuggestionDropdown({
   suggestions,
   selectedIndex,
-  query,
+  query: _query,
   iconOnly,
   onSelectSuggestion,
   onViewAll,

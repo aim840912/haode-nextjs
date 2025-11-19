@@ -19,7 +19,7 @@ import {
   removeReference,
   revokeGroup as revokeGroupURLs,
 } from './blob/blob-lifecycle'
-import { getStats, getTotalMemoryUsage } from './blob/blob-stats'
+import { getStats } from './blob/blob-stats'
 
 // ============================================================
 // Types & Interfaces (Re-export)

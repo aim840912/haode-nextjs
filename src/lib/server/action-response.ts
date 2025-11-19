@@ -11,7 +11,7 @@
  */
 
 import { ZodError } from 'zod'
-import { AppError, ErrorType, ValidationError } from '@/lib/errors'
+import { AppError, ErrorType } from '@/lib/errors'
 import { apiLogger } from '@/lib/logger'
 
 /**

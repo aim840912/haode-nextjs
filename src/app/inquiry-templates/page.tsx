@@ -16,10 +16,10 @@ export default function InquiryTemplatesPage() {
     templates,
     loading,
     error,
-    fetchTemplates,
+    fetchTemplates: _fetchTemplates,
     deleteTemplate,
     toggleFavorite,
-    toggleActive,
+    toggleActive: _toggleActive,
   } = useInquiryTemplates({ is_active: true, sort_by: 'updated_at', sort_order: 'desc' })
 
   const [filter, setFilter] = useState<'all' | 'product' | 'farm_tour'>('all')

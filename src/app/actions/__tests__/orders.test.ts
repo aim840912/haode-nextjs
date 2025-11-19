@@ -6,7 +6,7 @@
  * - cancelOrderAction - 取消訂單
  */
 
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { createOrderAction, cancelOrderAction } from '../orders'
 
 // ============================================================================
@@ -196,7 +196,7 @@ describe('createOrderAction', () => {
       mockOrderService.createOrder.mockResolvedValue(mockOrder)
 
       // Act
-      const result = await createOrderAction(validCreateOrderData)
+      await createOrderAction(validCreateOrderData)
 
       // Assert
       expect(mockRequireAuth).toHaveBeenCalledTimes(1)
@@ -265,7 +265,7 @@ describe('createOrderAction', () => {
       })
 
       // Act
-      const result = await createOrderAction(minimalOrderData)
+      await createOrderAction(minimalOrderData)
 
       // Assert
       expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockUser.id, minimalOrderData)
@@ -282,7 +282,7 @@ describe('createOrderAction', () => {
       }
 
       // Act
-      const result = await createOrderAction(invalidData)
+      await createOrderAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -302,7 +302,7 @@ describe('createOrderAction', () => {
       }
 
       // Act
-      const result = await createOrderAction(invalidData)
+      await createOrderAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -322,7 +322,7 @@ describe('createOrderAction', () => {
       }
 
       // Act
-      const result = await createOrderAction(invalidData)
+      await createOrderAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -344,7 +344,7 @@ describe('createOrderAction', () => {
       }
 
       // Act
-      const result = await createOrderAction(invalidData)
+      await createOrderAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -359,7 +359,7 @@ describe('createOrderAction', () => {
       mockRequireAuth.mockRejectedValue(authError)
 
       // Act
-      const result = await createOrderAction(validCreateOrderData)
+      await createOrderAction(validCreateOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(authError)
@@ -374,7 +374,7 @@ describe('createOrderAction', () => {
       mockOrderService.createOrder.mockRejectedValue(serviceError)
 
       // Act
-      const result = await createOrderAction(validCreateOrderData)
+      await createOrderAction(validCreateOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(serviceError)
@@ -389,7 +389,7 @@ describe('createOrderAction', () => {
       mockLogCreate.mockRejectedValue(logError)
 
       // Act
-      const result = await createOrderAction(validCreateOrderData)
+      await createOrderAction(validCreateOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(logError)
@@ -413,7 +413,7 @@ describe('cancelOrderAction', () => {
       mockOrderService.cancelOrder.mockResolvedValue(undefined)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockRequireAuth).toHaveBeenCalledTimes(1)
@@ -485,7 +485,7 @@ describe('cancelOrderAction', () => {
       mockOrderService.cancelOrder.mockResolvedValue(undefined)
 
       // Act
-      const result = await cancelOrderAction(dataWithoutReason)
+      await cancelOrderAction(dataWithoutReason)
 
       // Assert
       expect(mockOrderService.cancelOrder).toHaveBeenCalledWith(
@@ -506,7 +506,7 @@ describe('cancelOrderAction', () => {
       }
 
       // Act
-      const result = await cancelOrderAction(invalidData)
+      await cancelOrderAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -522,7 +522,7 @@ describe('cancelOrderAction', () => {
       mockRequireAuth.mockRejectedValue(authError)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(authError)
@@ -536,7 +536,7 @@ describe('cancelOrderAction', () => {
       mockOrderService.getOrderById.mockResolvedValue(null)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(expect.any(Error))
@@ -549,7 +549,7 @@ describe('cancelOrderAction', () => {
       mockOrderService.getOrderById.mockResolvedValue(null)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(expect.any(Error))
@@ -563,7 +563,7 @@ describe('cancelOrderAction', () => {
       mockOrderService.getOrderById.mockRejectedValue(serviceError)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(serviceError)
@@ -577,7 +577,7 @@ describe('cancelOrderAction', () => {
       mockOrderService.cancelOrder.mockRejectedValue(serviceError)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(serviceError)
@@ -593,7 +593,7 @@ describe('cancelOrderAction', () => {
       mockLogStatusChange.mockRejectedValue(logError)
 
       // Act
-      const result = await cancelOrderAction(validCancelOrderData)
+      await cancelOrderAction(validCancelOrderData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(logError)

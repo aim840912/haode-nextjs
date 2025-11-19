@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { SimpleImage, AvatarSimpleImage } from '@/components/ui/image/OptimizedImage'
+import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import { LocationsPageLoader } from '@/components/ui/loading/PageLoader'
 import { Breadcrumbs, createLocationsBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
 import { useAuth } from '@/contexts/AuthContext'

@@ -5,7 +5,7 @@
  * 提供類型安全的狀態管理和更新邏輯
  */
 
-import { useReducer, useCallback, useMemo } from 'react'
+import { useReducer, useMemo } from 'react'
 
 export interface SiteSettingsState {
   // UI 狀態

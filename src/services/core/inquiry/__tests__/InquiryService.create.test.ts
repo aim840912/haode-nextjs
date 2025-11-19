@@ -5,9 +5,9 @@ import { InquiryService } from '../InquiryService'
 
 // Use vi.hoisted() to ensure mock variables are available before hoisting
 const {
-  mockReserveInventory,
-  mockFinalizeInventory,
-  mockReleaseInventory,
+  mockReserveInventory: _mockReserveInventory,
+  mockFinalizeInventory: _mockFinalizeInventory,
+  mockReleaseInventory: _mockReleaseInventory,
   MockInquiryInventoryService,
 } = vi.hoisted(() => {
   const mockReserveInventory = vi.fn()

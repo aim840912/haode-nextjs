@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger'
 import { metrics } from '@/lib/metrics'
 
 // 動態 import 避免循環依賴
-import type { RateLimitStats } from './rate-limit'
+// import type { RateLimitStats } from './rate-limit'
 
 // === 類型定義 ===
 

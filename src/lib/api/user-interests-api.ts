@@ -127,7 +127,7 @@ export async function removeUserInterest(productId: string): Promise<boolean> {
  * 切換興趣狀態（加入或移除）
  * @deprecated 請使用 Server Action `toggleInterestAction` from '@/app/actions/user-interests'
  */
-export async function toggleUserInterest(productId: string): Promise<{
+export async function toggleUserInterest(_productId: string): Promise<{
   action: 'added' | 'removed'
   productId: string
 }> {

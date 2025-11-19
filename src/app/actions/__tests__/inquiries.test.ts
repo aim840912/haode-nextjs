@@ -8,7 +8,7 @@
  * - deleteInquiryAction - 刪除詢價單 (管理員)
  */
 
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import {
   createInquiryAction,
   createGuestInquiryAction,
@@ -268,7 +268,7 @@ describe('createInquiryAction', () => {
       mockInquiryService.createInquiry.mockResolvedValue(mockInquiry)
 
       // Act
-      const result = await createInquiryAction(validInquiryData)
+      await createInquiryAction(validInquiryData)
 
       // Assert
       expect(mockRequireAuth).toHaveBeenCalledTimes(1)
@@ -317,7 +317,7 @@ describe('createInquiryAction', () => {
       mockInquiryService.createInquiry.mockResolvedValue(inquiryWithoutItems)
 
       // Act
-      const result = await createInquiryAction(validInquiryData)
+      await createInquiryAction(validInquiryData)
 
       // Assert
       expect(mockLogCreate).toHaveBeenCalledWith(mockUser, 'inquiry', inquiryWithoutItems.id, {
@@ -338,7 +338,7 @@ describe('createInquiryAction', () => {
       }
 
       // Act
-      const result = await createInquiryAction(invalidData)
+      await createInquiryAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -353,7 +353,7 @@ describe('createInquiryAction', () => {
       }
 
       // Act
-      const result = await createInquiryAction(invalidData)
+      await createInquiryAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -368,7 +368,7 @@ describe('createInquiryAction', () => {
       mockRequireAuth.mockRejectedValue(authError)
 
       // Act
-      const result = await createInquiryAction(validInquiryData)
+      await createInquiryAction(validInquiryData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(authError)
@@ -383,7 +383,7 @@ describe('createInquiryAction', () => {
       mockInquiryService.createInquiry.mockRejectedValue(serviceError)
 
       // Act
-      const result = await createInquiryAction(validInquiryData)
+      await createInquiryAction(validInquiryData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(serviceError)
@@ -413,7 +413,7 @@ describe('createGuestInquiryAction', () => {
       mockInquiryService.createInquiry.mockResolvedValue(guestInquiry)
 
       // Act
-      const result = await createGuestInquiryAction(validGuestInquiryData)
+      await createGuestInquiryAction(validGuestInquiryData)
 
       // Assert
       expect(mockInquiryService.createInquiry).toHaveBeenCalledWith(
@@ -528,7 +528,7 @@ describe('createGuestInquiryAction', () => {
       }
 
       // Act
-      const result = await createGuestInquiryAction(invalidData)
+      await createGuestInquiryAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -543,7 +543,7 @@ describe('createGuestInquiryAction', () => {
       }
 
       // Act
-      const result = await createGuestInquiryAction(invalidData)
+      await createGuestInquiryAction(invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -558,7 +558,7 @@ describe('createGuestInquiryAction', () => {
       mockInquiryService.createInquiry.mockRejectedValue(serviceError)
 
       // Act
-      const result = await createGuestInquiryAction(validGuestInquiryData)
+      await createGuestInquiryAction(validGuestInquiryData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(serviceError)
@@ -583,7 +583,7 @@ describe('updateInquiryStatusAction', () => {
       setupSupabaseMockChain({ data: updatedInquiry, error: null })
 
       // Act
-      const result = await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
+      await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
 
       // Assert
       expect(mockRequireAdmin).toHaveBeenCalledTimes(1)
@@ -667,7 +667,7 @@ describe('updateInquiryStatusAction', () => {
       }
 
       // Act
-      const result = await updateInquiryStatusAction('inquiry-123', invalidData)
+      await updateInquiryStatusAction('inquiry-123', invalidData)
 
       // Assert
       expect(mockValidationError).toHaveBeenCalledWith(expect.any(Object))
@@ -682,7 +682,7 @@ describe('updateInquiryStatusAction', () => {
       mockRequireAdmin.mockRejectedValue(authError)
 
       // Act
-      const result = await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
+      await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(authError)
@@ -696,7 +696,7 @@ describe('updateInquiryStatusAction', () => {
       mockInquiryService.getInquiryByIdForAdmin.mockResolvedValue(null)
 
       // Act
-      const result = await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
+      await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(expect.any(Error))
@@ -712,7 +712,7 @@ describe('updateInquiryStatusAction', () => {
       setupSupabaseMockChain({ data: null, error: dbError })
 
       // Act
-      const result = await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
+      await updateInquiryStatusAction('inquiry-123', validStatusUpdateData)
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(dbError)
@@ -737,7 +737,7 @@ describe('deleteInquiryAction', () => {
       mockInquiryService.deleteInquiry.mockResolvedValue(undefined)
 
       // Act
-      const result = await deleteInquiryAction('inquiry-123')
+      await deleteInquiryAction('inquiry-123')
 
       // Assert
       expect(mockRequireAdmin).toHaveBeenCalledTimes(1)
@@ -774,7 +774,7 @@ describe('deleteInquiryAction', () => {
       mockRequireAdmin.mockRejectedValue(authError)
 
       // Act
-      const result = await deleteInquiryAction('inquiry-123')
+      await deleteInquiryAction('inquiry-123')
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(authError)
@@ -788,7 +788,7 @@ describe('deleteInquiryAction', () => {
       mockInquiryService.getInquiryByIdForAdmin.mockResolvedValue(null)
 
       // Act
-      const result = await deleteInquiryAction('inquiry-123')
+      await deleteInquiryAction('inquiry-123')
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(expect.any(Error))
@@ -804,7 +804,7 @@ describe('deleteInquiryAction', () => {
       mockInquiryService.deleteInquiry.mockRejectedValue(serviceError)
 
       // Act
-      const result = await deleteInquiryAction('inquiry-123')
+      await deleteInquiryAction('inquiry-123')
 
       // Assert
       expect(mockError).toHaveBeenCalledWith(serviceError)

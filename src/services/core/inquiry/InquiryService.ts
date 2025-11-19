@@ -21,7 +21,7 @@ import {
   InquiryStatus,
   InquiryItem,
 } from '@/types/inquiry'
-import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
+import { ServiceSupabaseClient, UpdateDataObject } from '@/types/service.types'
 import { withServiceOperation } from '../utils/ServiceDecorators'
 import { transformFromDB, serializeFarmTourData, applyQueryParams } from './inquiry-helpers'
 import { validateCreateInquiryRequest, calculateTotalAmount } from './inquiry-validation'

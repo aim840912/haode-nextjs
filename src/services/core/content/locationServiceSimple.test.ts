@@ -14,13 +14,6 @@ import {
   resetAllLocationMocks,
   mockFrom,
   mockSingle,
-  mockSelect,
-  mockOrder,
-  mockLimit,
-  mockInsert,
-  mockUpdate,
-  mockDelete,
-  mockEq,
   mockLocationData,
   mockLocationResponse,
 } from './__tests__/location-test-setup'

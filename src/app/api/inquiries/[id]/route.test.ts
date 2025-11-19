@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock helpers
-vi.mock('./helpers', async importOriginal => {
+vi.mock('./helpers', async _importOriginal => {
   const { ValidationError } = await import('@/lib/errors')
 
   return {
@@ -18,7 +18,7 @@ vi.mock('./helpers', async importOriginal => {
 
       return id
     }),
-    checkAdminRole: vi.fn(async (userId: string) => {
+    checkAdminRole: vi.fn(async (_userId: string) => {
       // Will be overridden in tests
       return {
         role: 'user',

@@ -20,7 +20,7 @@ export function StatusStep({
   isCompleted,
   timestamp,
   description,
-  stepNumber,
+  stepNumber: _stepNumber,
   isLast = false,
   layout = 'horizontal',
 }: StatusStepProps) {

@@ -7,7 +7,6 @@ import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/providers/ToastProvider'
 import { Product } from '@/types/product'
-import { InterestButton } from './InterestButton'
 
 // 動態載入圖片元件以提升效能
 const ProductCardImage = dynamic(
