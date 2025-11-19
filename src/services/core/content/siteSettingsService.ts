@@ -1,11 +1,15 @@
 /**
  * 網站設定服務
  * 用於管理網站動態設定（首頁、農場體驗頁等圖片和文字內容）
+ *
+ * 重構後:
+ * - 使用 withServiceOperation 統一錯誤處理
+ * - 移除重複的 try-catch、timer、logger 邏輯
+ * - 減少程式碼行數約 40%
  */
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
-import { dbLogger } from '@/lib/logger'
 import { ServiceSupabaseClient } from '@/types/service.types'
 import type {
   SiteSetting,
@@ -13,6 +17,7 @@ import type {
   SiteSettingUpdate,
   SettingKey,
 } from '@/types/siteSettings'
+import { withServiceOperation } from '../utils/ServiceDecorators'
 
 export class SiteSettingsService {
   private readonly moduleName = 'SiteSettingsService'
@@ -29,257 +34,159 @@ export class SiteSettingsService {
    * 取得所有設定
    */
   async getAll(): Promise<SiteSetting[]> {
-    const timer = dbLogger.timer('查詢所有網站設定')
-
-    try {
-      dbLogger.info('取得所有網站設定', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getAll',
-      })
+        action: '取得所有網站設定',
+      },
+      async () => {
+        const supabase = this.getSupabaseClient()
 
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
+        const { data, error } = await supabase
+          .from('site_settings' as any)
+          .select('*')
+          .order('key', { ascending: true })
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return (data || []) as unknown as SiteSetting[]
       }
-
-      const { data, error } = await supabase
-        .from('site_settings' as any)
-        .select('*')
-        .order('key', { ascending: true })
-
-      if (error) throw error
-
-      timer.end({ metadata: { count: data?.length || 0 } })
-
-      return (data || []) as unknown as SiteSetting[]
-    } catch (error) {
-      timer.end()
-      dbLogger.error('取得網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'getAll',
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'getAll',
-      })
-    }
+    )
   }
 
   /**
    * 根據 key 取得單一設定
    */
   async getByKey(key: SettingKey | string): Promise<SiteSetting | null> {
-    const timer = dbLogger.timer('查詢單一網站設定')
-
-    try {
-      dbLogger.info('根據 key 取得網站設定', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getByKey',
-        metadata: { key },
-      })
+        action: '根據 key 取得網站設定',
+        context: { key },
+      },
+      async () => {
+        const supabase = this.getSupabaseClient()
 
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
+        const { data, error } = await supabase
+          .from('site_settings' as any)
+          .select('*')
+          .eq('key', key)
+          .single()
 
-      const { data, error } = await supabase
-        .from('site_settings' as any)
-        .select('*')
-        .eq('key', key)
-        .single()
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          timer.end({ metadata: { found: false } })
-          return null
+        if (error) {
+          // PGRST116 = 找不到資料,返回 null 而非拋出錯誤
+          if (error.code === 'PGRST116') {
+            return null
+          }
+          throw ErrorFactory.fromSupabaseError(error)
         }
-        throw error
-      }
 
-      timer.end({ metadata: { found: true } })
-      return data as unknown as SiteSetting | null
-    } catch (error) {
-      timer.end()
-      dbLogger.error('取得網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'getByKey',
-        metadata: { key },
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'getByKey',
-      })
-    }
+        return data as unknown as SiteSetting | null
+      }
+    )
   }
 
   /**
    * 批次取得多個設定
    */
   async getByKeys(keys: (SettingKey | string)[]): Promise<Record<string, SiteSetting>> {
-    const timer = dbLogger.timer('批次查詢網站設定')
-
-    try {
-      dbLogger.info('批次取得網站設定', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getByKeys',
-        metadata: { keysCount: keys.length },
-      })
+        action: '批次取得網站設定',
+        context: { keysCount: keys.length },
+      },
+      async () => {
+        const supabase = this.getSupabaseClient()
 
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
+        const { data, error } = await supabase
+          .from('site_settings' as any)
+          .select('*')
+          .in('key', keys)
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        const result: Record<string, SiteSetting> = {}
+        ;(data as unknown as SiteSetting[])?.forEach(setting => {
+          result[setting.key] = setting
+        })
+
+        return result
       }
-
-      const { data, error } = await supabase
-        .from('site_settings' as any)
-        .select('*')
-        .in('key', keys)
-
-      if (error) throw error
-
-      const result: Record<string, SiteSetting> = {}
-      ;(data as unknown as SiteSetting[])?.forEach(setting => {
-        result[setting.key] = setting
-      })
-
-      timer.end({ metadata: { requestedKeys: keys.length, foundKeys: data?.length || 0 } })
-      return result
-    } catch (error) {
-      timer.end()
-      dbLogger.error('批次取得網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'getByKeys',
-        metadata: { keysCount: keys.length },
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'getByKeys',
-      })
-    }
+    )
   }
 
   /**
    * 建立新設定
    */
   async create(input: SiteSettingInput): Promise<SiteSetting> {
-    const timer = dbLogger.timer('建立網站設定')
+    return withServiceOperation(
+      {
+        module: this.moduleName,
+        action: '建立網站設定',
+        context: { key: input.key, type: input.type },
+      },
+      async () => {
+        if (!input.key?.trim()) {
+          throw new ValidationError('設定鍵不能為空')
+        }
 
-    try {
-      if (!input.key?.trim()) {
-        throw new ValidationError('設定鍵不能為空')
+        const supabase = this.getSupabaseClient()
+
+        const { data, error } = await supabase
+          .from('site_settings' as any)
+          .insert([
+            {
+              key: input.key,
+              value: input.value,
+              type: input.type,
+              description: input.description || null,
+            },
+          ])
+          .select()
+          .single()
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return data as unknown as SiteSetting
       }
-
-      dbLogger.info('建立新的網站設定', {
-        module: this.moduleName,
-        action: 'create',
-        metadata: { key: input.key, type: input.type },
-      })
-
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
-      const { data, error } = await supabase
-        .from('site_settings' as any)
-        .insert([
-          {
-            key: input.key,
-            value: input.value,
-            type: input.type,
-            description: input.description || null,
-          },
-        ])
-        .select()
-        .single()
-
-      if (error) throw error
-
-      const setting = data as unknown as SiteSetting
-
-      timer.end({ metadata: { key: setting.key } })
-
-      dbLogger.info('網站設定建立成功', {
-        module: this.moduleName,
-        action: 'create',
-        metadata: { key: setting.key },
-      })
-
-      return setting
-    } catch (error) {
-      timer.end()
-      dbLogger.error('建立網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'create',
-        metadata: { key: input.key },
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'create',
-      })
-    }
+    )
   }
 
   /**
    * 更新設定
    */
   async update(key: SettingKey | string, input: SiteSettingUpdate): Promise<SiteSetting> {
-    const timer = dbLogger.timer('更新網站設定')
-
-    try {
-      dbLogger.info('更新網站設定', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'update',
-        metadata: { key },
-      })
+        action: '更新網站設定',
+        context: { key },
+      },
+      async () => {
+        const existing = await this.getByKey(key)
+        if (!existing) {
+          throw new NotFoundError(`找不到設定鍵: ${key}`)
+        }
 
-      const existing = await this.getByKey(key)
-      if (!existing) {
-        throw new NotFoundError(`找不到設定鍵: ${key}`)
+        const supabase = this.getSupabaseClient()
+
+        const { data, error } = await supabase
+          .from('site_settings' as any)
+          .update({
+            value: input.value,
+            description: input.description !== undefined ? input.description : existing.description,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('key', key)
+          .select()
+          .single()
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return data as unknown as SiteSetting
       }
-
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
-      const { data, error } = await supabase
-        .from('site_settings' as any)
-        .update({
-          value: input.value,
-          description: input.description !== undefined ? input.description : existing.description,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('key', key)
-        .select()
-        .single()
-
-      if (error) throw error
-
-      const updatedSetting = data as unknown as SiteSetting
-
-      timer.end({ metadata: { key: updatedSetting.key } })
-
-      dbLogger.info('網站設定更新成功', {
-        module: this.moduleName,
-        action: 'update',
-        metadata: { key: updatedSetting.key },
-      })
-
-      return updatedSetting
-    } catch (error) {
-      timer.end()
-      dbLogger.error('更新網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'update',
-        metadata: { key },
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'update',
-      })
-    }
+    )
   }
 
   /**
@@ -289,97 +196,60 @@ export class SiteSettingsService {
     key: SettingKey | string,
     input: SiteSettingUpdate & { type?: string }
   ): Promise<SiteSetting> {
-    const timer = dbLogger.timer('Upsert 網站設定')
-
-    try {
-      dbLogger.info('Upsert 網站設定', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'upsert',
-        metadata: { key },
-      })
+        action: 'Upsert 網站設定',
+        context: { key },
+      },
+      async () => {
+        const existing = await this.getByKey(key)
 
-      const existing = await this.getByKey(key)
-
-      if (existing) {
-        // 設定存在，執行更新
-        timer.end({ metadata: { operation: 'update' } })
-        return await this.update(key, input)
-      } else {
-        // 設定不存在，執行創建
-        const createInput: SiteSettingInput = {
-          key,
-          value: input.value,
-          type: input.type || 'string',
-          description: input.description,
+        if (existing) {
+          // 設定存在，執行更新
+          return await this.update(key, input)
+        } else {
+          // 設定不存在，執行創建
+          const createInput: SiteSettingInput = {
+            key,
+            value: input.value,
+            type: input.type || 'string',
+            description: input.description,
+          }
+          return await this.create(createInput)
         }
-        timer.end({ metadata: { operation: 'create' } })
-        return await this.create(createInput)
       }
-    } catch (error) {
-      timer.end()
-      dbLogger.error('Upsert 網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'upsert',
-        metadata: { key },
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'upsert',
-      })
-    }
+    )
   }
 
   /**
    * 刪除設定
    */
   async delete(key: SettingKey | string): Promise<boolean> {
-    const timer = dbLogger.timer('刪除網站設定')
-
-    try {
-      dbLogger.info('刪除網站設定', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'delete',
-        metadata: { key },
-      })
+        action: '刪除網站設定',
+        context: { key },
+      },
+      async () => {
+        const existing = await this.getByKey(key)
+        if (!existing) {
+          throw new NotFoundError(`找不到設定鍵: ${key}`)
+        }
 
-      const existing = await this.getByKey(key)
-      if (!existing) {
-        throw new NotFoundError(`找不到設定鍵: ${key}`)
+        const supabase = this.getSupabaseClient()
+
+        const { error } = await supabase
+          .from('site_settings' as any)
+          .delete()
+          .eq('key', key)
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return true
       }
-
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
-      const { error } = await supabase
-        .from('site_settings' as any)
-        .delete()
-        .eq('key', key)
-
-      if (error) throw error
-
-      timer.end({ metadata: { deleted: true } })
-
-      dbLogger.info('網站設定刪除成功', {
-        module: this.moduleName,
-        action: 'delete',
-        metadata: { key },
-      })
-
-      return true
-    } catch (error) {
-      timer.end()
-      dbLogger.error('刪除網站設定失敗', error as Error, {
-        module: this.moduleName,
-        action: 'delete',
-        metadata: { key },
-      })
-      throw ErrorFactory.fromSupabaseError(error, {
-        module: this.moduleName,
-        action: 'delete',
-      })
-    }
+    )
   }
 }
 

@@ -15,6 +15,7 @@ import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/l
 import { dbLogger } from '@/lib/logger'
 import { ServiceSupabaseClient } from '@/types/service.types'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { withServiceOperation } from '../utils/ServiceDecorators'
 
 // 類型斷言，解決 Supabase 重載問題
 const _getAdmin = () => getSupabaseAdmin()
@@ -71,48 +72,6 @@ export class FarmTourService implements IFarmTourService {
   }
 
   /**
-   * 統一錯誤處理方法
-   */
-  private handleError(error: unknown, action: string): never {
-    // 詳細錯誤日誌
-    dbLogger.error(`農場體驗服務 ${action} 操作失敗`, error as Error, {
-      module: this.moduleName,
-      action,
-      metadata: {
-        timestamp: new Date().toISOString(),
-        errorType: typeof error,
-        errorDetails: error,
-        errorString: String(error),
-        errorJson: error ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : 'null',
-      },
-    })
-
-    // 如果是 Supabase 錯誤物件，提取詳細資訊
-    if (error && typeof error === 'object' && 'message' in error) {
-      const supabaseError = error as any
-      const detailedMessage = [
-        `訊息: ${supabaseError.message}`,
-        supabaseError.code ? `代碼: ${supabaseError.code}` : '',
-        supabaseError.details ? `詳情: ${supabaseError.details}` : '',
-        supabaseError.hint ? `提示: ${supabaseError.hint}` : '',
-      ]
-        .filter(Boolean)
-        .join(' | ')
-
-      throw new DatabaseError(`資料庫操作失敗 (${action}): ${detailedMessage}`, {
-        module: this.moduleName,
-        action,
-        originalError: error instanceof Error ? error : new Error(String(error)),
-      })
-    }
-
-    throw ErrorFactory.fromSupabaseError(error, {
-      module: this.moduleName,
-      action,
-    })
-  }
-
-  /**
    * 轉換資料庫記錄為 FarmTourActivity
    * Note: 使用 any 以避免 Supabase 查詢結果的複雜類型斷言
    */
@@ -159,87 +118,49 @@ export class FarmTourService implements IFarmTourService {
    * 取得所有農場體驗活動
    */
   async getAll(): Promise<FarmTourActivity[]> {
-    const timer = dbLogger.timer('查詢農場體驗活動清單')
-
-    try {
-      dbLogger.info('取得農場體驗活動清單', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getAll',
-      })
+        action: '取得農場體驗活動清單',
+      },
+      async () => {
+        const supabase = this.getSupabaseClient()
 
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
+        const { data, error } = await supabase
+          .from('farm_tour')
+          .select('*')
+          .order('created_at', { ascending: false })
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return data?.map(record => this.transformFromDB(record)) || []
       }
-
-      const { data, error } = await supabase
-        .from('farm_tour')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        throw error
-      }
-
-      const activities = data?.map(record => this.transformFromDB(record)) || []
-
-      timer.end({
-        metadata: {
-          count: activities.length,
-        },
-      })
-
-      dbLogger.info('農場體驗活動清單查詢成功', {
-        module: this.moduleName,
-        action: 'getAll',
-        metadata: { count: activities.length },
-      })
-
-      return activities
-    } catch (error) {
-      timer.end()
-      this.handleError(error, 'getAll')
-    }
+    )
   }
 
   /**
    * 根據 ID 取得農場體驗活動
    */
   async getById(id: string): Promise<FarmTourActivity | null> {
-    const timer = dbLogger.timer('查詢單一農場體驗活動')
-
-    try {
-      dbLogger.info('根據 ID 取得農場體驗活動', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getById',
-        metadata: { id },
-      })
+        action: '根據 ID 取得農場體驗活動',
+        context: { id },
+      },
+      async () => {
+        const supabase = this.getSupabaseClient()
 
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
+        const { data, error } = await supabase.from('farm_tour').select('*').eq('id', id).single()
 
-      const { data, error } = await supabase.from('farm_tour').select('*').eq('id', id).single()
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // 找不到資料
-          timer.end({ metadata: { found: false } })
-          return null
+        if (error) {
+          if (error.code === 'PGRST116') return null
+          throw ErrorFactory.fromSupabaseError(error)
         }
-        throw error
+
+        return data ? this.transformFromDB(data) : null
       }
-
-      const activity = data ? this.transformFromDB(data) : null
-
-      timer.end({ metadata: { found: !!activity } })
-
-      return activity
-    } catch (error) {
-      timer.end()
-      this.handleError(error, 'getById')
-    }
+    )
   }
 
   /**
@@ -248,56 +169,35 @@ export class FarmTourService implements IFarmTourService {
   async create(
     activityData: Omit<FarmTourActivity, 'createdAt' | 'updatedAt'> & { id?: string }
   ): Promise<FarmTourActivity> {
-    const timer = dbLogger.timer('建立農場體驗活動')
-
-    try {
-      dbLogger.info('建立新的農場體驗活動', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'create',
-        metadata: {
+        action: '建立農場體驗活動',
+        context: {
           title: activityData.title,
           start_month: activityData.start_month,
           end_month: activityData.end_month,
         },
-      })
+      },
+      async () => {
+        if (!activityData.title?.trim()) {
+          throw new ValidationError('活動標題不能為空')
+        }
 
-      // 驗證必填欄位
-      if (!activityData.title?.trim()) {
-        throw new ValidationError('活動標題不能為空')
+        const supabase = this.getSupabaseClient()
+        const insertData = this.transformToDB(activityData)
+
+        const { data, error } = await supabase
+          .from('farm_tour')
+          .insert([insertData])
+          .select()
+          .single()
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return this.transformFromDB(data)
       }
-
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
-      const insertData = this.transformToDB(activityData)
-
-      const { data, error } = await supabase
-        .from('farm_tour')
-        .insert([insertData])
-        .select()
-        .single()
-
-      if (error) {
-        throw error
-      }
-
-      const newActivity = this.transformFromDB(data)
-
-      timer.end({ metadata: { id: newActivity.id } })
-
-      dbLogger.info('農場體驗活動建立成功', {
-        module: this.moduleName,
-        action: 'create',
-        metadata: { id: newActivity.id, title: newActivity.title },
-      })
-
-      return newActivity
-    } catch (error) {
-      timer.end()
-      this.handleError(error, 'create')
-    }
+    )
   }
 
   /**
@@ -307,130 +207,91 @@ export class FarmTourService implements IFarmTourService {
     id: string,
     activityData: Partial<Omit<FarmTourActivity, 'id' | 'createdAt'>>
   ): Promise<FarmTourActivity | null> {
-    const timer = dbLogger.timer('更新農場體驗活動')
-
-    try {
-      dbLogger.info('更新農場體驗活動', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'update',
-        metadata: { activityId: id, updatedFields: Object.keys(activityData) },
-      })
+        action: '更新農場體驗活動',
+        context: { activityId: id, updatedFields: Object.keys(activityData) },
+      },
+      async () => {
+        const existing = await this.getById(id)
+        if (!existing) {
+          throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
+        }
 
-      // 先檢查記錄是否存在
-      const existing = await this.getById(id)
-      if (!existing) {
-        throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
+        const supabase = this.getSupabaseClient()
+
+        // 準備更新資料，移除不應更新的欄位
+        const updateData = { ...activityData }
+        delete (updateData as any).createdAt
+        delete (updateData as any).id
+
+        const { data, error } = await supabase
+          .from('farm_tour')
+          .update({
+            ...updateData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', id)
+          .select()
+          .single()
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return this.transformFromDB(data)
       }
-
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
-      // 準備更新資料，移除不應更新的欄位
-      const updateData = { ...activityData }
-      delete (updateData as any).createdAt
-      delete (updateData as any).id
-
-      const { data, error } = await supabase
-        .from('farm_tour')
-        .update({
-          ...updateData,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) {
-        throw error
-      }
-
-      const updatedActivity = this.transformFromDB(data)
-
-      timer.end({ metadata: { id: updatedActivity.id } })
-
-      dbLogger.info('農場體驗活動更新成功', {
-        module: this.moduleName,
-        action: 'update',
-        metadata: { id: updatedActivity.id, title: updatedActivity.title },
-      })
-
-      return updatedActivity
-    } catch (error) {
-      timer.end()
-      this.handleError(error, 'update')
-    }
+    )
   }
 
   /**
    * 刪除農場體驗活動
    */
   async delete(id: string): Promise<boolean> {
-    const timer = dbLogger.timer('刪除農場體驗活動')
-
-    try {
-      dbLogger.info('刪除農場體驗活動', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'delete',
-        metadata: { activityId: id },
-      })
+        action: '刪除農場體驗活動',
+        context: { activityId: id },
+      },
+      async () => {
+        const existing = await this.getById(id)
+        if (!existing) {
+          throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
+        }
 
-      // 先檢查記錄是否存在
-      const existing = await this.getById(id)
-      if (!existing) {
-        throw new NotFoundError(`找不到 ID 為 ${id} 的農場體驗活動`)
-      }
+        // 刪除相關圖片（使用統一圖片服務）
+        try {
+          const unifiedImageService = new UnifiedImageService()
+          const deletedImagesCount = await unifiedImageService.deleteEntityImages('farm-tour', id)
 
-      // 刪除相關圖片（使用統一圖片服務）
-      let deletedImagesCount = 0
-      try {
-        const unifiedImageService = new UnifiedImageService()
-        deletedImagesCount = await unifiedImageService.deleteEntityImages('farm-tour', id)
-
-        if (deletedImagesCount > 0) {
-          dbLogger.info('農場體驗活動相關圖片刪除成功', {
+          if (deletedImagesCount > 0) {
+            dbLogger.info('農場體驗活動相關圖片刪除成功', {
+              module: this.moduleName,
+              action: 'deleteEntityImages',
+              metadata: { activityId: id, deletedImagesCount },
+            })
+          }
+        } catch (imageError) {
+          // 圖片刪除失敗不應阻止活動刪除，只記錄警告
+          dbLogger.warn('農場體驗活動圖片刪除失敗，但繼續進行活動刪除', {
             module: this.moduleName,
             action: 'deleteEntityImages',
-            metadata: { activityId: id, deletedImagesCount },
+            metadata: {
+              activityId: id,
+              error: imageError instanceof Error ? imageError.message : String(imageError),
+            },
           })
         }
-      } catch (imageError) {
-        // 圖片刪除失敗不應阻止活動刪除，只記錄警告
-        dbLogger.warn('農場體驗活動圖片刪除失敗，但繼續進行活動刪除', {
-          module: this.moduleName,
-          action: 'deleteEntityImages',
-          metadata: {
-            activityId: id,
-            error: imageError instanceof Error ? imageError.message : String(imageError),
-          },
-        })
+
+        const supabase = this.getSupabaseClient()
+
+        const { error } = await supabase.from('farm_tour').delete().eq('id', id)
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return true
       }
-
-      const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
-      const { error } = await supabase.from('farm_tour').delete().eq('id', id)
-
-      if (error) {
-        throw error
-      }
-
-      timer.end({ metadata: { deleted: true, deletedImagesCount } })
-
-      dbLogger.info('農場體驗活動刪除成功', {
-        module: this.moduleName,
-        action: 'delete',
-        metadata: { activityId: id, title: existing.title, deletedImagesCount },
-      })
-
-      return true
-    } catch (error) {
-      timer.end()
-      this.handleError(error, 'delete')
-    }
+    )
   }
 
   /**
@@ -442,22 +303,10 @@ export class FarmTourService implements IFarmTourService {
     details: Record<string, unknown>
   }> {
     try {
-      dbLogger.info('檢查服務健康狀態', {
-        module: this.moduleName,
-        action: 'getHealthStatus',
-      })
-
-      // 測試資料庫連接
       const supabase = this.getSupabaseClient()
-      if (!supabase) {
-        throw new Error('Supabase client 初始化失敗')
-      }
-
       const { error } = await supabase.from('farm_tour').select('count').limit(1)
 
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
       return {
         status: 'healthy',

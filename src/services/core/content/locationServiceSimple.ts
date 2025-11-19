@@ -16,6 +16,7 @@ import { dbLogger } from '@/lib/logger'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { Location, LocationService } from '@/types/location'
 import { UpdateDataObject, ServiceSupabaseClient } from '@/types/service.types'
+import { withServiceOperation } from '../utils/ServiceDecorators'
 
 /**
  * 資料庫記錄類型
@@ -59,35 +60,6 @@ export class LocationServiceSimple implements LocationService {
       throw new DatabaseError('Supabase admin client not initialized')
     }
     return client
-  }
-
-  /**
-   * 統一錯誤處理方法
-   */
-  private handleError(error: unknown, action: string): never {
-    // 加入更詳細的錯誤資訊
-    const errorDetails = {
-      action,
-      timestamp: new Date().toISOString(),
-      originalError: error,
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorCode: (error as any)?.code,
-      errorDetails: (error as any)?.details,
-      errorHint: (error as any)?.hint,
-      errorName: (error as any)?.name,
-    }
-
-    dbLogger.error(`地點服務 ${action} 操作失敗`, error as Error, {
-      module: this.moduleName,
-      action,
-      metadata: errorDetails,
-    })
-
-    throw ErrorFactory.fromSupabaseError(error, {
-      module: this.moduleName,
-      action,
-      context: errorDetails,
-    })
   }
 
   /**
@@ -150,35 +122,23 @@ export class LocationServiceSimple implements LocationService {
    * 取得所有地點
    */
   async getLocations(): Promise<Location[]> {
-    try {
-      dbLogger.info('取得地點清單', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getLocations',
-      })
+        action: '取得地點清單',
+      },
+      async () => {
+        const supabase = createServiceSupabaseClient()
+        const { data, error } = await supabase
+          .from('locations')
+          .select('*')
+          .order('created_at', { ascending: true })
 
-      const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .order('created_at', { ascending: true })
+        if (error) throw ErrorFactory.fromSupabaseError(error)
 
-      if (error) {
-        this.handleError(error, 'getLocations')
+        return data?.map(record => this.transformFromDB(record as SupabaseLocationRecord)) || []
       }
-
-      const locations =
-        data?.map(record => this.transformFromDB(record as SupabaseLocationRecord)) || []
-
-      dbLogger.info('地點清單查詢成功', {
-        module: this.moduleName,
-        action: 'getLocations',
-        metadata: { count: locations.length },
-      })
-
-      return locations
-    } catch (error) {
-      this.handleError(error, 'getLocations')
-    }
+    )
   }
 
   /**
@@ -220,80 +180,45 @@ export class LocationServiceSimple implements LocationService {
   async addLocation(
     locationData: Omit<Location, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
   ): Promise<Location> {
-    try {
-      dbLogger.info('新增地點', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'addLocation',
-        metadata: { name: locationData.name, address: locationData.address },
-      })
+        action: '新增地點',
+        context: { name: locationData.name, address: locationData.address },
+      },
+      async () => {
+        // 基本驗證
+        if (!locationData.name?.trim()) {
+          throw new ValidationError('地點名稱不能為空')
+        }
+        if (!locationData.address?.trim()) {
+          throw new ValidationError('地址不能為空')
+        }
+        if (
+          !locationData.coordinates ||
+          !locationData.coordinates.lat ||
+          !locationData.coordinates.lng
+        ) {
+          throw new ValidationError('座標資訊不完整')
+        }
 
-      // 基本驗證
-      if (!locationData.name?.trim()) {
-        throw new ValidationError('地點名稱不能為空')
+        // 電話號碼驗證
+        this.validatePhoneNumber(locationData.phone)
+
+        const insertData = this.transformToDB(locationData)
+        const supabaseAdmin = this.getSupabaseAdminClient()
+
+        const { data, error } = await supabaseAdmin
+          .from('locations')
+          .insert([insertData])
+          .select()
+          .single()
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+
+        return this.transformFromDB(data as SupabaseLocationRecord)
       }
-      if (!locationData.address?.trim()) {
-        throw new ValidationError('地址不能為空')
-      }
-      if (
-        !locationData.coordinates ||
-        !locationData.coordinates.lat ||
-        !locationData.coordinates.lng
-      ) {
-        throw new ValidationError('座標資訊不完整')
-      }
-
-      // 電話號碼驗證
-      this.validatePhoneNumber(locationData.phone)
-
-      const insertData = this.transformToDB(locationData)
-
-      dbLogger.debug('準備插入資料', {
-        module: this.moduleName,
-        action: 'addLocation',
-        metadata: { insertData },
-      })
-
-      const supabaseAdmin = this.getSupabaseAdminClient()
-
-      dbLogger.debug('使用 Supabase Admin 客戶端', {
-        module: this.moduleName,
-        action: 'addLocation',
-        metadata: { hasAdminClient: !!supabaseAdmin },
-      })
-
-      const { data, error } = await supabaseAdmin
-        .from('locations')
-        .insert([insertData])
-        .select()
-        .single()
-
-      if (error) {
-        dbLogger.error('Supabase 插入錯誤詳情', error, {
-          module: this.moduleName,
-          action: 'addLocation',
-          metadata: {
-            errorCode: error.code,
-            errorMessage: error.message,
-            errorDetails: error.details,
-            errorHint: error.hint,
-            insertData,
-          },
-        })
-        this.handleError(error, 'addLocation')
-      }
-
-      const newLocation = this.transformFromDB(data as SupabaseLocationRecord)
-
-      dbLogger.info('地點新增成功', {
-        module: this.moduleName,
-        action: 'addLocation',
-        metadata: { locationId: newLocation.id, name: newLocation.name },
-      })
-
-      return newLocation
-    } catch (error) {
-      this.handleError(error, 'addLocation')
-    }
+    )
   }
 
   /**
@@ -303,177 +228,138 @@ export class LocationServiceSimple implements LocationService {
     id: string,
     locationData: Partial<Omit<Location, 'id' | 'createdAt' | 'updatedAt'>>
   ): Promise<Location> {
-    try {
-      dbLogger.info('更新地點', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'updateLocation',
-        metadata: { locationId: id },
-      })
+        action: '更新地點',
+        context: { locationId: id },
+      },
+      async () => {
+        if (!id || typeof id !== 'string' || id.trim() === '') {
+          throw new ValidationError('地點 ID 必須為非空字串')
+        }
 
-      if (!id || typeof id !== 'string' || id.trim() === '') {
-        throw new ValidationError('地點 ID 必須為非空字串')
+        // 驗證更新資料
+        if (locationData.phone !== undefined) {
+          this.validatePhoneNumber(locationData.phone)
+        }
+
+        // 建立更新資料對象
+        const updateData: UpdateDataObject = {}
+        if (locationData.name !== undefined) updateData.name = locationData.name
+        if (locationData.title !== undefined) updateData.title = locationData.title
+        if (locationData.address !== undefined) updateData.address = locationData.address
+        if (locationData.landmark !== undefined) updateData.landmark = locationData.landmark
+        if (locationData.phone !== undefined) updateData.phone = locationData.phone
+        if (locationData.lineId !== undefined) updateData.line_id = locationData.lineId
+        if (locationData.hours !== undefined) updateData.hours = locationData.hours
+        if (locationData.closedDays !== undefined) updateData.closed_days = locationData.closedDays
+        if (locationData.parking !== undefined) updateData.parking = locationData.parking
+        if (locationData.publicTransport !== undefined)
+          updateData.public_transport = locationData.publicTransport
+        if (locationData.features !== undefined) updateData.features = locationData.features
+        if (locationData.specialties !== undefined)
+          updateData.specialties = locationData.specialties
+        if (locationData.coordinates !== undefined)
+          updateData.coordinates = locationData.coordinates
+        if (locationData.image !== undefined) updateData.image = locationData.image
+        if (locationData.isMain !== undefined) updateData.is_main = locationData.isMain
+
+        const supabaseAdmin = this.getSupabaseAdminClient()
+        const { data, error } = await supabaseAdmin
+          .from('locations')
+          .update(updateData)
+          .eq('id', id)
+          .select()
+          .single()
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
+        if (!data) throw new NotFoundError(`地點 ${id} 不存在`)
+
+        return this.transformFromDB(data as SupabaseLocationRecord)
       }
-
-      // 驗證更新資料
-      if (locationData.phone !== undefined) {
-        this.validatePhoneNumber(locationData.phone)
-      }
-
-      // 建立更新資料對象
-      const updateData: UpdateDataObject = {}
-      if (locationData.name !== undefined) updateData.name = locationData.name
-      if (locationData.title !== undefined) updateData.title = locationData.title
-      if (locationData.address !== undefined) updateData.address = locationData.address
-      if (locationData.landmark !== undefined) updateData.landmark = locationData.landmark
-      if (locationData.phone !== undefined) updateData.phone = locationData.phone
-      if (locationData.lineId !== undefined) updateData.line_id = locationData.lineId
-      if (locationData.hours !== undefined) updateData.hours = locationData.hours
-      if (locationData.closedDays !== undefined) updateData.closed_days = locationData.closedDays
-      if (locationData.parking !== undefined) updateData.parking = locationData.parking
-      if (locationData.publicTransport !== undefined)
-        updateData.public_transport = locationData.publicTransport
-      if (locationData.features !== undefined) updateData.features = locationData.features
-      if (locationData.specialties !== undefined) updateData.specialties = locationData.specialties
-      if (locationData.coordinates !== undefined) updateData.coordinates = locationData.coordinates
-      if (locationData.image !== undefined) updateData.image = locationData.image
-      if (locationData.isMain !== undefined) updateData.is_main = locationData.isMain
-
-      const supabaseAdmin = this.getSupabaseAdminClient()
-      const { data, error } = await supabaseAdmin
-        .from('locations')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single()
-
-      if (error) {
-        this.handleError(error, 'updateLocation')
-      }
-
-      if (!data) {
-        throw new NotFoundError(`地點 ${id} 不存在`)
-      }
-
-      const updatedLocation = this.transformFromDB(data as SupabaseLocationRecord)
-
-      dbLogger.info('地點更新成功', {
-        module: this.moduleName,
-        action: 'updateLocation',
-        metadata: { locationId: id, updatedFields: Object.keys(updateData) },
-      })
-
-      return updatedLocation
-    } catch (error) {
-      this.handleError(error, 'updateLocation')
-    }
+    )
   }
 
   /**
    * 刪除地點
    */
   async deleteLocation(id: string): Promise<void> {
-    try {
-      dbLogger.info('刪除地點', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'deleteLocation',
-        metadata: { locationId: id },
-      })
+        action: '刪除地點',
+        context: { locationId: id },
+      },
+      async () => {
+        if (!id || typeof id !== 'string' || id.trim() === '') {
+          throw new ValidationError('地點 ID 必須為非空字串')
+        }
 
-      if (!id || typeof id !== 'string' || id.trim() === '') {
-        throw new ValidationError('地點 ID 必須為非空字串')
-      }
+        // 先檢查地點是否存在
+        const existing = await this.getLocationById(id)
+        if (!existing) {
+          throw new NotFoundError(`找不到 ID 為 ${id} 的地點`)
+        }
 
-      // 先檢查地點是否存在
-      const existing = await this.getLocationById(id)
-      if (!existing) {
-        throw new NotFoundError(`找不到 ID 為 ${id} 的地點`)
-      }
+        // 刪除相關圖片（使用統一圖片服務）
+        try {
+          const unifiedImageService = new UnifiedImageService()
+          const deletedImagesCount = await unifiedImageService.deleteEntityImages('locations', id)
 
-      // 刪除相關圖片（使用統一圖片服務）
-      let deletedImagesCount = 0
-      try {
-        const unifiedImageService = new UnifiedImageService()
-        deletedImagesCount = await unifiedImageService.deleteEntityImages('locations', id)
-
-        if (deletedImagesCount > 0) {
-          dbLogger.info('地點相關圖片刪除成功', {
+          if (deletedImagesCount > 0) {
+            dbLogger.info('地點相關圖片刪除成功', {
+              module: this.moduleName,
+              action: 'deleteEntityImages',
+              metadata: { locationId: id, deletedImagesCount },
+            })
+          }
+        } catch (imageError) {
+          // 圖片刪除失敗不應阻止地點刪除，只記錄警告
+          dbLogger.warn('地點圖片刪除失敗，但繼續進行地點刪除', {
             module: this.moduleName,
             action: 'deleteEntityImages',
-            metadata: { locationId: id, deletedImagesCount },
+            metadata: {
+              locationId: id,
+              error: imageError instanceof Error ? imageError.message : String(imageError),
+            },
           })
         }
-      } catch (imageError) {
-        // 圖片刪除失敗不應阻止地點刪除，只記錄警告
-        dbLogger.warn('地點圖片刪除失敗，但繼續進行地點刪除', {
-          module: this.moduleName,
-          action: 'deleteEntityImages',
-          metadata: {
-            locationId: id,
-            error: imageError instanceof Error ? imageError.message : String(imageError),
-          },
-        })
+
+        const supabaseAdmin = this.getSupabaseAdminClient()
+        const { error } = await supabaseAdmin.from('locations').delete().eq('id', id)
+
+        if (error) throw ErrorFactory.fromSupabaseError(error)
       }
-
-      const supabaseAdmin = this.getSupabaseAdminClient()
-      const { error } = await supabaseAdmin.from('locations').delete().eq('id', id)
-
-      if (error) {
-        this.handleError(error, 'deleteLocation')
-      }
-
-      dbLogger.info('地點刪除成功', {
-        module: this.moduleName,
-        action: 'deleteLocation',
-        metadata: { locationId: id, locationName: existing.name, deletedImagesCount },
-      })
-    } catch (error) {
-      this.handleError(error, 'deleteLocation')
-    }
+    )
   }
 
   /**
    * 根據 ID 取得地點
    */
   async getLocationById(id: string): Promise<Location | null> {
-    try {
-      dbLogger.info('根據 ID 取得地點', {
+    return withServiceOperation(
+      {
         module: this.moduleName,
-        action: 'getLocationById',
-        metadata: { locationId: id },
-      })
-
-      if (!id || typeof id !== 'string' || id.trim() === '') {
-        throw new ValidationError('地點 ID 必須為非空字串')
-      }
-
-      const supabase = createServiceSupabaseClient()
-      const { data, error } = await supabase.from('locations').select('*').eq('id', id).single()
-
-      if (error) {
-        if (error.code === 'PGRST116') {
-          // 記錄未找到
-          dbLogger.info('地點不存在', {
-            module: this.moduleName,
-            action: 'getLocationById',
-            metadata: { locationId: id },
-          })
-          return null
+        action: '根據 ID 取得地點',
+        context: { locationId: id },
+      },
+      async () => {
+        if (!id || typeof id !== 'string' || id.trim() === '') {
+          throw new ValidationError('地點 ID 必須為非空字串')
         }
-        this.handleError(error, 'getLocationById')
+
+        const supabase = createServiceSupabaseClient()
+        const { data, error } = await supabase.from('locations').select('*').eq('id', id).single()
+
+        if (error) {
+          if (error.code === 'PGRST116') return null
+          throw ErrorFactory.fromSupabaseError(error)
+        }
+
+        return this.transformFromDB(data as SupabaseLocationRecord)
       }
-
-      const location = this.transformFromDB(data as SupabaseLocationRecord)
-
-      dbLogger.info('地點查詢成功', {
-        module: this.moduleName,
-        action: 'getLocationById',
-        metadata: { locationId: id, name: location.name },
-      })
-
-      return location
-    } catch (error) {
-      this.handleError(error, 'getLocationById')
-    }
+    )
   }
 
   /**
