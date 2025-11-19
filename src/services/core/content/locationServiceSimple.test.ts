@@ -35,13 +35,11 @@ describe('LocationServiceSimple', () => {
     it('應該成功取得地點列表', async () => {
       mockFrom.mockReturnValue({
         select: () => ({
-          order: () => ({
-            limit: () =>
-              Promise.resolve({
-                data: [mockLocationData],
-                error: null,
-              }),
-          }),
+          order: () =>
+            Promise.resolve({
+              data: [mockLocationData],
+              error: null,
+            }),
         }),
       })
 

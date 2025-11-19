@@ -84,6 +84,9 @@ export function initializeLocationMocks() {
       error: vi.fn(),
       warn: vi.fn(),
       debug: vi.fn(),
+      timer: vi.fn(() => ({
+        end: vi.fn(),
+      })),
     },
   }))
 
