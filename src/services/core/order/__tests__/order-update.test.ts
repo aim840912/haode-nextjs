@@ -165,11 +165,12 @@ describe('OrderService - updateOrder', () => {
       const updates: Partial<Order> = {
         notes: '新備註',
         shippingAddress: {
-          recipientName: '新收件人',
+          name: '新收件人',
           phone: '0987654321',
           city: '台中市',
-          district: '西屯區',
           street: '新地址456號',
+          postalCode: '407',
+          country: '台灣',
         },
       }
 

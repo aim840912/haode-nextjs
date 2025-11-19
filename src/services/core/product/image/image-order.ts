@@ -36,17 +36,23 @@ export async function reorderImages(
       metadata: { productId, count: imageOrders.length },
     })
 
-    // TODO: 優化機會 - 可改為使用批次 RPC function 一次更新所有位置
-    for (const { id, position } of imageOrders) {
-      const { error } = await supabase
-        .from(TABLE_NAME)
-        .update({ display_position: position })
-        .eq('id', id)
-        .eq('module', MODULE)
-        .eq('entity_id', productId)
+    // 使用批次 RPC function 一次更新所有位置 (優化 N+1 查詢)
+    // 將 imageOrders 轉換為 JSONB 格式: { "uuid1": position1, "uuid2": position2, ... }
+    const updates = imageOrders.reduce(
+      (acc, { id, position }) => {
+        acc[id] = position
+        return acc
+      },
+      {} as Record<string, number>
+    )
 
-      if (error) throw error
-    }
+    // 使用 as any 繞過型別檢查 (新增的 RPC function 尚未在型別定義中)
+    const { error } = await (supabase as any).rpc('batch_update_image_positions', {
+      p_product_id: productId,
+      p_updates: updates,
+    })
+
+    if (error) throw error
 
     timer.end({ metadata: { productId, count: imageOrders.length } })
 

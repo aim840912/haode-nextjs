@@ -246,8 +246,7 @@ describe('Error System', () => {
 
     it('應該在開發環境包含詳細資訊', () => {
       // Arrange
-      const originalEnv = process.env.NODE_ENV
-      process.env.NODE_ENV = 'development'
+      vi.stubEnv('NODE_ENV', 'development')
 
       const details: ErrorDetails = { module: 'Test', action: 'test' }
       const error = new ValidationError('測試', details)
@@ -259,13 +258,12 @@ describe('Error System', () => {
       expect(response.error.details).toEqual(details)
 
       // Cleanup
-      process.env.NODE_ENV = originalEnv
+      vi.unstubAllEnvs()
     })
 
     it('應該在生產環境隱藏詳細資訊', () => {
       // Arrange
-      const originalEnv = process.env.NODE_ENV
-      process.env.NODE_ENV = 'production'
+      vi.stubEnv('NODE_ENV', 'production')
 
       const details: ErrorDetails = { module: 'Test', action: 'test' }
       const error = new ValidationError('測試', details)
@@ -277,7 +275,7 @@ describe('Error System', () => {
       expect(response.error.details).toBeUndefined()
 
       // Cleanup
-      process.env.NODE_ENV = originalEnv
+      vi.unstubAllEnvs()
     })
   })
 

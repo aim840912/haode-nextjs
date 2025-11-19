@@ -4,11 +4,18 @@ import { fetchProducts as fetchProductsAPI } from '@/lib/api/products-api'
 import { logger } from '@/lib/logger'
 import { Product } from '@/types/product'
 
+export interface UseProductsDataOptions {
+  /** 限制返回的產品數量 (可選) */
+  limit?: number
+}
+
 export interface UseProductsDataReturn {
   products: Product[]
   loading: boolean
   error: Error | null
   refetch: (forceRefresh?: boolean) => Promise<void>
+  /** 重試函數 (用於錯誤處理) */
+  handleRetry: () => void
 }
 
 /**
@@ -19,8 +26,22 @@ export interface UseProductsDataReturn {
  * - 統一錯誤處理
  * - 支援強制重新整理
  * - 去重複邏輯
+ * - 支援限制產品數量
+ *
+ * @param options - 配置選項
+ * @param options.limit - 限制返回的產品數量 (可選)
+ *
+ * @example
+ * ```typescript
+ * // 獲取所有產品
+ * const { products, loading, error } = useProductsData()
+ *
+ * // 只獲取前 3 個產品
+ * const { products, loading, error } = useProductsData({ limit: 3 })
+ * ```
  */
-export function useProductsData(): UseProductsDataReturn {
+export function useProductsData(options?: UseProductsDataOptions): UseProductsDataReturn {
+  const { limit } = options || {}
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -37,10 +58,15 @@ export function useProductsData(): UseProductsDataReturn {
             const data = await fetchProductsAPI({ isActive: true })
 
             // 過濾重複產品
-            const uniqueProducts = data.filter(
+            let uniqueProducts = data.filter(
               (product: Product, index: number, self: Product[]) =>
                 index === self.findIndex(p => p.id === product.id)
             )
+
+            // 如果設定了 limit,則只取前 N 個產品
+            if (limit && limit > 0) {
+              uniqueProducts = uniqueProducts.slice(0, limit)
+            }
 
             setProducts(uniqueProducts)
             return uniqueProducts
@@ -69,8 +95,14 @@ export function useProductsData(): UseProductsDataReturn {
         setLoading(false)
       }
     },
-    [executeWithErrorHandling]
+    [executeWithErrorHandling, limit]
   )
+
+  // 重試函數 (用於錯誤處理元件)
+  const handleRetry = useCallback(() => {
+    setLoading(true)
+    fetchProducts()
+  }, [fetchProducts])
 
   // 初始載入
   useEffect(() => {
@@ -96,5 +128,6 @@ export function useProductsData(): UseProductsDataReturn {
     loading,
     error,
     refetch: fetchProducts,
+    handleRetry,
   }
 }

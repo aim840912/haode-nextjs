@@ -3,7 +3,7 @@
  * 提供共用的 Mock 和測試工具，避免重複代碼
  */
 
-import { vi } from 'vitest'
+import { vi, expect } from 'vitest'
 
 /**
  * 建立 Supabase Mock 客戶端

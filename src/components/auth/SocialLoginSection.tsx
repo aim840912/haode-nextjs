@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { signInWithProvider } from '@/lib/database/supabase-auth'
+import { authLogger } from '@/lib/logger'
 import { OAuthProvider } from '@/types/oauth'
 import { SocialLoginButton } from './SocialLoginButton'
 
@@ -24,11 +25,15 @@ export function SocialLoginSection({ providers, redirectTo }: SocialLoginSection
       if (error) {
         // 錯誤會在 signInWithProvider 中記錄
         // 這裡不顯示 toast，因為用戶會被導向到 OAuth 頁面
-        console.error(`${provider} 登入失敗:`, error)
+        authLogger.error(`${provider} 登入失敗`, error, {
+          metadata: { provider, redirectTo },
+        })
       }
       // 成功時會自動導向到 OAuth 頁面
     } catch (err) {
-      console.error('登入過程發生錯誤:', err)
+      authLogger.error('登入過程發生錯誤', err as Error, {
+        metadata: { provider, redirectTo },
+      })
     } finally {
       // 通常不會執行到這裡，因為會導向到 OAuth 頁面
       setLoading(false)

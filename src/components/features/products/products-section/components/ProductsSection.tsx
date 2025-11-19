@@ -6,7 +6,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils/cn'
-import { useProductsData } from '../hooks/useProductsData'
+import { useProductsData } from '@/hooks/useProductsData'
 import { useVisibility } from '../hooks/useVisibility'
 import { SectionHeader } from './SectionHeader'
 import { LoadingState } from './LoadingState'
@@ -16,7 +16,8 @@ import { ProductCard } from './ProductCard'
 import { ViewAllButton } from './ViewAllButton'
 
 function ProductsSection() {
-  const { products, loading, error, handleRetry } = useProductsData()
+  // 使用統一的 useProductsData Hook,限制只取前 3 個產品
+  const { products, loading, error, handleRetry } = useProductsData({ limit: 3 })
   const { isVisible, ref } = useVisibility()
 
   if (loading) {
@@ -24,7 +25,7 @@ function ProductsSection() {
   }
 
   if (error) {
-    return <ErrorState error={error} onRetry={handleRetry} />
+    return <ErrorState error={error.message} onRetry={handleRetry} />
   }
 
   return (

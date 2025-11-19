@@ -231,8 +231,10 @@ describe('GET /api/inquiries/[id]', () => {
       isAdmin: true,
     })
 
-    // Mock update (標記已讀)
-    mockEq.mockResolvedValueOnce({ data: null, error: null })
+    // Mock update (標記已讀) - update().eq() 本身不返回 Promise,應該 mock update 操作完成
+    mockUpdate.mockReturnValueOnce({
+      eq: vi.fn().mockResolvedValueOnce({ error: null }),
+    })
 
     mockGetInquiryByIdForAdmin.mockResolvedValue(mockInquiry)
 
