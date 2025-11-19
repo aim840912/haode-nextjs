@@ -7,14 +7,14 @@ import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Hooks
+import { useInterests } from '@/hooks/profile/useInterests'
+import { useOrders } from '@/hooks/profile/useOrders'
+import { useProfileForm } from '@/hooks/profile/useProfileForm'
 import { InterestsTab } from './components/InterestsTab'
 import { OrdersTab } from './components/OrdersTab'
 import { ProfileTab } from './components/ProfileTab'
-import { useInterests } from '@/hooks/profile/useInterests'
-import { useOrders } from '@/hooks/profile/useOrders'
 
 // Components
-import { useProfileForm } from '@/hooks/profile/useProfileForm'
 
 // 載入頁面元件
 function ProfilePageLoading() {

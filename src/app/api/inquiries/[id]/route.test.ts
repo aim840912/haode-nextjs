@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { GET, PUT, DELETE, PATCH } from './route'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock helpers
 vi.mock('./helpers', async importOriginal => {
@@ -148,9 +147,10 @@ vi.mock('@/lib/middleware/api-middleware', async importOriginal => {
 
 // Import after mock
 import { inquiryService } from '@/services/core/inquiry/InquiryService'
-import { InquiryUtils } from '@/types/inquiry'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
+import { InquiryUtils } from '@/types/inquiry'
 import { checkAdminRole } from './helpers'
+import { GET, PUT, DELETE, PATCH } from './route'
 
 const mockGetInquiryById = inquiryService.getInquiryById as ReturnType<typeof vi.fn>
 const mockGetInquiryByIdForAdmin = inquiryService.getInquiryByIdForAdmin as ReturnType<typeof vi.fn>

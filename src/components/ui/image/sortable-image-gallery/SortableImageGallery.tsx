@@ -19,12 +19,12 @@ import {
 } from '@dnd-kit/sortable'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils/cn'
-import { SortableImageGalleryProps } from './types'
-import { SortableImageItem } from './SortableImageItem'
+import { DragOverlay } from './DragOverlay'
 import { EmptyGalleryPlaceholder } from './EmptyGalleryPlaceholder'
 import { GalleryInstructions } from './GalleryInstructions'
 import { GalleryStats } from './GalleryStats'
-import { DragOverlay } from './DragOverlay'
+import { SortableImageItem } from './SortableImageItem'
+import { SortableImageGalleryProps } from './types'
 
 export function SortableImageGallery({
   images,

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Sprout, Apple, Wheat, Leaf, PartyPopper, Calendar, Users, Sparkles } from 'lucide-react'
-import { HeroSection } from '@/components/features/home/HeroSection'
 import { FeaturesSection } from '@/components/features/home/FeaturesSection'
+import { HeroSection } from '@/components/features/home/HeroSection'
 import { NewsSection } from '@/components/features/home/NewsSection'
 import { ProductsSectionWithErrorBoundary as ProductsSection } from '@/components/features/products/ProductsSection'
 import { FarmStructuredData } from '@/components/features/seo/StructuredData'

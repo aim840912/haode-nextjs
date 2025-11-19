@@ -4,9 +4,9 @@
  */
 
 import { cacheLogger } from '@/lib/logger'
-import type { WarmupTask, BackgroundRefreshTask, CacheOptions } from './cache-types'
-import type { CacheStorageManager } from './cache-storage'
 import type { CacheMetricsManager } from './cache-metrics'
+import type { CacheStorageManager } from './cache-storage'
+import type { WarmupTask, BackgroundRefreshTask, CacheOptions } from './cache-types'
 
 export class CacheAdvancedManager {
   constructor(

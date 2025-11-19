@@ -5,8 +5,8 @@
 'use client'
 
 import React, { createContext, useState, useCallback } from 'react'
-import type { Toast, ToastAction, ToastContextType } from '../types'
 import { ToastContainer } from '../components/ToastContainer'
+import type { Toast, ToastAction, ToastContextType } from '../types'
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined)
 

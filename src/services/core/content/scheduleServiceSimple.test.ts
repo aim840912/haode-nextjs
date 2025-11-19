@@ -10,8 +10,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ScheduleServiceSimple } from './scheduleServiceSimple'
 import type { ScheduleItem } from '@/types/schedule'
+import { ScheduleServiceSimple } from './scheduleServiceSimple'
 
 // ============================================================================
 // Mock Setup (vi.hoisted for Vitest 4.0 compatibility)

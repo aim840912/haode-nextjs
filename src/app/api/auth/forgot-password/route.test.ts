@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from './route'
 
 // Mock Supabase Auth
@@ -13,6 +13,7 @@ vi.mock('@/lib/database/supabase-auth', () => ({
 
 // Import after mock
 import { supabase } from '@/lib/database/supabase-auth'
+
 const mockResetPasswordForEmail = supabase.auth.resetPasswordForEmail as ReturnType<typeof vi.fn>
 
 describe('POST /api/auth/forgot-password', () => {

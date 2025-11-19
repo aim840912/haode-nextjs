@@ -13,15 +13,15 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ValidationError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import { Order, OrderItem, OrderStatus, OrderSummary, CreateOrderRequest } from '@/types/order'
+import { QueryBuilder } from '../utils/QueryBuilder'
+import { withServiceOperation, withServiceOperationLogged } from '../utils/ServiceDecorators'
 import { orderFromDB, orderItemFromDB, generateOrderNumber } from './orderMappers'
-import type { OrderRecord, OrderItemRecord } from './types'
 
 // 工具模組
 import { OrderCalculator } from './utils/OrderCalculator'
 import { OrderInventoryManager } from './utils/OrderInventoryManager'
 import { OrderItemsLoader } from './utils/OrderItemsLoader'
-import { withServiceOperation, withServiceOperationLogged } from '../utils/ServiceDecorators'
-import { QueryBuilder } from '../utils/QueryBuilder'
+import type { OrderRecord, OrderItemRecord } from './types'
 
 const getAdmin = () => {
   const client = getSupabaseAdmin()

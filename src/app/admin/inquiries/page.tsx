@@ -7,6 +7,8 @@ import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
+import { useBatchOperations } from '@/hooks/admin/useBatchOperations'
+import { useInquiriesData } from '@/hooks/admin/useInquiriesData'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { useInquiryWorkflow } from '@/hooks/useInquiryWorkflow'
 import { useQuickReplyTemplates } from '@/hooks/useQuickReplyTemplates'
@@ -20,8 +22,6 @@ import { InquiryFilters } from './components/InquiryFilters'
 import { InquiryList } from './components/InquiryList'
 import { InquiryStats } from './components/InquiryStats'
 import { QuickReplySection } from './components/QuickReplySection'
-import { useBatchOperations } from '@/hooks/admin/useBatchOperations'
-import { useInquiriesData } from '@/hooks/admin/useInquiriesData'
 
 function AdminInquiriesPage() {
   const { user } = useAuth()

@@ -12,8 +12,8 @@
 
 import { cookies } from 'next/headers'
 import * as jwt from 'jsonwebtoken'
-import { authLogger } from '@/lib/logger'
 import { AuthenticationError, AuthorizationError } from '@/lib/errors'
+import { authLogger } from '@/lib/logger'
 
 const JWT_SECRET = process.env.JWT_SECRET
 

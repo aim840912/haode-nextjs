@@ -9,7 +9,6 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
-import { LocationServiceSimple } from './locationServiceSimple'
 import {
   initializeLocationMocks,
   resetAllLocationMocks,
@@ -25,6 +24,7 @@ import {
   mockLocationData,
   mockLocationResponse,
 } from './__tests__/location-test-setup'
+import { LocationServiceSimple } from './locationServiceSimple'
 
 // 初始化所有 Mocks
 initializeLocationMocks()

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { SearchResult } from '@/types/search'
 import { useDebounce } from '@/hooks/useDebounce'
 import { searchContent } from '@/lib/api/search-api'
 import { logger } from '@/lib/logger'
+import { SearchResult } from '@/types/search'
 
 export function useSearchSuggestions(query: string, showSuggestions: boolean, isExpanded: boolean) {
   const [suggestions, setSuggestions] = useState<SearchResult[]>([])

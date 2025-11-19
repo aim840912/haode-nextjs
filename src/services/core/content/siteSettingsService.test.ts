@@ -8,9 +8,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { SiteSettingsService } from './siteSettingsService'
 import { NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import type { SiteSetting, SiteSettingInput, SiteSettingUpdate } from '@/types/siteSettings'
+import { SiteSettingsService } from './siteSettingsService'
 
 // ============================================================================
 // Mock Setup

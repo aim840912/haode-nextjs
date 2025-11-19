@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { GET, PUT, DELETE } from './route'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock ProductService
 vi.mock('@/services/core/product/productService', () => ({
@@ -139,10 +138,11 @@ vi.mock('@/lib/middleware/api-middleware', async importOriginal => {
 })
 
 // Import after mock
-import { productService } from '@/services/core/product/productService'
-import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
 import { UnifiedCacheManager } from '@/lib/cache/unified-cache-manager'
 import { recordProductView } from '@/lib/metrics'
+import { productService } from '@/services/core/product/productService'
+import { unifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { GET, PUT, DELETE } from './route'
 
 const mockGetProductById = productService.getProductById as ReturnType<typeof vi.fn>
 const mockUpdateProduct = productService.updateProduct as ReturnType<typeof vi.fn>

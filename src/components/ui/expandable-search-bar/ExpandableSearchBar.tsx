@@ -3,12 +3,12 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
-import { ExpandableSearchBarProps } from './types'
-import { useSearchSuggestions } from './useSearchSuggestions'
-import { useKeyboardNavigation } from './useKeyboardNavigation'
 import { SearchButton } from './SearchButton'
 import { SearchInput } from './SearchInput'
 import { SuggestionDropdown } from './SuggestionDropdown'
+import { ExpandableSearchBarProps } from './types'
+import { useKeyboardNavigation } from './useKeyboardNavigation'
+import { useSearchSuggestions } from './useSearchSuggestions'
 
 export function ExpandableSearchBar({
   placeholder,

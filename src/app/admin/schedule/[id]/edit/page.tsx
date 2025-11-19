@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
 // Form Components
 import { AdditionalInfoSection } from '@/components/admin/schedule-form/AdditionalInfoSection'
@@ -11,6 +10,7 @@ import { BasicInfoSection } from '@/components/admin/schedule-form/BasicInfoSect
 import { DateTimeSection } from '@/components/admin/schedule-form/DateTimeSection'
 import { ProductsSection } from '@/components/admin/schedule-form/ProductsSection'
 import { SchedulePreview } from '@/components/admin/schedule-form/SchedulePreview'
+import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useScheduleForm } from '@/hooks/forms/useScheduleForm'
 import { useScheduleFormSubmit } from '@/hooks/forms/useScheduleFormSubmit'
 import { useScheduleFormValidation } from '@/hooks/forms/useScheduleFormValidation'

@@ -5,8 +5,8 @@ import { cn } from '@/lib/utils/cn'
 import { InitialState, LoadingState, LoginLink } from './AuthButtonStates'
 import { ChevronDownIcon, UserIcon } from './icons'
 import { AuthButtonProps } from './types'
-import { UserDropdownMenu } from './UserDropdownMenu'
 import { useAuthButton } from './useAuthButton'
+import { UserDropdownMenu } from './UserDropdownMenu'
 
 /**
  * 認證按鈕元件

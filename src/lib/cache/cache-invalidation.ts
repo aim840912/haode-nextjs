@@ -4,8 +4,8 @@
  */
 
 import { cacheLogger } from '@/lib/logger'
-import type { CacheStorageManager } from './cache-storage'
 import type { CacheMetricsManager } from './cache-metrics'
+import type { CacheStorageManager } from './cache-storage'
 
 export class CacheInvalidationManager {
   constructor(

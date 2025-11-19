@@ -10,8 +10,8 @@ import { validateImageFile, generateFileName } from '@/lib/utils/image-utils'
 import type { Database } from '@/types/database'
 import type { ImageUploadResult } from '@/types/supabase.types'
 import { UnifiedImageError } from './image-error'
-import { validateImageParams } from './image-validation'
 import { ImageStorageManager } from './image-storage'
+import { validateImageParams } from './image-validation'
 
 type ImageRecord = Database['public']['Tables']['images']['Row']
 

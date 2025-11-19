@@ -3,7 +3,6 @@
  * 提供統一的錯誤處理、計時、日誌記錄功能
  */
 
-import { dbLogger } from '@/lib/logger'
 import {
   ErrorFactory,
   ValidationError,
@@ -11,6 +10,7 @@ import {
   AuthorizationError,
   MethodNotAllowedError,
 } from '@/lib/errors'
+import { dbLogger } from '@/lib/logger'
 
 /**
  * Service 操作裝飾器配置

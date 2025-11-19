@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { ProductService } from './productService'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import type { CreateProductData, UpdateProductData, Product } from '@/types/product'
+import { ProductService } from './productService'
 
 // Use vi.hoisted() for mock setup
 const {

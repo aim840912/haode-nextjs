@@ -7,7 +7,6 @@ import type { CacheOptions } from './cache-types'
 
 // 全域型別宣告
 declare global {
-  // eslint-disable-next-line no-var
   var unifiedCacheCleanupStarted: boolean | undefined
 }
 

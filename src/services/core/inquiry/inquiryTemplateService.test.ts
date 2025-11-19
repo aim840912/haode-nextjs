@@ -9,13 +9,13 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { InquiryTemplateService } from './inquiryTemplateService'
 import { NotFoundError, ValidationError } from '@/lib/errors'
 import type {
   CreateInquiryTemplateRequest,
   UpdateInquiryTemplateRequest,
   InquiryTemplateQueryParams,
 } from '@/types/inquiry-template'
+import { InquiryTemplateService } from './inquiryTemplateService'
 
 // ============================================================================
 // Mock Setup

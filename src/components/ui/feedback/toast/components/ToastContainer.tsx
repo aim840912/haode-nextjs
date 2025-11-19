@@ -3,9 +3,9 @@
  */
 
 import React from 'react'
-import type { Toast } from '../types'
 import { getPositionClasses, groupToastsByPosition } from '../utils/positionUtils'
 import { ToastItem } from './ToastItem'
+import type { Toast } from '../types'
 
 interface ToastContainerProps {
   toasts: Toast[]

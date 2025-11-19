@@ -5,11 +5,11 @@
 export { ProductImageGallery } from './product-image-gallery'
 export type { ProductImageGalleryProps } from './product-image-gallery/types'
 
+import Image from 'next/image'
 import { OptimizedImage } from '@/components/ui/image/OptimizedImage'
 import { cn } from '@/lib/utils/cn'
 import { generateImageUrlsFromSupabaseUrl } from '@/lib/utils/image-utils'
 import { Product } from '@/types/product'
-import Image from 'next/image'
 
 // 簡化版本的產品圖片展示元件
 export function SimpleProductImage({

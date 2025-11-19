@@ -4,8 +4,8 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils/cn'
-import type { ToastType } from '../types'
 import { getIconStyles } from '../utils/styleUtils'
+import type { ToastType } from '../types'
 
 interface ToastIconProps {
   type: ToastType

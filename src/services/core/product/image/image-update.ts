@@ -9,8 +9,8 @@ import { DatabaseError, NotFoundError, ErrorFactory } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
 import type { Database } from '@/types/database'
 import type { ProductImage } from '@/types/product'
-import { transformFromDB } from './image-transform'
 import { getImageById } from './image-query'
+import { transformFromDB } from './image-transform'
 
 type ImageUpdate = Database['public']['Tables']['images']['Update']
 

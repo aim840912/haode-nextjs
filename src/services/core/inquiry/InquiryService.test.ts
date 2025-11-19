@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { NotFoundError, ValidationError } from '@/lib/errors'
 import type { CreateInquiryRequest, UpdateInquiryRequest } from '@/types/inquiry'
 import { InquiryService } from './InquiryService'
-import { NotFoundError, ValidationError } from '@/lib/errors'
 
 // Use vi.hoisted() to ensure mock variables are available before hoisting
 const {

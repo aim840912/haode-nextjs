@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { Share2, ShoppingCart } from 'lucide-react'
 import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
-import { InterestButton } from '../InterestButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
+import { InterestButton } from '../InterestButton'
 import { ExtendedProduct } from './types'
 
 interface ProductModalActionsProps {

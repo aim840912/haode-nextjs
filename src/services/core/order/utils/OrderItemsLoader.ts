@@ -5,8 +5,8 @@
 
 import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { ErrorFactory } from '@/lib/errors'
-import { orderItemFromDB } from '../orderMappers'
 import type { OrderItem } from '@/types/order'
+import { orderItemFromDB } from '../orderMappers'
 import type { OrderItemRecord } from '../types'
 
 const getAdmin = () => {

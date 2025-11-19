@@ -3,12 +3,12 @@
  */
 
 import React from 'react'
-import type { Toast } from '../types'
 import { getToastStyles } from '../utils/styleUtils'
-import { ToastIcon } from './ToastIcon'
-import { ToastProgressBar } from './ToastProgressBar'
 import { ToastActionButtons } from './ToastActionButtons'
 import { ToastCloseButton } from './ToastCloseButton'
+import { ToastIcon } from './ToastIcon'
+import { ToastProgressBar } from './ToastProgressBar'
+import type { Toast } from '../types'
 
 interface ToastItemProps {
   toast: Toast

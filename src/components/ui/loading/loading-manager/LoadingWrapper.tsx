@@ -1,6 +1,6 @@
 import React from 'react'
-import { useLoading } from './useLoading'
 import { LoadingIndicator } from './LoadingIndicator'
+import { useLoading } from './useLoading'
 import type { LoadingWrapperProps } from './types'
 
 /**

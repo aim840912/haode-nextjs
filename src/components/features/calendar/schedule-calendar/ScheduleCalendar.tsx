@@ -8,10 +8,10 @@ import {
 } from '@/hooks/useScheduleCalendar'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils/cn'
-import { StatusFilter } from './StatusFilter'
-import { CalendarView } from './CalendarView'
 import { CalendarLegend } from './CalendarLegend'
+import { CalendarView } from './CalendarView'
 import { EventDetailModal } from './EventDetailModal'
+import { StatusFilter } from './StatusFilter'
 
 export interface ScheduleCalendarProps {
   className?: string

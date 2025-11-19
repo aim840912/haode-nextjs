@@ -1,6 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
-import { GET, POST } from './route'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock InquiryService
 vi.mock('@/services/core/inquiry/InquiryService', () => ({
@@ -74,9 +73,10 @@ vi.mock('@/lib/middleware/api-middleware', async importOriginal => {
 })
 
 // Import after mock
-import { inquiryService } from '@/services/core/inquiry/InquiryService'
 import { recordInquirySubmit } from '@/lib/metrics'
+import { inquiryService } from '@/services/core/inquiry/InquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
+import { GET, POST } from './route'
 
 const mockGetUserInquiries = inquiryService.getUserInquiries as ReturnType<typeof vi.fn>
 const mockGetAllInquiries = inquiryService.getAllInquiries as ReturnType<typeof vi.fn>

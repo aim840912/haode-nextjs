@@ -12,8 +12,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { UserInterestsService } from '../userInterestsService'
 import { ValidationError } from '@/lib/errors'
+import { UserInterestsService } from '../userInterestsService'
 
 // ============================================================================
 // Mock Setup

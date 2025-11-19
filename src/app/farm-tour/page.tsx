@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react'
 import { FarmTourPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
+import { useFarmTourActivities } from '@/hooks/farm-tour/useFarmTourActivities'
+import { useFarmTourForm } from '@/hooks/farm-tour/useFarmTourForm'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
 import type { FarmTourActivity } from '@/types/farmTour'
 import {
@@ -21,8 +23,6 @@ import { FloatingCTA } from './components/FloatingCTA'
 import { HeroSection } from './components/HeroSection'
 import { InfoSection } from './components/InfoSection'
 import { TrustSection } from './components/TrustSection'
-import { useFarmTourActivities } from '@/hooks/farm-tour/useFarmTourActivities'
-import { useFarmTourForm } from '@/hooks/farm-tour/useFarmTourForm'
 
 // 預設農場設施（向下相容）
 const DEFAULT_FACILITIES: FacilityItem[] = [

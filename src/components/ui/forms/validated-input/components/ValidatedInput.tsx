@@ -2,17 +2,17 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils/cn'
+import { useSuggestions } from '../hooks/useSuggestions'
+import { useValidatedInputState } from '../hooks/useValidatedInputState'
 import { ValidatedInputProps } from '../types'
 import { getInputState } from '../utils/getInputState'
 import { getStateClasses } from '../utils/getStateClasses'
-import { useValidatedInputState } from '../hooks/useValidatedInputState'
-import { useSuggestions } from '../hooks/useSuggestions'
-import { InputLabel } from './InputLabel'
+import { CharacterCount } from './CharacterCount'
 import { InputField } from './InputField'
+import { InputLabel } from './InputLabel'
 import { StatusIcon } from './StatusIcon'
 import { SuggestionsList } from './SuggestionsList'
 import { ValidationMessages } from './ValidationMessages'
-import { CharacterCount } from './CharacterCount'
 
 /**
  * 增強的驗證輸入元件

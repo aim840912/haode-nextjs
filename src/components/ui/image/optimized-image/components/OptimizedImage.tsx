@@ -3,19 +3,19 @@
 import { useCallback } from 'react'
 import Image from 'next/image'
 import { useImageBlob } from '@/hooks/useImageBlob'
-import { handleImageError } from '@/lib/utils/image-utils'
 import { cn } from '@/lib/utils/cn'
+import { handleImageError } from '@/lib/utils/image-utils'
+import { useImageErrorHandling } from '../hooks/useImageErrorHandling'
+import { useImageLazyLoad } from '../hooks/useImageLazyLoad'
+import { useImageValidation } from '../hooks/useImageValidation'
 import {
   OptimizedImageProps,
   DEFAULT_BLUR_DATA_URL,
   RESPONSIVE_SIZES,
   DEFAULT_SIZES,
 } from '../types'
-import { useImageValidation } from '../hooks/useImageValidation'
-import { useImageLazyLoad } from '../hooks/useImageLazyLoad'
-import { useImageErrorHandling } from '../hooks/useImageErrorHandling'
-import { ImageLoadingState } from './ImageLoadingState'
 import { ImageErrorState } from './ImageErrorState'
+import { ImageLoadingState } from './ImageLoadingState'
 
 /**
  * OptimizedImage 元件

@@ -2,9 +2,9 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
-import { useHeaderState } from './header/useHeaderState'
 import { DesktopHeader } from './header/DesktopHeader'
 import { MobileHeader } from './header/MobileHeader'
+import { useHeaderState } from './header/useHeaderState'
 
 /**
  * Header 元件 - 網站頂部導航欄

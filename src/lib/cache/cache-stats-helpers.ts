@@ -5,8 +5,8 @@
  * 從 API Routes 中抽取出來，便於重用和測試
  */
 
-import { UnifiedCacheManager } from './unified-cache-manager'
 import { cacheLogger } from '@/lib/logger'
+import { UnifiedCacheManager } from './unified-cache-manager'
 
 /**
  * 計算快取健康評分 (0-100)

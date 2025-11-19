@@ -14,8 +14,8 @@ import { inquiryService } from '@/services/core/inquiry/InquiryService'
 import { AuditLogger } from '@/services/infrastructure/auditLogService'
 import type { Database } from '@/types/database'
 import { InquiryUtils } from '@/types/inquiry'
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { validateRouteId, checkAdminRole, logAuditWithErrorHandling } from './helpers'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 /**
  * GET /api/inquiries/:id - 取得單一詢價單

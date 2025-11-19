@@ -5,15 +5,15 @@
  */
 
 import type { ProductImage } from '@/types/product'
-import { getProductImages, getImageById, getMainImage } from './image/image-query'
 import {
   createProductImage,
   createProductImages,
   type CreateProductImageData,
 } from './image/image-create'
-import { updateProductImage, type UpdateProductImageData } from './image/image-update'
 import { deleteProductImage, clearProductImages } from './image/image-delete'
 import { reorderImages, setPrimaryImage } from './image/image-order'
+import { getProductImages, getImageById, getMainImage } from './image/image-query'
+import { updateProductImage, type UpdateProductImageData } from './image/image-update'
 
 // 重新導出類型(向後相容)
 export type { CreateProductImageData, UpdateProductImageData }

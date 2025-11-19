@@ -13,8 +13,8 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import {} from '@/lib/database/supabase-server'
 import { ErrorFactory, NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
 import { dbLogger } from '@/lib/logger'
-import { ServiceSupabaseClient } from '@/types/service.types'
 import { UnifiedImageService } from '@/services/infrastructure/unified-image-service'
+import { ServiceSupabaseClient } from '@/types/service.types'
 import { withServiceOperation } from '../utils/ServiceDecorators'
 
 // 類型斷言，解決 Supabase 重載問題

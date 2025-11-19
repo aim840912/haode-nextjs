@@ -9,6 +9,8 @@ import { v4 as uuidv4 } from 'uuid'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
+import { useProductForm } from '@/hooks/forms/useProductAddForm'
+import { useProductSubmit } from '@/hooks/forms/useProductSubmit'
 import { useCSRFToken } from '@/hooks/useCSRFToken'
 import { logger } from '@/lib/logger'
 
@@ -16,8 +18,6 @@ import { logger } from '@/lib/logger'
 import { ProductFormFields } from './components/ProductFormFields'
 import { SuccessOverlay } from './components/SuccessOverlay'
 import { UploadStatsPanel } from './components/UploadStatsPanel'
-import { useProductForm } from '@/hooks/forms/useProductAddForm'
-import { useProductSubmit } from '@/hooks/forms/useProductSubmit'
 
 // Components
 

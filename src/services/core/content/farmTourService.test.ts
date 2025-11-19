@@ -10,8 +10,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { FarmTourService } from './farmTourService'
 import { ValidationError, NotFoundError, DatabaseError } from '@/lib/errors'
+import { FarmTourService } from './farmTourService'
 
 // ==========================================================================
 // Mock Setup

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { POST } from './route'
 
 // Mock Supabase Auth
@@ -55,6 +55,7 @@ vi.mock('@/lib/middleware/api-middleware', async importOriginal => {
 
 // Import after mock
 import { supabase } from '@/lib/database/supabase-auth'
+
 const mockUpdateUser = supabase.auth.updateUser as ReturnType<typeof vi.fn>
 const mockSignOut = supabase.auth.signOut as ReturnType<typeof vi.fn>
 

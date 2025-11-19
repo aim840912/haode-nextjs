@@ -22,11 +22,11 @@ import {
   InquiryItem,
 } from '@/types/inquiry'
 import { ServiceSupabaseClient, ServiceErrorContext, UpdateDataObject } from '@/types/service.types'
-import { validateCreateInquiryRequest, calculateTotalAmount } from './inquiry-validation'
+import { withServiceOperation } from '../utils/ServiceDecorators'
 import { transformFromDB, serializeFarmTourData, applyQueryParams } from './inquiry-helpers'
+import { validateCreateInquiryRequest, calculateTotalAmount } from './inquiry-validation'
 import { handleInventoryForStatusChange } from './shared/inquiry-inventory-integration'
 import { SupabaseInquiryRecord } from './types'
-import { withServiceOperation } from '../utils/ServiceDecorators'
 
 /**
  * 統一詢問單服務

@@ -9,8 +9,8 @@
  * ⚠️ 注意: 此實作使用記憶體快取,在多伺服器環境需要使用 Redis
  */
 
-import { apiLogger } from '@/lib/logger'
 import { RateLimitError } from '@/lib/errors'
+import { apiLogger } from '@/lib/logger'
 
 /**
  * 速率限制配置介面

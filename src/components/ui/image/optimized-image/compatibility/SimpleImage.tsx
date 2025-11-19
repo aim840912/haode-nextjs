@@ -1,8 +1,8 @@
 import React from 'react'
 import { cn } from '@/lib/utils/cn'
-import { OptimizedImageProps } from '../types'
-import { OptimizedImage } from '../components/OptimizedImage'
 import { AvatarImage } from '../components/AvatarImage'
+import { OptimizedImage } from '../components/OptimizedImage'
+import { OptimizedImageProps } from '../types'
 
 /**
  * SimpleImage 兼容性別名 - 啟用錯誤詳情顯示

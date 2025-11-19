@@ -11,6 +11,7 @@
  */
 
 import { logger } from '@/lib/logger'
+import { cleanup, startAutoCleanup, stopAutoCleanup } from './blob/blob-cleanup'
 import {
   createURL as createBlobURL,
   revokeURL as revokeBlobURL,
@@ -19,7 +20,6 @@ import {
   revokeGroup as revokeGroupURLs,
 } from './blob/blob-lifecycle'
 import { getStats, getTotalMemoryUsage } from './blob/blob-stats'
-import { cleanup, startAutoCleanup, stopAutoCleanup } from './blob/blob-cleanup'
 
 // ============================================================
 // Types & Interfaces (Re-export)

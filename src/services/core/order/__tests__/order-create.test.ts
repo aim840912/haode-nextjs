@@ -11,8 +11,8 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ValidationError, NotFoundError } from '@/lib/errors'
-import { OrderService } from '../OrderService'
 import type { CreateOrderRequest } from '@/types/order'
+import { OrderService } from '../OrderService'
 
 // ============================================================================
 // Mock Setup (vi.hoisted for Vitest 4.0 compatibility)

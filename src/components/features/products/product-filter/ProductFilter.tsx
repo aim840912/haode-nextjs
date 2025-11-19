@@ -3,12 +3,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { FilterState } from '@/hooks/useProductFilter'
 import { cn } from '@/lib/utils/cn'
-import { FilterToggleButton } from './FilterToggleButton'
-import { FilterResultsCount } from './FilterResultsCount'
-import { SearchAndSort } from './SearchAndSort'
-import { CategoryFilter } from './CategoryFilter'
 import { AvailabilityFilter } from './AvailabilityFilter'
+import { CategoryFilter } from './CategoryFilter'
+import { FilterResultsCount } from './FilterResultsCount'
+import { FilterToggleButton } from './FilterToggleButton'
 import { PriceRangeFilter } from './PriceRangeFilter'
+import { SearchAndSort } from './SearchAndSort'
 
 export interface ProductFilterProps {
   onFilterChange: (filters: FilterState) => void

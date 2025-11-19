@@ -8,8 +8,8 @@
 
 'use server'
 
-import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
 import { requireAuth, success, error, validationError } from '@/lib/server'
 import { userInterestsService } from '@/services/core/user/userInterestsService'
 

@@ -5,14 +5,14 @@
 'use client'
 
 import React from 'react'
-import { cn } from '@/lib/utils/cn'
 import { useProductsData } from '@/hooks/useProductsData'
+import { cn } from '@/lib/utils/cn'
 import { useVisibility } from '../hooks/useVisibility'
-import { SectionHeader } from './SectionHeader'
-import { LoadingState } from './LoadingState'
-import { ErrorState } from './ErrorState'
 import { EmptyState } from './EmptyState'
+import { ErrorState } from './ErrorState'
+import { LoadingState } from './LoadingState'
 import { ProductCard } from './ProductCard'
+import { SectionHeader } from './SectionHeader'
 import { ViewAllButton } from './ViewAllButton'
 
 function ProductsSection() {

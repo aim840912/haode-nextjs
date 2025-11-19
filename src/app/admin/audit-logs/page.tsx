@@ -6,6 +6,8 @@ import { ComponentErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { useAuth } from '@/contexts/AuthContext'
+import { useAuditLogFilters } from '@/hooks/admin/useAuditLogFilters'
+import { useAuditLogsData } from '@/hooks/admin/useAuditLogsData'
 import { deleteAuditLog, batchDeleteAuditLogs } from '@/lib/api/audit-logs-api'
 import { logger } from '@/lib/logger'
 import { AuditLog } from '@/types/audit'
@@ -17,8 +19,6 @@ import { AuditLogDetailModal } from './components/AuditLogDetailModal'
 import { AuditLogFilters } from './components/AuditLogFilters'
 import { AuditLogsTable } from './components/AuditLogsTable'
 import { DeleteConfirmModal } from './components/DeleteConfirmModal'
-import { useAuditLogFilters } from '@/hooks/admin/useAuditLogFilters'
-import { useAuditLogsData } from '@/hooks/admin/useAuditLogsData'
 
 function AuditLogsPage() {
   const { user } = useAuth()

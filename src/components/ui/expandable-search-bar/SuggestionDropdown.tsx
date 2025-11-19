@@ -1,8 +1,8 @@
 'use client'
 
 import { cn } from '@/lib/utils/cn'
-import { SuggestionDropdownProps } from './types'
 import { SuggestionItem } from './SuggestionItem'
+import { SuggestionDropdownProps } from './types'
 
 export function SuggestionDropdown({
   suggestions,

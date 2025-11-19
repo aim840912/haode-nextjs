@@ -11,9 +11,8 @@
 
 'use client'
 
-import { CreateInquiryRequest } from '@/types/inquiry'
-
 import { ApiResponse, ApiRequestOptions, ApiRequestData } from '@/types/infrastructure.types'
+import { CreateInquiryRequest } from '@/types/inquiry'
 
 // ApiClient 實例會在主檔案注入
 let apiClientInstance: {

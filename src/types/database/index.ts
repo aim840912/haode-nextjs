@@ -11,11 +11,11 @@ export type { Database as InfrastructureDatabase } from './infrastructure'
 
 // Import domain databases for composition
 import type { Database as AuthDB } from './auth'
-import type { Database as ProductsDB } from './products'
-import type { Database as OrdersDB } from './orders'
-import type { Database as InquiriesDB } from './inquiries'
 import type { Database as ContentDB } from './content'
 import type { Database as InfraDB } from './infrastructure'
+import type { Database as InquiriesDB } from './inquiries'
+import type { Database as OrdersDB } from './orders'
+import type { Database as ProductsDB } from './products'
 
 // Compose complete Database type for backward compatibility
 export type Database = {

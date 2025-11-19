@@ -11,9 +11,9 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ValidationError, NotFoundError } from '@/lib/errors'
-import { OrderService } from '../OrderService'
 import type { Order } from '@/types/order'
 import { QueryBuilder } from '../../utils/QueryBuilder'
+import { OrderService } from '../OrderService'
 import { OrderItemsLoader } from '../utils/OrderItemsLoader'
 
 // ============================================================================

@@ -5,8 +5,6 @@
  * 移除狀態管理、Collector 介面實作
  */
 
-import { logger } from '@/lib/logger'
-import { metrics } from '@/lib/metrics'
 import {
   getAllKPIBaselines,
   getKPIBaselineByName,
@@ -14,6 +12,8 @@ import {
   AlertSeverity,
   type KPIBaseline,
 } from '@/config/kpi-baselines'
+import { logger } from '@/lib/logger'
+import { metrics } from '@/lib/metrics'
 
 // 動態 import 避免循環依賴
 import type { RateLimitStats } from './rate-limit'

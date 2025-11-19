@@ -7,8 +7,8 @@ import { getSupabaseAdmin } from '@/lib/database/supabase-auth'
 import { dbLogger } from '@/lib/logger'
 import type { Database } from '@/types/database'
 import { UnifiedImageError } from './image-error'
-import { validateImageParams } from './image-validation'
 import { ImageStorageManager } from './image-storage'
+import { validateImageParams } from './image-validation'
 
 type ImageRecord = Database['public']['Tables']['images']['Row']
 

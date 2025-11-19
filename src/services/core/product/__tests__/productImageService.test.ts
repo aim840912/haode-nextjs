@@ -10,9 +10,9 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { ProductImageService } from '../productImageService'
-import type { ProductImage } from '@/types/product'
 import { NotFoundError, ValidationError, DatabaseError } from '@/lib/errors'
+import type { ProductImage } from '@/types/product'
+import { ProductImageService } from '../productImageService'
 
 // ============================================================================
 // Mock Setup (vi.hoisted for Vitest 4.0 compatibility)

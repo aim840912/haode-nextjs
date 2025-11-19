@@ -1,11 +1,11 @@
 'use client'
 
 import { logger } from '@/lib/logger'
-import { LoadingErrorProps } from './types'
-import { getErrorIcon, getErrorTitle, getErrorMessage } from './error-messages'
-import { InlineErrorView } from './InlineErrorView'
 import { CardErrorView } from './CardErrorView'
+import { getErrorIcon, getErrorTitle, getErrorMessage } from './error-messages'
 import { FullscreenErrorView } from './FullscreenErrorView'
+import { InlineErrorView } from './InlineErrorView'
+import { LoadingErrorProps } from './types'
 
 export function LoadingError({
   error,
