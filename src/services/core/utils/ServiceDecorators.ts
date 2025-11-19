@@ -4,7 +4,13 @@
  */
 
 import { dbLogger } from '@/lib/logger'
-import { ErrorFactory } from '@/lib/errors'
+import {
+  ErrorFactory,
+  ValidationError,
+  NotFoundError,
+  AuthorizationError,
+  MethodNotAllowedError,
+} from '@/lib/errors'
 
 /**
  * Service 操作裝飾器配置
@@ -45,6 +51,18 @@ export async function withServiceOperation<T>(
     return result
   } catch (error) {
     timer.end()
+
+    // 如果是我們自定義的錯誤類型，直接重新拋出，不要轉換
+    if (
+      error instanceof ValidationError ||
+      error instanceof NotFoundError ||
+      error instanceof AuthorizationError ||
+      error instanceof MethodNotAllowedError
+    ) {
+      throw error
+    }
+
+    // 其他錯誤（主要是 Supabase 錯誤）使用 ErrorFactory 轉換
     throw ErrorFactory.fromSupabaseError(error, {
       module,
       action,
