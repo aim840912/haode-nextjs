@@ -114,7 +114,9 @@ vi.mock('../cache-advanced', () => ({
 }))
 
 vi.mock('../cache-utils', () => ({
-  createCacheWrapper: vi.fn((get, set) => (fn: Function, options: unknown) => fn),
+  createCacheWrapper: vi.fn(
+    (_get, _set) => (fn: (...args: unknown[]) => unknown, _options: unknown) => fn
+  ),
   setupCacheCleanup: vi.fn(),
 }))
 
