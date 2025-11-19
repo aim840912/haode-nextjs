@@ -4,12 +4,11 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { AdminPageLoader } from '@/components/ui/loading/PageLoader'
 import { useAuth } from '@/contexts/AuthContext'
-import { useFarmTourSubmit } from '@/hooks/farm-tour/useFarmTourSubmit'
+import { useFarmTourAddForm } from '@/hooks/farm-tour/useFarmTourAddForm'
 import { ProductImage } from '@/types/product'
 
 // 動態載入圖片管理器
@@ -29,37 +28,32 @@ const ProductImageManager = dynamic(
 )
 
 export default function AddFarmTourActivity() {
-  const router = useRouter()
+  // 圖片管理狀態（獨立於表單邏輯）
   const [images, setImages] = useState<ProductImage[]>([])
   const [activityId] = useState(() => uuidv4())
+
+  // 認證狀態
   const { user, isLoading } = useAuth()
 
-  const [formData, setFormData] = useState({
-    start_month: 1,
-    end_month: 12,
-    title: '',
-    activities: [''],
-    price: 0,
-    available: true,
-    note: '',
-  })
-
-  // 使用 farm-tour 提交 hook
-  const { submitError, submitSuccess, loading, submitActivity } = useFarmTourSubmit()
+  // 表單邏輯 Hook（整合狀態、驗證和提交）
+  const {
+    formData,
+    fieldErrors,
+    submitError,
+    submitSuccess,
+    loading,
+    handleInputChange,
+    handleFieldBlur,
+    handleSubmit,
+    addActivityField,
+    removeActivityField,
+    updateActivityField,
+  } = useFarmTourAddForm()
 
   // 處理圖片變更
   const handleImagesChange = (newImages: ProductImage[]) => {
     setImages(newImages)
   }
-
-  // 欄位錯誤狀態管理
-  const [fieldErrors, setFieldErrors] = useState({
-    title: '',
-    activities: '',
-    price: '',
-    start_month: '',
-    end_month: '',
-  })
 
   // 載入中狀態
   if (isLoading) {
@@ -117,106 +111,6 @@ export default function AddFarmTourActivity() {
     label: `${i + 1}月`,
   }))
 
-  // 驗證函數
-  const validateField = (field: string, value: unknown) => {
-    switch (field) {
-      case 'title':
-        return !String(value).trim() ? '請輸入活動標題' : ''
-      case 'activities':
-        const validActivities = Array.isArray(value)
-          ? value.filter(activity => String(activity).trim() !== '')
-          : []
-        return validActivities.length === 0 ? '至少需要一個活動項目' : ''
-      case 'price':
-        return Number(value) < 0 ? '價格不能為負數' : ''
-      case 'start_month':
-        return Number(value) < 1 || Number(value) > 12 ? '開始月份必須是 1-12' : ''
-      case 'end_month':
-        return Number(value) < 1 || Number(value) > 12 ? '結束月份必須是 1-12' : ''
-      default:
-        return ''
-    }
-  }
-
-  const handleFieldChange = (field: string, value: unknown) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-    // 清除該欄位的錯誤訊息
-    if (fieldErrors[field as keyof typeof fieldErrors]) {
-      setFieldErrors(prev => ({ ...prev, [field]: '' }))
-    }
-  }
-
-  const handleFieldBlur = (field: string, value: unknown) => {
-    const error = validateField(field, value)
-    setFieldErrors(prev => ({ ...prev, [field]: error }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // 欄位級驗證
-    const newFieldErrors = {
-      title: validateField('title', formData.title),
-      activities: validateField('activities', formData.activities),
-      price: validateField('price', formData.price),
-      start_month: validateField('start_month', formData.start_month),
-      end_month: validateField('end_month', formData.end_month),
-    }
-
-    setFieldErrors(newFieldErrors)
-
-    // 檢查是否有任何錯誤
-    const hasFieldErrors = Object.values(newFieldErrors).some(error => error !== '')
-    if (hasFieldErrors) {
-      return
-    }
-
-    // 使用 hook 提交活動
-    const success = await submitActivity(activityId, formData, images)
-
-    // 成功後跳轉
-    if (success) {
-      setTimeout(() => {
-        router.push('/admin/farm-tour')
-      }, 1500)
-    }
-  }
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const { name, value, type } = e.target
-    const newValue =
-      type === 'number'
-        ? Number(value)
-        : type === 'checkbox'
-          ? (e.target as HTMLInputElement).checked
-          : name === 'start_month' || name === 'end_month' || name === 'price'
-            ? Number(value)
-            : value
-
-    handleFieldChange(name, newValue)
-  }
-
-  const addActivityField = () => {
-    setFormData(prev => ({
-      ...prev,
-      activities: [...prev.activities, ''],
-    }))
-  }
-
-  const removeActivityField = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      activities: prev.activities.filter((_, i) => i !== index),
-    }))
-  }
-
-  const updateActivityField = (index: number, value: string) => {
-    const newActivities = formData.activities.map((activity, i) => (i === index ? value : activity))
-    handleFieldChange('activities', newActivities)
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 pt-24">
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -232,7 +126,7 @@ export default function AddFarmTourActivity() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Form */}
           <form
-            onSubmit={handleSubmit}
+            onSubmit={e => handleSubmit(e, activityId, images)}
             className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-6 space-y-6"
             noValidate
           >
