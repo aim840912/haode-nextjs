@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
-import { fetchUserInterests, toggleUserInterest } from '@/lib/api/user-interests-api'
+import { fetchUserInterests } from '@/lib/api/user-interests-api'
+import { toggleInterestAction } from '@/app/actions/user-interests'
 import { logger } from '@/lib/logger'
 
 export interface UseProductInterestReturn {
@@ -71,11 +72,15 @@ export function useProductInterest(): UseProductInterestReturn {
       })
 
       try {
-        // 儲存到資料庫（使用 API 呼叫）
-        const result = await toggleUserInterest(productId)
+        // 儲存到資料庫（使用 Server Action）
+        const result = await toggleInterestAction({ productId })
+
+        if (!result.success) {
+          throw new Error(result.error.message)
+        }
 
         // 成功提示
-        if (result.action === 'removed') {
+        if (result.data.action === 'removed') {
           showSuccess('已移除', `已從興趣清單移除 ${productName}`)
         } else {
           showSuccess('已加入', `已將 ${productName} 加入興趣清單！`)

@@ -125,25 +125,13 @@ export async function removeUserInterest(productId: string): Promise<boolean> {
 
 /**
  * 切換興趣狀態（加入或移除）
+ * @deprecated 請使用 Server Action `toggleInterestAction` from '@/app/actions/user-interests'
  */
 export async function toggleUserInterest(productId: string): Promise<{
   action: 'added' | 'removed'
   productId: string
 }> {
-  try {
-    const result = await apiClient.post<ActionResponse>('/api/user/interests/toggle', {
-      productId,
-    })
-
-    if (!result.success || !result.data) {
-      throw new Error(result.message || '切換興趣狀態失敗')
-    }
-
-    return {
-      action: result.data.action as 'added' | 'removed',
-      productId: result.data.productId,
-    }
-  } catch (error) {
-    handleApiError(error, 'toggleUserInterest', 'UserInterestsAPI')
-  }
+  throw new Error(
+    'toggleUserInterest is deprecated. Use Server Action toggleInterestAction instead.'
+  )
 }
