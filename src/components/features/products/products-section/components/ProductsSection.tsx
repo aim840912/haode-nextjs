@@ -29,7 +29,7 @@ function ProductsSection() {
   }
 
   return (
-    <section id="products" ref={ref} className="py-24 px-6 bg-white">
+    <section id="products" ref={ref} className="py-16 px-6 bg-white">
       <div className="max-w-7xl mx-auto">
         <SectionHeader isVisible={isVisible} />
 
@@ -37,12 +37,17 @@ function ProductsSection() {
           <>
             <div
               className={cn(
-                'grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mb-12',
-                isVisible ? 'animate-slide-up animation-delay-300' : 'opacity-0'
+                'flex flex-wrap justify-center gap-8 mb-12',
+                isVisible && 'animate-slide-up animation-delay-300'
               )}
             >
               {products.map((product, index) => (
-                <ProductCard key={product.id} product={product} index={index} />
+                <div
+                  key={product.id}
+                  className="w-full sm:w-[calc(50%-1rem)] md:w-[calc(33.333%-1.5rem)] lg:w-[calc(25%-1.5rem)] max-w-sm"
+                >
+                  <ProductCard product={product} index={index} />
+                </div>
               ))}
             </div>
 

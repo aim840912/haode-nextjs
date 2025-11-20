@@ -58,7 +58,7 @@ export function SimpleProductImage({
 export function ProductCardImage({
   product,
   className = '',
-  aspectRatio = 'aspect-[3/4]',
+  aspectRatio = 'aspect-square',
   priority = false,
   index = 0,
 }: {

@@ -9,17 +9,17 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 /**
  * Theme Provider
- * 提供主題切換功能，支援 light / dark / system 三種模式
+ * 提供主題切換功能，支援 light / dark 兩種模式
  *
  * 功能特色：
- * - 支援三種主題模式（light / dark / system）
- * - 自動跟隨系統偏好（當選擇 system 時）
+ * - 支援兩種主題模式（light / dark）
+ * - 不受系統偏好影響，完全由用戶控制
  * - 持久化到 localStorage
  * - 正確處理 SSR/CSR hydration
  * - 無閃爍載入（FOUC free）
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('system')
+  const [theme, setThemeState] = useState<Theme>('light')
   const [effectiveTheme, setEffectiveTheme] = useState<EffectiveTheme>('light')
   const [isClient, setIsClient] = useState(false)
 
@@ -36,15 +36,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (!isClient) return undefined
 
     /**
-     * 解析主題：將 system 轉換為實際的 light/dark
+     * 解析主題：將 system 轉換為 light（不再依賴系統偏好）
      */
     const resolveTheme = (currentTheme: Theme): EffectiveTheme => {
-      if (currentTheme === 'system') {
-        // 檢查系統偏好
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        return prefersDark ? 'dark' : 'light'
+      if (currentTheme === 'system' || currentTheme === 'light') {
+        return 'light'
       }
-      return currentTheme
+      return 'dark'
     }
 
     /**
@@ -67,22 +65,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     updateEffectiveTheme()
 
-    // 監聽系統主題變更（僅在 theme 為 system 時）
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-      const handleChange = (e: MediaQueryListEvent) => {
-        logger.debug('系統主題偏好改變', { metadata: { prefersDark: e.matches } })
-        updateEffectiveTheme()
-      }
-
-      // 使用現代瀏覽器 API
-      mediaQuery.addEventListener('change', handleChange)
-
-      return () => {
-        mediaQuery.removeEventListener('change', handleChange)
-      }
-    }
-
+    // 不再監聽系統主題變更，主題完全由用戶控制
     return undefined
   }, [theme, isClient])
 

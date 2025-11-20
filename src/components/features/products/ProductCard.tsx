@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { Star, ShoppingCart, Heart } from 'lucide-react'
+import { Star, Heart } from 'lucide-react'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/providers/ToastProvider'
@@ -17,7 +17,7 @@ const ProductCardImage = dynamic(
   {
     loading: () => (
       <div className="relative rounded-t-xl overflow-hidden">
-        <div className="pb-[133.33%] bg-gray-100 animate-pulse"></div>
+        <div className="pb-[100%] bg-gray-100 animate-pulse"></div>
       </div>
     ),
     ssr: false,
@@ -41,7 +41,7 @@ interface ProductCardProps {
  * 產品卡片組件 - momo 風格設計
  *
  * 特色：
- * - 3:4 垂直圖片比例（符合商品攝影習慣）
+ * - 1:1 正方形圖片比例
  * - 4 列桌面佈局（與 momo 一致）
  * - 300px 卡片寬度（平衡視覺與資訊密度）
  * - 簡潔的色彩設計和陰影系統
@@ -171,10 +171,10 @@ export const ProductCard = React.memo<ProductCardProps>(
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               {/* 現價 */}
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-lg font-bold text-amber-900">
                 NT$ {product.price}
                 {product.priceUnit && (
-                  <span className="text-sm font-normal text-gray-600 ml-1">
+                  <span className="text-xs font-normal text-gray-600 ml-1">
                     / {product.priceUnit}
                   </span>
                 )}
@@ -198,62 +198,25 @@ export const ProductCard = React.memo<ProductCardProps>(
             </div>
           </div>
 
-          {/* 操作按鈕組 */}
-          <div>
-            {/* 主要操作按鈕 */}
-            <button
-              disabled={(product.availableStock ?? product.inventory) <= 0}
-              onClick={handleViewDetails}
-              className={cn(
-                'w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md',
-                (product.availableStock ?? product.inventory) <= 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              )}
-              aria-label={
-                (product.availableStock ?? product.inventory) > 0 ? '查看產品詳情' : '產品暫時缺貨'
-              }
-            >
-              <span className="text-sm font-medium">
-                {(product.availableStock ?? product.inventory) > 0 ? '查看詳情' : '暫時缺貨'}
-              </span>
-            </button>
-          </div>
-
-          {/* 收藏和加入購物車按鈕行 */}
-          <div className="flex gap-2 justify-between pt-1">
-            {/* 收藏按鈕 */}
+          {/* 收藏按鈕 - Hover 時展開 */}
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-200',
+              isHovered ? 'max-h-12 pt-2 opacity-100' : 'max-h-0 opacity-0'
+            )}
+          >
             <button
               onClick={e => {
                 e.stopPropagation()
                 onToggleInterest(product.id, product.name, e)
               }}
-              className="flex-1 flex items-center justify-center gap-2 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50 transition-colors duration-200 shadow-sm hover:shadow-md"
+              className="w-full flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors duration-200"
               aria-label={isInterested ? '移除我的收藏' : '加入我的收藏'}
             >
               <Heart
-                className={cn(
-                  'w-4 h-4',
-                  isInterested ? 'fill-red-500 text-red-500' : 'text-gray-600'
-                )}
+                className={cn('w-4 h-4', isInterested ? 'fill-white text-white' : 'text-white')}
               />
               <span className="text-sm font-medium">{isInterested ? '已收藏' : '收藏'}</span>
-            </button>
-
-            {/* 加入購物車按鈕 */}
-            <button
-              onClick={e => handleQuickAction('addtocart', e)}
-              disabled={(product.availableStock ?? product.inventory) <= 0}
-              className={cn(
-                'flex-1 flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md',
-                (product.availableStock ?? product.inventory) <= 0
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              )}
-              aria-label="加入購物車"
-            >
-              <ShoppingCart className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium">購物車</span>
             </button>
           </div>
         </div>

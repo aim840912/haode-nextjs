@@ -178,7 +178,7 @@ export default function RootLayout({
   return (
     <html lang="zh">
       <body
-        className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen bg-gray-50 dark:bg-slate-900`}
+        className={`${notoSansTC.variable} ${notoSerifTC.variable} ${inter.variable} antialiased flex flex-col min-h-screen bg-gray-50`}
       >
         <ErrorBoundary>
           <ThemeProvider>

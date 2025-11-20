@@ -44,10 +44,8 @@ export function DesktopHeader({
           {/* 品牌標誌（緊湊版）*/}
           <Link href="/" className="flex items-center">
             <div className="flex items-center gap-2 h-8">
-              <div className="font-display text-green-900 dark:text-green-300 tracking-tight text-2xl">
-                豪德製茶所
-              </div>
-              <div className="text-green-700/70 dark:text-green-400/70 font-inter font-medium tracking-wider text-[8px]">
+              <div className="font-display text-[#3e2723] tracking-tight text-2xl">豪德製茶所</div>
+              <div className="text-[#5d4037]/70 font-inter font-medium tracking-wider text-[8px]">
                 HAUDE TEA
               </div>
             </div>
@@ -60,14 +58,14 @@ export function DesktopHeader({
                 {item.isExternal ? (
                   <a href={item.href} className="block py-2 px-2">
                     <span
-                      className={`text-gray-700 dark:text-gray-300 hover:text-green-900 dark:hover:text-green-300 transition-colors duration-200 text-sm font-sans font-medium ${
-                        isActive(item.href) ? 'text-green-900 dark:text-green-300' : ''
+                      className={`text-gray-600 hover:text-[#d35400] transition-colors duration-200 text-sm font-sans font-medium ${
+                        isActive(item.href) ? 'text-[#d35400]' : ''
                       }`}
                     >
                       {item.label}
                     </span>
                     <div
-                      className={`absolute bottom-0 left-0 h-0.5 bg-green-900 dark:bg-green-300 transition-all duration-300 ${
+                      className={`absolute bottom-0 left-0 h-0.5 bg-[#d35400] transition-all duration-300 ${
                         isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
                       }`}
                     ></div>
@@ -75,14 +73,14 @@ export function DesktopHeader({
                 ) : (
                   <Link href={item.href} className="block py-2 px-2">
                     <span
-                      className={`text-gray-700 dark:text-gray-300 hover:text-green-900 dark:hover:text-green-300 transition-colors duration-200 text-sm font-sans font-medium ${
-                        isActive(item.href) ? 'text-green-900 dark:text-green-300' : ''
+                      className={`text-gray-600 hover:text-[#d35400] transition-colors duration-200 text-sm font-sans font-medium ${
+                        isActive(item.href) ? 'text-[#d35400]' : ''
                       }`}
                     >
                       {item.label}
                     </span>
                     <div
-                      className={`absolute bottom-0 left-0 h-0.5 bg-green-900 dark:bg-green-300 transition-all duration-300 ${
+                      className={`absolute bottom-0 left-0 h-0.5 bg-[#d35400] transition-all duration-300 ${
                         isActive(item.href) ? 'w-full' : 'w-0 group-hover:w-full'
                       }`}
                     ></div>
@@ -108,7 +106,7 @@ export function DesktopHeader({
           {user?.role === 'admin' && (
             <div className="relative" ref={desktopAdminMenuRef}>
               <button
-                className="w-10 h-10 flex items-center justify-center text-green-800 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 hover:bg-green-50/50 dark:hover:bg-slate-700/50 transition-colors duration-200 rounded-md"
+                className="w-10 h-10 flex items-center justify-center text-[#5d4037] hover:text-[#d35400] hover:bg-gray-100 transition-colors duration-200 rounded-md"
                 title="管理功能"
                 onClick={handleDesktopAdminMenuToggle}
               >

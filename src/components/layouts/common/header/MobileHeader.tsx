@@ -48,10 +48,8 @@ export function MobileHeader({
         {/* Brand - 左側固定 */}
         <Link href="/" className="flex items-center flex-shrink-0">
           <div>
-            <div className="font-display text-green-900 dark:text-green-300 tracking-tight text-xl">
-              豪德製茶所
-            </div>
-            <div className="text-green-700/70 dark:text-green-400/70 font-inter font-medium tracking-wider text-[8px]">
+            <div className="font-display text-green-900 tracking-tight text-xl">豪德製茶所</div>
+            <div className="text-green-700/70 font-inter font-medium tracking-wider text-[8px]">
               HAUDE TEA
             </div>
           </div>
@@ -69,10 +67,8 @@ export function MobileHeader({
           {user?.role === 'admin' && (
             <div className="relative" ref={mobileAdminMenuRef}>
               <button
-                className={`flex items-center text-green-800 dark:text-green-300 hover:text-green-900 dark:hover:text-green-200 hover:bg-green-50/50 dark:hover:bg-slate-700/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
-                  isMobileAdminMenuOpen
-                    ? 'bg-green-50 dark:bg-slate-700 text-green-900 dark:text-green-200'
-                    : ''
+                className={`flex items-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
+                  isMobileAdminMenuOpen ? 'bg-green-50 text-green-900' : ''
                 }`}
                 title="管理功能"
                 onClick={handleMobileAdminMenuToggle}

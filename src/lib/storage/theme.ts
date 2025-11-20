@@ -10,33 +10,34 @@ const THEME_STORAGE_KEY = 'haude-theme-preference'
 
 /**
  * 從 localStorage 讀取主題偏好
- * @returns 儲存的主題偏好，預設為 'system'
+ * @returns 儲存的主題偏好，預設為 'light'
  */
 export function getTheme(): Theme {
   try {
     // SSR 環境檢查
     if (typeof window === 'undefined') {
-      return 'system'
+      return 'light'
     }
 
     const stored = localStorage.getItem(THEME_STORAGE_KEY)
 
     if (!stored) {
-      return 'system'
+      return 'light'
     }
 
     // 驗證讀取的值是否為有效的主題
     const parsed = JSON.parse(stored) as Theme
     if (parsed === 'light' || parsed === 'dark' || parsed === 'system') {
       logger.debug('成功讀取主題偏好', { metadata: { theme: parsed } })
-      return parsed
+      // 如果是 system，轉換為 light（不再支援系統偏好）
+      return parsed === 'system' ? 'light' : parsed
     }
 
     logger.warn('讀取到無效的主題值，使用預設值', { metadata: { invalid: parsed } })
-    return 'system'
+    return 'light'
   } catch (error) {
     logger.error('讀取主題偏好失敗', error as Error)
-    return 'system'
+    return 'light'
   }
 }
 

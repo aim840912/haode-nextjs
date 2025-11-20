@@ -13,12 +13,7 @@ interface ViewAllButtonProps {
 
 export const ViewAllButton = React.memo(function ViewAllButton({ isVisible }: ViewAllButtonProps) {
   return (
-    <div
-      className={cn(
-        'text-center',
-        isVisible ? 'animate-scale-in animation-delay-450' : 'opacity-0'
-      )}
-    >
+    <div className={cn('text-center', isVisible && 'animate-scale-in animation-delay-450')}>
       <Link
         href="/products"
         className="inline-flex items-center gap-3 bg-gray-900 text-white px-10 py-4 rounded-lg text-lg font-semibold hover:bg-gray-800 transition-all duration-200 shadow-lg hover:shadow-xl group"

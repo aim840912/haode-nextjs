@@ -16,13 +16,11 @@ import {
 } from '@/types/siteSettings'
 import { ActivitiesSection } from './components/ActivitiesSection'
 import { BookingModal } from './components/BookingModal'
-import { ContactCTA } from './components/ContactCTA'
 import { FacilitiesSection } from './components/FacilitiesSection'
 import { FAQSection } from './components/FAQSection'
 import { FloatingCTA } from './components/FloatingCTA'
 import { HeroSection } from './components/HeroSection'
 import { InfoSection } from './components/InfoSection'
-import { TrustSection } from './components/TrustSection'
 
 // 預設農場設施（向下相容）
 const DEFAULT_FACILITIES: FacilityItem[] = [
@@ -282,14 +280,8 @@ export default function FarmTourPage() {
         />
       )}
 
-      {/* 社會證明區塊 */}
-      <TrustSection />
-
       {/* FAQ 區塊 */}
       <FAQSection faqs={faqs} />
-
-      {/* Contact CTA */}
-      <ContactCTA onMapClick={() => handleTabClick('info')} />
 
       {/* 浮動 CTA 按鈕 */}
       <FloatingCTA />

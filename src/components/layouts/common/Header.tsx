@@ -34,7 +34,7 @@ export function Header() {
   } = useHeaderState()
 
   return (
-    <header className="fixed top-0 w-full backdrop-blur-lg z-50 bg-green-50/98 dark:bg-slate-900/98 shadow-md min-h-[60px]">
+    <header className="fixed top-0 w-full z-50 bg-white shadow-md min-h-[60px]">
       <nav className="max-w-7xl mx-auto px-8 py-1">
         <DesktopHeader
           user={user}

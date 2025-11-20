@@ -11,7 +11,7 @@ export function getProductBadge(index: number, product: Product): ProductBadge |
     return {
       icon: <Award className="w-3.5 h-3.5" />,
       text: '熱銷推薦',
-      bgColor: 'bg-amber-500 dark:bg-amber-600',
+      bgColor: 'bg-amber-500',
       animation: 'animate-badge-bounce',
     }
   }
@@ -19,7 +19,7 @@ export function getProductBadge(index: number, product: Product): ProductBadge |
     return {
       icon: <Sparkles className="w-3.5 h-3.5" />,
       text: '限時優惠',
-      bgColor: 'bg-red-500 dark:bg-red-600',
+      bgColor: 'bg-red-500',
       animation: 'animate-badge-pulse',
     }
   }
@@ -27,7 +27,7 @@ export function getProductBadge(index: number, product: Product): ProductBadge |
     return {
       icon: <TrendingUp className="w-3.5 h-3.5" />,
       text: '人氣商品',
-      bgColor: 'bg-green-500 dark:bg-green-600',
+      bgColor: 'bg-green-500',
       animation: '',
     }
   }

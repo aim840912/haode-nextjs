@@ -443,32 +443,6 @@ export default function LocationsPage() {
           </>
         )}
       </div>
-
-      {/* Contact CTA Section - only show when we have a selected store */}
-      {selectedStore && (
-        <div className="bg-amber-900 text-white py-16">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-3xl font-bold mb-4">找到最近的門市了嗎？</h2>
-            <p className="text-amber-100 mb-8 text-lg">
-              四間門市都提供完整的農產品選購服務，歡迎就近前往體驗
-            </p>
-            <div className="flex flex-col md:flex-row gap-4 justify-center">
-              <a
-                href={`tel:${selectedStore.phone}`}
-                className="bg-white text-amber-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
-              >
-                聯絡 {selectedStore.name}
-              </a>
-              <a
-                href="/products"
-                className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-amber-900 transition-colors"
-              >
-                線上購買
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

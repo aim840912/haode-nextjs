@@ -58,7 +58,7 @@ export const ProductCard = React.memo(function ProductCard({ product, index }: P
             originalPrice={product.originalPrice}
           />
 
-          <button className="w-full flex items-center justify-center gap-2 border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors duration-200">
+          <button className="w-full flex items-center justify-center gap-2 border border-gray-200 text-[#5d4037] px-3 py-2 rounded-lg text-sm font-medium hover:bg-[#f8f5f0]/50 transition-colors duration-200">
             <span>查看詳情</span>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />

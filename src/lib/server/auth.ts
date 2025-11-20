@@ -2,28 +2,16 @@
  * Server Actions 認證工具
  *
  * 提供 Server-only 的認證檢查功能,用於 Server Actions 中:
- * - 從 cookies 取得當前用戶
+ * - 從 Supabase session 取得當前用戶
  * - 檢查用戶認證狀態
  * - 檢查管理員權限
- * - 與現有 JWT 系統整合
  *
  * ⚠️ 只能在 Server Actions 或 Server Components 中使用
  */
 
-import { cookies } from 'next/headers'
-import * as jwt from 'jsonwebtoken'
 import { AuthenticationError, AuthorizationError } from '@/lib/errors'
 import { authLogger } from '@/lib/logger'
-
-const JWT_SECRET = process.env.JWT_SECRET
-
-if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET 環境變數是必填項目,請在 .env.local 中設定')
-}
-
-if (JWT_SECRET.length < 32) {
-  throw new Error('JWT_SECRET 必須至少包含 32 個字元以確保安全性')
-}
+import { createServerSupabaseClient } from '@/lib/database/supabase-server'
 
 /**
  * 用戶資訊介面
@@ -32,69 +20,6 @@ export interface ServerUser {
   id: string
   email: string
   isAdmin: boolean
-}
-
-/**
- * JWT Payload 介面
- */
-interface JWTPayload {
-  userId: string
-  email: string
-  isAdmin?: boolean
-  iat?: number
-  exp?: number
-}
-
-/**
- * 從 JWT token 驗證並提取用戶資訊
- */
-function verifyJWTToken(token: string): ServerUser | null {
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET as string) as JWTPayload
-    return {
-      id: decoded.userId,
-      email: decoded.email,
-      isAdmin: decoded.isAdmin || false,
-    }
-  } catch (error) {
-    authLogger.warn('JWT token 驗證失敗', {
-      metadata: {
-        error: error instanceof Error ? error.message : String(error),
-      },
-    })
-    return null
-  }
-}
-
-/**
- * 從 cookies 中取得認證 token
- */
-async function getAuthToken(): Promise<string | null> {
-  const cookieStore = await cookies()
-
-  // 嘗試從不同可能的 cookie 名稱取得 token
-  // 1. Authorization header 格式的 cookie
-  const authCookie = cookieStore.get('authorization')
-  if (authCookie?.value) {
-    const token = authCookie.value.startsWith('Bearer ')
-      ? authCookie.value.substring(7)
-      : authCookie.value
-    return token
-  }
-
-  // 2. 直接的 token cookie
-  const tokenCookie = cookieStore.get('token')
-  if (tokenCookie?.value) {
-    return tokenCookie.value
-  }
-
-  // 3. auth-token cookie (備用)
-  const authTokenCookie = cookieStore.get('auth-token')
-  if (authTokenCookie?.value) {
-    return authTokenCookie.value
-  }
-
-  return null
 }
 
 /**
@@ -123,13 +48,34 @@ async function getAuthToken(): Promise<string | null> {
  * ```
  */
 export async function auth(): Promise<ServerUser | null> {
-  const token = await getAuthToken()
+  try {
+    const supabase = await createServerSupabaseClient()
 
-  if (!token) {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error || !user) {
+      return null
+    }
+
+    // 檢查用戶是否為管理員（使用 RPC 函數）
+    const { data: isAdmin } = await supabase.rpc('is_admin')
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      isAdmin: isAdmin || false,
+    }
+  } catch (error) {
+    authLogger.warn('Server Action 認證檢查失敗', {
+      metadata: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    })
     return null
   }
-
-  return verifyJWTToken(token)
 }
 
 /**

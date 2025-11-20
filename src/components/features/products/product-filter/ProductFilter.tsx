@@ -126,7 +126,7 @@ export function ProductFilter({
       className={cn(
         integrated
           ? // 整合模式：使用分隔線，無背景、圓角、陰影
-            ['border-t border-gray-200 dark:border-slate-600 pt-2', isExpanded && 'pb-2']
+            ['border-t border-gray-200 pt-2', isExpanded && 'pb-2']
           : // 獨立模式：卡片樣式
             ['bg-white rounded-lg shadow-lg mb-6', isExpanded ? 'p-6' : 'p-4']
       )}

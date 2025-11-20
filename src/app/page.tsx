@@ -15,7 +15,6 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0)
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set())
   const [activeFeature, setActiveFeature] = useState(0)
-  const [activeSeason, setActiveSeason] = useState(0)
 
   const { setting: heroImagesSetting, loading: heroImagesLoading } = useSiteSetting(
     SETTING_KEYS.HOME_HERO_IMAGES
@@ -24,10 +23,6 @@ export default function Home() {
   const { setting: featureCard2Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE)
   const { setting: featureCard3Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE)
   const { setting: featureCard4Setting } = useSiteSetting(SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE)
-  const { setting: seasonSpringSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_SPRING_IMAGE)
-  const { setting: seasonSummerSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE)
-  const { setting: seasonAutumnSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE)
-  const { setting: seasonWinterSetting } = useSiteSetting(SETTING_KEYS.HOME_SEASON_WINTER_IMAGE)
 
   // 最新消息 - 當季推薦卡片設定
   const { setting: seasonalRecommendationEnabled } = useSiteSetting(
@@ -91,21 +86,6 @@ export default function Home() {
     featureCard2Setting?.value || '',
     featureCard3Setting?.value || '',
     featureCard4Setting?.value || '',
-  ]
-
-  // 四季體驗圖片（提供 fallback 預設值）
-  const defaultSeasonImages = [
-    '/images/locations/mountain.jpg', // 春季預設
-    '/images/farm-tour/many_people_1.jpg', // 夏季預設
-    '/images/locations/mountain.jpg', // 秋季預設
-    '/images/farm-tour/many_people_1.jpg', // 冬季預設
-  ]
-
-  const seasonImages = [
-    seasonSpringSetting?.value || defaultSeasonImages[0],
-    seasonSummerSetting?.value || defaultSeasonImages[1],
-    seasonAutumnSetting?.value || defaultSeasonImages[2],
-    seasonWinterSetting?.value || defaultSeasonImages[3],
   ]
 
   // 圖示映射函數
@@ -196,10 +176,7 @@ export default function Home() {
         <FeaturesSection
           activeFeature={activeFeature}
           onFeatureClick={setActiveFeature}
-          activeSeason={activeSeason}
-          onSeasonChange={setActiveSeason}
           featureImages={featureCardImages}
-          seasonImages={seasonImages}
           isVisible={visibleSections.has('features')}
         />
 
