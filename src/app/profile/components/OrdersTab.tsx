@@ -1,8 +1,27 @@
 import Link from 'next/link'
-import { Package } from 'lucide-react'
+import { Package, CreditCard } from 'lucide-react'
 import { LoadingSpinner } from '@/components/ui/loading/LoadingSpinner'
 import { formatDate } from '@/lib/utils/formatters'
 import type { Order } from '@/types/order'
+
+function getPaymentStatusText(status: string | undefined) {
+  if (!status) return '未付款'
+  const statusMap: Record<string, string> = {
+    pending: '待付款',
+    paid: '已付款',
+    failed: '付款失敗',
+    refunded: '已退款',
+    expired: '已過期',
+  }
+  return statusMap[status] || status
+}
+
+function getPaymentStatusColor(status: string | undefined) {
+  if (!status || status === 'pending') return 'bg-yellow-100 text-yellow-800'
+  if (status === 'paid') return 'bg-green-100 text-green-800'
+  if (status === 'failed' || status === 'expired') return 'bg-red-100 text-red-800'
+  return 'bg-gray-100 text-gray-800'
+}
 
 interface OrdersTabProps {
   orders: Order[]
@@ -67,46 +86,67 @@ export function OrdersTab({
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-6">訂單記錄</h2>
       <div className="space-y-4">
-        {orders.map(order => (
-          <div key={order.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <p className="text-sm text-gray-600">訂單編號：{order.id}</p>
-                <p className="text-sm text-gray-600">
-                  訂單日期：{formatDate(order.createdAt, 'short')}
+        {orders.map(order => {
+          const canPay = order.paymentStatus === 'pending' || !order.paymentStatus
+          const isPaid = order.paymentStatus === 'paid'
+
+          return (
+            <div key={order.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-sm text-gray-600">訂單編號：{order.orderNumber || order.id}</p>
+                  <p className="text-sm text-gray-600">
+                    訂單日期：{formatDate(order.createdAt, 'short')}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1">
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}
+                  >
+                    {getStatusText(order.status)}
+                  </span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(order.paymentStatus)}`}
+                  >
+                    {getPaymentStatusText(order.paymentStatus)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <p className="text-gray-900 font-medium">
+                  總金額：NT$ {order.totalAmount.toLocaleString()}
                 </p>
               </div>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}
-              >
-                {getStatusText(order.status)}
-              </span>
-            </div>
 
-            <div className="mb-3">
-              <p className="text-gray-900 font-medium">
-                總金額：NT$ {order.totalAmount.toLocaleString()}
-              </p>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Link
-                href={`/orders/${order.id}`}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                查看詳情
-              </Link>
-              {order.status === 'pending' && (
-                <button
-                  onClick={() => onCancelOrder(order.id)}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              <div className="flex justify-end space-x-2">
+                <Link
+                  href={`/profile/orders/${order.id}`}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  取消訂單
-                </button>
-              )}
+                  查看詳情
+                </Link>
+                {canPay && !isPaid && (
+                  <Link
+                    href={`/profile/orders/${order.id}`}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+                  >
+                    <CreditCard className="w-4 h-4 mr-1" />
+                    付款
+                  </Link>
+                )}
+                {order.status === 'pending' && (
+                  <button
+                    onClick={() => onCancelOrder(order.id)}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    取消訂單
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

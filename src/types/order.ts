@@ -7,6 +7,10 @@ export type OrderStatus =
   | 'cancelled'
   | 'refunded'
 
+export type PaymentMethod = 'CREDIT' | 'VACC' | 'CVS' | 'WEBATM'
+
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'expired'
+
 export interface ShippingAddress {
   name: string
   phone: string
@@ -43,9 +47,14 @@ export interface Order {
   tax: number // 稅費
   totalAmount: number // 總金額
   shippingAddress: ShippingAddress
-  paymentMethod?: string // 付款方式
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded' // 付款狀態
+  paymentMethod?: PaymentMethod | string // 付款方式
+  paymentStatus?: PaymentStatus // 付款狀態
   paymentId?: string // 付款系統的交易ID
+  paymentTradeNo?: string // 藍新交易編號
+  paymentTime?: string // 付款完成時間
+  paymentBankCode?: string // ATM 銀行代碼
+  paymentVaAccount?: string // ATM 虛擬帳號
+  paymentExpireDate?: string // ATM/超商繳費期限
   notes?: string // 備註
   estimatedDeliveryDate?: string // 預計送達日期
   actualDeliveryDate?: string // 實際送達日期
@@ -101,6 +110,30 @@ export interface OrderFilters {
   minAmount?: number
   maxAmount?: number
   userId?: string
+}
+
+export interface PaymentLog {
+  id: string
+  orderId?: string
+  tradeNo?: string
+  merchantOrderNo?: string
+  status: string
+  message?: string
+  amount: number
+  paymentType?: string
+  bankCode?: string
+  rawData?: Record<string, unknown>
+  ipAddress?: string
+  createdAt: string
+}
+
+export interface PaymentFormData {
+  paymentUrl: string
+  merchantId: string
+  merchantOrderNo: string
+  tradeInfo: string
+  tradeSha: string
+  version: string
 }
 
 export interface OrderListResponse {

@@ -11,9 +11,14 @@ export type Database = {
           id: string
           notes: string | null
           order_number: string
+          payment_bank_code: string | null
+          payment_expire_date: string | null
           payment_id: string | null
           payment_method: string | null
           payment_status: string | null
+          payment_time: string | null
+          payment_trade_no: string | null
+          payment_va_account: string | null
           shipping_address: Json
           shipping_fee: number
           status: string
@@ -31,9 +36,14 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number: string
+          payment_bank_code?: string | null
+          payment_expire_date?: string | null
           payment_id?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          payment_time?: string | null
+          payment_trade_no?: string | null
+          payment_va_account?: string | null
           shipping_address: Json
           shipping_fee?: number
           status?: string
@@ -51,9 +61,14 @@ export type Database = {
           id?: string
           notes?: string | null
           order_number?: string
+          payment_bank_code?: string | null
+          payment_expire_date?: string | null
           payment_id?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          payment_time?: string | null
+          payment_trade_no?: string | null
+          payment_va_account?: string | null
           shipping_address?: Json
           shipping_fee?: number
           status?: string
@@ -148,6 +163,59 @@ export type Database = {
           },
         ]
       }
+      payment_logs: {
+        Row: {
+          id: string
+          order_id: string | null
+          trade_no: string | null
+          merchant_order_no: string | null
+          status: string
+          message: string | null
+          amount: number
+          payment_type: string | null
+          bank_code: string | null
+          raw_data: Json | null
+          ip_address: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id?: string | null
+          trade_no?: string | null
+          merchant_order_no?: string | null
+          status: string
+          message?: string | null
+          amount: number
+          payment_type?: string | null
+          bank_code?: string | null
+          raw_data?: Json | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          order_id?: string | null
+          trade_no?: string | null
+          merchant_order_no?: string | null
+          status?: string
+          message?: string | null
+          amount?: number
+          payment_type?: string | null
+          bank_code?: string | null
+          raw_data?: Json | null
+          ip_address?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'payment_logs_order_id_fkey'
+            columns: ['order_id']
+            isOneToOne: false
+            referencedRelation: 'orders'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       order_summary_view: {
@@ -164,6 +232,18 @@ export type Database = {
     }
     Functions: {
       generate_order_number: { Args: never; Returns: string }
+      update_order_payment_status: {
+        Args: {
+          p_order_id: string
+          p_status: string
+          p_trade_no?: string
+          p_payment_time?: string
+          p_bank_code?: string
+          p_va_account?: string
+          p_expire_date?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
