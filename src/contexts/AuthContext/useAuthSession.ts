@@ -19,6 +19,8 @@ export function useAuthSession({ onInterestsSync }: UseAuthSessionOptions) {
       err?.message?.includes('Invalid Refresh Token') ||
       err?.message?.includes('refresh_token_not_found') ||
       err?.message?.includes('Refresh Token Not Found') ||
+      err?.message?.includes('missing destination') ||
+      err?.message?.includes('oauth_client_id') ||
       err?.name === 'AuthApiError'
     )
   }, [])

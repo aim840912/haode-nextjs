@@ -5,7 +5,6 @@ import { Sprout, Apple, Wheat, Leaf, PartyPopper, Calendar, Users, Sparkles } fr
 import { FeaturesSection } from '@/components/features/home/FeaturesSection'
 import { HeroSection } from '@/components/features/home/HeroSection'
 import { NewsSection } from '@/components/features/home/NewsSection'
-import { ProductsSectionWithErrorBoundary as ProductsSection } from '@/components/features/products/ProductsSection'
 import { FarmStructuredData } from '@/components/features/seo/StructuredData'
 import { useSiteSetting } from '@/hooks/useSiteSettings'
 import { SETTING_KEYS } from '@/types/siteSettings'
@@ -179,8 +178,6 @@ export default function Home() {
           featureImages={featureCardImages}
           isVisible={visibleSections.has('features')}
         />
-
-        <ProductsSection />
 
         <NewsSection
           newsCards={newsCards}

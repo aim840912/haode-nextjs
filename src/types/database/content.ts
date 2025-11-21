@@ -33,45 +33,6 @@ export type Database = {
         }
         Relationships: []
       }
-      culture: {
-        Row: {
-          category: string | null
-          content: string | null
-          created_at: string
-          description: string | null
-          id: string
-          images: Json | null
-          is_featured: boolean | null
-          title: string
-          updated_at: string
-          year: number | null
-        }
-        Insert: {
-          category?: string | null
-          content?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          images?: Json | null
-          is_featured?: boolean | null
-          title: string
-          updated_at?: string
-          year?: number | null
-        }
-        Update: {
-          category?: string | null
-          content?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          images?: Json | null
-          is_featured?: boolean | null
-          title?: string
-          updated_at?: string
-          year?: number | null
-        }
-        Relationships: []
-      }
       farm_tour: {
         Row: {
           activities: Json | null
@@ -267,24 +228,6 @@ export type Database = {
           specialties?: Json | null
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      location_id_mapping: {
-        Row: {
-          migrated_at: string | null
-          new_uuid: string | null
-          old_id: number | null
-        }
-        Insert: {
-          migrated_at?: string | null
-          new_uuid?: string | null
-          old_id?: number | null
-        }
-        Update: {
-          migrated_at?: string | null
-          new_uuid?: string | null
-          old_id?: number | null
         }
         Relationships: []
       }
