@@ -17,6 +17,8 @@ export interface InquiryStatsData {
   completion_rate: number
   cancellation_rate: number
   avg_response_time_hours: number
+  // 訂單統計（可選，由管理員選單使用）
+  pending_orders?: number
 }
 
 /**

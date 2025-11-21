@@ -139,19 +139,34 @@ export async function deleteInquiry(id: string): Promise<boolean> {
 export async function fetchInquiryStats(timeframe: number = 30): Promise<InquiryStatsDataUtil> {
   try {
     const params = new URLSearchParams({ timeframe: String(timeframe) })
-    const endpoint = `/api/inquiries/stats?${params}`
+    const inquiryEndpoint = `/api/inquiries/stats?${params}`
+    const orderStatsEndpoint = '/api/admin/orders/stats'
 
-    const result = await apiClient.get<{ summary: InquiryStatsDataUtil }>(endpoint)
+    // 同時獲取詢問統計和訂單統計
+    const [inquiryResult, orderResult] = await Promise.all([
+      apiClient.get<{ summary: InquiryStatsDataUtil }>(inquiryEndpoint),
+      apiClient.get<{ pending_orders: number }>(orderStatsEndpoint).catch(() => null),
+    ])
 
-    if (!result.success || !result.data) {
-      throw new Error(result.message || '取得詢問單統計資料失敗')
+    if (!inquiryResult.success || !inquiryResult.data) {
+      throw new Error(inquiryResult.message || '取得詢問單統計資料失敗')
     }
 
-    apiLogger.info('詢問單統計資料取得成功', {
-      metadata: { timeframe, totalInquiries: result.data.summary.total_inquiries },
+    // 合併結果
+    const stats: InquiryStatsDataUtil = {
+      ...inquiryResult.data.summary,
+      pending_orders: orderResult?.data?.pending_orders ?? 0,
+    }
+
+    apiLogger.info('管理員統計資料取得成功', {
+      metadata: {
+        timeframe,
+        totalInquiries: stats.total_inquiries,
+        pendingOrders: stats.pending_orders,
+      },
     })
 
-    return result.data.summary
+    return stats
   } catch (error) {
     handleApiError(error, 'fetchInquiryStats', 'InquiriesAPI')
   }

@@ -6,6 +6,7 @@ interface AdminMenuContentProps {
   onMenuItemClick: () => void
   stats?: {
     unread_count: number
+    pending_orders?: number
   }
 }
 
@@ -101,6 +102,27 @@ export function AdminMenuContent({ onMenuItemClick, stats }: AdminMenuContentPro
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
           </svg>
           門市管理
+        </Link>
+        <Link
+          href="/admin/orders"
+          className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-green-900"
+          onClick={onMenuItemClick}
+        >
+          <div className="flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z"
+                clipRule="evenodd"
+              />
+            </svg>
+            訂單管理
+          </div>
+          {stats && stats.pending_orders && stats.pending_orders > 0 && (
+            <span className="ml-1 px-1.5 py-0.5 bg-orange-100 text-orange-600 text-xs rounded-full font-medium">
+              {stats.pending_orders}
+            </span>
+          )}
         </Link>
 
         {/* 詢問管理 */}
