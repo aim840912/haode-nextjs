@@ -8,7 +8,14 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { CreditCard, Building2, Store, Monitor } from 'lucide-react'
-import type { PaymentMethod, PaymentFormData } from '@/types/order'
+import type { PaymentMethod } from '@/types/order'
+import { getCSRFTokenFromCookie } from '@/lib/api/core/api-headers'
+
+// 綠界付款表單資料
+interface ECPayFormData {
+  paymentUrl: string
+  formData: Record<string, string | number>
+}
 
 interface PaymentFormProps {
   orderId: string
@@ -53,7 +60,7 @@ const PAYMENT_METHODS: {
 export function PaymentForm({ orderId, amount, email, onSuccess, onError }: PaymentFormProps) {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('CREDIT')
   const [isLoading, setIsLoading] = useState(false)
-  const [formData, setFormData] = useState<PaymentFormData | null>(null)
+  const [formData, setFormData] = useState<ECPayFormData | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
 
   // 當表單資料準備好時自動提交
@@ -67,9 +74,19 @@ export function PaymentForm({ orderId, amount, email, onSuccess, onError }: Paym
     setIsLoading(true)
 
     try {
-      const response = await fetch('/api/payments/create', {
+      // 取得 CSRF token 並加入 header
+      const csrfToken = getCSRFTokenFromCookie()
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      }
+      if (csrfToken) {
+        headers['X-CSRF-Token'] = csrfToken
+      }
+
+      // 使用綠界 ECPay API
+      const response = await fetch('/api/payments/ecpay/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           orderId,
           paymentMethod: selectedMethod,
@@ -183,13 +200,12 @@ export function PaymentForm({ orderId, amount, email, onSuccess, onError }: Paym
         {isLoading ? '處理中...' : '前往付款'}
       </button>
 
-      {/* 隱藏的表單，用於提交到藍新 */}
+      {/* 隱藏的表單，用於提交到綠界 */}
       {formData && (
         <form ref={formRef} method="POST" action={formData.paymentUrl} className="hidden">
-          <input type="hidden" name="MerchantID" value={formData.merchantId} />
-          <input type="hidden" name="TradeInfo" value={formData.tradeInfo} />
-          <input type="hidden" name="TradeSha" value={formData.tradeSha} />
-          <input type="hidden" name="Version" value={formData.version} />
+          {Object.entries(formData.formData).map(([key, value]) => (
+            <input key={key} type="hidden" name={key} value={String(value)} />
+          ))}
         </form>
       )}
     </div>

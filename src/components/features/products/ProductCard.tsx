@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { Star, Heart } from 'lucide-react'
+import { Star, Heart, ShoppingCart } from 'lucide-react'
+import { useCart } from '@/contexts/CartContext'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/providers/ToastProvider'
@@ -50,8 +51,25 @@ interface ProductCardProps {
 export const ProductCard = React.memo<ProductCardProps>(
   ({ product, index, isInterested, onProductClick, onToggleInterest }) => {
     const { addToast } = useToast()
+    const { addItem, getItemQuantity } = useCart()
     const [isHovered, setIsHovered] = useState(false)
     const [showQuickActions, setShowQuickActions] = useState(false)
+
+    // 檢查購物車中的數量
+    const cartQuantity = getItemQuantity(product.id)
+    const availableStock = product.availableStock ?? product.inventory
+    const canAddToCart = availableStock > cartQuantity
+
+    // 加入購物車處理
+    const handleAddToCart = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (!canAddToCart) {
+        addToast('已達購買上限', 'warning', 3000)
+        return
+      }
+      addItem(product, 1)
+      addToast(`已將 ${product.name} 加入購物車`, 'success', 3000)
+    }
 
     const handleCardClick = () => {
       onProductClick(product)
@@ -198,26 +216,47 @@ export const ProductCard = React.memo<ProductCardProps>(
             </div>
           </div>
 
-          {/* 收藏按鈕 - Hover 時展開 */}
+          {/* 操作按鈕 - Hover 時展開 */}
           <div
             className={cn(
               'overflow-hidden transition-all duration-200',
-              isHovered ? 'max-h-12 pt-2 opacity-100' : 'max-h-0 opacity-0'
+              isHovered ? 'max-h-24 pt-2 opacity-100' : 'max-h-0 opacity-0'
             )}
           >
-            <button
-              onClick={e => {
-                e.stopPropagation()
-                onToggleInterest(product.id, product.name, e)
-              }}
-              className="w-full flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors duration-200"
-              aria-label={isInterested ? '移除我的收藏' : '加入我的收藏'}
-            >
-              <Heart
-                className={cn('w-4 h-4', isInterested ? 'fill-white text-white' : 'text-white')}
-              />
-              <span className="text-sm font-medium">{isInterested ? '已收藏' : '收藏'}</span>
-            </button>
+            <div className="space-y-2">
+              {/* 加入購物車按鈕 */}
+              <button
+                onClick={handleAddToCart}
+                disabled={!canAddToCart}
+                className={cn(
+                  'w-full flex items-center justify-center gap-2 py-2 rounded-lg transition-colors duration-200',
+                  canAddToCart
+                    ? 'bg-green-600 text-white hover:bg-green-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                )}
+                aria-label="加入購物車"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {cartQuantity > 0 ? `已加入 (${cartQuantity})` : '加入購物車'}
+                </span>
+              </button>
+
+              {/* 收藏按鈕 */}
+              <button
+                onClick={e => {
+                  e.stopPropagation()
+                  onToggleInterest(product.id, product.name, e)
+                }}
+                className="w-full flex items-center justify-center gap-2 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors duration-200"
+                aria-label={isInterested ? '移除我的收藏' : '加入我的收藏'}
+              >
+                <Heart
+                  className={cn('w-4 h-4', isInterested ? 'fill-white text-white' : 'text-white')}
+                />
+                <span className="text-sm font-medium">{isInterested ? '已收藏' : '收藏'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

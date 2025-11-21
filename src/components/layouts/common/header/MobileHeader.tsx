@@ -2,9 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { ShoppingCart } from 'lucide-react'
 import { AuthButton } from '@/components/ui/button/AuthButton'
 import { ExpandableSearchBar } from '@/components/ui/ExpandableSearchBar'
 import { ThemeToggle } from '@/components/ui/theme/ThemeToggle'
+import { useCart } from '@/contexts/CartContext'
 import { AdminMenuContent } from './AdminMenuContent'
 import { navItems } from './NavigationItems'
 
@@ -34,6 +36,7 @@ export function MobileHeader({
   handleMenuItemClick,
 }: MobileHeaderProps) {
   const pathname = usePathname()
+  const { itemCount } = useCart()
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -62,6 +65,20 @@ export function MobileHeader({
 
           {/* 主題切換按鈕 - Mobile */}
           <ThemeToggle />
+
+          {/* 購物車按鈕 - Mobile */}
+          <Link
+            href="/cart"
+            className="relative flex items-center text-gray-700 hover:text-green-900 hover:bg-green-50 transition-all duration-200 justify-center rounded-md min-h-[44px] min-w-[44px] p-2"
+            title="購物車"
+          >
+            <ShoppingCart className="w-5 h-5" />
+            {itemCount > 0 && (
+              <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                {itemCount > 99 ? '99+' : itemCount}
+              </span>
+            )}
+          </Link>
 
           {/* 管理員快速連結 - Mobile */}
           {user?.role === 'admin' && (

@@ -153,7 +153,7 @@ const nextConfig: NextConfig = {
       "frame-ancestors 'none'", // 防止點擊劫持攻擊
       "object-src 'none'", // 禁止物件嵌入
       "base-uri 'self'", // 限制 base 標籤
-      "form-action 'self'", // 限制表單提交目標
+      "form-action 'self' https://ccore.newebpay.com https://core.newebpay.com https://payment.ecpay.com.tw https://payment-stage.ecpay.com.tw", // 限制表單提交目標（含藍新金流和綠界）
       "media-src 'self' data: https:", // 媒體來源控制
       "child-src 'self' blob:", // 子框架來源控制
       'upgrade-insecure-requests', // 自動升級 HTTP 到 HTTPS

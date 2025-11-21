@@ -68,22 +68,22 @@ export function getNewebPayConfig(): NewebPayConfig {
 // ==========================================
 
 /**
- * AES-256-CBC 加密
+ * AES-128-CBC 加密
  *
- * 藍新金流使用 AES-256-CBC 加密交易資訊
+ * 藍新金流使用 AES-128-CBC 加密交易資訊
  * @param data - 要加密的資料（物件會自動轉為 JSON）
- * @param key - HashKey
- * @param iv - HashIV
+ * @param key - HashKey (16 bytes)
+ * @param iv - HashIV (16 bytes)
  * @returns 加密後的十六進位字串
  */
 export function aesEncrypt(data: string | object, key: string, iv: string): string {
   const dataString = typeof data === 'object' ? JSON.stringify(data) : data
 
-  // 將 key 和 iv 轉換為正確長度的 Buffer
+  // 將 key 和 iv 轉換為 Buffer (藍新使用 16 bytes key)
   const keyBuffer = Buffer.from(key, 'utf8')
   const ivBuffer = Buffer.from(iv, 'utf8')
 
-  const cipher = crypto.createCipheriv('aes-256-cbc', keyBuffer, ivBuffer)
+  const cipher = crypto.createCipheriv('aes-128-cbc', keyBuffer, ivBuffer)
   let encrypted = cipher.update(dataString, 'utf8', 'hex')
   encrypted += cipher.final('hex')
 
@@ -91,18 +91,19 @@ export function aesEncrypt(data: string | object, key: string, iv: string): stri
 }
 
 /**
- * AES-256-CBC 解密
+ * AES-128-CBC 解密
  *
+ * 藍新金流使用 AES-128-CBC 解密交易資訊
  * @param encryptedData - 加密後的十六進位字串
- * @param key - HashKey
- * @param iv - HashIV
+ * @param key - HashKey (16 bytes)
+ * @param iv - HashIV (16 bytes)
  * @returns 解密後的字串
  */
 export function aesDecrypt(encryptedData: string, key: string, iv: string): string {
   const keyBuffer = Buffer.from(key, 'utf8')
   const ivBuffer = Buffer.from(iv, 'utf8')
 
-  const decipher = crypto.createDecipheriv('aes-256-cbc', keyBuffer, ivBuffer)
+  const decipher = crypto.createDecipheriv('aes-128-cbc', keyBuffer, ivBuffer)
   let decrypted = decipher.update(encryptedData, 'hex', 'utf8')
   decrypted += decipher.final('utf8')
 

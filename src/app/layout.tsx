@@ -11,6 +11,7 @@ import { ErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { ToastProvider } from '@/components/ui/feedback/Toast'
 import { HeaderSpacer } from '@/components/ui/navigation/HeaderSpacer'
 import { AuthProvider } from '@/contexts/AuthContext'
+import { CartProvider } from '@/contexts/CartContext'
 import { InquiryStatsProvider } from '@/contexts/InquiryStatsContext'
 import { ThemeProvider } from '@/contexts/ThemeContext'
 import { validateOnStartup } from '@/lib/env'
@@ -185,14 +186,16 @@ export default function RootLayout({
             <GoogleAnalyticsProvider>
               <ToastProvider>
                 <AuthProvider>
-                  <InquiryStatsProvider>
-                    <Header />
-                    <main className="flex-grow">
-                      <HeaderSpacer />
-                      {children}
-                    </main>
-                    <Footer />
-                  </InquiryStatsProvider>
+                  <CartProvider>
+                    <InquiryStatsProvider>
+                      <Header />
+                      <main className="flex-grow">
+                        <HeaderSpacer />
+                        {children}
+                      </main>
+                      <Footer />
+                    </InquiryStatsProvider>
+                  </CartProvider>
                 </AuthProvider>
               </ToastProvider>
             </GoogleAnalyticsProvider>

@@ -38,6 +38,8 @@ const CSRF_EXCLUDED_PATHS = [
   '/api/farm-tour', // 公開的農場導覽 API（GET 請求）
   '/api/schedule', // 公開的行程 API（GET 請求）
   '/api/payment/callback', // 支付回調（第三方調用）
+  '/api/payments/ecpay/notify', // 綠界付款通知回調（第三方調用）
+  '/api/payments/ecpay/return', // 綠界付款完成返回（可能無 CSRF context）
   '/api/admin', // Admin API 使用 X-Admin-Key 驗證，不需要 CSRF 保護
   '/api/admin-proxy', // Admin Proxy 使用 Supabase 認證 + Admin Key 驗證，不需要 CSRF 保護
   '/_next/', // Next.js 內部請求
@@ -329,7 +331,7 @@ export const config = {
     '/auth/:path*',
 
     // 用戶功能頁面 - 需要認證和 CSRF 保護
-    '/profile',
+    '/profile/:path*',
     '/inquiries/:path*',
     '/inquiry/:path*',
     '/orders/:path*',
