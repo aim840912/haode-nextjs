@@ -8,6 +8,7 @@ import { AuthButton } from '@/components/ui/button/AuthButton'
 import { ExpandableSearchBar } from '@/components/ui/ExpandableSearchBar'
 import { ThemeToggle } from '@/components/ui/theme/ThemeToggle'
 import { useCart } from '@/contexts/CartContext'
+import { useCartAccess } from '@/hooks/useCartAccess'
 import { AdminMenuContent } from './AdminMenuContent'
 import { navItems } from './NavigationItems'
 
@@ -30,6 +31,7 @@ export function DesktopHeader({
 }: DesktopHeaderProps) {
   const pathname = usePathname()
   const { itemCount } = useCart()
+  const { canAccessCart, disabledReason } = useCartAccess()
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -102,21 +104,29 @@ export function DesktopHeader({
           {/* 主題切換按鈕 */}
           <ThemeToggle />
 
-          {/* 購物車按鈕 - 僅登入用戶顯示 */}
-          {user && (
-            <Link
-              href="/cart"
-              className="relative w-10 h-10 flex items-center justify-center text-[#5d4037] hover:text-[#d35400] hover:bg-gray-100 transition-colors duration-200 rounded-md"
-              title="購物車"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                  {itemCount > 99 ? '99+' : itemCount}
-                </span>
-              )}
-            </Link>
-          )}
+          {/* 購物車按鈕 - 僅登入用戶顯示，需要權限才能使用 */}
+          {user &&
+            (canAccessCart ? (
+              <Link
+                href="/cart"
+                className="relative w-10 h-10 flex items-center justify-center text-[#5d4037] hover:text-[#d35400] hover:bg-gray-100 transition-colors duration-200 rounded-md"
+                title="購物車"
+              >
+                <ShoppingCart className="w-5 h-5" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {itemCount > 99 ? '99+' : itemCount}
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <span
+                className="relative w-10 h-10 flex items-center justify-center text-gray-400 cursor-not-allowed rounded-md"
+                title={disabledReason}
+              >
+                <ShoppingCart className="w-5 h-5" />
+              </span>
+            ))}
 
           {/* Social Links */}
           <SocialLinks size="sm" />

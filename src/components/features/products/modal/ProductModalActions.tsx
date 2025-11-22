@@ -3,6 +3,7 @@ import { Share2, ShoppingCart } from 'lucide-react'
 import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useCartAccess } from '@/hooks/useCartAccess'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { InterestButton } from '../InterestButton'
@@ -36,11 +37,14 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
     const [isAddingToCart, setIsAddingToCart] = useState(false)
     const { user } = useAuth()
     const { addItem, getItemQuantity } = useCart()
+    const { canAccessCart, disabledReason } = useCartAccess()
 
     // 取得購物車中此產品的數量
     const cartQuantity = getItemQuantity(product.id)
     const availableStock = product.availableStock ?? product.inventory
     const isOutOfStock = availableStock <= 0
+    // 是否可以加入購物車（需要權限 + 有庫存 + 已登入）
+    const canAddToCartButton = canAccessCart && user && !isOutOfStock
 
     const handleRequestQuote = async () => {
       setIsRequestingQuote(true)
@@ -52,7 +56,7 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
     }
 
     const handleAddToCart = () => {
-      if (!user || isOutOfStock) return
+      if (!canAccessCart || !user || isOutOfStock) return
 
       setIsAddingToCart(true)
       try {
@@ -180,8 +184,11 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
           {/* 加入購物車按鈕 */}
           <button
             onClick={handleAddToCart}
-            disabled={!user || isOutOfStock || isAddingToCart}
-            aria-label={isAddingToCart ? '加入中...' : '加入購物車'}
+            disabled={!canAddToCartButton || isAddingToCart}
+            aria-label={
+              isAddingToCart ? '加入中...' : !canAccessCart ? disabledReason : '加入購物車'
+            }
+            title={!canAccessCart ? disabledReason : undefined}
             className={cn(
               // 基礎樣式 - 與 TailwindGreenButton 一致
               'w-full min-h-[48px] rounded-3xl',
@@ -191,7 +198,7 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
               'transform hover:scale-[1.01] active:scale-[0.99]',
               'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500',
               // 狀態樣式
-              !user || isOutOfStock
+              !canAddToCartButton
                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-2 border-gray-300'
                 : 'bg-white cursor-pointer border-2 border-amber-500 shadow-[inset_0px_-2px_0px_1px_#f59e0b] group hover:bg-amber-500'
             )}
@@ -200,10 +207,12 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
               className={cn(
                 'font-medium text-[#333] flex items-center justify-center gap-2',
                 'group-hover:text-white',
-                (!user || isOutOfStock) && 'group-hover:text-[#333]'
+                !canAddToCartButton && 'group-hover:text-[#333]'
               )}
             >
-              {isOutOfStock ? (
+              {!canAccessCart ? (
+                <span className="font-bold text-base">功能暫未開放</span>
+              ) : isOutOfStock ? (
                 <span className="font-bold text-base">
                   {product.inventory > 0 ? '庫存已保留' : '暫時缺貨'}
                 </span>

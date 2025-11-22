@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Star, Heart, ShoppingCart } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
+import { useCartAccess } from '@/hooks/useCartAccess'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/providers/ToastProvider'
@@ -52,18 +53,24 @@ export const ProductCard = React.memo<ProductCardProps>(
   ({ product, index, isInterested, onProductClick, onToggleInterest }) => {
     const { addToast } = useToast()
     const { addItem, getItemQuantity } = useCart()
+    const { canAccessCart, disabledReason } = useCartAccess()
     const [isHovered, setIsHovered] = useState(false)
     const [showQuickActions, setShowQuickActions] = useState(false)
 
     // 檢查購物車中的數量
     const cartQuantity = getItemQuantity(product.id)
     const availableStock = product.availableStock ?? product.inventory
-    const canAddToCart = availableStock > cartQuantity
+    // 加入購物車需要權限檢查
+    const canAddToCart = canAccessCart && availableStock > cartQuantity
 
     // 加入購物車處理
     const handleAddToCart = (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (!canAddToCart) {
+      if (!canAccessCart) {
+        addToast(disabledReason || '購物車功能暫未開放', 'warning', 3000)
+        return
+      }
+      if (availableStock <= cartQuantity) {
         addToast('已達購買上限', 'warning', 3000)
         return
       }
@@ -234,11 +241,16 @@ export const ProductCard = React.memo<ProductCardProps>(
                     ? 'bg-green-600 text-white hover:bg-green-700'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 )}
-                aria-label="加入購物車"
+                aria-label={!canAccessCart ? disabledReason : '加入購物車'}
+                title={!canAccessCart ? disabledReason : undefined}
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span className="text-sm font-medium">
-                  {cartQuantity > 0 ? `已加入 (${cartQuantity})` : '加入購物車'}
+                  {!canAccessCart
+                    ? '功能暫未開放'
+                    : cartQuantity > 0
+                      ? `已加入 (${cartQuantity})`
+                      : '加入購物車'}
                 </span>
               </button>
 
