@@ -64,12 +64,11 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
           inventory: product.inventory,
           availableStock: product.availableStock,
           productImages: product.productImages,
-          // 其他必要欄位
           description: product.description || '',
           category: product.category || '',
-          status: product.status || 'active',
-          created_at: product.created_at || new Date().toISOString(),
-          updated_at: product.updated_at || new Date().toISOString(),
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
         }
 
         addItem(productForCart, quantity)

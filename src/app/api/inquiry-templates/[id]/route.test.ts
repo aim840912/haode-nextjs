@@ -46,7 +46,15 @@ vi.mock('@/services/core/inquiry/inquiryTemplateService', () => ({
 }))
 
 vi.mock('@/lib/middleware/api-middleware', () => ({
-  withAuthAndError: (handler: any) => handler,
+  withAuthAndError: (handler: any) => {
+    return async (request: NextRequest, context?: unknown) => {
+      const mockUser = {
+        id: 'user-123',
+        email: 'test@example.com',
+      }
+      return handler(request, mockUser, context)
+    }
+  },
   User: {} as any,
 }))
 
@@ -108,7 +116,7 @@ describe('GET /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act
-    const response = await GET(request, mockUser, context)
+    const response = await GET(request, context)
     const data = await response.json()
 
     // Assert
@@ -132,7 +140,7 @@ describe('GET /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'non-existent' }) }
 
     // Act & Assert
-    await expect(GET(request, mockUser, context)).rejects.toThrow('範本不存在或無權限查看')
+    await expect(GET(request, context)).rejects.toThrow('範本不存在或無權限查看')
   })
 
   it('應該返回 404 當嘗試存取其他使用者的範本', async () => {
@@ -143,7 +151,7 @@ describe('GET /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'other-template' }) }
 
     // Act & Assert
-    await expect(GET(request, mockUser, context)).rejects.toThrow('範本不存在或無權限查看')
+    await expect(GET(request, context)).rejects.toThrow('範本不存在或無權限查看')
   })
 })
 
@@ -179,7 +187,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act
-    const response = await PUT(request, mockUser, context)
+    const response = await PUT(request, context)
     const data = await response.json()
 
     // Assert
@@ -219,7 +227,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act
-    const response = await PUT(request, mockUser, context)
+    const response = await PUT(request, context)
     const data = await response.json()
 
     // Assert
@@ -248,7 +256,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act
-    const response = await PUT(request, mockUser, context)
+    const response = await PUT(request, context)
     const data = await response.json()
 
     // Assert
@@ -272,7 +280,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act & Assert
-    await expect(PUT(request, mockUser, context)).rejects.toThrow('資料驗證失敗')
+    await expect(PUT(request, context)).rejects.toThrow('資料驗證失敗')
   })
 
   it('應該返回 400 當 email 格式錯誤', async () => {
@@ -288,7 +296,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act & Assert
-    await expect(PUT(request, mockUser, context)).rejects.toThrow('資料驗證失敗')
+    await expect(PUT(request, context)).rejects.toThrow('資料驗證失敗')
   })
 
   it('應該返回 400 當 items 超過最大數量', async () => {
@@ -308,7 +316,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act & Assert
-    await expect(PUT(request, mockUser, context)).rejects.toThrow('資料驗證失敗')
+    await expect(PUT(request, context)).rejects.toThrow('資料驗證失敗')
   })
 
   // ==========================================================================
@@ -327,7 +335,7 @@ describe('PUT /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'non-existent' }) }
 
     // Act & Assert
-    await expect(PUT(request, mockUser, context)).rejects.toThrow('範本不存在或無權限修改')
+    await expect(PUT(request, context)).rejects.toThrow('範本不存在或無權限修改')
   })
 })
 
@@ -350,7 +358,7 @@ describe('DELETE /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'template-123' }) }
 
     // Act
-    const response = await DELETE(request, mockUser, context)
+    const response = await DELETE(request, context)
     const data = await response.json()
 
     // Assert
@@ -375,7 +383,7 @@ describe('DELETE /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'non-existent' }) }
 
     // Act & Assert
-    await expect(DELETE(request, mockUser, context)).rejects.toThrow('範本不存在或無權限刪除')
+    await expect(DELETE(request, context)).rejects.toThrow('範本不存在或無權限刪除')
   })
 
   it('應該處理權限錯誤', async () => {
@@ -388,6 +396,6 @@ describe('DELETE /api/inquiry-templates/[id]', () => {
     const context = { params: Promise.resolve({ id: 'other-template' }) }
 
     // Act & Assert
-    await expect(DELETE(request, mockUser, context)).rejects.toThrow('範本不存在或無權限刪除')
+    await expect(DELETE(request, context)).rejects.toThrow('範本不存在或無權限刪除')
   })
 })
