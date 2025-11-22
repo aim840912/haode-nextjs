@@ -35,7 +35,7 @@ export function AuthButton({ isMobile = false }: AuthButtonProps) {
 
   // 共用樣式
   const baseClasses = isMobile
-    ? 'px-2 py-1 text-xs font-medium rounded-full transition-all duration-200 border border-green-200'
+    ? 'flex items-center justify-center gap-1 text-xs font-medium rounded-md transition-all duration-200 min-h-[44px] min-w-[44px] p-2'
     : 'px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 flex items-center gap-1.5 border border-green-200 h-8'
 
   const loginClasses = 'text-green-900 bg-green-50 hover:bg-green-100'

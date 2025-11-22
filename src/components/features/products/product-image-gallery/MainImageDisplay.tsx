@@ -61,6 +61,24 @@ export const MainImageDisplay = React.memo<MainImageDisplayProps>(
               <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-white/10 pointer-events-none" />
             </>
           )}
+
+          {/* 點擊切換區域 - 左右半部 */}
+          {imageUrls.length > 1 && (
+            <>
+              {/* 左半部 - 點擊切換到上一張 */}
+              <div
+                onClick={onPrevious}
+                className="absolute left-0 top-0 w-1/2 h-full cursor-w-resize z-10"
+                aria-label="上一張圖片"
+              />
+              {/* 右半部 - 點擊切換到下一張 */}
+              <div
+                onClick={onNext}
+                className="absolute right-0 top-0 w-1/2 h-full cursor-e-resize z-10"
+                aria-label="下一張圖片"
+              />
+            </>
+          )}
         </div>
 
         {/* 圖片載入狀態 */}

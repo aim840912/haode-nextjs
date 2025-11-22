@@ -59,32 +59,34 @@ export function MobileHeader({
         </Link>
 
         {/* 右側:工具按鈕組 */}
-        <div className="flex items-center flex-shrink-0 space-x-1">
+        <div className="flex items-center flex-shrink-0 space-x-2">
           {/* 可展開搜尋欄 - Mobile */}
           <ExpandableSearchBar iconOnly />
 
           {/* 主題切換按鈕 - Mobile */}
           <ThemeToggle />
 
-          {/* 購物車按鈕 - Mobile */}
-          <Link
-            href="/cart"
-            className="relative flex items-center text-gray-700 hover:text-green-900 hover:bg-green-50 transition-all duration-200 justify-center rounded-md min-h-[44px] min-w-[44px] p-2"
-            title="購物車"
-          >
-            <ShoppingCart className="w-5 h-5" />
-            {itemCount > 0 && (
-              <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
-                {itemCount > 99 ? '99+' : itemCount}
-              </span>
-            )}
-          </Link>
+          {/* 購物車按鈕 - 僅登入用戶顯示 */}
+          {user && (
+            <Link
+              href="/cart"
+              className="relative flex items-center text-gray-700 hover:text-green-900 hover:bg-green-50 transition-all duration-200 justify-center rounded-md min-h-[44px] min-w-[44px] p-2"
+              title="購物車"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute top-1 right-1 bg-red-500 text-white text-xs font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">
+                  {itemCount > 99 ? '99+' : itemCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* 管理員快速連結 - Mobile */}
           {user?.role === 'admin' && (
             <div className="relative" ref={mobileAdminMenuRef}>
               <button
-                className={`flex items-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-all duration-200 justify-center rounded-md min-h-[52px] min-w-[52px] p-2 ${
+                className={`flex items-center text-green-800 hover:text-green-900 hover:bg-green-50/50 transition-all duration-200 justify-center rounded-md min-h-[44px] min-w-[44px] p-2 ${
                   isMobileAdminMenuOpen ? 'bg-green-50 text-green-900' : ''
                 }`}
                 title="管理功能"

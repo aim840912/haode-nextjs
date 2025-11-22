@@ -15,17 +15,8 @@ interface AuthButtonStatesProps {
 export const LoadingState = React.memo<AuthButtonStatesProps>(
   ({ isMobile, baseClasses, loginClasses }) => (
     <div className={cn(baseClasses, loginClasses)}>
-      {isMobile ? (
-        <>
-          <UserIcon className="w-4 h-4 inline mr-1" />
-          載入中...
-        </>
-      ) : (
-        <>
-          <UserIcon className="w-4 h-4" />
-          <span>載入中...</span>
-        </>
-      )}
+      <UserIcon className="w-4 h-4" />
+      <span>載入中...</span>
     </div>
   )
 )
@@ -38,17 +29,8 @@ LoadingState.displayName = 'LoadingState'
 export const InitialState = React.memo<AuthButtonStatesProps>(
   ({ isMobile, baseClasses, loginClasses }) => (
     <div className={cn(baseClasses, loginClasses)} suppressHydrationWarning>
-      {isMobile ? (
-        <>
-          <UserIcon className="w-4 h-4 inline mr-1" />
-          登入
-        </>
-      ) : (
-        <>
-          <UserIcon className="w-4 h-4" />
-          <span>登入</span>
-        </>
-      )}
+      <UserIcon className="w-4 h-4" />
+      <span>登入</span>
     </div>
   )
 )
@@ -60,21 +42,10 @@ InitialState.displayName = 'InitialState'
  */
 export const LoginLink = React.memo<AuthButtonStatesProps>(
   ({ isMobile, baseClasses, loginClasses }) => (
-    <div className="relative">
-      <Link href="/login" className={cn(baseClasses, loginClasses)}>
-        {isMobile ? (
-          <>
-            <UserIcon className="w-4 h-4 mr-1" />
-            登入
-          </>
-        ) : (
-          <>
-            <UserIcon className="w-4 h-4" />
-            <span>登入</span>
-          </>
-        )}
-      </Link>
-    </div>
+    <Link href="/login" className={cn(baseClasses, loginClasses)}>
+      <UserIcon className="w-4 h-4" />
+      <span>登入</span>
+    </Link>
   )
 )
 

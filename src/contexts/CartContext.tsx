@@ -9,8 +9,9 @@
  * - 計算小計、運費、總金額
  */
 
-import { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef, ReactNode } from 'react'
 import type { Product } from '@/types/product'
+import { useAuth } from './AuthContext'
 
 // ==========================================
 // 類型定義
@@ -55,9 +56,13 @@ interface CartContextType {
 // 常數
 // ==========================================
 
-const CART_STORAGE_KEY = 'haude_cart'
 const FREE_SHIPPING_THRESHOLD = 1000 // 滿千免運
 const SHIPPING_FEE = 100 // 運費
+
+// 根據用戶 ID 生成購物車儲存 key
+const getCartStorageKey = (userId: string | null): string | null => {
+  return userId ? `haude_cart_${userId}` : null
+}
 
 // ==========================================
 // Reducer
@@ -126,32 +131,58 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 const CartContext = createContext<CartContextType | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
   const [state, dispatch] = useReducer(cartReducer, {
     items: [],
     isLoaded: false,
   })
 
-  // 從 localStorage 載入購物車
+  // 追蹤前一個用戶 ID，用於偵測用戶變化
+  const prevUserIdRef = useRef<string | null | undefined>(undefined)
+
+  // 監聽用戶變化，載入對應購物車
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(CART_STORAGE_KEY)
-      if (saved) {
-        const items = JSON.parse(saved) as CartItem[]
-        dispatch({ type: 'LOAD_CART', payload: items })
+    const userId = user?.id ?? null
+    const storageKey = getCartStorageKey(userId)
+
+    // 跳過初始渲染（prevUserIdRef 為 undefined）
+    if (prevUserIdRef.current === undefined) {
+      prevUserIdRef.current = userId
+    }
+
+    // 用戶變化時載入對應購物車
+    if (prevUserIdRef.current !== userId || !state.isLoaded) {
+      prevUserIdRef.current = userId
+
+      if (storageKey) {
+        // 已登入：載入用戶專屬購物車
+        try {
+          const saved = localStorage.getItem(storageKey)
+          if (saved) {
+            const items = JSON.parse(saved) as CartItem[]
+            dispatch({ type: 'LOAD_CART', payload: items })
+          } else {
+            dispatch({ type: 'LOAD_CART', payload: [] })
+          }
+        } catch {
+          dispatch({ type: 'LOAD_CART', payload: [] })
+        }
       } else {
+        // 未登入：顯示空購物車
         dispatch({ type: 'LOAD_CART', payload: [] })
       }
-    } catch {
-      dispatch({ type: 'LOAD_CART', payload: [] })
     }
-  }, [])
+  }, [user?.id, state.isLoaded])
 
-  // 儲存到 localStorage
+  // 儲存到 localStorage（僅登入用戶）
   useEffect(() => {
-    if (state.isLoaded) {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items))
+    const userId = user?.id ?? null
+    const storageKey = getCartStorageKey(userId)
+
+    if (state.isLoaded && storageKey) {
+      localStorage.setItem(storageKey, JSON.stringify(state.items))
     }
-  }, [state.items, state.isLoaded])
+  }, [state.items, state.isLoaded, user?.id])
 
   // 新增商品
   const addItem = (product: Product, quantity = 1) => {

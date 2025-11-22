@@ -344,15 +344,10 @@ export default function SchedulePage() {
                       )}
 
                       {/* Contact */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-slate-700">
+                      <div className="pt-4 border-t border-gray-100 dark:border-slate-700">
                         <div className="flex items-center text-gray-600 dark:text-gray-300">
                           <span className="text-sm">{schedule.contact}</span>
                         </div>
-                        {schedule.status === 'upcoming' && (
-                          <button className="bg-amber-900 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-800 dark:hover:bg-amber-700 transition-colors">
-                            設定提醒
-                          </button>
-                        )}
                       </div>
                     </div>
                   ))

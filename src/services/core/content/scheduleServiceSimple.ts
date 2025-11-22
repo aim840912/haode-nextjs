@@ -71,10 +71,20 @@ export class ScheduleServiceSimple implements ScheduleService {
    * 轉換資料庫記錄為 ScheduleItem
    */
   private transformToScheduleItem(record: SupabaseScheduleRecord): ScheduleItem {
-    // 處理 status，確保是有效值
-    let status: 'upcoming' | 'ongoing' | 'completed' = 'upcoming'
-    if (record.status === 'ongoing' || record.status === 'completed') {
-      status = record.status
+    // 根據日期動態計算狀態
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const scheduleDate = new Date(record.date)
+    scheduleDate.setHours(0, 0, 0, 0)
+
+    let status: 'upcoming' | 'ongoing' | 'completed'
+    if (scheduleDate < today) {
+      status = 'completed'
+    } else if (scheduleDate.getTime() === today.getTime()) {
+      status = 'ongoing'
+    } else {
+      status = 'upcoming'
     }
 
     return {

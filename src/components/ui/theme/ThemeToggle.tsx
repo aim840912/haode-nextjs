@@ -93,17 +93,13 @@ export function ThemeToggle() {
     <button
       onClick={toggleTheme}
       className="
-        inline-flex items-center gap-2
-        p-2 sm:px-3 sm:py-2
-        rounded-lg
-        bg-white dark:bg-slate-800
+        flex items-center justify-center
+        p-2
+        rounded-md
         text-gray-700 dark:text-gray-200
-        border border-gray-300 dark:border-slate-600
-        hover:bg-gray-50 dark:hover:bg-slate-700
-        hover:border-green-500 dark:hover:border-green-400
+        hover:text-green-900 hover:bg-green-50
         transition-all duration-200
-        shadow-sm hover:shadow-md
-        focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 dark:focus:ring-offset-slate-900
+        min-h-[44px] min-w-[44px]
       "
       aria-label={ariaLabel}
       title={ariaLabel}
@@ -111,12 +107,6 @@ export function ThemeToggle() {
     >
       {/* 圖標 */}
       {renderIcon()}
-
-      {/* 文字標籤（桌面版顯示） */}
-      {/* suppressHydrationWarning: 主題相關內容在 SSR 和客戶端可能不同 */}
-      <span className="hidden sm:inline text-sm font-medium" suppressHydrationWarning>
-        {themeLabels[displayTheme]}
-      </span>
     </button>
   )
 }

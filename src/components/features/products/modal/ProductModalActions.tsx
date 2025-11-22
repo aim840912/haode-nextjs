@@ -2,10 +2,12 @@ import React, { useState } from 'react'
 import { Share2, ShoppingCart } from 'lucide-react'
 import { TailwindGreenButton } from '@/components/ui/buttons/TailwindGreenButton'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCart } from '@/contexts/CartContext'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils'
 import { InterestButton } from '../InterestButton'
 import { ExtendedProduct } from './types'
+import type { Product } from '@/types/product'
 
 interface ProductModalActionsProps {
   /** 產品資訊 */
@@ -31,7 +33,14 @@ interface ProductModalActionsProps {
 export const ProductModalActions = React.memo<ProductModalActionsProps>(
   ({ product, quantity, isInterested, onToggleInterest, onRequestQuote }) => {
     const [isRequestingQuote, setIsRequestingQuote] = useState(false)
+    const [isAddingToCart, setIsAddingToCart] = useState(false)
     const { user } = useAuth()
+    const { addItem, getItemQuantity } = useCart()
+
+    // 取得購物車中此產品的數量
+    const cartQuantity = getItemQuantity(product.id)
+    const availableStock = product.availableStock ?? product.inventory
+    const isOutOfStock = availableStock <= 0
 
     const handleRequestQuote = async () => {
       setIsRequestingQuote(true)
@@ -39,6 +48,33 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
         await onRequestQuote(product)
       } finally {
         setIsRequestingQuote(false)
+      }
+    }
+
+    const handleAddToCart = () => {
+      if (!user || isOutOfStock) return
+
+      setIsAddingToCart(true)
+      try {
+        // 將 ExtendedProduct 轉換為 Product 類型
+        const productForCart: Product = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          inventory: product.inventory,
+          availableStock: product.availableStock,
+          productImages: product.productImages,
+          // 其他必要欄位
+          description: product.description || '',
+          category: product.category || '',
+          status: product.status || 'active',
+          created_at: product.created_at || new Date().toISOString(),
+          updated_at: product.updated_at || new Date().toISOString(),
+        }
+
+        addItem(productForCart, quantity)
+      } finally {
+        setIsAddingToCart(false)
       }
     }
 
@@ -109,41 +145,88 @@ export const ProductModalActions = React.memo<ProductModalActionsProps>(
           </div>
         </div>
 
-        {/* 主要操作按鈕 - 綠色 Tailwind 設計 */}
+        {/* 主要操作按鈕 */}
         <div
-          className="animate-fade-in opacity-0"
+          className="animate-fade-in opacity-0 space-y-3"
           style={{ animationDelay: '600ms', animationFillMode: 'forwards' }}
         >
+          {/* 詢問報價按鈕 */}
           <TailwindGreenButton
             onClick={handleRequestQuote}
-            disabled={(product.availableStock ?? product.inventory) <= 0 || isRequestingQuote}
+            disabled={isOutOfStock || isRequestingQuote || !user}
             aria-label={isRequestingQuote ? '處理中...' : '立即詢問報價'}
-            className="py-4 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            className="py-3 transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
-            {(product.availableStock ?? product.inventory) <= 0 ? (
-              <span className="font-bold text-base md:text-lg">
+            {isOutOfStock ? (
+              <span className="font-bold text-base">
                 {product.inventory > 0 ? '庫存已保留' : '暫時缺貨'}
               </span>
             ) : isRequestingQuote ? (
-              <div className="flex items-center justify-center gap-3">
-                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span className="font-bold text-base md:text-lg">處理中...</span>
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <span className="font-bold text-base">處理中...</span>
               </div>
             ) : !user ? (
-              <span className="font-bold text-base md:text-lg">請先登入</span>
+              <span className="font-bold text-base">請先登入才能詢問報價</span>
             ) : (
-              <div className="flex items-center justify-center gap-3">
-                <ShoppingCart className="w-5 h-5" />
-                <div className="flex flex-col items-center">
-                  <span className="font-bold text-base md:text-lg">立即詢問報價</span>
-                  <span className="text-xs opacity-90">
-                    總計 NT$ {(product.price * quantity).toLocaleString()}
-                    {product.priceUnit && ` (${quantity} ${product.priceUnit})`}
-                  </span>
-                </div>
+              <div className="flex items-center justify-center gap-2">
+                <span className="font-bold text-base">詢問報價</span>
+                <span className="text-sm opacity-90">
+                  NT$ {(product.price * quantity).toLocaleString()}
+                </span>
               </div>
             )}
           </TailwindGreenButton>
+
+          {/* 加入購物車按鈕 */}
+          <button
+            onClick={handleAddToCart}
+            disabled={!user || isOutOfStock || isAddingToCart}
+            aria-label={isAddingToCart ? '加入中...' : '加入購物車'}
+            className={cn(
+              // 基礎樣式 - 與 TailwindGreenButton 一致
+              'w-full min-h-[48px] rounded-3xl',
+              'flex items-center justify-center',
+              // 過渡效果
+              'transition duration-300 ease-in-out',
+              'transform hover:scale-[1.01] active:scale-[0.99]',
+              'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500',
+              // 狀態樣式
+              !user || isOutOfStock
+                ? 'bg-gray-200 text-gray-500 cursor-not-allowed border-2 border-gray-300'
+                : 'bg-white cursor-pointer border-2 border-amber-500 shadow-[inset_0px_-2px_0px_1px_#f59e0b] group hover:bg-amber-500'
+            )}
+          >
+            <span
+              className={cn(
+                'font-medium text-[#333] flex items-center justify-center gap-2',
+                'group-hover:text-white',
+                (!user || isOutOfStock) && 'group-hover:text-[#333]'
+              )}
+            >
+              {isOutOfStock ? (
+                <span className="font-bold text-base">
+                  {product.inventory > 0 ? '庫存已保留' : '暫時缺貨'}
+                </span>
+              ) : isAddingToCart ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-bold text-base">加入中...</span>
+                </>
+              ) : !user ? (
+                <span className="font-bold text-base">請先登入才能加入購物車</span>
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  <span className="font-bold text-base">
+                    {cartQuantity > 0
+                      ? `已加入 (${cartQuantity}) - 再加 ${quantity}`
+                      : `加入購物車 (${quantity})`}
+                  </span>
+                </>
+              )}
+            </span>
+          </button>
         </div>
       </>
     )
