@@ -4,6 +4,7 @@
  * 提供藍新金流相關的付款建立、通知處理、狀態查詢等功能
  */
 
+import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 import { logger } from '@/lib/logger'
 import {
@@ -51,7 +52,7 @@ export interface PaymentStatus {
 
 export class PaymentService {
   private supabase
-  private config: NewebPayConfig
+  private _config: NewebPayConfig | null = null
 
   constructor() {
     // 使用 service role key 以繞過 RLS
@@ -59,7 +60,18 @@ export class PaymentService {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    this.config = getNewebPayConfig()
+    // 配置延遲載入，避免建置時因環境變數缺失而失敗
+  }
+
+  /**
+   * 延遲載入藍新金流配置
+   * 在第一次使用時才驗證配置，而非模組載入時
+   */
+  private get config(): NewebPayConfig {
+    if (!this._config) {
+      this._config = getNewebPayConfig()
+    }
+    return this._config
   }
 
   // ==========================================
@@ -416,8 +428,7 @@ export class PaymentService {
   /**
    * 生成查詢用的 CheckValue
    */
-  private generateQueryCheckValue(merchantOrderNo: string, timestamp: string): string {
-    const crypto = require('crypto')
+  private generateQueryCheckValue(merchantOrderNo: string, _timestamp: string): string {
     const data = `IV=${this.config.hashIv}&Amt=0&MerchantID=${this.config.merchantId}&MerchantOrderNo=${merchantOrderNo}&Key=${this.config.hashKey}`
     return crypto.createHash('sha256').update(data).digest('hex').toUpperCase()
   }
