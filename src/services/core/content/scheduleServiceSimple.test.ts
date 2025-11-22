@@ -292,25 +292,31 @@ describe('ScheduleServiceSimple', () => {
 
   describe('updateSchedule', () => {
     it('應該成功更新排程', async () => {
-      const updateData = { title: '更新後的標題', status: 'ongoing' as const }
+      // 使用今天的日期，讓 status 自動計算為 'ongoing'
+      // 注意：使用本地時間格式化，避免時區問題
+      const today = new Date()
+      const year = today.getFullYear()
+      const month = String(today.getMonth() + 1).padStart(2, '0')
+      const day = String(today.getDate()).padStart(2, '0')
+      const todayStr = `${year}-${month}-${day}`
+      const updateData = { title: '更新後的標題' }
 
       mockFrom.mockReturnValue({ update: mockUpdate })
       mockUpdate.mockReturnValue({ eq: mockEq })
       mockEq.mockReturnValue({ select: mockSelect })
       mockSelect.mockReturnValue({ single: mockSingle })
       mockSingle.mockResolvedValue({
-        data: { ...mockScheduleRecord, ...updateData },
+        data: { ...mockScheduleRecord, date: todayStr, ...updateData },
         error: null,
       })
 
       const result = await service.updateSchedule('schedule-123', updateData)
 
       expect(result.title).toBe('更新後的標題')
-      expect(result.status).toBe('ongoing')
+      expect(result.status).toBe('ongoing') // 今天的日期 = ongoing
       expect(mockUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           title: '更新後的標題',
-          status: 'ongoing',
         })
       )
     })
@@ -334,17 +340,25 @@ describe('ScheduleServiceSimple', () => {
     })
 
     it('應該只更新提供的欄位', async () => {
-      const partialUpdate = { status: 'completed' as const }
+      // 使用過去的日期，讓 status 自動計算為 'completed'
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      const yesterdayStr = yesterday.toISOString().split('T')[0]
+      const partialUpdate = { location: '新地點' }
 
       mockFrom.mockReturnValue({ update: mockUpdate })
       mockUpdate.mockReturnValue({ eq: mockEq })
       mockEq.mockReturnValue({ select: mockSelect })
       mockSelect.mockReturnValue({ single: mockSingle })
-      mockSingle.mockResolvedValue({ data: mockScheduleRecord, error: null })
+      mockSingle.mockResolvedValue({
+        data: { ...mockScheduleRecord, date: yesterdayStr, ...partialUpdate },
+        error: null,
+      })
 
-      await service.updateSchedule('schedule-123', partialUpdate)
+      const result = await service.updateSchedule('schedule-123', partialUpdate)
 
-      expect(mockUpdate).toHaveBeenCalledWith({ status: 'completed' })
+      expect(result.status).toBe('completed') // 過去的日期 = completed
+      expect(mockUpdate).toHaveBeenCalledWith({ location: '新地點' })
     })
   })
 
