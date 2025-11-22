@@ -120,7 +120,8 @@ describe('GET /api/auth/check-phone', () => {
 
     expect(response.status).toBe(500)
     expect(data.success).toBe(false)
-    expect(data.error.message).toContain('檢查手機號碼時發生錯誤')
-    expect(data.error.code).toBe('INTERNAL_SERVER_ERROR')
+    // ErrorFactory.fromSupabaseError 會產生更精確的錯誤訊息
+    expect(data.error.message).toContain('資料庫操作失敗')
+    expect(data.error.code).toBe('DATABASE_OPERATION_FAILED')
   })
 })

@@ -67,7 +67,7 @@
 import { NextRequest } from 'next/server'
 import { success } from '@/lib/api-response'
 import { createServiceSupabaseClient } from '@/lib/database/supabase-server'
-import { ValidationError } from '@/lib/errors'
+import { ValidationError, ErrorFactory } from '@/lib/errors'
 import { withErrorHandler } from '@/lib/middleware/error-handler'
 
 async function handleGET(request: NextRequest) {
@@ -96,7 +96,10 @@ async function handleGET(request: NextRequest) {
 
   if (error && error.code !== 'PGRST116') {
     // PGRST116 是 "not found" 錯誤，這是我們預期的
-    throw new Error('檢查手機號碼時發生錯誤')
+    throw ErrorFactory.fromSupabaseError(error, {
+      module: 'CheckPhoneAPI',
+      action: 'check-phone-availability',
+    })
   }
 
   const isAvailable = !existingProfile
