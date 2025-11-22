@@ -105,6 +105,7 @@ supabase/.temp/
 # 保留重要的配置檔案
 !postcss.config.mjs
 !bundle-analyzer.mjs
+!eslint.config.mjs
 
 # MCP (Model Context Protocol) 配置
 .mcp.json
