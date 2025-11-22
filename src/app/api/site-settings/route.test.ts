@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GET, POST } from './route'
 import { NextRequest } from 'next/server'
-import type { SiteSetting } from '@/types/siteSettings'
+import type { SiteSetting, SettingType } from '@/types/siteSettings'
 
 // ============================================================================
 // Mock Setup (vi.hoisted for Vitest 4.0 compatibility)
@@ -63,7 +63,8 @@ const mockUser = {
   role: 'admin',
 }
 
-const createMockSetting = (key: string, value: any, type: string): SiteSetting => ({
+const createMockSetting = (key: string, value: any, type: SettingType): SiteSetting => ({
+  id: `setting-${key}`,
   key,
   value,
   type,

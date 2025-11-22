@@ -263,7 +263,7 @@ describe('InquiryTemplateService', () => {
         customer_email: 'test2@example.com',
         customer_phone: '0987654321',
         activity_title: '農場參觀',
-        visit_date_pattern: null,
+        visit_date_pattern: undefined,
         visitor_count: '10',
       }
 

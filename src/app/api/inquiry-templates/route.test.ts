@@ -243,7 +243,7 @@ describe('POST /api/inquiry-templates', () => {
     const createData = {
       name: '每週蔬菜訂單',
       description: '每週固定蔬菜訂單',
-      inquiry_type: 'product',
+      inquiry_type: 'product' as const,
       customer_name: '王小明',
       customer_email: 'wang@example.com',
       customer_phone: '0912345678',
@@ -339,7 +339,7 @@ describe('POST /api/inquiry-templates', () => {
     // Arrange
     const minimalData = {
       name: '簡單範本',
-      inquiry_type: 'product',
+      inquiry_type: 'product' as const,
     }
 
     const createdTemplate = createMockTemplate(minimalData)

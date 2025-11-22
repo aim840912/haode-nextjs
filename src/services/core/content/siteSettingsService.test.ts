@@ -95,6 +95,7 @@ describe('SiteSettingsService', () => {
   let service: SiteSettingsService
 
   const mockSettingData: SiteSetting = {
+    id: 'setting-1',
     key: 'homepage_banner_image',
     value: 'https://example.com/banner.jpg',
     type: 'image',
@@ -117,6 +118,7 @@ describe('SiteSettingsService', () => {
       const mockSettings: SiteSetting[] = [
         mockSettingData,
         {
+          id: 'setting-2',
           key: 'site_title',
           value: '測試網站',
           type: 'string',
@@ -207,6 +209,7 @@ describe('SiteSettingsService', () => {
       const mockSettings: SiteSetting[] = [
         mockSettingData,
         {
+          id: 'setting-2',
           key: 'site_title',
           value: '測試網站',
           type: 'string',
@@ -263,7 +266,11 @@ describe('SiteSettingsService', () => {
       }
 
       const createdSetting: SiteSetting = {
-        ...createData,
+        id: 'setting-new',
+        key: createData.key,
+        value: createData.value,
+        type: createData.type,
+        description: createData.description ?? null,
         created_at: '2025-01-15T10:00:00Z',
         updated_at: '2025-01-15T10:00:00Z',
       }
@@ -433,6 +440,7 @@ describe('SiteSettingsService', () => {
       }
 
       const createdSetting: SiteSetting = {
+        id: 'setting-new-key',
         key: 'new_key',
         value: 'new_value',
         type: 'string',
