@@ -50,7 +50,7 @@ export interface ECPayNotifyResult {
 
 export class ECPayService {
   private supabase
-  private config: ECPayConfig
+  private _config: ECPayConfig | null = null
 
   constructor() {
     // 使用 service role key 以繞過 RLS
@@ -58,7 +58,18 @@ export class ECPayService {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    this.config = getECPayConfig()
+    // 配置延遲載入，避免建置時因環境變數缺失而失敗
+  }
+
+  /**
+   * 延遲載入綠界金流配置
+   * 在第一次使用時才驗證配置，而非模組載入時
+   */
+  private get config(): ECPayConfig {
+    if (!this._config) {
+      this._config = getECPayConfig()
+    }
+    return this._config
   }
 
   // ==========================================
