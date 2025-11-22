@@ -56,9 +56,10 @@ export const {
  * 設定 Mock 鏈式調用結構
  */
 export function setupMockChains() {
-  // select() 鏈: select().eq().eq().order()
+  // select() 鏈: select().eq().eq().order() 或 select().limit()
   mockSelect.mockReturnValue({
     eq: mockEq,
+    limit: mockLimit,
   })
 
   mockEq.mockReturnValue({
@@ -107,19 +108,12 @@ export function setupMockChains() {
 // Vi.mock calls at module top-level (required for Vitest 4.0)
 // ============================================================================
 
-// Mock supabase-proxies (supabase-auth re-exports from it)
-vi.mock('@/lib/database/supabase-proxies', () => ({
+// Mock supabase-auth (服務直接從這裡匯入 supabaseAdmin)
+vi.mock('@/lib/database/supabase-auth', () => ({
   supabaseAdmin: hoistedMocks.mockSupabaseClient,
 }))
 
-vi.mock('@/lib/logger', () => ({
-  dbLogger: {
-    error: vi.fn(),
-    info: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-  },
-}))
+// logger mock 已在 vitest.setup.ts 中全域設置
 
 // Mock localStorage
 const mockLocalStorage = (() => {
