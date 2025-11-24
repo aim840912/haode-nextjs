@@ -121,3 +121,26 @@ test-inquiry-templates-result.json
 /public/workbox-*.js
 /public/sw.js.map
 /public/workbox-*.js.map
+
+# 備份檔案
+*.backup
+*.old
+*.orig
+*-backup
+
+# WSL 相關
+*:Zone.Identifier
+
+# Playwright 報告
+playwright-report/
+
+# 系統檔案（補充）
+Thumbs.db
+*.swp
+*.swo
+*.swn
+
+# IDE 設定
+.idea/
+*.sublime-project
+*.sublime-workspace
