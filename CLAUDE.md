@@ -167,11 +167,11 @@ npx depcheck                         # 檢查未使用依賴
 
 ### Git 提交流程
 
-- **Commit 前必須詢問**：
+- **Commit 可直接執行**：
   1. 展示變更的檔案列表 (`git status`, `git diff --stat`)
-  2. 展示完整的 commit message 草稿
-  3. 等待使用者明確確認後才執行 commit
-  4. 確認後才可執行 `git add` 和 `git commit`
+  2. 展示 commit message
+  3. 直接執行 `git add` 和 `git commit`
+  4. 無需等待使用者確認
 
 - **Push 前必須詢問**：
   1. 詢問使用者是否要推送到 remote

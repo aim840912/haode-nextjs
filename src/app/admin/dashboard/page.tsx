@@ -11,6 +11,10 @@ import {
   Database,
   Settings,
   Bug,
+  Monitor,
+  FileText,
+  Calendar,
+  MapPin,
 } from 'lucide-react'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 
@@ -29,27 +33,51 @@ export default function AdminDashboard() {
         </div>
 
         <div className="max-w-7xl mx-auto px-6 py-8">
-          {/* 快速操作卡片 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {/* 網站分析卡片 */}
-            <Link href="/admin/analytics" className="group">
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
-                <div className="flex items-center">
-                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg group-hover:bg-blue-200 dark:group-hover:bg-blue-900/50 transition-colors">
-                    <BarChart3 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      網站分析
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      查看訪客統計和行為分析
-                    </p>
+          {/* 系統管理 */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+              系統管理
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* 系統監控卡片 */}
+              <Link href="/admin/monitoring" className="group">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg group-hover:bg-cyan-200 dark:group-hover:bg-cyan-900/50 transition-colors">
+                      <Monitor className="h-8 w-8 text-cyan-600 dark:text-cyan-400" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        系統監控
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">系統效能和網站分析</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
 
+              {/* 操作日誌卡片 */}
+              <Link href="/admin/audit-logs" className="group">
+                <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
+                  <div className="flex items-center">
+                    <div className="p-3 bg-slate-100 dark:bg-slate-700 rounded-lg group-hover:bg-slate-200 dark:group-hover:bg-slate-600 transition-colors">
+                      <FileText className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+                    </div>
+                    <div className="ml-4">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        操作日誌
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">查看系統操作記錄</p>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* 快速操作卡片 */}
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">快速操作</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             {/* 產品管理卡片 */}
             <Link href="/admin/products" className="group">
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
@@ -84,7 +112,7 @@ export default function AdminDashboard() {
               </div>
             </Link>
 
-            {/* 諮詢管理卡片 */}
+            {/* 詢問管理卡片 */}
             <Link href="/admin/inquiries" className="group">
               <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
                 <div className="flex items-center">
@@ -93,7 +121,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                      客戶諮詢
+                      詢問管理
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">回覆客戶問題和諮詢</p>
                   </div>
@@ -113,6 +141,40 @@ export default function AdminDashboard() {
                       農場導覽
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-300">管理導覽活動和預約</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* 行程管理卡片 */}
+            <Link href="/admin/schedule" className="group">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
+                <div className="flex items-center">
+                  <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg group-hover:bg-orange-200 dark:group-hover:bg-orange-900/50 transition-colors">
+                    <Calendar className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      行程管理
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">管理活動行程和排程</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* 門市管理卡片 */}
+            <Link href="/admin/locations" className="group">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border dark:border-slate-700 group-hover:shadow-md transition-shadow">
+                <div className="flex items-center">
+                  <div className="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-lg group-hover:bg-teal-200 dark:group-hover:bg-teal-900/50 transition-colors">
+                    <MapPin className="h-8 w-8 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      門市管理
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">管理門市據點資訊</p>
                   </div>
                 </div>
               </div>
