@@ -1,7 +1,6 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useInquiryStatsContext } from '@/contexts/InquiryStatsContext'
 import { DesktopHeader } from './header/DesktopHeader'
 import { MobileHeader } from './header/MobileHeader'
 import { useHeaderState } from './header/useHeaderState'
@@ -13,22 +12,14 @@ import { useHeaderState } from './header/useHeaderState'
  * - useHeaderState: 狀態管理 Hook (選單開合、外部點擊偵測)
  * - DesktopHeader: 桌面版佈局 (≥ lg breakpoint)
  * - MobileHeader: 移動版佈局 (< lg breakpoint)
- * - AdminMenuContent: 共用的管理員選單內容
  */
 export function Header() {
   const { user } = useAuth()
-  const { stats } = useInquiryStatsContext()
 
   const {
-    isDesktopAdminMenuOpen,
-    isMobileAdminMenuOpen,
     isMobileMenuOpen,
-    desktopAdminMenuRef,
-    mobileAdminMenuRef,
     mobileMenuRef,
     mobileMenuButtonRef,
-    handleDesktopAdminMenuToggle,
-    handleMobileAdminMenuToggle,
     handleMobileMenuToggle,
     handleMenuItemClick,
   } = useHeaderState()
@@ -36,24 +27,13 @@ export function Header() {
   return (
     <header className="fixed top-0 w-full z-50 bg-white shadow-md min-h-[60px]">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1">
-        <DesktopHeader
-          user={user}
-          stats={stats}
-          isDesktopAdminMenuOpen={isDesktopAdminMenuOpen}
-          desktopAdminMenuRef={desktopAdminMenuRef}
-          handleDesktopAdminMenuToggle={handleDesktopAdminMenuToggle}
-          handleMenuItemClick={handleMenuItemClick}
-        />
+        <DesktopHeader user={user} />
 
         <MobileHeader
           user={user}
-          stats={stats}
-          isMobileAdminMenuOpen={isMobileAdminMenuOpen}
           isMobileMenuOpen={isMobileMenuOpen}
-          mobileAdminMenuRef={mobileAdminMenuRef}
           mobileMenuRef={mobileMenuRef}
           mobileMenuButtonRef={mobileMenuButtonRef}
-          handleMobileAdminMenuToggle={handleMobileAdminMenuToggle}
           handleMobileMenuToggle={handleMobileMenuToggle}
           handleMenuItemClick={handleMenuItemClick}
         />

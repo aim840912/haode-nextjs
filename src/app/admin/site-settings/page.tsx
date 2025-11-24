@@ -9,6 +9,7 @@ import { useSiteSettingsReducer } from '@/hooks/useSiteSettingsReducer'
 import { fetchAllSiteSettings, upsertSiteSetting } from '@/lib/api/site-settings-api'
 import { SETTING_KEYS, type SettingType } from '@/types/siteSettings'
 import { FarmTourBackgroundSection } from './components/FarmTourBackgroundSection'
+import { FarmTourFAQSection } from './components/FarmTourFAQSection'
 import { FeatureCardsSection } from './components/FeatureCardsSection'
 import { HomeHeroSection } from './components/HomeHeroSection'
 import { NewsCardsSection } from './components/NewsCardsSection'
@@ -440,6 +441,7 @@ export default function SiteSettingsPage() {
         <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
           <HomeHeroSection state={state} actions={actions} />
           <FarmTourBackgroundSection state={state} actions={actions} />
+          <FarmTourFAQSection state={state} actions={actions} />
           <FeatureCardsSection state={state} actions={actions} />
           <SeasonImagesSection state={state} actions={actions} />
           <NewsCardsSection state={state} actions={actions} />
