@@ -85,13 +85,22 @@ export function SimpleCalendar({
     return (
       <div className="mt-1 space-y-0.5">
         {displayEvents.map(event => (
-          <button
+          <div
             key={event.id}
+            role="button"
+            tabIndex={0}
             onClick={e => {
               e.stopPropagation()
               onEventClick?.(event)
             }}
-            className="w-full text-left text-xs px-1 py-0.5 rounded truncate transition-opacity hover:opacity-80"
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                e.stopPropagation()
+                onEventClick?.(event)
+              }
+            }}
+            className="w-full text-left text-xs px-1 py-0.5 rounded truncate transition-opacity hover:opacity-80 cursor-pointer"
             style={{
               backgroundColor: event.backgroundColor || '#3B82F6',
               color: event.textColor || '#FFFFFF',
@@ -99,7 +108,7 @@ export function SimpleCalendar({
             title={event.title}
           >
             {event.title}
-          </button>
+          </div>
         ))}
         {hasMore && <div className="text-xs text-gray-500 px-1">+{dateEvents.length - 3} 更多</div>}
       </div>
