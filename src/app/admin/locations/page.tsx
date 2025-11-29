@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useAuth } from '@/contexts/AuthContext'
-import { fetchLocations as fetchLocationsAPI, deleteLocation } from '@/lib/api/locations-api'
+import { fetchLocations as fetchLocationsAPI } from '@/lib/api/locations-api'
+import { deleteLocationAction } from '@/app/actions/locations'
 import { logger } from '@/lib/logger'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { Location } from '@/types/location'
@@ -29,6 +30,7 @@ const isValidImageUrl = (url: string | undefined): boolean => {
 export default function LocationsAdmin() {
   const [locations, setLocations] = useState<Location[]>([])
   const [loading, setLoading] = useState(true)
+  const [isPending, startTransition] = useTransition()
   const { user } = useAuth()
 
   useEffect(() => {
@@ -59,23 +61,24 @@ export default function LocationsAdmin() {
 
     if (!confirm('確定要刪除此門市嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
-    try {
-      const result = await deleteLocation(id)
-      setLocations(locations.filter(l => l.id !== id))
+    startTransition(async () => {
+      try {
+        const result = await deleteLocationAction(id)
 
-      // 顯示圖片清理結果
-      if (result.imageCleanup?.deletedCount && result.imageCleanup.deletedCount > 0) {
-        alert(`門市已刪除，同時清理了 ${result.imageCleanup.deletedCount} 個相關圖片`)
-      } else {
-        alert('門市已刪除')
+        if (result.success) {
+          setLocations(locations.filter(l => l.id !== id))
+          alert(result.message || '門市已刪除')
+        } else {
+          alert(result.error?.message || '刪除失敗')
+        }
+      } catch (err) {
+        logger.error(
+          'Error deleting location:',
+          err instanceof Error ? err : new Error('Unknown error')
+        )
+        alert(err instanceof Error ? err.message : '刪除失敗')
       }
-    } catch (error) {
-      logger.error(
-        'Error deleting location:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      alert(error instanceof Error ? error.message : '刪除失敗')
-    }
+    })
   }
 
   if (loading) {
@@ -345,7 +348,8 @@ export default function LocationsAdmin() {
                       </Link>
                       <button
                         onClick={() => handleDelete(location.id)}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 dark:bg-red-700 text-white text-sm font-medium rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200"
+                        disabled={isPending}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-red-600 dark:bg-red-700 text-white text-sm font-medium rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <svg
                           className="w-4 h-4 mr-2"
@@ -360,7 +364,7 @@ export default function LocationsAdmin() {
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                           />
                         </svg>
-                        刪除
+                        {isPending ? '刪除中...' : '刪除'}
                       </button>
                     </div>
                   ) : (

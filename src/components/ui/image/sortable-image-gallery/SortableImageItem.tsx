@@ -1,55 +1,53 @@
 'use client'
 
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { ChevronUp, ChevronDown, X } from 'lucide-react'
 import { SimpleImage } from '@/components/ui/image/OptimizedImage'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils/cn'
 import { getFullImageUrl } from '@/lib/utils/image-url-utils'
 import { SortableImageProps } from './types'
 
-export function SortableImageItem({ image, onRemove }: SortableImageProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: itemIsDragging,
-  } = useSortable({ id: image.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: itemIsDragging ? 0.5 : 1,
-  }
-
+export function SortableImageItem({
+  image,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
+}: SortableImageProps) {
   return (
     <div
-      ref={setNodeRef}
-      style={style}
       className={cn(
         'relative group rounded-lg overflow-hidden border-2 transition-all duration-200',
-        itemIsDragging
-          ? 'border-amber-400 shadow-lg scale-105 z-10'
-          : 'border-gray-200 hover:border-gray-300'
+        'border-gray-200 hover:border-gray-300'
       )}
-      {...attributes}
     >
-      {/* 拖拽手柄 */}
-      <div
-        {...listeners}
-        className="absolute top-2 left-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing z-10"
-        title="拖拽排序"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-          />
-        </svg>
+      {/* 排序按鈕 */}
+      <div className="absolute top-2 left-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button
+          onClick={onMoveUp}
+          disabled={isFirst}
+          className={cn(
+            'bg-black/50 text-white p-1.5 rounded-full transition-colors',
+            isFirst ? 'opacity-30 cursor-not-allowed' : 'hover:bg-black/70'
+          )}
+          title="上移"
+          type="button"
+        >
+          <ChevronUp className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onMoveDown}
+          disabled={isLast}
+          className={cn(
+            'bg-black/50 text-white p-1.5 rounded-full transition-colors',
+            isLast ? 'opacity-30 cursor-not-allowed' : 'hover:bg-black/70'
+          )}
+          title="下移"
+          type="button"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
       </div>
 
       {/* 圖片 */}
@@ -98,14 +96,7 @@ export function SortableImageItem({ image, onRemove }: SortableImageProps) {
         aria-label={`刪除圖片 ${image.position + 1}`}
         type="button"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
+        <X className="w-4 h-4" />
       </button>
     </div>
   )

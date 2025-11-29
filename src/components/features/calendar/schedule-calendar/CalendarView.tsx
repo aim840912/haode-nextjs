@@ -1,7 +1,6 @@
 'use client'
 
-import dayGridPlugin from '@fullcalendar/daygrid'
-import FullCalendar from '@fullcalendar/react'
+import { SimpleCalendar, type CalendarEvent } from '@/components/ui/calendar'
 import type { ScheduleCalendarEvent } from '@/hooks/useScheduleCalendar'
 
 interface CalendarViewProps {
@@ -11,37 +10,20 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ events, height, onEventClick }: CalendarViewProps) {
-  return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
-      <FullCalendar
-        plugins={[dayGridPlugin]}
-        initialView="dayGridMonth"
-        headerToolbar={{
-          left: 'prev,next today',
-          center: 'title',
-          right: '',
-        }}
-        buttonText={{
-          today: '今天',
-        }}
-        locale="zh-tw"
-        height={height}
-        events={events}
-        eventClick={onEventClick}
-        dayMaxEvents={3}
-        moreLinkText="更多"
-        eventTimeFormat={{
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: false,
-        }}
-        nowIndicator={true}
-        weekends={true}
-        eventDisplay="block"
-        dayHeaderFormat={{ weekday: 'short', month: 'numeric', day: 'numeric' }}
-        editable={false}
-        selectable={false}
-      />
-    </div>
-  )
+  // 轉換事件格式
+  const calendarEvents: CalendarEvent[] = events.map(event => ({
+    id: event.id,
+    title: event.title,
+    start: event.start,
+    end: event.end,
+    backgroundColor: event.backgroundColor,
+    textColor: '#FFFFFF', // 預設白色文字
+    extendedProps: event.extendedProps,
+  }))
+
+  const handleEventClick = (event: CalendarEvent) => {
+    onEventClick({ event: { id: event.id } })
+  }
+
+  return <SimpleCalendar events={calendarEvents} height={height} onEventClick={handleEventClick} />
 }

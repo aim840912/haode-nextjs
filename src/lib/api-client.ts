@@ -3,9 +3,8 @@
  *
  * 提供全站統一的 API 調用接口,自動處理:
  * - CSRF token 管理
- * - 錯誤處理和重試
+ * - 錯誤處理
  * - 請求/響應攔截
- * - 載入狀態管理
  */
 
 'use client'
@@ -15,13 +14,107 @@ import {
   prepareHeaders as prepareHeadersCore,
   getCSRFTokenFromCookie,
 } from './api/core/api-headers'
-import { executeWithRetry } from './api/core/api-retry'
 
-// 重新導出錯誤類別 (向後相容)
-export { ApiError, CSRFError, RateLimitError } from './api/core/api-errors'
+// ============================================
+// 客戶端 API 錯誤類別
+// ============================================
+
+/**
+ * API 錯誤基類
+ */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public statusCode: number = 500,
+    public code?: string
+  ) {
+    super(message)
+    this.name = 'ApiError'
+    Object.setPrototypeOf(this, ApiError.prototype)
+  }
+}
+
+/**
+ * CSRF 錯誤
+ */
+export class CSRFError extends ApiError {
+  constructor(message: string = 'CSRF 驗證失敗') {
+    super(message, 403, 'CSRF_ERROR')
+    this.name = 'CSRFError'
+  }
+}
+
+// 從統一錯誤系統重新匯出 RateLimitError
+export { RateLimitError } from './errors'
 
 // 重新導出 React Hook (向後相容)
 export { useApiCall } from './api/hooks/useApiCall'
+
+// ============================================
+// API 請求執行器
+// ============================================
+
+/**
+ * 執行 API 請求
+ */
+async function executeRequest<T>(
+  url: string,
+  options: ApiRequestOptions & { method?: string },
+  prepareHeaders: typeof prepareHeadersCore,
+  timeout: number
+): Promise<ApiResponse<T>> {
+  const { method = 'GET', headers: customHeaders, body, skipCSRF = false } = options
+
+  // 準備請求標頭
+  const headers = prepareHeaders(customHeaders, skipCSRF, method)
+
+  // 建立 AbortController 用於超時控制
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+  try {
+    const response = await fetch(url, {
+      method,
+      headers,
+      body,
+      signal: controller.signal,
+      credentials: 'include',
+    })
+
+    clearTimeout(timeoutId)
+
+    // 處理回應
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new ApiError(
+        errorData.message || errorData.error?.message || `HTTP ${response.status}`,
+        response.status,
+        errorData.code || errorData.error?.code
+      )
+    }
+
+    return await response.json()
+  } catch (error) {
+    clearTimeout(timeoutId)
+
+    if (error instanceof ApiError) {
+      throw error
+    }
+
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        throw new ApiError('請求超時', 408, 'TIMEOUT')
+      }
+      throw new ApiError(error.message, 500, 'NETWORK_ERROR')
+    }
+
+    throw new ApiError('未知錯誤', 500, 'UNKNOWN_ERROR')
+  }
+}
+
+// ============================================
+// API 客戶端類
+// ============================================
 
 /**
  * 統一 API 客戶端類
@@ -29,15 +122,11 @@ export { useApiCall } from './api/hooks/useApiCall'
 class ApiClient {
   private baseUrl: string
   private defaultTimeout: number
-  private defaultRetries: number
-  private defaultRetryDelay: number
 
   constructor() {
     this.baseUrl =
       process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_API_URL || '' : ''
     this.defaultTimeout = 30000 // 30 秒
-    this.defaultRetries = 2 // 增加預設重試次數
-    this.defaultRetryDelay = 1000 // 1 秒
   }
 
   /**
@@ -48,15 +137,10 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return executeWithRetry<T>(
+    return executeRequest<T>(
       url,
-      {
-        ...options,
-        method: 'GET',
-      },
+      { ...options, method: 'GET' },
       prepareHeadersCore,
-      this.defaultRetries,
-      this.defaultRetryDelay,
       this.defaultTimeout
     )
   }
@@ -70,7 +154,7 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return executeWithRetry<T>(
+    return executeRequest<T>(
       url,
       {
         ...options,
@@ -78,8 +162,6 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
       },
       prepareHeadersCore,
-      this.defaultRetries,
-      this.defaultRetryDelay,
       this.defaultTimeout
     )
   }
@@ -93,7 +175,7 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return executeWithRetry<T>(
+    return executeRequest<T>(
       url,
       {
         ...options,
@@ -101,8 +183,6 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
       },
       prepareHeadersCore,
-      this.defaultRetries,
-      this.defaultRetryDelay,
       this.defaultTimeout
     )
   }
@@ -116,7 +196,7 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return executeWithRetry<T>(
+    return executeRequest<T>(
       url,
       {
         ...options,
@@ -124,8 +204,6 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
       },
       prepareHeadersCore,
-      this.defaultRetries,
-      this.defaultRetryDelay,
       this.defaultTimeout
     )
   }
@@ -138,15 +216,10 @@ class ApiClient {
     options: ApiRequestOptions = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    return executeWithRetry<T>(
+    return executeRequest<T>(
       url,
-      {
-        ...options,
-        method: 'DELETE',
-      },
+      { ...options, method: 'DELETE' },
       prepareHeadersCore,
-      this.defaultRetries,
-      this.defaultRetryDelay,
       this.defaultTimeout
     )
   }
@@ -160,7 +233,7 @@ class ApiClient {
     options: Omit<ApiRequestOptions, 'body'> = {}
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}${endpoint}`
-    const { skipCSRF = false, ...otherOptions } = options
+    const { skipCSRF = false } = options
 
     // FormData 請求不需要設置 Content-Type
     const headers: Record<string, string> = {}
@@ -173,26 +246,56 @@ class ApiClient {
       }
     }
 
-    return executeWithRetry<T>(
-      url,
-      {
-        ...otherOptions,
+    const formData =
+      file instanceof File
+        ? (() => {
+            const fd = new FormData()
+            fd.append('file', file)
+            return fd
+          })()
+        : file
+
+    // 建立 AbortController 用於超時控制
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.defaultTimeout)
+
+    try {
+      const response = await fetch(url, {
         method: 'POST',
         headers,
-        body:
-          file instanceof File
-            ? (() => {
-                const formData = new FormData()
-                formData.append('file', file)
-                return formData
-              })()
-            : file,
-      },
-      prepareHeadersCore,
-      this.defaultRetries,
-      this.defaultRetryDelay,
-      this.defaultTimeout
-    )
+        body: formData,
+        signal: controller.signal,
+        credentials: 'include',
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new ApiError(
+          errorData.message || `HTTP ${response.status}`,
+          response.status,
+          errorData.code
+        )
+      }
+
+      return await response.json()
+    } catch (error) {
+      clearTimeout(timeoutId)
+
+      if (error instanceof ApiError) {
+        throw error
+      }
+
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          throw new ApiError('上傳超時', 408, 'TIMEOUT')
+        }
+        throw new ApiError(error.message, 500, 'UPLOAD_ERROR')
+      }
+
+      throw new ApiError('上傳失敗', 500, 'UNKNOWN_ERROR')
+    }
   }
 }
 

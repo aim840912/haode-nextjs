@@ -5,11 +5,9 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { GoogleAnalyticsProvider } from '@/components/features/analytics/GoogleAnalyticsProvider'
-import { Footer } from '@/components/layouts/common/Footer'
-import { Header } from '@/components/layouts/common/Header'
+import { RootLayoutContent } from '@/components/layouts/RootLayoutContent'
 import { ErrorBoundary } from '@/components/ui/error/ErrorBoundary'
 import { ToastProvider } from '@/components/ui/feedback/Toast'
-import { HeaderSpacer } from '@/components/ui/navigation/HeaderSpacer'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CartProvider } from '@/contexts/CartContext'
 import { InquiryStatsProvider } from '@/contexts/InquiryStatsContext'
@@ -188,12 +186,7 @@ export default function RootLayout({
                 <AuthProvider>
                   <CartProvider>
                     <InquiryStatsProvider>
-                      <Header />
-                      <main className="flex-grow">
-                        <HeaderSpacer />
-                        {children}
-                      </main>
-                      <Footer />
+                      <RootLayoutContent>{children}</RootLayoutContent>
                     </InquiryStatsProvider>
                   </CartProvider>
                 </AuthProvider>

@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useTransition } from 'react'
 import Link from 'next/link'
 import { Save, RefreshCw, ArrowLeft } from 'lucide-react'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useLoadingManager } from '@/hooks/useLoadingManager'
 import { useSiteSettingsReducer } from '@/hooks/useSiteSettingsReducer'
-import { fetchAllSiteSettings, upsertSiteSetting } from '@/lib/api/site-settings-api'
+import { fetchAllSiteSettings } from '@/lib/api/site-settings-api'
+import { upsertSiteSettingsBatchAction } from '@/app/actions/site-settings'
 import { SETTING_KEYS, type SettingType } from '@/types/siteSettings'
 import { FarmTourBackgroundSection } from './components/FarmTourBackgroundSection'
 import { FarmTourFAQSection } from './components/FarmTourFAQSection'
@@ -49,6 +50,7 @@ function cleanImageUrl(url: string): string {
 export default function SiteSettingsPage() {
   // ✅ 使用 useReducer 替換 17 個 useState
   const { state, actions } = useSiteSettingsReducer()
+  const [isPending, startTransition] = useTransition()
 
   // 使用 useLoadingManager 管理載入狀態
   const { isLoading: loading, execute } = useLoadingManager({
@@ -215,153 +217,158 @@ export default function SiteSettingsPage() {
 
   const handleSave = async () => {
     actions.setSaving(true)
-    try {
-      const updates: Array<{ key: string; value: string; type: SettingType }> = [
-        {
-          key: SETTING_KEYS.HOME_HERO_IMAGES,
-          value: JSON.stringify(state.homeHeroImages),
-          type: 'json' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.FARM_TOUR_HERO_BG,
-          value: state.farmTourHeroBg,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE,
-          value: state.featureCard1Image,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE,
-          value: state.featureCard2Image,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE,
-          value: state.featureCard3Image,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE,
-          value: state.featureCard4Image,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_SEASON_SPRING_IMAGE,
-          value: state.seasonSpringImage,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE,
-          value: state.seasonSummerImage,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE,
-          value: state.seasonAutumnImage,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_SEASON_WINTER_IMAGE,
-          value: state.seasonWinterImage,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.FARM_TOUR_FACILITIES,
-          value: state.farmFacilities,
-          type: 'json' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.FARM_TOUR_FAQS,
-          value: state.farmFaqs,
-          type: 'json' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.FARM_TOUR_VISIT_INFO,
-          value: state.farmVisitInfo,
-          type: 'json' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.FARM_TOUR_VISIT_NOTES,
-          value: state.farmVisitNotes,
-          type: 'json' as SettingType,
-        },
-        // 首頁最新消息 - 當季推薦卡片
-        {
-          key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_ENABLED,
-          value: state.newsSeasonalRecommendationEnabled,
-          type: 'boolean' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_TITLE,
-          value: state.newsSeasonalRecommendationTitle,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_ICON,
-          value: state.newsSeasonalRecommendationIcon,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_DESCRIPTION,
-          value: state.newsSeasonalRecommendationDescription,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_LINK_URL,
-          value: state.newsSeasonalRecommendationLinkUrl,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_LINK_TEXT,
-          value: state.newsSeasonalRecommendationLinkText,
-          type: 'string' as SettingType,
-        },
-        // 首頁最新消息 - 農場活動卡片
-        {
-          key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_ENABLED,
-          value: state.newsFarmActivityEnabled,
-          type: 'boolean' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_TITLE,
-          value: state.newsFarmActivityTitle,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_ICON,
-          value: state.newsFarmActivityIcon,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_DESCRIPTION,
-          value: state.newsFarmActivityDescription,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_LINK_URL,
-          value: state.newsFarmActivityLinkUrl,
-          type: 'string' as SettingType,
-        },
-        {
-          key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_LINK_TEXT,
-          value: state.newsFarmActivityLinkText,
-          type: 'string' as SettingType,
-        },
-      ].filter(update => update.value && update.value.trim() !== '' && update.value !== '[]')
+    startTransition(async () => {
+      try {
+        const updates: Array<{ key: string; value: string; type: SettingType }> = [
+          {
+            key: SETTING_KEYS.HOME_HERO_IMAGES,
+            value: JSON.stringify(state.homeHeroImages),
+            type: 'json' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.FARM_TOUR_HERO_BG,
+            value: state.farmTourHeroBg,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_FEATURE_CARD_1_IMAGE,
+            value: state.featureCard1Image,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_FEATURE_CARD_2_IMAGE,
+            value: state.featureCard2Image,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_FEATURE_CARD_3_IMAGE,
+            value: state.featureCard3Image,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_FEATURE_CARD_4_IMAGE,
+            value: state.featureCard4Image,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_SEASON_SPRING_IMAGE,
+            value: state.seasonSpringImage,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_SEASON_SUMMER_IMAGE,
+            value: state.seasonSummerImage,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_SEASON_AUTUMN_IMAGE,
+            value: state.seasonAutumnImage,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_SEASON_WINTER_IMAGE,
+            value: state.seasonWinterImage,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.FARM_TOUR_FACILITIES,
+            value: state.farmFacilities,
+            type: 'json' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.FARM_TOUR_FAQS,
+            value: state.farmFaqs,
+            type: 'json' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.FARM_TOUR_VISIT_INFO,
+            value: state.farmVisitInfo,
+            type: 'json' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.FARM_TOUR_VISIT_NOTES,
+            value: state.farmVisitNotes,
+            type: 'json' as SettingType,
+          },
+          // 首頁最新消息 - 當季推薦卡片
+          {
+            key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_ENABLED,
+            value: state.newsSeasonalRecommendationEnabled,
+            type: 'boolean' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_TITLE,
+            value: state.newsSeasonalRecommendationTitle,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_ICON,
+            value: state.newsSeasonalRecommendationIcon,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_DESCRIPTION,
+            value: state.newsSeasonalRecommendationDescription,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_LINK_URL,
+            value: state.newsSeasonalRecommendationLinkUrl,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_SEASONAL_RECOMMENDATION_LINK_TEXT,
+            value: state.newsSeasonalRecommendationLinkText,
+            type: 'string' as SettingType,
+          },
+          // 首頁最新消息 - 農場活動卡片
+          {
+            key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_ENABLED,
+            value: state.newsFarmActivityEnabled,
+            type: 'boolean' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_TITLE,
+            value: state.newsFarmActivityTitle,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_ICON,
+            value: state.newsFarmActivityIcon,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_DESCRIPTION,
+            value: state.newsFarmActivityDescription,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_LINK_URL,
+            value: state.newsFarmActivityLinkUrl,
+            type: 'string' as SettingType,
+          },
+          {
+            key: SETTING_KEYS.HOME_NEWS_FARM_ACTIVITY_LINK_TEXT,
+            value: state.newsFarmActivityLinkText,
+            type: 'string' as SettingType,
+          },
+        ].filter(update => update.value && update.value.trim() !== '' && update.value !== '[]')
 
-      for (const update of updates) {
-        await upsertSiteSetting(update.key, { value: update.value, type: update.type })
+        // 使用 Server Action 批次儲存
+        const result = await upsertSiteSettingsBatchAction(updates)
+
+        if (result.success) {
+          actions.showMessage('success', result.message || '設定已成功儲存')
+          await loadSettings()
+        } else {
+          actions.showMessage('error', result.error?.message || '儲存失敗')
+        }
+      } catch (err) {
+        actions.showMessage('error', err instanceof Error ? err.message : '儲存失敗')
+      } finally {
+        actions.setSaving(false)
       }
-
-      actions.showMessage('success', '設定已成功儲存')
-      await loadSettings()
-    } catch (err) {
-      actions.showMessage('error', err instanceof Error ? err.message : '儲存失敗')
-    } finally {
-      actions.setSaving(false)
-    }
+    })
   }
 
   if (loading) {

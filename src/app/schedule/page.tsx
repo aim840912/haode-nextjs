@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useSearchParams, useRouter, usePathname } from 'next/navigation'
 import { Breadcrumbs, createScheduleBreadcrumbs } from '@/components/ui/navigation/Breadcrumbs'
@@ -31,54 +31,21 @@ export default function SchedulePage() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // 從 URL 參數讀取視圖和狀態（移除 'ongoing'）
+  // 從 URL 參數讀取視圖模式
   const viewMode = (searchParams.get('view') as 'cards' | 'calendar') || 'cards'
-  const statusParam = searchParams.get('status')
-  const statusFromUrl = (
-    ['all', 'upcoming', 'completed'].includes(statusParam as string) ? statusParam : 'all'
-  ) as 'all' | 'upcoming' | 'completed'
 
-  // ✅ 使用 Custom Hook 管理行程資料
-  const { filteredSchedule, loading, error, currentFilter, filterByStatus } = useSchedule()
-
-  // URL 參數更新函數
-  const updateUrlParams = useCallback(
-    (params: { view?: string; status?: string }) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString())
-      if (params.view) {
-        newSearchParams.set('view', params.view)
-      }
-      if (params.status) {
-        newSearchParams.set('status', params.status)
-      }
-      router.push(`${pathname}?${newSearchParams.toString()}`)
-    },
-    [searchParams, pathname, router]
-  )
+  // ✅ 使用 Custom Hook 管理行程資料（預設顯示全部）
+  const { filteredSchedule, loading, error } = useSchedule()
 
   // 視圖切換函數
   const switchView = useCallback(
     (newView: 'cards' | 'calendar') => {
-      updateUrlParams({ view: newView, status: currentFilter })
+      const newSearchParams = new URLSearchParams(searchParams.toString())
+      newSearchParams.set('view', newView)
+      router.push(`${pathname}?${newSearchParams.toString()}`)
     },
-    [updateUrlParams, currentFilter]
+    [searchParams, pathname, router]
   )
-
-  // 過濾狀態切換函數（同步 URL）
-  const handleFilterChange = useCallback(
-    (status: 'all' | 'upcoming' | 'completed') => {
-      filterByStatus(status)
-      updateUrlParams({ view: viewMode, status })
-    },
-    [filterByStatus, updateUrlParams, viewMode]
-  )
-
-  // 初始化時從 URL 參數設定過濾狀態
-  useEffect(() => {
-    if (statusFromUrl !== currentFilter) {
-      filterByStatus(statusFromUrl)
-    }
-  }, [statusFromUrl, currentFilter, filterByStatus])
 
   const getStatusColor = (status: 'upcoming' | 'ongoing' | 'completed') => {
     switch (status) {
@@ -189,51 +156,13 @@ export default function SchedulePage() {
               )}
             </div>
           </div>
-
-          {/* 篩選按鈕區 */}
-          <div className="border-t border-gray-200 dark:border-slate-600 pt-2 pb-1.5 flex flex-wrap justify-center gap-2">
-            <button
-              onClick={() => handleFilterChange('all')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                currentFilter === 'all'
-                  ? 'bg-amber-900 text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              全部行程
-            </button>
-            <button
-              onClick={() => handleFilterChange('upcoming')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                currentFilter === 'upcoming'
-                  ? 'bg-amber-900 text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              即將到來
-            </button>
-            <button
-              onClick={() => handleFilterChange('completed')}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                currentFilter === 'completed'
-                  ? 'bg-amber-900 text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700'
-              }`}
-            >
-              已結束
-            </button>
-          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-12">
         {/* 條件渲染：卡片視圖 或 行事曆視圖 */}
         {viewMode === 'calendar' ? (
-          <ScheduleCalendar
-            statusFilter={currentFilter === 'all' ? undefined : (currentFilter as any)}
-            onStatusFilterChange={handleFilterChange}
-            hideStatusFilter={true}
-          />
+          <ScheduleCalendar hideStatusFilter={true} />
         ) : (
           <div>
             {/* Loading State */}

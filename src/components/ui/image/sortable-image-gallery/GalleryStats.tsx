@@ -1,5 +1,3 @@
-'use client'
-
 import { SortableImage } from './types'
 
 interface GalleryStatsProps {
