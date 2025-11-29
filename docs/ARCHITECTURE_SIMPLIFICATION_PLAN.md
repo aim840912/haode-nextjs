@@ -14,8 +14,8 @@
 | 4. 簡化快取系統 | ✅ 完成 | 刪除未使用的 cache-keys.ts、api-cache-middleware.ts |
 | 5. 簡化監控系統 | ✅ 評估完成 | 核心功能保留，發現模擬資料問題 |
 | 6. 簡化 Hooks | ✅ 部分完成 | 移除 3 個未使用 hooks (~877 行) |
-| 7. API 客戶端遷移 | ⏳ 待執行 | 需更多時間規劃 |
-| 8. 移除 'use client' | ⏳ 待執行 | 需更多時間規劃 |
+| 7. API 客戶端遷移 | ✅ 完成 | 建立 4 個 Server Actions (products, locations, farm-tour, site-settings) |
+| 8. 移除 'use client' | ✅ 完成 | 審查 161 個檔案，移除 1 個不必要的 'use client' |
 
 ### 已實現的減少量
 
@@ -23,6 +23,8 @@
 - **程式碼減少**: ~2,200+ 行
 - **快取系統**: 1,633 行 → 1,384 行（-15%）
 - **Hooks**: 8,344 行 → 7,467 行（-10%）
+- **Server Actions**: 建立 4 個新 Actions（products, locations, farm-tour, site-settings）
+- **'use client' 審查**: 161 個檔案審查完成，移除 1 個不必要的標記
 
 ---
 
