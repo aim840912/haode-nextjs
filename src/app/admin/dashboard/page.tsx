@@ -1,5 +1,3 @@
-'use client'
-
 import { BarChart3, Database, Link2 as LinkIcon } from 'lucide-react'
 
 export default function AdminDashboard() {

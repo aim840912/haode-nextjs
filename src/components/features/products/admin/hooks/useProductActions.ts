@@ -1,10 +1,9 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useTransition } from 'react'
 import { useToast } from '@/components/ui/feedback/Toast'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCSRFToken } from '@/hooks/useCSRFToken'
-import { deleteProduct, updateProduct } from '@/lib/api/products-api'
+import { deleteProductAction, toggleProductActiveAction } from '@/app/actions/products'
 import { logger } from '@/lib/logger'
 import { Product } from '@/types/product'
 
@@ -26,6 +25,8 @@ interface UseProductActionsReturn {
 /**
  * 產品操作 Hook
  * 負責處理產品的刪除、上架/下架等操作
+ *
+ * 使用 Server Actions 進行資料變更，不再需要 CSRF Token
  */
 export function useProductActions({
   products,
@@ -35,13 +36,14 @@ export function useProductActions({
   refetchData,
 }: UseProductActionsProps): UseProductActionsReturn {
   const { user } = useAuth()
-  const { token: csrfToken, loading: csrfLoading, error: csrfError } = useCSRFToken()
   const { success, error: errorToast, warning } = useToast()
+  const [isPending, startTransition] = useTransition()
 
   // 操作狀態管理 - 追蹤正在進行操作的產品 ID
   const [operatingProductIds, setOperatingProductIds] = useState<Set<string>>(new Set())
 
-  const isActionDisabled = csrfLoading || !csrfToken || !!csrfError
+  // Server Actions 不需要 CSRF token，只檢查是否有正在進行的操作
+  const isActionDisabled = isPending
 
   // 檢查特定產品是否正在進行操作
   const isProductOperating = useCallback(
@@ -64,86 +66,68 @@ export function useProductActions({
         return
       }
 
-      // 🔒 立即將產品加入操作狀態，防止重複點擊（在任何用戶交互之前）
-      setOperatingProductIds(prev => new Set(prev).add(id))
-
       const productToDelete = products.find(p => p.id === id)
       const productName = productToDelete?.name || '產品'
 
       if (!confirm(`確定要刪除產品「${productName}」嗎？此操作無法復原。`)) {
-        // 🔓 用戶取消，移除操作狀態
-        setOperatingProductIds(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(id)
-          return newSet
-        })
         return
       }
 
-      if (isActionDisabled) {
-        // 🔓 CSRF 錯誤，移除操作狀態
-        setOperatingProductIds(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(id)
-          return newSet
-        })
+      // 標記為操作中
+      setOperatingProductIds(prev => new Set(prev).add(id))
 
-        if (csrfLoading) {
-          warning('請稍候', '正在初始化安全驗證...')
-        } else if (csrfError) {
-          errorToast('安全驗證失敗', '請重新整理頁面後再試')
+      startTransition(async () => {
+        try {
+          const result = await deleteProductAction(id)
+
+          if (result.success) {
+            success('刪除成功', `產品「${productName}」已刪除`)
+            onDelete?.(id)
+
+            if (refetchData) {
+              await refetchData()
+            }
+          } else {
+            errorToast('刪除失敗', result.error?.message || '刪除失敗，請稍後再試', [
+              {
+                label: '重試',
+                onClick: () => handleDelete(id),
+                variant: 'primary',
+              },
+            ])
+
+            if (refetchData) {
+              await refetchData()
+            }
+          }
+        } catch (err) {
+          logger.error('Error deleting product', err as Error, {
+            metadata: { productId: id, module: 'useProductActions' },
+          })
+
+          const errorMessage = err instanceof Error ? err.message : '刪除失敗，請稍後再試'
+          errorToast('刪除失敗', `無法刪除產品「${productName}」: ${errorMessage}`, [
+            {
+              label: '重試',
+              onClick: () => handleDelete(id),
+              variant: 'primary',
+            },
+          ])
+
+          if (refetchData) {
+            await refetchData()
+          }
+        } finally {
+          // 移除操作狀態
+          setOperatingProductIds(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(id)
+            return newSet
+          })
         }
-        return
-      }
-
-      try {
-        await deleteProduct(id)
-
-        success('刪除成功', `產品「${productName}」已刪除`)
-        onDelete?.(id)
-
-        if (refetchData) {
-          await refetchData()
-        }
-      } catch (error) {
-        logger.error('Error deleting product', error as Error, {
-          metadata: { productId: id, module: 'useProductActions' },
-        })
-
-        const errorMessage = error instanceof Error ? error.message : '刪除失敗，請稍後再試'
-        errorToast('刪除失敗', `無法刪除產品「${productName}」: ${errorMessage}`, [
-          {
-            label: '重試',
-            onClick: () => handleDelete(id),
-            variant: 'primary',
-          },
-        ])
-
-        if (refetchData) {
-          await refetchData()
-        }
-      } finally {
-        // 🔓 操作完成，移除產品的操作狀態
-        setOperatingProductIds(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(id)
-          return newSet
-        })
-      }
+      })
     },
-    [
-      user,
-      products,
-      operatingProductIds,
-      csrfLoading,
-      csrfError,
-      isActionDisabled,
-      onDelete,
-      refetchData,
-      success,
-      errorToast,
-      warning,
-    ]
+    [user, products, operatingProductIds, onDelete, refetchData, success, errorToast, warning]
   )
 
   const handleToggleActive = useCallback(
@@ -159,84 +143,77 @@ export function useProductActions({
         return
       }
 
-      // 🔒 立即將產品加入操作狀態，防止重複點擊
-      setOperatingProductIds(prev => new Set(prev).add(id))
-
       const productToUpdate = products.find(p => p.id === id)
       const productName = productToUpdate?.name || '產品'
       const newActiveState = !isActive
       const actionText = newActiveState ? '上架' : '下架'
 
-      if (isActionDisabled) {
-        // 🔓 CSRF 錯誤，移除操作狀態
-        setOperatingProductIds(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(id)
-          return newSet
-        })
+      // 標記為操作中
+      setOperatingProductIds(prev => new Set(prev).add(id))
 
-        if (csrfLoading) {
-          warning('請稍候', '正在初始化安全驗證...')
-        } else if (csrfError) {
-          errorToast('安全驗證失敗', '請重新整理頁面後再試')
+      // 樂觀更新
+      setProducts(prevProducts =>
+        prevProducts.map(p => (p.id === id ? { ...p, isActive: newActiveState } : p))
+      )
+
+      startTransition(async () => {
+        try {
+          const result = await toggleProductActiveAction(id, newActiveState)
+
+          if (result.success) {
+            success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
+            onToggleActive?.(id, newActiveState)
+          } else {
+            // 回滾樂觀更新
+            setProducts(prevProducts =>
+              prevProducts.map(p => (p.id === id ? { ...p, isActive: isActive } : p))
+            )
+
+            errorToast(
+              `${actionText}失敗`,
+              result.error?.message || `無法${actionText}產品「${productName}」`,
+              [
+                {
+                  label: '重試',
+                  onClick: () => handleToggleActive(id, isActive),
+                  variant: 'primary',
+                },
+              ]
+            )
+          }
+        } catch (err) {
+          logger.error('Error updating product', err as Error, {
+            metadata: { productId: id, module: 'useProductActions' },
+          })
+
+          // 回滾樂觀更新
+          setProducts(prevProducts =>
+            prevProducts.map(p => (p.id === id ? { ...p, isActive: isActive } : p))
+          )
+
+          const errorMessage = err instanceof Error ? err.message : '更新失敗，請稍後再試'
+          errorToast(
+            `${actionText}失敗`,
+            `無法${actionText}產品「${productName}」: ${errorMessage}`,
+            [
+              {
+                label: '重試',
+                onClick: () => handleToggleActive(id, isActive),
+                variant: 'primary',
+              },
+            ]
+          )
+        } finally {
+          // 移除操作狀態
+          setOperatingProductIds(prev => {
+            const newSet = new Set(prev)
+            newSet.delete(id)
+            return newSet
+          })
         }
-        return
-      }
-
-      try {
-        // 樂觀更新
-        setProducts(prevProducts =>
-          prevProducts.map(p => (p.id === id ? { ...p, isActive: newActiveState } : p))
-        )
-
-        await updateProduct(id, { isActive: newActiveState })
-
-        success(`${actionText}成功`, `產品「${productName}」已${actionText}`)
-        onToggleActive?.(id, newActiveState)
-      } catch (error) {
-        logger.error('Error updating product', error as Error, {
-          metadata: { productId: id, module: 'useProductActions' },
-        })
-
-        const errorMessage = error instanceof Error ? error.message : '更新失敗，請稍後再試'
-        errorToast(
-          `${actionText}失敗`,
-          `無法${actionText}產品「${productName}」: ${errorMessage}`,
-          [
-            {
-              label: '重試',
-              onClick: () => handleToggleActive(id, isActive),
-              variant: 'primary',
-            },
-          ]
-        )
-
-        // 回滾樂觀更新
-        setProducts(prevProducts =>
-          prevProducts.map(p => (p.id === id ? { ...p, isActive: isActive } : p))
-        )
-      } finally {
-        // 🔓 操作完成，移除產品的操作狀態
-        setOperatingProductIds(prev => {
-          const newSet = new Set(prev)
-          newSet.delete(id)
-          return newSet
-        })
-      }
+      })
     },
-    [
-      user,
-      products,
-      setProducts,
-      operatingProductIds,
-      csrfLoading,
-      csrfError,
-      isActionDisabled,
-      onToggleActive,
-      success,
-      errorToast,
-      warning,
-    ]
+    [user, products, setProducts, operatingProductIds, onToggleActive, success, errorToast, warning]
   )
 
   return {

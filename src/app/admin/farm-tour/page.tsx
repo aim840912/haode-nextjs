@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { deleteFarmTourAction, toggleFarmTourAvailabilityAction } from '@/app/actions/farm-tour'
 import { AdminProtection } from '@/components/features/admin/AdminProtection'
 import { useAuth } from '@/contexts/AuthContext'
-import { fetchFarmTourActivities, deleteFarmTour, updateFarmTour } from '@/lib/api/farm-tour-api'
+import { fetchFarmTourActivities } from '@/lib/api/farm-tour-api'
 import { logger } from '@/lib/logger'
 import { formatDate as formatDateUtil } from '@/lib/utils/formatters'
 import { FarmTourActivity } from '@/types/farmTour'
@@ -13,6 +14,7 @@ import { FarmTourActivity } from '@/types/farmTour'
 export default function FarmTourAdmin() {
   const [activities, setActivities] = useState<FarmTourActivity[]>([])
   const [loading, setLoading] = useState(true)
+  const [_isPending, startTransition] = useTransition()
   const { user } = useAuth()
 
   useEffect(() => {
@@ -37,40 +39,57 @@ export default function FarmTourAdmin() {
   const handleDelete = async (id: string) => {
     if (!confirm('確定要刪除此體驗活動嗎？此操作將同時刪除相關圖片且無法復原。')) return
 
-    try {
-      const result = await deleteFarmTour(id)
-      setActivities(activities.filter(activity => activity.id !== id))
+    startTransition(async () => {
+      try {
+        const result = await deleteFarmTourAction(id)
 
-      // 顯示圖片清理結果
-      if (result.imageCleanup?.deletedCount && result.imageCleanup.deletedCount > 0) {
-        alert(`體驗活動已刪除，同時清理了 ${result.imageCleanup.deletedCount} 個相關圖片`)
-      } else {
-        alert('體驗活動已刪除')
+        if (result.success) {
+          setActivities(activities.filter(activity => activity.id !== id))
+          alert(result.message || '體驗活動已刪除')
+        } else {
+          alert(result.error?.message || '刪除失敗')
+        }
+      } catch (err) {
+        logger.error(
+          'Error deleting activity:',
+          err instanceof Error ? err : new Error('Unknown error')
+        )
+        alert(err instanceof Error ? err.message : '刪除失敗')
       }
-    } catch (error) {
-      logger.error(
-        'Error deleting activity:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      alert(error instanceof Error ? error.message : '刪除失敗')
-    }
+    })
   }
 
   const toggleAvailability = async (id: string, available: boolean) => {
-    try {
-      await updateFarmTour(id, { available: !available })
-      setActivities(
-        activities.map(activity =>
-          activity.id === id ? { ...activity, available: !available } : activity
+    // 樂觀更新
+    setActivities(
+      activities.map(activity =>
+        activity.id === id ? { ...activity, available: !available } : activity
+      )
+    )
+
+    startTransition(async () => {
+      try {
+        const result = await toggleFarmTourAvailabilityAction(id, !available)
+
+        if (!result.success) {
+          // 回滾樂觀更新
+          setActivities(
+            activities.map(activity => (activity.id === id ? { ...activity, available } : activity))
+          )
+          alert(result.error?.message || '更新狀態失敗')
+        }
+      } catch (err) {
+        // 回滾樂觀更新
+        setActivities(
+          activities.map(activity => (activity.id === id ? { ...activity, available } : activity))
         )
-      )
-    } catch (error) {
-      logger.error(
-        'Error updating availability:',
-        error instanceof Error ? error : new Error('Unknown error')
-      )
-      alert(error instanceof Error ? error.message : '更新狀態失敗')
-    }
+        logger.error(
+          'Error updating availability:',
+          err instanceof Error ? err : new Error('Unknown error')
+        )
+        alert(err instanceof Error ? err.message : '更新狀態失敗')
+      }
+    })
   }
 
   const formatDate = (dateString: string) => {
