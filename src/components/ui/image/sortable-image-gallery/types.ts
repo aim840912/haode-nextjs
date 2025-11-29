@@ -12,6 +12,10 @@ export interface SortableImage {
 export interface SortableImageProps {
   image: SortableImage
   onRemove: (id: string) => void
+  onMoveUp?: () => void
+  onMoveDown?: () => void
+  isFirst?: boolean
+  isLast?: boolean
 }
 
 export interface SortableImageGalleryProps {

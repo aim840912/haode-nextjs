@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   fetchFarmTourCalendar,
@@ -10,7 +10,6 @@ import {
 } from '@/lib/api/farm-tour-api'
 import { logger } from '@/lib/logger'
 import type { InquiryStatus } from '@/types/inquiry'
-import type FullCalendar from '@fullcalendar/react'
 
 export interface UseFarmTourCalendarOptions {
   defaultView?: 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek'
@@ -33,9 +32,6 @@ export interface UseFarmTourCalendarReturn {
   // 設定狀態
   statusFilter: InquiryStatus[] | 'all'
   setStatusFilter: (filter: InquiryStatus[] | 'all') => void
-
-  // 行事曆參考
-  calendarRef: React.RefObject<FullCalendar | null>
 }
 
 export function useFarmTourCalendar(
@@ -44,7 +40,6 @@ export function useFarmTourCalendar(
   const { enableDragAndDrop = true, statusFilter: initialStatusFilter = 'all' } = options
 
   const { user } = useAuth()
-  const calendarRef = useRef<FullCalendar>(null)
 
   // 狀態管理
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -156,8 +151,5 @@ export function useFarmTourCalendar(
     // 設定狀態
     statusFilter,
     setStatusFilter: handleStatusFilterChange,
-
-    // 行事曆參考
-    calendarRef,
   }
 }

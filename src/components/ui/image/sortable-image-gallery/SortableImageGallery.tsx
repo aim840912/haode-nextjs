@@ -1,30 +1,13 @@
 'use client'
 
-import { useState } from 'react'
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core'
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  horizontalListSortingStrategy,
-} from '@dnd-kit/sortable'
+import { useCallback } from 'react'
 import { logger } from '@/lib/logger'
 import { cn } from '@/lib/utils/cn'
-import { DragOverlay } from './DragOverlay'
 import { EmptyGalleryPlaceholder } from './EmptyGalleryPlaceholder'
 import { GalleryInstructions } from './GalleryInstructions'
 import { GalleryStats } from './GalleryStats'
 import { SortableImageItem } from './SortableImageItem'
-import { SortableImageGalleryProps } from './types'
+import { SortableImageGalleryProps, SortableImage } from './types'
 
 export function SortableImageGallery({
   images,
@@ -34,59 +17,38 @@ export function SortableImageGallery({
   maxColumns = 4,
   className = '',
 }: SortableImageGalleryProps) {
-  const [isDragging, setIsDragging] = useState(false)
+  // 移動圖片
+  const moveImage = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      if (toIndex < 0 || toIndex >= images.length) return
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // 需要拖拽 8px 才開始排序，避免與點擊衝突
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
-  const handleDragStart = () => {
-    setIsDragging(true)
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    setIsDragging(false)
-
-    const { active, over } = event
-
-    if (active.id !== over?.id) {
-      const oldIndex = images.findIndex(image => image.id === active.id)
-      const newIndex = images.findIndex(image => image.id === over?.id)
-
-      const newImages = arrayMove(images, oldIndex, newIndex)
+      const newImages = [...images]
+      const [removed] = newImages.splice(fromIndex, 1)
+      newImages.splice(toIndex, 0, removed)
 
       // 更新位置索引
-      const updatedImages = newImages.map((image, index) => ({
+      const updatedImages: SortableImage[] = newImages.map((image, index) => ({
         ...image,
         position: index,
       }))
 
       logger.info('圖片排序已更新', {
         metadata: {
-          oldIndex,
-          newIndex,
+          fromIndex,
+          toIndex,
           totalImages: updatedImages.length,
           newOrder: updatedImages.map(img => img.id),
         },
       })
 
       onImagesReorder(updatedImages)
-    }
-  }
+    },
+    [images, onImagesReorder]
+  )
 
   if (images.length === 0) {
     return <EmptyGalleryPlaceholder className={className} />
   }
-
-  const sortingStrategy =
-    layout === 'list' ? verticalListSortingStrategy : horizontalListSortingStrategy
 
   const gridClass = cn(
     layout === 'grid' && 'grid gap-4',
@@ -109,24 +71,20 @@ export function SortableImageGallery({
       {/* 統計資訊 */}
       <GalleryStats images={images} />
 
-      {/* 可拖拽的圖片網格 */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={images.map(img => img.id)} strategy={sortingStrategy}>
-          <div className={gridClass}>
-            {images.map(image => (
-              <SortableImageItem key={image.id} image={image} onRemove={onImageRemove} />
-            ))}
-          </div>
-        </SortableContext>
-      </DndContext>
-
-      {/* 拖拽提示 */}
-      {isDragging && <DragOverlay />}
+      {/* 圖片網格 */}
+      <div className={gridClass}>
+        {images.map((image, index) => (
+          <SortableImageItem
+            key={image.id}
+            image={image}
+            onRemove={onImageRemove}
+            onMoveUp={() => moveImage(index, index - 1)}
+            onMoveDown={() => moveImage(index, index + 1)}
+            isFirst={index === 0}
+            isLast={index === images.length - 1}
+          />
+        ))}
+      </div>
     </div>
   )
 }

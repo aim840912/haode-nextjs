@@ -1,18 +1,19 @@
 /**
  * FarmTourCalendar 主元件
  *
- * 農場體驗預約行事曆元件（重構版）
- * - 整合所有子模組
- * - 主元件保持簡潔（< 80 行）
- * - 向後相容原始匯入路徑
+ * 農場體驗預約行事曆元件（簡化版 - 使用 react-calendar）
+ * - 移除 FullCalendar 依賴
+ * - 只保留月視圖
+ * - 移除拖放功能（可在詳情頁修改日期）
  */
 
 'use client'
 
 export { type FarmTourCalendarProps } from './types'
 
-import { useState } from 'react'
-import FullCalendar from '@fullcalendar/react'
+import { useState, useCallback, useEffect } from 'react'
+import { SimpleCalendar, type CalendarEvent } from '@/components/ui/calendar'
+import type { InquiryStatus } from '@/types/inquiry'
 import { useAuth } from '@/contexts/AuthContext'
 import { useFarmTourCalendar } from '@/hooks/useFarmTourCalendar'
 import { cn } from '@/lib/utils/cn'
@@ -22,8 +23,6 @@ import { CalendarToolbar } from './CalendarToolbar'
 import { CalendarErrorState } from './components/CalendarErrorState'
 import { CalendarLoadingState } from './components/CalendarLoadingState'
 import { CalendarUsageGuide } from './components/CalendarUsageGuide'
-import { useFarmTourEventHandlers } from './hooks/useFarmTourEventHandlers'
-import { getCalendarConfig } from './utils/calendarConfig'
 import type { FarmTourCalendarProps } from './types'
 
 export function FarmTourCalendar({
@@ -46,48 +45,85 @@ export function FarmTourCalendar({
     loading,
     error,
     fetchEvents,
-    updateEventTime,
     refreshData,
     statusFilter,
     setStatusFilter,
-    calendarRef,
   } = useFarmTourCalendar({
     defaultView,
-    enableDragAndDrop: user?.role === 'admin',
+    enableDragAndDrop: false, // 簡化版不支持拖放
   })
 
-  // 事件處理器
-  const {
-    handleEventClick,
-    handleDateClick,
-    handleEventDrop,
-    handleDatesSet,
-    handleStatusFilterChange,
-    handleQuickAddSuccess,
-  } = useFarmTourEventHandlers({
-    events,
-    user,
-    updateEventTime,
-    fetchEvents,
-    setStatusFilter,
-    refreshData,
-    setShowQuickAddModal,
-    setSelectedDateForQuickAdd,
-    onEventClick,
-    onDateClick,
-  })
+  // 初始載入
+  useEffect(() => {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    fetchEvents(startOfMonth, endOfMonth)
+  }, [fetchEvents])
 
-  // FullCalendar 配置
-  const calendarConfig = getCalendarConfig({
-    defaultView,
-    height,
-    events,
-    editable: user?.role === 'admin',
-    eventClick: handleEventClick,
-    dateClick: handleDateClick,
-    eventDrop: handleEventDrop,
-    datesSet: handleDatesSet,
-  })
+  // 轉換事件格式
+  const calendarEvents: CalendarEvent[] = events.map(event => ({
+    id: event.id,
+    title: event.title,
+    start: event.start,
+    end: event.end,
+    backgroundColor: event.backgroundColor,
+    textColor: event.textColor,
+    extendedProps: event.extendedProps,
+  }))
+
+  // 事件點擊處理
+  const handleEventClick = useCallback(
+    (event: CalendarEvent) => {
+      if (onEventClick) {
+        onEventClick(event.id)
+      }
+    },
+    [onEventClick]
+  )
+
+  // 日期點擊處理
+  const handleDateClick = useCallback(
+    (date: Date) => {
+      if (onDateClick) {
+        onDateClick(date)
+      }
+
+      // 管理員可以快速新增
+      if (user?.role === 'admin') {
+        setSelectedDateForQuickAdd(date)
+        setShowQuickAddModal(true)
+      }
+    },
+    [onDateClick, user?.role]
+  )
+
+  // 月份變更處理
+  const handleMonthChange = useCallback(
+    (startDate: Date, endDate: Date) => {
+      fetchEvents(startDate, endDate)
+    },
+    [fetchEvents]
+  )
+
+  // 狀態篩選變更
+  const handleStatusFilterChange = useCallback(
+    (newFilter: string) => {
+      if (newFilter === 'all') {
+        setStatusFilter('all')
+      } else {
+        setStatusFilter([newFilter] as InquiryStatus[])
+      }
+    },
+    [setStatusFilter]
+  )
+
+  // 快速新增成功
+  const handleQuickAddSuccess = useCallback(() => {
+    setShowQuickAddModal(false)
+    setSelectedDateForQuickAdd(null)
+    refreshData()
+  }, [refreshData])
 
   return (
     <div className={cn('farm-tour-calendar', className)}>
@@ -119,9 +155,13 @@ export function FarmTourCalendar({
       <CalendarStatisticsDisplay statistics={statistics} loading={loading} />
 
       {/* 行事曆 */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <FullCalendar ref={calendarRef} {...calendarConfig} />
-      </div>
+      <SimpleCalendar
+        events={calendarEvents}
+        height={height}
+        onDateClick={handleDateClick}
+        onEventClick={handleEventClick}
+        onMonthChange={handleMonthChange}
+      />
 
       {/* 使用說明 */}
       <CalendarUsageGuide isAdmin={user?.role === 'admin'} />

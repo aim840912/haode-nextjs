@@ -1,18 +1,13 @@
-The orignal prompt is from: https://www.dzombak.com/blog/2025/08/getting-good-results-from-claude-code/
-
 # 開發指南
 
 ## 📑 目錄
 
 - [🚀 快速開始](#-快速開始)
 - [📈 優化歷史](#-優化歷史)
-- [🤖 Claude 行為準則](#-claude-行為準則)
-- [📐 開發理念](#-開發理念)
-- [🔧 開發流程](#-開發流程)
+- [📐 通用開發規範](#-通用開發規範)
 - [🌐 API 開發規範](#-api-開發規範)
-- [💎 程式碼品質標準](#-程式碼品質標準)
-- [🎨 UI/UX 設計規範](#-uiux-設計規範)
-- [✅ 品質閘門與維護](#-品質閘門與維護)
+- [💎 專案品質標準](#-專案品質標準)
+- [✅ 維護檢查](#-維護檢查)
 
 ---
 
@@ -54,33 +49,28 @@ npm ls | grep package-name           # 檢查套件
 npx depcheck                         # 檢查未使用依賴
 ```
 
-### 📚 完整指令指南
+### Slash Commands
 
-**不確定該用哪個指令？** 請查看完整指令使用指南：
+本專案可使用以下指令：
 
-👉 **`.claude/commands/README.md`**
-
-包含：
-- 指令分類（開發流程、維護檢查、優化管理等）
-- 決策樹（我應該用哪個指令？）
-- 快速參考表
-- 實際使用範例
-
----
-
-### 開發流程 Slash Commands
-
+**專案特有指令**:
 ```bash
-# 開發前檢查
-/pre-dev-check [功能名稱]            # 開發前檢查（Code Reuse、依賴、架構、效能）
-
-# API 開發檢查
 /api-check [API路徑]                 # API 開發完成檢查（中間件、錯誤處理、TypeScript）
+/opt-status                          # 查看完整優化歷史
+/simplify-architecture               # 執行架構簡化
+/simplify-infrastructure             # 簡化基礎設施服務
+```
 
-# 維護和發布檢查
-/major-change-check                  # 重大變更維護檢查（快取、依賴、品質、TODO）
-/release-check                       # 版本發布前檢查（依賴、測試、效能、文檔）
-/tech-debt-scan                      # 技術債掃描（建置時間、警告、重複程式碼、過時依賴）
+**全域指令**（來自 `~/.claude/commands/`）:
+```bash
+/pre-dev-check [功能名稱]            # 開發前檢查（Code Reuse、依賴、架構、效能）
+/major-change-check                  # 重大變更維護檢查
+/release-check                       # 版本發布前檢查
+/tech-debt-scan                      # 技術債掃描
+/ultraplan                           # 深度規劃（Plan Mode）
+/deepdive                            # 深度探索程式碼庫
+/archdesign                          # 系統架構設計
+/safereview                          # 安全的程式碼審查（唯讀）
 ```
 
 ### 檢查優化歷史
@@ -157,206 +147,31 @@ npx depcheck                         # 檢查未使用依賴
 
 ---
 
-## 🤖 Claude 行為準則
+## 📐 通用開發規範
 
-### 執行原則
+> **詳見全域規範：`~/.claude/CLAUDE.md`**
+>
+> 以下規範已在全域文件中定義，專案遵循相同標準：
+> - **Claude 行為準則** - 執行原則、Git 提交流程、TodoWrite 使用規範
+> - **開發理念** - 核心信念、永不與始終、決策框架、學習程式碼庫
+> - **開發流程** - 實作流程、遇到困難時的處理
+> - **程式碼品質標準** - 架構原則、品質標準、依賴管理、測試指南
+> - **UI/UX 設計規範** - 禁止漸層、禁止 Emoji、使用 SVG 圖示
+> - **品質閘門** - 完成定義
 
-- **精確執行** - 只做被要求的事，不多不少
-- **謹慎建立檔案** - 只在絕對必要時建立新檔案，優先編輯現有檔案
-- **不主動建立文檔** - 除非使用者明確要求，否則不建立 *.md 或 README 檔案
+### 專案特定補充
 
-### Git 提交流程
+**日誌系統**：使用專案日誌系統而非 `console.log`
+- `apiLogger` - API 路由日誌
+- `dbLogger` - 資料庫操作日誌
 
-- **Commit 可直接執行**：
-  1. 展示變更的檔案列表 (`git status`, `git diff --stat`)
-  2. 展示 commit message
-  3. 直接執行 `git add` 和 `git commit`
-  4. 無需等待使用者確認
-
-- **Push 前必須詢問**：
-  1. 詢問使用者是否要推送到 remote
-  2. 等待使用者明確確認後才執行 `git push`
-  3. 永不自動執行 push 操作
-
-### TodoWrite 使用規範
-
-#### 基本原則
-
-將複雜工作分解為 3-5 個階段，使用 TodoWrite 工具追蹤進度：
+**圖示庫**：使用 `lucide-react`（已移除 @heroicons/react）
 
 ```typescript
-TodoWrite({
-  todos: [
-    { content: "階段 1: [具體目標]", status: "pending", activeForm: "執行階段 1中" },
-    { content: "階段 2: [具體目標]", status: "pending", activeForm: "執行階段 2中" }
-  ]
-})
+import { Check, X, Search } from 'lucide-react'
+
+<Check className="w-5 h-5 text-green-600" />
 ```
-
-#### 狀態管理規則
-
-1. **狀態轉換順序**：
-   - pending (待處理) → in_progress (進行中) → completed (已完成)
-   - 永不跳過 in_progress 直接標記為 completed
-
-2. **一次只有一個 in_progress**：
-   - 同一時間只能有一個任務狀態為 `in_progress`
-   - 開始新任務前必須先完成當前任務
-
-3. **立即更新原則**：
-   - ✅ 開始任務時：**立即**標記為 `in_progress`
-   - ✅ 完成任務後：**立即**標記為 `completed`
-   - ❌ 不要批量處理多個任務的狀態更新
-
-4. **任務描述格式**：
-   - `content`: 命令式（例：「建立 API 目錄結構」）
-   - `activeForm`: 現在進行式（例：「建立 API 目錄結構中」）
-
-5. **完成條件要求**：
-   - **僅當任務完全完成時**才標記為 `completed`
-   - 如果遇到錯誤或阻塞，保持 `in_progress`
-   - 永不標記未完成的任務為 `completed`
-
-**何時不標記為 completed**：
-- 測試失敗時
-- 實作部分完成時
-- 遇到未解決的錯誤時
-- 找不到必要檔案或依賴時
-- 被阻塞無法繼續時
-
-#### Markdown 文檔任務清單同步
-
-**當專案包含實作路線圖或檢查清單文檔時**（如 `docs/architecture/交易系統/08-實作路線圖.md`），Claude 需要同時管理兩種任務清單：
-
-1. **TodoWrite（動態追蹤）**：
-   - 用於追蹤當前會話的執行進度
-   - 狀態：pending → in_progress → completed
-   - 會話結束後狀態消失
-
-2. **Markdown Task List（靜態記錄）**：
-   - 用於更新文檔中的永久記錄
-   - 格式：`- [ ]` → `- [x]`
-   - 永久保存在文檔中
-
-**同步規則**：
-
-- **開始任務時**：只更新 TodoWrite 為 in_progress，文檔保持 `[ ]`
-- **完成任務時**：同時更新 TodoWrite 為 completed **和**文檔為 `[x]`
-
-**適用情境**：
-- ✅ 當任務來自文檔中的檢查清單
-- ✅ 當實作路線圖明確列出任務清單
-- ❌ 當任務是臨時性的（不在文檔中）
-
-**注意事項**：
-- 僅更新**直接對應**的任務項目
-- 不要一次批量勾選多個未完成的任務
-- 完成任務後**立即**更新文檔，不要等到最後才批量更新
-
----
-
-## 📐 開發理念
-
-### 核心信念
-
-- **漸進式進展優於大爆炸式改變** - 小的變更能編譯並通過測試
-- **從現有程式碼中學習** - 在實作前先研究和規劃
-- **實用主義優於教條主義** - 適應專案現實
-- **清晰意圖優於巧妙程式碼** - 保持無趣和明顯
-- **單一職責原則** - 每個函數/類別單一職責，避免過早抽象化
-- **高信心原則** - 不確定時說「不知道」，優先研究和驗證而非猜測
-
-### 永不 與 始終
-
-**永不**：
-- 使用 `--no-verify` 繞過提交鉤子
-- 停用測試而不是修復它們
-- 提交不能編譯的程式碼
-- 做假設 - 用現有程式碼驗證
-- **在沒有理由的情況下安裝依賴** - 始終在提交訊息中解釋原因
-- **建立重複功能** - 先用 grep/搜尋檢查現有程式碼
-- **忽略效能警告** - 解決套件大小和建置時間問題
-
-**始終**：
-- 漸進式提交可工作的程式碼
-- 從現有實作中學習
-- 3 次嘗試失敗後停止並重新評估
-- **執行開發前檢查清單** - 程式碼重用、依賴評估、架構一致性、效能影響
-- **監控技術債信號** - 建置時間增加、TypeScript 錯誤、ESLint 警告、重複程式碼
-
-### 決策框架
-
-當存在多種有效方法時，根據以下原則選擇：
-
-1. **可測試性** - 我能輕易測試這個嗎？
-2. **可讀性** - 6 個月後有人能理解這個嗎？
-3. **一致性** - 這是否符合專案模式？
-4. **簡潔性** - 這是否最簡單可行的解決方案？
-5. **可逆性** - 後續更改有多困難？
-6. **技術債影響** - 這會在後續產生技術債嗎？
-
-### 學習程式碼庫
-
-- 找到 3 個類似的功能/元件
-- 識別常見模式和慣例
-- 盡可能使用相同的函式庫/工具
-- 遵循現有的測試模式
-
----
-
-## 🔧 開發流程
-
-### 開發前檢查清單
-
-實作任何功能前，**必須**執行開發前檢查：
-
-```bash
-/pre-dev-check [功能名稱或描述]
-```
-
-**檢查項目包括**：
-- ✅ **Code Reuse Check** - 搜尋相似功能，避免重複實作
-- ✅ **Dependency Assessment** - 評估是否需要新依賴，避免套件膨脹
-- ✅ **Architecture Consistency** - 確認遵循專案架構模式
-- ✅ **Performance Impact** - 評估對建置時間和 Bundle 大小的影響
-
-**詳細檢查項目和標準**：請參考 `.claude/commands/pre-dev-check.md`
-
-**每次開發前執行**：
-```bash
-npm run type-check && npm run lint
-```
-
-### 實作流程
-
-1. **理解** - 研究程式碼庫中的現有模式
-2. **實作** - 編寫功能程式碼
-3. **測試** - 根據情況編寫或更新測試（新功能必須、修復建議、重構可選）
-4. **重構** - 在測試通過的情況下清理
-5. **提交** - 使用清晰的訊息解釋「為什麼」
-
-### 遇到困難時（嘗試 3 次後）
-
-**重要**：每個問題最多嘗試 3 次，然後停止。
-
-1. **記錄失敗原因**：
-   - 你嘗試了什麼
-   - 具體的錯誤訊息
-   - 你認為為什麼失敗
-
-2. **研究替代方案**：
-   - 找到 2-3 個類似的實作
-   - 記錄使用的不同方法
-
-3. **質疑基本原則**：
-   - 這是否正確的抽象層級？
-   - 能否將其分解為更小的問題？
-   - 是否有更簡單的方法？
-
-4. **嘗試不同角度**：
-   - 不同的函式庫/框架功能？
-   - 不同的架構模式？
-   - 移除抽象而不是添加？
 
 ---
 
@@ -372,7 +187,7 @@ npm run type-check && npm run lint
 - **整合 logger 系統**: 所有錯誤自動記錄到適當的日誌級別 (apiLogger)
 - **包含除錯上下文**: 每個錯誤都有追蹤 ID 和詳細上下文
 - **永不默默吐掉例外** - 所有例外都應適當處理和記錄
-- **依賴 Sentry 做錯誤監控**: 已移除自建的 ErrorStatsCollector,錯誤統計和分析由 Sentry 提供
+- **依賴 Sentry 做錯誤監控**: 已移除自建的 ErrorStatsCollector
 
 **可用的錯誤類型**：
 
@@ -440,106 +255,19 @@ export const GET = withAuthAndError(handleGET, { module: 'ProductAPI' })
 
 ### Service 層架構 (統一服務模式)
 
-**專案採用統一服務架構** - 每個領域使用單一 Service 類別,整合查詢和命令操作
+> **詳見全域規範：`~/.claude/CLAUDE.md` → 附錄 E - Service 層架構**
+>
+> 全域規範包含完整的統一服務模式原則和範例。
 
-**核心原則**:
-- **單一 Service 類別**: 每個領域只有一個 Service 類別 (例如: OrderService, InquiryService)
-- **整合操作**: 同時包含讀取 (Query) 和寫入 (Command) 操作
-- **職責分離**: 使用註解或方法分組區分查詢和命令操作,但保持在同一類別中
-
-**範例架構**:
-
-```typescript
-// src/services/core/order/OrderService.ts
-export class OrderService {
-  // === 查詢方法（Query Operations） ===
-
-  async getOrderById(orderId: string, userId: string): Promise<Order> {
-    // 查詢邏輯
-  }
-
-  async getUserOrders(userId: string, limit: number, offset: number) {
-    // 查詢邏輯
-  }
-
-  // === 命令方法（Command Operations） ===
-
-  async createOrder(userId: string, data: CreateOrderRequest): Promise<Order> {
-    // 建立訂單邏輯 (可直接調用內部查詢方法)
-    const product = await this.getProductById(productId)
-
-    // 建立訂單
-  }
-
-  async cancelOrder(orderId: string, userId: string, reason?: string): Promise<void> {
-    // 取消訂單邏輯
-  }
-}
-
-export const orderService = new OrderService()
-```
-
-**API 使用範例**:
-
-```typescript
-// src/app/api/orders/route.ts
-import { orderService } from '@/services/core/order/OrderService'
-import { withAuthAndError } from '@/lib/middleware/api-middleware'
-
-// GET - 使用查詢方法
-async function handleGET(req: NextRequest, user: User) {
-  const orders = await orderService.getUserOrders(user.id, 20, 0)
-  return success(orders, '取得訂單列表成功')
-}
-
-// POST - 使用命令方法
-async function handlePOST(req: NextRequest, user: User) {
-  const data = await req.json()
-  const order = await orderService.createOrder(user.id, data)
-  return created(order, '訂單建立成功')
-}
-
-export const GET = withAuthAndError(handleGET, { module: 'OrderAPI' })
-export const POST = withAuthAndError(handlePOST, { module: 'OrderAPI', enableAuditLog: true })
-```
-
-**重要**:
-- ✅ **使用統一服務**: 每個領域只有一個 Service 類別
-- ✅ **內部方法調用**: 命令方法可直接調用同類別的查詢方法 (使用 `this.`)
-- ❌ **不要建立**分離的 QueryService 和 CommandService
-- ❌ **不要建立** coordinator 層來組合服務
+**專案服務目錄**: `src/services/core/`
 
 ### 審計日誌策略
 
-**專案審計日誌策略** - 僅記錄資料變更操作
+> **詳見全域規範：`~/.claude/CLAUDE.md` → 附錄 B - 審計日誌策略**
+>
+> 全域規範包含記錄策略和範例。
 
-**記錄策略**:
-- ✅ **記錄**: POST/PUT/PATCH/DELETE (變更操作)
-- ❌ **不記錄**: GET (查詢操作)
-- ✅ **啟用**: 在中間件選項中設定 `enableAuditLog: true`
-
-**範例**:
-
-```typescript
-// ✅ 正確：變更操作啟用審計
-export const POST = withAuthAndError(handlePOST, {
-  module: 'OrderAPI',
-  enableAuditLog: true  // 記錄建立訂單
-})
-
-export const PATCH = withAdminAndError(handlePATCH, {
-  module: 'AdminOrderAPI',
-  enableAuditLog: true  // 記錄管理員更新
-})
-
-// ✅ 正確：查詢操作不啟用審計
-export const GET = withAuthAndError(handleGET, {
-  module: 'OrderAPI'
-  // 不設定 enableAuditLog
-})
-```
-
-**理由**: GET 請求頻繁且不修改資料,記錄審計會增加資料庫負載而沒有實際價值。
+**專案補充**: 使用 `enableAuditLog: true` 在中間件選項中啟用
 
 ### API 開發完成檢查清單
 
@@ -549,15 +277,13 @@ API 開發完成後，**必須**執行 API 檢查：
 /api-check [API 路徑或檔案]
 ```
 
-**檢查項目包括**：
-- ✅ **中間件和認證** - 正確使用組合中間件（withAuthAndError/withAdminAndError）
-- ✅ **錯誤處理** - 使用標準錯誤類型和統一回應格式
-- ✅ **TypeScript** - 類型檢查通過，無 `any` 類型繞過
-- ✅ **安全性** - 防止常見漏洞（SQL Injection、XSS 等）
-- ✅ **資料庫操作** - 使用統一 Service 層，避免 N+1 查詢
-- ✅ **測試** - 新功能必須有測試覆蓋
-
-**詳細檢查項目和標準**：請參考 `.claude/commands/api-check.md`
+**檢查項目**：
+- ✅ 正確使用組合中間件（withAuthAndError/withAdminAndError）
+- ✅ 使用標準錯誤類型和統一回應格式
+- ✅ TypeScript 類型檢查通過，無 `any` 類型繞過
+- ✅ 防止常見漏洞（SQL Injection、XSS 等）
+- ✅ 使用統一 Service 層，避免 N+1 查詢
+- ✅ 新功能必須有測試覆蓋
 
 ### Server Actions 開發規範
 
@@ -565,17 +291,7 @@ API 開發完成後，**必須**執行 API 檢查：
 
 #### 何時使用 Server Actions
 
-✅ **適合使用 Server Actions**:
-- 表單提交 (建立、更新、刪除資源)
-- 需要認證的操作
-- 需要審計日誌的行為
-- 互動式操作 (按鈕點擊、切換狀態)
-
-❌ **不適合使用 Server Actions** (保留 API Routes):
-- 純查詢操作 (GET) → 使用 Server Components 或 API Routes
-- 公開 API (外部系統調用) → 使用 API Routes
-- Webhook 回調 → 使用 API Routes
-- 檔案下載或串流 → 使用 API Routes
+> **詳見全域規範：`~/.claude/CLAUDE.md` → 附錄 B - Server Actions vs API Routes 選擇**
 
 #### 基礎設施工具
 
@@ -603,21 +319,6 @@ import {
 #### Server Action 標準模式
 
 ```typescript
-/**
- * Action 簡要說明
- *
- * @param data - 參數說明
- * @returns ActionResponse 包含操作結果
- *
- * @example
- * ```tsx
- * // 完整使用範例
- * const result = await myAction(data)
- * if (result.success) {
- *   toast.success(result.message)
- * }
- * ```
- */
 export async function myAction(data: unknown) {
   try {
     // 1. 認證檢查
@@ -629,39 +330,23 @@ export async function myAction(data: unknown) {
       return validationError(result.error)
     }
 
-    // 3. 記錄操作 (可選)
-    apiLogger.info('操作描述', {
-      metadata: { userId: user.id, /* ... */ },
-    })
-
-    // 4. 執行業務邏輯
+    // 3. 執行業務邏輯
     const resource = await service.operation(user.id, result.data)
 
-    // 5. 審計日誌 (關鍵操作)
+    // 4. 審計日誌 (關鍵操作)
     await logCreate(user, 'resource', resource.id, {
       newData: { /* 關鍵欄位 */ },
     })
 
-    // 6. Revalidation - 清除快取
+    // 5. Revalidation - 清除快取
     revalidatePath('/resources')
-    revalidatePath(`/resources/${resource.id}`)
 
-    // 7. 返回成功回應
+    // 6. 返回成功回應
     return success(resource, '操作成功')
   } catch (err) {
     return error(err)
   }
 }
-```
-
-#### 檔案組織
-
-```
-src/app/actions/
-├── user-interests.ts    # 用戶興趣相關
-├── inquiries.ts         # 詢價單相關
-├── orders.ts            # 訂單相關
-└── index.ts             # 統一匯出
 ```
 
 #### 客戶端使用
@@ -681,7 +366,6 @@ function MyComponent() {
 
       if (result.success) {
         toast.success(result.message)
-        // result.data 有完整型別
       } else {
         toast.error(result.error.message)
       }
@@ -695,15 +379,6 @@ function MyComponent() {
   )
 }
 ```
-
-#### 最佳實踐
-
-1. **始終使用 try-catch** - 確保錯誤被正確處理
-2. **輸入驗證** - 使用 Zod `safeParse()` 而非 `parse()`
-3. **認證在最前面** - 第一步就檢查 `requireAuth()`
-4. **明確的 Revalidation** - 清除所有相關路徑
-5. **審計關鍵操作** - Create/Update/Delete 都要記錄
-6. **詳細的 JSDoc** - 包含使用範例
 
 #### 與 API Routes 的差異
 
@@ -719,235 +394,19 @@ function MyComponent() {
 
 ---
 
-## 💎 程式碼品質標準
-
-### 架構原則
-
-- **組合優於繼承** - 使用依賴注入
-- **介面優於單例模式** - 啟用測試和靈活性
-- **明確優於隱含** - 清晰的資料流和依賴關係
-- **重視測試** - 永不停用測試，修復它們；新功能必須有測試
-
-### 程式碼品質要求
-
-**每次提交必須**：
-- 編譯成功
-- 通過所有現有測試
-- 遵循專案格式化/linting
-- 使用專案日誌系統 (apiLogger/dbLogger，不用 console.log)
-
-**提交前**：
-- **先向使用者確認** - 展示變更檔案和 commit message 草稿
-- 運行格式化工具/linter
-- 自我審查變更
-- 確保提交訊息解釋「為什麼」
-
-### 品質標準與技術債管理
-
-**品質標準**（建議）:
-- 相同邏輯出現 **3+ 次** → 考慮抽取為共用函數
-- 元件建議 **< 200 行** / 函數建議 **< 30 行** / Props 建議 **< 7 個**
-- 巢狀層數建議 **< 3 層** / 參數數量建議 **< 5 個**
-- 避免在元件內直接調用 API (使用 custom hooks)
-
-**技術債信號**:
-- 🔴 建置時間增加 > 30 秒
-- 🔴 TypeScript/ESLint 錯誤或警告數量增加
-- 🔴 相似功能在多處重複實作
-- 🔴 依賴套件版本過舊或有安全漏洞
-
-**技術債分類**:
-- 🔴 Critical - 影響系統穩定性、安全性或核心功能
-- 🟡 Major - 影響開發效率、用戶體驗或維護成本
-- 🟢 Minor - 程式碼整潔度、文檔或註解問題
-
-**定期執行技術債掃描**：
-```bash
-/tech-debt-scan
-```
-
-掃描項目包括：建置時間、TypeScript/ESLint 警告、重複程式碼、過時依賴、安全漏洞、Bundle 大小、TODO/DEBT 標籤、程式碼複雜度等。
-
-**詳細掃描項目和標準**：請參考 `.claude/commands/tech-debt-scan.md`
-
-**遇到技術債信號時**：
-1. **記錄問題** - 使用 TODO 註釋和 DEBT 標籤
-2. **考慮重構** - 而不是增加問題
-3. **參考現有實作** - 尋找類似的模式
-
-### 依賴管理
-
-**新增依賴前必須執行**:
-
-```bash
-# 1. 檢查現有相似功能
-grep -r "import.*from.*package-name" src/
-npm ls | grep similar-functionality
-
-# 2. 評估套件健康度
-npm info package-name
-npm audit
-
-# 3. 檢查 Bundle 影響
-npm run analyze  # 記錄當前大小
-npm install package-name
-npm run analyze  # 比較差異
-
-# 4. 檢查未使用依賴
-npx depcheck
-```
-
-**依賴管理規則**:
-- **避免** 安裝功能重複的套件（如已有 lodash 不要加 ramda）
-- **謹慎** 安裝超過 1 年未更新的套件（除非是穩定庫）
-- **評估** 增加 bundle > 100KB 的套件影響（非核心功能需謹慎）
-- **必須** 在 commit message 說明為什麼需要新依賴
-
-### 測試指南
-
-- 測試行為而非實作
-- 盡可能每個測試一個斷言
-- 清晰的測試名稱描述場景
-- 使用現有的測試工具/助手
-- 測試應該是確定性的
+## 💎 專案品質標準
 
 ### Client/Server Components 規範
 
-**Next.js App Router 專案必須正確區分 Client 和 Server Components**
+> **詳見全域規範：`~/.claude/CLAUDE.md` → Client/Server Components 規範（Next.js App Router）**
+>
+> 全域規範包含完整的判斷準則、常見錯誤和最佳實踐範例。
 
-#### 何時必須使用 'use client'
-
-✅ **必須標記為 Client Component**:
-- 使用 React Hooks (`useState`, `useEffect`, `useCallback`, `useMemo`, `useRef`, `useContext`)
-- 使用瀏覽器 API (`window`, `localStorage`, `navigator`)
-- 使用事件處理器 (`onClick`, `onChange`, `onSubmit`)
-- 使用 Custom Hooks (如 `useToast`, `useAuth`, `useModal`)
-- 使用第三方客戶端函式庫 (動畫、圖表、表單驗證)
-
-#### 何時應保持為 Server Component
-
-❌ **不需要 'use client'**:
-- 純展示型元件（只接收 props 和渲染內容）
-- 資料獲取元件（使用 `async/await` 直接查詢資料庫或 API）
-- 靜態內容元件（文字、圖片、連結）
-- Layout 元件（除非需要互動功能）
-
-#### 開發檢查清單
-
-**建立新元件時**:
-1. ✅ 預設為 Server Component（不加 'use client'）
-2. ✅ 只在需要時才添加 'use client'
-3. ✅ 考慮將互動邏輯拆分到子元件
-
-**重構現有元件時**:
-1. ✅ 檢查是否使用 React Hooks → 需要 'use client'
-2. ✅ 檢查是否純展示 → 可移除 'use client'
-3. ✅ 檢查子元件是否可獨立為 Client Component
-
-#### 常見錯誤
-
-🔴 **缺少 'use client' 會導致**:
-```
-Error: useState only works in Client Components
-Error: Event handlers cannot be passed to Client Components
-```
-
-🟡 **不必要的 'use client' 會導致**:
-- 增加客戶端 bundle 大小
-- 降低初始載入效能
-- 失去 Server Components 的 SEO 優勢
-
-#### 最佳實踐範例
-
-```typescript
-// ❌ 錯誤：父元件不需要 'use client'
-'use client'
-
-export function NewsSection() {
-  return (
-    <section>
-      <NextMarketScheduleCard /> {/* 只有這個需要客戶端 */}
-    </section>
-  )
-}
-
-// ✅ 正確：只有子元件標記 'use client'
-export function NewsSection() {
-  return (
-    <section>
-      <NextMarketScheduleCard /> {/* 子元件內部有 'use client' */}
-    </section>
-  )
-}
-```
-
-```typescript
-// ✅ 正確：使用 hooks 必須標記
-'use client'
-
-import { useState } from 'react'
-
-export function ProductCard() {
-  const [isHovered, setIsHovered] = useState(false)
-  return <div onMouseEnter={() => setIsHovered(true)}>...</div>
-}
-```
+**專案補充**：本專案使用 `lucide-react` 作為圖示庫，圖示元件本身是 Server Component 安全的。
 
 ---
 
-## 🎨 UI/UX 設計規範
-
-### 視覺設計原則
-
-1. **禁止使用漸層**
-   - ❌ `bg-gradient-to-r from-blue-500 to-purple-600`
-   - ✅ `bg-blue-500`
-   - 理由：保持視覺簡潔、提升效能、易於維護
-
-2. **禁止使用 Emoji**
-   - ❌ `🎯` `✅` `❌` `📊` `🔍`
-   - ✅ 使用 SVG 圖示替代
-   - 理由：emoji 在不同平台顯示不一致、無法精確控制樣式、影響無障礙體驗
-
-3. **使用 SVG 圖示**
-   - 使用 inline SVG 或圖示庫（**使用 lucide-react**，已移除 @heroicons/react）
-   - 確保 SVG 支援深色模式（使用 `currentColor`）
-   - 提供適當的 `aria-label` 以支援無障礙
-   - SVG 應具有適當的尺寸類別（如 `w-6 h-6`）
-
-   ```typescript
-   // ✅ 正確：使用 lucide-react
-   import { Check, X, Search } from 'lucide-react'
-
-   <Check className="w-5 h-5 text-green-600" />
-   <X className="w-5 h-5 text-red-600" />
-   <Search className="w-5 h-5" />
-   ```
-
-**範例**：
-
-```tsx
-// ❌ 錯誤：使用 emoji
-<div>{isSuccess ? '✅' : '❌'} 操作結果</div>
-
-// ✅ 正確：使用 SVG 圖示
-<div className="flex items-center gap-2">
-  {isSuccess ? (
-    <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-    </svg>
-  ) : (
-    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-    </svg>
-  )}
-  <span>操作結果</span>
-</div>
-```
-
----
-
-## ✅ 品質閘門與維護
+## ✅ 維護檢查
 
 ### 完成定義
 
@@ -965,14 +424,7 @@ export function ProductCard() {
 /major-change-check
 ```
 
-**檢查項目包括**：
-- ✅ **快取清理** - 清理建置快取（目標 < 200MB）
-- ✅ **依賴檢查** - 未使用依賴、安全漏洞、過時套件
-- ✅ **品質檢查** - TypeScript、Lint、Bundle 大小
-- ✅ **TODO 掃描** - 追蹤未完成工作和技術債
-- ✅ **測試和建置** - 確保所有測試通過、建置成功
-
-**詳細檢查項目和標準**：請參考 `.claude/commands/major-change-check.md`
+**檢查項目**：快取清理、依賴檢查、品質檢查、TODO 掃描、測試和建置
 
 ### 版本發布維護
 
@@ -982,17 +434,6 @@ export function ProductCard() {
 /release-check
 ```
 
-**檢查項目包括**：
-- ✅ **依賴健康** - 過時依賴、安全漏洞、未使用套件
-- ✅ **程式碼品質** - 重複程式碼、TypeScript、Lint、測試覆蓋率
-- ✅ **效能基準** - 建置時間、Bundle 大小、關鍵路徑效能
-- ✅ **資料庫效能** - 查詢優化、索引設置、N+1 查詢檢查
-- ✅ **測試套件** - 單元測試、整合測試、E2E 測試、手動測試
-- ✅ **系統指標** - Vercel 效能、API 回應時間、快取命中率
-- ✅ **文檔更新** - README、API 文檔、Changelog、優化歷史
-- ✅ **環境配置** - 環境變數、生產配置、敏感資訊檢查
-- ✅ **備份回滾** - 資料庫備份、回滾計劃
-
-**詳細檢查項目和標準**：請參考 `.claude/commands/release-check.md`
+**檢查項目**：依賴健康、程式碼品質、效能基準、資料庫效能、測試套件、系統指標、文檔更新、環境配置、備份回滾
 
 **建議**：在非尖峰時段發布，並在發布後持續監控 1-2 小時。

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef, useEffect } from 'react'
-import FullCalendar from '@fullcalendar/react'
+import { useState, useCallback, useEffect } from 'react'
 import {
   fetchScheduleCalendar,
   type ScheduleCalendarEvent as APIScheduleCalendarEvent,
@@ -37,16 +36,11 @@ export interface UseScheduleCalendarReturn {
   // 設定狀態
   statusFilter: ScheduleStatus
   setStatusFilter: (filter: ScheduleStatus) => void
-
-  // 行事曆參考
-  calendarRef: React.RefObject<FullCalendar | null>
 }
 
 export function useScheduleCalendar(
   initialStatusFilter: ScheduleStatus = 'all'
 ): UseScheduleCalendarReturn {
-  const calendarRef = useRef<FullCalendar | null>(null)
-
   // 狀態管理
   const [events, setEvents] = useState<ScheduleCalendarEvent[]>([])
   const [allEvents, setAllEvents] = useState<ScheduleCalendarEvent[]>([])
@@ -163,8 +157,5 @@ export function useScheduleCalendar(
     // 設定狀態
     statusFilter,
     setStatusFilter: handleSetStatusFilter,
-
-    // 行事曆參考
-    calendarRef,
   }
 }

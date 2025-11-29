@@ -212,25 +212,6 @@ export const orderSchema = z.object({
 })
 
 /**
- * 開發筆記 schema
- */
-export const devNoteSchema = z.object({
-  title: z.string().min(1, '標題為必填').max(200, '標題不得超過 200 字元'),
-  content: z.string().min(1, '內容為必填'),
-  type: z.enum(['todo', 'bug', 'feature', 'note', 'question'], {
-    message: '請選擇有效的筆記類型',
-  }),
-  status: z.enum(['pending', 'in_progress', 'completed', 'blocked'], {
-    message: '請選擇有效的狀態',
-  }),
-  priority: z.enum(['low', 'medium', 'high', 'urgent'], {
-    message: '請選擇有效的優先級',
-  }),
-  tags: z.array(z.string()).optional(),
-  related_file: z.string().max(500, '檔案路徑不得超過 500 字元').optional(),
-})
-
-/**
  * 網站設定 schema
  */
 export const siteSettingsSchema = z.object({
@@ -279,7 +260,6 @@ export type UserLoginInput = z.infer<typeof userLoginSchema>
 export type ContactFormInput = z.infer<typeof contactFormSchema>
 export type AddressInput = z.infer<typeof addressSchema>
 export type OrderInput = z.infer<typeof orderSchema>
-export type DevNoteInput = z.infer<typeof devNoteSchema>
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>
 export type FarmTourActivityInput = z.infer<typeof farmTourActivitySchema>
 export type StockReservationInput = z.infer<typeof stockReservationSchema>
