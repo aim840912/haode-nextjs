@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import {
   useScheduleCalendar,
   type ScheduleCalendarEvent,
@@ -54,6 +54,13 @@ export function ScheduleCalendar({
     },
     [externalOnChange, internalSetStatusFilter]
   )
+
+  // 當外部 statusFilter 改變時，同步到內部 hook
+  useEffect(() => {
+    if (externalStatusFilter && externalStatusFilter !== internalStatusFilter) {
+      internalSetStatusFilter(externalStatusFilter)
+    }
+  }, [externalStatusFilter, internalStatusFilter, internalSetStatusFilter])
 
   const handleEventClick = useCallback(
     (clickInfo: { event: { id: string } }) => {
